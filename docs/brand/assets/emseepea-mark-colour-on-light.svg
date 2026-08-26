@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -12 364 194" role="img" aria-labelledby="title">
+  <title id="title">Em See Pea colour mark for light backgrounds</title>
+  <defs>
+    <mask id="seam" x="0" y="0" width="340" height="170" maskUnits="userSpaceOnUse">
+      <rect width="340" height="170" fill="#fff"/>
+      <path d="M7 86c19-19 45-31 72-29 27 2 53 15 72 24 13 6 23 6 36 0 19-9 45-22 72-24 27-2 53 10 72 29" fill="none" stroke="#000" stroke-linecap="round" stroke-width="6"/>
+    </mask>
+  </defs>
+  <path d="M7 86C57-11 282-11 331 86c-49 97-274 97-324 0Z" fill="#E8F6ED"/>
+  <g fill="#2D8A4E" mask="url(#seam)">
+    <circle cx="84" cy="96" r="34"/>
+    <circle cx="169" cy="96" r="34"/>
+    <circle cx="254" cy="96" r="34"/>
+  </g>
+  <path d="M7 86C57-11 282-11 331 86c-19-19-45-31-72-29-27 2-53 15-72 24-13 6-23 6-36 0-19-9-45-22-72-24-27-2-53 10-72 29Z" fill="#18231E" mask="url(#seam)"/>
+  <path d="M7 86C57-11 282-11 331 86c-49 97-274 97-324 0Z" fill="none" stroke="#18231E" stroke-linejoin="miter" stroke-miterlimit="10" stroke-width="8"/>
+</svg>
