@@ -11,7 +11,7 @@ Compact rendered index of every ADR's chosen option, confirmation criteria, and 
 
 For deep-dive — creating, evolving, ratifying, or contesting a decision — open the per-ADR file directly. `/wr-architect:create-adr`, `/wr-architect:capture-adr`, and `/wr-architect:review-decisions` all keep the full body in scope. Decision Drivers, Considered Options bodies, Pros and Cons, Consequences narrative, and Reassessment Criteria are intentionally NOT in this routine view — they live in the per-ADR body.
 
-**Total ADRs:** 15 (14 in-force, 1 historical)
+**Total ADRs:** 16 (14 in-force, 2 historical)
 
 ---
 
@@ -28,11 +28,6 @@ _14 ADRs. These are the current rules. The architect agent reads this section fi
 **Status:** proposed | **Oversight:** confirmed
 **Chosen:** Chosen option: **"Public repository with private packages and gated Changesets release PRs"**, because it makes development and quality evidence public while preserving an explicit later decision for registry identity and publication.
 **Confirmation:** GitHub identifies windyroad/emseepea as public with main as its default branch.; The repository includes the exact MIT licence text and public contribution, security, and support boundaries.; Clean GitHub-hosted checkouts pass quality jobs on Node.js 22 and 24.; Workflow dependencies use immutable pins and least-privilege permissions.; The Changesets workflow creates or updates a release PR on main.
-
-### ADR-0004 — Fastify-First TypeScript Framework Foundation
-**Status:** proposed | **Oversight:** confirmed | **Supersedes:** ["ADR-0001"]
-**Chosen:** Chosen option: **"Fastify-first official MCP integration"**.
-**Confirmation:** Clean installs, builds, and tests pass on Node.js 22 and 24.; Real Fastify HTTP tests cover discovery, listing, calling, malformed input, and disabled capabilities.; An independent MCP client interoperates through the Fastify endpoint.; Examples use only the public Em See Pea API for MCP behavior.; No public generic request-handler, server adapter, or caller-supplied capability map exists.
 
 ### ADR-0005 — Active Streamable HTTP Scope and Adaptive Delivery
 **Status:** proposed | **Oversight:** confirmed
@@ -67,7 +62,7 @@ _14 ADRs. These are the current rules. The architect agent reads this section fi
 ### ADR-0011 — Framework-Neutral Accessible Elicitation and Approval UI
 **Status:** proposed | **Oversight:** unconfirmed
 **Chosen:** Chosen option: **"Optional React renderer and Tailwind style packages"**.
-**Confirmation:** Native and React/Tailwind examples render the same shared fixtures and states.; The React/Tailwind example imports @windyroad/emseepea-react, not private source.; The example uses exactly one @windyroad/emseepea-tailwind stylesheet import.; The example has zero Tailwind config, plugin, theme CSS, or selector mapping.; Tailwind dependencies exist only in the Tailwind package's development closure.
+**Confirmation:** Native and React/Tailwind examples render the same shared fixtures and states.; The React/Tailwind example imports @emseepea/react, not private source.; The example uses exactly one @emseepea/tailwind stylesheet import.; The example has zero Tailwind config, plugin, theme CSS, or selector mapping.; Tailwind dependencies exist only in the Tailwind package's development closure.
 
 ### ADR-0012 — Typed Operations and OpenTelemetry Boundary
 **Status:** proposed | **Oversight:** confirmed
@@ -89,13 +84,23 @@ _14 ADRs. These are the current rules. The architect agent reads this section fi
 **Chosen:** Chosen option: **"Ordinary reproducible evidence and exact claims"**.
 **Confirmation:** Every public claim maps to current tests and named clean-checkout artifacts.; Raw HTTP negative tests prove invalid and security failures cause zero application calls.; Independent clients and synthetic services exercise only the public package boundary.; Checksums, SBOMs, locked dependencies, and independent reviews accompany release evidence.; No custom certification key, challenge, trust-root, attestation, or report-validation subsystem exists.
 
+### ADR-0016 — Em See Pea Product npm Scope with Server-Named Runtime
+**Status:** proposed | **Oversight:** confirmed | **Supersedes:** ["ADR-0004"]
+**Chosen:** Chosen option: **"Product scope with role-specific package names"**, because `@emseepea/server` is concise, groups the package family under its product identity, and accurately signals the Fastify-first server foundation.
+**Confirmation:** Workspace manifests and imports use `@emseepea/server` and no longer use `@windyroad/emseepea`.; Optional UI documentation uses `@emseepea/react` and `@emseepea/tailwind`.; Private example names follow `@emseepea/example-*` and remain ignored by Changesets.; The runtime depends on Fastify 5 and `@modelcontextprotocol/fastify@2.0.0`.; Clean installs, builds, and tests pass on Node.js 22 and 24.
+
 ---
 
 ## Historical decisions
 
-_1 ADRs. These were tried and superseded, rejected, or deprecated. Read them as direction for what NOT to do, or to understand the lineage of an in-force decision. Do not enforce them as current rules._
+_2 ADRs. These were tried and superseded, rejected, or deprecated. Read them as direction for what NOT to do, or to understand the lineage of an in-force decision. Do not enforce them as current rules._
 
 ### ADR-0001 — Public-Specification-First TypeScript Framework Foundation
 **Status:** superseded | **Oversight:** confirmed
 **Chosen:** Chosen option: **"Public-specification-first framework using the official SDK"**.
 **Confirmation:** Clean installs, builds, and tests pass on Node.js 22 and 24.; Raw HTTP tests cover discovery, listing, calling, malformed input, header mismatch, and disabled capabilities.; An independent MCP client pinned to 2026-07-28 interoperates through the real HTTP endpoint.; Every example imports only the public framework API for MCP behavior.; Capability advertisements are derived from enabled handlers and match tested behavior.
+
+### ADR-0004 — Fastify-First TypeScript Framework Foundation
+**Status:** superseded | **Oversight:** confirmed | **Supersedes:** ["ADR-0001"]
+**Chosen:** Chosen option: **"Fastify-first official MCP integration"**.
+**Confirmation:** Clean installs, builds, and tests pass on Node.js 22 and 24.; Real Fastify HTTP tests cover discovery, listing, calling, malformed input, and disabled capabilities.; An independent MCP client interoperates through the Fastify endpoint.; Examples use only the public Em See Pea API for MCP behavior.; No public generic request-handler, server adapter, or caller-supplied capability map exists.

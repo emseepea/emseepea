@@ -55,10 +55,10 @@ and deterministic focus targets. It contains no credential, private backend
 state, destination, or effect authority. Compatibility changes follow ADR-0006.
 
 The first opt-in modern UI includes separately installable
-`@windyroad/emseepea-react` and `@windyroad/emseepea-tailwind` packages plus an
+`@emseepea/react` and `@emseepea/tailwind` packages plus an
 `examples/react-tailwind-ui` workspace that consumes both. The renderer has an
 ordinary dependency on
-`@windyroad/emseepea`, required `react` and `react-dom` peer dependencies covering
+`@emseepea/server`, required `react` and `react-dom` peer dependencies covering
 only qualified major versions, and matching development dependencies for its
 own tests. Core declares no React, React DOM, or Tailwind peer, optional, or
 runtime dependency.
@@ -157,8 +157,8 @@ submission, or server authority.
 ## Confirmation
 
 - Native and React/Tailwind examples render the same shared fixtures and states.
-- The React/Tailwind example imports `@windyroad/emseepea-react`, not private source.
-- The example uses exactly one `@windyroad/emseepea-tailwind` stylesheet import.
+- The React/Tailwind example imports `@emseepea/react`, not private source.
+- The example uses exactly one `@emseepea/tailwind` stylesheet import.
 - The example has zero Tailwind config, plugin, theme CSS, or selector mapping.
 - Tailwind dependencies exist only in the Tailwind package's development closure.
 - Security and approval negative-flow tests pass.
