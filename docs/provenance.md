@@ -57,6 +57,7 @@ behavior, deployment logic, or domain rule may be copied from them.
 | `actions/setup-node` | `a0853c24544627f65ddf259abe73b1d18a591444` (`v5.0.0`) | MIT | Node.js 22 and 24 matrix setup with npm caching |
 | `changesets/action` | `a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d` (`v1.9.0`) | MIT | Create or update the release pull request without publishing |
 | `@changesets/cli` | `3.0.1` | MIT | Version private workspace packages inside the release pull request |
+| `@changesets/changelog-github` | `1.0.0` | MIT | Generate the changelog consumed by the Changesets release pull request |
 
 The three pinned Actions use the Node.js 24 action runtime. Their public action
 manifests, tag targets, and repository licences were verified on 2026-08-26.
