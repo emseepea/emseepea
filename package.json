@@ -1,0 +1,30 @@
+{
+  "name": "emseepea",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "benchmark": "npm run build && node --expose-gc benchmarks/json-boundary.mjs",
+    "build": "npm run build -w @emseepea/server && npm run build -w @emseepea/example-basic-no-ui",
+    "changeset": "changeset",
+    "check": "npm test",
+    "start:basic": "npm run start -w @emseepea/example-basic-no-ui",
+    "test": "npm run build && node --test tests/black-box/*.test.mjs",
+    "version-packages": "changeset version"
+  },
+  "devDependencies": {
+    "@changesets/cli": "3.0.1",
+    "@modelcontextprotocol/client": "2.0.0",
+    "@types/node": "24.13.3",
+    "typescript": "6.0.3",
+    "zod": "4.4.3"
+  }
+}

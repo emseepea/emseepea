@@ -11,7 +11,7 @@ Compact rendered index of every ADR's chosen option, confirmation criteria, and 
 
 For deep-dive — creating, evolving, ratifying, or contesting a decision — open the per-ADR file directly. `/wr-architect:create-adr`, `/wr-architect:capture-adr`, and `/wr-architect:review-decisions` all keep the full body in scope. Decision Drivers, Considered Options bodies, Pros and Cons, Consequences narrative, and Reassessment Criteria are intentionally NOT in this routine view — they live in the per-ADR body.
 
-**Total ADRs:** 16 (14 in-force, 2 historical)
+**Total ADRs:** 18 (14 in-force, 4 historical)
 
 ---
 
@@ -43,11 +43,6 @@ _14 ADRs. These are the current rules. The architect agent reads this section fi
 **Status:** proposed | **Oversight:** confirmed
 **Chosen:** Chosen option: **"One checked execution kernel"**.
 **Confirmation:** Malformed, unauthenticated, unauthorized, and invalid requests cause zero handler and adapter calls.; Backend contract failures cannot emit partial or unvalidated public results.; Two materially different synthetic adapters run without kernel changes.; A bounded workflow obeys the same deadline, cancellation, and error layers as a mapped call.; Public APIs expose no raw response or caller-selected destination escape hatch.
-
-### ADR-0008 — Public and OAuth Protected Resource Security
-**Status:** proposed | **Oversight:** confirmed
-**Chosen:** Chosen option: **"Explicit public or OAuth-protected operations"**.
-**Confirmation:** Missing access declarations fail startup.; Invalid issuer, audience, expiry, scope, object, or tenant authorization causes zero application calls.; Caller tokens never appear in backend authorization or logs.; SSRF tests cover parsing, redirects, DNS/address changes, prohibited address ranges, and size limits.; Public operations do not accidentally inherit protected credentials or identity.
 
 ### ADR-0009 — Capability-Scoped Reliability, Effects, and State
 **Status:** proposed | **Oversight:** confirmed
@@ -89,11 +84,16 @@ _14 ADRs. These are the current rules. The architect agent reads this section fi
 **Chosen:** Chosen option: **"Product scope with role-specific package names"**, because `@emseepea/server` is concise, groups the package family under its product identity, and accurately signals the Fastify-first server foundation.
 **Confirmation:** Workspace manifests and imports use `@emseepea/server` and no longer use `@windyroad/emseepea`.; Optional UI documentation uses `@emseepea/react` and `@emseepea/tailwind`.; Private example names follow `@emseepea/example-*` and remain ignored by Changesets.; The runtime depends on Fastify 5 and `@modelcontextprotocol/fastify@2.0.0`.; Clean installs, builds, and tests pass on Node.js 22 and 24.
 
+### ADR-0018 — Public Discovery and Invocation-Scoped OAuth Security
+**Status:** proposed | **Oversight:** confirmed | **Supersedes:** ["ADR-0017"]
+**Chosen:** Chosen option: **"Public discovery with invocation-scoped OAuth and retained outbound controls"**.
+**Confirmation:** A client without a token can call `server/discover` and `tools/list`.; Protected tools are listed with only public contract and access metadata.; Missing, invalid, expired, wrong-audience, or insufficient-scope tokens cause zero handler and backend calls.; Public tools still execute without credentials when protected tools coexist.; Caller tokens never appear in backend authorization, public output, or logs.
+
 ---
 
 ## Historical decisions
 
-_2 ADRs. These were tried and superseded, rejected, or deprecated. Read them as direction for what NOT to do, or to understand the lineage of an in-force decision. Do not enforce them as current rules._
+_4 ADRs. These were tried and superseded, rejected, or deprecated. Read them as direction for what NOT to do, or to understand the lineage of an in-force decision. Do not enforce them as current rules._
 
 ### ADR-0001 — Public-Specification-First TypeScript Framework Foundation
 **Status:** superseded | **Oversight:** confirmed
@@ -104,3 +104,13 @@ _2 ADRs. These were tried and superseded, rejected, or deprecated. Read them as 
 **Status:** superseded | **Oversight:** confirmed | **Supersedes:** ["ADR-0001"]
 **Chosen:** Chosen option: **"Fastify-first official MCP integration"**.
 **Confirmation:** Clean installs, builds, and tests pass on Node.js 22 and 24.; Real Fastify HTTP tests cover discovery, listing, calling, malformed input, and disabled capabilities.; An independent MCP client interoperates through the Fastify endpoint.; Examples use only the public Em See Pea API for MCP behavior.; No public generic request-handler, server adapter, or caller-supplied capability map exists.
+
+### ADR-0008 — Public and OAuth Protected Resource Security
+**Status:** superseded | **Oversight:** confirmed
+**Chosen:** Chosen option: **"Explicit public or OAuth-protected operations"**.
+**Confirmation:** Missing access declarations fail startup.; Invalid issuer, audience, expiry, scope, object, or tenant authorization causes zero application calls.; Caller tokens never appear in backend authorization or logs.; SSRF tests cover parsing, redirects, DNS/address changes, prohibited address ranges, and size limits.; Public operations do not accidentally inherit protected credentials or identity.
+
+### ADR-0017 — Public Discovery with Protected Tool Invocation
+**Status:** superseded | **Oversight:** confirmed | **Supersedes:** ["ADR-0008"]
+**Chosen:** Chosen option: **"Public discovery and listing, invocation-scoped protection"**.
+**Confirmation:** A client without a token can call `server/discover` and `tools/list`.; Protected tools are listed with only public contract and access metadata.; Missing, invalid, expired, wrong-audience, or insufficient-scope tokens cause zero handler and backend calls.; Public tools still execute without credentials when protected tools coexist.; Caller tokens never appear in backend authorization, public output, or logs.

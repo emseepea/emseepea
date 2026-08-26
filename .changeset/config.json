@@ -1,0 +1,16 @@
+{
+  "changelog": false,
+  "commit": false,
+  "fixed": [],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@emseepea/example-basic-no-ui"
+  ],
+  "privatePackages": {
+    "version": true,
+    "tag": false
+  }
+}

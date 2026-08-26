@@ -42,5 +42,7 @@ amendments. This control is an engineering measure, not legal advice.
 ## Current Attestation
 
 As of 2026-08-26, implementation work has used only this fresh workspace, the
-named guide, public sources, public package metadata, and system-provided working
-instructions. No archived implementation was opened or restored.
+named guide, public sources, public package metadata, system-provided working
+instructions, and the approved projects' generic QA and release-process files.
+No product implementation, test body, fixture, schema, or domain behavior was
+taken from those projects. No archived implementation was opened or restored.
