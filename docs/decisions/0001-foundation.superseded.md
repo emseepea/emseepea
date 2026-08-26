@@ -1,11 +1,13 @@
 ---
-status: "proposed"
+status: "superseded"
 date: 2026-08-26
-human-oversight: unconfirmed
+human-oversight: confirmed
+oversight-date: 2026-08-27
 decision-makers: ["Tom Howard"]
 consulted: []
 informed: []
 reassessment-date: 2026-11-26
+superseded-by: "ADR-0004"
 ---
 
 # Public-Specification-First TypeScript Framework Foundation

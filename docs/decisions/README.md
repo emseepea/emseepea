@@ -11,21 +11,16 @@ Compact rendered index of every ADR's chosen option, confirmation criteria, and 
 
 For deep-dive — creating, evolving, ratifying, or contesting a decision — open the per-ADR file directly. `/wr-architect:create-adr`, `/wr-architect:capture-adr`, and `/wr-architect:review-decisions` all keep the full body in scope. Decision Drivers, Considered Options bodies, Pros and Cons, Consequences narrative, and Reassessment Criteria are intentionally NOT in this routine view — they live in the per-ADR body.
 
-**Total ADRs:** 3 (3 in-force, 0 historical)
+**Total ADRs:** 15 (14 in-force, 1 historical)
 
 ---
 
 ## In-force decisions
 
-_3 ADRs. These are the current rules. The architect agent reads this section first for routine compliance review._
-
-### ADR-0001 — Public-Specification-First TypeScript Framework Foundation
-**Status:** proposed | **Oversight:** unconfirmed
-**Chosen:** Chosen option: **"Public-specification-first framework using the official SDK"**.
-**Confirmation:** Clean installs, builds, and tests pass on Node.js 22 and 24.; Raw HTTP tests cover discovery, listing, calling, malformed input, header mismatch, and disabled capabilities.; An independent MCP client pinned to 2026-07-28 interoperates through the real HTTP endpoint.; Every example imports only the public framework API for MCP behavior.; Capability advertisements are derived from enabled handlers and match tested behavior.
+_14 ADRs. These are the current rules. The architect agent reads this section first for routine compliance review._
 
 ### ADR-0002 — Explicit Anonymous Production Boundary Behind a Trusted Proxy
-**Status:** proposed | **Oversight:** unconfirmed
+**Status:** proposed | **Oversight:** confirmed
 **Chosen:** Chosen option: **"Explicit trusted-proxy production profile"**, because it is the smallest production boundary whose trust and resource assumptions can be stated and tested honestly.
 **Confirmation:** public binding is impossible in the loopback profile;; untrusted peers and IPv4-mapped comparison errors are rejected;; missing, repeated, chained, or non-HTTPS forwarding metadata is rejected;; invalid client IPs, authorities, ports, and origins are rejected;; rate limits, bounded state, saturation, and window expiry behave as configured;
 
@@ -33,3 +28,74 @@ _3 ADRs. These are the current rules. The architect agent reads this section fir
 **Status:** proposed | **Oversight:** confirmed
 **Chosen:** Chosen option: **"Public repository with private packages and gated Changesets release PRs"**, because it makes development and quality evidence public while preserving an explicit later decision for registry identity and publication.
 **Confirmation:** GitHub identifies windyroad/emseepea as public with main as its default branch.; The repository includes the exact MIT licence text and public contribution, security, and support boundaries.; Clean GitHub-hosted checkouts pass quality jobs on Node.js 22 and 24.; Workflow dependencies use immutable pins and least-privilege permissions.; The Changesets workflow creates or updates a release PR on main.
+
+### ADR-0004 — Fastify-First TypeScript Framework Foundation
+**Status:** proposed | **Oversight:** confirmed | **Supersedes:** ["ADR-0001"]
+**Chosen:** Chosen option: **"Fastify-first official MCP integration"**.
+**Confirmation:** Clean installs, builds, and tests pass on Node.js 22 and 24.; Real Fastify HTTP tests cover discovery, listing, calling, malformed input, and disabled capabilities.; An independent MCP client interoperates through the Fastify endpoint.; Examples use only the public Em See Pea API for MCP behavior.; No public generic request-handler, server adapter, or caller-supplied capability map exists.
+
+### ADR-0005 — Active Streamable HTTP Scope and Adaptive Delivery
+**Status:** proposed | **Oversight:** unconfirmed
+**Chosen:** Chosen option: **"Active surface with adaptive delivery"**.
+**Confirmation:** Every release names only its currently proven modules and deployment boundary.; The coverage ledger traces every shipped claim to public requirements and passing evidence.; Disabled capabilities are absent from discovery and safely rejected.; Delivery may be reordered without violating recorded dependency gates.; No deprecated, stdio, GET stream, session, replay, or extension claim appears implicitly.
+
+### ADR-0006 — Canonical Public Contract and Private Manifest Compilation
+**Status:** proposed | **Oversight:** unconfirmed
+**Chosen:** Chosen option: **"Compile public contracts and private manifests"**.
+**Confirmation:** Repeated clean builds produce byte-identical public contract artifacts.; Duplicate, invalid, unresolved, and dependency-incomplete registrations fail startup.; Discovery exactly matches the effective registry through real HTTP.; Public artifacts contain no backend type, credential, destination, or private error detail.; Compatibility checks reject an unclassified breaking public-contract change.
+
+### ADR-0007 — Deterministic Execution Kernel and Checked Boundaries
+**Status:** proposed | **Oversight:** unconfirmed
+**Chosen:** Chosen option: **"One checked execution kernel"**.
+**Confirmation:** Malformed, unauthenticated, unauthorized, and invalid requests cause zero handler and adapter calls.; Backend contract failures cannot emit partial or unvalidated public results.; Two materially different synthetic adapters run without kernel changes.; A bounded workflow obeys the same deadline, cancellation, and error layers as a mapped call.; Public APIs expose no raw response or caller-selected destination escape hatch.
+
+### ADR-0008 — Public and OAuth Protected Resource Security
+**Status:** proposed | **Oversight:** unconfirmed
+**Chosen:** Chosen option: **"Explicit public or OAuth-protected operations"**.
+**Confirmation:** Missing access declarations fail startup.; Invalid issuer, audience, expiry, scope, object, or tenant authorization causes zero application calls.; Caller tokens never appear in backend authorization or logs.; SSRF tests cover parsing, redirects, DNS/address changes, prohibited address ranges, and size limits.; Public operations do not accidentally inherit protected credentials or identity.
+
+### ADR-0009 — Capability-Scoped Reliability, Effects, and State
+**Status:** proposed | **Oversight:** unconfirmed
+**Chosen:** Chosen option: **"Capability-scoped reliability and state"**.
+**Confirmation:** Deadline expiry and disconnect cancellation stop all cooperating downstream work.; Retry tests prove bounds, deadline adherence, and absence on unsafe effects.; Idempotency races create at most the documented number of effects.; Single-instance features are not advertised as multi-instance safe.; Required shared-provider failure removes readiness before accepting dependent work.
+
+### ADR-0010 — POST-Scoped Streaming, Progress, and Subscriptions
+**Status:** proposed | **Oversight:** unconfirmed
+**Chosen:** Chosen option: **"POST-scoped SSE with bounded state"**.
+**Confirmation:** JSON and SSE paths produce the same validated final domain result.; Slow-reader tests prove queue bounds and deterministic overflow termination.; Disconnect, expiry, and cancellation stop downstream work.; Progress cannot appear after a terminal result or error.; Local subscriptions are never described as cross-instance or replayable.
+
+### ADR-0011 — Native Accessible Elicitation and Approval UI
+**Status:** proposed | **Oversight:** unconfirmed
+**Chosen:** Chosen option: **"Server-rendered native Fastify UI"**.
+**Confirmation:** Confirm, decline, cancel, expiry, alteration, replay, and concurrency tests pass.; Keyboard-only and screen-reader users can complete happy and error paths.; Automated checks cover semantics, names, focus, errors, status, and WCAG 2.2 AA contrast.; Confirmation URLs and logs contain no secret, token, PII, or effect authority.; Navigation without server confirmation produces zero effects.
+
+### ADR-0012 — Typed Operations and OpenTelemetry Boundary
+**Status:** proposed | **Oversight:** unconfirmed
+**Chosen:** Chosen option: **"Typed configuration and isolated OpenTelemetry boundary"**.
+**Confirmation:** Invalid, missing, and out-of-range safety configuration fails closed.; Liveness and readiness expose no application data and reflect dependency failure.; Redaction tests cover tokens, secrets, inputs, URLs, and backend errors.; Exporter failure leaves protocol status and body unchanged.; Shutdown tests prove admission stops and work ends within the configured deadline.
+
+### ADR-0013 — Clean-Room Source Authority and Provenance
+**Status:** proposed | **Oversight:** unconfirmed
+**Chosen:** Chosen option: **"Pinned clean-room source hierarchy"**.
+**Confirmation:** Provenance identifies every implementation-affecting external source and digest.; Repository tests and examples use only synthetic services, adapters, and data.; No restricted path or archived content appears in source, history, or build inputs.; QA precedent records only generic process lessons, never copied product artifacts.; An independent clean-room review can trace each shipped claim to permitted evidence.
+
+### ADR-0014 — Performance Budget for the Initial JSON HTTP Boundary
+**Status:** proposed | **Oversight:** unconfirmed
+**Chosen:** Chosen option: **"Adopt the guide's provisional JSON/tools budget"**.
+**Confirmation:** The benchmark command and environment are committed and reproducible from a clean checkout.; Results separately report throughput, framework CPU, transient allocation, and added bytes.; The baseline passes without disabling validation, limits, security, or telemetry redaction.; Repeated runs include variance and do not hide failed or cancelled requests.; Invalid-input load shows no unbounded allocation, queue, retry, or cardinality growth.
+
+### ADR-0015 — Ordinary Evidence and Exact Release Claims
+**Status:** proposed | **Oversight:** unconfirmed
+**Chosen:** Chosen option: **"Ordinary reproducible evidence and exact claims"**.
+**Confirmation:** Every public claim maps to current tests and named clean-checkout artifacts.; Raw HTTP negative tests prove invalid and security failures cause zero application calls.; Independent clients and synthetic services exercise only the public package boundary.; Checksums, SBOMs, locked dependencies, and independent reviews accompany release evidence.; No custom certification key, challenge, trust-root, attestation, or report-validation subsystem exists.
+
+---
+
+## Historical decisions
+
+_1 ADRs. These were tried and superseded, rejected, or deprecated. Read them as direction for what NOT to do, or to understand the lineage of an in-force decision. Do not enforce them as current rules._
+
+### ADR-0001 — Public-Specification-First TypeScript Framework Foundation
+**Status:** superseded | **Oversight:** confirmed
+**Chosen:** Chosen option: **"Public-specification-first framework using the official SDK"**.
+**Confirmation:** Clean installs, builds, and tests pass on Node.js 22 and 24.; Raw HTTP tests cover discovery, listing, calling, malformed input, header mismatch, and disabled capabilities.; An independent MCP client pinned to 2026-07-28 interoperates through the real HTTP endpoint.; Every example imports only the public framework API for MCP behavior.; Capability advertisements are derived from enabled handlers and match tested behavior.
