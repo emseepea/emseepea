@@ -25,6 +25,11 @@ test("Copilot evidence requires the pinned model and no tools", () => {
     ].map(JSON.stringify).join("\n")),
     /server blocked by policy/,
   );
+  assert.throws(
+    () => parseCopilotEvents(JSON.stringify({ type: "session.mcp_servers_loaded", data: { servers: [] } }), 1),
+    /process exited 1 without a result/,
+  );
+  assert.throws(() => parseCopilotEvents(events, 1), /process exited 1/);
 });
 
 test("Claude advisory evidence rejects every tool call", () => {

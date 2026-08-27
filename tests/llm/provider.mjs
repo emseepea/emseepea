@@ -232,7 +232,7 @@ function parseJsonLines(stdout) {
   return stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
 }
 
-export function parseCopilotEvents(stdout) {
+export function parseCopilotEvents(stdout, processExitCode = 0) {
   const events = parseJsonLines(stdout);
   const errors = events.filter(({ type }) => type === "session.error");
   const mcpWarnings = events.filter(({ type, data }) => (
@@ -262,7 +262,13 @@ export function parseCopilotEvents(stdout) {
     .at(-1);
   if (mcpWarnings.length > 0) throw new Error(`Copilot MCP failed: ${mcpWarnings[0].data?.message ?? "unknown"}`);
   if (errors.length > 0) throw new Error(`Copilot session failed: ${errors[0].data?.errorType ?? "unknown"}`);
-  if (result?.exitCode !== 0) throw new Error(`Copilot exited ${result?.exitCode ?? "without a result"}`);
+  if (processExitCode !== 0) throw new Error(
+    `Copilot process exited ${processExitCode}${result ? "" : " without a result"}`,
+  );
+  if (!result) throw new Error(
+    "Copilot exited without a result",
+  );
+  if (result.exitCode !== 0) throw new Error(`Copilot exited ${result.exitCode}`);
   if (!answer) throw new Error("Copilot emitted no final answer");
   if (models.length === 0 || models.some((model) => model !== copilotModel)) {
     throw new Error(`Copilot effective model was ${models.join(", ") || "unreported"}`);
@@ -332,13 +338,13 @@ async function runCopilot(prompt, neutralDirectory) {
   const execution = await runProcess(resolve(repoRoot, "node_modules/.bin/copilot"), args, {
     cwd: neutralDirectory,
     env: childEnvironment({
-      COPILOT_GITHUB_TOKEN: token,
       COPILOT_HOME: join(neutralDirectory, "copilot-home"),
+      GITHUB_TOKEN: token,
     }),
   });
   if (execution.timedOut) throw new Error("Copilot provider timed out");
   if (execution.code !== 0 && !execution.stdout) throw new Error(`Copilot exited ${execution.code}`);
-  return parseCopilotEvents(execution.stdout);
+  return parseCopilotEvents(execution.stdout, execution.code);
 }
 
 async function runClaude(prompt, neutralDirectory) {
