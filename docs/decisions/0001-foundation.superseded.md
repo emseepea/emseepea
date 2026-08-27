@@ -16,14 +16,13 @@ superseded-by: "ADR-0004"
 
 Em See Pea must be a reusable framework rather than a service-specific server. It
 must implement the modern MCP `2026-07-28` Streamable HTTP server surface
-without copying restricted material or rebuilding maintained public protocol
-machinery. The framework must support progressively enabled capabilities and
+without rebuilding maintained public protocol machinery. The framework must
+support progressively enabled capabilities and
 honest, independently testable claims while keeping its initial implementation
 small enough to qualify thoroughly.
 
 ## Decision Drivers
 
-- Clean-room implementation against public, versioned authorities.
 - Observable interoperability at the real HTTP boundary.
 - A universal framework product rather than a single application server.
 - Honest capability advertisement and composable qualification claims.

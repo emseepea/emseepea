@@ -42,7 +42,7 @@ uses raw real-HTTP tests, at least two independent clients for a full claim,
 clean checkouts, synthetic services and materially different adapters,
 requirement-to-test traceability, locked dependencies, registry integrity,
 checksums, software bills of materials, CI artifacts, and independent protocol,
-security, accessibility, architecture, and clean-room reviews.
+security, accessibility, and architecture reviews.
 
 A full active server-surface claim is available only when every active in-scope
 requirement has current passing evidence. Until then releases use composable

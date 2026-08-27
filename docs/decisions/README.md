@@ -11,13 +11,13 @@ Compact rendered index of every ADR's chosen option, confirmation criteria, and 
 
 For deep-dive — creating, evolving, ratifying, or contesting a decision — open the per-ADR file directly. `/wr-architect:create-adr`, `/wr-architect:capture-adr`, and `/wr-architect:review-decisions` all keep the full body in scope. Decision Drivers, Considered Options bodies, Pros and Cons, Consequences narrative, and Reassessment Criteria are intentionally NOT in this routine view — they live in the per-ADR body.
 
-**Total ADRs:** 20 (13 in-force, 7 historical)
+**Total ADRs:** 18 (12 in-force, 6 historical)
 
 ---
 
 ## In-force decisions
 
-_13 ADRs. These are the current rules. The architect agent reads this section first for routine compliance review._
+_12 ADRs. These are the current rules. The architect agent reads this section first for routine compliance review._
 
 ### ADR-0002 — Explicit Anonymous Production Boundary Behind a Trusted Proxy
 **Status:** proposed | **Oversight:** confirmed
@@ -79,16 +79,11 @@ _13 ADRs. These are the current rules. The architect agent reads this section fi
 **Chosen:** Chosen option: **"Public pre-alpha releases through npm trusted publishing"**, because it proves the real adopter path while keeping release authority short lived, workflow-specific, and independently verifiable.
 **Confirmation:** `@emseepea/server` is public under MIT; the root and examples remain private.; The first publication is exactly `@emseepea/server@0.0.1` under `next`.; Changesets creates the release pull request, required checks pass before merge, and the exact merged SHA is requalified before publication.; The workflow publishes only through `next`, and anonymous registry inspection proves `latest` was not created or changed.; Anonymous `npm view`, exact-version `0.0.1` clean install, public import, and smoke execution succeed.
 
-### ADR-0020 — Ordinary Open-Source Evidence
-**Status:** proposed | **Oversight:** confirmed | **Supersedes:** ["ADR-0013", "ADR-0015"]
-**Chosen:** Chosen option: **"Ordinary open-source evidence"**.
-**Confirmation:** Product and ordinary project documentation contains no source-origin claim or special qualification gate.; Releases retain exact claims, independent reviews, checksums, SBOMs, registry provenance, dependency integrity, and clean-checkout qualification.; Contributors attest only to ordinary rights, confidentiality, licensing, and quality requirements.; No replacement source-origin governance or bespoke certification system is introduced.
-
 ---
 
 ## Historical decisions
 
-_7 ADRs. These were tried and superseded, rejected, or deprecated. Read them as direction for what NOT to do, or to understand the lineage of an in-force decision. Do not enforce them as current rules._
+_6 ADRs. These were tried and superseded, rejected, or deprecated. Read them as direction for what NOT to do, or to understand the lineage of an in-force decision. Do not enforce them as current rules._
 
 ### ADR-0001 — Public-Specification-First TypeScript Framework Foundation
 **Status:** superseded | **Oversight:** confirmed
@@ -109,11 +104,6 @@ _7 ADRs. These were tried and superseded, rejected, or deprecated. Read them as 
 **Status:** superseded | **Oversight:** confirmed
 **Chosen:** Chosen option: **"Explicit public or OAuth-protected operations"**.
 **Confirmation:** Missing access declarations fail startup.; Invalid issuer, audience, expiry, scope, object, or tenant authorization causes zero application calls.; Caller tokens never appear in backend authorization or logs.; SSRF tests cover parsing, redirects, DNS/address changes, prohibited address ranges, and size limits.; Public operations do not accidentally inherit protected credentials or identity.
-
-### ADR-0013 — Clean-Room Source Authority and Provenance
-**Status:** superseded | **Oversight:** confirmed
-**Chosen:** Chosen option: **"Pinned clean-room source hierarchy"**.
-**Confirmation:** Provenance identifies every implementation-affecting external source and digest.; Repository tests and examples use only synthetic services, adapters, and data.; No restricted path or archived content appears in source, history, or build inputs.; QA precedent records only generic process lessons, never copied product artifacts.; An independent clean-room review can trace each shipped claim to permitted evidence.
 
 ### ADR-0015 — Ordinary Evidence and Exact Release Claims
 **Status:** superseded | **Oversight:** confirmed

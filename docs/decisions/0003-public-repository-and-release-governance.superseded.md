@@ -18,10 +18,6 @@ package publication, and a trustworthy release are different events. The
 repository needs a simple contribution and release boundary that validates
 clean checkouts without accidentally publishing unfinished packages.
 
-The framework implementation remains clean-room. Generic Changesets and GitHub
-Actions process may reuse Windy Road's established public repository
-conventions; it is not implementation evidence and carries no product code.
-
 ## Decision Drivers
 
 - Public ownership by Windy Road Technology.
@@ -78,8 +74,6 @@ useful feedback, without committing known broken intermediate states.
 ### Neutral
 
 - Package versions may advance in release PRs before packages are publishable.
-- Generic release-process conventions are outside the clean-room product-code
-  boundary.
 
 ### Bad
 

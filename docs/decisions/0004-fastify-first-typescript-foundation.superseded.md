@@ -21,7 +21,6 @@ lifecycle on which the framework depends.
 
 ## Decision Drivers
 
-- Clean-room implementation from public specifications and dependencies.
 - One observable HTTP lifecycle for validation, security, dispatch, and errors.
 - Maintained MCP and Fastify integration rather than private protocol plumbing.
 - A small public package surface without speculative transport abstractions.
