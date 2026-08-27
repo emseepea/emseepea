@@ -55,5 +55,5 @@ A capability claim may be added only when the committed clean-checkout job
 passes the exact public-boundary checks for that claim. Failure or drift
 withdraws the claim until a later green revision restores it.
 
-The process precedents and their clean-room limits are recorded in the
-[source provenance log](docs/provenance.md).
+Dependencies, licences, and release evidence use the repository manifests,
+lockfile, reviews, checksums, software bills of materials, and npm provenance.

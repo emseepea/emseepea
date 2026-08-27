@@ -32,7 +32,7 @@ middle pea partially obscured to form a subtle smile.
 
 The wordmark lettering is outlined geometry derived from IBM Plex Sans
 Semibold. It is artwork, not editable text. See the
-[brand asset provenance](./PROVENANCE.md) for its source and licence.
+[brand asset sources](./ASSET-SOURCES.md) for its source and licence.
 
 ## Approved assets
 

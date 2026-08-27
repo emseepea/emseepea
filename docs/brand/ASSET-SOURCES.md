@@ -1,4 +1,4 @@
-# Brand asset provenance
+# Brand Asset Sources
 
 The Em See Pea wordmark uses outlined geometry from IBM Plex Sans Semibold
 version 3.005 at public commit

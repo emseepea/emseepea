@@ -11,7 +11,10 @@ This plan is a decision aid, not a contract with yesterday's assumptions. No pla
 
 ## Mission
 
-Implement and independently qualify a clean-room, monorepo-based universal MCP `2026-07-28` Streamable HTTP server framework using public specifications and approved open-source dependencies, with working no-UI, UI, streaming, and distributed examples.
+Implement and independently qualify a monorepo-based universal MCP `2026-07-28`
+Streamable HTTP server framework using public specifications and approved
+open-source dependencies, with working no-UI, UI, streaming, and distributed
+examples.
 
 The objective is a useful, safe, reusable framework. Full-profile conformance is earned only when the complete active server surface is proven. It is not a commitment to a particular sequence, package graph, or number of releases.
 
@@ -33,10 +36,11 @@ Maintain one thin adopter path through the real HTTP boundary. Every capability 
 - Capability modules can be enabled independently and advertise only proven behaviour.
 - Working examples cover basic no-UI, backend, protected, resources and prompts, streaming and progress, subscriptions, elicitation UI, approval UI, and multi-instance operation.
 - Example directories exist only when their capability works.
-- Security, accessibility, clean-room, performance, and operational checks pass from clean checkouts.
+- Security, accessibility, performance, and operational checks pass from clean checkouts.
 - Release claims name the exact supported modules and deployment boundaries.
-- No archived or restricted implementation material has entered the work.
 - No bespoke cryptographic certification system has been built.
+- A comprehensive documentation website presents only verified-current APIs,
+  examples, commands, capabilities, and deployment boundaries.
 
 ## Definition of Victory
 
@@ -53,18 +57,12 @@ The implementation objective is achieved when all of the following are true:
 9. All examples run from a clean checkout through published framework APIs and synthetic data.
 10. Two unrelated services, two adapters, and two independent clients pass without kernel special cases.
 11. Reproducible builds, ordinary checksums, dependency integrity, software bills of materials, CI evidence, and independent reviews support the exact release claim.
-12. Clean-room provenance and review pass.
+12. The documentation website passes freshness, accessibility, link, code, and
+    clean-checkout example checks.
 
 ## Rules of Engagement
 
 These rules do not yield to schedule pressure.
-
-### Clean-Room Boundary
-
-- Never inspect the archived implementation or other restricted material.
-- Permitted inputs are this battle plan, the approved clean-room guide and amendments, public standards, public SDKs and libraries, and independently created synthetic data.
-- The public MCP specification and official schema outrank the guide, SDK behaviour, examples, and assumptions.
-- A suspected restricted-material exposure stops and quarantines the affected workstream until independently assessed.
 
 ### Engineering Boundary
 
@@ -116,7 +114,6 @@ These rules do not yield to schedule pressure.
 - Streaming and distributed state creating unbounded or ambiguous behaviour.
 - Dependency abandonment, vulnerability, incompatible licensing, or private-fork pressure.
 - UI accessibility treated as late polish.
-- Clean-room contamination.
 - Examples rotting or using private escape hatches.
 
 ## Manoeuvre Doctrine
@@ -146,7 +143,7 @@ Every completed manoeuvre leaves:
 - bounded resources, deadlines, and cancellation;
 - an explicit deployment boundary;
 - all earlier applicable checks passing; and
-- updated provenance and decision records.
+- updated dependency, release-evidence, and decision records.
 
 ## Lines of Effort
 
@@ -157,7 +154,7 @@ Objective: establish the authoritative wire contract and keep it ahead of implem
 Evidence:
 
 - pinned public specification and official schema;
-- source provenance and licence records;
+- pinned public authorities and dependency licence records;
 - requirement-to-test traceability for the currently claimed surface;
 - approved clarifications expressed as observable acceptance scenarios; and
 - raw request and response fixtures created independently from public sources.
@@ -231,7 +228,22 @@ Evidence:
 - locked dependencies, checksums, and software bills of materials;
 - deterministic reports without custom certification protocols;
 - two unrelated services, two adapters, and two clients; and
-- protocol, security, architecture, accessibility, clean-room, and performance reviews.
+- protocol, security, architecture, accessibility, and performance reviews.
+
+### Documentation Website
+
+Objective: keep comprehensive public guidance synchronized with the framework
+that adopters can actually install.
+
+Evidence:
+
+- version-labelled getting-started paths for every supported adopter profile;
+- public API, capability, configuration, security, and deployment reference;
+- runnable no-UI, UI, streaming, and multi-instance examples as each becomes qualified;
+- generated or checked public-export reference with no undocumented public API drift;
+- clean-checkout execution of documented commands, snippets, and examples;
+- automated broken-link, HTML, code-block, static-type, and claim checks; and
+- WCAG 2.2 AA automation plus keyboard and screen-reader acceptance.
 
 ## Default Advance Route
 
@@ -243,7 +255,8 @@ Status: completed on 2026-08-27.
 
 Actions:
 
-- Amend or version the guide so the 110 outcomes are a coverage ledger and the rejected certification system is no longer part of the full claim.
+- Treat the guide's 110 outcomes as a coverage ledger and exclude its rejected
+  certification system from the full claim.
 - Verify the public MCP baseline, especially discovery, mirrored headers, header projection, result types, error codes, and deprecated features.
 - Resolve the known guide contradictions as acceptance scenarios.
 - Choose the runtime, package manager, MCP SDK, schema validator, licence, dependency policy, and provisional measurable budgets.
@@ -253,7 +266,7 @@ Exit evidence at the checkpoint:
 
 - the public baseline, selected stack, claim model, and first raw-wire corpus agree;
 - no runtime package had been released at that checkpoint; and
-- the clean-room implementation boundary is ready.
+- the implementation boundary is ready.
 
 ### Objective 1: Win the No-UI Beachhead
 
@@ -286,6 +299,33 @@ Exit signal:
 - raw HTTP and one independent client call the tool from a clean checkout;
 - malformed and unauthorized requests invoke no handler; and
 - adding breadth before this signal is prohibited.
+
+### Continuous Objective: Publish Verified Documentation
+
+Begin after the first public package exists and expand only with qualified
+capabilities.
+
+Deliver:
+
+- a comprehensive, version-labelled documentation website;
+- short getting-started paths for each supported deployment and UI profile;
+- public API, configuration, security, capability, and deployment reference;
+- runnable examples that import only released public packages;
+- code and command snippets checked against the current package; and
+- accessible navigation, search, content, examples, and status messaging.
+
+Exit signal for each release:
+
+- the documented install and getting-started paths pass from a clean checkout;
+- public exports, examples, links, code blocks, and capability claims match the
+  released version;
+- unreleased or unqualified behaviour is not presented as current; and
+- automated WCAG 2.2 AA checks plus keyboard and screen-reader acceptance pass.
+
+Choose the site generator, hosting platform, dependencies, and publishing
+workflow only immediately before implementation, under a recorded decision.
+If automated deployment is selected, that decision must explicitly amend the
+current prohibition on repository deployment workflows.
 
 ### Objective 2: Hold Production Ground
 
@@ -458,7 +498,7 @@ Immediate action:
 - stop the affected implementation;
 - preserve unrelated work;
 - derive a raw request corpus from authoritative public sources; and
-- amend the guide through the clean-room clarification path.
+- amend the acceptance record using authoritative public sources.
 
 Resume when the schema, normative text, and request corpus agree.
 
@@ -487,7 +527,8 @@ Resume when discovery, listing, calling, malformed-input, cancellation, and zero
 Immediate action:
 
 - convert it into an observable acceptance scenario;
-- route it through clean-room clarification; and
+- resolve it through an observable acceptance scenario and authoritative public
+  sources; and
 - continue unrelated work.
 
 Resume the affected work when an approved amendment or public-source resolution exists.
@@ -571,16 +612,6 @@ Immediate action:
 
 Resume when a reproducible benchmark identifies and clears the framework-owned regression.
 
-### Restricted Exposure Occurs
-
-Immediate action:
-
-- stop and quarantine the affected workstream;
-- record exactly what was exposed; and
-- independently assess or rebuild affected artefacts.
-
-Resume only when the clean-room reviewer authorizes continuation.
-
 ### Conformance Work Becomes a Custom Governance Product
 
 Immediate action:
@@ -621,7 +652,6 @@ Require an explicit architecture or product decision before changing:
 Abort the full implementation objective only if:
 
 - public normative sources cannot be independently verified;
-- clean-room eligibility cannot be restored;
 - mandatory public requirements remain mutually impossible after clarification; or
 - universal reuse is disproven and a narrower product is explicitly rejected.
 
@@ -689,7 +719,7 @@ Before the first runtime edit, record:
 1. The revised framework scope and conformance claim, including the 110-item coverage ledger and removal of bespoke certification.
 2. The runtime, package manager, open-source dependency and licensing policy, and monorepo boundary.
 3. The public API, deterministic contract output, dependency direction, and module-derived capability claims.
-4. The clean-room process and ordinary reproducible conformance evidence.
+4. Ordinary reproducible conformance and release evidence.
 
 Record later, immediately before their owning fronts:
 
@@ -706,17 +736,20 @@ Record later, immediately before their owning fronts:
    creation credential.
 3. Continue the universal framework build with the smallest independently useful
    capability front.
-4. Add backend adapters only after their checked boundary and synthetic evidence
+4. Establish the verified documentation website immediately after the first
+   public package release; select its generator, host, and publishing workflow
+   through a separate decision.
+5. Add backend adapters only after their checked boundary and synthetic evidence
    are defined.
-5. Make no runtime capability claim without current clean-checkout evidence.
-6. Continue resolving these guide contradictions as their owning fronts begin:
+6. Make no runtime capability claim without current clean-checkout evidence.
+7. Continue resolving these guide contradictions as their owning fronts begin:
    - handler-backed first tool versus workflow arriving later;
    - final validation before emission versus progress during execution;
    - guaranteed notifications versus bounded queues and no replay;
    - JSON-only services versus `json-and-sse` manifest semantics;
    - the illustrative manifest missing mandatory fields; and
    - the public status of mirrored headers, projection, discovery, result types, and error codes.
-7. Defer SSE, UI, and distributed state until their decision gates open.
+8. Defer SSE, UI, and distributed state until their decision gates open.
 
 ## Campaign Log
 
@@ -746,4 +779,10 @@ ordinary release evidence.
 
 ## Implementation Goal
 
-Implement and independently qualify a clean-room, monorepo-based universal MCP `2026-07-28` Streamable HTTP server framework with opt-in capabilities, working no-UI, UI, streaming, and multi-instance examples, approved open-source dependencies, native accessible UI, honest composable claims during delivery, and a revised full active server-surface claim only when complete coverage is proven from clean checkouts, without accessing restricted material or building bespoke cryptographic certification.
+Implement and independently qualify a monorepo-based universal MCP `2026-07-28`
+Streamable HTTP server framework with opt-in capabilities, a comprehensive
+verified-current documentation website, working no-UI, UI, streaming, and
+multi-instance examples, approved open-source dependencies, native accessible
+UI, honest composable claims during delivery, and a revised full active
+server-surface claim only when complete coverage is proven from clean checkouts,
+without building bespoke cryptographic certification.

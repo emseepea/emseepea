@@ -1,7 +1,7 @@
 # Em See Pea
 
-Em See Pea is a clean-room, general-purpose framework for MCP `2026-07-28`
-servers over Streamable HTTP.
+Em See Pea is a general-purpose framework for MCP `2026-07-28` servers over
+Streamable HTTP.
 
 The project is pre-alpha. The current qualified slice is a Fastify-first,
 JSON-only MCP server with public tools, invocation-scoped OAuth-protected
@@ -10,13 +10,10 @@ tools, and one synthetic read-only example.
 ## Operating Documents
 
 - [Battle plan](BATTLE-PLAN.md)
-- [Clean-room boundary](CLEAN-ROOM.md)
 - [Server package decision](docs/decisions/0016-em-see-pea-product-npm-scope-and-server-package.proposed.md)
 - [Anonymous production boundary][production-boundary]
 - [Public discovery and protected invocation][public-discovery]
 - [Trusted pre-alpha release governance][release-governance]
-- [Guide amendment](docs/guide-amendments/0001-adaptive-delivery-and-ordinary-evidence.md)
-- [Source provenance](docs/provenance.md)
 - [Quality policy](QUALITY.md)
 - [Brand style guide](docs/brand/STYLE-GUIDE.md)
 

@@ -7,18 +7,17 @@ Last reviewed: 2026-08-26
 ## Business Context
 
 Em See Pea is a pre-release, public, MIT-licensed TypeScript monorepo for a
-clean-room, general-purpose MCP Streamable HTTP server framework, its examples,
+general-purpose MCP Streamable HTTP server framework, its examples,
 documentation, and future package releases. It is framework source for adopters
 to build deployable servers; this project does not itself operate a hosted
 service and makes no service-availability or operational-SLO commitment.
 
-Risk decisions cover the public source repository, clean-room provenance,
-protocol and security behaviour inherited by adopters, accessibility of supplied
+Risk decisions cover the public source repository, protocol and security
+behaviour inherited by adopters, accessibility of supplied
 user interfaces and documentation, dependency and GitHub Actions supply chains,
 honest capability claims, release metadata, and future npm publication integrity.
 
-Every committed artifact is treated as public. The project does not accept
-restricted implementation material as implementation evidence.
+Every committed artifact is treated as public.
 
 ## Risk Appetite
 
@@ -30,8 +29,8 @@ The appetite reflects an early pre-release framework with no operated service
 while retaining a reachable path for severe-but-rare work whose controls reduce
 likelihood to Rare.
 
-Clean-room contamination, licence infringement, secret exposure, destructive
-action without exact authority, supply-chain compromise, and materially
+Licence infringement, secret exposure, destructive action without exact
+authority, supply-chain compromise, and materially
 dishonest release or capability claims are never prompt-bypassable. They must be
 removed, demonstrably controlled to within appetite, or the action halts.
 
@@ -43,7 +42,7 @@ removed, demonstrably controlled to within appetite, or the action halts.
 | 2 | Minor | Developer-only friction such as a local build or tooling interruption; no released artifact, adopter workflow, public trust, or confidential information is affected. |
 | 3 | Moderate | Public documentation, CI, release-PR preparation, or update delivery is disrupted; package or repository metadata materially misleads without creating an adopter security failure; or confidential business metrics such as revenue, user counts, pricing, or traffic volumes are committed and require immediate removal. |
 | 4 | Significant | A public or released framework feature, example, UI, or documentation path is materially inaccessible, incompatible, misleading, or insecure, causing adopters' MCP servers or development workflows to fail or lose an expected protection. |
-| 5 | Severe | A published supply-chain compromise, credential or restricted-material disclosure, clean-room or licensing breach, destructive or unauthorized framework behaviour, exploitable protocol/security defect, or false conformance claim destroys adopter data integrity, safety, legal reuse, or trust. |
+| 5 | Severe | A published supply-chain compromise, credential or confidential-material disclosure, licensing breach, destructive or unauthorized framework behaviour, exploitable protocol/security defect, or false conformance claim destroys adopter data integrity, safety, legal reuse, or trust. |
 
 ## Likelihood Levels
 
@@ -78,8 +77,8 @@ Risk score is Impact x Likelihood.
 ## Confidential Information
 
 This repository is intended to be public. Secrets, credentials, tokens, private
-keys, personal or customer data, confidential client details, restricted
-implementation material, and non-public business metrics must not appear in
+keys, personal or customer data, confidential client details, incompatible
+third-party material, and non-public business metrics must not appear in
 committed files, history, issues, changesets, build output, examples, or release
 notes. Confidential metrics include revenue, user counts, pricing not already
 public, and traffic volumes. Use generic descriptions and synthetic examples
@@ -105,7 +104,7 @@ appropriate removal and credential-rotation response.
 - Default-permitted-when-silent: a policy predating this section still permits
   the risk-reducing and incident paths above; this section makes the policy the
   explicit single source of truth and should be added at its next review.
-- No bypass may waive clean-room provenance, licensing, secret-exposure, exact
+- No bypass may waive licensing, secret-exposure, exact
   destructive-action authority, or honest release and capability-claim controls.
 
 ## Governance

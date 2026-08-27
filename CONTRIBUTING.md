@@ -5,13 +5,14 @@ boundary are welcome.
 
 ## Before Opening a Pull Request
 
-1. Work only from public sources and synthetic data. Do not introduce archived,
-   restricted, proprietary, or customer material.
+1. Submit only material you have the right to license under MIT. Do not include
+   secrets, customer data, confidential information, or incompatible third-party
+   material.
 2. Install from the committed lockfile with `npm ci --ignore-scripts`.
 3. Run `npm test`, `npm run benchmark`, and `npm audit --audit-level=high`.
 4. Add a Changeset for any user-visible change to `@emseepea/server`.
-5. Update the exact capability claim and provenance when behavior or a source
-   changes.
+5. Update the exact capability claim when behavior changes and keep dependency
+   licences valid.
 
 Examples must consume public package APIs and remain private npm workspaces.
 Security reports belong in the private channel described in
