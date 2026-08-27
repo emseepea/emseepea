@@ -35,6 +35,10 @@ await serveEmseepea(app);
 result, and public output. The adapter receives only its validated command, the
 request cancellation signal, and the shared deadline.
 
+Use `defineTool` instead when the backend already accepts the public input and
+returns the public output. `defineMappedTool` is for a real contract boundary,
+not an identity mapping.
+
 ```ts
 const lookup = defineMappedTool({
   name: "lookup-bean",

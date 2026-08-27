@@ -1,8 +1,11 @@
 # Backend No-UI Example
 
-This example uses the public `defineMappedTool` API with two synthetic backend
-adapters: an in-memory `Map` and a JSON file. Both pass through the same input,
-backend-command, backend-result, and public-output validation lifecycle.
+This example uses the public `defineTool` API with two synthetic backends: an
+in-memory `Map` and a validated JSON file. Their input and output already match
+the public tool contract, so a separate mapping layer would add no value.
+
+Use [`defineMappedTool`](../../packages/framework/README.md#mapped-backend-tool)
+when a backend has a genuinely different command or result shape.
 
 ## Run
 

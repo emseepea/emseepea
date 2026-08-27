@@ -1,16 +1,14 @@
 import { readFile } from "node:fs/promises";
-import { createEmseepea, defineMappedTool, serveEmseepea } from "@emseepea/server";
+import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
-const bean = z.object({
+const beanSchema = z.object({
   id: z.string(),
   origin: z.string(),
   roast: z.enum(["light", "medium", "dark"]),
 });
-const inputSchema = z.object({ id: z.string().min(1).max(32) });
-const outputSchema = bean;
-const mapCommand = ({ id }: { id: string }) => ({ id });
-const mapResult = (data: z.output<typeof bean>) => ({
+const beanLookupInput = z.object({ id: z.string().min(1).max(32) });
+const beanResult = (data: z.output<typeof beanSchema>) => ({
   text: `${data.id}: ${data.origin}, ${data.roast} roast`,
   data,
 });
@@ -20,38 +18,34 @@ const memory = new Map([["map-bean", {
   origin: "Synthetic Highlands",
   roast: "medium" as const,
 }]]);
-const lookupMemoryBean = defineMappedTool({
+const lookupMemoryBean = defineTool({
   name: "lookup-memory-bean",
   access: "public",
   description: "Look up a synthetic in-memory bean.",
-  inputSchema,
-  outputSchema,
-  backendInputSchema: inputSchema,
-  backendOutputSchema: bean,
-  mapInput: mapCommand,
-  adapter: ({ id }) => memory.get(id) ?? { id, origin: "Synthetic Unknown", roast: "dark" as const },
-  mapOutput: mapResult,
+  inputSchema: beanLookupInput,
+  outputSchema: beanSchema,
+  handler: ({ id }) => beanResult(
+    memory.get(id) ?? { id, origin: "Synthetic Unknown", roast: "dark" as const },
+  ),
 });
 
 const fileUrl = new URL("../data/beans.json", import.meta.url);
-const lookupFileBean = defineMappedTool({
+const lookupFileBean = defineTool({
   name: "lookup-file-bean",
   access: "public",
   description: "Look up a synthetic file-backed bean.",
-  inputSchema,
-  outputSchema,
-  backendInputSchema: inputSchema,
-  backendOutputSchema: bean,
-  mapInput: mapCommand,
-  async adapter({ id }, { signal }) {
+  inputSchema: beanLookupInput,
+  outputSchema: beanSchema,
+  async handler({ id }, { signal }) {
     const records = JSON.parse(await readFile(fileUrl, { encoding: "utf8", signal })) as unknown;
-    return z.record(z.string(), bean).parse(records)[id] ?? {
-      id,
-      origin: "Synthetic Unknown",
-      roast: "dark" as const,
-    };
+    return beanResult(
+      z.record(z.string(), beanSchema).parse(records)[id] ?? {
+        id,
+        origin: "Synthetic Unknown",
+        roast: "dark" as const,
+      },
+    );
   },
-  mapOutput: mapResult,
 });
 
 const running = await serveEmseepea(createEmseepea({
