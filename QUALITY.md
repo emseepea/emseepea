@@ -16,6 +16,41 @@ green proxy check is not evidence for an untested claim.
 Every step runs on Node.js 22 and 24 from a GitHub-hosted clean checkout. A
 failure stops the job; later steps are not evidence for earlier ones.
 
+## Published Content Gate
+
+Every changed public prose file must pass a specialist cognitive-accessibility
+review before commit, push, release, or website publication.
+
+This includes:
+
+- root, package, and example READMEs
+- documentation and website pages
+- release notes and Changesets
+- package descriptions
+- contribution, security, support, and conduct guidance
+- generated prose
+- public issue, pull-request, discussion, and release text
+
+Source code, protocol fixtures, machine data, and generated evidence are
+excluded unless they present prose to readers.
+
+The review checks whether readers can:
+
+- identify the task and next action
+- understand the language and necessary terms
+- scan the content on mobile
+- follow the structure without unnecessary memory load
+- reach detailed evidence through descriptive links
+
+Review evidence must name every checked file or public message, record PASS or
+FAIL, and retain any required correction. Missing or failed review evidence
+blocks publication. Generated prose follows the same rule as human-written
+prose.
+
+The automated README density test is only a regression signal. Passing it does
+not prove cognitive accessibility, readability, comprehension, or Web Content
+Accessibility Guidelines (WCAG) conformance.
+
 ## Test Rules
 
 - Assert the exact capability and deployment boundary being claimed.
@@ -47,11 +82,13 @@ failure stops the job; later steps are not evidence for earlier ones.
   TypeScript in runnable or static quality checks.
 - Add a contract check only when a public artifact exists; do not create a
   baseline for a future surface.
-- UI examples must test both light and dark color pairs, keyboard operation,
-  accessible names, focus visibility, status announcements, and WCAG 2.2 AA.
+- User interface examples must test both light and dark color pairs, keyboard
+  operation, accessible names, focus visibility, status announcements, and
+  Web Content Accessibility Guidelines (WCAG) 2.2 AA.
 - Every example must have a Promptfoo semantic case with three fresh agent
-  trials, three independent no-MCP judge verdicts, deterministic critical
-  facts, and exact MCP path evidence. All three trials must pass.
+  trials, three independent no-MCP (no Model Context Protocol tools) judge
+  verdicts, deterministic critical facts, and exact Model Context Protocol
+  (MCP) path evidence. All three trials must pass.
 - For every trial, the harness must execute the exact tool call, resource read,
   or prompt get through the official client and bind the operation and returned
   material to evidence. Model processes receive no MCP tools; claims are about
@@ -78,7 +115,8 @@ failure stops the job; later steps are not evidence for earlier ones.
   exact publishing SHA through pinned GitHub Copilot CLI and
   `claude-sonnet-4.6`. Redacted evidence is retained for exactly 14 days.
 - Routine publication uses npm trusted publishing, automatic provenance,
-  checksum and SBOM evidence, and no durable npm write token.
+  checksum and software bill of materials (SBOM) evidence, and no durable npm
+  write token.
 - Do not add deployment, production attestation, signing, or environment
   verification workflows to this framework repository.
 
