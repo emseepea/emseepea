@@ -17,14 +17,16 @@ import {
   type OAuthTokenVerifier,
 } from "@modelcontextprotocol/server";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { isIP } from "node:net";
-import type { z } from "zod";
+import { z } from "zod";
 
 const PROTOCOL_VERSION = "2026-07-28";
 const REGISTER = Symbol("register");
 const TOOL_NAME = Symbol("toolName");
 const TOOL_ACCESS = Symbol("toolAccess");
 const runtimes = new WeakMap<FastifyInstance, AppRuntime>();
+const requestDeadlines = new AsyncLocalStorage<number>();
 
 export interface ToolPrincipal {
   readonly clientId: string;
@@ -33,9 +35,14 @@ export interface ToolPrincipal {
 }
 export interface ToolContext<Access extends ToolAccess = ToolAccess> {
   readonly signal: AbortSignal;
+  readonly deadlineMs: number;
   readonly principal: Access extends "public" ? undefined : ToolPrincipal;
 }
 export interface ToolResult<Output> { readonly text: string; readonly data: Output }
+export interface BackendAdapterContext {
+  readonly signal: AbortSignal;
+  readonly deadlineMs: number;
+}
 interface ProtectedToolAccess {
   readonly type: "protected";
   readonly requiredScopes: readonly string[];
@@ -63,6 +70,35 @@ export type ToolDefinition<Input extends z.ZodObject, Output extends z.ZodObject
           ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
       }
   );
+interface MappedToolDefinitionBase<
+  Input extends z.ZodObject,
+  Output extends z.ZodObject,
+  BackendInput extends z.ZodObject,
+  BackendOutput extends z.ZodObject,
+> extends ToolDefinitionBase<Input, Output> {
+  readonly backendInputSchema: BackendInput;
+  readonly backendOutputSchema: BackendOutput;
+  readonly mapInput: (input: z.output<Input>) => z.input<BackendInput>;
+  readonly adapter: (
+    input: z.output<BackendInput>,
+    context: BackendAdapterContext,
+  ) => z.input<BackendOutput> | Promise<z.input<BackendOutput>>;
+  readonly mapOutput: (output: z.output<BackendOutput>) => ToolResult<z.input<Output>>;
+}
+export type MappedToolDefinition<
+  Input extends z.ZodObject,
+  Output extends z.ZodObject,
+  BackendInput extends z.ZodObject,
+  BackendOutput extends z.ZodObject,
+> =
+  | MappedToolDefinitionBase<Input, Output, BackendInput, BackendOutput> & {
+      readonly access: "public";
+      readonly requiredScopes?: never;
+    }
+  | MappedToolDefinitionBase<Input, Output, BackendInput, BackendOutput> & {
+      readonly access: "protected";
+      readonly requiredScopes: readonly string[];
+    };
 export interface EmseepeaTool {
   readonly [TOOL_NAME]: string;
   readonly [TOOL_ACCESS]: "public" | ProtectedToolAccess;
@@ -125,12 +161,62 @@ interface NormalizedOAuth {
 export function defineTool<Input extends z.ZodObject, Output extends z.ZodObject>(
   definition: ToolDefinition<Input, Output>,
 ): EmseepeaTool {
-  assertToolName(definition.name);
-  const access = normalizeToolAccess(definition.access, definition.requiredScopes);
   const handler = definition.handler as unknown as (
     input: z.output<Input>,
     context: ToolContext,
   ) => ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
+  return createCheckedTool(definition, handler as CheckedToolExecutor);
+}
+
+export function defineMappedTool<
+  Input extends z.ZodObject,
+  Output extends z.ZodObject,
+  BackendInput extends z.ZodObject,
+  BackendOutput extends z.ZodObject,
+>(definition: MappedToolDefinition<Input, Output, BackendInput, BackendOutput>): EmseepeaTool {
+  const mapInput = definition.mapInput as unknown as (
+    input: z.output<Input>,
+  ) => z.input<BackendInput>;
+  const mapOutput = definition.mapOutput as unknown as (
+    output: z.output<BackendOutput>,
+  ) => ToolResult<z.input<Output>>;
+  const execute = async (input: z.output<Input>, context: ToolContext) => {
+    const command = await definition.backendInputSchema.safeParseAsync(mapInput(input));
+    if (!command.success) throw new Error("Mapped backend command does not match its schema");
+    context.signal.throwIfAborted();
+    const backendResult = await definition.adapter(command.data, {
+      signal: context.signal,
+      deadlineMs: context.deadlineMs,
+    });
+    context.signal.throwIfAborted();
+    const parsedBackendResult = await definition.backendOutputSchema.safeParseAsync(backendResult);
+    if (!parsedBackendResult.success) throw new Error("Backend result does not match its schema");
+    context.signal.throwIfAborted();
+    return mapOutput(parsedBackendResult.data);
+  };
+  return createCheckedTool(definition, execute as CheckedToolExecutor);
+}
+
+interface CheckedToolDefinition {
+  readonly name: string;
+  readonly title?: string;
+  readonly description: string;
+  readonly inputSchema: z.ZodObject;
+  readonly outputSchema: z.ZodObject;
+  readonly access: ToolAccess;
+  readonly requiredScopes?: readonly string[];
+}
+type CheckedToolExecutor = (
+  input: unknown,
+  context: ToolContext,
+) => unknown | Promise<unknown>;
+
+function createCheckedTool(
+  definition: CheckedToolDefinition,
+  execute: CheckedToolExecutor,
+): EmseepeaTool {
+  assertToolName(definition.name);
+  const access = normalizeToolAccess(definition.access, definition.requiredScopes);
   return {
     [TOOL_NAME]: definition.name,
     [TOOL_ACCESS]: access,
@@ -142,8 +228,8 @@ export function defineTool<Input extends z.ZodObject, Output extends z.ZodObject
         {
           title: definition.title,
           description: definition.description,
-          inputSchema,
-          outputSchema,
+          inputSchema: sdkMetadataSchema(inputSchema),
+          outputSchema: sdkMetadataSchema(outputSchema),
           _meta: {
             "io.emseepea/access": access === "public"
               ? { type: "public" }
@@ -151,23 +237,40 @@ export function defineTool<Input extends z.ZodObject, Output extends z.ZodObject
           },
         },
         async (input, context): Promise<CallToolResult> => {
-          const parsedInput = await definition.inputSchema.safeParseAsync(input);
-          if (!parsedInput.success) throw new Error("Tool received input that does not match its schema");
-          const result = await runWithDeadline(
-            context.mcpReq.signal,
-            timeoutMs,
-            (signal) => handler(parsedInput.data, {
-              signal,
-              principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
-            }),
-          );
-          const parsedOutput = await definition.outputSchema.safeParseAsync(result.data);
-          if (!parsedOutput.success) throw new Error("Tool returned output that does not match its schema");
-          return {
-            content: [{ type: "text", text: result.text }],
-            structuredContent: parsedOutput.data as Record<string, unknown>,
-            isError: false,
-          };
+          try {
+            const deadlineMs = requestDeadlines.getStore() ?? Date.now() + timeoutMs;
+            return await runWithDeadline(
+              context.mcpReq.signal,
+              deadlineMs,
+              async (signal) => {
+                const parsedInput = await definition.inputSchema.safeParseAsync(input);
+                if (!parsedInput.success) {
+                  throw new Error("Tool received input that does not match its schema");
+                }
+                signal.throwIfAborted();
+                const result = await execute(parsedInput.data, {
+                  signal,
+                  deadlineMs,
+                  principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
+                });
+                if (!isRecord(result) || typeof result.text !== "string" || !("data" in result)) {
+                  throw new Error("Tool returned an invalid result");
+                }
+                signal.throwIfAborted();
+                const parsedOutput = await definition.outputSchema.safeParseAsync(result.data);
+                if (!parsedOutput.success) {
+                  throw new Error("Tool returned output that does not match its schema");
+                }
+                return {
+                  content: [{ type: "text" as const, text: result.text }],
+                  structuredContent: parsedOutput.data as Record<string, unknown>,
+                  isError: false,
+                };
+              },
+            );
+          } catch {
+            return { content: [{ type: "text", text: "Tool execution failed" }], isError: true };
+          }
         },
       );
     },
@@ -252,7 +355,10 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       }
     }
     reply.hijack();
-    await nodeHandler(request.raw, reply.raw, request.body);
+    await requestDeadlines.run(
+      Date.now() + toolTimeoutMs,
+      () => nodeHandler(request.raw, reply.raw, request.body),
+    );
   });
   app.setErrorHandler(async (error, _request, reply) => {
     if (isFastifyError(error) && error.code === "FST_ERR_CTP_BODY_TOO_LARGE") {
@@ -293,7 +399,7 @@ async function verifyProtectedCall(
   try {
     const authInfo = await runWithDeadline(
       disconnected.signal,
-      oauth.verificationTimeoutMs,
+      Date.now() + oauth.verificationTimeoutMs,
       () => verifyBearerToken(singleHeader(request.raw.rawHeaders, "authorization"), {
         verifier: oauth.verifier,
         requiredScopes: [...access.requiredScopes],
@@ -572,16 +678,32 @@ function singleHeader(rawHeaders: readonly string[], name: string): string | und
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
+
+function sdkMetadataSchema(schema: z.ZodObject): z.ZodObject {
+  return {
+    "~standard": {
+      version: 1,
+      vendor: "emseepea",
+      validate: (value: unknown) => ({ value }),
+      jsonSchema: {
+        input: () => z.toJSONSchema(schema, { target: "draft-2020-12", io: "input" }),
+        output: () => z.toJSONSchema(schema, { target: "draft-2020-12", io: "output" }),
+      },
+    },
+  } as unknown as z.ZodObject;
+}
 function requestId(value: unknown): string | number | null {
   return typeof value === "string" || typeof value === "number" ? value : null;
 }
 
 async function runWithDeadline<Result>(
   requestSignal: AbortSignal,
-  timeoutMs: number,
+  deadlineMs: number,
   work: (signal: AbortSignal) => Result | Promise<Result>,
 ): Promise<Result> {
-  const signal = AbortSignal.any([requestSignal, AbortSignal.timeout(timeoutMs)]);
+  const remainingMs = deadlineMs - Date.now();
+  const deadlineSignal = remainingMs > 0 ? AbortSignal.timeout(remainingMs) : AbortSignal.abort();
+  const signal = AbortSignal.any([requestSignal, deadlineSignal]);
   return new Promise<Result>((resolve, reject) => {
     const onAbort = () => reject(new Error("Tool execution cancelled"));
     if (signal.aborted) return onAbort();

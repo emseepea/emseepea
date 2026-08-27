@@ -12,7 +12,8 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "@emseepea/example-basic-no-ui"
+    "@emseepea/example-basic-no-ui",
+    "@emseepea/example-backend-no-ui"
   ],
   "privatePackages": {
     "version": true,

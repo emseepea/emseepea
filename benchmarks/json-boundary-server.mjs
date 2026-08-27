@@ -1,14 +1,18 @@
 import { Session } from "node:inspector";
-import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
+import { createEmseepea, defineMappedTool, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
-const tool = defineTool({
+const tool = defineMappedTool({
   name: "synthetic-read",
   access: "public",
   description: "Return one synthetic record.",
   inputSchema: z.object({ id: z.string() }),
   outputSchema: z.object({ id: z.string(), value: z.string() }),
-  handler: ({ id }) => ({ text: "synthetic", data: { id, value: "synthetic" } }),
+  backendInputSchema: z.object({ id: z.string() }),
+  backendOutputSchema: z.object({ id: z.string(), value: z.string() }),
+  mapInput: ({ id }) => ({ id }),
+  adapter: ({ id }) => ({ id, value: "synthetic" }),
+  mapOutput: (data) => ({ text: "synthetic", data }),
 });
 const app = createEmseepea({ name: "emseepea-benchmark", version: "0.0.0", tools: [tool] });
 const running = await serveEmseepea(app, { port: 0 });

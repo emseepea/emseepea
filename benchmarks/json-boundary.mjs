@@ -96,7 +96,7 @@ try {
       requestBytes: Buffer.byteLength(requestBody),
     },
     throughputRequestsPerSecond: summary(throughput),
-    frameworkProcessCpuMsPerRequest: { ...summary(cpuMs), note: "server process only; no-op local backend" },
+    frameworkProcessCpuMsPerRequest: { ...summary(cpuMs), note: "server process only; mapped synthetic adapter" },
     sampledTransientAllocationBytesPerRequest: summary(allocations),
     addedProtocolBytesPerRequest: summary(overheadBytes),
     invalidInputPostGcHeapBytes: invalidHeap,

@@ -90,6 +90,12 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     const list = await rpc(running.url, "tools/list");
     assert.equal(list.response.status, 200);
     assert.deepEqual(list.body.result.tools.map(({ name }) => name), ["lookup-bean"]);
+    assert.equal(list.body.result.tools[0].inputSchema.properties.id.type, "string");
+    assert.deepEqual(list.body.result.tools[0].outputSchema.properties.roast.enum, [
+      "light",
+      "medium",
+      "dark",
+    ]);
 
     const call = await rpc(running.url, "tools/call", {
       name: "lookup-bean",

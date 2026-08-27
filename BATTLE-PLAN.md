@@ -3,9 +3,9 @@
 ## Status
 
 - Document type: Living implementation battle plan
-- Objective state: No-UI beachhead unproven in the current checkout
-- Current operating objective: Restore and qualify the no-UI boundary before widening scope
-- Last updated: 2026-08-26
+- Objective state: No-UI and OAuth qualified; checked mapped-adapter candidate pending committed evidence
+- Current operating objective: Publish the first pre-alpha package, then establish the verified documentation website
+- Last updated: 2026-08-27
 
 This plan is a decision aid, not a contract with yesterday's assumptions. No plan survives contact with real specifications, SDKs, clients, proxies, attackers, users, or production constraints. The objective and rules of engagement remain fixed; the route changes whenever evidence reveals a shorter, safer, or more useful path.
 
@@ -776,6 +776,17 @@ the independent MCP client. The exact current claim is the pre-alpha slice in
 the repository README; unsupported capabilities remain excluded. The next
 checkpoint is public `@emseepea/server@0.0.1` publication under `next` with
 ordinary release evidence.
+
+### 2026-08-27: Checked Mapped-Adapter Candidate Implemented
+
+The public `defineMappedTool` path now validates public input, backend commands,
+backend results, and final public output inside the same deadline, cancellation,
+authorization, and safe-error lifecycle as direct tools. Memory and file
+adapters pass the local real HTTP-boundary checks without kernel changes. The
+mapped benchmark remains inside the provisional JSON-boundary budget. Release
+qualification remains pending clean-checkout Node.js 22 and 24 checks on the
+exact committed revision. Outbound HTTP policy, credentials, retries, effects,
+and workflow execution remain excluded.
 
 ## Implementation Goal
 
