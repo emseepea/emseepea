@@ -1,12 +1,11 @@
 # Risk R004: Public Claims Exceed Exact Evidence
 
-**Status**: Active (auto-scaffolded - pending review)
-**Curation**: pending review (auto-scaffolded 2026-08-27)
+**Status**: Active
 **Category**: brand
 **Identified**: 2026-08-27
-**Owner**: pending review
-**Last reviewed**: 2026-08-27
-**Next review**: pending review
+**Owner**: Documentation and release maintainer
+**Last reviewed**: 2026-08-28
+**Next review**: 2027-02-28
 
 ## Description
 
@@ -21,40 +20,56 @@ exist.
 
 Impact × Likelihood *before* controls.
 
-- **Impact**: not estimated - no prior data
-- **Likelihood**: not estimated - no prior data
-- **Inherent Score**: not estimated - no prior data
-- **Inherent Band**: not estimated - no prior data
+- **Impact**: 5 (Severe)
+- **Likelihood**: 4 (Likely)
+- **Inherent Score**: 20
+- **Inherent Band**: Very High
 
 ## Controls
 
-None recorded. Pending human review.
+- **Exact-commit qualification** - Quality and release workflows build, test,
+  benchmark, and audit a clean checkout of the exact commit. Implemented in
+  `.github/workflows/quality.yml` and `.github/workflows/release.yml`.
+- **Bounded release claim** - Release evidence names the supported slice and
+  exclusions instead of implying full conformance. Implemented in
+  `.github/workflows/release.yml`.
+- **Evidence record** - Publication requires a version-matched readiness record
+  with exact pass markers. Implemented in `.github/workflows/release.yml` and
+  `docs/reviews/0.0.1-release-readiness.md`.
+- **Claim withdrawal rule** - A failed or drifting check withdraws the affected
+  claim until a later exact revision restores it. Defined in `QUALITY.md`.
 
 ## Residual Risk
 
 Impact × Likelihood *after* controls.
 
-- **Impact**: not estimated - no prior data
-- **Likelihood**: not estimated - no prior data
-- **Residual Score**: not estimated - no prior data
-- **Residual Band**: not estimated - no prior data
-- **Within appetite?**: pending - scoring not estimated
+- **Impact**: 5 (Severe)
+- **Likelihood**: 1 (Rare)
+- **Residual Score**: 5
+- **Residual Band**: Low
+- **Within appetite?**: Yes
 
 ## Treatment
 
-Pending.
+Mitigate. Exact-commit evidence and explicit exclusions are mandatory and cannot
+be bypassed. Proposed, planned, implemented, release-ready, published, and
+verified states must remain distinct in all public content.
 
 ## Monitoring
 
 - **Trigger to re-assess**: Any public claim, package version, release, or
   capability-status change.
-- **Metrics**: pending review.
+- **Metrics**: Public claims with exact-revision evidence; unsupported claims;
+  release attempts lacking the required review record or qualification result.
 
 ## Related
 
 - Criteria: `RISK-POLICY.md`
 - Realised-as: none recorded
-- Treatment ADRs: pending review
+- Treatment ADRs:
+  [ADR-0005: Active Streamable HTTP Scope and Adaptive Delivery](../decisions/0005-active-streamable-http-scope-and-adaptive-delivery.proposed.md)
+  and
+  [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.proposed.md)
 - Personas affected: adopters, contributors, and maintainers
 
 ## Source Evidence (auto-scaffolded 2026-08-27)
@@ -66,8 +81,11 @@ Aggregated from 4 `.risk-reports/` entries:
 - `.risk-reports/2026-08-27T02-05-01-commit.md`
 - `.risk-reports/2026-08-27T11-59-09-commit.md`
 
-Re-rate after human review is recorded or controls change.
+These source entries seeded the curated risk. Re-rate when controls, source
+evidence, or risk policy change.
 
 ## Change Log
 
 - 2026-08-27: Auto-scaffolded from recurring pipeline findings.
+- 2026-08-28: Curated controls, ownership, scoring, and treatment from the
+  exact-commit quality and release gates.
