@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   exact-sha-quality:
-    name: Exact SHA / Node.js ${{ matrix.node-version }}
+    name: Exact commit / Node.js ${{ matrix.node-version }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -76,7 +76,8 @@ jobs:
           else
             echo "has_changesets=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Qualify every example through MCP
+      - name: Qualify every example through Model Context Protocol (MCP)
+        if: steps.release-state.outputs.has_changesets == 'false'
         env:
           EMSEEPEA_COPILOT_TOKEN: ${{ github.token }}
           EMSEEPEA_COPILOT_TOKEN_FILE: ${{ runner.temp }}/emseepea-copilot-token
@@ -87,7 +88,7 @@ jobs:
           trap 'rm -f "$EMSEEPEA_COPILOT_TOKEN_FILE"' EXIT
           npm run test:eval:ci
       - name: Upload redacted semantic evidence
-        if: always()
+        if: ${{ always() && steps.release-state.outputs.has_changesets == 'false' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: semantic-eval-${{ github.sha }}
@@ -98,7 +99,7 @@ jobs:
   changesets:
     name: Update release pull request or publish
     needs: [exact-sha-quality, semantic-eval]
-    if: ${{ always() && needs.exact-sha-quality.result == 'success' && (needs.semantic-eval.outputs.has_changesets == 'true' || needs.semantic-eval.result == 'success') }}
+    if: ${{ always() && needs.exact-sha-quality.result == 'success' && (needs.semantic-eval.outputs.has_changesets == 'true' || (needs.semantic-eval.outputs.has_changesets == 'false' && needs.semantic-eval.result == 'success')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -127,7 +128,7 @@ jobs:
           else
             echo "has_changesets=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Capture the current default tag
+      - name: Capture the current npm latest tag
         if: steps.release-state.outputs.has_changesets == 'false'
         id: registry-before
         run: |
@@ -192,7 +193,7 @@ jobs:
           PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
         run: |
           version="$(node -p "require('./packages/framework/package.json').version")"
-          node --input-type=module -e 'const packages = JSON.parse(process.env.PUBLISHED_PACKAGES); if (!packages.some(({ name, version }) => name === "@emseepea/server" && version === process.argv[1])) process.exit(1)' "$version"
+          node --input-type=module -e 'const packages = JSON.parse(process.env.PUBLISHED_PACKAGES); if (!packages.some(({ name, version }) => name === "@emseepea/server" && version === process.argv[1])) throw new Error(`published package list did not include @emseepea/server@${process.argv[1]}`)' "$version"
           published=""
           next=""
           provenance=""
