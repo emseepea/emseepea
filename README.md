@@ -5,9 +5,7 @@ Streamable HTTP.
 
 The project is pre-alpha. The current qualified slice is a Fastify-first,
 JSON-only MCP server with public tools, invocation-scoped OAuth-protected
-tools, and one synthetic read-only example. Checked backend adapters and their
-second example are implemented but remain a candidate until the exact committed
-revision passes the Node.js 22 and 24 clean-checkout gates.
+tools, checked backend adapters, and synthetic read-only examples.
 
 ## Operating Documents
 

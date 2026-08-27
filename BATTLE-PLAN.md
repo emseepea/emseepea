@@ -3,7 +3,7 @@
 ## Status
 
 - Document type: Living implementation battle plan
-- Objective state: No-UI and OAuth qualified; checked mapped-adapter candidate pending committed evidence
+- Objective state: No-UI, OAuth, and checked mapped-adapter slices qualified
 - Current operating objective: Publish the first pre-alpha package, then establish the verified documentation website
 - Last updated: 2026-08-27
 
@@ -777,16 +777,17 @@ the repository README; unsupported capabilities remain excluded. The next
 checkpoint is public `@emseepea/server@0.0.1` publication under `next` with
 ordinary release evidence.
 
-### 2026-08-27: Checked Mapped-Adapter Candidate Implemented
+### 2026-08-27: Checked Mapped-Adapter Slice Qualified
 
 The public `defineMappedTool` path now validates public input, backend commands,
 backend results, and final public output inside the same deadline, cancellation,
 authorization, and safe-error lifecycle as direct tools. Memory and file
-adapters pass the local real HTTP-boundary checks without kernel changes. The
-mapped benchmark remains inside the provisional JSON-boundary budget. Release
-qualification remains pending clean-checkout Node.js 22 and 24 checks on the
-exact committed revision. Outbound HTTP policy, credentials, retries, effects,
-and workflow execution remain excluded.
+adapters pass the real HTTP-boundary checks without kernel changes. The exact
+committed revision passed the clean-checkout test, mapped benchmark, and audit
+gates on Node.js 22 and 24 in the
+[GitHub Actions qualification run](https://github.com/windyroad/emseepea/actions/runs/33031986348).
+Outbound HTTP policy, credentials, retries, effects, and workflow execution
+remain excluded.
 
 ## Implementation Goal
 
