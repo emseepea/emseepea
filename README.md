@@ -14,7 +14,7 @@ tools, and one synthetic read-only example.
 - [Server package decision](docs/decisions/0016-em-see-pea-product-npm-scope-and-server-package.proposed.md)
 - [Anonymous production boundary][production-boundary]
 - [Public discovery and protected invocation][public-discovery]
-- [Repository and release governance][release-governance]
+- [Trusted pre-alpha release governance][release-governance]
 - [Guide amendment](docs/guide-amendments/0001-adaptive-delivery-and-ordinary-evidence.md)
 - [Source provenance](docs/provenance.md)
 - [Quality policy](QUALITY.md)
@@ -31,8 +31,9 @@ tools, and one synthetic read-only example.
 - Per-tool public or OAuth-protected access with required scopes
 - One private no-UI example importing only the public package
 
-The source and examples are public under MIT. npm publication remains disabled
-until the package identity and first supported boundary are approved.
+The source and examples are public under MIT. Only `@emseepea/server@0.0.1` is
+eligible for initial npm publication under the `next` tag; the root and examples
+remain private npm workspaces.
 
 ## Check the Current Boundary
 
@@ -61,8 +62,8 @@ using the official SDK boundary. The adopter's `OAuthTokenVerifier` remains
 responsible for issuer and token-integrity validation and for independently
 bounding or cancelling its own I/O. Object or tenant authorization, safe
 outbound HTTP adapters, SSE responses, shared state, React, and Tailwind are not
-implemented or claimed by this slice. npm publication remains disabled.
+implemented or claimed by this slice. Publication does not expand these claims.
 
 [production-boundary]: docs/decisions/0002-anonymous-production-boundary.proposed.md
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md
-[release-governance]: docs/decisions/0003-public-repository-and-release-governance.proposed.md
+[release-governance]: docs/decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.proposed.md

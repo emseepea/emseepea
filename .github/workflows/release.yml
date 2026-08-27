@@ -1,13 +1,11 @@
-name: Release pull request
+name: Release pull request or package
 
 on:
   push:
     branches:
       - main
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 concurrency:
   group: release-${{ github.ref }}
@@ -15,9 +13,13 @@ concurrency:
 
 jobs:
   changesets:
-    name: Update release pull request
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    name: Update release pull request or publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+      pull-requests: write
     steps:
       - name: Check out repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -25,12 +27,132 @@ jobs:
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 24.20.0
-          cache: npm
+          registry-url: https://registry.npmjs.org
+      - name: Pin the npm release client
+        run: |
+          npm install --global npm@11.13.0 --ignore-scripts
+          test "$(npm --version)" = "11.13.0"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
-      - name: Create or update release pull request
+      - name: Test the exact release commit
+        run: npm test
+      - name: Check the JSON-boundary performance budget
+        run: npm run benchmark
+        env:
+          EMSEEPEA_BENCHMARK_PROFILE: github-ubuntu-24.04-standard
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+      - name: Detect a publication run
+        id: release-state
+        run: |
+          if find .changeset -maxdepth 1 -type f -name '*.md' ! -name README.md | grep -q .; then
+            echo "has_changesets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changesets=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Capture the current default tag
+        if: steps.release-state.outputs.has_changesets == 'false'
+        id: registry-before
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_OUTPUT"
+          const response = await fetch("https://registry.npmjs.org/@emseepea%2fserver");
+          if (response.status === 404) {
+            console.log("package_exists=false");
+            console.log("latest=");
+          } else {
+            if (!response.ok) throw new Error(`registry returned ${response.status}`);
+            const metadata = await response.json();
+            console.log("package_exists=true");
+            console.log(`latest=${metadata["dist-tags"]?.latest ?? ""}`);
+          }
+          NODE
+      - name: Prepare package evidence
+        if: steps.release-state.outputs.has_changesets == 'false'
+        env:
+          RELEASE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          mkdir -p release-artifacts
+          npm pack --workspace @emseepea/server --pack-destination release-artifacts --ignore-scripts
+          npm sbom --workspace @emseepea/server --omit=dev --package-lock-only --sbom-format cyclonedx --sbom-type framework > release-artifacts/sbom.cdx.json
+          sha256sum release-artifacts/*.tgz > release-artifacts/SHA256SUMS
+          version="$(node -p "require('./packages/framework/package.json').version")"
+          review_record="docs/reviews/$version-release-readiness.md"
+          test -s "$review_record"
+          grep -Fqx -- '- Result: PASS' "$review_record"
+          grep -Fqx -- '- Final result: within appetite.' "$review_record"
+          lock_sha="$(sha256sum package-lock.json | cut -d' ' -f1)"
+          cat > release-artifacts/RELEASE-EVIDENCE.md <<EOF
+          # @emseepea/server $version release evidence
+
+          - Commit: $RELEASE_SHA
+          - Workflow: $RELEASE_RUN_URL
+          - Lockfile SHA-256: $lock_sha
+          - Node.js: $(node --version)
+          - npm: $(npm --version)
+          - GitHub CLI: $(gh --version | head -1)
+          - Qualification: npm test; npm run benchmark; npm audit --audit-level=high; npm pack
+          - Reviews: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/$review_record
+          - Supported slice: Fastify-first JSON MCP 2026-07-28 server; public and invocation-scoped OAuth-protected tools; anonymous resource metadata, server discovery, and tool listing
+          - Excluded: object or tenant authorization, outbound HTTP adapters, SSE, shared state, React, Tailwind, deployment, and full-profile conformance
+          EOF
+      - name: Create release pull request or publish
+        id: changesets
         uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           version: npm run version-packages
-          createGithubReleases: false
+          publish: npm run release
+          createGithubReleases: true
+      - name: Verify and attach the published package
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LATEST_BEFORE: ${{ steps.registry-before.outputs.latest }}
+          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
+        run: |
+          version="$(node -p "require('./packages/framework/package.json').version")"
+          node --input-type=module -e 'const packages = JSON.parse(process.env.PUBLISHED_PACKAGES); if (!packages.some(({ name, version }) => name === "@emseepea/server" && version === process.argv[1])) process.exit(1)' "$version"
+          published=""
+          next=""
+          provenance=""
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            published="$(npm view "@emseepea/server@$version" version --userconfig /dev/null 2>/dev/null || true)"
+            next="$(npm view @emseepea/server dist-tags.next --userconfig /dev/null 2>/dev/null || true)"
+            provenance="$(npm view "@emseepea/server@$version" dist.attestations.provenance.predicateType --userconfig /dev/null 2>/dev/null || true)"
+            [ "$published" = "$version" ] && [ "$next" = "$version" ] && [ "$provenance" = "https://slsa.dev/provenance/v1" ] && break
+            sleep 3
+          done
+          test "$published" = "$version"
+          test "$next" = "$version"
+          test "$provenance" = "https://slsa.dev/provenance/v1"
+          latest_after="$(node --input-type=module <<'NODE'
+          const response = await fetch("https://registry.npmjs.org/@emseepea%2fserver");
+          if (!response.ok) throw new Error(`registry returned ${response.status}`);
+          const metadata = await response.json();
+          console.log(metadata["dist-tags"]?.latest ?? "");
+          NODE
+          )"
+          test "$latest_after" = "$LATEST_BEFORE"
+          mkdir -p registry-artifacts
+          npm pack "@emseepea/server@$version" --pack-destination registry-artifacts --ignore-scripts --userconfig /dev/null
+          test "$(sha256sum release-artifacts/*.tgz | cut -d' ' -f1)" = "$(sha256sum registry-artifacts/*.tgz | cut -d' ' -f1)"
+          integrity="$(npm view "@emseepea/server@$version" dist.integrity --userconfig /dev/null)"
+          attestations_url="$(npm view "@emseepea/server@$version" dist.attestations.url --userconfig /dev/null)"
+          test -n "$integrity"
+          test -n "$attestations_url"
+          cat >> release-artifacts/RELEASE-EVIDENCE.md <<EOF
+
+          - Registry integrity: $integrity
+          - Provenance: $attestations_url
+          EOF
+          smoke_dir="$(mktemp -d)"
+          trap 'rm -rf "$smoke_dir"' EXIT
+          cd "$smoke_dir"
+          npm init --yes >/dev/null
+          npm install --ignore-scripts --userconfig /dev/null "@emseepea/server@$version"
+          npm audit signatures --userconfig /dev/null
+          node --input-type=module -e 'const api = await import("@emseepea/server"); if (typeof api.createEmseepea !== "function" || typeof api.defineTool !== "function") process.exit(1)'
+          cd "$GITHUB_WORKSPACE"
+          tag="@emseepea/server@$version"
+          gh release upload "$tag" release-artifacts/RELEASE-EVIDENCE.md release-artifacts/SHA256SUMS release-artifacts/sbom.cdx.json --clobber

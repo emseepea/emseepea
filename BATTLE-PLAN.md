@@ -239,6 +239,8 @@ This route is the current best hypothesis. Only dependency constraints are fixed
 
 ### Objective 0: Establish the Battlefield
 
+Status: completed on 2026-08-27.
+
 Actions:
 
 - Amend or version the guide so the 110 outcomes are a coverage ledger and the rejected certification system is no longer part of the full claim.
@@ -247,13 +249,17 @@ Actions:
 - Choose the runtime, package manager, MCP SDK, schema validator, licence, dependency policy, and provisional measurable budgets.
 - Record the minimum architecture decisions.
 
-Exit signal:
+Exit evidence at the checkpoint:
 
 - the public baseline, selected stack, claim model, and first raw-wire corpus agree;
-- no runtime package has been released; and
+- no runtime package had been released at that checkpoint; and
 - the clean-room implementation boundary is ready.
 
 ### Objective 1: Win the No-UI Beachhead
+
+Status: completed on 2026-08-27 for the exact JSON and invocation-scoped OAuth
+slice described in the repository README. Broader universal-framework work
+remains active.
 
 Create only:
 
@@ -694,24 +700,23 @@ Record later, immediately before their owning fronts:
 
 ## Immediate Orders
 
-1. Correct the product and package identity to Em See Pea throughout the
-   scaffold.
-2. Ratify the foundation and production-boundary decisions before their runtime
-   code is changed.
-3. Restore the loopback build and prove it from a clean checkout through raw HTTP
-   and an independent client.
-4. Add production-boundary controls only after the no-UI exit signal is green.
-5. Add backend adapters only after the production boundary is proven.
-6. Make no runtime capability claim without current clean-checkout evidence.
-7. Continue resolving these guide contradictions as their owning fronts begin:
+1. Publish the exact qualified `@emseepea/server@0.0.1` slice under `next` and
+   prove the public registry path without moving `latest`.
+2. Configure and verify npm trusted publishing, then remove the one-off package
+   creation credential.
+3. Continue the universal framework build with the smallest independently useful
+   capability front.
+4. Add backend adapters only after their checked boundary and synthetic evidence
+   are defined.
+5. Make no runtime capability claim without current clean-checkout evidence.
+6. Continue resolving these guide contradictions as their owning fronts begin:
    - handler-backed first tool versus workflow arriving later;
    - final validation before emission versus progress during execution;
    - guaranteed notifications versus bounded queues and no replay;
    - JSON-only services versus `json-and-sse` manifest semantics;
    - the illustrative manifest missing mandatory fields; and
    - the public status of mirrored headers, projection, discovery, result types, and error codes.
-8. Defer OAuth until the anonymous production boundary is proven.
-9. Defer SSE, UI, and distributed state until their decision gates open.
+7. Defer SSE, UI, and distributed state until their decision gates open.
 
 ## Campaign Log
 
@@ -727,9 +732,17 @@ Evidence:
 npm test
 ```
 
-This currently fails because five production-boundary symbols are undefined.
-The claim can be reinstated only after the clean-checkout quality gate passes
-the real HTTP and independent-client checks.
+At that checkpoint, the command failed because five production-boundary symbols
+were undefined. The claim remained withdrawn until the later clean-checkout
+quality gate passed the real HTTP and independent-client checks.
+
+### 2026-08-27: No-UI and Invocation-Scoped OAuth Slice Restored
+
+The clean-checkout quality gate now passes the real Fastify HTTP boundary and
+the independent MCP client. The exact current claim is the pre-alpha slice in
+the repository README; unsupported capabilities remain excluded. The next
+checkpoint is public `@emseepea/server@0.0.1` publication under `next` with
+ordinary release evidence.
 
 ## Implementation Goal
 

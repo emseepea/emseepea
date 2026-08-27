@@ -17,6 +17,7 @@
     "build": "npm run build -w @emseepea/server && npm run build -w @emseepea/example-basic-no-ui",
     "changeset": "changeset",
     "check": "npm test",
+    "release": "changeset publish --tag next",
     "start:basic": "npm run start -w @emseepea/example-basic-no-ui",
     "test": "npm run build && npm run typecheck && node --test tests/black-box/*.test.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",

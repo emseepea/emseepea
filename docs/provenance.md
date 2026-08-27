@@ -54,10 +54,13 @@ behavior, deployment logic, or domain rule may be copied from them.
 | Dependency | Pin | Licence | Use |
 | --- | --- | --- | --- |
 | `actions/checkout` | `fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09` (`v5.1.0`) | MIT | Clean GitHub-hosted checkout |
-| `actions/setup-node` | `a0853c24544627f65ddf259abe73b1d18a591444` (`v5.0.0`) | MIT | Node.js 22 and 24 matrix setup with npm caching |
-| `changesets/action` | `a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d` (`v1.9.0`) | MIT | Create or update the release pull request without publishing |
-| `@changesets/cli` | `3.0.1` | MIT | Version private workspace packages inside the release pull request |
+| `actions/setup-node` | `a0853c24544627f65ddf259abe73b1d18a591444` (`v5.0.0`) | MIT | Node.js 22 and 24 matrix setup; npm registry configuration without caching in release jobs |
+| `changesets/action` | `a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d` (`v1.9.0`) | MIT | Create or update the release pull request, invoke trusted publication, and create the resulting GitHub tag and release |
+| `@changesets/cli` | `3.0.1` | MIT | Version public packages in the release pull request and publish them under `next` |
 | `@changesets/changelog-github` | `1.0.0` | MIT | Generate the changelog consumed by the Changesets release pull request |
+| npm CLI | `11.13.0` | Artistic-2.0 | Generate the CycloneDX SBOM and publish through npm OIDC; the release job verifies this exact version |
+| GitHub-hosted runner | `ubuntu-24.04` | Service | Execute exact-commit qualification and release checks in a clean environment |
+| GitHub CLI | Runner-provided; exact version recorded by each release job | MIT | Upload checksum, SBOM, and release evidence assets after npm publication |
 
 The three pinned Actions use the Node.js 24 action runtime. Their public action
 manifests, tag targets, and repository licences were verified on 2026-08-26.

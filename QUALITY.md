@@ -40,8 +40,12 @@ failure stops the job; later steps are not evidence for earlier ones.
 - Pin third-party GitHub Actions to immutable commit SHAs and document the
   corresponding release tag in a comment.
 - Use least-privilege workflow permissions, timeouts, and concurrency controls.
-- Changesets may create or update a release pull request, but no workflow may
-  publish to npm until a later reviewed decision enables it.
+- Changesets creates or updates the release pull request. Only
+  `@emseepea/server` may publish under `next`, after required pull-request checks
+  and exact merged-commit qualification pass. The root and examples remain
+  private.
+- Routine publication uses npm trusted publishing, automatic provenance,
+  checksum and SBOM evidence, and no durable npm write token.
 - Do not add deployment, production attestation, signing, or environment
   verification workflows to this framework repository.
 
