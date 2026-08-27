@@ -5,9 +5,8 @@ Streamable HTTP.
 
 The project is pre-alpha. The current qualified slice is a Fastify-first,
 JSON-only MCP server with public tools, invocation-scoped OAuth-protected
-tools, checked backend adapters, public static resources and prompts, and
-synthetic read-only examples. Current source also contains non-enumerating
-resource templates under qualification.
+tools, checked backend adapters, public static resources, non-enumerating
+resource templates, prompts, and synthetic read-only examples.
 
 ## Operating Documents
 

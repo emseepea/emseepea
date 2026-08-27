@@ -3,8 +3,8 @@
 ## Status
 
 - Document type: Living implementation battle plan
-- Objective state: No-UI, OAuth, checked mapped-adapter, public-resource, and prompt slices qualified; public resource templates under qualification
-- Current operating objective: Qualify public resource templates, publish the first pre-alpha package, then establish the verified documentation website
+- Objective state: No-UI, OAuth, checked mapped-adapter, public-resource, resource-template, and prompt slices qualified
+- Current operating objective: Qualify opt-in public completion for existing prompt arguments and resource-template variables, publish the first pre-alpha package, then establish the verified documentation website
 - Last updated: 2026-08-27
 
 This plan is a decision aid, not a contract with yesterday's assumptions. No plan survives contact with real specifications, SDKs, clients, proxies, attackers, users, or production constraints. The objective and rules of engagement remain fixed; the route changes whenever evidence reveals a shorter, safer, or more useful path.
@@ -798,9 +798,12 @@ cancellation, result-validation, size-limit, and generic-error boundary. The
 exact committed revision passed the clean-checkout test, benchmark, and audit
 gates on Node.js 22 and 24 in the
 [GitHub Actions qualification run](https://github.com/windyroad/emseepea/actions/runs/33035207338).
-Public non-enumerating resource templates are the next slice under qualification;
-template enumeration, completion, pagination, and cache configuration remain
-excluded.
+The public non-enumerating resource-template revision passed its public-boundary
+tests and dependency audit on Node.js 22 and 24 in the
+[GitHub Actions qualification run](https://github.com/windyroad/emseepea/actions/runs/33037095029).
+The existing JSON/tools benchmark also remained green; it does not cover template
+performance. Template enumeration, completion, pagination, and cache
+configuration remain excluded.
 
 ## Implementation Goal
 
