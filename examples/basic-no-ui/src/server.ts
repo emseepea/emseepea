@@ -1,23 +1,48 @@
 import { defineTool, createEmseepea, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
-const lookupBean = defineTool({
-  name: "lookup-bean",
+const beanNames = ["Harbour Dawn", "Highland Bloom"] as const;
+const beanDetailsSchema = z.object({
+  name: z.enum(beanNames),
+  origin: z.string(),
+  variety: z.string(),
+  process: z.string(),
+  roast: z.enum(["light", "medium", "dark"]),
+  tastingNotes: z.array(z.string()),
+});
+const beans: Record<(typeof beanNames)[number], z.input<typeof beanDetailsSchema>> = {
+  "Harbour Dawn": {
+    name: "Harbour Dawn",
+    origin: "Synthetic Coast",
+    variety: "Caturra",
+    process: "washed",
+    roast: "light",
+    tastingNotes: ["citrus", "honey"],
+  },
+  "Highland Bloom": {
+    name: "Highland Bloom",
+    origin: "Synthetic Highlands",
+    variety: "Bourbon",
+    process: "natural",
+    roast: "medium",
+    tastingNotes: ["berry", "cocoa"],
+  },
+};
+
+const getBeanDetails = defineTool({
+  name: "get-bean-details",
   access: "public",
-  title: "Coffee Bean Lookup",
-  description: "Look up a synthetic coffee bean record by identifier.",
+  title: "Coffee Bean Details",
+  description: "Get origin, processing, roast, and tasting details for a synthetic coffee bean.",
   inputSchema: z.object({
-    id: z.string().min(1).max(32),
+    name: z.enum(beanNames),
   }),
-  outputSchema: z.object({
-    id: z.string(),
-    origin: z.string(),
-    roast: z.enum(["light", "medium", "dark"]),
-  }),
-  handler: ({ id }) => {
-    const data = { id, origin: "Synthetic Highlands", roast: "medium" as const };
+  outputSchema: beanDetailsSchema,
+  handler: ({ name }) => {
+    const data = beans[name];
     return {
-      text: `${data.id}: ${data.origin}, ${data.roast} roast`,
+      text: `${data.name} is a ${data.roast} ${data.process} ${data.variety} from ` +
+        `${data.origin}, with notes of ${data.tastingNotes.join(" and ")}.`,
       data,
     };
   },
@@ -26,8 +51,8 @@ const lookupBean = defineTool({
 const handler = createEmseepea({
   name: "emseepea-basic-no-ui",
   version: "0.0.0",
-  instructions: "Use lookup-bean for synthetic coffee records.",
-  tools: [lookupBean],
+  instructions: "Use get-bean-details for information about a synthetic coffee bean.",
+  tools: [getBeanDetails],
 });
 
 const running = await serveEmseepea(handler, {

@@ -1,7 +1,8 @@
 # Basic No-UI Example
 
-This example exposes one synthetic, read-only coffee-bean lookup through the
-public `@emseepea/server` API.
+This example exposes one self-contained, read-only `get-bean-details` tool
+through the public `@emseepea/server` API. It is the shortest path from a Zod
+input and output contract to a useful MCP tool.
 
 ## Boundary
 
@@ -9,7 +10,7 @@ public `@emseepea/server` API.
 - Streamable HTTP `POST /mcp`
 - JSON responses only for enabled methods
 - Anonymous, loopback-only serving
-- One read-only tool
+- One read-only tool with inline synthetic data
 - No sessions, replay, subscriptions, effects, authentication, or production
   network exposure
 

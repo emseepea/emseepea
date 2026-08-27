@@ -1,11 +1,13 @@
 # Backend No-UI Example
 
-This example uses the public `defineTool` API with two synthetic backends: an
-in-memory `Map` and a validated JSON file. Their input and output already match
-the public tool contract, so a separate mapping layer would add no value.
+This example exposes one read-only `create-bean-report` tool through the public
+`defineMappedTool` API. It optionally filters a validated JSON catalogue by
+roast and returns a useful report.
 
-Use [`defineMappedTool`](../../packages/framework/README.md#mapped-backend-tool)
-when a backend has a genuinely different command or result shape.
+Unlike the [basic no-UI example](../basic-no-ui/README.md), this example has a
+genuine public/private contract boundary. Public camel-case filters and report
+fields are mapped to and from private snake-case backend commands and rows. The
+file path remains module-owned and cannot be selected by the caller.
 
 ## Run
 
