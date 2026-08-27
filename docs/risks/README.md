@@ -21,3 +21,5 @@ A dash (`—`) means the score is not estimated yet. A residual score above the
 | [R008](R008-official-ui-is-inaccessible.active.md) | Official UI is inaccessible | Delivery | 16 | 16 | Mitigate | UI package maintainer | 2027-02-28 |
 | [R009](R009-ui-presentation-is-mistaken-for-effect-authority.active.md) | UI presentation is mistaken for effect authority | Information security | 15 | 15 | Avoid and mitigate | Framework security maintainer | 2027-02-28 |
 | [R010](R010-guides-and-examples-drift-from-released-packages.active.md) | Guides and examples drift from released packages | Delivery | 16 | 12 | Mitigate | Documentation and examples maintainer | 2027-02-28 |
+| [R011](R011-untrusted-ui-data-executes-markup-or-reveals-private-state.active.md) | Untrusted UI data executes markup or reveals private state | Information security | 20 | 20 | Avoid | Framework security maintainer | 2027-02-28 |
+| [R012](R012-framework-examples-obscure-correct-adoption.active.md) | Framework examples obscure correct adoption | Delivery | 20 | 20 | Mitigate | Framework developer-experience maintainer | 2027-02-28 |
