@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import test from "node:test";
 import { OAuthError, OAuthErrorCode } from "@modelcontextprotocol/server";
 import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
@@ -218,6 +219,44 @@ test("discovery stays public while protected invocation is fail-closed", async (
   }
 });
 
+test("protected example lists anonymously and requires the synthetic bearer token", async () => {
+  const running = await startProtectedExample();
+  try {
+    const list = await rpc(running.url, "tools/list");
+    assert.equal(list.response.status, 200);
+    const tool = list.body.result.tools.find(
+      ({ name }) => name === "get-private-inventory-report",
+    );
+    assert.deepEqual(tool._meta["io.emseepea/access"], {
+      type: "protected",
+      requiredScopes: ["inventory:read"],
+    });
+    assert.doesNotMatch(JSON.stringify(list.body), /example-access-token|120 on hand/);
+
+    const params = { name: "get-private-inventory-report", arguments: {} };
+    assert.equal((await rpc(running.url, "tools/call", params)).response.status, 401);
+    assert.equal((await rpc(running.url, "tools/call", params, "invalid")).response.status, 401);
+    assert.equal(
+      (await rpc(running.url, "tools/call", params, "example-wrong-scope")).response.status,
+      403,
+    );
+
+    const valid = await rpc(running.url, "tools/call", params, "example-access-token");
+    assert.equal(valid.response.status, 200);
+    assert.deepEqual(valid.body.result.structuredContent, {
+      item: "Green coffee bags",
+      onHandBags: 120,
+      reservedBags: 35,
+      availableToPromiseBags: 85,
+      inboundBags: 40,
+      inboundAvailableToPromise: false,
+    });
+    assert.doesNotMatch(JSON.stringify(valid.body), /example-access-token/);
+  } finally {
+    await running.close();
+  }
+});
+
 function protectedTool(onCall) {
   return defineTool({
     name: "protected-bean",
@@ -262,4 +301,40 @@ async function rpc(url, method, params = {}, token) {
     }),
   });
   return { response, body: await response.json() };
+}
+
+async function startProtectedExample() {
+  const child = spawn(process.execPath, ["examples/protected-no-ui/dist/server.js"], {
+    env: { ...process.env, PORT: "0" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", (chunk) => {
+    stdout += chunk.toString();
+  });
+  child.stderr.on("data", (chunk) => {
+    stderr += chunk.toString();
+  });
+  const url = await new Promise((resolveUrl, rejectUrl) => {
+    const timeout = setTimeout(() => rejectUrl(new Error("protected example startup timed out")), 10_000);
+    const inspect = () => {
+      const match = stdout.match(/http:\/\/127\.0\.0\.1:\d+\/mcp/);
+      if (!match) return;
+      clearTimeout(timeout);
+      resolveUrl(match[0]);
+    };
+    child.stdout.on("data", inspect);
+    child.once("error", rejectUrl);
+    child.once("exit", (code) => rejectUrl(new Error(`protected example exited ${code}: ${stderr}`)));
+    inspect();
+  });
+  return {
+    url,
+    async close() {
+      if (child.exitCode !== null) return;
+      child.kill("SIGTERM");
+      await new Promise((resolveClose) => child.once("close", resolveClose));
+    },
+  };
 }

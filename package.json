@@ -26,6 +26,7 @@
     "release": "changeset publish --tag next",
     "start:basic": "npm run start -w @emseepea/example-basic-no-ui",
     "start:backend": "npm run start -w @emseepea/example-backend-no-ui",
+    "start:protected": "npm run start -w @emseepea/example-protected-no-ui",
     "start:resources-prompts": "npm run start -w @emseepea/example-resources-prompts",
     "start:streaming": "npm run start -w @emseepea/example-streaming-progress",
     "test": "npm run build && npm run typecheck && node --test tests/black-box/*.test.mjs tests/llm/*.test.mjs",

@@ -14,10 +14,17 @@ const artifactDirectory = join(repoRoot, "artifacts/llm-eval");
 const promptfooOutput = join(artifactDirectory, "promptfoo.json");
 const providerEvidence = join(artifactDirectory, "provider.jsonl");
 const evidencePath = join(artifactDirectory, "evidence.json");
-const examples = ["basic-no-ui", "backend-no-ui", "resources-prompts", "streaming-progress"];
+const examples = [
+  "basic-no-ui",
+  "backend-no-ui",
+  "protected-no-ui",
+  "resources-prompts",
+  "streaming-progress",
+];
 const expectedPaths = {
   "basic-no-ui": [["tools/call", "get-bean-details"]],
   "backend-no-ui": [["tools/call", "create-bean-report"]],
+  "protected-no-ui": [["tools/call", "get-private-inventory-report"]],
   "resources-prompts": [
     ["resources/read", "guide://coffee/getting-started"],
     ["prompts/get", "brew-guide"],

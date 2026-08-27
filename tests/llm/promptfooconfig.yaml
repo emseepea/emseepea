@@ -85,6 +85,21 @@ tests:
           from Synthetic Range. It treats one as the filtered result count, not
           the total catalogue size, and invents no additional matching bean.
 
+  - description: Protected inventory availability is interpreted correctly
+    vars:
+      example: protected-no-ui
+      question: >-
+        How many green coffee bags can we promise to customers now? Show the
+        calculation and explain whether the inbound bags count yet.
+      requiredPaths: tools/call:get-private-inventory-report
+      criticalFacts: 120|35|85|40
+    assert:
+      - type: llm-rubric
+        value: >-
+          The answer calculates 85 bags available to promise as 120 on hand
+          minus 35 reserved. It says the 40 inbound bags are not yet available
+          to promise and does not add them to the current 85.
+
   - description: Resource and prompt distinguish strength from extraction
     vars:
       example: resources-prompts

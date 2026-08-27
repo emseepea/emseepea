@@ -27,6 +27,12 @@ const examples = {
     tool: "create-bean-report",
     arguments: { roast: "dark" },
   },
+  "protected-no-ui": {
+    script: "examples/protected-no-ui/dist/server.js",
+    tool: "get-private-inventory-report",
+    arguments: {},
+    token: "example-access-token",
+  },
   "resources-prompts": {
     script: "examples/resources-prompts/dist/server.js",
     async material(url) {
@@ -89,7 +95,12 @@ async function toolMaterial(url, definition) {
     { name: "emseepea-semantic-eval", version: "0.0.0" },
     { versionNegotiation: { mode: { pin: "2026-07-28" } } },
   );
-  await client.connect(new StreamableHTTPClientTransport(new URL(url)));
+  await client.connect(new StreamableHTTPClientTransport(
+    new URL(url),
+    definition.token
+      ? { authProvider: { token: async () => definition.token } }
+      : undefined,
+  ));
   const progress = [];
   try {
     const result = await client.callTool(
