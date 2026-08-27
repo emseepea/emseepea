@@ -11,7 +11,7 @@ Compact rendered index of every ADR's chosen option, confirmation criteria, and 
 
 For deep-dive — creating, evolving, ratifying, or contesting a decision — open the per-ADR file directly. `/wr-architect:create-adr`, `/wr-architect:capture-adr`, and `/wr-architect:review-decisions` all keep the full body in scope. Decision Drivers, Considered Options bodies, Pros and Cons, Consequences narrative, and Reassessment Criteria are intentionally NOT in this routine view — they live in the per-ADR body.
 
-**Total ADRs:** 18 (14 in-force, 4 historical)
+**Total ADRs:** 19 (14 in-force, 5 historical)
 
 ---
 
@@ -23,11 +23,6 @@ _14 ADRs. These are the current rules. The architect agent reads this section fi
 **Status:** proposed | **Oversight:** confirmed
 **Chosen:** Chosen option: **"Explicit trusted-proxy production profile"**, because it is the smallest production boundary whose trust and resource assumptions can be stated and tested honestly.
 **Confirmation:** public binding is impossible in the loopback profile;; untrusted peers and IPv4-mapped comparison errors are rejected;; missing, repeated, chained, or non-HTTPS forwarding metadata is rejected;; invalid client IPs, authorities, ports, and origins are rejected;; rate limits, bounded state, saturation, and window expiry behave as configured;
-
-### ADR-0003 — Public Windy Road Repository with Gated Changesets Releases
-**Status:** proposed | **Oversight:** confirmed
-**Chosen:** Chosen option: **"Public repository with private packages and gated Changesets release PRs"**, because it makes development and quality evidence public while preserving an explicit later decision for registry identity and publication.
-**Confirmation:** GitHub identifies windyroad/emseepea as public with main as its default branch.; The repository includes the exact MIT licence text and public contribution, security, and support boundaries.; Clean GitHub-hosted checkouts pass quality jobs on Node.js 22 and 24.; Workflow dependencies use immutable pins and least-privilege permissions.; The Changesets workflow creates or updates a release PR on main.
 
 ### ADR-0005 — Active Streamable HTTP Scope and Adaptive Delivery
 **Status:** proposed | **Oversight:** confirmed
@@ -89,16 +84,26 @@ _14 ADRs. These are the current rules. The architect agent reads this section fi
 **Chosen:** Chosen option: **"Public discovery with invocation-scoped OAuth and retained outbound controls"**.
 **Confirmation:** A client without a token can call `server/discover` and `tools/list`.; Protected tools are listed with only public contract and access metadata.; Missing, invalid, expired, wrong-audience, or insufficient-scope tokens cause zero handler and backend calls.; Public tools still execute without credentials when protected tools coexist.; Caller tokens never appear in backend authorization, public output, or logs.
 
+### ADR-0019 — Public Pre-Alpha Releases Through npm Trusted Publishing
+**Status:** proposed | **Oversight:** confirmed | **Supersedes:** ["ADR-0003"]
+**Chosen:** Chosen option: **"Public pre-alpha releases through npm trusted publishing"**, because it proves the real adopter path while keeping release authority short lived, workflow-specific, and independently verifiable.
+**Confirmation:** `@emseepea/server` is public under MIT; the root and examples remain private.; The first publication is exactly `@emseepea/server@0.0.1` under `next`.; Changesets creates the release pull request, required checks pass before merge, and the exact merged SHA is requalified before publication.; The workflow publishes only through `next`, and anonymous registry inspection proves `latest` was not created or changed.; Anonymous `npm view`, exact-version `0.0.1` clean install, public import, and smoke execution succeed.
+
 ---
 
 ## Historical decisions
 
-_4 ADRs. These were tried and superseded, rejected, or deprecated. Read them as direction for what NOT to do, or to understand the lineage of an in-force decision. Do not enforce them as current rules._
+_5 ADRs. These were tried and superseded, rejected, or deprecated. Read them as direction for what NOT to do, or to understand the lineage of an in-force decision. Do not enforce them as current rules._
 
 ### ADR-0001 — Public-Specification-First TypeScript Framework Foundation
 **Status:** superseded | **Oversight:** confirmed
 **Chosen:** Chosen option: **"Public-specification-first framework using the official SDK"**.
 **Confirmation:** Clean installs, builds, and tests pass on Node.js 22 and 24.; Raw HTTP tests cover discovery, listing, calling, malformed input, header mismatch, and disabled capabilities.; An independent MCP client pinned to 2026-07-28 interoperates through the real HTTP endpoint.; Every example imports only the public framework API for MCP behavior.; Capability advertisements are derived from enabled handlers and match tested behavior.
+
+### ADR-0003 — Public Windy Road Repository with Gated Changesets Releases
+**Status:** superseded | **Oversight:** confirmed
+**Chosen:** Chosen option: **"Public repository with private packages and gated Changesets release PRs"**, because it makes development and quality evidence public while preserving an explicit later decision for registry identity and publication.
+**Confirmation:** GitHub identifies windyroad/emseepea as public with main as its default branch.; The repository includes the exact MIT licence text and public contribution, security, and support boundaries.; Clean GitHub-hosted checkouts pass quality jobs on Node.js 22 and 24.; Workflow dependencies use immutable pins and least-privilege permissions.; The Changesets workflow creates or updates a release PR on main.
 
 ### ADR-0004 — Fastify-First TypeScript Framework Foundation
 **Status:** superseded | **Oversight:** confirmed | **Supersedes:** ["ADR-0001"]
