@@ -50,7 +50,7 @@ _13 ADRs. These are the current rules. The architect agent reads this section fi
 **Confirmation:** JSON and SSE paths produce the same validated final domain result.; Slow-reader tests prove queue bounds and deterministic overflow termination.; Disconnect, expiry, and cancellation stop downstream work.; Progress cannot appear after a terminal result or error.; Local subscriptions are never described as cross-instance or replayable.
 
 ### ADR-0011 — Framework-Neutral Accessible Elicitation and Approval UI
-**Status:** proposed | **Oversight:** unconfirmed
+**Status:** proposed | **Oversight:** confirmed
 **Chosen:** Chosen option: **"Optional React renderer and Tailwind style packages"**.
 **Confirmation:** Native and React/Tailwind examples render the same shared fixtures and states.; The React/Tailwind example imports @emseepea/react, not private source.; The example uses exactly one @emseepea/tailwind stylesheet import.; The example has zero Tailwind config, plugin, theme CSS, or selector mapping.; Tailwind dependencies exist only in the Tailwind package's development closure.
 
