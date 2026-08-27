@@ -27,7 +27,7 @@
 | Package | Pinned version | Licence | Reason |
 | --- | --- | --- | --- |
 | `@modelcontextprotocol/fastify` | `2.0.0` | MIT | Official Fastify integration for MCP servers |
-| `@modelcontextprotocol/server` | `2.0.0` | MIT | Official modern MCP server and schemas |
+| `@modelcontextprotocol/server` | `2.0.0` | MIT | Official modern MCP server, schemas, bearer verification, OAuth challenges, and resource metadata helpers |
 | `@modelcontextprotocol/node` | `2.0.0` | MIT | Maintained Node HTTP adapter |
 | `fastify` | `5.12.1` | MIT | Fastify-first application and HTTP lifecycle |
 | `zod` | `4.4.3` | MIT | SDK-compatible runtime schema validation |

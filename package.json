@@ -2,6 +2,7 @@
   "name": "emseepea",
   "version": "0.0.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "packageManager": "npm@11.13.0",
   "engines": {
@@ -17,7 +18,8 @@
     "changeset": "changeset",
     "check": "npm test",
     "start:basic": "npm run start -w @emseepea/example-basic-no-ui",
-    "test": "npm run build && node --test tests/black-box/*.test.mjs",
+    "test": "npm run typecheck && npm run build && node --test tests/black-box/*.test.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "version-packages": "changeset version"
   },
   "devDependencies": {

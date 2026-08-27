@@ -22,6 +22,11 @@ failure stops the job; later steps are not evidence for earlier ones.
 - Delete generated output before tests that consume build artifacts, preventing
   stale files from producing false results.
 - Invalid or rejected requests must prove zero handler and backend calls.
+- Public discovery and public tools must prove that bearer headers neither
+  invoke the verifier nor create an authenticated handler context.
+- Protected calls must prove failure before handler execution for missing,
+  invalid, expired, insufficient-scope, wrong-resource, and timed-out
+  verification outcomes.
 - Keep tests outside production packages, but include their JavaScript and
   TypeScript in runnable or static quality checks.
 - Add a contract check only when a public artifact exists; do not create a

@@ -2,6 +2,15 @@
   "name": "@emseepea/server",
   "version": "0.0.0",
   "private": true,
+  "description": "Fastify-first framework for MCP 2026-07-28 servers over Streamable HTTP",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/windyroad/emseepea.git",
+    "directory": "packages/framework"
+  },
+  "homepage": "https://github.com/windyroad/emseepea#readme",
+  "bugs": "https://github.com/windyroad/emseepea/issues",
   "type": "module",
   "exports": {
     ".": {
@@ -10,7 +19,9 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json"

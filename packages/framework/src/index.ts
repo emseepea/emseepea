@@ -1,6 +1,21 @@
 import { createMcpFastifyApp } from "@modelcontextprotocol/fastify";
 import { toNodeHandler } from "@modelcontextprotocol/node";
-import { McpServer, createMcpHandler, type CallToolResult } from "@modelcontextprotocol/server";
+import {
+  McpServer,
+  OAuthError,
+  OAuthErrorCode,
+  bearerAuthChallengeResponse,
+  buildOAuthProtectedResourceMetadata,
+  checkResourceAllowed,
+  createMcpHandler,
+  getOAuthProtectedResourceMetadataUrl,
+  oauthMetadataResponse,
+  verifyBearerToken,
+  type AuthInfo,
+  type AuthMetadataOptions,
+  type CallToolResult,
+  type OAuthTokenVerifier,
+} from "@modelcontextprotocol/server";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { isIP } from "node:net";
 import type { z } from "zod";
@@ -8,23 +23,57 @@ import type { z } from "zod";
 const PROTOCOL_VERSION = "2026-07-28";
 const REGISTER = Symbol("register");
 const TOOL_NAME = Symbol("toolName");
+const TOOL_ACCESS = Symbol("toolAccess");
 const runtimes = new WeakMap<FastifyInstance, AppRuntime>();
 
-export interface ToolContext { readonly signal: AbortSignal }
+export interface ToolPrincipal {
+  readonly clientId: string;
+  readonly scopes: readonly string[];
+  readonly resource?: string;
+}
+export interface ToolContext<Access extends ToolAccess = ToolAccess> {
+  readonly signal: AbortSignal;
+  readonly principal: Access extends "public" ? undefined : ToolPrincipal;
+}
 export interface ToolResult<Output> { readonly text: string; readonly data: Output }
-export interface ToolDefinition<Input extends z.ZodObject, Output extends z.ZodObject> {
+interface ProtectedToolAccess {
+  readonly type: "protected";
+  readonly requiredScopes: readonly string[];
+}
+export type ToolAccess = "public" | "protected";
+interface ToolDefinitionBase<Input extends z.ZodObject, Output extends z.ZodObject> {
   readonly name: string;
-  readonly access: "public";
   readonly title?: string;
   readonly description: string;
   readonly inputSchema: Input;
   readonly outputSchema: Output;
-  readonly handler: (input: z.output<Input>, context: ToolContext) =>
-    ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
 }
+export type ToolDefinition<Input extends z.ZodObject, Output extends z.ZodObject> =
+  ToolDefinitionBase<Input, Output> & (
+    | {
+        readonly access: "public";
+        readonly requiredScopes?: never;
+        readonly handler: (input: z.output<Input>, context: ToolContext<"public">) =>
+          ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
+      }
+    | {
+        readonly access: "protected";
+        readonly requiredScopes: readonly string[];
+        readonly handler: (input: z.output<Input>, context: ToolContext<"protected">) =>
+          ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
+      }
+  );
 export interface EmseepeaTool {
   readonly [TOOL_NAME]: string;
+  readonly [TOOL_ACCESS]: "public" | ProtectedToolAccess;
   readonly [REGISTER]: (server: McpServer, timeoutMs: number) => void;
+}
+export interface OAuthResourceServerOptions {
+  readonly verifier: OAuthTokenVerifier;
+  readonly metadata: Omit<AuthMetadataOptions, "dangerouslyAllowInsecureIssuerUrl"> & {
+    readonly dangerouslyAllowInsecureIssuerUrl?: false;
+  };
+  readonly verificationTimeoutMs?: number;
 }
 export interface EmseepeaOptions {
   readonly name: string;
@@ -34,6 +83,7 @@ export interface EmseepeaOptions {
   readonly maxRequestBytes?: number;
   readonly toolTimeoutMs?: number;
   readonly deployment?: DeploymentProfile;
+  readonly oauth?: OAuthResourceServerOptions;
 }
 export type DeploymentProfile =
   | { readonly mode: "loopback" }
@@ -65,29 +115,51 @@ type NormalizedDeployment =
       readonly rateLimit: Readonly<RateLimitOptions>;
     };
 interface AppRuntime { deployment: NormalizedDeployment; requestTimeoutMs: number }
+interface NormalizedOAuth {
+  readonly verifier: OAuthTokenVerifier;
+  readonly metadata: AuthMetadataOptions;
+  readonly resourceMetadataUrl: string;
+  readonly verificationTimeoutMs: number;
+}
 
 export function defineTool<Input extends z.ZodObject, Output extends z.ZodObject>(
   definition: ToolDefinition<Input, Output>,
 ): EmseepeaTool {
   assertToolName(definition.name);
-  if (definition.access !== "public") {
-    throw new TypeError('Tool access must be explicitly declared as "public"');
-  }
+  const access = normalizeToolAccess(definition.access, definition.requiredScopes);
+  const handler = definition.handler as unknown as (
+    input: z.output<Input>,
+    context: ToolContext,
+  ) => ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
   return {
     [TOOL_NAME]: definition.name,
+    [TOOL_ACCESS]: access,
     [REGISTER](server, timeoutMs) {
       const inputSchema: z.ZodObject = definition.inputSchema;
       const outputSchema: z.ZodObject = definition.outputSchema;
       server.registerTool(
         definition.name,
-        { title: definition.title, description: definition.description, inputSchema, outputSchema },
+        {
+          title: definition.title,
+          description: definition.description,
+          inputSchema,
+          outputSchema,
+          _meta: {
+            "io.emseepea/access": access === "public"
+              ? { type: "public" }
+              : { type: "protected", requiredScopes: [...access.requiredScopes] },
+          },
+        },
         async (input, context): Promise<CallToolResult> => {
           const parsedInput = await definition.inputSchema.safeParseAsync(input);
           if (!parsedInput.success) throw new Error("Tool received input that does not match its schema");
           const result = await runWithDeadline(
             context.mcpReq.signal,
             timeoutMs,
-            (signal) => definition.handler(parsedInput.data, { signal }),
+            (signal) => handler(parsedInput.data, {
+              signal,
+              principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
+            }),
           );
           const parsedOutput = await definition.outputSchema.safeParseAsync(result.data);
           if (!parsedOutput.success) throw new Error("Tool returned output that does not match its schema");
@@ -110,6 +182,11 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   const maxRequestBytes = positiveInteger("maxRequestBytes", options.maxRequestBytes ?? 1024 * 1024);
   const toolTimeoutMs = positiveInteger("toolTimeoutMs", options.toolTimeoutMs ?? 30_000);
   const deployment = normalizeDeployment(options.deployment ?? { mode: "loopback" });
+  const oauth = options.oauth ? normalizeOAuth(options.oauth) : undefined;
+  if (tools.some((tool) => tool[TOOL_ACCESS] !== "public") && !oauth) {
+    throw new TypeError("Protected tools require OAuth resource-server configuration");
+  }
+  const toolsByName = new Map(tools.map((tool) => [tool[TOOL_NAME], tool]));
   const enabledMethods = new Set(["server/discover"]);
   if (tools.length) enabledMethods.add("tools/list").add("tools/call");
 
@@ -133,6 +210,21 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
 
   app.get("/healthz", health("ok\n"));
   app.get("/readyz", health("ready\n"));
+  if (oauth) {
+    app.all("/.well-known/*", async (request, reply) => {
+      const response = oauthMetadataResponse(
+        new Request(new URL(request.url, oauth.metadata.resourceServerUrl.origin), {
+          method: request.method,
+        }),
+        oauth.metadata,
+      );
+      if (!response) {
+        await reply.code(404).send();
+        return;
+      }
+      await sendWebResponse(reply, response);
+    });
+  }
   app.route({
     method: ["GET", "PUT", "PATCH", "DELETE", "OPTIONS"],
     url: "/mcp",
@@ -145,6 +237,19 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         !enabledMethods.has(request.body.method)) {
       await sendRpcError(reply, 404, -32601, "Method not found", requestId(request.body.id));
       return;
+    }
+    const access = protectedAccessForCall(request.body, toolsByName);
+    if (access && oauth) {
+      try {
+        const authInfo = await verifyProtectedCall(request, reply, access, oauth);
+        (request.raw as typeof request.raw & { auth?: AuthInfo }).auth = authInfo;
+      } catch (error) {
+        await sendWebResponse(reply, bearerAuthChallengeResponse(safeOAuthError(error), {
+          requiredScopes: [...access.requiredScopes],
+          resourceMetadataUrl: oauth.resourceMetadataUrl,
+        }));
+        return;
+      }
     }
     reply.hijack();
     await nodeHandler(request.raw, reply.raw, request.body);
@@ -161,6 +266,76 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   app.addHook("onClose", async () => sdkHandler.close());
   runtimes.set(app, { deployment, requestTimeoutMs: toolTimeoutMs + 5_000 });
   return app;
+}
+
+function safeOAuthError(error: unknown): unknown {
+  if (!(error instanceof OAuthError)) return error;
+  const message = error.code === OAuthErrorCode.InvalidToken
+    ? "Invalid access token"
+    : error.code === OAuthErrorCode.InsufficientScope
+      ? "Insufficient scope"
+      : error.code === OAuthErrorCode.ServerError
+        ? "Authorization service error"
+        : "Authorization request failed";
+  return new OAuthError(error.code, message);
+}
+
+async function verifyProtectedCall(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  access: ProtectedToolAccess,
+  oauth: NormalizedOAuth,
+): Promise<AuthInfo> {
+  const disconnected = new AbortController();
+  const abort = () => disconnected.abort();
+  request.raw.once("aborted", abort);
+  reply.raw.once("close", abort);
+  try {
+    const authInfo = await runWithDeadline(
+      disconnected.signal,
+      oauth.verificationTimeoutMs,
+      () => verifyBearerToken(singleHeader(request.raw.rawHeaders, "authorization"), {
+        verifier: oauth.verifier,
+        requiredScopes: [...access.requiredScopes],
+        resourceMetadataUrl: oauth.resourceMetadataUrl,
+      }),
+    );
+    if (!authInfo.resource || authInfo.resource.hash || !checkResourceAllowed({
+      requestedResource: authInfo.resource,
+      configuredResource: oauth.metadata.resourceServerUrl,
+    })) {
+      throw new OAuthError(OAuthErrorCode.InvalidToken, "Token is not valid for this resource");
+    }
+    return authInfo;
+  } finally {
+    request.raw.off("aborted", abort);
+    reply.raw.off("close", abort);
+  }
+}
+
+async function sendWebResponse(reply: FastifyReply, response: Response): Promise<void> {
+  for (const [name, value] of response.headers) reply.header(name, value);
+  const body = Buffer.from(await response.arrayBuffer());
+  await reply.code(response.status).send(body.length ? body : undefined);
+}
+
+function protectedAccessForCall(
+  body: unknown,
+  toolsByName: ReadonlyMap<string, EmseepeaTool>,
+): ProtectedToolAccess | undefined {
+  if (!isRecord(body) || body.method !== "tools/call" || !isRecord(body.params) ||
+      typeof body.params.name !== "string") return undefined;
+  const access = toolsByName.get(body.params.name)?.[TOOL_ACCESS];
+  return access === "public" ? undefined : access;
+}
+
+function principalFrom(authInfo: AuthInfo | undefined): ToolPrincipal {
+  if (!authInfo) throw new Error("Protected tool reached execution without verified authorization");
+  return {
+    clientId: authInfo.clientId,
+    scopes: [...authInfo.scopes],
+    resource: authInfo.resource?.href,
+  };
 }
 
 export async function serveEmseepea(
@@ -271,6 +446,55 @@ class FixedWindowRateLimiter {
     this.#clients.set(client, { count: 1, startedAt: now });
     return "allowed";
   }
+}
+
+function normalizeToolAccess(
+  access: unknown,
+  requiredScopes: unknown,
+): "public" | ProtectedToolAccess {
+  if (access === "public") return access;
+  if (access !== "protected" || !Array.isArray(requiredScopes) || requiredScopes.length === 0) {
+    throw new TypeError('Tool access must be explicitly declared as "public" or protected with scopes');
+  }
+  const scopes = requiredScopes.map((scope) => {
+    if (typeof scope !== "string" || !/^[\x21\x23-\x5B\x5D-\x7E]+$/.test(scope)) {
+      throw new TypeError("Protected tool scopes must be valid OAuth scope tokens");
+    }
+    return scope;
+  });
+  if (new Set(scopes).size !== scopes.length) {
+    throw new TypeError("Protected tool scopes must be unique");
+  }
+  return { type: "protected", requiredScopes: scopes };
+}
+
+function normalizeOAuth(options: OAuthResourceServerOptions): NormalizedOAuth {
+  if (!options.verifier || typeof options.verifier.verifyAccessToken !== "function") {
+    throw new TypeError("oauth.verifier must implement verifyAccessToken");
+  }
+  if ((options.metadata as AuthMetadataOptions).dangerouslyAllowInsecureIssuerUrl === true) {
+    throw new TypeError("Insecure OAuth issuer URLs are not supported");
+  }
+  const resourceServerUrl = options.metadata.resourceServerUrl;
+  if (resourceServerUrl.hash || resourceServerUrl.username || resourceServerUrl.password ||
+      (resourceServerUrl.protocol !== "https:" &&
+       !(resourceServerUrl.protocol === "http:" && isLoopbackUrl(resourceServerUrl)))) {
+    throw new TypeError("OAuth resource-server URL must be HTTPS, or HTTP on loopback, without credentials or a fragment");
+  }
+  buildOAuthProtectedResourceMetadata(options.metadata);
+  return {
+    verifier: options.verifier,
+    metadata: options.metadata,
+    resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(options.metadata.resourceServerUrl),
+    verificationTimeoutMs: positiveInteger(
+      "oauth.verificationTimeoutMs",
+      options.verificationTimeoutMs ?? 10_000,
+    ),
+  };
+}
+
+function isLoopbackUrl(url: URL): boolean {
+  return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
 }
 
 function normalizeDeployment(profile: DeploymentProfile): NormalizedDeployment {
