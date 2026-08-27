@@ -11,7 +11,7 @@ Compact rendered index of every ADR's chosen option, confirmation criteria, and 
 
 For deep-dive — creating, evolving, ratifying, or contesting a decision — open the per-ADR file directly. `/wr-architect:create-adr`, `/wr-architect:capture-adr`, and `/wr-architect:review-decisions` all keep the full body in scope. Decision Drivers, Considered Options bodies, Pros and Cons, Consequences narrative, and Reassessment Criteria are intentionally NOT in this routine view — they live in the per-ADR body.
 
-**Total ADRs:** 20 (13 in-force, 7 historical)
+**Total ADRs:** 21 (13 in-force, 8 historical)
 
 ---
 
@@ -79,16 +79,16 @@ _13 ADRs. These are the current rules. The architect agent reads this section fi
 **Chosen:** Chosen option: **"Public pre-alpha releases through npm trusted publishing"**, because it proves the real adopter path while keeping release authority short lived, workflow-specific, and independently verifiable.
 **Confirmation:** `@emseepea/server` is public under MIT; the root and examples remain private.; The first publication is exactly `@emseepea/server@0.0.1` under `next`.; Changesets creates the release pull request, required checks pass before merge, and the exact merged SHA is requalified before publication.; The workflow publishes only through `next`, and anonymous registry inspection proves `latest` was not created or changed.; Anonymous `npm view`, exact-version `0.0.1` clean install, public import, and smoke execution succeed.
 
-### ADR-0021 — Mandatory Semantic LLM Qualification for Examples and Releases
-**Status:** proposed | **Oversight:** confirmed | **Supersedes:** ["ADR-0020"]
-**Chosen:** Chosen option: **"Mandatory Promptfoo qualification with GitHub Copilot CLI"**, because it tests the user-visible meaning of every example while retaining a bounded, auditable, exact-commit release gate.
-**Confirmation:** Every example has Promptfoo qualification with deterministic critical facts, a semantic rubric, and explicit MCP path evidence.; Every example runs three uncached agent trials and three judge verdicts without semantic retries.; Tool trials record named MCP calls; resource and prompt trials record exact official-client operations.; Agent trials use at most three MCP tool calls and bounded credits and time.; CI proves the effective Copilot provider and `claude-sonnet-4.6` model or fails closed.
+### ADR-0022 — Harness-Mediated Semantic LLM Qualification for Examples and Releases
+**Status:** proposed | **Oversight:** confirmed | **Supersedes:** ["ADR-0021"]
+**Chosen:** Chosen option: **"Harness-mediated MCP material with GitHub Copilot CLI"**, because it tests live MCP results for user-visible meaning while retaining a bounded, auditable, exact-commit release gate within provider policy.
+**Confirmation:** Every example has Promptfoo qualification with deterministic critical facts, a semantic rubric, and explicit MCP path evidence.; For every trial the harness performs the exact official-client operation and binds the result to evidence.; Agents and judges have no MCP tools and run without semantic retries.; CI proves the effective Copilot provider and `claude-sonnet-4.6` model or fails closed.
 
 ---
 
 ## Historical decisions
 
-_7 ADRs. These were tried and superseded, rejected, or deprecated. Read them as direction for what NOT to do, or to understand the lineage of an in-force decision. Do not enforce them as current rules._
+_8 ADRs. These were tried and superseded, rejected, or deprecated. Read them as direction for what NOT to do, or to understand the lineage of an in-force decision. Do not enforce them as current rules._
 
 ### ADR-0001 — Public-Specification-First TypeScript Framework Foundation
 **Status:** superseded | **Oversight:** confirmed
@@ -124,3 +124,8 @@ _7 ADRs. These were tried and superseded, rejected, or deprecated. Read them as 
 **Status:** superseded | **Oversight:** confirmed
 **Chosen:** Chosen option: **"Mandatory Promptfoo qualification with GitHub Copilot CLI"**. Superseded by ADR-0021 because this record misstated the evaluation budget and omitted required isolation and dependency-policy details.
 **Confirmation:** Historical only; use ADR-0021 for the current semantic-evaluation contract.
+
+### ADR-0021 — Mandatory Semantic LLM Qualification for Examples and Releases
+**Status:** superseded | **Oversight:** confirmed | **Supersedes:** ["ADR-0020"]
+**Chosen:** Chosen option: **"Mandatory Promptfoo qualification with GitHub Copilot CLI"**, because it tests the user-visible meaning of every example while retaining a bounded, auditable, exact-commit release gate.
+**Confirmation:** Historical only; direct model access to the custom loopback MCP server was blocked by provider policy. Use ADR-0022 for the current semantic-evaluation contract.

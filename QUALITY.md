@@ -52,9 +52,10 @@ failure stops the job; later steps are not evidence for earlier ones.
 - Every example must have a Promptfoo semantic case with three fresh agent
   trials, three independent no-MCP judge verdicts, deterministic critical
   facts, and exact MCP path evidence. All three trials must pass.
-- Tool examples must record the named MCP tool call. Resource and prompt
-  examples must record exact official-client read or get operations and claim
-  semantic consumption, not autonomous selection.
+- For every trial, the harness must execute the exact tool call, resource read,
+  or prompt get through the official client and bind the operation and returned
+  material to evidence. Model processes receive no MCP tools; claims are about
+  semantic interpretation, not autonomous selection.
 - Semantic evaluation has no semantic retries. Provider, model, credential,
   path, judge, timeout, configuration, or artifact uncertainty fails closed.
 - Promptfoo provider retries are disabled. Provider-internal transport retries

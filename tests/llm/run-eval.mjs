@@ -14,7 +14,16 @@ const artifactDirectory = join(repoRoot, "artifacts/llm-eval");
 const promptfooOutput = join(artifactDirectory, "promptfoo.json");
 const providerEvidence = join(artifactDirectory, "provider.jsonl");
 const evidencePath = join(artifactDirectory, "evidence.json");
-const examples = ["basic-no-ui", "backend-no-ui", "resources-prompts"];
+const examples = ["basic-no-ui", "backend-no-ui", "resources-prompts", "streaming-progress"];
+const expectedPaths = {
+  "basic-no-ui": [["tools/call", "get-bean-details"]],
+  "backend-no-ui": [["tools/call", "create-bean-report"]],
+  "resources-prompts": [
+    ["resources/read", "guide://coffee/getting-started"],
+    ["prompts/get", "brew-guide"],
+  ],
+  "streaming-progress": [["tools/call", "roast-sample-batch"]],
+};
 const providerFlag = process.argv.indexOf("--provider");
 const provider = providerFlag >= 0 ? process.argv[providerFlag + 1] : "claude";
 const authoritative = provider === "copilot";
@@ -129,8 +138,22 @@ function verifyProviderRecords(records) {
     if (agents.length !== 3 || judges.length !== 3) {
       throw new Error(`${example} produced ${agents.length} agent and ${judges.length} judge outputs`);
     }
-    if (agents.some(({ status, toolCallCount = 0 }) => status !== "completed" || toolCallCount > 3)) {
-      throw new Error(`${example} has an incomplete or over-budget agent trial`);
+    if (agents.some(({ status, toolCallCount, materialSha256, pathEvidence }) => {
+      const expected = expectedPaths[example];
+      return status !== "completed"
+        || toolCallCount !== 0
+        || !/^[a-f0-9]{64}$/.test(materialSha256 ?? "")
+        || !Array.isArray(pathEvidence)
+        || pathEvidence.length !== expected.length
+        || expected.some(([method, target]) => !pathEvidence.some((entry) => (
+          entry.server === "emseepea_eval"
+          && entry.method === method
+          && entry.target === target
+          && /^[a-f0-9]{64}$/.test(entry.requestSha256 ?? "")
+          && /^[a-f0-9]{64}$/.test(entry.responseSha256 ?? "")
+        )));
+    })) {
+      throw new Error(`${example} has an incomplete or tool-enabled agent trial`);
     }
     if (judges.some(({ status, verdict }) => status !== "completed" || verdict?.pass !== true)) {
       throw new Error(`${example} has a missing or failed judge verdict`);
@@ -194,7 +217,7 @@ try {
   const promptfooDocument = JSON.parse(await readFile(promptfooOutput, "utf8"));
   resultEntries = promptfooEntries(promptfooDocument);
   if (promptfoo.code !== 0) throw new Error(`Promptfoo exited ${promptfoo.code}`);
-  if (resultEntries.length !== 9 || resultEntries.some(({ success }) => success !== true)) {
+  if (resultEntries.length !== examples.length * 3 || resultEntries.some(({ success }) => success !== true)) {
     throw new Error(`Promptfoo recorded ${resultEntries.filter(({ success }) => success).length}/${resultEntries.length} passing trials`);
   }
 } catch (error) {

@@ -27,6 +27,7 @@
     "start:basic": "npm run start -w @emseepea/example-basic-no-ui",
     "start:backend": "npm run start -w @emseepea/example-backend-no-ui",
     "start:resources-prompts": "npm run start -w @emseepea/example-resources-prompts",
+    "start:streaming": "npm run start -w @emseepea/example-streaming-progress",
     "test": "npm run build && npm run typecheck && node --test tests/black-box/*.test.mjs tests/llm/*.test.mjs",
     "test:eval": "npm run build && node tests/llm/run-eval.mjs --provider claude",
     "test:eval:ci": "node tests/llm/run-eval.mjs --provider copilot",

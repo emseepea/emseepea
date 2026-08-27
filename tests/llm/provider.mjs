@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { appendFile, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -11,18 +12,20 @@ const repoRoot = resolve(here, "../..");
 const mcpServerName = "emseepea_eval";
 const copilotModel = "claude-sonnet-4.6";
 const providerTimeoutMs = 120_000;
-const maxToolCalls = 3;
 const copilotCreditCap = 30;
 const counters = new Map();
+const sha256 = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 
 const examples = {
   "basic-no-ui": {
     script: "examples/basic-no-ui/dist/server.js",
     tool: "get-bean-details",
+    arguments: { name: "Highland Bloom" },
   },
   "backend-no-ui": {
     script: "examples/backend-no-ui/dist/server.js",
     tool: "create-bean-report",
+    arguments: { roast: "dark" },
   },
   "resources-prompts": {
     script: "examples/resources-prompts/dist/server.js",
@@ -33,10 +36,16 @@ const examples = {
       );
       await client.connect(new StreamableHTTPClientTransport(new URL(url)));
       try {
-        const resource = await client.readResource({ uri: "guide://coffee/getting-started" });
-        const prompt = await client.getPrompt({
+        const resourceRequest = { method: "resources/read", uri: "guide://coffee/getting-started" };
+        const promptRequest = {
+          method: "prompts/get",
           name: "brew-guide",
           arguments: { topic: "brew-ratio" },
+        };
+        const resource = await client.readResource({ uri: resourceRequest.uri });
+        const prompt = await client.getPrompt({
+          name: promptRequest.name,
+          arguments: promptRequest.arguments,
         });
         return {
           text: [
@@ -47,8 +56,20 @@ const examples = {
             String(prompt.messages[0]?.content?.text ?? ""),
           ].join("\n\n"),
           pathEvidence: [
-            { server: mcpServerName, method: "resources/read", target: "guide://coffee/getting-started" },
-            { server: mcpServerName, method: "prompts/get", target: "brew-guide" },
+            {
+              server: mcpServerName,
+              method: resourceRequest.method,
+              target: resourceRequest.uri,
+              requestSha256: sha256(resourceRequest),
+              responseSha256: sha256(resource),
+            },
+            {
+              server: mcpServerName,
+              method: promptRequest.method,
+              target: promptRequest.name,
+              requestSha256: sha256(promptRequest),
+              responseSha256: sha256(prompt),
+            },
           ],
         };
       } finally {
@@ -56,7 +77,49 @@ const examples = {
       }
     },
   },
+  "streaming-progress": {
+    script: "examples/streaming-progress/dist/server.js",
+    tool: "roast-sample-batch",
+    arguments: { batch: "sample-batch" },
+  },
 };
+
+async function toolMaterial(url, definition) {
+  const client = new Client(
+    { name: "emseepea-semantic-eval", version: "0.0.0" },
+    { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+  );
+  await client.connect(new StreamableHTTPClientTransport(new URL(url)));
+  const progress = [];
+  try {
+    const result = await client.callTool(
+      { name: definition.tool, arguments: definition.arguments },
+      { onprogress: (update) => progress.push(update) },
+    );
+    if (result.isError) throw new Error(`${definition.tool} returned a tool error`);
+    const request = { method: "tools/call", name: definition.tool, arguments: definition.arguments };
+    const response = { progress, result };
+    const requestSha256 = sha256(request);
+    const responseSha256 = sha256(response);
+    return {
+      text: [
+        "The following material was retrieved through the official MCP client.",
+        `Operation: ${JSON.stringify(request)}`,
+        `Progress notifications: ${JSON.stringify(progress)}`,
+        `Final result: ${JSON.stringify(result)}`,
+      ].join("\n\n"),
+      pathEvidence: [{
+        server: mcpServerName,
+        method: "tools/call",
+        target: definition.tool,
+        requestSha256,
+        responseSha256,
+      }],
+    };
+  } finally {
+    await client.close();
+  }
+}
 
 function nextTrial(example, role) {
   const key = `${example}:${role}`;
@@ -169,7 +232,7 @@ function parseJsonLines(stdout) {
   return stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
 }
 
-export function parseCopilotEvents(stdout, expectedTool) {
+export function parseCopilotEvents(stdout) {
   const events = parseJsonLines(stdout);
   const errors = events.filter(({ type }) => type === "session.error");
   const mcpWarnings = events.filter(({ type, data }) => (
@@ -181,7 +244,6 @@ export function parseCopilotEvents(stdout, expectedTool) {
     .map(({ data }) => data?.model)
     .filter(Boolean);
   const toolEvents = events.filter(({ type }) => type === "tool.execution_start");
-  const toolCompletions = events.filter(({ type }) => type === "tool.execution_complete");
   const forbiddenEvents = events.filter(({ type }) => [
     "skill.invoked",
     "subagent.started",
@@ -198,14 +260,6 @@ export function parseCopilotEvents(stdout, expectedTool) {
     .map(({ data }) => data.content)
     .filter(Boolean)
     .at(-1);
-  const pathEvidence = toolEvents.map(({ data }) => ({
-    server: data?.mcpServerName,
-    method: "tools/call",
-    target: data?.mcpToolName,
-  }));
-  const invalidTool = toolEvents.find(({ data }) => (
-    data?.mcpServerName !== mcpServerName || data?.mcpToolName !== expectedTool
-  ));
   if (mcpWarnings.length > 0) throw new Error(`Copilot MCP failed: ${mcpWarnings[0].data?.message ?? "unknown"}`);
   if (errors.length > 0) throw new Error(`Copilot session failed: ${errors[0].data?.errorType ?? "unknown"}`);
   if (result?.exitCode !== 0) throw new Error(`Copilot exited ${result?.exitCode ?? "without a result"}`);
@@ -214,31 +268,20 @@ export function parseCopilotEvents(stdout, expectedTool) {
     throw new Error(`Copilot effective model was ${models.join(", ") || "unreported"}`);
   }
   if (forbiddenEvents.length > 0) throw new Error(`Copilot emitted forbidden event ${forbiddenEvents[0].type}`);
-  const expectedServers = expectedTool ? [mcpServerName] : [];
-  if (loadedServers.length !== expectedServers.length || loadedServers.some((server) => !expectedServers.includes(server))) {
+  if (loadedServers.length > 0) {
     throw new Error(`Copilot loaded MCP servers ${loadedServers.join(", ") || "none"}`);
   }
-  if (toolEvents.length > maxToolCalls) throw new Error(`Copilot exceeded ${maxToolCalls} MCP tool calls`);
-  if (expectedTool && toolEvents.length === 0) throw new Error(`Copilot did not call ${expectedTool}`);
-  if (invalidTool) throw new Error("Copilot used a tool outside the named MCP path");
-  if (toolEvents.some(({ data }, index) => (
-    typeof data?.toolCallId !== "string"
-    || toolEvents.findIndex(({ data: candidate }) => candidate?.toolCallId === data.toolCallId) !== index
-    || toolCompletions.filter(({ data: completion }) => completion?.toolCallId === data.toolCallId).length !== 1
-    || toolCompletions.find(({ data: completion }) => completion?.toolCallId === data.toolCallId)?.data?.success !== true
-  ))) {
-    throw new Error("Copilot MCP tool call did not complete successfully");
-  }
+  if (toolEvents.length > 0) throw new Error("Copilot used a tool");
   return {
     answer,
     model: copilotModel,
-    pathEvidence,
-    toolCallCount: toolEvents.length,
+    pathEvidence: [],
+    toolCallCount: 0,
     turnCount: events.filter(({ type }) => type === "assistant.turn_start").length,
   };
 }
 
-export function parseClaudeEvents(stdout, expectedTool) {
+export function parseClaudeEvents(stdout) {
   const events = parseJsonLines(stdout);
   const result = events.findLast(({ type }) => type === "result");
   const allToolUses = events.flatMap(({ message }) => (
@@ -246,49 +289,22 @@ export function parseClaudeEvents(stdout, expectedTool) {
       ? message.content.filter(({ type }) => type === "tool_use")
       : []
   ));
-  const toolUses = allToolUses.filter(({ name }) => name?.startsWith("mcp__"));
-  const toolResults = events.flatMap(({ message }) => (
-    Array.isArray(message?.content)
-      ? message.content.filter(({ type }) => type === "tool_result")
-      : []
-  ));
-  const forbiddenTool = allToolUses.find(({ name }) => (
-    !name?.startsWith("mcp__")
-  ));
-  const expectedName = expectedTool ? `mcp__${mcpServerName}__${expectedTool}` : undefined;
   if (result?.is_error || typeof result?.result !== "string") {
     throw new Error(
       `Claude failed: ${result?.subtype ?? "no result"}; is_error=${String(result?.is_error)}; result=${typeof result?.result}`,
     );
   }
-  if (toolUses.length > maxToolCalls) throw new Error(`Claude exceeded ${maxToolCalls} MCP tool calls`);
-  if (expectedTool && toolUses.length === 0) throw new Error(`Claude did not call ${expectedTool}`);
-  if (forbiddenTool) throw new Error(`Claude used forbidden tool ${forbiddenTool.name}`);
-  if (toolUses.some(({ name }) => name !== expectedName)) {
-    throw new Error("Claude used a tool outside the named MCP path");
-  }
-  if (toolUses.some(({ id }, index) => (
-    typeof id !== "string"
-    || toolUses.findIndex(({ id: candidate }) => candidate === id) !== index
-    || toolResults.filter(({ tool_use_id: toolUseId }) => toolUseId === id).length !== 1
-    || toolResults.find(({ tool_use_id: toolUseId }) => toolUseId === id)?.is_error === true
-  ))) {
-    throw new Error("Claude MCP tool call did not complete successfully");
-  }
+  if (allToolUses.length > 0) throw new Error(`Claude used forbidden tool ${allToolUses[0].name}`);
   return {
     answer: result.result,
     model: result.modelUsage ? Object.keys(result.modelUsage)[0] ?? "claude-advisory" : "claude-advisory",
-    pathEvidence: toolUses.map(() => ({
-      server: mcpServerName,
-      method: "tools/call",
-      target: expectedTool,
-    })),
-    toolCallCount: toolUses.length,
+    pathEvidence: [],
+    toolCallCount: 0,
     turnCount: events.filter(({ type }) => type === "assistant").length,
   };
 }
 
-async function runCopilot(prompt, url, tool, neutralDirectory) {
+async function runCopilot(prompt, neutralDirectory) {
   const tokenFile = process.env.EMSEEPEA_COPILOT_TOKEN_FILE;
   if (!tokenFile) throw new Error("EMSEEPEA_COPILOT_TOKEN_FILE is required for authoritative evaluation");
   const token = (await readFile(tokenFile, "utf8")).trim();
@@ -312,17 +328,7 @@ async function runCopilot(prompt, url, tool, neutralDirectory) {
     "--output-format", "json",
     "--silent",
   ];
-  if (tool) {
-    const permission = `${mcpServerName}(${tool})`;
-    args.push(
-      "--additional-mcp-config",
-      JSON.stringify({ mcpServers: { [mcpServerName]: { type: "http", url, tools: [tool] } } }),
-      "--available-tools", permission,
-      "--allow-tool", permission,
-    );
-  } else {
-    args.push("--available-tools", "");
-  }
+  args.push("--available-tools", "");
   const execution = await runProcess(resolve(repoRoot, "node_modules/.bin/copilot"), args, {
     cwd: neutralDirectory,
     env: childEnvironment({
@@ -332,10 +338,10 @@ async function runCopilot(prompt, url, tool, neutralDirectory) {
   });
   if (execution.timedOut) throw new Error("Copilot provider timed out");
   if (execution.code !== 0 && !execution.stdout) throw new Error(`Copilot exited ${execution.code}`);
-  return parseCopilotEvents(execution.stdout, tool);
+  return parseCopilotEvents(execution.stdout);
 }
 
-async function runClaude(prompt, url, tool, neutralDirectory) {
+async function runClaude(prompt, neutralDirectory) {
   const args = [
     "--print", prompt,
     "--strict-mcp-config",
@@ -350,21 +356,14 @@ async function runClaude(prompt, url, tool, neutralDirectory) {
     "--setting-sources", "",
     "--tools", "",
   ];
-  if (tool) {
-    args.push(
-      "--mcp-config", JSON.stringify({ mcpServers: { [mcpServerName]: { type: "http", url } } }),
-      "--allowedTools", `mcp__${mcpServerName}__${tool}`,
-    );
-  } else {
-    args.push("--safe-mode");
-  }
+  args.push("--safe-mode");
   const execution = await runProcess("claude", args, {
     cwd: neutralDirectory,
     env: childEnvironment(),
   });
   if (execution.timedOut) throw new Error("Claude provider timed out");
   if (execution.code !== 0 && !execution.stdout) throw new Error(`Claude exited ${execution.code}`);
-  return parseClaudeEvents(execution.stdout, tool);
+  return parseClaudeEvents(execution.stdout);
 }
 
 export function parseJudgeVerdict(output) {
@@ -412,29 +411,28 @@ export default class SemanticProvider {
     let running;
     try {
       let effectivePrompt = prompt;
-      let expectedTool;
       let pathEvidence = [];
+      let materialSha256;
       if (this.role === "agent") {
         running = await startExample(example);
         const definition = examples[example];
-        expectedTool = definition.tool;
-        if (definition.material) {
-          const material = await definition.material(running.url);
-          effectivePrompt = `${material.text}\n\nQuestion:\n${prompt}`;
-          pathEvidence = material.pathEvidence;
-        } else {
-          effectivePrompt = `Use the ${mcpServerName} MCP server and call ${expectedTool} exactly once before answering.\n\n${prompt}`;
-        }
+        const material = definition.material
+          ? await definition.material(running.url)
+          : await toolMaterial(running.url, definition);
+        effectivePrompt = `${material.text}\n\nAnswer only from that MCP material.\n\nQuestion:\n${prompt}`;
+        pathEvidence = material.pathEvidence;
+        materialSha256 = createHash("sha256").update(material.text).digest("hex");
       }
       const result = this.provider === "copilot"
-        ? await runCopilot(effectivePrompt, running?.url, expectedTool, neutralDirectory)
-        : await runClaude(effectivePrompt, running?.url, expectedTool, neutralDirectory);
+        ? await runCopilot(effectivePrompt, neutralDirectory)
+        : await runClaude(effectivePrompt, neutralDirectory);
       const combinedEvidence = [...pathEvidence, ...result.pathEvidence];
       let output = result.answer;
       if (this.role === "judge") output = output.trim();
       const metadata = {
         example,
         model: result.model,
+        materialSha256,
         pathEvidence: combinedEvidence,
         provider: this.provider,
         role: this.role,

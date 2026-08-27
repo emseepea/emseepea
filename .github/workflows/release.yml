@@ -12,6 +12,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  exact-sha-quality:
+    name: Exact SHA / Node.js ${{ matrix.node-version }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 22.23.2
+          - 24.20.0
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Test the public boundary
+        run: npm test
+      - name: Check the JSON-boundary performance budget
+        run: npm run benchmark
+        env:
+          EMSEEPEA_BENCHMARK_PROFILE: github-ubuntu-24.04-standard
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
   semantic-eval:
     name: Semantic example qualification
     runs-on: ubuntu-24.04
@@ -64,8 +97,8 @@ jobs:
 
   changesets:
     name: Update release pull request or publish
-    needs: semantic-eval
-    if: ${{ always() && (needs.semantic-eval.outputs.has_changesets == 'true' || needs.semantic-eval.result == 'success') }}
+    needs: [exact-sha-quality, semantic-eval]
+    if: ${{ always() && needs.exact-sha-quality.result == 'success' && (needs.semantic-eval.outputs.has_changesets == 'true' || needs.semantic-eval.result == 'success') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -86,14 +119,6 @@ jobs:
           test "$(npm --version)" = "11.13.0"
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
-      - name: Test the exact release commit
-        run: npm test
-      - name: Check the JSON-boundary performance budget
-        run: npm run benchmark
-        env:
-          EMSEEPEA_BENCHMARK_PROFILE: github-ubuntu-24.04-standard
-      - name: Audit dependencies
-        run: npm audit --audit-level=high
       - name: Detect a publication run
         id: release-state
         run: |
@@ -148,8 +173,8 @@ jobs:
           - Qualification: npm test; npm run benchmark; npm audit --audit-level=high; npm pack
           - Semantic qualification: $SEMANTIC_EVAL_RUN_URL, artifact $SEMANTIC_EVAL_ARTIFACT
           - Reviews: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/$review_record
-          - Supported slice: Fastify-first JSON MCP 2026-07-28 server; public and invocation-scoped OAuth-protected tools; checked mapped adapters; public static-resource and non-enumerating resource-template discovery and reads; public prompt listing and rendering; opt-in prompt and resource-template completion; anonymous resource metadata and discovery
-          - Excluded: template enumeration, protected templates, pagination, configurable cache hints, object or tenant authorization, outbound HTTP policy, retries, effects, SSE, progress, subscriptions, shared state, UI packages, deployment, resource/prompt/template/completion performance, and full-profile conformance
+          - Supported slice: Fastify-first MCP 2026-07-28 server; JSON operations; checked, bounded, loopback-only POST SSE progress for explicitly streaming tools; public and invocation-scoped OAuth-protected tools; checked mapped adapters; public static-resource and non-enumerating resource-template discovery and reads; public prompt listing and rendering; opt-in prompt and resource-template completion; anonymous resource metadata and discovery
+          - Excluded: template enumeration, protected templates, pagination, configurable cache hints, object or tenant authorization, outbound HTTP policy, retries, effects, production or intermediary streaming, transport backpressure, queue overflow, resynchronisation, subscriptions, replay, sessions, shared state, UI packages, deployment, resource/prompt/template/completion/streaming performance, and full-profile conformance
           EOF
       - name: Create release pull request or publish
         id: changesets
@@ -214,6 +239,7 @@ jobs:
             definePrompt,
             defineResource,
             defineResourceTemplate,
+            defineStreamingTool,
             defineTool,
             serveEmseepea,
           } from "@emseepea/server";
@@ -240,6 +266,17 @@ jobs:
             adapter: ({ value }) => ({ value }),
             mapOutput: ({ value }) => ({ text: value, data: { value } }),
           });
+          const streaming = defineStreamingTool({
+            name: "smoke-streaming-tool",
+            access: "public",
+            description: "Smoke-test bounded progress.",
+            inputSchema: z.object({}),
+            outputSchema: z.object({ status: z.literal("complete") }),
+            async handler(_input, { reportProgress }) {
+              await reportProgress({ progress: 1, total: 1, message: "complete" });
+              return { text: "complete", data: { status: "complete" } };
+            },
+          });
           const resourceUri = "smoke://resource/value";
           const resource = defineResource({
             name: "smoke-resource",
@@ -263,7 +300,7 @@ jobs:
           const app = createEmseepea({
             name: "installed-package-smoke",
             version: "0.0.0",
-            tools: [tool, mapped],
+            tools: [tool, mapped, streaming],
             resources: [resource, resourceTemplate],
             prompts: [prompt],
           });
@@ -318,6 +355,37 @@ jobs:
               if (completion.result.completion.values[0] !== "checked") {
                 throw new Error("installed package did not complete its public definition");
               }
+            }
+            const streamed = await fetch(running.url, {
+              method: "POST",
+              headers: {
+                Accept: "application/json, text/event-stream",
+                "Content-Type": "application/json",
+                "MCP-Protocol-Version": "2026-07-28",
+                "Mcp-Method": "tools/call",
+                "Mcp-Name": "smoke-streaming-tool",
+              },
+              body: JSON.stringify({
+                jsonrpc: "2.0",
+                id: crypto.randomUUID(),
+                method: "tools/call",
+                params: {
+                  name: "smoke-streaming-tool",
+                  arguments: {},
+                  _meta: {
+                    "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                    "io.modelcontextprotocol/clientInfo": { name: "release-smoke", version: "0.0.0" },
+                    "io.modelcontextprotocol/clientCapabilities": {},
+                    progressToken: 1,
+                  },
+                },
+              }),
+            });
+            const streamBody = await streamed.text();
+            if (!streamed.headers.get("content-type")?.startsWith("text/event-stream")
+                || !streamBody.includes('"progress":1')
+                || !streamBody.includes('"status":"complete"')) {
+              throw new Error("installed package did not stream progress and its final result");
             }
           } finally {
             await running.close();

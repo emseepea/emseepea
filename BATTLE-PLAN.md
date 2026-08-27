@@ -3,8 +3,8 @@
 ## Status
 
 - Document type: Living implementation battle plan
-- Objective state: No-UI, OAuth, checked mapped-adapter, public-resource, resource-template, and prompt slices qualified; opt-in completion and semantic example evaluation locally qualified with clean-checkout CI pending
-- Current operating objective: Obtain exact-revision completion and authoritative semantic CI evidence, publish the first pre-alpha package, then establish the verified documentation website
+- Objective state: No-UI, OAuth, checked mapped-adapter, public-resource, resource-template, prompt, completion, and bounded loopback streaming-progress slices locally qualified; exact-commit CI pending
+- Current operating objective: Commit and push the streaming and semantic-harness slice, obtain Node.js 22/24 and authoritative Copilot evidence, publish the first pre-alpha only after every gate passes, then establish the verified documentation website
 - Last updated: 2026-08-27
 
 This plan is a decision aid, not a contract with yesterday's assumptions. No plan survives contact with real specifications, SDKs, clients, proxies, attackers, users, or production constraints. The objective and rules of engagement remain fixed; the route changes whenever evidence reveals a shorter, safer, or more useful path.
@@ -372,23 +372,23 @@ Exit signal:
 
 ### Objective 4: Open the Streaming Front
 
-Settle the state machine before adding breadth:
+First prove one loopback-only, POST-scoped progress path:
 
 - checked event emission during execution;
 - one checked final result;
 - cancellation and disconnect;
-- bounded queues and backpressure;
-- slow-consumer terminal behaviour;
-- heartbeats, lifetime, and authentication expiry;
-- resynchronisation after overflow; and
-- real-intermediary preservation.
+- bounded event count and size;
+- authentication before streaming; and
+- JSON fallback when progress is not requested.
 
-Then add request SSE, progress, and subscriptions.
+Do not add heartbeats, replay, sessions, subscriptions, intermediaries, or
+distributed state to this first slice. Add each only for an accepted use case
+with its own terminal and resource-bound evidence.
 
 Examples:
 
 - `streaming-progress`;
-- `subscriptions`.
+- `subscriptions` only when that later capability begins.
 
 Exit signal:
 
@@ -471,9 +471,18 @@ Before non-loopback use, prove intermediary, authority, Origin, proxy trust, lim
 
 Prove one OAuth mode end to end before adding alternate modes.
 
-### Streaming Gate
+### Loopback Progress Gate
 
-No streaming claim exists until proxy, cancellation, queue, overflow, slow-consumer, and final-response tests pass.
+A loopback-only POST progress claim requires cancellation, timeout, event-count
+and notification-payload bounds, terminal ordering, and JSON/SSE final-result
+parity. It implies no intermediary, queue, backpressure, replay, or subscription
+behaviour.
+
+### Production and Intermediary Streaming Gate
+
+No production or intermediary streaming claim exists until proxy, queue,
+backpressure, overflow, slow-consumer, resynchronisation, and final-response
+tests pass.
 
 ### Interaction-and-Effects Gate
 
@@ -697,7 +706,9 @@ An example directory lands only when the same change contains:
 - one relevant negative boundary check;
 - synthetic data only;
 - one mandatory semantic Promptfoo case with three fresh agent trials, three
-  no-MCP judge verdicts, deterministic facts, and exact MCP path evidence; and
+  no-MCP judge verdicts, deterministic facts, and exact MCP path evidence; the
+  harness performs the live official-client operation and model processes get
+  no MCP tools; and
 - a clean-checkout CI run.
 
 Do not scaffold empty future examples.
@@ -826,18 +837,21 @@ checkpoint remains pending until the exact committed revision passes the
 Node.js 22 and 24 clean-checkout gates; no completion performance claim is
 made.
 
-### 2026-08-27: Semantic Example Gate Locally Qualified, CI Pending
+### 2026-08-27: Four-Example Semantic Gate Locally Qualified, CI Pending
 
-ADR-0021 requires Promptfoo qualification for every example. The shared gate
+ADR-0022 requires Promptfoo qualification for every example. The shared gate
 runs three fresh agent trials and three independent no-MCP judge verdicts per
 example, requires deterministic critical facts and exact MCP path evidence,
-allows no semantic retries, and emits redacted evidence. The local Claude
-advisory run passes all three current examples: both tool examples make exactly
-one named MCP tool call per trial, while the resources-and-prompts example
-records official-client `resources/read` and `prompts/get` operations. The
-authoritative GitHub Copilot CLI `claude-sonnet-4.6` run remains pending on the
-exact committed SHA. Publication is blocked until that separate least-privilege
-job passes and uploads its 14-day evidence artifact.
+allows no semantic retries, and emits redacted evidence. Provider policy blocked
+autonomous custom MCP use in authoritative CI, so Tom ratified harness-mediated
+MCP material: the official client performs the live operation and binds its
+result to evidence before the no-tools agent interprets it. A clean local Claude
+advisory snapshot passes 12/12 trials across basic, backend, resources-and-prompts,
+and streaming-progress examples. The streaming case distinguishes charge, first
+crack, and cool progress from the completed 820-gram result. The authoritative
+GitHub Copilot CLI `claude-sonnet-4.6` run remains pending on the exact committed
+SHA. Publication stays blocked until that separate least-privilege job passes
+and uploads its 14-day evidence artifact.
 
 ## Implementation Goal
 

@@ -3,6 +3,7 @@ import {
   definePrompt,
   defineResource,
   defineResourceTemplate,
+  defineStreamingTool,
   defineTool,
   type MappedToolDefinition,
   type ToolPrincipal,
@@ -27,6 +28,20 @@ defineTool({
     const deadline: number = deadlineMs;
     void publicPrincipal;
     void deadline;
+    return { text: value, data: { value } };
+  },
+});
+
+defineStreamingTool({
+  name: "streaming-public-type-check",
+  access: "public",
+  description: "Compile-time streaming context check.",
+  inputSchema: schema,
+  outputSchema: schema,
+  async handler({ value }, { principal, reportProgress }) {
+    const publicPrincipal: undefined = principal;
+    await reportProgress({ progress: 1, total: 1, message: value });
+    void publicPrincipal;
     return { text: value, data: { value } };
   },
 });
@@ -159,6 +174,20 @@ defineTool({
   outputSchema: schema,
   handler: ({ value }, { principal }) => {
     const protectedPrincipal: ToolPrincipal = principal;
+    return { text: value, data: { value: protectedPrincipal.clientId } };
+  },
+});
+
+defineStreamingTool({
+  name: "streaming-protected-type-check",
+  access: "protected",
+  requiredScopes: ["value:read"],
+  description: "Compile-time protected streaming context check.",
+  inputSchema: schema,
+  outputSchema: schema,
+  async handler({ value }, { principal, reportProgress }) {
+    const protectedPrincipal: ToolPrincipal = principal;
+    await reportProgress({ progress: 1 });
     return { text: value, data: { value: protectedPrincipal.clientId } };
   },
 });

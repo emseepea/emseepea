@@ -33,6 +33,7 @@ const PROTOCOL_VERSION = "2026-07-28";
 const REGISTER = Symbol("register");
 const TOOL_NAME = Symbol("toolName");
 const TOOL_ACCESS = Symbol("toolAccess");
+const TOOL_STREAMING = Symbol("toolStreaming");
 const RESOURCE_NAME = Symbol("resourceName");
 const RESOURCE_URI = Symbol("resourceUri");
 const RESOURCE_KIND = Symbol("resourceKind");
@@ -56,6 +57,15 @@ export interface ToolContext<Access extends ToolAccess = ToolAccess> {
   readonly signal: AbortSignal;
   readonly deadlineMs: number;
   readonly principal: Access extends "public" ? undefined : ToolPrincipal;
+}
+export interface ProgressUpdate {
+  readonly progress: number;
+  readonly total?: number;
+  readonly message?: string;
+}
+export interface StreamingToolContext<Access extends ToolAccess = ToolAccess>
+  extends ToolContext<Access> {
+  readonly reportProgress: (update: ProgressUpdate) => Promise<void>;
 }
 export interface ToolResult<Output> { readonly text: string; readonly data: Output }
 export interface BackendAdapterContext {
@@ -97,6 +107,21 @@ export type ToolDefinition<Input extends z.ZodObject, Output extends z.ZodObject
           ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
       }
   );
+export type StreamingToolDefinition<Input extends z.ZodObject, Output extends z.ZodObject> =
+  ToolDefinitionBase<Input, Output> & (
+    | {
+        readonly access: "public";
+        readonly requiredScopes?: never;
+        readonly handler: (input: z.output<Input>, context: StreamingToolContext<"public">) =>
+          ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
+      }
+    | {
+        readonly access: "protected";
+        readonly requiredScopes: readonly string[];
+        readonly handler: (input: z.output<Input>, context: StreamingToolContext<"protected">) =>
+          ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
+      }
+  );
 interface MappedToolDefinitionBase<
   Input extends z.ZodObject,
   Output extends z.ZodObject,
@@ -129,7 +154,14 @@ export type MappedToolDefinition<
 export interface EmseepeaTool {
   readonly [TOOL_NAME]: string;
   readonly [TOOL_ACCESS]: "public" | ProtectedToolAccess;
-  readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
+  readonly [TOOL_STREAMING]: boolean;
+  readonly [REGISTER]: (
+    server: McpServer,
+    timeoutMs: number,
+    maxApplicationResultBytes: number,
+    maxProgressEvents: number,
+    maxProgressEventBytes: number,
+  ) => void;
 }
 export interface ResourceDefinition {
   readonly name: string;
@@ -210,6 +242,8 @@ export interface EmseepeaOptions {
   readonly prompts?: readonly EmseepeaPrompt[];
   readonly maxRequestBytes?: number;
   readonly maxApplicationResultBytes?: number;
+  readonly maxProgressEvents?: number;
+  readonly maxProgressEventBytes?: number;
   readonly operationTimeoutMs?: number;
   readonly deployment?: DeploymentProfile;
   readonly oauth?: OAuthResourceServerOptions;
@@ -258,7 +292,14 @@ export function defineTool<Input extends z.ZodObject, Output extends z.ZodObject
     input: z.output<Input>,
     context: ToolContext,
   ) => ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
-  return createCheckedTool(definition, handler as CheckedToolExecutor);
+  return createCheckedTool(definition, handler as CheckedToolExecutor, false);
+}
+
+export function defineStreamingTool<Input extends z.ZodObject, Output extends z.ZodObject>(
+  definition: StreamingToolDefinition<Input, Output>,
+): EmseepeaTool {
+  const handler = definition.handler as unknown as CheckedToolExecutor;
+  return createCheckedTool(definition, handler, true);
 }
 
 export function defineMappedTool<
@@ -288,7 +329,7 @@ export function defineMappedTool<
     context.signal.throwIfAborted();
     return mapOutput(parsedBackendResult.data);
   };
-  return createCheckedTool(definition, execute as CheckedToolExecutor);
+  return createCheckedTool(definition, execute as CheckedToolExecutor, false);
 }
 
 export function defineResource(definition: ResourceDefinition): EmseepeaResource {
@@ -461,9 +502,16 @@ type CheckedToolExecutor = (
   context: ToolContext,
 ) => unknown | Promise<unknown>;
 
+const progressUpdateSchema = z.strictObject({
+  progress: z.number().nonnegative(),
+  total: z.number().positive().optional(),
+  message: z.string().optional(),
+});
+
 function createCheckedTool(
   definition: CheckedToolDefinition,
   execute: CheckedToolExecutor,
+  streaming: boolean,
 ): EmseepeaTool {
   const { name, title, description, inputSchema, outputSchema } = definition;
   assertRegistrationName("Tool", name);
@@ -471,7 +519,8 @@ function createCheckedTool(
   const registration: EmseepeaTool = {
     [TOOL_NAME]: name,
     [TOOL_ACCESS]: access,
-    [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
+    [TOOL_STREAMING]: streaming,
+    [REGISTER](server, timeoutMs, maxApplicationResultBytes, maxProgressEvents, maxProgressEventBytes) {
       server.registerTool(
         name,
         {
@@ -497,11 +546,26 @@ function createCheckedTool(
                   throw new Error("Tool received input that does not match its schema");
                 }
                 signal.throwIfAborted();
-                const result = await execute(parsedInput.data, {
-                  signal,
-                  deadlineMs,
-                  principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
-                });
+                const reporter = streaming
+                  ? progressReporter(
+                      context,
+                      signal,
+                      maxProgressEvents,
+                      maxProgressEventBytes,
+                    )
+                  : undefined;
+                let result: unknown;
+                try {
+                  result = await execute(parsedInput.data, {
+                    signal,
+                    deadlineMs,
+                    principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
+                    ...(reporter ? { reportProgress: reporter.report } : {}),
+                  });
+                } finally {
+                  await reporter?.finish();
+                }
+                reporter?.throwIfFailed();
                 if (!isRecord(result) || typeof result.text !== "string" || !("data" in result)) {
                   throw new Error("Tool returned an invalid result");
                 }
@@ -529,6 +593,78 @@ function createCheckedTool(
   return Object.freeze(registration);
 }
 
+function progressReporter(
+  context: {
+    readonly mcpReq: {
+      readonly _meta?: { readonly progressToken?: unknown };
+      readonly notify: (notification: {
+        readonly method: "notifications/progress";
+        readonly params: {
+          readonly progressToken: string | number;
+          readonly progress: number;
+          readonly total?: number;
+          readonly message?: string;
+        };
+      }) => Promise<void>;
+    };
+  },
+  signal: AbortSignal,
+  maxEvents: number,
+  maxEventBytes: number,
+): {
+  readonly report: (update: ProgressUpdate) => Promise<void>;
+  readonly finish: () => Promise<void>;
+  readonly throwIfFailed: () => void;
+} {
+  const token = context.mcpReq._meta?.progressToken;
+  let closed = false;
+  let failure: Error | undefined;
+  let attempts = 0;
+  let previousProgress = -Infinity;
+  const pending = new Set<Promise<void>>();
+  return {
+    report(update) {
+      if (closed) return Promise.reject(new Error("Progress is no longer available"));
+      if (failure) return Promise.reject(failure);
+      const operation = (async () => {
+        try {
+          signal.throwIfAborted();
+          attempts += 1;
+          if (attempts > maxEvents) throw new Error("Progress event limit exceeded");
+          const parsed = progressUpdateSchema.safeParse(update);
+          if (!parsed.success || parsed.data.progress <= previousProgress ||
+              (parsed.data.total !== undefined && parsed.data.progress > parsed.data.total)) {
+            throw new Error("Progress update is invalid");
+          }
+          previousProgress = parsed.data.progress;
+          if (token !== undefined && typeof token !== "string" && typeof token !== "number") {
+            throw new Error("Progress token is invalid");
+          }
+          const notification = {
+            method: "notifications/progress" as const,
+            params: { progressToken: token ?? 0, ...parsed.data },
+          };
+          if (Buffer.byteLength(JSON.stringify(notification), "utf8") > maxEventBytes) {
+            throw new Error("Progress event exceeds configured size limit");
+          }
+          if (token !== undefined) await context.mcpReq.notify(notification);
+        } catch (error) {
+          failure = error instanceof Error ? error : new Error("Progress emission failed");
+          throw error;
+        }
+      })();
+      pending.add(operation);
+      void operation.then(() => pending.delete(operation), () => pending.delete(operation));
+      return operation;
+    },
+    async finish() {
+      closed = true;
+      await Promise.allSettled([...pending]);
+    },
+    throwIfFailed() { if (failure) throw failure; },
+  };
+}
+
 export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   assertNonEmpty("name", options.name);
   assertNonEmpty("version", options.version);
@@ -543,12 +679,24 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     "maxApplicationResultBytes",
     options.maxApplicationResultBytes ?? 1024 * 1024,
   );
+  const maxProgressEvents = positiveInteger(
+    "maxProgressEvents",
+    options.maxProgressEvents ?? 32,
+  );
+  const maxProgressEventBytes = positiveInteger(
+    "maxProgressEventBytes",
+    options.maxProgressEventBytes ?? 8 * 1024,
+  );
   const operationTimeoutMs = positiveInteger(
     "operationTimeoutMs",
     options.operationTimeoutMs ?? 30_000,
   );
   const deployment = normalizeDeployment(options.deployment ?? { mode: "loopback" });
   const oauth = options.oauth ? normalizeOAuth(options.oauth) : undefined;
+  const hasStreaming = tools.some((tool) => tool[TOOL_STREAMING]);
+  if (hasStreaming && deployment.mode !== "loopback") {
+    throw new TypeError("Streaming tools currently require the loopback deployment profile");
+  }
   if (tools.some((tool) => tool[TOOL_ACCESS] !== "public") && !oauth) {
     throw new TypeError("Protected tools require OAuth resource-server configuration");
   }
@@ -578,11 +726,23 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         supportedProtocolVersions: [PROTOCOL_VERSION],
       },
     );
-    for (const tool of tools) tool[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
+    for (const tool of tools) {
+      tool[REGISTER](
+        server,
+        operationTimeoutMs,
+        maxApplicationResultBytes,
+        maxProgressEvents,
+        maxProgressEventBytes,
+      );
+    }
     for (const resource of resources) resource[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
     for (const prompt of prompts) prompt[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
     return server;
-  }, { legacy: "reject", responseMode: "json" });
+  }, {
+    legacy: "reject",
+    responseMode: hasStreaming ? "auto" : "json",
+    keepAliveMs: 0,
+  });
   const nodeHandler = toNodeHandler(sdkHandler);
   const app = createMcpFastifyApp({ host: deployment.mode === "loopback" ? "127.0.0.1" : "0.0.0.0" });
   const limiter = deployment.mode === "production-behind-proxy"

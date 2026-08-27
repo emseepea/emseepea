@@ -1,7 +1,8 @@
 # `@emseepea/server`
 
 `@emseepea/server` is the Fastify-first server package for Em See Pea. It
-currently provides a stateless JSON MCP `2026-07-28` endpoint, explicit public
+currently provides a stateless MCP `2026-07-28` endpoint, JSON operations,
+opt-in loopback-only POST SSE progress, explicit public
 and OAuth-protected tools, checked backend adapters, runtime schema validation,
 public static resources, resource templates, and prompts, deadlines, and
 bounded HTTP defaults. Prompt arguments and resource-template variables may
@@ -58,6 +59,39 @@ const lookup = defineMappedTool({
 The framework does not yet provide outbound HTTP policy, retries, credentials,
 or effect handling; those remain adapter-owned and are not claimed by this
 slice.
+
+## Streaming Progress
+
+Use `defineStreamingTool` only when a tool has meaningful progress to report.
+It has the same checked input and final-output contract as `defineTool`, plus a
+checked `reportProgress` function. If the client supplies a progress token, the
+official SDK emits POST-scoped SSE; otherwise the same call returns JSON.
+
+```ts
+import { defineStreamingTool } from "@emseepea/server";
+
+const roast = defineStreamingTool({
+  name: "roast-batch",
+  access: "public",
+  description: "Run one synthetic roast batch.",
+  inputSchema: z.object({ batch: z.string() }),
+  outputSchema: z.object({ status: z.literal("complete") }),
+  async handler(_input, { reportProgress, signal }) {
+    signal.throwIfAborted();
+    await reportProgress({ progress: 1, total: 1, message: "cool" });
+    return { text: "complete", data: { status: "complete" } };
+  },
+});
+```
+
+Progress is strictly increasing and defaults to at most 32 notification payloads
+of 8 KiB each, measured before SDK JSON-RPC and SSE framing. Set
+`maxProgressEvents` and `maxProgressEventBytes` on `createEmseepea` to change
+those positive bounds. The reporter closes with the tool call, heartbeats are
+disabled, and invalid, oversized, late, or excess updates fail safely.
+Streaming tools currently fail startup outside the loopback deployment profile;
+GET streams, sessions, replay, subscriptions, intermediaries, transport
+backpressure, resynchronisation, and multi-instance streaming are not claimed.
 
 ## Public Resources and Prompts
 
