@@ -6,8 +6,8 @@ green proxy check is not evidence for an untested claim.
 ## Required Quality Sequence
 
 1. Install exactly from the committed lockfile with `npm ci --ignore-scripts`.
-2. Type-check source, test drivers, and repository scripts.
-3. Build all workspaces from current source.
+2. Type-check and build all workspaces from current source.
+3. Type-check test drivers and public type contracts against that fresh output.
 4. Run raw HTTP and independent-client tests against the real endpoint.
 5. Check any published schema or generated public artifact against its declared
    contract.

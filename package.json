@@ -18,7 +18,7 @@
     "changeset": "changeset",
     "check": "npm test",
     "start:basic": "npm run start -w @emseepea/example-basic-no-ui",
-    "test": "npm run typecheck && npm run build && node --test tests/black-box/*.test.mjs",
+    "test": "npm run build && npm run typecheck && node --test tests/black-box/*.test.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "version-packages": "changeset version"
   },
