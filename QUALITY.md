@@ -24,6 +24,10 @@ failure stops the job; later steps are not evidence for earlier ones.
 - Invalid or rejected requests must prove zero handler and backend calls.
 - Public discovery and public tools must prove that bearer headers neither
   invoke the verifier nor create an authenticated handler context.
+- Public resources and prompts must prove that listing and invocation remain
+  verifier-free and identity-free, including when OAuth is configured.
+- Unknown static resource URIs and invalid prompt arguments must prove zero
+  application-handler calls.
 - Protected calls must prove failure before handler execution for missing,
   invalid, expired, insufficient-scope, wrong-resource, and timed-out
   verification outcomes.

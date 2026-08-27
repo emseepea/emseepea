@@ -31,6 +31,7 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@modelcontextprotocol/core": "2.0.0",
     "@modelcontextprotocol/fastify": "2.0.0",
     "@modelcontextprotocol/node": "2.0.0",
     "@modelcontextprotocol/server": "2.0.0",

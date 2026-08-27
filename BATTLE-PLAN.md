@@ -3,8 +3,8 @@
 ## Status
 
 - Document type: Living implementation battle plan
-- Objective state: No-UI, OAuth, and checked mapped-adapter slices qualified
-- Current operating objective: Publish the first pre-alpha package, then establish the verified documentation website
+- Objective state: No-UI, OAuth, and checked mapped-adapter slices qualified; public resources and prompts under qualification
+- Current operating objective: Qualify public resources and prompts, publish the first pre-alpha package, then establish the verified documentation website
 - Last updated: 2026-08-27
 
 This plan is a decision aid, not a contract with yesterday's assumptions. No plan survives contact with real specifications, SDKs, clients, proxies, attackers, users, or production constraints. The objective and rules of engagement remain fixed; the route changes whenever evidence reveals a shorter, safer, or more useful path.

@@ -1,5 +1,7 @@
 import {
   defineMappedTool,
+  definePrompt,
+  defineResource,
   defineTool,
   type MappedToolDefinition,
   type ToolPrincipal,
@@ -26,6 +28,41 @@ defineTool({
     void deadline;
     return { text: value, data: { value } };
   },
+});
+
+defineResource({
+  name: "resource-type-check",
+  uri: "type-check://resource/value",
+  handler: (context) => {
+    const deadline: number = context.deadlineMs;
+    const signal: AbortSignal = context.signal;
+    // @ts-expect-error Public resource handlers do not receive caller principals.
+    void context.principal;
+    void deadline;
+    void signal;
+    return { contents: [{ uri: "type-check://resource/value", text: "value" }] };
+  },
+});
+
+definePrompt({
+  name: "prompt-type-check",
+  argsSchema: schema,
+  handler: ({ value }, context) => {
+    const deadline: number = context.deadlineMs;
+    const signal: AbortSignal = context.signal;
+    // @ts-expect-error Public prompt handlers do not receive caller principals.
+    void context.principal;
+    void deadline;
+    void signal;
+    return { messages: [{ role: "user", content: { type: "text", text: value } }] };
+  },
+});
+
+// @ts-expect-error MCP prompt arguments must accept string values on the wire.
+definePrompt({
+  name: "invalid-number-prompt",
+  argsSchema: z.object({ count: z.number() }),
+  handler: () => ({ messages: [] }),
 });
 
 defineMappedTool({

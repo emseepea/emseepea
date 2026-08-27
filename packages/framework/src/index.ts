@@ -1,4 +1,8 @@
 import { createMcpFastifyApp } from "@modelcontextprotocol/fastify";
+import {
+  GetPromptResultSchema,
+  ReadResourceResultSchema,
+} from "@modelcontextprotocol/core";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import {
   McpServer,
@@ -14,7 +18,9 @@ import {
   type AuthInfo,
   type AuthMetadataOptions,
   type CallToolResult,
+  type GetPromptResult,
   type OAuthTokenVerifier,
+  type ReadResourceResult,
 } from "@modelcontextprotocol/server";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -25,6 +31,9 @@ const PROTOCOL_VERSION = "2026-07-28";
 const REGISTER = Symbol("register");
 const TOOL_NAME = Symbol("toolName");
 const TOOL_ACCESS = Symbol("toolAccess");
+const RESOURCE_NAME = Symbol("resourceName");
+const RESOURCE_URI = Symbol("resourceUri");
+const PROMPT_NAME = Symbol("promptName");
 const runtimes = new WeakMap<FastifyInstance, AppRuntime>();
 const requestDeadlines = new AsyncLocalStorage<number>();
 
@@ -43,6 +52,7 @@ export interface BackendAdapterContext {
   readonly signal: AbortSignal;
   readonly deadlineMs: number;
 }
+export type OperationContext = BackendAdapterContext;
 interface ProtectedToolAccess {
   readonly type: "protected";
   readonly requiredScopes: readonly string[];
@@ -102,7 +112,44 @@ export type MappedToolDefinition<
 export interface EmseepeaTool {
   readonly [TOOL_NAME]: string;
   readonly [TOOL_ACCESS]: "public" | ProtectedToolAccess;
-  readonly [REGISTER]: (server: McpServer, timeoutMs: number) => void;
+  readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
+}
+export interface ResourceDefinition {
+  readonly name: string;
+  readonly uri: string;
+  readonly title?: string;
+  readonly description?: string;
+  readonly mimeType?: string;
+  readonly handler: (context: OperationContext) =>
+    ReadResourceResult | Promise<ReadResourceResult>;
+}
+export interface EmseepeaResource {
+  readonly [RESOURCE_NAME]: string;
+  readonly [RESOURCE_URI]: string;
+  readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
+}
+type NonStringPromptArgumentKeys<Args extends z.ZodObject> = {
+  [Key in keyof z.input<Args>]-?: Exclude<z.input<Args>[Key], undefined> extends string
+    ? never
+    : Key;
+}[keyof z.input<Args>];
+type PromptInputConstraint<Args extends z.ZodObject> =
+  [NonStringPromptArgumentKeys<Args>] extends [never]
+    ? object
+    : { readonly promptArgumentsMustAcceptStrings: never };
+export type PromptDefinition<Args extends z.ZodObject> = {
+  readonly name: string;
+  readonly title?: string;
+  readonly description?: string;
+  readonly argsSchema: Args;
+  readonly handler: (
+    args: z.output<Args>,
+    context: OperationContext,
+  ) => GetPromptResult | Promise<GetPromptResult>;
+} & PromptInputConstraint<Args>;
+export interface EmseepeaPrompt {
+  readonly [PROMPT_NAME]: string;
+  readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
 }
 export interface OAuthResourceServerOptions {
   readonly verifier: OAuthTokenVerifier;
@@ -116,8 +163,11 @@ export interface EmseepeaOptions {
   readonly version: string;
   readonly instructions?: string;
   readonly tools?: readonly EmseepeaTool[];
+  readonly resources?: readonly EmseepeaResource[];
+  readonly prompts?: readonly EmseepeaPrompt[];
   readonly maxRequestBytes?: number;
-  readonly toolTimeoutMs?: number;
+  readonly maxApplicationResultBytes?: number;
+  readonly operationTimeoutMs?: number;
   readonly deployment?: DeploymentProfile;
   readonly oauth?: OAuthResourceServerOptions;
 }
@@ -174,6 +224,7 @@ export function defineMappedTool<
   BackendInput extends z.ZodObject,
   BackendOutput extends z.ZodObject,
 >(definition: MappedToolDefinition<Input, Output, BackendInput, BackendOutput>): EmseepeaTool {
+  const { backendInputSchema, backendOutputSchema, adapter } = definition;
   const mapInput = definition.mapInput as unknown as (
     input: z.output<Input>,
   ) => z.input<BackendInput>;
@@ -181,20 +232,101 @@ export function defineMappedTool<
     output: z.output<BackendOutput>,
   ) => ToolResult<z.input<Output>>;
   const execute = async (input: z.output<Input>, context: ToolContext) => {
-    const command = await definition.backendInputSchema.safeParseAsync(mapInput(input));
+    const command = await backendInputSchema.safeParseAsync(mapInput(input));
     if (!command.success) throw new Error("Mapped backend command does not match its schema");
     context.signal.throwIfAborted();
-    const backendResult = await definition.adapter(command.data, {
+    const backendResult = await adapter(command.data, {
       signal: context.signal,
       deadlineMs: context.deadlineMs,
     });
     context.signal.throwIfAborted();
-    const parsedBackendResult = await definition.backendOutputSchema.safeParseAsync(backendResult);
+    const parsedBackendResult = await backendOutputSchema.safeParseAsync(backendResult);
     if (!parsedBackendResult.success) throw new Error("Backend result does not match its schema");
     context.signal.throwIfAborted();
     return mapOutput(parsedBackendResult.data);
   };
   return createCheckedTool(definition, execute as CheckedToolExecutor);
+}
+
+export function defineResource(definition: ResourceDefinition): EmseepeaResource {
+  const { name, title, description, mimeType, handler } = definition;
+  assertRegistrationName("Resource", name);
+  const uri = canonicalResourceUri(definition.uri);
+  const registration: EmseepeaResource = {
+    [RESOURCE_NAME]: name,
+    [RESOURCE_URI]: uri,
+    [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
+      server.registerResource(
+        name,
+        uri,
+        {
+          title,
+          description,
+          mimeType,
+        },
+        async (_requestedUri, context): Promise<ReadResourceResult> => {
+          try {
+            const deadlineMs = requestDeadlines.getStore() ?? Date.now() + timeoutMs;
+            return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
+              signal.throwIfAborted();
+              const result = await handler({ signal, deadlineMs });
+              signal.throwIfAborted();
+              const parsed = await ReadResourceResultSchema.safeParseAsync(result);
+              if (!parsed.success || parsed.data.contents.some((content) => content.uri !== uri)) {
+                throw new Error("Resource returned an invalid result");
+              }
+              signal.throwIfAborted();
+              assertResultSize(parsed.data, maxApplicationResultBytes, deadlineMs, signal);
+              return parsed.data;
+            });
+          } catch {
+            throw new Error("Resource read failed");
+          }
+        },
+      );
+    },
+  };
+  return Object.freeze(registration);
+}
+
+export function definePrompt<Args extends z.ZodObject>(
+  definition: PromptDefinition<Args>,
+): EmseepeaPrompt {
+  const { name, title, description, argsSchema, handler } = definition;
+  assertRegistrationName("Prompt", name);
+  const registration: EmseepeaPrompt = {
+    [PROMPT_NAME]: name,
+    [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
+      server.registerPrompt(
+        name,
+        {
+          title,
+          description,
+          argsSchema: sdkMetadataSchema(argsSchema),
+        },
+        async (args, context): Promise<GetPromptResult> => {
+          try {
+            const deadlineMs = requestDeadlines.getStore() ?? Date.now() + timeoutMs;
+            return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
+              const parsedArgs = await argsSchema.safeParseAsync(args);
+              if (!parsedArgs.success) throw new Error("Prompt received invalid arguments");
+              signal.throwIfAborted();
+              const result = await handler(parsedArgs.data, { signal, deadlineMs });
+              signal.throwIfAborted();
+              const parsedResult = await GetPromptResultSchema.safeParseAsync(result);
+              if (!parsedResult.success) throw new Error("Prompt returned an invalid result");
+              signal.throwIfAborted();
+              assertResultSize(parsedResult.data, maxApplicationResultBytes, deadlineMs, signal);
+              return parsedResult.data;
+            });
+          } catch {
+            throw new Error("Prompt rendering failed");
+          }
+        },
+      );
+    },
+  };
+  return Object.freeze(registration);
 }
 
 interface CheckedToolDefinition {
@@ -215,19 +347,18 @@ function createCheckedTool(
   definition: CheckedToolDefinition,
   execute: CheckedToolExecutor,
 ): EmseepeaTool {
-  assertToolName(definition.name);
+  const { name, title, description, inputSchema, outputSchema } = definition;
+  assertRegistrationName("Tool", name);
   const access = normalizeToolAccess(definition.access, definition.requiredScopes);
-  return {
-    [TOOL_NAME]: definition.name,
+  const registration: EmseepeaTool = {
+    [TOOL_NAME]: name,
     [TOOL_ACCESS]: access,
-    [REGISTER](server, timeoutMs) {
-      const inputSchema: z.ZodObject = definition.inputSchema;
-      const outputSchema: z.ZodObject = definition.outputSchema;
+    [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
       server.registerTool(
-        definition.name,
+        name,
         {
-          title: definition.title,
-          description: definition.description,
+          title,
+          description,
           inputSchema: sdkMetadataSchema(inputSchema),
           outputSchema: sdkMetadataSchema(outputSchema),
           _meta: {
@@ -243,7 +374,7 @@ function createCheckedTool(
               context.mcpReq.signal,
               deadlineMs,
               async (signal) => {
-                const parsedInput = await definition.inputSchema.safeParseAsync(input);
+                const parsedInput = await inputSchema.safeParseAsync(input);
                 if (!parsedInput.success) {
                   throw new Error("Tool received input that does not match its schema");
                 }
@@ -257,15 +388,17 @@ function createCheckedTool(
                   throw new Error("Tool returned an invalid result");
                 }
                 signal.throwIfAborted();
-                const parsedOutput = await definition.outputSchema.safeParseAsync(result.data);
+                const parsedOutput = await outputSchema.safeParseAsync(result.data);
                 if (!parsedOutput.success) {
                   throw new Error("Tool returned output that does not match its schema");
                 }
-                return {
+                const publicResult = {
                   content: [{ type: "text" as const, text: result.text }],
                   structuredContent: parsedOutput.data as Record<string, unknown>,
                   isError: false,
                 };
+                assertResultSize(publicResult, maxApplicationResultBytes, deadlineMs, signal);
+                return publicResult;
               },
             );
           } catch {
@@ -275,15 +408,27 @@ function createCheckedTool(
       );
     },
   };
+  return Object.freeze(registration);
 }
 
 export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   assertNonEmpty("name", options.name);
   assertNonEmpty("version", options.version);
-  const tools = options.tools ?? [];
+  const tools = Object.freeze([...(options.tools ?? [])]);
+  const resources = Object.freeze([...(options.resources ?? [])]);
+  const prompts = Object.freeze([...(options.prompts ?? [])]);
   assertUniqueToolNames(tools);
+  assertUniqueResources(resources);
+  assertUniquePromptNames(prompts);
   const maxRequestBytes = positiveInteger("maxRequestBytes", options.maxRequestBytes ?? 1024 * 1024);
-  const toolTimeoutMs = positiveInteger("toolTimeoutMs", options.toolTimeoutMs ?? 30_000);
+  const maxApplicationResultBytes = positiveInteger(
+    "maxApplicationResultBytes",
+    options.maxApplicationResultBytes ?? 1024 * 1024,
+  );
+  const operationTimeoutMs = positiveInteger(
+    "operationTimeoutMs",
+    options.operationTimeoutMs ?? 30_000,
+  );
   const deployment = normalizeDeployment(options.deployment ?? { mode: "loopback" });
   const oauth = options.oauth ? normalizeOAuth(options.oauth) : undefined;
   if (tools.some((tool) => tool[TOOL_ACCESS] !== "public") && !oauth) {
@@ -292,17 +437,25 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   const toolsByName = new Map(tools.map((tool) => [tool[TOOL_NAME], tool]));
   const enabledMethods = new Set(["server/discover"]);
   if (tools.length) enabledMethods.add("tools/list").add("tools/call");
+  if (resources.length) enabledMethods.add("resources/list").add("resources/read");
+  if (prompts.length) enabledMethods.add("prompts/list").add("prompts/get");
 
   const sdkHandler = createMcpHandler(() => {
     const server = new McpServer(
       { name: options.name, version: options.version },
       {
-        capabilities: tools.length ? { tools: { listChanged: false } } : {},
+        capabilities: {
+          ...(tools.length ? { tools: { listChanged: false } } : {}),
+          ...(resources.length ? { resources: { subscribe: false, listChanged: false } } : {}),
+          ...(prompts.length ? { prompts: { listChanged: false } } : {}),
+        },
         instructions: options.instructions,
         supportedProtocolVersions: [PROTOCOL_VERSION],
       },
     );
-    for (const tool of tools) tool[REGISTER](server, toolTimeoutMs);
+    for (const tool of tools) tool[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
+    for (const resource of resources) resource[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
+    for (const prompt of prompts) prompt[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
     return server;
   }, { legacy: "reject", responseMode: "json" });
   const nodeHandler = toNodeHandler(sdkHandler);
@@ -356,7 +509,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     }
     reply.hijack();
     await requestDeadlines.run(
-      Date.now() + toolTimeoutMs,
+      Date.now() + operationTimeoutMs,
       () => nodeHandler(request.raw, reply.raw, request.body),
     );
   });
@@ -370,7 +523,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     }
   });
   app.addHook("onClose", async () => sdkHandler.close());
-  runtimes.set(app, { deployment, requestTimeoutMs: toolTimeoutMs + 5_000 });
+  runtimes.set(app, { deployment, requestTimeoutMs: operationTimeoutMs + 5_000 });
   return app;
 }
 
@@ -721,10 +874,43 @@ function assertUniqueToolNames(tools: readonly EmseepeaTool[]): void {
     names.add(name);
   }
 }
-function assertToolName(name: string): void {
+function assertRegistrationName(kind: string, name: string): void {
   if (!/^[A-Za-z0-9_.-]{1,128}$/.test(name)) {
-    throw new TypeError("Tool name must contain 1 to 128 ASCII letters, digits, underscores, dots, or hyphens");
+    throw new TypeError(`${kind} name must contain 1 to 128 ASCII letters, digits, underscores, dots, or hyphens`);
   }
+}
+
+function assertUniqueResources(resources: readonly EmseepeaResource[]): void {
+  const names = new Set<string>();
+  const uris = new Set<string>();
+  for (const resource of resources) {
+    const name = resource[RESOURCE_NAME];
+    const uri = resource[RESOURCE_URI];
+    if (names.has(name)) throw new TypeError(`Duplicate resource name: ${name}`);
+    if (uris.has(uri)) throw new TypeError(`Duplicate resource URI: ${uri}`);
+    names.add(name);
+    uris.add(uri);
+  }
+}
+
+function assertUniquePromptNames(prompts: readonly EmseepeaPrompt[]): void {
+  const names = new Set<string>();
+  for (const prompt of prompts) {
+    const name = prompt[PROMPT_NAME];
+    if (names.has(name)) throw new TypeError(`Duplicate prompt name: ${name}`);
+    names.add(name);
+  }
+}
+
+function canonicalResourceUri(uri: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(uri);
+  } catch {
+    throw new TypeError("Resource URI must be an absolute canonical URI");
+  }
+  if (parsed.href !== uri) throw new TypeError("Resource URI must be an absolute canonical URI");
+  return uri;
 }
 function assertNonEmpty(field: string, value: string): void {
   if (!value.trim()) throw new TypeError(`${field} must not be empty`);
@@ -738,6 +924,25 @@ function nonNegativePort(value: number): number {
     throw new TypeError("port must be an integer from 0 to 65535");
   }
   return value;
+}
+
+function assertResultSize(
+  result: unknown,
+  maxApplicationResultBytes: number,
+  deadlineMs: number,
+  signal: AbortSignal,
+): void {
+  let serialized: string | undefined;
+  try {
+    serialized = JSON.stringify(result);
+  } catch {
+    throw new Error("Result cannot be serialized");
+  }
+  if (serialized === undefined || Buffer.byteLength(serialized) > maxApplicationResultBytes) {
+    throw new Error("Result exceeds configured size limit");
+  }
+  signal.throwIfAborted();
+  if (Date.now() >= deadlineMs) throw new Error("Result preparation exceeded its deadline");
 }
 function isLoopbackHost(host: string): boolean {
   return host === "127.0.0.1" || host === "::1" || host === "localhost";

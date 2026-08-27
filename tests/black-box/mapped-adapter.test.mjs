@@ -118,7 +118,7 @@ test("mapped adapters share the checked tool lifecycle", async () => {
     name: "mapped-adapter-test",
     version: "0.0.0",
     tools: [memoryTool, fileTool, slowInputTool, slowOutputTool],
-    toolTimeoutMs: 40,
+    operationTimeoutMs: 40,
   });
   const running = await serveEmseepea(app, { port: 0 });
 
@@ -210,7 +210,7 @@ test("disconnect cancels a cooperating adapter", async () => {
     name: "disconnect-test",
     version: "0.0.0",
     tools: [tool],
-    toolTimeoutMs: 1_000,
+    operationTimeoutMs: 1_000,
   });
   const running = await serveEmseepea(app, { port: 0 });
   const controller = new AbortController();

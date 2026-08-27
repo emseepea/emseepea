@@ -93,8 +93,8 @@ jobs:
           - GitHub CLI: $(gh --version | head -1)
           - Qualification: npm test; npm run benchmark; npm audit --audit-level=high; npm pack
           - Reviews: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/$review_record
-          - Supported slice: Fastify-first JSON MCP 2026-07-28 server; public and invocation-scoped OAuth-protected tools; anonymous resource metadata, server discovery, and tool listing
-          - Excluded: object or tenant authorization, outbound HTTP adapters, SSE, shared state, React, Tailwind, deployment, and full-profile conformance
+          - Supported slice: Fastify-first JSON MCP 2026-07-28 server; public and invocation-scoped OAuth-protected tools; checked mapped adapters; public static-resource listing and reads; public prompt listing and rendering; anonymous resource metadata and discovery
+          - Excluded: resource templates, completion, pagination, configurable cache hints, object or tenant authorization, outbound HTTP policy, retries, effects, SSE, progress, subscriptions, shared state, UI packages, deployment, resource/prompt performance, and full-profile conformance
           EOF
       - name: Create release pull request or publish
         id: changesets
@@ -152,7 +152,59 @@ jobs:
           npm init --yes >/dev/null
           npm install --ignore-scripts --userconfig /dev/null "@emseepea/server@$version"
           npm audit signatures --userconfig /dev/null
-          node --input-type=module -e 'const api = await import("@emseepea/server"); if (typeof api.createEmseepea !== "function" || typeof api.defineTool !== "function") process.exit(1)'
+          node --input-type=module <<'NODE'
+          import {
+            createEmseepea,
+            defineMappedTool,
+            definePrompt,
+            defineResource,
+            defineTool,
+          } from "@emseepea/server";
+          import { z } from "zod";
+
+          const value = z.object({ value: z.string() });
+          const tool = defineTool({
+            name: "smoke-tool",
+            access: "public",
+            description: "Smoke-test a direct tool.",
+            inputSchema: value,
+            outputSchema: value,
+            handler: ({ value }) => ({ text: value, data: { value } }),
+          });
+          const mapped = defineMappedTool({
+            name: "smoke-mapped-tool",
+            access: "public",
+            description: "Smoke-test a mapped tool.",
+            inputSchema: value,
+            outputSchema: value,
+            backendInputSchema: value,
+            backendOutputSchema: value,
+            mapInput: ({ value }) => ({ value }),
+            adapter: ({ value }) => ({ value }),
+            mapOutput: ({ value }) => ({ text: value, data: { value } }),
+          });
+          const resourceUri = "smoke://resource/value";
+          const resource = defineResource({
+            name: "smoke-resource",
+            uri: resourceUri,
+            handler: () => ({ contents: [{ uri: resourceUri, text: "value" }] }),
+          });
+          const prompt = definePrompt({
+            name: "smoke-prompt",
+            argsSchema: value,
+            handler: ({ value }) => ({
+              messages: [{ role: "user", content: { type: "text", text: value } }],
+            }),
+          });
+          const app = createEmseepea({
+            name: "installed-package-smoke",
+            version: "0.0.0",
+            tools: [tool, mapped],
+            resources: [resource],
+            prompts: [prompt],
+          });
+          await app.close();
+          NODE
           cd "$GITHUB_WORKSPACE"
           tag="@emseepea/server@$version"
           gh release upload "$tag" release-artifacts/RELEASE-EVIDENCE.md release-artifacts/SHA256SUMS release-artifacts/sbom.cdx.json --clobber

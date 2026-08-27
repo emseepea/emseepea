@@ -13,7 +13,8 @@
   "updateInternalDependencies": "patch",
   "ignore": [
     "@emseepea/example-basic-no-ui",
-    "@emseepea/example-backend-no-ui"
+    "@emseepea/example-backend-no-ui",
+    "@emseepea/example-resources-prompts"
   ],
   "privatePackages": {
     "version": true,

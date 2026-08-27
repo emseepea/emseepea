@@ -54,6 +54,9 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
       if (id === "invalid-output") {
         return { text: "must-not-leak", data: { id } };
       }
+      if (id === "oversized-output") {
+        return { text: "x".repeat(1_000), data: { id, roast: "medium" } };
+      }
       return { text: `${id}: medium`, data: { id, roast: "medium" } };
     },
   });
@@ -63,7 +66,8 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     version: "0.0.0",
     tools: [tool],
     maxRequestBytes: 1_024,
-    toolTimeoutMs: 40,
+    maxApplicationResultBytes: 256,
+    operationTimeoutMs: 40,
   });
   const running = await serveEmseepea(handler, { port: 0 });
 
@@ -135,6 +139,15 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     });
     assert.equal(invalidOutput.response.status, 200);
     assert.doesNotMatch(JSON.stringify(invalidOutput.body), /must-not-leak/);
+
+    const oversizedOutput = await rpc(running.url, "tools/call", {
+      name: "lookup-bean",
+      arguments: { id: "oversized-output" },
+    });
+    assert.equal(oversizedOutput.response.status, 200);
+    assert.equal(oversizedOutput.body.result.content[0].text, "Tool execution failed");
+    assert.equal(oversizedOutput.body.result.structuredContent, undefined);
+    assert.equal(oversizedOutput.body.result.isError, true);
 
     const timedOut = await rpc(running.url, "tools/call", {
       name: "lookup-bean",

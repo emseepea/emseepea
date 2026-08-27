@@ -66,7 +66,7 @@ test("an untrusted socket peer is rejected before tool execution", async () => {
 
 test("the anonymous limiter bounds request rate and client state", async () => {
   let calls = 0;
-  const app = productionApp(() => { calls += 1; }, { maxRequests: 1, windowMs: 30, maxClients: 1 });
+  const app = productionApp(() => { calls += 1; }, { maxRequests: 1, windowMs: 1_000, maxClients: 1 });
   const running = await serveEmseepea(app, { port: 0 });
   try {
     assert.equal((await call(running.url, validHeaders())).status, 200);
@@ -74,7 +74,7 @@ test("the anonymous limiter bounds request rate and client state", async () => {
     assert.equal((await call(running.url, validHeaders({ "X-Forwarded-For": "192.0.2.2" }))).status, 503);
     assert.equal(calls, 1);
 
-    await new Promise((resolve) => setTimeout(resolve, 40));
+    await new Promise((resolve) => setTimeout(resolve, 1_050));
     assert.equal((await call(running.url, validHeaders())).status, 200);
     assert.equal(calls, 2);
   } finally {

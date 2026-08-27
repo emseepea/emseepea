@@ -3,7 +3,7 @@
 `@emseepea/server` is the Fastify-first server package for Em See Pea. It
 currently provides a stateless JSON MCP `2026-07-28` endpoint, explicit public
 and OAuth-protected tools, checked backend adapters, runtime schema validation,
-deadlines, and bounded HTTP defaults.
+public static resources and prompts, deadlines, and bounded HTTP defaults.
 
 The package is pre-alpha. See the
 [repository README](https://github.com/windyroad/emseepea#readme) for the exact
@@ -52,6 +52,49 @@ const lookup = defineMappedTool({
 The framework does not yet provide outbound HTTP policy, retries, credentials,
 or effect handling; those remain adapter-owned and are not claimed by this
 slice.
+
+## Public Resource and Prompt
+
+Static resources and prompts are public operations. Their handlers receive only
+the shared deadline and cancellation signal. The framework validates prompt
+arguments and both result types before emission. `operationTimeoutMs` bounds
+tool calls, resource reads, and prompt gets. `maxApplicationResultBytes` bounds
+each validated handler result before SDK encoding; SDK metadata, protocol
+envelopes, discovery, and catalogues are outside that limit. The settings
+default to 30 seconds and one mebibyte respectively.
+
+```ts
+import { createEmseepea, definePrompt, defineResource } from "@emseepea/server";
+import { z } from "zod";
+
+const guideUri = "guide://coffee/getting-started";
+
+const guide = defineResource({
+  name: "getting-started",
+  uri: guideUri,
+  mimeType: "text/markdown",
+  handler: () => ({ contents: [{ uri: guideUri, text: "# Brew safely" }] }),
+});
+
+const brew = definePrompt({
+  name: "brew-guide",
+  argsSchema: z.object({ topic: z.string().min(1) }),
+  handler: ({ topic }) => ({
+    messages: [{ role: "user", content: { type: "text", text: `Explain ${topic}.` } }],
+  }),
+});
+
+const app = createEmseepea({
+  name: "coffee",
+  version: "1.0.0",
+  resources: [guide],
+  prompts: [brew],
+});
+```
+
+Resource templates, completion, pagination, and configurable cache hints are
+not included in this slice. The official codec emits conservative cache fields
+for cacheable operations.
 
 ## Protected Tool
 
