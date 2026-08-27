@@ -2,6 +2,7 @@ import {
   defineMappedTool,
   definePrompt,
   defineResource,
+  defineResourceTemplate,
   defineTool,
   type MappedToolDefinition,
   type ToolPrincipal,
@@ -41,6 +42,23 @@ defineResource({
     void deadline;
     void signal;
     return { contents: [{ uri: "type-check://resource/value", text: "value" }] };
+  },
+});
+
+defineResourceTemplate({
+  name: "resource-template-type-check",
+  uriTemplate: "type-check://resource/{value}",
+  handler: ({ uri, variables }, context) => {
+    const requestedUri: string = uri;
+    const value: string | readonly string[] | undefined = variables.value;
+    const deadline: number = context.deadlineMs;
+    const signal: AbortSignal = context.signal;
+    // @ts-expect-error Public resource-template handlers do not receive caller principals.
+    void context.principal;
+    void value;
+    void deadline;
+    void signal;
+    return { contents: [{ uri: requestedUri, text: "value" }] };
   },
 });
 

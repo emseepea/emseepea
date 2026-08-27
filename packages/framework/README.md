@@ -3,7 +3,8 @@
 `@emseepea/server` is the Fastify-first server package for Em See Pea. It
 currently provides a stateless JSON MCP `2026-07-28` endpoint, explicit public
 and OAuth-protected tools, checked backend adapters, runtime schema validation,
-public static resources and prompts, deadlines, and bounded HTTP defaults.
+public static resources, resource templates, and prompts, deadlines, and
+bounded HTTP defaults.
 
 The package is pre-alpha. See the
 [repository README](https://github.com/windyroad/emseepea#readme) for the exact
@@ -53,7 +54,7 @@ The framework does not yet provide outbound HTTP policy, retries, credentials,
 or effect handling; those remain adapter-owned and are not claimed by this
 slice.
 
-## Public Resource and Prompt
+## Public Resources and Prompts
 
 Static resources and prompts are public operations. Their handlers receive only
 the shared deadline and cancellation signal. The framework validates prompt
@@ -64,7 +65,12 @@ envelopes, discovery, and catalogues are outside that limit. The settings
 default to 30 seconds and one mebibyte respectively.
 
 ```ts
-import { createEmseepea, definePrompt, defineResource } from "@emseepea/server";
+import {
+  createEmseepea,
+  definePrompt,
+  defineResource,
+  defineResourceTemplate,
+} from "@emseepea/server";
 import { z } from "zod";
 
 const guideUri = "guide://coffee/getting-started";
@@ -74,6 +80,15 @@ const guide = defineResource({
   uri: guideUri,
   mimeType: "text/markdown",
   handler: () => ({ contents: [{ uri: guideUri, text: "# Brew safely" }] }),
+});
+
+const methodGuide = defineResourceTemplate({
+  name: "method-guide",
+  uriTemplate: "guide://coffee/method/{method}",
+  mimeType: "text/markdown",
+  handler: ({ uri, variables }) => ({
+    contents: [{ uri, text: `# ${String(variables.method)}` }],
+  }),
 });
 
 const brew = definePrompt({
@@ -87,14 +102,20 @@ const brew = definePrompt({
 const app = createEmseepea({
   name: "coffee",
   version: "1.0.0",
-  resources: [guide],
+  resources: [guide, methodGuide],
   prompts: [brew],
 });
 ```
 
-Resource templates, completion, pagination, and configurable cache hints are
-not included in this slice. The official codec emits conservative cache fields
-for cacheable operations.
+Resource templates are public and non-enumerating in this slice: clients
+discover their URI patterns through `resources/templates/list` and read
+matching URIs. Patterns accept simple `{variable}` expressions; structurally
+the scheme and authority remain fixed, and each unique variable occupies a
+whole path segment. Overlapping routes fail at startup instead of dispatching
+by registration order.
+Template enumeration, completion, pagination, protection, and configurable
+cache hints are not included. The official codec emits conservative cache
+fields for cacheable operations.
 
 ## Protected Tool
 

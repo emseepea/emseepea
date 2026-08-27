@@ -2,6 +2,7 @@ import {
   createEmseepea,
   definePrompt,
   defineResource,
+  defineResourceTemplate,
   serveEmseepea,
 } from "@emseepea/server";
 import { z } from "zod";
@@ -19,6 +20,21 @@ const guide = defineResource({
   }),
 });
 
+const methodGuide = defineResourceTemplate({
+  name: "method-guide",
+  uriTemplate: "guide://coffee/method/{method}",
+  title: "Coffee method guide",
+  description: "A synthetic guide selected by brewing method.",
+  mimeType: "text/markdown",
+  handler: ({ uri, variables }) => ({
+    contents: [{
+      uri,
+      mimeType: "text/markdown",
+      text: `# ${String(variables.method)}\n`,
+    }],
+  }),
+});
+
 const brew = definePrompt({
   name: "brew-guide",
   title: "Brew guide",
@@ -33,7 +49,7 @@ const brew = definePrompt({
 const running = await serveEmseepea(createEmseepea({
   name: "emseepea-resources-prompts",
   version: "0.0.0",
-  resources: [guide],
+  resources: [guide, methodGuide],
   prompts: [brew],
 }), { port: Number.parseInt(process.env.PORT ?? "3000", 10) });
 

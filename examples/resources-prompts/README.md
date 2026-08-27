@@ -1,7 +1,7 @@
 # Resources and prompts example
 
-This private workspace exposes one public static resource and one public prompt
-through `@emseepea/server`.
+This private workspace exposes a public static resource, a non-enumerating
+public resource template, and a public prompt through `@emseepea/server`.
 
 From the repository root:
 

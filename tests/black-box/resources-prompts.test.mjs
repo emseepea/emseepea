@@ -7,6 +7,7 @@ import {
   defineMappedTool,
   definePrompt,
   defineResource,
+  defineResourceTemplate,
   defineTool,
   serveEmseepea,
 } from "@emseepea/server";
@@ -25,6 +26,36 @@ test("resource and prompt registrations fail invalid startup state", () => {
     uri: "relative",
     handler: () => ({ contents: [] }),
   }), /absolute canonical URI/);
+  assert.throws(() => defineResourceTemplate({
+    name: "guide-template",
+    uriTemplate: "relative/{topic}",
+    handler: () => ({ contents: [] }),
+  }), /fixed scheme and authority/);
+  assert.throws(() => defineResourceTemplate({
+    name: "guide-template",
+    uriTemplate: "guide://coffee/static",
+    handler: () => ({ contents: [] }),
+  }), /fixed scheme and authority/);
+  assert.throws(() => defineResourceTemplate({
+    name: "guide-template",
+    uriTemplate: "guide://coffee/{?topic}",
+    handler: () => ({ contents: [] }),
+  }), /fixed scheme and authority/);
+  assert.throws(() => defineResourceTemplate({
+    name: "guide-template",
+    uriTemplate: "guide://coffee/prefix-{topic}",
+    handler: () => ({ contents: [] }),
+  }), /whole path-segment variables/);
+  assert.throws(() => defineResourceTemplate({
+    name: "guide-template",
+    uriTemplate: "guide://coffee/{topic}/{topic}",
+    handler: () => ({ contents: [] }),
+  }), /unique whole path-segment variables/);
+  assert.doesNotThrow(() => defineResourceTemplate({
+    name: "sentinel-literal-template",
+    uriTemplate: "guide://coffee/emseepea-variable-0/{topic}",
+    handler: ({ uri: requestedUri }) => ({ contents: [{ uri: requestedUri, text: "guide" }] }),
+  }));
 
   const resource = (name, resourceUri) => defineResource({
     name,
@@ -47,6 +78,45 @@ test("resource and prompt registrations fail invalid startup state", () => {
     version: "0.0.0",
     resources: [resource("guide", uri), resource("other", uri)],
   }), /Duplicate resource URI/);
+  const template = (name, uriTemplate) => defineResourceTemplate({
+    name,
+    uriTemplate,
+    handler: ({ uri: requestedUri }) => ({ contents: [{ uri: requestedUri, text: "guide" }] }),
+  });
+  assert.throws(() => createEmseepea({
+    name: "duplicate-resource-template-name",
+    version: "0.0.0",
+    resources: [resource("guide", uri), template("guide", "guide://coffee/{topic}")],
+  }), /Duplicate resource name/);
+  assert.throws(() => createEmseepea({
+    name: "duplicate-resource-template",
+    version: "0.0.0",
+    resources: [
+      template("guide", "guide://coffee/{topic}"),
+      template("other", "guide://coffee/{topic}"),
+    ],
+  }), /Duplicate resource template/);
+  assert.throws(() => createEmseepea({
+    name: "ambiguous-resource-template",
+    version: "0.0.0",
+    resources: [
+      template("guide", "guide://coffee/{topic}"),
+      template("other", "guide://coffee/{method}"),
+    ],
+  }), /Ambiguous resource template/);
+  assert.throws(() => createEmseepea({
+    name: "overlapping-resource-template",
+    version: "0.0.0",
+    resources: [
+      template("guide", "guide://coffee/{topic}/fixed"),
+      template("other", "guide://coffee/special/{section}"),
+    ],
+  }), /Ambiguous resource template/);
+  assert.throws(() => createEmseepea({
+    name: "static-template-overlap",
+    version: "0.0.0",
+    resources: [resource("guide", uri), template("template", "guide://coffee/{topic}")],
+  }), /Ambiguous resource registration/);
   assert.throws(() => createEmseepea({
     name: "duplicate-prompt",
     version: "0.0.0",
@@ -72,6 +142,14 @@ test("resource and prompt definitions are captured before exposure", async () =>
     argsSchema: z.object({ topic: z.string() }),
     handler: ({ topic }) => ({
       messages: [{ role: "user", content: { type: "text", text: `original ${topic}` } }],
+    }),
+  };
+  const templateDefinition = {
+    name: "captured-template",
+    uriTemplate: "guide://coffee/topic/{topic}",
+    title: "Original template",
+    handler: ({ uri: requestedUri, variables }) => ({
+      contents: [{ uri: requestedUri, text: `original ${variables.topic}` }],
     }),
   };
   const toolSchema = z.object({ value: z.string() });
@@ -101,12 +179,18 @@ test("resource and prompt definitions are captured before exposure", async () =>
     name: "captured-definitions",
     version: "0.0.0",
     tools: [defineTool(toolDefinition), defineMappedTool(mappedDefinition)],
-    resources: [defineResource(resourceDefinition)],
+    resources: [defineResource(resourceDefinition), defineResourceTemplate(templateDefinition)],
     prompts: [definePrompt(promptDefinition)],
   });
   resourceDefinition.name = "mutated-resource";
   resourceDefinition.title = "Mutated resource";
   resourceDefinition.handler = () => ({ contents: [{ uri, text: "mutated resource" }] });
+  templateDefinition.name = "mutated-template";
+  templateDefinition.uriTemplate = "guide://mutated/{topic}";
+  templateDefinition.title = "Mutated template";
+  templateDefinition.handler = ({ uri: requestedUri }) => ({
+    contents: [{ uri: requestedUri, text: "mutated template" }],
+  });
   promptDefinition.name = "mutated-prompt";
   promptDefinition.title = "Mutated prompt";
   promptDefinition.argsSchema = z.object({ changed: z.string() });
@@ -131,6 +215,16 @@ test("resource and prompt definitions are captured before exposure", async () =>
     assert.equal(resources.body.result.resources[0].title, "Original resource");
     const read = await rpc(running.url, "resources/read", { uri });
     assert.equal(read.body.result.contents[0].text, "original resource");
+    const templates = await rpc(running.url, "resources/templates/list");
+    assert.deepEqual(templates.body.result.resourceTemplates, [{
+      name: "captured-template",
+      uriTemplate: "guide://coffee/topic/{topic}",
+      title: "Original template",
+    }]);
+    const templateRead = await rpc(running.url, "resources/read", {
+      uri: "guide://coffee/topic/espresso",
+    });
+    assert.equal(templateRead.body.result.contents[0].text, "original espresso");
 
     const prompts = await rpc(running.url, "prompts/list");
     assert.equal(prompts.body.result.prompts[0].name, "captured-prompt");
@@ -169,7 +263,13 @@ test("disabled resource and prompt capabilities are absent and rejected", async 
     const discover = await rpc(running.url, "server/discover");
     assert.equal(discover.body.result.capabilities.resources, undefined);
     assert.equal(discover.body.result.capabilities.prompts, undefined);
-    for (const method of ["resources/list", "resources/read", "prompts/list", "prompts/get"]) {
+    for (const method of [
+      "resources/list",
+      "resources/templates/list",
+      "resources/read",
+      "prompts/list",
+      "prompts/get",
+    ]) {
       const result = await rpc(running.url, method);
       assert.equal(result.response.status, 404);
       assert.equal(result.body.error.code, -32601);
@@ -279,6 +379,10 @@ test("public resources and prompts stay checked and identity-free", async () => 
       listChanged: false,
     });
     assert.deepEqual(discover.body.result.capabilities.prompts, { listChanged: false });
+
+    const templates = await rpc(running.url, "resources/templates/list", {}, "irrelevant");
+    assert.equal(templates.response.status, 404);
+    assert.equal(templates.body.error.code, -32601);
 
     const resources = await rpc(running.url, "resources/list", {}, "irrelevant");
     assert.equal(resources.body.result.ttlMs, 0);
@@ -418,6 +522,151 @@ test("public resources and prompts stay checked and identity-free", async () => 
   }
 });
 
+test("public resource templates stay checked and identity-free", async () => {
+  let verifierCalls = 0;
+  let handlerCalls = 0;
+  let slowCancelled = false;
+  const template = defineResourceTemplate({
+    name: "topic-guide",
+    uriTemplate: "guide://coffee/{topic}",
+    title: "Coffee topic guide",
+    description: "A synthetic guide selected by topic.",
+    mimeType: "text/markdown",
+    async handler({ uri: requestedUri, variables }, { signal, deadlineMs }) {
+      handlerCalls += 1;
+      assert.ok(deadlineMs > Date.now() - 1_000);
+      const topic = variables.topic;
+      assert.equal(typeof topic, "string");
+      if (topic === "secret") throw new Error("template-secret-sentinel");
+      if (topic === "wrong-uri") {
+        return { contents: [{ uri: "guide://private/secret", text: "must-not-leak" }] };
+      }
+      if (topic === "oversized") {
+        return { contents: [{ uri: requestedUri, text: "x".repeat(1_000) }] };
+      }
+      if (topic === "slow") {
+        try {
+          await delay(200, undefined, { signal });
+        } catch (error) {
+          slowCancelled = signal.aborted;
+          throw error;
+        }
+      }
+      return {
+        contents: [{ uri: requestedUri, mimeType: "text/markdown", text: `# ${topic}` }],
+      };
+    },
+  });
+  const app = createEmseepea({
+    name: "resource-templates",
+    version: "0.0.0",
+    resources: [template],
+    operationTimeoutMs: 40,
+    maxApplicationResultBytes: 512,
+    oauth: {
+      verifier: {
+        async verifyAccessToken() {
+          verifierCalls += 1;
+          throw new Error("public operations must not verify bearer tokens");
+        },
+      },
+      metadata: {
+        resourceServerUrl: new URL("https://api.example/mcp"),
+        oauthMetadata: {
+          issuer: "https://auth.example",
+          authorization_endpoint: "https://auth.example/authorize",
+          token_endpoint: "https://auth.example/token",
+          response_types_supported: ["code"],
+        },
+      },
+    },
+  });
+  const running = await serveEmseepea(app, { port: 0 });
+
+  try {
+    const discover = await rpc(running.url, "server/discover", {}, "irrelevant");
+    assert.deepEqual(discover.body.result.capabilities.resources, {
+      subscribe: false,
+      listChanged: false,
+    });
+
+    const catalogue = await rpc(
+      running.url,
+      "resources/templates/list",
+      {},
+      "irrelevant",
+    );
+    assert.equal(catalogue.body.result.ttlMs, 0);
+    assert.equal(catalogue.body.result.cacheScope, "private");
+    assert.deepEqual(catalogue.body.result.resourceTemplates, [{
+      name: "topic-guide",
+      uriTemplate: "guide://coffee/{topic}",
+      title: "Coffee topic guide",
+      description: "A synthetic guide selected by topic.",
+      mimeType: "text/markdown",
+    }]);
+    assert.deepEqual((await rpc(running.url, "resources/list")).body.result.resources, []);
+
+    const read = await rpc(
+      running.url,
+      "resources/read",
+      { uri: "guide://coffee/pour-over" },
+      "irrelevant",
+    );
+    assert.equal(read.body.result.contents[0].text, "# pour-over");
+    assert.equal(handlerCalls, 1);
+    assert.equal(verifierCalls, 0);
+
+    for (const unknownUri of ["guide://tea/pour-over", "not-a-resource-uri"]) {
+      const unknown = await rpc(running.url, "resources/read", { uri: unknownUri }, "irrelevant");
+      assert.equal(unknown.response.status, 200);
+      assert.equal(unknown.body.error.code, -32602);
+      assert.equal(handlerCalls, 1);
+    }
+
+    const secret = await rpc(running.url, "resources/read", { uri: "guide://coffee/secret" });
+    assertGenericError(secret, "Resource read failed");
+    assert.doesNotMatch(JSON.stringify(secret.body), /template-secret-sentinel/);
+    const wrongUri = await rpc(
+      running.url,
+      "resources/read",
+      { uri: "guide://coffee/wrong-uri" },
+    );
+    assertGenericError(wrongUri, "Resource read failed");
+    assert.doesNotMatch(JSON.stringify(wrongUri.body), /private\/secret|must-not-leak/);
+    const oversized = await rpc(
+      running.url,
+      "resources/read",
+      { uri: "guide://coffee/oversized" },
+    );
+    assertGenericError(oversized, "Resource read failed");
+    const slow = await rpc(running.url, "resources/read", { uri: "guide://coffee/slow" });
+    assertGenericError(slow, "Resource read failed");
+    assert.equal(slowCancelled, true);
+
+    const client = new Client(
+      { name: "resource-template-independent-client", version: "0.0.0" },
+      { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+    );
+    await client.connect(new StreamableHTTPClientTransport(running.url));
+    try {
+      assert.deepEqual(
+        (await client.listResourceTemplates()).resourceTemplates.map(({ name }) => name),
+        ["topic-guide"],
+      );
+      assert.equal(
+        (await client.readResource({ uri: "guide://coffee/espresso" })).contents[0].text,
+        "# espresso",
+      );
+    } finally {
+      await client.close();
+    }
+    assert.equal(verifierCalls, 0);
+  } finally {
+    await running.close();
+  }
+});
+
 test("disconnect cancels cooperating resource and prompt handlers", async () => {
   let startResource;
   const resourceStarted = new Promise((resolve) => { startResource = resolve; });
@@ -427,24 +676,42 @@ test("disconnect cancels cooperating resource and prompt handlers", async () => 
   const promptStarted = new Promise((resolve) => { startPrompt = resolve; });
   let cancelPrompt;
   const promptCancelled = new Promise((resolve) => { cancelPrompt = resolve; });
+  let startTemplate;
+  const templateStarted = new Promise((resolve) => { startTemplate = resolve; });
+  let cancelTemplate;
+  const templateCancelled = new Promise((resolve) => { cancelTemplate = resolve; });
   let resourceCompleted = false;
   let promptCompleted = false;
+  let templateCompleted = false;
 
   const app = createEmseepea({
     name: "resource-prompt-disconnect",
     version: "0.0.0",
     operationTimeoutMs: 1_000,
-    resources: [defineResource({
-      name: "disconnect-resource",
-      uri,
-      async handler({ signal }) {
-        startResource();
-        signal.addEventListener("abort", cancelResource, { once: true });
-        await delay(5_000, undefined, { signal });
-        resourceCompleted = true;
-        return { contents: [{ uri, text: "done" }] };
-      },
-    })],
+    resources: [
+      defineResource({
+        name: "disconnect-resource",
+        uri,
+        async handler({ signal }) {
+          startResource();
+          signal.addEventListener("abort", cancelResource, { once: true });
+          await delay(5_000, undefined, { signal });
+          resourceCompleted = true;
+          return { contents: [{ uri, text: "done" }] };
+        },
+      }),
+      defineResourceTemplate({
+        name: "disconnect-template",
+        uriTemplate: "guide://disconnect/{topic}",
+        async handler({ uri: requestedUri }, { signal }) {
+          startTemplate();
+          signal.addEventListener("abort", cancelTemplate, { once: true });
+          await delay(5_000, undefined, { signal });
+          templateCompleted = true;
+          return { contents: [{ uri: requestedUri, text: "done" }] };
+        },
+      }),
+    ],
     prompts: [definePrompt({
       name: "disconnect-prompt",
       argsSchema: z.object({}),
@@ -485,8 +752,25 @@ test("disconnect cancels cooperating resource and prompt handlers", async () => 
       promptCancelled,
       delay(200).then(() => assert.fail("prompt handler did not observe cancellation")),
     ]);
+
+    const templateController = new AbortController();
+    const templateRead = rpc(
+      running.url,
+      "resources/read",
+      { uri: "guide://disconnect/topic" },
+      undefined,
+      templateController.signal,
+    );
+    await templateStarted;
+    templateController.abort();
+    await assert.rejects(templateRead, /abort/i);
+    await Promise.race([
+      templateCancelled,
+      delay(200).then(() => assert.fail("resource-template handler did not observe cancellation")),
+    ]);
     assert.equal(resourceCompleted, false);
     assert.equal(promptCompleted, false);
+    assert.equal(templateCompleted, false);
   } finally {
     await running.close();
   }

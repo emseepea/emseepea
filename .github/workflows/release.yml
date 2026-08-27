@@ -93,8 +93,8 @@ jobs:
           - GitHub CLI: $(gh --version | head -1)
           - Qualification: npm test; npm run benchmark; npm audit --audit-level=high; npm pack
           - Reviews: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/$review_record
-          - Supported slice: Fastify-first JSON MCP 2026-07-28 server; public and invocation-scoped OAuth-protected tools; checked mapped adapters; public static-resource listing and reads; public prompt listing and rendering; anonymous resource metadata and discovery
-          - Excluded: resource templates, completion, pagination, configurable cache hints, object or tenant authorization, outbound HTTP policy, retries, effects, SSE, progress, subscriptions, shared state, UI packages, deployment, resource/prompt performance, and full-profile conformance
+          - Supported slice: Fastify-first JSON MCP 2026-07-28 server; public and invocation-scoped OAuth-protected tools; checked mapped adapters; public static-resource and non-enumerating resource-template discovery and reads; public prompt listing and rendering; anonymous resource metadata and discovery
+          - Excluded: template enumeration, protected templates, completion, pagination, configurable cache hints, object or tenant authorization, outbound HTTP policy, retries, effects, SSE, progress, subscriptions, shared state, UI packages, deployment, resource/prompt/template performance, and full-profile conformance
           EOF
       - name: Create release pull request or publish
         id: changesets
@@ -158,7 +158,9 @@ jobs:
             defineMappedTool,
             definePrompt,
             defineResource,
+            defineResourceTemplate,
             defineTool,
+            serveEmseepea,
           } from "@emseepea/server";
           import { z } from "zod";
 
@@ -189,6 +191,11 @@ jobs:
             uri: resourceUri,
             handler: () => ({ contents: [{ uri: resourceUri, text: "value" }] }),
           });
+          const resourceTemplate = defineResourceTemplate({
+            name: "smoke-resource-template",
+            uriTemplate: "smoke://resource/{value}",
+            handler: ({ uri }) => ({ contents: [{ uri, text: "value" }] }),
+          });
           const prompt = definePrompt({
             name: "smoke-prompt",
             argsSchema: value,
@@ -200,10 +207,49 @@ jobs:
             name: "installed-package-smoke",
             version: "0.0.0",
             tools: [tool, mapped],
-            resources: [resource],
+            resources: [resource, resourceTemplate],
             prompts: [prompt],
           });
-          await app.close();
+          const running = await serveEmseepea(app, { port: 0 });
+          const request = async (method, params = {}) => {
+            const response = await fetch(running.url, {
+              method: "POST",
+              headers: {
+                Accept: "application/json, text/event-stream",
+                "Content-Type": "application/json",
+                "MCP-Protocol-Version": "2026-07-28",
+                "Mcp-Method": method,
+                ...(method === "resources/read" ? { "Mcp-Name": params.uri } : {}),
+              },
+              body: JSON.stringify({
+                jsonrpc: "2.0",
+                id: crypto.randomUUID(),
+                method,
+                params: {
+                  ...params,
+                  _meta: {
+                    "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                    "io.modelcontextprotocol/clientInfo": { name: "release-smoke", version: "0.0.0" },
+                    "io.modelcontextprotocol/clientCapabilities": {},
+                  },
+                },
+              }),
+            });
+            if (!response.ok) throw new Error(`${method} returned HTTP ${response.status}`);
+            return response.json();
+          };
+          try {
+            const templates = await request("resources/templates/list");
+            if (templates.result.resourceTemplates[0]?.uriTemplate !== "smoke://resource/{value}") {
+              throw new Error("installed package did not expose its resource template");
+            }
+            const read = await request("resources/read", { uri: "smoke://resource/checked" });
+            if (read.result.contents[0]?.uri !== "smoke://resource/checked") {
+              throw new Error("installed package did not dispatch its resource template");
+            }
+          } finally {
+            await running.close();
+          }
           NODE
           cd "$GITHUB_WORKSPACE"
           tag="@emseepea/server@$version"

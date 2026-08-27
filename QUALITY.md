@@ -26,6 +26,9 @@ failure stops the job; later steps are not evidence for earlier ones.
   invoke the verifier nor create an authenticated handler context.
 - Public resources and prompts must prove that listing and invocation remain
   verifier-free and identity-free, including when OAuth is configured.
+- Public resource templates must additionally prove exact catalogue metadata,
+  URI-variable extraction, matching reads, and zero calls for unmatched or
+  malformed URIs.
 - Unknown static resource URIs and invalid prompt arguments must prove zero
   application-handler calls.
 - Protected calls must prove failure before handler execution for missing,

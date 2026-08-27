@@ -8,6 +8,7 @@ import {
   McpServer,
   OAuthError,
   OAuthErrorCode,
+  ResourceTemplate,
   bearerAuthChallengeResponse,
   buildOAuthProtectedResourceMetadata,
   checkResourceAllowed,
@@ -33,6 +34,9 @@ const TOOL_NAME = Symbol("toolName");
 const TOOL_ACCESS = Symbol("toolAccess");
 const RESOURCE_NAME = Symbol("resourceName");
 const RESOURCE_URI = Symbol("resourceUri");
+const RESOURCE_KIND = Symbol("resourceKind");
+const RESOURCE_MATCHES = Symbol("resourceMatches");
+const RESOURCE_ROUTE = Symbol("resourceRoute");
 const PROMPT_NAME = Symbol("promptName");
 const runtimes = new WeakMap<FastifyInstance, AppRuntime>();
 const requestDeadlines = new AsyncLocalStorage<number>();
@@ -123,9 +127,31 @@ export interface ResourceDefinition {
   readonly handler: (context: OperationContext) =>
     ReadResourceResult | Promise<ReadResourceResult>;
 }
+export interface ResourceTemplateDefinition {
+  readonly name: string;
+  readonly uriTemplate: string;
+  readonly title?: string;
+  readonly description?: string;
+  readonly mimeType?: string;
+  readonly handler: (
+    input: {
+      readonly uri: string;
+      readonly variables: Readonly<Record<string, string | readonly string[]>>;
+    },
+    context: OperationContext,
+  ) => ReadResourceResult | Promise<ReadResourceResult>;
+}
+interface ResourceTemplateRoute {
+  readonly protocol: string;
+  readonly host: string;
+  readonly segments: readonly (string | undefined)[];
+}
 export interface EmseepeaResource {
   readonly [RESOURCE_NAME]: string;
   readonly [RESOURCE_URI]: string;
+  readonly [RESOURCE_KIND]: "static" | "template";
+  readonly [RESOURCE_MATCHES]?: (uri: string) => boolean;
+  readonly [RESOURCE_ROUTE]?: ResourceTemplateRoute;
   readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
 }
 type NonStringPromptArgumentKeys<Args extends z.ZodObject> = {
@@ -255,6 +281,7 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
   const registration: EmseepeaResource = {
     [RESOURCE_NAME]: name,
     [RESOURCE_URI]: uri,
+    [RESOURCE_KIND]: "static",
     [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
       server.registerResource(
         name,
@@ -274,6 +301,48 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
               const parsed = await ReadResourceResultSchema.safeParseAsync(result);
               if (!parsed.success || parsed.data.contents.some((content) => content.uri !== uri)) {
                 throw new Error("Resource returned an invalid result");
+              }
+              signal.throwIfAborted();
+              assertResultSize(parsed.data, maxApplicationResultBytes, deadlineMs, signal);
+              return parsed.data;
+            });
+          } catch {
+            throw new Error("Resource read failed");
+          }
+        },
+      );
+    },
+  };
+  return Object.freeze(registration);
+}
+
+export function defineResourceTemplate(definition: ResourceTemplateDefinition): EmseepeaResource {
+  const { name, title, description, mimeType, handler } = definition;
+  assertRegistrationName("Resource template", name);
+  const { template, route } = checkedResourceTemplate(definition.uriTemplate);
+  const uriTemplate = template.uriTemplate.toString();
+  const registration: EmseepeaResource = {
+    [RESOURCE_NAME]: name,
+    [RESOURCE_URI]: uriTemplate,
+    [RESOURCE_KIND]: "template",
+    [RESOURCE_MATCHES]: (uri) => template.uriTemplate.match(uri) !== null,
+    [RESOURCE_ROUTE]: route,
+    [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
+      server.registerResource(
+        name,
+        template,
+        { title, description, mimeType },
+        async (requestedUri, variables, context): Promise<ReadResourceResult> => {
+          try {
+            const deadlineMs = requestDeadlines.getStore() ?? Date.now() + timeoutMs;
+            return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
+              signal.throwIfAborted();
+              const result = await handler({ uri: requestedUri.href, variables }, { signal, deadlineMs });
+              signal.throwIfAborted();
+              const parsed = await ReadResourceResultSchema.safeParseAsync(result);
+              if (!parsed.success ||
+                  parsed.data.contents.some((content) => content.uri !== requestedUri.href)) {
+                throw new Error("Resource template returned an invalid result");
               }
               signal.throwIfAborted();
               assertResultSize(parsed.data, maxApplicationResultBytes, deadlineMs, signal);
@@ -438,6 +507,9 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   const enabledMethods = new Set(["server/discover"]);
   if (tools.length) enabledMethods.add("tools/list").add("tools/call");
   if (resources.length) enabledMethods.add("resources/list").add("resources/read");
+  if (resources.some((resource) => resource[RESOURCE_KIND] === "template")) {
+    enabledMethods.add("resources/templates/list");
+  }
   if (prompts.length) enabledMethods.add("prompts/list").add("prompts/get");
 
   const sdkHandler = createMcpHandler(() => {
@@ -883,13 +955,30 @@ function assertRegistrationName(kind: string, name: string): void {
 function assertUniqueResources(resources: readonly EmseepeaResource[]): void {
   const names = new Set<string>();
   const uris = new Set<string>();
+  const templateRoutes: ResourceTemplateRoute[] = [];
   for (const resource of resources) {
     const name = resource[RESOURCE_NAME];
     const uri = resource[RESOURCE_URI];
     if (names.has(name)) throw new TypeError(`Duplicate resource name: ${name}`);
-    if (uris.has(uri)) throw new TypeError(`Duplicate resource URI: ${uri}`);
+    if (uris.has(uri)) {
+      const label = resource[RESOURCE_KIND] === "template" ? "template" : "URI";
+      throw new TypeError(`Duplicate resource ${label}: ${uri}`);
+    }
+    const route = resource[RESOURCE_ROUTE];
+    if (route && templateRoutes.some((candidate) => resourceTemplateRoutesOverlap(route, candidate))) {
+      throw new TypeError(`Ambiguous resource template: ${uri}`);
+    }
     names.add(name);
     uris.add(uri);
+    if (route) templateRoutes.push(route);
+  }
+  for (const resource of resources) {
+    if (resource[RESOURCE_KIND] !== "static") continue;
+    for (const candidate of resources) {
+      if (candidate[RESOURCE_MATCHES]?.(resource[RESOURCE_URI])) {
+        throw new TypeError(`Ambiguous resource registration: ${resource[RESOURCE_URI]}`);
+      }
+    }
   }
 }
 
@@ -911,6 +1000,66 @@ function canonicalResourceUri(uri: string): string {
   }
   if (parsed.href !== uri) throw new TypeError("Resource URI must be an absolute canonical URI");
   return uri;
+}
+function checkedResourceTemplate(uriTemplate: string): {
+  template: ResourceTemplate;
+  route: ResourceTemplateRoute;
+} {
+  let template: ResourceTemplate;
+  try {
+    if (/[{}]/.test(uriTemplate.replace(/\{[A-Za-z][A-Za-z0-9_]*\}/g, ""))) {
+      throw new Error("unsupported expression");
+    }
+    const expressionNames = [...uriTemplate.matchAll(/\{([A-Za-z][A-Za-z0-9_]*)\}/g)]
+      .map((match) => match[1]!);
+    if (new Set(expressionNames).size !== expressionNames.length) {
+      throw new Error("repeated variable");
+    }
+    template = new ResourceTemplate(uriTemplate, { list: undefined });
+    const variableNames = template.uriTemplate.variableNames;
+    if (variableNames.length === 0) throw new Error("missing variable");
+    const sentinels = variableNames.map((_, index) => {
+      let sentinel = `emseepea-variable-${index}`;
+      while (uriTemplate.includes(sentinel)) sentinel = `_${sentinel}`;
+      return sentinel;
+    });
+    const expanded = template.uriTemplate.expand(
+      Object.fromEntries(variableNames.map((name, index) => [name, sentinels[index]!])),
+    );
+    canonicalResourceUri(expanded);
+    const parsed = new URL(expanded);
+    if (parsed.username || parsed.password || parsed.search || parsed.hash) {
+      throw new Error("unsupported URI component");
+    }
+    const segments = parsed.pathname.split("/").map((segment) => {
+      const variableIndex = sentinels.indexOf(segment);
+      if (variableIndex >= 0) return undefined;
+      if (sentinels.some((sentinel) => segment.includes(sentinel))) {
+        throw new Error("variable must occupy a path segment");
+      }
+      return segment;
+    });
+    if (segments.filter((segment) => segment === undefined).length !== variableNames.length) {
+      throw new Error("variable must occupy a path segment");
+    }
+    return {
+      template,
+      route: { protocol: parsed.protocol, host: parsed.host, segments },
+    };
+  } catch {
+    throw new TypeError(
+      "Resource template must use a fixed scheme and authority with unique whole path-segment variables",
+    );
+  }
+}
+function resourceTemplateRoutesOverlap(
+  left: ResourceTemplateRoute,
+  right: ResourceTemplateRoute,
+): boolean {
+  return left.protocol === right.protocol && left.host === right.host &&
+    left.segments.length === right.segments.length &&
+    left.segments.every((segment, index) =>
+      segment === undefined || right.segments[index] === undefined || segment === right.segments[index]);
 }
 function assertNonEmpty(field: string, value: string): void {
   if (!value.trim()) throw new TypeError(`${field} must not be empty`);

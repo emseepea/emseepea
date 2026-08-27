@@ -3,8 +3,8 @@
 ## Status
 
 - Document type: Living implementation battle plan
-- Objective state: No-UI, OAuth, and checked mapped-adapter slices qualified; public resources and prompts under qualification
-- Current operating objective: Qualify public resources and prompts, publish the first pre-alpha package, then establish the verified documentation website
+- Objective state: No-UI, OAuth, checked mapped-adapter, public-resource, and prompt slices qualified; public resource templates under qualification
+- Current operating objective: Qualify public resource templates, publish the first pre-alpha package, then establish the verified documentation website
 - Last updated: 2026-08-27
 
 This plan is a decision aid, not a contract with yesterday's assumptions. No plan survives contact with real specifications, SDKs, clients, proxies, attackers, users, or production constraints. The objective and rules of engagement remain fixed; the route changes whenever evidence reveals a shorter, safer, or more useful path.
@@ -788,6 +788,19 @@ gates on Node.js 22 and 24 in the
 [GitHub Actions qualification run](https://github.com/windyroad/emseepea/actions/runs/33031986348).
 Outbound HTTP policy, credentials, retries, effects, and workflow execution
 remain excluded.
+
+### 2026-08-27: Public Resource and Prompt Slice Qualified
+
+Public static-resource listing and reads and public prompt listing and rendering
+now pass raw HTTP and independent-client checks. Their handlers remain
+identity-free when OAuth is configured and share the checked deadline,
+cancellation, result-validation, size-limit, and generic-error boundary. The
+exact committed revision passed the clean-checkout test, benchmark, and audit
+gates on Node.js 22 and 24 in the
+[GitHub Actions qualification run](https://github.com/windyroad/emseepea/actions/runs/33035207338).
+Public non-enumerating resource templates are the next slice under qualification;
+template enumeration, completion, pagination, and cache configuration remain
+excluded.
 
 ## Implementation Goal
 

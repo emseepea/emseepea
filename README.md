@@ -5,8 +5,9 @@ Streamable HTTP.
 
 The project is pre-alpha. The current qualified slice is a Fastify-first,
 JSON-only MCP server with public tools, invocation-scoped OAuth-protected
-tools, checked backend adapters, and synthetic read-only examples. Current
-source also contains public static resources and prompts under qualification.
+tools, checked backend adapters, public static resources and prompts, and
+synthetic read-only examples. Current source also contains non-enumerating
+resource templates under qualification.
 
 ## Operating Documents
 
@@ -52,10 +53,10 @@ backend-command, backend-result, and final-output validation across memory and
 file adapters, with one adapter call, shared deadlines, disconnect cancellation,
 and redacted failures.
 Resource and prompt tests prove exact capability advertisement, anonymous
-listing and invocation even when OAuth is configured, exact static-resource
-dispatch, checked protocol results, deadline-bounded prompt argument validation,
-bounded application results, generic errors, and interoperability through the
-official client.
+listing and invocation even when OAuth is configured, exact static and
+templated resource dispatch, URI-variable extraction, checked protocol results,
+deadline-bounded prompt argument validation, bounded application results,
+generic errors, and interoperability through the official client.
 
 Run the provisional JSON-boundary performance gate separately:
 
@@ -67,10 +68,10 @@ The OAuth slice validates bearer-token expiry, required scopes, and resource
 using the official SDK boundary. The adopter's `OAuthTokenVerifier` remains
 responsible for issuer and token-integrity validation and for independently
 bounding or cancelling its own I/O. Object or tenant authorization, safe
-outbound HTTP policy, retries, effects, resource templates, completion,
-pagination, cache-hint configuration, SSE responses, shared state, React, and
-Tailwind are not implemented or claimed by this slice. Publication does not
-expand these claims.
+outbound HTTP policy, retries, effects, template enumeration or protection,
+completion, pagination, cache-hint configuration, SSE responses, shared state,
+React, and Tailwind are not implemented or claimed by this slice. Publication
+does not expand these claims.
 
 [production-boundary]: docs/decisions/0002-anonymous-production-boundary.proposed.md
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md
