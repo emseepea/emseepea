@@ -48,6 +48,18 @@ defineResource({
 defineResourceTemplate({
   name: "resource-template-type-check",
   uriTemplate: "type-check://resource/{value}",
+  complete: {
+    value: (partial, context) => {
+      const candidate: string = partial;
+      const deadline: number = context.deadlineMs;
+      const signal: AbortSignal = context.signal;
+      const siblings: Readonly<Record<string, string>> = context.arguments;
+      void deadline;
+      void signal;
+      void siblings;
+      return [candidate];
+    },
+  },
   handler: ({ uri, variables }, context) => {
     const requestedUri: string = uri;
     const value: string | readonly string[] | undefined = variables.value;
@@ -65,6 +77,13 @@ defineResourceTemplate({
 definePrompt({
   name: "prompt-type-check",
   argsSchema: schema,
+  complete: {
+    value: (partial, context) => {
+      const candidate: string = partial;
+      const siblings: Readonly<Record<string, string>> = context.arguments;
+      return [candidate, ...Object.values(siblings)];
+    },
+  },
   handler: ({ value }, context) => {
     const deadline: number = context.deadlineMs;
     const signal: AbortSignal = context.signal;
@@ -74,6 +93,16 @@ definePrompt({
     void signal;
     return { messages: [{ role: "user", content: { type: "text", text: value } }] };
   },
+});
+
+definePrompt({
+  name: "invalid-completion-key",
+  argsSchema: schema,
+  complete: {
+    // @ts-expect-error Prompt completion keys must name registered prompt arguments.
+    missing: () => [],
+  },
+  handler: () => ({ messages: [] }),
 });
 
 // @ts-expect-error MCP prompt arguments must accept string values on the wire.

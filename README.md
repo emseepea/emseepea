@@ -7,6 +7,8 @@ The project is pre-alpha. The current qualified slice is a Fastify-first,
 JSON-only MCP server with public tools, invocation-scoped OAuth-protected
 tools, checked backend adapters, public static resources, non-enumerating
 resource templates, prompts, and synthetic read-only examples.
+Configured prompt arguments and resource-template variables also support
+checked, opt-in completion.
 
 ## Operating Documents
 
@@ -15,6 +17,7 @@ resource templates, prompts, and synthetic read-only examples.
 - [Anonymous production boundary][production-boundary]
 - [Public discovery and protected invocation][public-discovery]
 - [Trusted pre-alpha release governance][release-governance]
+- [Semantic example qualification][semantic-qualification]
 - [Quality policy](QUALITY.md)
 - [Brand style guide](docs/brand/STYLE-GUIDE.md)
 
@@ -56,6 +59,21 @@ listing and invocation even when OAuth is configured, exact static and
 templated resource dispatch, URI-variable extraction, checked protocol results,
 deadline-bounded prompt argument validation, bounded application results,
 generic errors, and interoperability through the official client.
+Completion tests additionally prove startup key validation, immutable handler
+capture, sibling-context filtering, candidate and result validation, timeout and
+disconnect cancellation, error redaction, anonymous access, disabled-method
+rejection, and official-client interoperability for prompts and templates.
+
+Run the local advisory semantic gate separately:
+
+```sh
+npm run test:eval
+```
+
+Promptfoo then runs three fresh agent trials and three no-MCP judge verdicts for
+every example, requiring deterministic critical facts and exact MCP path
+evidence. GitHub Copilot CLI with `claude-sonnet-4.6` is the authoritative
+exact-commit release gate; local Claude results are advisory.
 
 Run the provisional JSON-boundary performance gate separately:
 
@@ -68,10 +86,11 @@ using the official SDK boundary. The adopter's `OAuthTokenVerifier` remains
 responsible for issuer and token-integrity validation and for independently
 bounding or cancelling its own I/O. Object or tenant authorization, safe
 outbound HTTP policy, retries, effects, template enumeration or protection,
-completion, pagination, cache-hint configuration, SSE responses, shared state,
-React, and Tailwind are not implemented or claimed by this slice. Publication
-does not expand these claims.
+pagination, cache-hint configuration, SSE responses, shared state, React, and
+Tailwind are not implemented or claimed by this slice. Publication does not
+expand these claims.
 
 [production-boundary]: docs/decisions/0002-anonymous-production-boundary.proposed.md
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md
 [release-governance]: docs/decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.proposed.md
+[semantic-qualification]: docs/decisions/0021-mandatory-semantic-llm-qualification-for-examples-and-releases.proposed.md

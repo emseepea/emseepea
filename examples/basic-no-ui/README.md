@@ -34,3 +34,5 @@ Run the raw-wire and independent-client checks:
 ```sh
 npm test
 ```
+
+Run this example's three-trial semantic MCP case with `npm run test:eval`.

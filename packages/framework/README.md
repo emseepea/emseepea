@@ -4,7 +4,8 @@
 currently provides a stateless JSON MCP `2026-07-28` endpoint, explicit public
 and OAuth-protected tools, checked backend adapters, runtime schema validation,
 public static resources, resource templates, and prompts, deadlines, and
-bounded HTTP defaults.
+bounded HTTP defaults. Prompt arguments and resource-template variables may
+opt into completion.
 
 The package is pre-alpha. See the
 [repository README](https://github.com/windyroad/emseepea#readme) for the exact
@@ -90,6 +91,9 @@ const methodGuide = defineResourceTemplate({
   name: "method-guide",
   uriTemplate: "guide://coffee/method/{method}",
   mimeType: "text/markdown",
+  complete: {
+    method: (value) => ["espresso", "pour-over"].filter((method) => method.startsWith(value)),
+  },
   handler: ({ uri, variables }) => ({
     contents: [{ uri, text: `# ${String(variables.method)}` }],
   }),
@@ -98,6 +102,9 @@ const methodGuide = defineResourceTemplate({
 const brew = definePrompt({
   name: "brew-guide",
   argsSchema: z.object({ topic: z.string().min(1) }),
+  complete: {
+    topic: (value) => ["grind-size", "water-temperature"].filter((topic) => topic.startsWith(value)),
+  },
   handler: ({ topic }) => ({
     messages: [{ role: "user", content: { type: "text", text: `Explain ${topic}.` } }],
   }),
@@ -117,9 +124,19 @@ matching URIs. Patterns accept simple `{variable}` expressions; structurally
 the scheme and authority remain fixed, and each unique variable occupies a
 whole path segment. Overlapping routes fail at startup instead of dispatching
 by registration order.
-Template enumeration, completion, pagination, protection, and configurable
-cache hints are not included. The official codec emits conservative cache
-fields for cacheable operations.
+
+Completion is opt-in through each definition's `complete` map. Unknown map keys
+fail at startup. A handler receives the partial value plus the shared deadline,
+cancellation signal, and only registered sibling arguments with string values.
+Its string candidates are validated, limited with the complete public result,
+and reduced to the protocol's first 100 values. A configured completion
+capability is otherwise absent and `completion/complete` is rejected.
+Completion is a public, identity-free operation even when OAuth is configured;
+handlers must therefore return only suggestions safe for anonymous discovery.
+
+Template enumeration, pagination, protection, and configurable cache hints are
+not included. The official codec emits conservative cache fields for cacheable
+operations.
 
 ## Protected Tool
 

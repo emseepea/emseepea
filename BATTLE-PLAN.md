@@ -3,8 +3,8 @@
 ## Status
 
 - Document type: Living implementation battle plan
-- Objective state: No-UI, OAuth, checked mapped-adapter, public-resource, resource-template, and prompt slices qualified
-- Current operating objective: Qualify opt-in public completion for existing prompt arguments and resource-template variables, publish the first pre-alpha package, then establish the verified documentation website
+- Objective state: No-UI, OAuth, checked mapped-adapter, public-resource, resource-template, and prompt slices qualified; opt-in completion and semantic example evaluation locally qualified with clean-checkout CI pending
+- Current operating objective: Obtain exact-revision completion and authoritative semantic CI evidence, publish the first pre-alpha package, then establish the verified documentation website
 - Last updated: 2026-08-27
 
 This plan is a decision aid, not a contract with yesterday's assumptions. No plan survives contact with real specifications, SDKs, clients, proxies, attackers, users, or production constraints. The objective and rules of engagement remain fixed; the route changes whenever evidence reveals a shorter, safer, or more useful path.
@@ -227,6 +227,8 @@ Evidence:
 - clean-checkout CI;
 - locked dependencies, checksums, and software bills of materials;
 - deterministic reports without custom certification protocols;
+- three fresh Promptfoo agent trials and three independent judge verdicts for
+  every example, with deterministic facts and exact MCP path evidence;
 - two unrelated services, two adapters, and two clients; and
 - protocol, security, architecture, accessibility, and performance reviews.
 
@@ -693,7 +695,9 @@ An example directory lands only when the same change contains:
 - one end-to-end smoke command through the public endpoint;
 - one positive independent-client invocation;
 - one relevant negative boundary check;
-- synthetic data only; and
+- synthetic data only;
+- one mandatory semantic Promptfoo case with three fresh agent trials, three
+  no-MCP judge verdicts, deterministic facts, and exact MCP path evidence; and
 - a clean-checkout CI run.
 
 Do not scaffold empty future examples.
@@ -804,6 +808,36 @@ tests and dependency audit on Node.js 22 and 24 in the
 The existing JSON/tools benchmark also remained green; it does not cover template
 performance. Template enumeration, completion, pagination, and cache
 configuration remain excluded.
+
+### 2026-08-27: Opt-In Completion Locally Qualified, CI Pending
+
+Prompt arguments and resource-template variables can opt into completion through
+their existing public definitions. Local raw-HTTP and official-client checks
+cover exact capability admission, disabled-method rejection, startup key
+validation, immutable handler capture, required and optional prompt arguments,
+sanitized sibling context, candidate validation and truncation, deadlines,
+disconnect cancellation, concurrent-request isolation, bounded results, generic
+errors, verifier-free public access, and both prompt and template references.
+The compiled example and a freshly packed and installed package pass their real
+HTTP completion smokes. The full local suite passes 26 tests with zero audited
+dependency vulnerabilities. Independent code and post-implementation
+architecture reviews pass, and the remediated WIP risk is 4/25 (Low). This
+checkpoint remains pending until the exact committed revision passes the
+Node.js 22 and 24 clean-checkout gates; no completion performance claim is
+made.
+
+### 2026-08-27: Semantic Example Gate Locally Qualified, CI Pending
+
+ADR-0021 requires Promptfoo qualification for every example. The shared gate
+runs three fresh agent trials and three independent no-MCP judge verdicts per
+example, requires deterministic critical facts and exact MCP path evidence,
+allows no semantic retries, and emits redacted evidence. The local Claude
+advisory run passes all three current examples: both tool examples make exactly
+one named MCP tool call per trial, while the resources-and-prompts example
+records official-client `resources/read` and `prompts/get` operations. The
+authoritative GitHub Copilot CLI `claude-sonnet-4.6` run remains pending on the
+exact committed SHA. Publication is blocked until that separate least-privilege
+job passes and uploads its 14-day evidence artifact.
 
 ## Implementation Goal
 

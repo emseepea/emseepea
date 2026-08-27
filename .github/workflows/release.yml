@@ -12,8 +12,60 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  semantic-eval:
+    name: Semantic example qualification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      copilot-requests: write
+    outputs:
+      has_changesets: ${{ steps.release-state.outputs.has_changesets }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24.20.0
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Build without model credentials
+        run: npm run build
+      - name: Detect a release pull request update
+        id: release-state
+        run: |
+          if find .changeset -maxdepth 1 -type f -name '*.md' ! -name README.md | grep -q .; then
+            echo "has_changesets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changesets=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Qualify every example through MCP
+        env:
+          EMSEEPEA_COPILOT_TOKEN: ${{ github.token }}
+          EMSEEPEA_COPILOT_TOKEN_FILE: ${{ runner.temp }}/emseepea-copilot-token
+        run: |
+          umask 077
+          printf '%s' "$EMSEEPEA_COPILOT_TOKEN" > "$EMSEEPEA_COPILOT_TOKEN_FILE"
+          unset EMSEEPEA_COPILOT_TOKEN
+          trap 'rm -f "$EMSEEPEA_COPILOT_TOKEN_FILE"' EXIT
+          npm run test:eval:ci
+      - name: Upload redacted semantic evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: semantic-eval-${{ github.sha }}
+          path: artifacts/llm-eval/evidence.json
+          if-no-files-found: error
+          retention-days: 14
+
   changesets:
     name: Update release pull request or publish
+    needs: semantic-eval
+    if: ${{ always() && (needs.semantic-eval.outputs.has_changesets == 'true' || needs.semantic-eval.result == 'success') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -71,6 +123,8 @@ jobs:
         env:
           RELEASE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           RELEASE_SHA: ${{ github.sha }}
+          SEMANTIC_EVAL_ARTIFACT: semantic-eval-${{ github.sha }}
+          SEMANTIC_EVAL_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           mkdir -p release-artifacts
           npm pack --workspace @emseepea/server --pack-destination release-artifacts --ignore-scripts
@@ -92,9 +146,10 @@ jobs:
           - npm: $(npm --version)
           - GitHub CLI: $(gh --version | head -1)
           - Qualification: npm test; npm run benchmark; npm audit --audit-level=high; npm pack
+          - Semantic qualification: $SEMANTIC_EVAL_RUN_URL, artifact $SEMANTIC_EVAL_ARTIFACT
           - Reviews: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/$review_record
-          - Supported slice: Fastify-first JSON MCP 2026-07-28 server; public and invocation-scoped OAuth-protected tools; checked mapped adapters; public static-resource and non-enumerating resource-template discovery and reads; public prompt listing and rendering; anonymous resource metadata and discovery
-          - Excluded: template enumeration, protected templates, completion, pagination, configurable cache hints, object or tenant authorization, outbound HTTP policy, retries, effects, SSE, progress, subscriptions, shared state, UI packages, deployment, resource/prompt/template performance, and full-profile conformance
+          - Supported slice: Fastify-first JSON MCP 2026-07-28 server; public and invocation-scoped OAuth-protected tools; checked mapped adapters; public static-resource and non-enumerating resource-template discovery and reads; public prompt listing and rendering; opt-in prompt and resource-template completion; anonymous resource metadata and discovery
+          - Excluded: template enumeration, protected templates, pagination, configurable cache hints, object or tenant authorization, outbound HTTP policy, retries, effects, SSE, progress, subscriptions, shared state, UI packages, deployment, resource/prompt/template/completion performance, and full-profile conformance
           EOF
       - name: Create release pull request or publish
         id: changesets
@@ -194,11 +249,13 @@ jobs:
           const resourceTemplate = defineResourceTemplate({
             name: "smoke-resource-template",
             uriTemplate: "smoke://resource/{value}",
+            complete: { value: (partial) => ["checked"].filter((value) => value.startsWith(partial)) },
             handler: ({ uri }) => ({ contents: [{ uri, text: "value" }] }),
           });
           const prompt = definePrompt({
             name: "smoke-prompt",
             argsSchema: value,
+            complete: { value: (partial) => ["checked"].filter((value) => value.startsWith(partial)) },
             handler: ({ value }) => ({
               messages: [{ role: "user", content: { type: "text", text: value } }],
             }),
@@ -246,6 +303,21 @@ jobs:
             const read = await request("resources/read", { uri: "smoke://resource/checked" });
             if (read.result.contents[0]?.uri !== "smoke://resource/checked") {
               throw new Error("installed package did not dispatch its resource template");
+            }
+            for (const params of [
+              {
+                ref: { type: "ref/prompt", name: "smoke-prompt" },
+                argument: { name: "value", value: "ch" },
+              },
+              {
+                ref: { type: "ref/resource", uri: "smoke://resource/{value}" },
+                argument: { name: "value", value: "ch" },
+              },
+            ]) {
+              const completion = await request("completion/complete", params);
+              if (completion.result.completion.values[0] !== "checked") {
+                throw new Error("installed package did not complete its public definition");
+              }
             }
           } finally {
             await running.close();

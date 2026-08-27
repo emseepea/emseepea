@@ -56,6 +56,18 @@ test("resource and prompt registrations fail invalid startup state", () => {
     uriTemplate: "guide://coffee/emseepea-variable-0/{topic}",
     handler: ({ uri: requestedUri }) => ({ contents: [{ uri: requestedUri, text: "guide" }] }),
   }));
+  assert.throws(() => defineResourceTemplate({
+    name: "unknown-template-completion",
+    uriTemplate: "guide://coffee/{topic}",
+    complete: { unknown: () => [] },
+    handler: ({ uri: requestedUri }) => ({ contents: [{ uri: requestedUri, text: "guide" }] }),
+  }), /completion key is not registered: unknown/);
+  assert.throws(() => definePrompt({
+    name: "unknown-prompt-completion",
+    argsSchema: z.object({ topic: z.string() }),
+    complete: { unknown: () => [] },
+    handler: () => ({ messages: [] }),
+  }), /completion key is not registered: unknown/);
 
   const resource = (name, resourceUri) => defineResource({
     name,
@@ -269,6 +281,7 @@ test("disabled resource and prompt capabilities are absent and rejected", async 
       "resources/read",
       "prompts/list",
       "prompts/get",
+      "completion/complete",
     ]) {
       const result = await rpc(running.url, method);
       assert.equal(result.response.status, 404);
@@ -379,6 +392,14 @@ test("public resources and prompts stay checked and identity-free", async () => 
       listChanged: false,
     });
     assert.deepEqual(discover.body.result.capabilities.prompts, { listChanged: false });
+    assert.equal(discover.body.result.capabilities.completions, undefined);
+
+    const disabledCompletion = await rpc(running.url, "completion/complete", {
+      ref: { type: "ref/prompt", name: "brew-guide" },
+      argument: { name: "topic", value: "e" },
+    });
+    assert.equal(disabledCompletion.response.status, 404);
+    assert.equal(disabledCompletion.body.error.code, -32601);
 
     const templates = await rpc(running.url, "resources/templates/list", {}, "irrelevant");
     assert.equal(templates.response.status, 404);
@@ -662,6 +683,340 @@ test("public resource templates stay checked and identity-free", async () => {
       await client.close();
     }
     assert.equal(verifierCalls, 0);
+  } finally {
+    await running.close();
+  }
+});
+
+test("prompt and resource-template completion is opt-in and checked", async () => {
+  let verifierCalls = 0;
+  let promptCompletionCalls = 0;
+  let templateCompletionCalls = 0;
+  let promptMode = "valid";
+  let observedPromptArguments;
+  let observedTemplateArguments;
+  const promptComplete = {
+    topic: async (value, { arguments: siblings, signal, deadlineMs }) => {
+      promptCompletionCalls += 1;
+      observedPromptArguments = siblings;
+      assert.ok(deadlineMs > Date.now() - 1_000);
+      if (promptMode === "secret") throw new Error("completion-secret-sentinel");
+      if (promptMode === "invalid") return [1];
+      if (promptMode === "sparse") return new Array(1);
+      if (promptMode === "huge-sparse") {
+        const values = [];
+        values.length = 1_000_000;
+        return values;
+      }
+      if (promptMode === "custom-iterator") {
+        const values = ["indexed-value"];
+        values[Symbol.iterator] = function* iterator() {
+          while (true) yield "iterator-value";
+        };
+        return values;
+      }
+      if (promptMode === "many") return Array.from({ length: 101 }, (_, index) => `v${index}`);
+      if (promptMode === "oversized") return ["x".repeat(10_000)];
+      if (promptMode === "slow") await delay(200, undefined, { signal });
+      return ["espresso", "pour-over"].filter((topic) => topic.startsWith(value));
+    },
+  };
+  const templateComplete = {
+    method: (value, { arguments: siblings }) => {
+      templateCompletionCalls += 1;
+      observedTemplateArguments = siblings;
+      return ["espresso", "filter"].filter((method) => method.startsWith(value));
+    },
+  };
+  const prompt = definePrompt({
+    name: "complete-brew-guide",
+    argsSchema: z.object({
+      topic: z.string(),
+      style: z.string().optional(),
+      audience: z.string().optional(),
+    }),
+    complete: {
+      ...promptComplete,
+      style: (value) => ["concise"].filter((style) => style.startsWith(value)),
+    },
+    handler: () => ({ messages: [] }),
+  });
+  const template = defineResourceTemplate({
+    name: "complete-method-guide",
+    uriTemplate: "guide://coffee/{method}/{size}",
+    complete: templateComplete,
+    handler: ({ uri: requestedUri }) => ({ contents: [{ uri: requestedUri, text: "guide" }] }),
+  });
+  promptComplete.topic = () => ["mutated"];
+  templateComplete.method = () => ["mutated"];
+  const running = await serveEmseepea(createEmseepea({
+    name: "completion",
+    version: "0.0.0",
+    prompts: [prompt],
+    resources: [template],
+    operationTimeoutMs: 40,
+    maxApplicationResultBytes: 4_096,
+    oauth: {
+      verifier: {
+        async verifyAccessToken() {
+          verifierCalls += 1;
+          throw new Error("public completion must not verify bearer tokens");
+        },
+      },
+      metadata: {
+        resourceServerUrl: new URL("https://api.example/mcp"),
+        oauthMetadata: {
+          issuer: "https://auth.example",
+          authorization_endpoint: "https://auth.example/authorize",
+          token_endpoint: "https://auth.example/token",
+          response_types_supported: ["code"],
+        },
+      },
+    },
+  }), { port: 0 });
+
+  try {
+    const discover = await rpc(running.url, "server/discover", {}, "irrelevant");
+    assert.deepEqual(discover.body.result.capabilities.completions, {});
+    const prompts = await rpc(running.url, "prompts/list");
+    assert.deepEqual(prompts.body.result.prompts[0].arguments, [
+      { name: "topic", required: true },
+      { name: "style", required: false },
+      { name: "audience", required: false },
+    ]);
+
+    const promptResult = await rpc(running.url, "completion/complete", {
+      ref: { type: "ref/prompt", name: "complete-brew-guide" },
+      argument: { name: "topic", value: "es" },
+      context: { arguments: { style: "concise", topic: "current", unknown: "private" } },
+    }, "irrelevant");
+    assert.deepEqual(promptResult.body.result.completion, {
+      values: ["espresso"],
+      total: 1,
+      hasMore: false,
+    });
+    assert.deepEqual({ ...observedPromptArguments }, { style: "concise" });
+
+    const templateResult = await rpc(running.url, "completion/complete", {
+      ref: { type: "ref/resource", uri: "guide://coffee/{method}/{size}" },
+      argument: { name: "method", value: "f" },
+      context: { arguments: { size: "small", method: "current", unknown: "private" } },
+    });
+    assert.deepEqual(templateResult.body.result.completion, {
+      values: ["filter"],
+      total: 1,
+      hasMore: false,
+    });
+    assert.deepEqual({ ...observedTemplateArguments }, { size: "small" });
+
+    const optional = await rpc(running.url, "completion/complete", {
+      ref: { type: "ref/prompt", name: "complete-brew-guide" },
+      argument: { name: "style", value: "c" },
+    });
+    assert.deepEqual(optional.body.result.completion.values, ["concise"]);
+
+    const unconfigured = await rpc(running.url, "completion/complete", {
+      ref: { type: "ref/prompt", name: "complete-brew-guide" },
+      argument: { name: "audience", value: "h" },
+    });
+    assert.deepEqual(unconfigured.body.result.completion, { values: [], hasMore: false });
+    assert.equal(promptCompletionCalls, 1);
+
+    for (const params of [
+      {
+        ref: { type: "ref/prompt", name: "unknown" },
+        argument: { name: "topic", value: "e" },
+      },
+      {
+        ref: { type: "ref/resource", uri: "guide://coffee/{unknown}" },
+        argument: { name: "unknown", value: "e" },
+      },
+      {
+        ref: { type: "ref/prompt", name: "complete-brew-guide" },
+        argument: { name: "topic", value: 1 },
+      },
+    ]) {
+      const invalid = await rpc(running.url, "completion/complete", params);
+      assert.ok(invalid.body.error);
+    }
+    assert.equal(promptCompletionCalls, 1);
+    assert.equal(templateCompletionCalls, 1);
+
+    promptMode = "many";
+    const bounded = await rpc(running.url, "completion/complete", {
+      ref: { type: "ref/prompt", name: "complete-brew-guide" },
+      argument: { name: "topic", value: "" },
+    });
+    assert.equal(bounded.body.result.completion.values.length, 100);
+    assert.equal(bounded.body.result.completion.total, 101);
+    assert.equal(bounded.body.result.completion.hasMore, true);
+
+    promptMode = "custom-iterator";
+    const indexed = await rpc(running.url, "completion/complete", {
+      ref: { type: "ref/prompt", name: "complete-brew-guide" },
+      argument: { name: "topic", value: "" },
+    });
+    assert.deepEqual(indexed.body.result.completion.values, ["indexed-value"]);
+
+    for (const mode of ["secret", "invalid", "sparse", "huge-sparse", "oversized", "slow"]) {
+      promptMode = mode;
+      const failed = await rpc(running.url, "completion/complete", {
+        ref: { type: "ref/prompt", name: "complete-brew-guide" },
+        argument: { name: "topic", value: "e" },
+      });
+      assert.ok(failed.body.error, `expected ${mode} completion to fail`);
+      assert.doesNotMatch(JSON.stringify(failed.body), /completion-secret-sentinel|AbortError|stack/i);
+    }
+
+    promptMode = "valid";
+    const client = new Client(
+      { name: "completion-independent-client", version: "0.0.0" },
+      { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+    );
+    await client.connect(new StreamableHTTPClientTransport(running.url));
+    try {
+      assert.deepEqual((await client.complete({
+        ref: { type: "ref/prompt", name: "complete-brew-guide" },
+        argument: { name: "topic", value: "p" },
+      })).completion.values, ["pour-over"]);
+      assert.deepEqual((await client.complete({
+        ref: { type: "ref/resource", uri: "guide://coffee/{method}/{size}" },
+        argument: { name: "method", value: "e" },
+      })).completion.values, ["espresso"]);
+    } finally {
+      await client.close();
+    }
+    assert.equal(verifierCalls, 0);
+  } finally {
+    await running.close();
+  }
+});
+
+test("disconnect cancels a cooperating completion handler", async () => {
+  let started;
+  const completionStarted = new Promise((resolve) => { started = resolve; });
+  let cancelled;
+  const completionCancelled = new Promise((resolve) => { cancelled = resolve; });
+  let completed = false;
+  const running = await serveEmseepea(createEmseepea({
+    name: "completion-disconnect",
+    version: "0.0.0",
+    operationTimeoutMs: 1_000,
+    prompts: [definePrompt({
+      name: "disconnect-completion",
+      argsSchema: z.object({ topic: z.string() }),
+      complete: {
+        async topic(_value, { signal }) {
+          started();
+          signal.addEventListener("abort", cancelled, { once: true });
+          await delay(5_000, undefined, { signal });
+          completed = true;
+          return [];
+        },
+      },
+      handler: () => ({ messages: [] }),
+    })],
+  }), { port: 0 });
+
+  try {
+    const controller = new AbortController();
+    const result = rpc(running.url, "completion/complete", {
+      ref: { type: "ref/prompt", name: "disconnect-completion" },
+      argument: { name: "topic", value: "e" },
+    }, undefined, controller.signal);
+    await completionStarted;
+    controller.abort();
+    await assert.rejects(result, /abort/i);
+    await Promise.race([
+      completionCancelled,
+      delay(200).then(() => assert.fail("completion handler did not observe cancellation")),
+    ]);
+    assert.equal(completed, false);
+  } finally {
+    await running.close();
+  }
+});
+
+test("an already-closed request cannot start completion work", async () => {
+  let completionCalls = 0;
+  const app = createEmseepea({
+    name: "completion-already-closed",
+    version: "0.0.0",
+    prompts: [definePrompt({
+      name: "already-closed-completion",
+      argsSchema: z.object({ topic: z.string() }),
+      complete: {
+        topic: () => {
+          completionCalls += 1;
+          return [];
+        },
+      },
+      handler: () => ({ messages: [] }),
+    })],
+  });
+  app.addHook("preHandler", async (request) => {
+    if (request.url === "/mcp") {
+      Object.defineProperty(request.raw, "destroyed", { value: true, configurable: true });
+    }
+  });
+  const running = await serveEmseepea(app, { port: 0 });
+
+  try {
+    const result = await rpc(running.url, "completion/complete", {
+      ref: { type: "ref/prompt", name: "already-closed-completion" },
+      argument: { name: "topic", value: "e" },
+    });
+    assertGenericError(result, "Completion failed");
+    assert.equal(completionCalls, 0);
+  } finally {
+    await running.close();
+  }
+});
+
+test("concurrent completions keep signals and sibling context isolated", async () => {
+  const started = new Map();
+  const starts = ["first", "second"].map((value) => new Promise((resolve) => started.set(value, resolve)));
+  const observed = new Map();
+  const running = await serveEmseepea(createEmseepea({
+    name: "completion-concurrency",
+    version: "0.0.0",
+    operationTimeoutMs: 1_000,
+    prompts: [definePrompt({
+      name: "concurrent-completion",
+      argsSchema: z.object({ topic: z.string(), marker: z.string().optional() }),
+      complete: {
+        async topic(value, { arguments: siblings, signal, deadlineMs }) {
+          observed.set(value, { marker: siblings.marker, signal, deadlineMs });
+          started.get(value)();
+          await delay(value === "first" ? 5_000 : 80, undefined, { signal });
+          return [`${siblings.marker}:${signal.aborted}`];
+        },
+      },
+      handler: () => ({ messages: [] }),
+    })],
+  }), { port: 0, shutdownTimeoutMs: 200 });
+
+  const complete = (value, marker, signal) => rpc(running.url, "completion/complete", {
+    ref: { type: "ref/prompt", name: "concurrent-completion" },
+    argument: { name: "topic", value },
+    context: { arguments: { marker } },
+  }, undefined, signal);
+
+  try {
+    const firstController = new AbortController();
+    const first = complete("first", "one", firstController.signal);
+    const second = complete("second", "two");
+    await Promise.all(starts);
+    firstController.abort();
+    await assert.rejects(first, /abort/i);
+    const secondResult = await second;
+    assert.deepEqual(secondResult.body.result.completion.values, ["two:false"]);
+    assert.equal(observed.get("first").marker, "one");
+    assert.equal(observed.get("first").signal.aborted, true);
+    assert.equal(observed.get("second").marker, "two");
+    assert.equal(observed.get("second").signal.aborted, false);
+    assert.ok(observed.get("first").deadlineMs > Date.now() - 2_000);
+    assert.ok(observed.get("second").deadlineMs > Date.now() - 2_000);
   } finally {
     await running.close();
   }

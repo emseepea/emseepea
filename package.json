@@ -8,6 +8,12 @@
   "engines": {
     "node": ">=22"
   },
+  "overrides": {
+    "onnxruntime-node": {
+      "adm-zip": "0.6.0"
+    },
+    "sharp": "0.35.4"
+  },
   "workspaces": [
     "packages/*",
     "examples/*"
@@ -21,15 +27,19 @@
     "start:basic": "npm run start -w @emseepea/example-basic-no-ui",
     "start:backend": "npm run start -w @emseepea/example-backend-no-ui",
     "start:resources-prompts": "npm run start -w @emseepea/example-resources-prompts",
-    "test": "npm run build && npm run typecheck && node --test tests/black-box/*.test.mjs",
+    "test": "npm run build && npm run typecheck && node --test tests/black-box/*.test.mjs tests/llm/*.test.mjs",
+    "test:eval": "npm run build && node tests/llm/run-eval.mjs --provider claude",
+    "test:eval:ci": "node tests/llm/run-eval.mjs --provider copilot",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "version-packages": "changeset version"
   },
   "devDependencies": {
     "@changesets/changelog-github": "1.0.0",
     "@changesets/cli": "3.0.1",
+    "@github/copilot": "1.0.80",
     "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "24.13.3",
+    "promptfoo": "0.122.1",
     "typescript": "6.0.3",
     "zod": "4.4.3"
   }

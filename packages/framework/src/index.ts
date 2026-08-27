@@ -12,6 +12,7 @@ import {
   bearerAuthChallengeResponse,
   buildOAuthProtectedResourceMetadata,
   checkResourceAllowed,
+  completable,
   createMcpHandler,
   getOAuthProtectedResourceMetadataUrl,
   oauthMetadataResponse,
@@ -38,8 +39,13 @@ const RESOURCE_KIND = Symbol("resourceKind");
 const RESOURCE_MATCHES = Symbol("resourceMatches");
 const RESOURCE_ROUTE = Symbol("resourceRoute");
 const PROMPT_NAME = Symbol("promptName");
+const HAS_COMPLETION = Symbol("hasCompletion");
 const runtimes = new WeakMap<FastifyInstance, AppRuntime>();
-const requestDeadlines = new AsyncLocalStorage<number>();
+interface RequestOperation {
+  readonly deadlineMs: number;
+  readonly signal: AbortSignal;
+}
+const requestOperations = new AsyncLocalStorage<RequestOperation>();
 
 export interface ToolPrincipal {
   readonly clientId: string;
@@ -57,6 +63,13 @@ export interface BackendAdapterContext {
   readonly deadlineMs: number;
 }
 export type OperationContext = BackendAdapterContext;
+export interface CompletionContext extends OperationContext {
+  readonly arguments: Readonly<Record<string, string>>;
+}
+export type CompletionHandler = (
+  value: string,
+  context: CompletionContext,
+) => readonly string[] | Promise<readonly string[]>;
 interface ProtectedToolAccess {
   readonly type: "protected";
   readonly requiredScopes: readonly string[];
@@ -133,6 +146,7 @@ export interface ResourceTemplateDefinition {
   readonly title?: string;
   readonly description?: string;
   readonly mimeType?: string;
+  readonly complete?: Readonly<Record<string, CompletionHandler>>;
   readonly handler: (
     input: {
       readonly uri: string;
@@ -152,6 +166,7 @@ export interface EmseepeaResource {
   readonly [RESOURCE_KIND]: "static" | "template";
   readonly [RESOURCE_MATCHES]?: (uri: string) => boolean;
   readonly [RESOURCE_ROUTE]?: ResourceTemplateRoute;
+  readonly [HAS_COMPLETION]: boolean;
   readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
 }
 type NonStringPromptArgumentKeys<Args extends z.ZodObject> = {
@@ -168,6 +183,7 @@ export type PromptDefinition<Args extends z.ZodObject> = {
   readonly title?: string;
   readonly description?: string;
   readonly argsSchema: Args;
+  readonly complete?: Readonly<Partial<Record<Extract<keyof z.input<Args>, string>, CompletionHandler>>>;
   readonly handler: (
     args: z.output<Args>,
     context: OperationContext,
@@ -175,6 +191,7 @@ export type PromptDefinition<Args extends z.ZodObject> = {
 } & PromptInputConstraint<Args>;
 export interface EmseepeaPrompt {
   readonly [PROMPT_NAME]: string;
+  readonly [HAS_COMPLETION]: boolean;
   readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
 }
 export interface OAuthResourceServerOptions {
@@ -282,6 +299,7 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
     [RESOURCE_NAME]: name,
     [RESOURCE_URI]: uri,
     [RESOURCE_KIND]: "static",
+    [HAS_COMPLETION]: false,
     [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
       server.registerResource(
         name,
@@ -293,7 +311,7 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
         },
         async (_requestedUri, context): Promise<ReadResourceResult> => {
           try {
-            const deadlineMs = requestDeadlines.getStore() ?? Date.now() + timeoutMs;
+            const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
               signal.throwIfAborted();
               const result = await handler({ signal, deadlineMs });
@@ -321,20 +339,42 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
   assertRegistrationName("Resource template", name);
   const { template, route } = checkedResourceTemplate(definition.uriTemplate);
   const uriTemplate = template.uriTemplate.toString();
+  const variableNames = [...template.uriTemplate.variableNames];
+  const completions = checkedCompletionHandlers(
+    "Resource template",
+    definition.complete,
+    variableNames,
+  );
   const registration: EmseepeaResource = {
     [RESOURCE_NAME]: name,
     [RESOURCE_URI]: uriTemplate,
     [RESOURCE_KIND]: "template",
     [RESOURCE_MATCHES]: (uri) => template.uriTemplate.match(uri) !== null,
     [RESOURCE_ROUTE]: route,
+    [HAS_COMPLETION]: completions.size > 0,
     [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
+      const registeredTemplate = completions.size === 0
+        ? template
+        : new ResourceTemplate(uriTemplate, {
+            list: undefined,
+            complete: Object.fromEntries([...completions].map(([variable, complete]) => [
+              variable,
+              completionCallback(
+                complete,
+                variable,
+                variableNames,
+                timeoutMs,
+                maxApplicationResultBytes,
+              ),
+            ])),
+          });
       server.registerResource(
         name,
-        template,
+        registeredTemplate,
         { title, description, mimeType },
         async (requestedUri, variables, context): Promise<ReadResourceResult> => {
           try {
-            const deadlineMs = requestDeadlines.getStore() ?? Date.now() + timeoutMs;
+            const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
               signal.throwIfAborted();
               const result = await handler({ uri: requestedUri.href, variables }, { signal, deadlineMs });
@@ -363,19 +403,28 @@ export function definePrompt<Args extends z.ZodObject>(
 ): EmseepeaPrompt {
   const { name, title, description, argsSchema, handler } = definition;
   assertRegistrationName("Prompt", name);
+  const argumentNames = Object.keys(argsSchema.shape);
+  const completions = checkedCompletionHandlers("Prompt", definition.complete, argumentNames);
   const registration: EmseepeaPrompt = {
     [PROMPT_NAME]: name,
+    [HAS_COMPLETION]: completions.size > 0,
     [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
       server.registerPrompt(
         name,
         {
           title,
           description,
-          argsSchema: sdkMetadataSchema(argsSchema),
+          argsSchema: sdkPromptMetadataSchema(
+            argsSchema,
+            completions,
+            argumentNames,
+            timeoutMs,
+            maxApplicationResultBytes,
+          ),
         },
         async (args, context): Promise<GetPromptResult> => {
           try {
-            const deadlineMs = requestDeadlines.getStore() ?? Date.now() + timeoutMs;
+            const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
               const parsedArgs = await argsSchema.safeParseAsync(args);
               if (!parsedArgs.success) throw new Error("Prompt received invalid arguments");
@@ -438,7 +487,7 @@ function createCheckedTool(
         },
         async (input, context): Promise<CallToolResult> => {
           try {
-            const deadlineMs = requestDeadlines.getStore() ?? Date.now() + timeoutMs;
+            const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(
               context.mcpReq.signal,
               deadlineMs,
@@ -511,6 +560,9 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     enabledMethods.add("resources/templates/list");
   }
   if (prompts.length) enabledMethods.add("prompts/list").add("prompts/get");
+  const hasCompletion = resources.some((resource) => resource[HAS_COMPLETION]) ||
+    prompts.some((prompt) => prompt[HAS_COMPLETION]);
+  if (hasCompletion) enabledMethods.add("completion/complete");
 
   const sdkHandler = createMcpHandler(() => {
     const server = new McpServer(
@@ -520,6 +572,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
           ...(tools.length ? { tools: { listChanged: false } } : {}),
           ...(resources.length ? { resources: { subscribe: false, listChanged: false } } : {}),
           ...(prompts.length ? { prompts: { listChanged: false } } : {}),
+          ...(hasCompletion ? { completions: {} } : {}),
         },
         instructions: options.instructions,
         supportedProtocolVersions: [PROTOCOL_VERSION],
@@ -579,11 +632,21 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         return;
       }
     }
+    const disconnected = new AbortController();
+    const abort = () => disconnected.abort();
+    request.raw.once("aborted", abort);
+    reply.raw.once("close", abort);
+    if (request.raw.aborted || request.raw.destroyed || reply.raw.destroyed) abort();
     reply.hijack();
-    await requestDeadlines.run(
-      Date.now() + operationTimeoutMs,
-      () => nodeHandler(request.raw, reply.raw, request.body),
-    );
+    try {
+      await requestOperations.run(
+        { deadlineMs: Date.now() + operationTimeoutMs, signal: disconnected.signal },
+        () => nodeHandler(request.raw, reply.raw, request.body),
+      );
+    } finally {
+      request.raw.off("aborted", abort);
+      reply.raw.off("close", abort);
+    }
   });
   app.setErrorHandler(async (error, _request, reply) => {
     if (isFastifyError(error) && error.code === "FST_ERR_CTP_BODY_TOO_LARGE") {
@@ -917,6 +980,122 @@ function sdkMetadataSchema(schema: z.ZodObject): z.ZodObject {
     },
   } as unknown as z.ZodObject;
 }
+
+function checkedCompletionHandlers(
+  kind: string,
+  complete: Readonly<Record<string, unknown>> | undefined,
+  allowedNames: readonly string[],
+): ReadonlyMap<string, CompletionHandler> {
+  if (complete === undefined) return new Map();
+  if (!isRecord(complete)) throw new TypeError(`${kind} completion map must be an object`);
+  const allowed = new Set(allowedNames);
+  const handlers = new Map<string, CompletionHandler>();
+  for (const [name, handler] of Object.entries(complete)) {
+    if (!allowed.has(name)) throw new TypeError(`${kind} completion key is not registered: ${name}`);
+    if (typeof handler !== "function") {
+      throw new TypeError(`${kind} completion handler must be a function: ${name}`);
+    }
+    handlers.set(name, handler as CompletionHandler);
+  }
+  return handlers;
+}
+
+function sdkPromptMetadataSchema(
+  schema: z.ZodObject,
+  completions: ReadonlyMap<string, CompletionHandler>,
+  argumentNames: readonly string[],
+  timeoutMs: number,
+  maxApplicationResultBytes: number,
+): z.ZodObject {
+  const metadataSchema = sdkMetadataSchema(schema);
+  if (completions.size === 0) return metadataSchema;
+  const shape = Object.fromEntries([...completions].map(([argument, complete]) => [
+    argument,
+    completable(
+      z.string(),
+      completionCallback(
+        complete,
+        argument,
+        argumentNames,
+        timeoutMs,
+        maxApplicationResultBytes,
+      ),
+    ),
+  ]));
+  Object.defineProperty(metadataSchema, "shape", {
+    value: Object.freeze(shape),
+    enumerable: false,
+    writable: false,
+    configurable: false,
+  });
+  return metadataSchema;
+}
+
+function completionCallback(
+  complete: CompletionHandler,
+  currentName: string,
+  allowedNames: readonly string[],
+  timeoutMs: number,
+  maxApplicationResultBytes: number,
+): (value: string, context?: { arguments?: Record<string, string> }) => Promise<string[]> {
+  const allowedArguments = new Set(allowedNames.filter((name) => name !== currentName));
+  return async (value, context) => {
+    try {
+      const request = requestOperations.getStore();
+      const deadlineMs = request?.deadlineMs ?? Date.now() + timeoutMs;
+      const requestSignal = request?.signal ?? new AbortController().signal;
+      return await runWithDeadline(requestSignal, deadlineMs, async (signal) => {
+        signal.throwIfAborted();
+        const values = await complete(value, {
+          signal,
+          deadlineMs,
+          arguments: completionArguments(context?.arguments, allowedArguments),
+        });
+        signal.throwIfAborted();
+        if (!Array.isArray(values)) {
+          throw new Error("Completion returned an invalid result");
+        }
+        if (values.length > Math.floor((maxApplicationResultBytes - 1) / 3)) {
+          throw new Error("Completion returned an invalid result");
+        }
+        const candidates: string[] = [];
+        for (let index = 0; index < values.length; index += 1) {
+          const descriptor = Object.getOwnPropertyDescriptor(values, String(index));
+          if (!descriptor || !("value" in descriptor) || typeof descriptor.value !== "string") {
+            throw new Error("Completion returned an invalid result");
+          }
+          candidates.push(descriptor.value);
+        }
+        assertResultSize(candidates, maxApplicationResultBytes, deadlineMs, signal);
+        const publicResult = {
+          completion: {
+            values: candidates.slice(0, 100),
+            total: candidates.length,
+            hasMore: candidates.length > 100,
+          },
+        };
+        assertResultSize(publicResult, maxApplicationResultBytes, deadlineMs, signal);
+        return candidates;
+      });
+    } catch {
+      throw new Error("Completion failed");
+    }
+  };
+}
+
+function completionArguments(
+  candidate: unknown,
+  allowed: ReadonlySet<string>,
+): Readonly<Record<string, string>> {
+  const result: Record<string, string> = Object.create(null) as Record<string, string>;
+  if (isRecord(candidate)) {
+    for (const [name, value] of Object.entries(candidate)) {
+      if (allowed.has(name) && typeof value === "string") result[name] = value;
+    }
+  }
+  return Object.freeze(result);
+}
+
 function requestId(value: unknown): string | number | null {
   return typeof value === "string" || typeof value === "number" ? value : null;
 }

@@ -8,6 +8,8 @@ import {
 import { z } from "zod";
 
 const guideUri = "guide://coffee/getting-started";
+const methods = ["aeropress", "espresso", "pour-over"];
+const topics = ["brew-ratio", "grind-size", "water-temperature"];
 
 const guide = defineResource({
   name: "getting-started",
@@ -16,7 +18,11 @@ const guide = defineResource({
   description: "A synthetic guide exposed as an MCP resource.",
   mimeType: "text/markdown",
   handler: () => ({
-    contents: [{ uri: guideUri, mimeType: "text/markdown", text: "# Brew safely\n" }],
+    contents: [{
+      uri: guideUri,
+      mimeType: "text/markdown",
+      text: "# Brew clearly\n\nStrength is concentration; extraction is how much material left the grounds. They are related, but not interchangeable.\n",
+    }],
   }),
 });
 
@@ -26,6 +32,9 @@ const methodGuide = defineResourceTemplate({
   title: "Coffee method guide",
   description: "A synthetic guide selected by brewing method.",
   mimeType: "text/markdown",
+  complete: {
+    method: (value) => methods.filter((method) => method.startsWith(value)),
+  },
   handler: ({ uri, variables }) => ({
     contents: [{
       uri,
@@ -40,9 +49,18 @@ const brew = definePrompt({
   title: "Brew guide",
   description: "Create a prompt for a synthetic brewing topic.",
   argsSchema: z.object({ topic: z.string().min(1) }),
+  complete: {
+    topic: (value) => topics.filter((topic) => topic.startsWith(value)),
+  },
   handler: ({ topic }) => ({
     description: `Guide for ${topic}`,
-    messages: [{ role: "user", content: { type: "text", text: `Explain ${topic}.` } }],
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Explain ${topic} for a home brewer. Distinguish any commonly confused concepts.`,
+      },
+    }],
   }),
 });
 

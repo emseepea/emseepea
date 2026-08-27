@@ -1,0 +1,102 @@
+description: Em See Pea example semantic qualification
+
+providers:
+  - id: file://./provider.mjs
+    config:
+      maxRetries: 0
+      role: agent
+
+prompts:
+  - "{{question}}"
+
+defaultTest:
+  options:
+    timeoutMs: 120000
+    provider:
+      id: file://./provider.mjs
+      config:
+        maxRetries: 0
+        role: judge
+    rubricPrompt: |
+      Judge the meaning of this answer against every criterion below. A pass
+      requires every criterion. Ignore harmless wording differences.
+
+      Example under test: {{example}}
+
+      Criteria:
+      {{rubric}}
+
+      Answer:
+      <answer>
+      {{output}}
+      </answer>
+
+      Return only JSON with this exact shape:
+      {"pass": true or false, "score": 1 or 0, "reason": "one concise sentence"}
+  assert:
+    - type: javascript
+      value: |
+        const actual = context.metadata?.pathEvidence ?? [];
+        const required = String(context.vars.requiredPaths).split("|");
+        const seen = new Set(actual.map(({ method, target }) => `${method}:${target}`));
+        const missing = required.filter((path) => !seen.has(path));
+        return missing.length === 0
+          ? { pass: true, score: 1, reason: "required MCP path evidence recorded" }
+          : { pass: false, score: 0, reason: `missing MCP path evidence: ${missing.join(", ")}` };
+    - type: javascript
+      value: |
+        const answer = String(output).toLowerCase();
+        const missing = String(context.vars.criticalFacts)
+          .split("|")
+          .filter((fact) => !answer.includes(fact.toLowerCase()));
+        return missing.length === 0
+          ? { pass: true, score: 1, reason: "deterministic critical facts present" }
+          : { pass: false, score: 0, reason: `missing critical facts: ${missing.join(", ")}` };
+
+tests:
+  - description: Basic no-UI bean details are interpreted correctly
+    vars:
+      example: basic-no-ui
+      question: >-
+        For Highland Bloom, give me its origin, variety, processing method,
+        roast, and tasting notes. Keep those concepts distinct.
+      requiredPaths: tools/call:get-bean-details
+      criticalFacts: Synthetic Highlands|Bourbon|natural|medium|berry|cocoa
+    assert:
+      - type: llm-rubric
+        value: >-
+          The answer says Highland Bloom is a medium-roast, naturally processed
+          Bourbon from Synthetic Highlands with berry and cocoa tasting notes.
+          It does not confuse origin, variety, process, roast, or tasting notes.
+
+  - description: Backend no-UI filtered report count is interpreted correctly
+    vars:
+      example: backend-no-ui
+      question: >-
+        Produce a report for dark-roast beans. How many matching beans are
+        there, and what are their names and origins? Make clear what the count
+        represents.
+      requiredPaths: tools/call:create-bean-report
+      criticalFacts: 1|Forest Ember|Synthetic Range|dark
+    assert:
+      - type: llm-rubric
+        value: >-
+          The answer reports exactly one matching dark-roast bean: Forest Ember
+          from Synthetic Range. It treats one as the filtered result count, not
+          the total catalogue size, and invents no additional matching bean.
+
+  - description: Resource and prompt distinguish strength from extraction
+    vars:
+      example: resources-prompts
+      question: >-
+        Does making coffee stronger necessarily mean that extraction is higher?
+        Explain the distinction for a home brewer.
+      requiredPaths: resources/read:guide://coffee/getting-started|prompts/get:brew-guide
+      criticalFacts: concentration|extraction
+    assert:
+      - type: llm-rubric
+        value: >-
+          The answer says stronger coffee does not necessarily mean higher
+          extraction. It explains that strength is concentration while
+          extraction is how much material left the grounds, and it does not
+          describe the concepts as interchangeable.

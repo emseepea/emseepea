@@ -22,3 +22,4 @@ npm run start:backend
 The endpoint is `http://127.0.0.1:3000/mcp`.
 
 Run the HTTP-boundary checks with `npm test`.
+Run this example's three-trial semantic MCP case with `npm run test:eval`.
