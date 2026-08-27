@@ -2,39 +2,63 @@
 
 ## Status
 
-- Document type: Living implementation battle plan
-- Objective state: No-UI, OAuth, checked mapped-adapter, public-resource, resource-template, prompt, completion, and bounded loopback streaming-progress slices locally qualified; exact-commit CI pending
-- Current operating objective: Commit and push the streaming and semantic-harness slice, obtain Node.js 22/24 and authoritative Copilot evidence, publish the first pre-alpha only after every gate passes, then establish the verified documentation website
-- Last updated: 2026-08-27
+- Last updated: 2026-08-28
+- Document type: Living implementation battle plan.
+- Current state: No-user-interface, OAuth, mapped-adapter, resources, prompts,
+  completion, loopback streaming, and protected-example slices have the exact
+  deterministic quality evidence recorded below.
+- Current block: Published-content risk R001 remains outside appetite.
+- Next action: Remediate the published-content baseline, then implement the
+  ratified optional user-interface packages and examples.
+- Release rule: Do not publish `@emseepea/server@0.0.1` under `next` until the
+  exact publishing commit passes every quality, semantic, risk, architecture,
+  accessibility, and release gate.
 
-This plan is a decision aid, not a contract with yesterday's assumptions. No plan survives contact with real specifications, SDKs, clients, proxies, attackers, users, or production constraints. The objective and rules of engagement remain fixed; the route changes whenever evidence reveals a shorter, safer, or more useful path.
+This plan is a decision aid, not a contract with yesterday's assumptions.
+The objective and rules remain fixed. The route changes when evidence reveals
+a shorter, safer, or more useful path.
 
 ## Mission
 
-Implement and independently qualify a monorepo-based universal MCP `2026-07-28`
-Streamable HTTP server framework using public specifications and approved
-open-source dependencies, with working no-UI, UI, streaming, and distributed
-examples.
+Implement and independently qualify a monorepo-based universal Model Context
+Protocol (MCP) `2026-07-28` Streamable Hypertext Transfer Protocol (HTTP) server
+framework. Use public specifications and approved open-source dependencies.
+Provide working examples without a user interface, with a user interface (UI),
+with streaming, and with distributed operation.
 
-The objective is a useful, safe, reusable framework. Full-profile conformance is earned only when the complete active server surface is proven. It is not a commitment to a particular sequence, package graph, or number of releases.
+The objective is a useful, safe, reusable framework.
+
+Full-profile conformance is earned only when the complete active server surface
+is proven. The objective does not require a particular sequence, package graph,
+or number of releases.
 
 ## Commander's Intent
 
 ### Purpose
 
-Make correct and secure MCP server development boring across unrelated domains, backends, deployment platforms, and telemetry systems.
+Make correct and secure MCP server development boring across unrelated domains,
+backends, deployment platforms, and telemetry systems.
 
 ### Center of Gravity
 
-Maintain one thin adopter path through the real HTTP boundary. Every capability must strengthen or extend that path without making ordinary services carry unused complexity.
+Maintain one thin adopter path through the real HTTP boundary.
+
+Every capability must strengthen or extend that path without making ordinary
+services carry unused complexity.
 
 ### End State
 
-- Two unrelated synthetic services use the same public framework API without kernel changes.
-- Two materially different adapters preserve identical protocol, security, error, cancellation, and observability behaviour.
-- At least two independent MCP clients interoperate through the public HTTP boundary.
-- Capability modules can be enabled independently and advertise only proven behaviour.
-- Working examples cover basic no-UI, backend, protected, resources and prompts, streaming and progress, subscriptions, elicitation UI, approval UI, and multi-instance operation.
+- Two unrelated synthetic services use the same public framework application
+  programming interface (API) without kernel changes.
+- Two materially different adapters preserve identical protocol, security,
+  error, cancellation, and observability behaviour.
+- At least two independent MCP clients interoperate through the public HTTP
+  boundary.
+- Capability modules can be enabled independently and advertise only proven
+  behaviour.
+- Working examples cover basic no-UI, backend, protected, resources and prompts,
+  streaming and progress, subscriptions, native and React elicitation and
+  approval UI, and multi-instance operation.
 - Example directories exist only when their capability works.
 - Security, accessibility, performance, and operational checks pass from clean checkouts.
 - Release claims name the exact supported modules and deployment boundaries.
@@ -46,17 +70,28 @@ Maintain one thin adopter path through the real HTTP boundary. Every capability 
 
 The implementation objective is achieved when all of the following are true:
 
-1. The public MCP baseline and official schema are pinned, verified, and traceable to the implemented behaviour.
-2. The framework ships as a stable, versioned product with a small public API and opt-in capabilities.
-3. Every claimed capability has positive, disabled, negative, cancellation, and resource-bound evidence where applicable.
+1. The public MCP baseline is pinned. The official schema is verified. The
+   implementation traces back to both.
+2. The framework ships as a stable, versioned product. Its public API is small,
+   and capabilities are opt-in.
+3. Every claimed capability has applicable positive, disabled, negative,
+   cancellation, and resource-bound evidence.
 4. Discovery exactly matches compiled and observable behaviour.
-5. Invalid, unauthenticated, or unauthorized requests cause zero handler, adapter, upstream, or effect calls.
-6. Backend types, credentials, destinations, and unsafe errors never cross public MCP boundaries.
-7. Deadlines, cancellation, bounded memory and queues, backpressure, shutdown, and redaction pass under adversarial conditions.
-8. The native UI examples pass WCAG 2.2 AA, keyboard-only, and screen-reader acceptance.
-9. All examples run from a clean checkout through published framework APIs and synthetic data.
-10. Two unrelated services, two adapters, and two independent clients pass without kernel special cases.
-11. Reproducible builds, ordinary checksums, dependency integrity, software bills of materials, CI evidence, and independent reviews support the exact release claim.
+5. Invalid, unauthenticated, or unauthorized requests cause zero handler,
+   adapter, upstream, or effect calls.
+6. Backend types, credentials, destinations, and unsafe errors never cross
+   public MCP boundaries.
+7. Adversarial checks cover deadlines, cancellation, bounded memory and queues,
+   backpressure, shutdown, and redaction.
+8. Native and React UI examples pass Web Content Accessibility Guidelines
+   (WCAG) 2.2 AA, keyboard-only, and screen-reader acceptance.
+9. All examples run from a clean checkout. They use published framework APIs
+   and synthetic data.
+10. Two unrelated services, two adapters, and two independent clients pass
+    without kernel special cases.
+11. Reproducible builds, ordinary checksums, dependency integrity, software
+    bills of materials, continuous integration (CI) evidence, and independent
+    reviews support the exact release claim.
 12. The documentation website passes freshness, accessibility, link, code, and
     clean-checkout example checks.
 
@@ -66,20 +101,28 @@ These rules do not yield to schedule pressure.
 
 ### Engineering Boundary
 
-- Prefer maintained open-source dependencies over bespoke protocol, schema, OAuth, telemetry, cryptography, accessibility, or testing infrastructure.
+- Prefer maintained open-source dependencies. Do not build bespoke protocol,
+  schema, OAuth, telemetry, cryptography, accessibility, or test infrastructure.
 - Use native platform features and standard libraries before additional dependencies.
-- One production framework package remains the default until an optional dependency, independent consumer, or separate release lifecycle proves a split is necessary.
-- Do not add a generic transport abstraction until a second transport is approved and implemented.
-- Public MCP contracts remain separate from private handlers, adapters, credentials, policies, and backend models.
-- Application code never writes raw HTTP, JSON-RPC, or SSE responses.
-- No feature is advertised before its enabled, disabled, and negative paths pass.
-- Unproven scope remains explicitly JSON-only, read-only, anonymous, single-instance, or non-streaming and fails closed beyond that boundary.
+- Keep one production framework package by default. Split only for an optional
+  dependency, independent consumer, or separate release lifecycle.
+- Do not add a generic transport abstraction until a second transport is both
+  approved and implemented.
+- Keep public MCP contracts separate from private handlers, adapters,
+  credentials, policies, and backend models.
+- Application code never writes raw HTTP, JSON Remote Procedure Call
+  (JSON-RPC), or Server-Sent Events (SSE) responses.
+- Advertise a feature only after its enabled, disabled, and negative paths pass.
+- Label unproven scope as JSON-only, read-only, anonymous, single-instance, or
+  non-streaming. Fail closed beyond that boundary.
 
 ### Safety Boundary
 
 - Security controls, validation, cancellation, accessibility, and data-loss prevention are never traded for schedule.
 - Sensitive effects remain application-owned unless a proven cross-service need justifies framework support.
-- Native accessible HTML is the first UI approach. A client framework requires a separate decision backed by real routing, state, component, visualisation, or offline requirements.
+- UI contracts and approval authority remain server-owned. Optional React and
+  Tailwind packages implement the ratified accessible UI boundary without
+  adding frontend dependencies to core.
 - Custom release trust roots, run challenges, historical signature graphs, and other bespoke certification machinery remain excluded.
 
 ## Battlefield Assessment
@@ -93,16 +136,28 @@ These rules do not yield to schedule pressure.
 - The full protocol surface is a strategic target delivered through opt-in modules.
 - The guide's 110 outcomes are a coverage ledger, not immutable marching orders or 110 releases.
 - Open-source dependencies are expected and preferred.
-- The first UI is a server-rendered authenticated page using semantic HTML, native forms, CSS, and minimal progressive enhancement.
+- The selected stack is TypeScript on Node.js 22 and 24, npm workspaces with one
+  root lockfile, Fastify 5, official MCP packages, Zod, MIT licensing,
+  Changesets, and npm trusted publishing.
+- UI support will use shared accessible fixtures and states, native semantic
+  HTML, optional `@emseepea/react`, and one precompiled
+  `@emseepea/tailwind` stylesheet.
+- Core has no React, React DOM, or Tailwind dependency.
+- Approval authority remains server-owned, authenticated, scoped, single-use,
+  replay-safe, and atomic.
 
 ### Unverified Ground
 
 - Whether every method, header, result type, error mapping, and lifecycle claim in the guide matches the pinned public MCP baseline.
-- The implementation language, runtime, workspace tooling, public MCP SDK, JSON Schema validator, OAuth libraries, and package manager.
-- Whether a public SDK can meet the modern sessionless profile without a maintained private fork.
+- Whether the official software development kits (SDKs) can cover the remaining
+  active server surface without a maintained private fork.
 - The smallest public API that works across two unrelated domains.
 - Real client interoperability, intermediary behaviour, performance budgets, and state-provider requirements.
 - Whether complete active-surface coverage is supportable by two independent clients.
+- Which shared-state provider, if any, can prove the required multi-instance
+  race semantics.
+- Which website generator, host, dependencies, and publication workflow should
+  be adopted.
 
 ### Principal Threats
 
@@ -190,13 +245,14 @@ Evidence:
 - production HTTP, Origin, authority, proxy, and limit checks;
 - one proven OAuth mode before alternate modes;
 - object and tenant authorization tests;
-- token separation and SSRF controls;
+- token separation and server-side request forgery (SSRF) controls;
 - redaction and telemetry-failure isolation; and
 - zero-call or zero-effect denials.
 
 ### Streaming and State
 
-Objective: provide request SSE, progress, subscriptions, elicitation, and bounded state with explicit terminal semantics.
+Objective: provide request Server-Sent Events, progress, subscriptions,
+elicitation, and bounded state with explicit terminal semantics.
 
 Evidence:
 
@@ -219,7 +275,8 @@ Evidence:
 
 ### Qualification and Release
 
-Objective: accumulate ordinary interoperability and safety evidence throughout delivery, aggregating it only when seeking the full claim.
+Objective: accumulate ordinary interoperability and safety evidence throughout
+delivery. Aggregate it only when seeking the full claim.
 
 Evidence:
 
@@ -249,7 +306,14 @@ Evidence:
 
 ## Default Advance Route
 
-This route is the current best hypothesis. Only dependency constraints are fixed: kernel before modules, request state machine before streaming, authentication before protected effects, and local correctness before distributed state.
+This route is the current best hypothesis.
+
+Only these dependencies are fixed:
+
+- kernel before modules
+- request state machine before streaming
+- authentication before protected effects
+- local correctness before distributed state
 
 ### Objective 0: Establish the Battlefield
 
@@ -414,11 +478,14 @@ Examples:
 
 UI posture:
 
-- server-rendered semantic HTML;
-- native controls and forms;
-- CSS and minimal progressive enhancement;
-- a normal authenticated page rather than a modal; and
-- no client UI framework until real application complexity justifies one.
+- share canonical, presentation-safe fixtures and states across native and React
+  renderers;
+- use native controls and forms before custom widgets;
+- publish optional `@emseepea/react` unstyled semantic renderers;
+- publish one precompiled `@emseepea/tailwind` stylesheet with no adopter
+  Tailwind configuration;
+- keep frontend dependencies out of core; and
+- keep authenticated approval authority on the server.
 
 Exit signal:
 
@@ -449,23 +516,32 @@ Exit signal:
 
 ### Source-Authority Gate
 
-Confirm the pinned public schema and wire behaviour before implementing affected features. If the public baseline contradicts the guide, amend the guide first.
+Confirm the pinned public schema and wire behaviour before implementing affected
+features.
+
+If the public baseline contradicts the guide, amend the guide first.
 
 ### First Operating-Capability Gate
 
-One loopback read-only tool must support discovery, listing, and calling through raw HTTP and an independent client before breadth begins.
+One loopback read-only tool must support discovery, listing, and calling through
+raw HTTP and an independent client before breadth begins.
 
 ### Dependency Gate
 
-Use a maintained compatible open-source library unless a black-box probe proves it cannot meet the public contract. Do not maintain a private SDK fork merely to preserve the selected stack.
+Use a maintained compatible open-source library unless a black-box probe proves
+it cannot meet the public contract.
+
+Do not maintain a private SDK fork merely to preserve the selected stack.
 
 ### Package-Split Gate
 
-Split a package only after a second consumer, an optional dependency closure, or an independent release need appears.
+Split a package only after a second consumer, optional dependency closure, or
+independent release need appears.
 
 ### Production-Exposure Gate
 
-Before non-loopback use, prove intermediary, authority, Origin, proxy trust, limits, redaction, readiness, and shutdown behaviour.
+Before non-loopback use, prove intermediary, authority, Origin, proxy trust,
+limits, redaction, readiness, and shutdown behaviour.
 
 ### Protected-Service Gate
 
@@ -486,15 +562,23 @@ tests pass.
 
 ### Interaction-and-Effects Gate
 
-Elicitation precedes approval. Approval remains server-owned, authenticated, single-use, replay-safe, and accessible. Client navigation consent never authorizes an effect.
+Elicitation precedes approval.
+
+Approval remains server-owned, authenticated, single-use, replay-safe, and
+accessible. Client navigation consent never authorizes an effect.
 
 ### Distributed Gate
 
-Prove single-instance semantics and races first. Add shared state only for the capability being distributed.
+Prove single-instance semantics and races first.
+
+Add shared state only for the capability being distributed.
 
 ### UI-Framework Gate
 
-Retain native server-rendered HTML unless a separate UI product requires substantial routing, persistent client state, reusable components, complex visualisation, or offline behaviour.
+Implement the ratified optional React and Tailwind packages only through the
+shared public UI contract. Native and React renderers must pass the same
+fixtures, security rules, and accessibility checks. Client navigation or state
+never authorizes an effect.
 
 ### Full-Claim Gate
 
@@ -597,11 +681,13 @@ Resume when cross-instance race and unavailable-provider tests pass.
 
 Immediate action:
 
-- retain server-rendered native HTML for the current flow;
-- open a UI-framework decision for the separate UI product; and
-- keep that dependency outside the server core.
+- retain the shared native contract and server-owned approval state;
+- keep React and Tailwind outside server core;
+- add no component library, theme system, or client authorization path; and
+- open a new decision only for a materially broader UI product or renderer.
 
-Resume expanded UI work when accessibility, security, routing, and state requirements justify the selected framework.
+Resume expanded UI work when accessibility, security, routing, and state
+requirements justify the additional surface.
 
 ### Dependency Licence, Vulnerability, or Abandonment Blocks Release
 
@@ -642,7 +728,8 @@ Pivot deliberately when evidence shows the current route no longer serves the ob
 - Pivot from distributed to explicit single-instance support whenever atomic shared-state guarantees remain unproven.
 - Pivot from streaming to JSON-only whenever intermediary or backpressure semantics are unsafe.
 - Pivot from the selected SDK or runtime when the first operating capability requires a maintained private fork.
-- Pivot from a client UI framework back to native HTML if it adds more accessibility or security surface than user value.
+- Withdraw an optional renderer claim and retain the shared native contract if
+  that renderer adds more accessibility or security risk than user value.
 
 ## Escalation Criteria
 
@@ -654,7 +741,7 @@ Require an explicit architecture or product decision before changing:
 - a package boundary;
 - a shared-state provider;
 - a second transport;
-- the native server-rendered UI posture;
+- the shared public UI contract or optional renderer package boundaries;
 - security invariants or approved licences; or
 - the declared release scope.
 
@@ -680,7 +767,10 @@ For every dependency:
 6. Replace it if it forces unsafe semantics, a private fork, incompatible licensing, or unacceptable maintenance risk.
 7. Write custom code only for framework-specific orchestration or a demonstrated gap that no suitable dependency covers.
 
-Likely dependency areas include the public MCP SDK and schemas, JSON Schema validation, HTTP and SSE, OAuth and JWT, URI templates, canonical JSON, OpenTelemetry, testing, accessibility, security scanning, and release provenance.
+Likely dependency areas include the public MCP SDK and schemas, JSON Schema
+validation, HTTP and Server-Sent Events, OAuth and JSON Web Tokens (JWT),
+Uniform Resource Identifier (URI) templates, canonical JSON, OpenTelemetry,
+testing, accessibility, security scanning, and release provenance.
 
 ## Monorepo Doctrine
 
@@ -705,10 +795,11 @@ An example directory lands only when the same change contains:
 - one positive independent-client invocation;
 - one relevant negative boundary check;
 - synthetic data only;
-- one mandatory semantic Promptfoo case with three fresh agent trials, three
-  no-MCP judge verdicts, deterministic facts, and exact MCP path evidence; the
-  harness performs the live official-client operation and model processes get
-  no MCP tools; and
+- one mandatory semantic Promptfoo case that:
+  - runs three fresh agent trials and three independent judge trials;
+  - gives model processes no Model Context Protocol tools;
+  - checks deterministic facts and exact protocol-path evidence; and
+  - performs the live operation through the official client;
 - a clean-checkout CI run.
 
 Do not scaffold empty future examples.
@@ -718,7 +809,8 @@ Do not scaffold empty future examples.
 At every evidence checkpoint:
 
 1. Restate the current operating objective.
-2. Inspect the newest protocol, client, dependency, security, performance, accessibility, and operational evidence.
+2. Inspect the newest protocol, client, dependency, security, performance,
+   accessibility, and operational evidence.
 3. Identify the highest-risk unknown or highest-value blocked adopter outcome.
 4. Select the smallest safe manoeuvre that changes that evidence.
 5. Record any decision that constrains future work.
@@ -740,31 +832,36 @@ Record later, immediately before their owning fronts:
 
 5. Streaming states, overflow, termination, and resynchronisation.
 6. Authentication, effects, idempotency, and local or distributed state ownership.
-7. Native accessible UI and the trigger for adopting a client framework.
+7. The shared accessible UI contract, server-owned approval authority, and
+   optional React and Tailwind package boundaries.
 8. Compatibility, extensions, a second transport, and package-splitting triggers.
 
 ## Immediate Orders
 
-1. Publish the exact qualified `@emseepea/server@0.0.1` slice under `next` and
-   prove the public registry path without moving `latest`.
-2. Configure and verify npm trusted publishing, then remove the one-off package
-   creation credential.
-3. Continue the universal framework build with the smallest independently useful
-   capability front.
-4. Establish the verified documentation website immediately after the first
-   public package release; select its generator, host, and publishing workflow
-   through a separate decision.
-5. Add backend adapters only after their checked boundary and synthetic evidence
-   are defined.
+1. Remediate every non-generated published file that fails the mandatory
+   cognitive-accessibility review.
+2. Fix the generated decisions compendium through its owning generator. Do not
+   hand-edit the generated file.
+3. Implement and qualify the ratified optional React and Tailwind packages with
+   native and React examples using the same fixtures and states.
+4. Add multi-instance operation only after local state and race semantics pass.
+5. Record a website decision covering generator, host, dependencies, and
+   publication before implementing or deploying the documentation website.
 6. Make no runtime capability claim without current clean-checkout evidence.
-7. Continue resolving these guide contradictions as their owning fronts begin:
-   - handler-backed first tool versus workflow arriving later;
-   - final validation before emission versus progress during execution;
-   - guaranteed notifications versus bounded queues and no replay;
-   - JSON-only services versus `json-and-sse` manifest semantics;
-   - the illustrative manifest missing mandatory fields; and
-   - the public status of mirrored headers, projection, discovery, result types, and error codes.
-8. Defer SSE, UI, and distributed state until their decision gates open.
+7. Keep authoritative semantic qualification and npm publication pending while
+   R001 remains outside appetite.
+
+## Known Contradictions
+
+Resolve each guide contradiction only when its owning capability front begins:
+
+- handler-backed first tool versus workflow arriving later
+- final validation before emission versus progress during execution
+- guaranteed notifications versus bounded queues and no replay
+- JSON-only services versus `json-and-sse` manifest semantics
+- the illustrative manifest missing mandatory fields
+- the public status of mirrored headers, projection, discovery, result types,
+  and error codes
 
 ## Campaign Log
 
@@ -788,9 +885,9 @@ quality gate passed the real HTTP and independent-client checks.
 
 The clean-checkout quality gate now passes the real Fastify HTTP boundary and
 the independent MCP client. The exact current claim is the pre-alpha slice in
-the repository README; unsupported capabilities remain excluded. The next
-checkpoint is public `@emseepea/server@0.0.1` publication under `next` with
-ordinary release evidence.
+the repository README; unsupported capabilities remain excluded. Publication
+under `next` remains pending the current accessibility, semantic, and release
+gates.
 
 ### 2026-08-27: Checked Mapped-Adapter Slice Qualified
 
@@ -820,7 +917,7 @@ The existing JSON/tools benchmark also remained green; it does not cover templat
 performance. Template enumeration, completion, pagination, and cache
 configuration remain excluded.
 
-### 2026-08-27: Opt-In Completion Locally Qualified, CI Pending
+### 2026-08-27: Opt-In Completion Quality Qualified
 
 Prompt arguments and resource-template variables can opt into completion through
 their existing public definitions. Local raw-HTTP and official-client checks
@@ -830,35 +927,55 @@ sanitized sibling context, candidate validation and truncation, deadlines,
 disconnect cancellation, concurrent-request isolation, bounded results, generic
 errors, verifier-free public access, and both prompt and template references.
 The compiled example and a freshly packed and installed package pass their real
-HTTP completion smokes. The full local suite passes 26 tests with zero audited
-dependency vulnerabilities. Independent code and post-implementation
-architecture reviews pass, and the remediated WIP risk is 4/25 (Low). This
-checkpoint remains pending until the exact committed revision passes the
-Node.js 22 and 24 clean-checkout gates; no completion performance claim is
-made.
+HTTP completion smokes. Independent code and post-implementation architecture
+reviews pass. The exact revision passed Node.js 22 and 24 in the
+[clean-checkout qualification run](https://github.com/windyroad/emseepea/actions/runs/33047382337).
+No completion performance claim is made.
 
-### 2026-08-27: Four-Example Semantic Gate Locally Qualified, CI Pending
+### 2026-08-27: Loopback Streaming Progress Quality Qualified
+
+Checked POST-scoped progress, JSON fallback, cancellation, terminal ordering,
+authorization before streaming, and bounded event size and count passed the
+[Node.js 22 and 24 qualification run](https://github.com/windyroad/emseepea/actions/runs/33070295308).
+
+This evidence covers loopback-only operation. It does not support production or
+intermediary streaming, subscriptions, replay, sessions, backpressure, or
+resynchronisation claims.
+
+### 2026-08-27: Protected Example Quality Qualified
+
+The protected inventory example keeps discovery and tool listing public. Its
+tool call requires the synthetic `inventory:read` scope and distinguishes
+on-hand, reserved, available-to-promise, and inbound inventory.
+
+The exact revision passed the
+[Node.js 22 and 24 quality run](https://github.com/windyroad/emseepea/actions/runs/33084800356).
+The example is not production OAuth authorization guidance.
+
+### 2026-08-27: Five-Example Semantic Harness Added
 
 ADR-0022 requires Promptfoo qualification for every example. The shared gate
-runs three fresh agent trials and three independent no-MCP judge verdicts per
-example, requires deterministic critical facts and exact MCP path evidence,
-allows no semantic retries, and emits redacted evidence. Provider policy blocked
-autonomous custom MCP use in authoritative CI, so Tom ratified harness-mediated
-MCP material: the official client performs the live operation and binds its
-result to evidence before the no-tools agent interprets it. A clean local Claude
-advisory snapshot passes 12/12 trials across basic, backend, resources-and-prompts,
-and streaming-progress examples. The streaming case distinguishes charge, first
-crack, and cool progress from the completed 820-gram result. The authoritative
-GitHub Copilot CLI `claude-sonnet-4.6` run remains pending on the exact committed
-SHA. Publication stays blocked until that separate least-privilege job passes
-and uploads its 14-day evidence artifact.
+runs three fresh agent trials and three independent judges without MCP tools for
+each example. It requires deterministic critical facts and exact MCP path
+evidence, allows no semantic retries, and emits redacted evidence.
+
+Provider policy blocked autonomous custom MCP use in authoritative CI. The
+ratified harness therefore performs the live official-client operation and
+binds the result before a tool-free model interprets it.
+
+The harness now covers basic, backend, protected, resources-and-prompts, and
+streaming-progress examples. Earlier local advisory evidence covered the first
+four examples. Authoritative qualification of all five through the GitHub
+Copilot command-line interface (CLI) and `claude-sonnet-4.6` remains pending for
+the exact publishing commit.
 
 ## Implementation Goal
 
-Implement and independently qualify a monorepo-based universal MCP `2026-07-28`
-Streamable HTTP server framework with opt-in capabilities, a comprehensive
-verified-current documentation website, working no-UI, UI, streaming, and
-multi-instance examples, approved open-source dependencies, native accessible
-UI, honest composable claims during delivery, and a revised full active
-server-surface claim only when complete coverage is proven from clean checkouts,
-without building bespoke cryptographic certification.
+Implement and independently qualify a monorepo-based universal Model Context
+Protocol `2026-07-28` Streamable HTTP server framework with opt-in capabilities.
+
+Provide a comprehensive verified-current documentation website and working
+no-UI, native UI, React UI, streaming, and multi-instance examples. Use approved
+open-source dependencies and honest composable claims during delivery. Revise
+the full active server-surface claim only when complete coverage is proven from
+clean checkouts. Do not build bespoke cryptographic certification.

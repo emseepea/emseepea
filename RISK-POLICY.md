@@ -2,20 +2,26 @@
 
 ISO 31000-aligned project risk criteria
 
-Last reviewed: 2026-08-26
+Last reviewed: 2026-08-28
 
 ## Business Context
 
 Em See Pea is a pre-release, public, MIT-licensed TypeScript monorepo for a
-general-purpose MCP Streamable HTTP server framework, its examples,
-documentation, and future package releases. It is framework source for adopters
-to build deployable servers; this project does not itself operate a hosted
-service and makes no service-availability or operational-SLO commitment.
+general-purpose Model Context Protocol (MCP) Streamable HTTP server framework.
+It includes examples, documentation, and future package releases.
 
-Risk decisions cover the public source repository, protocol and security
-behaviour inherited by adopters, accessibility of supplied
-user interfaces and documentation, dependency and GitHub Actions supply chains,
-honest capability claims, release metadata, and future npm publication integrity.
+Adopters use this source to build deployable servers. This project does not
+operate a hosted service and makes no service-availability or service-level
+objective (SLO) commitment.
+
+Risk decisions cover:
+
+- the public source repository
+- protocol and security behaviour inherited by adopters
+- accessibility of supplied user interfaces and documentation
+- dependency and GitHub Actions supply chains
+- honest capability claims
+- release metadata and future npm publication integrity
 
 Every committed artifact is treated as public.
 
@@ -29,30 +35,70 @@ The appetite reflects an early pre-release framework with no operated service
 while retaining a reachable path for severe-but-rare work whose controls reduce
 likelihood to Rare.
 
-Licence infringement, secret exposure, destructive action without exact
-authority, supply-chain compromise, and materially
-dishonest release or capability claims are never prompt-bypassable. They must be
-removed, demonstrably controlled to within appetite, or the action halts.
+The following risks can never be waived by a prompt or environment variable:
+
+- licence infringement
+- secret exposure
+- destructive action without exact authority
+- supply-chain compromise
+- materially dishonest release or capability claims
+
+Remove the risk, demonstrably control it to within appetite, or halt the action.
 
 ## Impact Levels
 
-| Value | Level | Business consequence |
-|---:|---|---|
-| 1 | Negligible | A cosmetic or internal editorial defect with no effect on builds, public APIs, examples, accessibility, provenance, releases, or adopters. |
-| 2 | Minor | Developer-only friction such as a local build or tooling interruption; no released artifact, adopter workflow, public trust, or confidential information is affected. |
-| 3 | Moderate | Public documentation, CI, release-PR preparation, or update delivery is disrupted; package or repository metadata materially misleads without creating an adopter security failure; or confidential business metrics such as revenue, user counts, pricing, or traffic volumes are committed and require immediate removal. |
-| 4 | Significant | A public or released framework feature, example, UI, or documentation path is materially inaccessible, incompatible, misleading, or insecure, causing adopters' MCP servers or development workflows to fail or lose an expected protection. |
-| 5 | Severe | A published supply-chain compromise, credential or confidential-material disclosure, licensing breach, destructive or unauthorized framework behaviour, exploitable protocol/security defect, or false conformance claim destroys adopter data integrity, safety, legal reuse, or trust. |
+### 1 — Negligible
+
+A cosmetic or internal editorial defect has no effect on builds, public APIs,
+examples, accessibility, provenance, releases, or adopters.
+
+### 2 — Minor
+
+Developer-only friction interrupts a local build or tool. No released artifact,
+adopter workflow, public trust, or confidential information is affected.
+
+### 3 — Moderate
+
+One or more of these consequences occurs:
+
+- Public documentation, continuous integration, release-pull-request
+  preparation, or update delivery is disrupted.
+- Package or repository metadata materially misleads without creating an
+  adopter security failure.
+- Confidential business metrics are committed and require immediate removal.
+  These include revenue, user counts, pricing, or traffic volumes.
+
+### 4 — Significant
+
+A public or released framework feature, example, user interface, or
+documentation path is materially inaccessible, incompatible, misleading, or
+insecure. Adopters' MCP servers or development workflows fail or lose an
+expected protection.
+
+### 5 — Severe
+
+One or more of these consequences destroys adopter data integrity, safety,
+legal reuse, or trust:
+
+- a published supply-chain compromise
+- credential or confidential-material disclosure
+- licensing breach
+- destructive or unauthorized framework behaviour
+- exploitable protocol or security defect
+- false conformance claim
 
 ## Likelihood Levels
 
-| Value | Level | Description |
-|---:|---|---|
-| 1 | Rare | Requires specific, unusual conditions; extensive tests or architectural safeguards make occurrence very unlikely. |
-| 2 | Unlikely | Could happen, but tests, CI gates, review hooks, or independent review significantly reduce probability. |
-| 3 | Possible | Moderate complexity or limited test coverage means it could happen under normal conditions. |
-| 4 | Likely | High complexity, many paths, or weak controls make occurrence expected without intervention. |
-| 5 | Almost certain | A known gap, absent control, or previously observed failure mode makes occurrence expected. |
+- **1 — Rare:** Requires specific, unusual conditions. Extensive tests or
+  architectural safeguards make occurrence very unlikely.
+- **2 — Unlikely:** Could happen, but tests, continuous-integration gates,
+  review hooks, or independent review significantly reduce probability.
+- **3 — Possible:** Moderate complexity or limited test coverage means it could
+  happen under normal conditions.
+- **4 — Likely:** High complexity, many paths, or weak controls make occurrence
+  expected without intervention.
+- **5 — Almost certain:** A known gap, absent control, or previously observed
+  failure mode makes occurrence expected.
 
 ## Risk Matrix
 
@@ -76,34 +122,48 @@ Risk score is Impact x Likelihood.
 
 ## Confidential Information
 
-This repository is intended to be public. Secrets, credentials, tokens, private
-keys, personal or customer data, confidential client details, incompatible
-third-party material, and non-public business metrics must not appear in
-committed files, history, issues, changesets, build output, examples, or release
-notes. Confidential metrics include revenue, user counts, pricing not already
-public, and traffic volumes. Use generic descriptions and synthetic examples
-instead. Suspected disclosure requires stopping publication and following the
-appropriate removal and credential-rotation response.
+This repository is intended to be public.
+
+Do not commit:
+
+- secrets, credentials, tokens, or private keys
+- personal or customer data
+- confidential client details
+- incompatible third-party material
+- non-public business metrics, including revenue, user counts, private pricing,
+  and traffic volumes
+
+These restrictions apply to files, history, issues, changesets, build output,
+examples, and release notes.
+
+Use generic descriptions and synthetic examples instead.
+
+If disclosure is suspected, stop publication and follow the removal and
+credential-rotation response.
 
 ## Authorized Bypass Scenarios
+
+Only validated risk-reducing work can proceed through the reducing or incident
+paths below. No prompt or environment variable can waive licensing,
+secret-exposure, destructive-action, supply-chain, or honest-claim controls.
 
 - Risk-reducing or risk-neutral changes proceed via the risk-reducing path. A
   change that lowers or holds residual risk is not blocked by the gate. The
   scorer emits `RISK_BYPASS: reducing`; the gate honours a drift-revalidated,
-  TTL-bounded `reducing-*` marker.
+  time-to-live-bounded `reducing-*` marker. Drift revalidation proves the marker
+  still describes the current change before its bounded validity expires.
 - Incident response is not a separate appetite carve-out. An active incident is
   a risk already being realised at Likelihood 5, so an incident-response change
-  is scored against that live baseline and proceeds only when net-risk-reducing
-  under ADR-042 Rule 1b. The `incident-release` marker exists only to let a
-  net-reducing restore-service release proceed despite red or unreadable CI
-  during a live outage.
+  is scored against that live baseline. It proceeds only when it reduces net
+  risk. The `incident-release` marker permits only a net-risk-reducing
+  restore-service release during an active outage, even when continuous
+  integration is failing or unreadable.
 - Above-appetite risk is never bypassable by a prompt or environment variable.
   There is no commit-or-release-anyway question and no `BYPASS_RISK_GATE` or
-  `ci-bypass` override. Above appetite, the action is remediated to within
-  appetite or halted under ADR-042 Rule 1.
-- Default-permitted-when-silent: a policy predating this section still permits
-  the risk-reducing and incident paths above; this section makes the policy the
-  explicit single source of truth and should be added at its next review.
+  `ci-bypass` override. Remediate above-appetite work to within appetite or halt
+  it.
+- Older policy that is silent about bypasses permits only the reducing and
+  incident paths defined here. This section is the explicit source of truth.
 - No bypass may waive licensing, secret-exposure, exact
   destructive-action authority, or honest release and capability-claim controls.
 
