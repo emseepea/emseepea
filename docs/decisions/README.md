@@ -11,13 +11,13 @@ Compact rendered index of every ADR's chosen option, confirmation criteria, and 
 
 For deep-dive — creating, evolving, ratifying, or contesting a decision — open the per-ADR file directly. `/wr-architect:create-adr`, `/wr-architect:capture-adr`, and `/wr-architect:review-decisions` all keep the full body in scope. Decision Drivers, Considered Options bodies, Pros and Cons, Consequences narrative, and Reassessment Criteria are intentionally NOT in this routine view — they live in the per-ADR body.
 
-**Total ADRs:** 21 (13 in-force, 8 historical)
+**Total ADRs:** 22 (14 in-force, 8 historical)
 
 ---
 
 ## In-force decisions
 
-_13 ADRs. These are the current rules. The architect agent reads this section first for routine compliance review._
+_14 ADRs. These are the current rules. The architect agent reads this section first for routine compliance review._
 
 ### ADR-0002 — Explicit Anonymous Production Boundary Behind a Trusted Proxy
 **Status:** proposed | **Oversight:** confirmed
@@ -83,6 +83,24 @@ _13 ADRs. These are the current rules. The architect agent reads this section fi
 **Status:** proposed | **Oversight:** confirmed | **Supersedes:** ["ADR-0021"]
 **Chosen:** Chosen option: **"Harness-mediated MCP material with GitHub Copilot CLI"**, because it tests live MCP results for user-visible meaning while retaining a bounded, auditable, exact-commit release gate within provider policy.
 **Confirmation:** Every example has Promptfoo qualification with deterministic critical facts, a semantic rubric, and explicit MCP path evidence.; For every trial the harness performs the exact official-client operation and binds the result to evidence.; Agents and judges have no MCP tools and run without semantic retries.; CI proves the effective Copilot provider and `claude-sonnet-4.6` model or fails closed.
+
+### ADR-0023 — Mandatory Cognitive-Accessibility Review for Published Content
+
+**Status:** proposed | **Oversight:** confirmed
+
+**Chosen:** Mandatory specialist review plus a density guard.
+
+**Why:** The README failure passed structural checks. It needed human
+cognitive-accessibility judgement.
+
+**Confirmation:**
+
+- `QUALITY.md` defines the review rule, scope, and fail-closed publication gate.
+- The risk register records incomprehensible public content as a standing risk.
+- The root README uses short task-oriented sections.
+- The root README passes review at a rendered mobile width.
+- A runnable test rejects over-dense root README prose.
+- Existing published prose is inventoried and reviewed before first public release.
 
 ---
 
