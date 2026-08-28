@@ -12,14 +12,16 @@ const state = {
   response: undefined,
 };
 
+const moduleMockExports = Number.parseInt(process.versions.node, 10) < 24 ? "namedExports" : "exports";
+
 mock.module("node:dns/promises", {
-  exports: {
+  [moduleMockExports]: {
     lookup: async (hostname, options) => state.lookup
       ? (state.lookups.push({ hostname, options }), await state.lookup(hostname, options))
       : (state.lookups.push({ hostname, options }), state.addresses),
   },
 });
-mock.module("node:https", { exports: { request: fakeRequest } });
+mock.module("node:https", { [moduleMockExports]: { request: fakeRequest } });
 
 const { createJsonHttpClient } = await import(
   process.env.EMSEEPEA_HTTP_TEST_MODULE ?? "@emseepea/server/http"
@@ -233,7 +235,7 @@ test("cancellation and deadlines abandon DNS without starting a request", async 
   assert.equal(state.requests.length, 0);
 
   const signal = new AbortController().signal;
-  await assert.rejects(get({ signal, deadlineMs: Date.now() + 5 }));
+  await withActiveIo(assert.rejects(get({ signal, deadlineMs: Date.now() + 5 })));
   await assert.rejects(get({ signal, deadlineMs: Date.now() + 2_147_483_648 }));
   assert.equal(state.requests.length, 0);
 });
@@ -248,10 +250,10 @@ test("cancellation while waiting for the response destroys the request", async (
   assert.equal(state.requests[0].destroyed, true);
 
   state.response = { hold: true };
-  await assert.rejects(get({
+  await withActiveIo(assert.rejects(get({
     signal: new AbortController().signal,
     deadlineMs: Date.now() + 5,
-  }));
+  })));
   assert.equal(state.requests[1].destroyed, true);
 });
 
@@ -284,6 +286,11 @@ function get(overrides = {}, maxResponseBytes) {
     deadlineMs: Date.now() + 1_000,
     ...overrides,
   });
+}
+
+function withActiveIo(promise) {
+  const keepAlive = setTimeout(() => {}, 1_000);
+  return promise.finally(() => clearTimeout(keepAlive));
 }
 
 function fakeRequest(url, options, callback) {
