@@ -30,7 +30,7 @@ test("the packed server runs the public getting-started path", { timeout: 180_00
     run("npm", [
       "install",
       "--ignore-scripts",
-      "--offline",
+      "--prefer-offline",
       "--no-audit",
       "--no-fund",
       tarball,
