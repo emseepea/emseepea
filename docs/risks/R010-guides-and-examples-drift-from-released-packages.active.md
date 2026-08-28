@@ -36,7 +36,7 @@ Impact × Likelihood *before* controls.
   `.github/workflows/quality.yml` and `.github/workflows/release.yml`.
 - **Published-package verification** - Release qualification requires an exact-
   version clean install, public import, and smoke execution. Defined in
-  [ADR-0019: public pre-alpha releases through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.proposed.md).
+  [ADR-0019: public pre-alpha releases through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md).
 
 ## Residual Risk
 
@@ -67,7 +67,7 @@ fail closed.
 - Criteria: `RISK-POLICY.md`
 - Realised-as: none recorded
 - Treatment ADRs:
-  [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.proposed.md)
+  [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
 - Personas affected: framework adopters, contributors, and maintainers
 
 ## Change Log

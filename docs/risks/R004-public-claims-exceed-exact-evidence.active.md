@@ -69,7 +69,7 @@ verified states must remain distinct in all public content.
 - Treatment ADRs:
   [ADR-0005: Active Streamable HTTP Scope and Adaptive Delivery](../decisions/0005-active-streamable-http-scope-and-adaptive-delivery.proposed.md)
   and
-  [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.proposed.md)
+  [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
 - Personas affected: adopters, contributors, and maintainers
 
 ## Source Evidence (auto-scaffolded 2026-08-27)

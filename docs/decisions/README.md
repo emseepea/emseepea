@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 24 decisions: 15 current and 9 historical.
+This project has 27 decisions: 17 current and 10 historical.
 
 ## Quick Index
 
@@ -22,10 +22,12 @@ This project has 24 decisions: 15 current and 9 historical.
 - [ADR-0014: Performance Budget for the Initial JSON HTTP Boundary](0014-performance-budget-initial-json-http-boundary.proposed.md) — Proposed; human review confirmed.
 - [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.proposed.md) — Proposed; human review confirmed.
 - [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md) — Proposed; human review confirmed.
-- [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.proposed.md) — Proposed; human review confirmed.
 - [ADR-0023: Mandatory Cognitive-Accessibility Review for Published Content](0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md) — Proposed; human review confirmed.
 - [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.proposed.md) — Proposed; human review confirmed.
 - [ADR-0025: Static Documentation Website with Astro Starlight](0025-static-documentation-website-with-astro-starlight.proposed.md) — Proposed; human review pending.
+- [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.proposed.md) — Proposed; human review confirmed.
+- [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.proposed.md) — Proposed; human review confirmed.
+- [ADR-0028: Example-Owned Oxlint with Root Orchestration](0028-example-owned-oxlint-with-root-orchestration.proposed.md) — Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -35,6 +37,7 @@ This project has 24 decisions: 15 current and 9 historical.
 - [ADR-0008: Public and OAuth Protected Resource Security](0008-public-and-oauth-protected-resource-security.superseded.md) — Superseded; human review confirmed.
 - [ADR-0015: Ordinary Evidence and Exact Release Claims](0015-ordinary-evidence-and-exact-release-claims.superseded.md) — Superseded; human review confirmed.
 - [ADR-0017: Public Discovery with Protected Tool Invocation](0017-public-discovery-with-protected-tool-invocation.superseded.md) — Superseded; human review confirmed.
+- [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md) — Superseded; human review confirmed.
 - [ADR-0020: Mandatory Semantic LLM Qualification for Examples and Releases](0020-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md) — Superseded; human review confirmed.
 - [ADR-0021: Mandatory Semantic LLM Qualification for Examples and Releases](0021-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md) — Superseded; human review confirmed.
 - [ADR-0022: Harness-Mediated Semantic LLM Qualification for Examples and Releases](0022-harness-mediated-semantic-llm-qualification-for-examples-and-releases.superseded.md) — Superseded; human review confirmed.
@@ -85,7 +88,7 @@ Chosen option: **"Explicit trusted-proxy production profile"**, because it is th
 
 - Status: Superseded
 - Human review: Confirmed
-- Replaced by: [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.proposed.md)
+- Replaced by: [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
 
 #### Decision
 
@@ -369,11 +372,12 @@ Chosen option: **"Public discovery with invocation-scoped OAuth and retained out
 - Public operations never inherit protected credentials or identity.
 - No protected-path performance claim is made without a separate budget.
 
-### [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.proposed.md)
+### [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0003: Public Windy Road Repository with Gated Changesets Releases](0003-public-repository-and-release-governance.superseded.md)
+- Replaced by: [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.proposed.md)
 
 #### Decision
 
@@ -533,3 +537,69 @@ Chosen option: **"Astro Starlight"**, because it is the smallest maintained opti
 - Publication stops when any required package or check is unavailable.
 - The GitHub Pages workflow uses fixed action revisions, least permissions, no pull-request deployment credentials, and only the checked revision.
 - Compressed HTML, CSS, JavaScript, browser processing time, and memory are measured from the first build. Public deployment waits for a separately ratified website performance budget based on that evidence.
+
+### [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"Example-owned quality commands with shared tooling"**, because it makes quality visible where adopters learn while keeping credentials, provider isolation, and exact-release evidence in one place.
+
+#### How We Check It
+
+- Every runnable `examples/*/package.json` exposes `test`, `test:built`, and `test:llm`.
+- Every runnable example contains at least one deterministic test and one `eval.yaml` file referenced by the Promptfoo configuration.
+- `npm test -w <example workspace>` succeeds from a clean installed checkout.
+- `npm run test:llm -w <example workspace>` runs only that example's live MCP case through the shared Claude and Promptfoo harness.
+- Root `npm test` builds once and runs every example-owned deterministic test exactly once.
+- `tests/docs/example-quality.test.mjs` fails when a runnable example omits its `test` command, `test:built` command, `test:llm` command, ordinary test file, or `eval.yaml` scenario.
+- Native and React examples run browser, keyboard, and accessibility checks from their own workspaces.
+
+### [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
+
+#### Decision
+
+Chosen option: **"One public `@emseepea/testing` package"**, because semantic qualification is a product capability and its deterministic and model-backed checks share the same server lifecycle and official MCP client boundary.
+
+#### How We Check It
+
+- `@emseepea/testing` is public under MIT with no dependency on `@emseepea/server` or bundled proprietary model CLI.
+- Every runnable example imports the package as a development dependency and owns one deterministic test and one semantic case.
+- No central map repeats example server paths, operations, or expected MCP paths.
+- One example command runs only that example's deterministic checks; one runs only its semantic check.
+- Semantic checks collect data through the official MCP client.
+- They ask the model three times and judge each answer three times.
+- They fail when required evidence is missing, the answer misses critical facts, or the answer gets the meaning wrong.
+- They fail if the model uses tools, takes extra turns, or retries.
+- Package tests cover tool, resource, prompt, progress, authentication, cancellation, invalid cases, provider failure, and redacted evidence.
+- Clean packed installs and public smoke tests pass on supported Node versions.
+- Changesets and the existing release workflow publish both approved packages through the `next` npm tag.
+- The release record shows which commit was tested and published.
+- The root, examples, React package, and Tailwind package remain unpublished.
+
+### [ADR-0028: Example-Owned Oxlint with Root Orchestration](0028-example-owned-oxlint-with-root-orchestration.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"Example-owned Oxlint dependency with root orchestration"**, because an example must carry everything needed to lint itself after it leaves the monorepo.
+
+#### How We Check It
+
+- The root and every copyable example declare the same exact MIT-licensed Oxlint version compatible with supported Node 22 and 24 releases.
+- Every copyable example exposes a lint command that references only paths and dependencies contained in that example.
+- No example lint command references the monorepo root, a root script, or a shared private configuration.
+- Root CI runs one repository-wide lint scan before type checking and tests.
+- `tests/docs/example-quality.test.mjs` fails when an example omits `lint`, uses a different Oxlint version, or introduces a root-relative lint command.
+- At least one example is copied to a temporary directory outside the monorepo; a clean install and its lint command pass there.
+- The future `npm init` template test creates a project outside the monorepo and proves installation, linting, deterministic tests, and semantic checks.
+- Clean monorepo checkouts pass lint on both supported Node versions.
+- Intentional suppressions are narrow and state why they exist.

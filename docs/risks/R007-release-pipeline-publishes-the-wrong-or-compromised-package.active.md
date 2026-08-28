@@ -74,7 +74,7 @@ removal; it is not a reusable fallback.
 - Criteria: `RISK-POLICY.md`
 - Realised-as: none recorded
 - Treatment ADRs:
-  [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.proposed.md)
+  [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
 - Personas affected: package consumers, adopters, and maintainers
 
 ## Source Evidence (auto-scaffolded 2026-08-27)
