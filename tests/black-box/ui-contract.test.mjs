@@ -115,7 +115,7 @@ test("UI package boundaries keep frontend and Tailwind dependencies out of core"
     types: "./dist/ui.d.ts",
     import: "./dist/ui.js",
   });
-  assert.equal(react.dependencies["@emseepea/server"], "0.0.0");
+  assert.equal(react.dependencies["@emseepea/server"], server.version);
   assert.equal(react.peerDependencies.react, "^19.0.0");
   assert.deepEqual(tailwind.exports, { "./styles.css": "./dist/emseepea.css" });
   assert.equal(tailwind.dependencies, undefined);
