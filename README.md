@@ -13,17 +13,19 @@ Em See Pea is a general-purpose framework for Model Context Protocol (MCP)
 The project is pre-alpha. It currently supports a small, tested server surface;
 it does not claim complete MCP coverage.
 
-## What Works Now
+## What You Can Build Today
 
-- tools anyone can use and tools that require sign-in
-- direct tool calls and tools connected to another service
-- input and result checks before data crosses a boundary
-- resources, reusable resource addresses, and prompts
-- optional suggestions for prompt and resource fields
-- live progress for local, single-server examples
-- current-source work for two local server processes sharing a SQLite report
-  store, checked in a fresh local copy
-- Fastify servers on Node.js 22 and 24
+Use the current framework to create:
+
+- a Fastify MCP server that runs on Node.js 22 or 24
+- public tools that anyone can call
+- tools that require a sign-in token before their code runs
+- tools that call another service and check its response
+- resources, reusable resource addresses, prompts, and field suggestions
+- a local server that reports live progress while work is running
+- two local server processes that share one SQLite report store
+- a server with a native HTML form, or the same form rendered with React and
+  the Em See Pea stylesheet
 
 The live-progress feature passed its
 [Node.js 22 and 24 test run][streaming-quality]. It is not ready for production

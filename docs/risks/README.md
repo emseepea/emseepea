@@ -11,7 +11,7 @@ A dash (`—`) means the score is not estimated yet. A residual score above the
 
 | ID | Risk | Category | Inherent | Residual | Treatment | Owner | Next review |
 |---|---|---|---:|---:|---|---|---|
-| [R001](R001-published-content-is-not-understandable.active.md) | Published content is not understandable | Brand | 20 | 20 | Mitigate | Documentation maintainer | 2027-02-27 |
+| [R001](R001-published-content-is-not-understandable.active.md) | Published content is not understandable | Brand | 20 | 4 | Mitigate | Documentation maintainer | 2027-02-27 |
 | [R002](R002-protected-tools-run-without-valid-authorization.active.md) | Protected tools run without valid authorization | Information security | 15 | 5 | Mitigate | Framework security maintainer | 2027-02-28 |
 | [R003](R003-checked-boundaries-fail-or-expose-backend-data.active.md) | Checked boundaries fail or expose backend data | Information security | 15 | 5 | Mitigate | Framework security maintainer | 2027-02-28 |
 | [R004](R004-public-claims-exceed-exact-evidence.active.md) | Public claims exceed exact evidence | Brand | 20 | 5 | Mitigate | Documentation and release maintainer | 2027-02-28 |

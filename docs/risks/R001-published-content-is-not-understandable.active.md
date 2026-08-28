@@ -4,7 +4,7 @@
 **Category**: brand
 **Identified**: 2026-08-27
 **Owner**: Documentation maintainer
-**Last reviewed**: 2026-08-27
+**Last reviewed**: 2026-08-29
 **Next review**: 2027-02-27
 
 ## Description
@@ -18,6 +18,9 @@ or act on essential information.
 The risk has already occurred: the root README presented detailed verification
 evidence as a long paragraph that became an unreadable wall of text on mobile.
 Structural Markdown checks did not detect the comprehension failure.
+
+It occurred again when the root README listed framework capabilities without
+making it clear that they were examples users could create.
 
 ## Inherent Risk
 
@@ -38,6 +41,9 @@ Impact × Likelihood *before* controls.
 - **README density regression guard** - A runnable test rejects unusually long
   root README prose paragraphs. This is a regression signal, not proof that
   readers understand the content.
+- **Changed-docs review evidence guard** - A runnable test rejects changed
+  public Markdown unless the change includes a named cognitive-accessibility
+  review record. The guard runs with the normal test suite.
 - **Progressive evidence disclosure** - Primary tasks use short, plain sections.
   Detailed evidence stays available through descriptive links.
 
@@ -46,18 +52,17 @@ Impact × Likelihood *before* controls.
 Impact × Likelihood *after* controls.
 
 - **Impact**: 4 (Significant)
-- **Likelihood**: 5 (Almost certain)
-- **Residual Score**: 20
-- **Residual Band**: Very High
-- **Within appetite?**: No
+- **Likelihood**: 1 (Rare)
+- **Residual Score**: 4
+- **Residual Band**: Low
+- **Within appetite?**: Yes
 
 ## Treatment
 
-Mitigate. Residual risk remains the same as inherent risk until there is
-evidence that the baseline audit, specialist review gate, and automated guard
-are working across every published prose surface.
-
-Publication remains blocked while the residual score is above the 5/25 appetite.
+Mitigate. The risk stays active because automated checks cannot prove that
+people understand the prose. The current controls keep publication within
+appetite by requiring named review evidence for changed public Markdown and by
+keeping the root README scannable.
 
 ## Monitoring
 
@@ -78,3 +83,5 @@ Publication remains blocked while the residual score is above the 5/25 appetite.
 
 - 2026-08-27: Initial identification and conservative rating after the realised
   mobile README comprehension failure.
+- 2026-08-29: Added the changed-docs review evidence guard as an explicit
+  control for future public prose edits.

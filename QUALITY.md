@@ -47,6 +47,9 @@ FAIL, and retain any required correction. Missing or failed review evidence
 blocks publication. Generated prose follows the same rule as human-written
 prose.
 
+`npm test` rejects changed public Markdown that is not named in a cognitive-
+accessibility review record under `docs/reviews/`.
+
 The automated README density test is only a regression signal. Passing it does
 not prove cognitive accessibility, readability, comprehension, or Web Content
 Accessibility Guidelines (WCAG) conformance.
@@ -109,9 +112,10 @@ Accessibility Guidelines (WCAG) conformance.
   only `contents: read`. Never run it with credentials against untrusted fork
   code.
 - Changesets creates or updates the release pull request. Only
-  `@emseepea/server`, `@emseepea/react`, and `@emseepea/tailwind` may publish
-  under `next`. Required pull-request and language-model checks must pass for
-  the merged commit. The root and examples remain private.
+  `@emseepea/server` and `@emseepea/testing` may publish under `next`.
+  Required pull-request and language-model checks must pass for the merged
+  commit. The root, examples, React package, and Tailwind package remain
+  private.
 - The release job must depend on a passing Promptfoo check for the publishing
   SHA through pinned Claude CLI and `claude-sonnet-4-6`. It uses the Claude
   subscription OAuth secret, and redacted evidence is retained for exactly 14

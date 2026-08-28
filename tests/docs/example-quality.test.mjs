@@ -5,6 +5,7 @@ import test from "node:test";
 import { loadSemanticCase } from "../../packages/testing/semantic/case.mjs";
 
 const examplesRoot = new URL("../../examples/", import.meta.url);
+const testingManifest = JSON.parse(await readFile(new URL("../../packages/testing/package.json", import.meta.url), "utf8"));
 
 test("every runnable example visibly owns deterministic and LLM checks", async () => {
   const directories = await readdir(examplesRoot, { withFileTypes: true });
@@ -25,7 +26,7 @@ test("every runnable example visibly owns deterministic and LLM checks", async (
     const tsconfig = await readFile(new URL(`${directory.name}/tsconfig.json`, examplesRoot), "utf8");
     assert.doesNotMatch(tsconfig, /\.\.\/\.\./, `${directory.name} TypeScript config depends on the monorepo`);
     assert.ok(manifest.scripts["test:llm"], `${directory.name} has no LLM test command`);
-    assert.equal(manifest.devDependencies?.["@emseepea/testing"], "0.0.0");
+    assert.equal(manifest.devDependencies?.["@emseepea/testing"], testingManifest.version);
     assert.doesNotMatch(manifest.scripts["test:llm"], /\.\.\/\.\.|--prefix|-w\s/, `${directory.name} LLM test depends on the monorepo`);
     const caseUrl = new URL(`${directory.name}/eval.yaml`, examplesRoot);
     await access(caseUrl);
