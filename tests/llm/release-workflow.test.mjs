@@ -3,7 +3,18 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const workflow = await readFile(new URL("../../.github/workflows/release.yml", import.meta.url), "utf8");
+const quality = await readFile(new URL("../../.github/workflows/quality.yml", import.meta.url), "utf8");
 const manifest = JSON.parse(await readFile(new URL("../../package.json", import.meta.url), "utf8"));
+
+test("every GitHub job uses the recorded npm version", () => {
+  for (const source of [quality, workflow]) {
+    const setups = source.match(/- name: Set up Node\.js/g) ?? [];
+    const activations = source.match(/- name: Use the recorded npm version/g) ?? [];
+    assert.equal(activations.length, setups.length);
+    assert.equal((source.match(/corepack enable npm/g) ?? []).length, setups.length);
+    assert.equal((source.match(/packageManager\.slice\(4\)/g) ?? []).length, setups.length);
+  }
+});
 
 test("the Claude subscription check runs only for the publication revision", () => {
   assert.match(
