@@ -17,7 +17,7 @@ jobs:
   test:
     name: Node.js ${{ matrix.node-version }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -36,6 +36,8 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
+      - name: Install the browser used by UI checks
+        run: npx playwright install --with-deps chromium
       - name: Test the public boundary
         run: npm test
       - name: Check the JSON-boundary performance budget

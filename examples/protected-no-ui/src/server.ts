@@ -50,7 +50,7 @@ const app = createEmseepea({
     verifier: {
       async verifyAccessToken(token) {
         if (token !== demoToken && token !== "example-wrong-scope") {
-          throw new OAuthError(OAuthErrorCode.InvalidToken, "Invalid synthetic example token");
+          throw new OAuthError(OAuthErrorCode.InvalidToken, "Invalid sample token");
         }
         return {
           token,
@@ -63,7 +63,7 @@ const app = createEmseepea({
     },
     metadata: {
       resourceServerUrl,
-      resourceName: "Synthetic private inventory",
+      resourceName: "Sample private inventory",
       scopesSupported: ["inventory:read"],
       oauthMetadata: {
         issuer: "https://auth.example",

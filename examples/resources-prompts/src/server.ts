@@ -15,7 +15,7 @@ const guide = defineResource({
   name: "getting-started",
   uri: guideUri,
   title: "Coffee getting started",
-  description: "A synthetic guide exposed as an MCP resource.",
+  description: "A sample guide exposed as an MCP resource.",
   mimeType: "text/markdown",
   handler: () => ({
     contents: [{
@@ -30,7 +30,7 @@ const methodGuide = defineResourceTemplate({
   name: "method-guide",
   uriTemplate: "guide://coffee/method/{method}",
   title: "Coffee method guide",
-  description: "A synthetic guide selected by brewing method.",
+  description: "A sample guide selected by brewing method.",
   mimeType: "text/markdown",
   complete: {
     method: (value) => methods.filter((method) => method.startsWith(value)),
@@ -47,7 +47,7 @@ const methodGuide = defineResourceTemplate({
 const brew = definePrompt({
   name: "brew-guide",
   title: "Brew guide",
-  description: "Create a prompt for a synthetic brewing topic.",
+  description: "Create a prompt for a sample brewing topic.",
   argsSchema: z.object({ topic: z.string().min(1) }),
   complete: {
     topic: (value) => topics.filter((topic) => topic.startsWith(value)),

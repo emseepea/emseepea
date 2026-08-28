@@ -1,16 +1,16 @@
 # Basic No-UI Example
 
 This example exposes one self-contained, read-only `get-bean-details` tool
-through the public `@emseepea/server` API. It is the shortest path from a Zod
-input and output contract to a useful MCP tool.
+through the public `@emseepea/server` API. It is the shortest path from
+validated input and output to a useful Model Context Protocol (MCP) tool.
 
 ## Boundary
 
-- MCP `2026-07-28` only
+- Model Context Protocol `2026-07-28` only
 - Streamable HTTP `POST /mcp`
 - JSON responses only for enabled methods
 - Anonymous, loopback-only serving
-- One read-only tool with inline synthetic data
+- One read-only tool with sample data included in the example
 - No sessions, replay, subscriptions, effects, authentication, or production
   network exposure
 
@@ -29,10 +29,10 @@ The endpoint is `http://127.0.0.1:3000/mcp` and the health check is
 
 ## Smoke Test
 
-Run the raw-wire and independent-client checks:
+Run the HTTP and client checks:
 
 ```sh
 npm test
 ```
 
-Run this example's three-trial semantic MCP case with `npm run test:eval`.
+Run the language-model understanding check with `npm run test:eval`.

@@ -1,50 +1,102 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseClaudeEvents, parseCopilotEvents, parseJudgeVerdict } from "./provider.mjs";
+import {
+  claudeInvocation,
+  exampleEnvironment,
+  parseClaudeEvents,
+  parseJudgeVerdict,
+} from "./provider.mjs";
 
-test("Copilot evidence requires the pinned model and no tools", () => {
-  const events = [
-    { type: "session.mcp_servers_loaded", data: { servers: [] } },
-    { type: "assistant.turn_start", data: { turnId: "1" } },
-    { type: "model.call_start", data: { model: "claude-sonnet-4.6" } },
-    { type: "assistant.message", data: { content: "Highland Bloom details" } },
-    { type: "result", exitCode: 0 },
-  ].map(JSON.stringify).join("\n");
-  const parsed = parseCopilotEvents(events);
-  assert.equal(parsed.answer, "Highland Bloom details");
-  assert.equal(parsed.toolCallCount, 0);
-  assert.throws(() => parseCopilotEvents([
-    ...events.split("\n").map((line) => JSON.parse(line)),
-    { type: "tool.execution_start", data: { mcpToolName: "unexpected" } },
-  ].map(JSON.stringify).join("\n")), /used a tool/);
-  assert.throws(
-    () => parseCopilotEvents([
-      { type: "session.mcp_servers_loaded", data: { servers: ["emseepea_eval"] } },
-      { type: "session.warning", data: { warningType: "mcp", message: "server blocked by policy" } },
-    ].map(JSON.stringify).join("\n")),
-    /server blocked by policy/,
-  );
-  assert.throws(
-    () => parseCopilotEvents(JSON.stringify({ type: "session.mcp_servers_loaded", data: { servers: [] } }), 1),
-    /process exited 1 without a result/,
-  );
-  assert.throws(() => parseCopilotEvents(events, 1), /process exited 1/);
-});
-
-test("Claude advisory evidence rejects every tool call", () => {
+test("Claude evidence requires one tool-free turn with the pinned main model", () => {
   const tool = {
     type: "assistant",
-    message: { content: [{ type: "tool_use", id: "tool-1", name: "mcp__emseepea_eval__create-bean-report" }] },
+    message: { content: [{ type: "tool_use", id: "tool-1", name: "Read" }] },
   };
   const result = {
     type: "result",
     is_error: false,
+    num_turns: 1,
+    permission_denials: [],
     result: "One matching bean",
-    modelUsage: { "claude-sonnet": {} },
+    modelUsage: {
+      "claude-haiku-4-5-20251001": { canonicalModel: "claude-haiku-4-5", provider: "firstParty" },
+      "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" },
+    },
   };
-  assert.equal(parseClaudeEvents(JSON.stringify(result)).toolCallCount, 0);
+  const parsed = parseClaudeEvents(JSON.stringify(result));
+  assert.equal(parsed.model, "claude-sonnet-4-6");
+  assert.deepEqual(parsed.models, ["claude-haiku-4-5-20251001", "claude-sonnet-4-6"]);
+  assert.equal(parsed.toolCallCount, 0);
   assert.throws(() => parseClaudeEvents([tool, result].map(JSON.stringify).join("\n")), /forbidden tool/);
+  assert.throws(() => parseClaudeEvents(JSON.stringify({ ...result, num_turns: 2 })), /2 turns/);
+  assert.throws(() => parseClaudeEvents(JSON.stringify({ ...result, permission_denials: [{ tool: "Read" }] })), /forbidden action/);
+  assert.throws(() => parseClaudeEvents(JSON.stringify({ ...result, modelUsage: {} })), /required model/);
+  assert.throws(() => parseClaudeEvents(JSON.stringify({ ...result, modelUsage: {
+    "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-5", provider: "firstParty" },
+  } })), /required model/);
+  assert.throws(() => parseClaudeEvents(JSON.stringify({ ...result, is_error: true })), /Claude failed/);
+  assert.throws(() => parseClaudeEvents("", 0), /Claude failed/);
+  assert.throws(() => parseClaudeEvents(JSON.stringify(result), 1), /Claude exited 1/);
+  assert.throws(
+    () => parseClaudeEvents(JSON.stringify({
+      type: "assistant",
+      message: { content: [{ type: "text", text: "Not logged in · Please run /login" }] },
+    }), 1),
+    /not signed in/,
+  );
+});
+
+test("Claude invocation is isolated and keeps subscription auth away from examples", () => {
+  const originalToken = process.env.CLAUDE_CODE_OAUTH_TOKEN;
+  const originalApiKey = process.env.ANTHROPIC_API_KEY;
+  const originalHome = process.env.HOME;
+  process.env.CLAUDE_CODE_OAUTH_TOKEN = "sentinel-subscription-token";
+  process.env.ANTHROPIC_API_KEY = "sentinel-api-key";
+  process.env.HOME = "/tmp/emseepea-signed-in-home";
+  try {
+    const invocation = claudeInvocation("claude-ci", "question", "/tmp/emseepea-neutral");
+    assert.match(invocation.command, /node_modules\/\.bin\/claude$/);
+    assert.equal(invocation.env.CLAUDE_CODE_OAUTH_TOKEN, "sentinel-subscription-token");
+    assert.equal(invocation.env.ANTHROPIC_API_KEY, undefined);
+    assert.equal(invocation.env.HOME, "/tmp/emseepea-neutral");
+    for (const pair of [
+      ["--model", "claude-sonnet-4-6"],
+      ["--tools", ""],
+      ["--setting-sources", ""],
+      ["--permission-mode", "dontAsk"],
+      ["--output-format", "stream-json"],
+    ]) {
+      const index = invocation.args.indexOf(pair[0]);
+      assert.equal(invocation.args[index + 1], pair[1]);
+    }
+    for (const flag of ["--safe-mode", "--strict-mcp-config", "--disable-slash-commands", "--no-session-persistence", "--no-chrome"]) {
+      assert.ok(invocation.args.includes(flag), `${flag} is required`);
+    }
+    for (const flag of ["--mcp-config", "--plugin-dir", "--fallback-model", "--max-budget-usd"]) {
+      assert.equal(invocation.args.includes(flag), false, `${flag} must be absent`);
+    }
+    const example = exampleEnvironment({ NODE_ENV: "test", PORT: "0" });
+    assert.equal(example.CLAUDE_CODE_OAUTH_TOKEN, undefined);
+    assert.equal(example.ANTHROPIC_API_KEY, undefined);
+    const local = claudeInvocation("claude-local", "question", "/tmp/emseepea-neutral");
+    assert.equal(local.env.HOME, "/tmp/emseepea-signed-in-home");
+    assert.equal(local.env.CLAUDE_CONFIG_DIR, undefined);
+    assert.equal(local.env.CLAUDE_CODE_OAUTH_TOKEN, undefined);
+    assert.equal(local.env.ANTHROPIC_API_KEY, undefined);
+    delete process.env.HOME;
+    assert.throws(
+      () => claudeInvocation("claude-local", "question", "/tmp/emseepea-neutral"),
+      /absolute HOME/,
+    );
+  } finally {
+    if (originalToken === undefined) delete process.env.CLAUDE_CODE_OAUTH_TOKEN;
+    else process.env.CLAUDE_CODE_OAUTH_TOKEN = originalToken;
+    if (originalApiKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = originalApiKey;
+    if (originalHome === undefined) delete process.env.HOME;
+    else process.env.HOME = originalHome;
+  }
 });
 
 test("judge verdicts require the exact passing contract", () => {

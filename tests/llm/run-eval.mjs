@@ -17,14 +17,20 @@ const evidencePath = join(artifactDirectory, "evidence.json");
 const examples = [
   "basic-no-ui",
   "backend-no-ui",
+  "multi-instance",
+  "native-ui",
   "protected-no-ui",
+  "react-tailwind-ui",
   "resources-prompts",
   "streaming-progress",
 ];
 const expectedPaths = {
   "basic-no-ui": [["tools/call", "get-bean-details"]],
-  "backend-no-ui": [["tools/call", "create-bean-report"]],
+  "backend-no-ui": [["tools/call", "search-coffee-catalog"]],
+  "multi-instance": [["tools/call", "create-shared-bean-report"]],
+  "native-ui": [["tools/call", "preview-bean-report"]],
   "protected-no-ui": [["tools/call", "get-private-inventory-report"]],
+  "react-tailwind-ui": [["tools/call", "preview-bean-report"]],
   "resources-prompts": [
     ["resources/read", "guide://coffee/getting-started"],
     ["prompts/get", "brew-guide"],
@@ -32,12 +38,12 @@ const expectedPaths = {
   "streaming-progress": [["tools/call", "roast-sample-batch"]],
 };
 const providerFlag = process.argv.indexOf("--provider");
-const provider = providerFlag >= 0 ? process.argv[providerFlag + 1] : "claude";
-const authoritative = provider === "copilot";
+const provider = providerFlag >= 0 ? process.argv[providerFlag + 1] : "claude-local";
+const authoritative = provider === "claude-ci";
 const startedAt = new Date().toISOString();
 const suiteTimeoutMs = 38 * 60_000;
 
-if (!new Set(["claude", "copilot"]).has(provider)) {
+if (!new Set(["claude-local", "claude-ci"]).has(provider)) {
   throw new Error(`unsupported semantic provider: ${provider}`);
 }
 
@@ -82,7 +88,7 @@ function run(command, args, options = {}) {
 function cleanEnvironment(extra = {}) {
   return Object.fromEntries(Object.entries({
     CI: "true",
-    EMSEEPEA_COPILOT_TOKEN_FILE: process.env.EMSEEPEA_COPILOT_TOKEN_FILE,
+    CLAUDE_CODE_OAUTH_TOKEN: authoritative ? process.env.CLAUDE_CODE_OAUTH_TOKEN : undefined,
     EMSEEPEA_EVAL_PROVIDER: provider,
     EMSEEPEA_EVAL_PROVIDER_EVIDENCE: providerEvidence,
     GITHUB_RUN_ID: process.env.GITHUB_RUN_ID,
@@ -195,8 +201,8 @@ try {
   if (authoritative && !workingTreeClean) {
     throw new Error("authoritative evaluation requires a clean exact-commit checkout");
   }
-  if (authoritative && !process.env.EMSEEPEA_COPILOT_TOKEN_FILE) {
-    throw new Error("authoritative evaluation requires EMSEEPEA_COPILOT_TOKEN_FILE");
+  if (authoritative && !process.env.CLAUDE_CODE_OAUTH_TOKEN?.trim()) {
+    throw new Error("authoritative evaluation requires Claude subscription authentication");
   }
   promptfoo = await run(
     join(repoRoot, "node_modules/.bin/promptfoo"),
@@ -233,7 +239,7 @@ try {
 
 const config = await readFile(configPath);
 const packageVersions = {
-  copilot: await packageVersion("@github/copilot"),
+  claudeCode: await packageVersion("@anthropic-ai/claude-code"),
   promptfoo: await packageVersion("promptfoo"),
 };
 const runUrl = process.env.GITHUB_RUN_ID && process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY
@@ -252,7 +258,7 @@ const evidence = {
       .map(({ description, score, success }) => ({ description, score, success })),
   }])),
   finishedAt: new Date().toISOString(),
-  model: authoritative ? "claude-sonnet-4.6" : "local Claude advisory",
+  model: "claude-sonnet-4-6",
   packageVersions,
   provider,
   providerTimeoutMs: 120_000,

@@ -1,0 +1,24 @@
+{
+  "name": "@emseepea/tailwind",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "exports": {
+    "./styles.css": "./dist/emseepea.css"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tailwindcss -i src/emseepea.css -o dist/emseepea.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.3",
+    "tailwindcss": "4.3.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

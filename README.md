@@ -8,18 +8,19 @@ it does not claim complete MCP coverage.
 
 ## What Works Now
 
-- public and OAuth-protected tools
-- checked direct and mapped backend calls
-- static resources and non-enumerating resource templates
-- prompts and opt-in completion
-- bounded, loopback-only POST streaming progress
-- JSON fallback for streaming tools
-- Fastify-first HTTP serving on Node.js 22 and 24
+- tools anyone can use and tools that require sign-in
+- direct tool calls and tools connected to another service
+- input and result checks before data crosses a boundary
+- resources, reusable resource addresses, and prompts
+- optional suggestions for prompt and resource fields
+- live progress for local, single-server examples
+- current-source work for two local server processes sharing a SQLite report
+  store, checked in a fresh local copy
+- Fastify servers on Node.js 22 and 24
 
-The bounded streaming slice passed its
-[Node.js 22 and 24 qualification run][streaming-quality]. Production and
-intermediary streaming are not implemented. The protected example still
-requires exact-commit quality and authoritative semantic qualification.
+The live-progress feature passed its
+[Node.js 22 and 24 test run][streaming-quality]. It is not ready for production
+servers or proxies yet.
 
 ## Verify It Locally
 
@@ -28,16 +29,16 @@ npm ci --ignore-scripts
 npm test
 ```
 
-This required check builds every workspace and tests the public MCP boundary
-through the real Fastify endpoint.
+This builds every package and tests it through a real Fastify endpoint.
 
 It covers:
 
-- anonymous discovery and public listing
-- public tools, resources, prompts, templates, and completion
-- protected calls failing before handler execution
-- checked backend results and redacted failures
-- loopback streaming progress through raw HTTP and the official MCP client
+- finding the server and listing what it offers without signing in
+- using tools, resources, prompts, reusable resource addresses, and suggestions
+- rejecting calls that need sign-in before their code runs
+- checking results from connected services without exposing private errors
+- reporting progress through raw HTTP and the official MCP client
+- creating one stored report when two local server processes share a request ID
 
 For detailed gates and evidence, see the [quality policy][quality-policy] and
 [0.0.1 release-readiness review][release-readiness].
@@ -52,26 +53,31 @@ npm run build
 
 Then choose one example:
 
-- `npm run start:basic` - direct public tool
-- `npm run start:backend` - mapped backend report
-- `npm run start:protected` - public discovery with protected inventory data
+- `npm run start:basic` - a small tool with sample coffee data
+- `npm run start:backend` - a coffee report assembled from another service
+- `npm run start:protected` - a tool that requires a sample sign-in token
 - `npm run start:resources-prompts` - resources, templates, prompts, and completion
 - `npm run start:streaming` - loopback streaming progress with JSON fallback
+- `npm run start:multi-instance` - two local servers sharing one SQLite report store
+- `npm run start:native-ui` - a server-rendered form
+- `npm run start:react-ui` - the same form using React and the Em See Pea stylesheet
 
-The protected example uses the public synthetic token `example-access-token`.
-It demonstrates the verifier boundary only; it is not production OAuth.
+The sign-in example uses the made-up token `example-access-token`. It shows
+where token checking fits. It is not a production sign-in system.
 
 ## Check Whether a Language Model Understands the Results
 
 ```sh
+npm run claude:prepare
+npm run claude:login
 npm run test:eval
 ```
 
-This local advisory Promptfoo gate checks whether a language model interprets
-each live example result correctly. Returning valid JSON is not enough.
+This Promptfoo check asks a language model questions about every running
+example. It catches answers that look plausible but misunderstand the data.
+Returning valid JSON is not enough.
 
-The authoritative release gate uses GitHub Copilot CLI on the exact commit. It
-remains pending and fails closed.
+Skip `npm run claude:login` when Claude is already signed in on your computer.
 
 ## Run the Provisional Performance Check
 
@@ -79,47 +85,50 @@ remains pending and fails closed.
 npm run benchmark
 ```
 
-This measures the current JSON boundary. It does not make a performance claim
-for backends, protected paths, resources, prompts, completion, or streaming.
+This measures the current JSON handling. It does not measure connected
+services, tools that require sign-in, resources, prompts, suggestions, or live
+progress.
 
 ## Current Security Boundary
 
-The framework checks bearer-token expiry, required scopes, and resource
-matching through the official software development kit (SDK) boundary.
+The framework can check whether a bearer token has expired and whether it grants
+the required permission for this server.
 
 Adopters remain responsible for:
 
-- validating token integrity and issuer
-- independently bounding or cancelling network and file operations started by
-  the verifier
-- object and tenant authorization
-- safe outbound HTTP policy
+- checking that tokens are genuine and come from the expected issuer
+- stopping slow network and file operations started during token checks
+- deciding which records and organisations each person may access
+- controlling which external addresses the server may contact
 
-The `server/discover` and `tools/list` operations remain public even when a tool
-requires authorization.
+People can still discover the server and list its tools without signing in,
+even when using a tool requires permission.
 
-## Not Implemented Yet
+## Not Included Yet
 
-- effects, transactions, retries, or idempotency
-- template enumeration, protected resources, or protected prompts
-- pagination or configurable cache hints
-- production or intermediary streaming
-- subscriptions, replay, sessions, or resynchronisation
-- shared state or multi-instance guarantees
-- React, Tailwind, or native approval UI packages
-- full active server-surface conformance
+- tools that write data, group changes, retry failed requests, or safely repeat
+  the same write
+- listing every possible resource address or requiring sign-in for resources and
+  prompts
+- large result lists or configurable caching
+- production streaming through proxy servers
+- saved sessions, subscriptions, replay, or reconnect recovery
+- shared operation across computers or a promise that retries change an
+  external service only once
+- full coverage of the active MCP server protocol
 
 Publication does not expand these claims.
 
 ## Project Documents
 
+- [Getting started from source](docs/guides/getting-started.md)
 - [Battle plan](BATTLE-PLAN.md)
 - [Quality policy][quality-policy]
 - [Release-readiness review][release-readiness]
 - [Risk register](docs/risks/README.md)
 - [Server package decision](docs/decisions/0016-em-see-pea-product-npm-scope-and-server-package.proposed.md)
-- [Public discovery and protected invocation][public-discovery]
-- [Semantic example qualification][semantic-qualification]
+- [Public discovery and sign-in checks][public-discovery]
+- [Language-model understanding checks][semantic-qualification]
 - [Cognitive-accessibility publication rule][cognitive-publication]
 - [Brand style guide](docs/brand/STYLE-GUIDE.md)
 
@@ -130,5 +139,5 @@ private npm workspaces. Only `@emseepea/server` is eligible for publication.
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md
 [quality-policy]: QUALITY.md
 [release-readiness]: docs/reviews/0.0.1-release-readiness.md
-[semantic-qualification]: docs/decisions/0022-harness-mediated-semantic-llm-qualification-for-examples-and-releases.proposed.md
+[semantic-qualification]: docs/decisions/0024-subscription-backed-claude-semantic-release-checks.proposed.md
 [streaming-quality]: https://github.com/windyroad/emseepea/actions/runs/33070295308

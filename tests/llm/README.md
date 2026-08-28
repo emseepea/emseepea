@@ -1,20 +1,30 @@
-# Semantic Example Qualification
+# Language-Model Understanding Checks
 
-Promptfoo runs one semantic case for every example. Each case has three fresh
-agent trials and three independent judge verdicts, plus deterministic critical
-facts and MCP path evidence. For each trial, the harness executes the exact live
-operation through the official client and gives the bound result to the agent;
-the agent and judge receive no MCP tools.
+Promptfoo checks whether a language model understands every example. Each
+example gets three fresh answers and three independent reviews. The test also
+checks important facts and records which MCP operation supplied the data. The
+model receives the question and result, but it cannot call MCP tools itself.
 
-Run the local Claude advisory gate after authenticating Claude CLI:
+Prepare the pinned Claude CLI, then run the local check after signing in:
 
 ```sh
+npm run claude:prepare
+npm run claude:login
 npm run test:eval
 ```
 
-GitHub Actions runs `npm run test:eval:ci` with the pinned GitHub Copilot CLI and
-`claude-sonnet-4.6`. Only that exact-commit run can satisfy the release gate.
-Generated redacted evidence is written under `artifacts/llm-eval/`. Advisory
-evidence records whether the worktree is dirty and includes a source digest.
-Promptfoo retries are disabled; provider-internal transport retries are reported
-as unobservable and remain bounded by the provider timeout.
+The preparation command makes the locked Claude CLI executable. It does not
+sign in or run the language-model check.
+
+The local check uses the Claude CLI account already signed in on your computer.
+The repository does not read or store that account's credentials. GitHub uses
+the repository's Claude OAuth secret instead.
+
+Skip `npm run claude:login` when Claude is already signed in on your computer.
+
+GitHub Actions runs `npm run test:eval:ci` with the pinned Claude CLI and
+`claude-sonnet-4-6`, using the repository's Claude subscription secret. Only a
+passing check for the code being released permits publication. Redacted results
+are written under `artifacts/llm-eval/`. The local result records whether files
+have uncommitted changes. Promptfoo does not retry a failed answer, and every
+Claude call has a time limit.

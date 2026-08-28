@@ -1,13 +1,22 @@
-# Backend No-UI Example
+# Public Web Service Backend Example
 
-This example exposes one read-only `create-bean-report` tool through the public
-`defineMappedTool` API. It optionally filters a validated JSON catalogue by
-roast and returns a useful report.
+This example exposes one read-only `search-coffee-catalog` tool. A normal run
+searches [BrewMark's public coffee catalogue](https://brewmark.io/developers/api-docs)
+and returns at most five coffees.
 
-Unlike the [basic no-UI example](../basic-no-ui/README.md), this example has a
-genuine public/private contract boundary. Public camel-case filters and report
-fields are mapped to and from private snake-case backend commands and rows. The
-file path remains module-owned and cannot be selected by the caller.
+Unlike the [basic no-UI example](../basic-no-ui/README.md), this tool adapts a
+separate service. The public input and result use the Model Context Protocol
+(MCP). BrewMark's query and response are checked before the result is returned.
+
+The caller can choose a search term and roast filter. The caller cannot change
+the website, path, result limit, sort order, credentials, or HTTP rules. Search
+terms are sent to BrewMark. The example does not send authentication details or
+change data. Do not include personal, secret, or confidential information in a
+search term.
+
+The automated checks use invented coffee records through the same MCP server.
+They do not depend on BrewMark being available and do not make a speed or uptime
+claim for BrewMark. Normal runs use BrewMark's fair-use public web service.
 
 ## Run
 
@@ -21,5 +30,6 @@ npm run start:backend
 
 The endpoint is `http://127.0.0.1:3000/mcp`.
 
-Run the HTTP-boundary checks with `npm test`.
-Run this example's three-trial semantic MCP case with `npm run test:eval`.
+Run the server boundary checks with `npm test`.
+Run the full language-model understanding suite with `npm run test:eval`; it
+includes this example.

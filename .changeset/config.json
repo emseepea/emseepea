@@ -14,9 +14,15 @@
   "ignore": [
     "@emseepea/example-basic-no-ui",
     "@emseepea/example-backend-no-ui",
+    "@emseepea/example-multi-instance",
+    "@emseepea/example-native-ui",
     "@emseepea/example-protected-no-ui",
+    "@emseepea/example-react-tailwind-ui",
     "@emseepea/example-resources-prompts",
-    "@emseepea/example-streaming-progress"
+    "@emseepea/example-streaming-progress",
+    "@emseepea/example-ui-shared",
+    "@emseepea/react",
+    "@emseepea/tailwind"
   ],
   "privatePackages": {
     "version": true,

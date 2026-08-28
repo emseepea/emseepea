@@ -4,8 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import test from "node:test";
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { OAuthError, OAuthErrorCode } from "@modelcontextprotocol/server";
-import { createEmseepea, defineMappedTool, serveEmseepea } from "@emseepea/server";
+import { createEmseepea, defineMappedTool, defineTool, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
 const meta = {
@@ -225,8 +226,149 @@ test("disconnect cancels a cooperating adapter", async () => {
   }
 });
 
+test("mapped-tool availability rejects only dependent work", async () => {
+  let available = false;
+  let availabilityFailure = false;
+  let availabilityCalls = 0;
+  let mapCalls = 0;
+  let adapterCalls = 0;
+  let contextWasFrozen = false;
+  const definition = {
+    name: "provider-backed-report",
+    access: "public",
+    description: "Read a report only while its provider is available.",
+    inputSchema: z.object({ id: z.string() }),
+    outputSchema: z.object({ id: z.string() }),
+    backendInputSchema: z.object({ id: z.string() }),
+    backendOutputSchema: z.object({ id: z.string() }),
+    isAvailable(context) {
+      availabilityCalls += 1;
+      contextWasFrozen = Object.isFrozen(context);
+      if (availabilityFailure) throw new Error("availability-secret-sentinel");
+      return available;
+    },
+    mapInput({ id }) {
+      mapCalls += 1;
+      return { id };
+    },
+    adapter({ id }) {
+      adapterCalls += 1;
+      return { id };
+    },
+    mapOutput: ({ id }) => ({ text: id, data: { id } }),
+  };
+  const reportTool = defineMappedTool(definition);
+  definition.isAvailable = () => true;
+  const statusTool = defineTool({
+    name: "independent-status",
+    access: "public",
+    description: "Show that unrelated tools remain available.",
+    inputSchema: z.object({}),
+    outputSchema: z.object({ ready: z.boolean() }),
+    handler: () => ({ text: "ready", data: { ready: true } }),
+  });
+  const app = createEmseepea({
+    name: "provider-availability-test",
+    version: "0.0.0",
+    tools: [reportTool, statusTool],
+  });
+  const running = await serveEmseepea(app, { port: 0 });
+  const client = new Client(
+    { name: "provider-availability-client", version: "0.0.0" },
+    { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+  );
+  await client.connect(new StreamableHTTPClientTransport(running.url));
+
+  try {
+    const listed = await client.listTools();
+    assert.ok(listed.tools.some(({ name }) => name === "provider-backed-report"));
+
+    const invalid = await rpc(running.url, "provider-backed-report", { id: 42 });
+    assert.equal(invalid.body.result.isError, true);
+    assert.equal(availabilityCalls, 0);
+    assert.equal(mapCalls, 0);
+    assert.equal(adapterCalls, 0);
+
+    const unavailable = await rpc(running.url, "provider-backed-report", { id: "report-1" });
+    assert.equal(unavailable.body.result.content[0].text, "Tool execution failed");
+    assert.equal(availabilityCalls, 1);
+    assert.equal(contextWasFrozen, true);
+    assert.equal(mapCalls, 0);
+    assert.equal(adapterCalls, 0);
+
+    availabilityFailure = true;
+    const rejected = await rpc(running.url, "provider-backed-report", { id: "report-1" });
+    assert.equal(rejected.body.result.content[0].text, "Tool execution failed");
+    assert.doesNotMatch(JSON.stringify(rejected.body), /availability-secret-sentinel/);
+    assert.equal(mapCalls, 0);
+    assert.equal(adapterCalls, 0);
+    availabilityFailure = false;
+
+    const independent = await rpc(running.url, "independent-status", {});
+    assert.deepEqual(independent.body.result.structuredContent, { ready: true });
+    const readiness = await fetch(new URL("/readyz", running.url));
+    assert.equal(readiness.status, 200);
+    assert.equal(await readiness.text(), "ready\n");
+
+    available = true;
+    const report = await rpc(running.url, "provider-backed-report", { id: "report-1" });
+    assert.deepEqual(report.body.result.structuredContent, { id: "report-1" });
+    assert.equal(mapCalls, 1);
+    assert.equal(adapterCalls, 1);
+  } finally {
+    await client.close();
+    await running.close();
+  }
+});
+
+test("mapped-tool availability shares cancellation and deadline", async () => {
+  let mapCalls = 0;
+  let observedAbort = false;
+  const tool = defineMappedTool({
+    name: "slow-provider-check",
+    access: "public",
+    description: "Wait for a provider check.",
+    inputSchema: z.object({}),
+    outputSchema: z.object({ done: z.boolean() }),
+    backendInputSchema: z.object({}),
+    backendOutputSchema: z.object({ done: z.boolean() }),
+    async isAvailable({ signal }) {
+      try {
+        await delay(5_000, undefined, { signal });
+        return true;
+      } catch (error) {
+        observedAbort = signal.aborted;
+        throw error;
+      }
+    },
+    mapInput() {
+      mapCalls += 1;
+      return {};
+    },
+    adapter: () => ({ done: true }),
+    mapOutput: (value) => ({ text: "done", data: value }),
+  });
+  const app = createEmseepea({
+    name: "provider-availability-timeout-test",
+    version: "0.0.0",
+    tools: [tool],
+    operationTimeoutMs: 50,
+  });
+  const running = await serveEmseepea(app, { port: 0 });
+
+  try {
+    const result = await rpc(running.url, "slow-provider-check", {});
+    assert.equal(result.body.result.content[0].text, "Tool execution failed");
+    assert.equal(observedAbort, true);
+    assert.equal(mapCalls, 0);
+  } finally {
+    await running.close();
+  }
+});
+
 test("protected mapped tools reject authorization failures before adapter execution", async () => {
   let verifierCalls = 0;
+  let availabilityCalls = 0;
   let adapterCalls = 0;
   const tool = defineMappedTool({
     name: "protected-adapter",
@@ -237,6 +379,10 @@ test("protected mapped tools reject authorization failures before adapter execut
     outputSchema: z.object({ id: z.string() }),
     backendInputSchema: z.object({ id: z.string() }),
     backendOutputSchema: z.object({ id: z.string() }),
+    isAvailable: () => {
+      availabilityCalls += 1;
+      return true;
+    },
     mapInput: ({ id }) => ({ id }),
     adapter: ({ id }) => {
       adapterCalls += 1;
@@ -272,9 +418,11 @@ test("protected mapped tools reject authorization failures before adapter execut
   try {
     assert.equal((await rpc(running.url, "protected-adapter", { id: "missing" })).response.status, 401);
     assert.equal(verifierCalls, 0);
+    assert.equal(availabilityCalls, 0);
     assert.equal(adapterCalls, 0);
     assert.equal((await rpc(running.url, "protected-adapter", { id: "invalid" }, "bad")).response.status, 401);
     assert.equal(verifierCalls, 1);
+    assert.equal(availabilityCalls, 0);
     assert.equal(adapterCalls, 0);
   } finally {
     await running.close();

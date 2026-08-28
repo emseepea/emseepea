@@ -29,6 +29,8 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { isIP } from "node:net";
 import { z } from "zod";
 
+export * from "./ui.js";
+
 const PROTOCOL_VERSION = "2026-07-28";
 const REGISTER = Symbol("register");
 const TOOL_NAME = Symbol("toolName");
@@ -130,11 +132,15 @@ interface MappedToolDefinitionBase<
 > extends ToolDefinitionBase<Input, Output> {
   readonly backendInputSchema: BackendInput;
   readonly backendOutputSchema: BackendOutput;
+  /** Side-effect-free provider check. The tool stays listed while unavailable. */
+  readonly isAvailable?: (
+    context: BackendAdapterContext,
+  ) => boolean | Promise<boolean>;
   readonly mapInput: (input: z.output<Input>) => z.input<BackendInput>;
   readonly adapter: (
     input: z.output<BackendInput>,
     context: BackendAdapterContext,
-  ) => z.input<BackendOutput> | Promise<z.input<BackendOutput>>;
+  ) => unknown | Promise<unknown>;
   readonly mapOutput: (output: z.output<BackendOutput>) => ToolResult<z.input<Output>>;
 }
 export type MappedToolDefinition<
@@ -308,7 +314,7 @@ export function defineMappedTool<
   BackendInput extends z.ZodObject,
   BackendOutput extends z.ZodObject,
 >(definition: MappedToolDefinition<Input, Output, BackendInput, BackendOutput>): EmseepeaTool {
-  const { backendInputSchema, backendOutputSchema, adapter } = definition;
+  const { backendInputSchema, backendOutputSchema, isAvailable, adapter } = definition;
   const mapInput = definition.mapInput as unknown as (
     input: z.output<Input>,
   ) => z.input<BackendInput>;
@@ -316,13 +322,19 @@ export function defineMappedTool<
     output: z.output<BackendOutput>,
   ) => ToolResult<z.input<Output>>;
   const execute = async (input: z.output<Input>, context: ToolContext) => {
-    const command = await backendInputSchema.safeParseAsync(mapInput(input));
-    if (!command.success) throw new Error("Mapped backend command does not match its schema");
-    context.signal.throwIfAborted();
-    const backendResult = await adapter(command.data, {
+    const adapterContext = Object.freeze({
       signal: context.signal,
       deadlineMs: context.deadlineMs,
     });
+    context.signal.throwIfAborted();
+    if (isAvailable && await isAvailable(adapterContext) !== true) {
+      throw new Error("Mapped tool provider is unavailable");
+    }
+    context.signal.throwIfAborted();
+    const command = await backendInputSchema.safeParseAsync(mapInput(input));
+    if (!command.success) throw new Error("Mapped backend command does not match its schema");
+    context.signal.throwIfAborted();
+    const backendResult = await adapter(command.data, adapterContext);
     context.signal.throwIfAborted();
     const parsedBackendResult = await backendOutputSchema.safeParseAsync(backendResult);
     if (!parsedBackendResult.success) throw new Error("Backend result does not match its schema");

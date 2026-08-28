@@ -1,7 +1,7 @@
 {
   "name": "@emseepea/server",
   "version": "0.0.0",
-  "description": "Fastify-first framework for MCP 2026-07-28 servers over Streamable HTTP",
+  "description": "Fastify-first framework for Model Context Protocol 2026-07-28 servers over Streamable HTTP",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -20,6 +20,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./ui": {
+      "types": "./dist/ui.d.ts",
+      "import": "./dist/ui.js"
+    },
+    "./http": {
+      "types": "./dist/http.d.ts",
+      "import": "./dist/http.js"
     }
   },
   "files": [

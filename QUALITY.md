@@ -85,16 +85,17 @@ Accessibility Guidelines (WCAG) conformance.
 - User interface examples must test both light and dark color pairs, keyboard
   operation, accessible names, focus visibility, status announcements, and
   Web Content Accessibility Guidelines (WCAG) 2.2 AA.
-- Every example must have a Promptfoo semantic case with three fresh agent
-  trials, three independent no-MCP (no Model Context Protocol tools) judge
-  verdicts, deterministic critical facts, and exact Model Context Protocol
-  (MCP) path evidence. All three trials must pass.
+- Every example must have a Promptfoo language-model understanding case. It
+  requires three fresh answers, three independent judgments made without MCP
+  tools, fixed critical facts, and evidence of the exact MCP operation. All
+  three answers must pass.
 - For every trial, the harness must execute the exact tool call, resource read,
   or prompt get through the official client and bind the operation and returned
-  material to evidence. Model processes receive no MCP tools; claims are about
-  semantic interpretation, not autonomous selection.
-- Semantic evaluation has no semantic retries. Provider, model, credential,
-  path, judge, timeout, configuration, or artifact uncertainty fails closed.
+  material to evidence. Model processes receive no MCP tools; the check measures
+  whether the model understands returned data, not whether it chooses a tool.
+- The understanding check never retries a wrong answer. An unknown provider,
+  model, credential, path, judgment, timeout, configuration, or evidence result
+  stops publication.
 - Promptfoo provider retries are disabled. Provider-internal transport retries
   are reported as unobservable and remain bounded by the provider timeout.
 
@@ -104,19 +105,20 @@ Accessibility Guidelines (WCAG) conformance.
 - Pin third-party GitHub Actions to immutable commit SHAs and document the
   corresponding release tag in a comment.
 - Use least-privilege workflow permissions, timeouts, and concurrency controls.
-- Keep authoritative semantic evaluation in a separate job with only
-  `contents: read` and `copilot-requests: write`. Never run it with credentials
-  against untrusted fork code.
+- Keep the required language-model understanding check in a separate job with
+  only `contents: read`. Never run it with credentials against untrusted fork
+  code.
 - Changesets creates or updates the release pull request. Only
-  `@emseepea/server` may publish under `next`, after required pull-request checks
-  and exact merged-commit qualification pass. The root and examples remain
-  private.
-- The release job must depend on authoritative Promptfoo qualification of the
-  exact publishing SHA through pinned GitHub Copilot CLI and
-  `claude-sonnet-4.6`. Redacted evidence is retained for exactly 14 days.
-- Routine publication uses npm trusted publishing, automatic provenance,
-  checksum and software bill of materials (SBOM) evidence, and no durable npm
-  write token.
+  `@emseepea/server`, `@emseepea/react`, and `@emseepea/tailwind` may publish
+  under `next`. Required pull-request and language-model checks must pass for
+  the merged commit. The root and examples remain private.
+- The release job must depend on a passing Promptfoo check for the publishing
+  SHA through pinned Claude CLI and `claude-sonnet-4-6`. It uses the Claude
+  subscription OAuth secret, and redacted evidence is retained for exactly 14
+  days.
+- Routine publication uses npm trusted publishing without a long-lived npm
+  write token. It records the source and build, a checksum, and a list of the
+  package's included software dependencies.
 - Do not add deployment, production attestation, signing, or environment
   verification workflows to this framework repository.
 

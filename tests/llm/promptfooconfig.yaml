@@ -61,29 +61,68 @@ tests:
         For Highland Bloom, give me its origin, variety, processing method,
         roast, and tasting notes. Keep those concepts distinct.
       requiredPaths: tools/call:get-bean-details
-      criticalFacts: Synthetic Highlands|Bourbon|natural|medium|berry|cocoa
+      criticalFacts: Sample Highlands|Bourbon|natural|medium|berry|cocoa
     assert:
       - type: llm-rubric
         value: >-
           The answer says Highland Bloom is a medium-roast, naturally processed
-          Bourbon from Synthetic Highlands with berry and cocoa tasting notes.
+          Bourbon from Sample Highlands with berry and cocoa tasting notes.
           It does not confuse origin, variety, process, roast, or tasting notes.
 
-  - description: Backend no-UI filtered report count is interpreted correctly
+  - description: Backend no-UI coffee ratings are interpreted correctly
     vars:
       example: backend-no-ui
       question: >-
-        Produce a report for dark-roast beans. How many matching beans are
-        there, and what are their names and origins? Make clear what the count
-        represents.
-      requiredPaths: tools/call:create-bean-report
-      criticalFacts: 1|Forest Ember|Synthetic Range|dark
+        Search the coffee catalogue for natural coffees. Name each returned
+        coffee, its roaster and origin, say whether more matches are available,
+        and explain exactly what the acidity and body scores mean. Which coffee
+        is more acidic, and which has the fuller body?
+      requiredPaths: tools/call:search-coffee-catalog
+      criticalFacts: Riverlight Natural|North Star Sample Roasters|Burundi|Cedar Grove|Harbour Sample Coffee|Colombia|more matches|low acidity|high acidity|light body|full body
     assert:
       - type: llm-rubric
         value: >-
-          The answer reports exactly one matching dark-roast bean: Forest Ember
-          from Synthetic Range. It treats one as the filtered result count, not
-          the total catalogue size, and invents no additional matching bean.
+          The answer reports Riverlight Natural by North Star Sample Roasters
+          from Burundi and Cedar Grove by Harbour Sample Coffee from Colombia.
+          It says more matches are available. It explains that acidity runs
+          from 1 for low acidity to 5 for high acidity, while body runs from 1
+          for light body to 5 for full body. It therefore identifies Riverlight
+          Natural, scored 5 versus 2, as more acidic and Cedar Grove, scored 4
+          versus 2, as having the fuller body. It does not treat either score as
+          a quality rating or reverse either scale.
+
+  - description: Multi-instance report replay is not mistaken for a second report
+    vars:
+      example: multi-instance
+      question: >-
+        Summarize daily-roast-report. Which server instance originally created
+        it, what are the roast counts, and what happens if another server
+        instance uses the same request ID?
+      requiredPaths: tools/call:create-shared-bean-report
+      criticalFacts: eval-instance|total beans|4|1 light|2 medium|1 dark|same stored report|does not create
+    assert:
+      - type: llm-rubric
+        value: >-
+          The answer says eval-instance originally created daily-roast-report,
+          which covers four beans: one light, two medium, and one dark. It says
+          another server using the same request ID receives that original
+          stored report and does not create a second report.
+
+  - description: Native UI preview is not mistaken for a completed effect
+    vars:
+      example: native-ui
+      question: >-
+        Summarize the dark-roast preview. Was a report sent or stored, and did
+        this operation change anything?
+      requiredPaths: tools/call:preview-bean-report
+      criticalFacts: Forest Ember|Sample Range|preview-only|false|No report was sent or stored
+    assert:
+      - type: llm-rubric
+        value: >-
+          The answer identifies Forest Ember from Sample Range as the one
+          dark-roast match. It says the result is preview-only,
+          effectPerformed is false, no report was sent or stored, and no
+          external action or data change occurred.
 
   - description: Protected inventory availability is interpreted correctly
     vars:
@@ -99,6 +138,22 @@ tests:
           The answer calculates 85 bags available to promise as 120 on hand
           minus 35 reserved. It says the 40 inbound bags are not yet available
           to promise and does not add them to the current 85.
+
+  - description: React UI preview is not mistaken for a completed effect
+    vars:
+      example: react-tailwind-ui
+      question: >-
+        Summarize the dark-roast preview. Was a report sent or stored, and did
+        this operation change anything?
+      requiredPaths: tools/call:preview-bean-report
+      criticalFacts: Forest Ember|Sample Range|preview-only|false|No report was sent or stored
+    assert:
+      - type: llm-rubric
+        value: >-
+          The answer identifies Forest Ember from Sample Range as the one
+          dark-roast match. It says the result is preview-only,
+          effectPerformed is false, no report was sent or stored, and no
+          external action or data change occurred.
 
   - description: Resource and prompt distinguish strength from extraction
     vars:

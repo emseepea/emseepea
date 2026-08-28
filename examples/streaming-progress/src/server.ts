@@ -5,7 +5,7 @@ import { z } from "zod";
 const roastBatch = defineStreamingTool({
   name: "roast-sample-batch",
   access: "public",
-  description: "Run a synthetic coffee-roasting batch with bounded progress.",
+  description: "Run a sample coffee-roasting batch with bounded progress.",
   inputSchema: z.object({ batch: z.literal("sample-batch") }),
   outputSchema: z.object({
     batch: z.literal("sample-batch"),
@@ -27,7 +27,7 @@ const roastBatch = defineStreamingTool({
 const running = await serveEmseepea(createEmseepea({
   name: "emseepea-streaming-progress",
   version: "0.0.0",
-  instructions: "Use roast-sample-batch for the synthetic roast run.",
+  instructions: "Use roast-sample-batch for the sample roast run.",
   tools: [roastBatch],
 }), { port: Number.parseInt(process.env.PORT ?? "3000", 10) });
 

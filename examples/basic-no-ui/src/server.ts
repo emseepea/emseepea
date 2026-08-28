@@ -13,7 +13,7 @@ const beanDetailsSchema = z.object({
 const beans: Record<(typeof beanNames)[number], z.input<typeof beanDetailsSchema>> = {
   "Harbour Dawn": {
     name: "Harbour Dawn",
-    origin: "Synthetic Coast",
+    origin: "Sample Coast",
     variety: "Caturra",
     process: "washed",
     roast: "light",
@@ -21,7 +21,7 @@ const beans: Record<(typeof beanNames)[number], z.input<typeof beanDetailsSchema
   },
   "Highland Bloom": {
     name: "Highland Bloom",
-    origin: "Synthetic Highlands",
+    origin: "Sample Highlands",
     variety: "Bourbon",
     process: "natural",
     roast: "medium",
@@ -33,7 +33,7 @@ const getBeanDetails = defineTool({
   name: "get-bean-details",
   access: "public",
   title: "Coffee Bean Details",
-  description: "Get origin, processing, roast, and tasting details for a synthetic coffee bean.",
+  description: "Get origin, processing, roast, and tasting details for a sample coffee bean.",
   inputSchema: z.object({
     name: z.enum(beanNames),
   }),
@@ -51,7 +51,7 @@ const getBeanDetails = defineTool({
 const handler = createEmseepea({
   name: "emseepea-basic-no-ui",
   version: "0.0.0",
-  instructions: "Use get-bean-details for information about a synthetic coffee bean.",
+  instructions: "Use get-bean-details for information about a sample coffee bean.",
   tools: [getBeanDetails],
 });
 

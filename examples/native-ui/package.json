@@ -1,0 +1,19 @@
+{
+  "name": "@emseepea/example-native-ui",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@emseepea/example-ui-shared": "0.0.0",
+    "@emseepea/server": "0.0.0",
+    "@emseepea/tailwind": "0.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

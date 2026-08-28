@@ -1,14 +1,14 @@
-# Protected No-UI Example
+# Sign-In No-UI Example
 
-This loopback-only example keeps Model Context Protocol (MCP) discovery and
-tool listing public while requiring the `inventory:read` scope to call
-`get-private-inventory-report`. The report distinguishes stock on hand,
-reserved stock, stock available to promise, and inbound stock.
+This local-only example lets anyone discover the Model Context Protocol (MCP)
+server and list its tools. Calling `get-private-inventory-report` requires the
+`inventory:read` permission. The report distinguishes stock on hand, reserved
+stock, stock available to promise, and incoming stock.
 
-The token `example-access-token` and every OAuth authorization URL in this
-example are public synthetic test data. The verifier demonstrates Em See Pea's
-integration boundary; it does not validate a real token or represent production
-OAuth authorization.
+The token `example-access-token` and every sign-in address in this example are
+made up and safe to publish. The example shows where an application connects
+its own token checker. It does not validate a real token or provide production
+sign-in.
 
 ## Run
 
@@ -21,9 +21,7 @@ npm run start:protected
 ```
 
 The endpoint is `http://127.0.0.1:3000/mcp`. Clients may discover and list
-without credentials. Use `example-access-token` only to exercise the protected
-tool locally.
+without signing in. Use `example-access-token` only to try the tool locally.
 
-Run the HTTP-boundary checks with `npm test`.
-Run this example's three-trial semantic Model Context Protocol (MCP) case with
-`npm run test:eval`.
+Run the HTTP checks with `npm test`.
+Run the language-model understanding check with `npm run test:eval`.

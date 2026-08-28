@@ -135,6 +135,15 @@ defineMappedTool({
   outputSchema: schema,
   backendInputSchema: z.object({ key: z.string() }),
   backendOutputSchema: z.object({ record: z.string() }),
+  isAvailable: (context) => {
+    const deadline: number = context.deadlineMs;
+    const signal: AbortSignal = context.signal;
+    // @ts-expect-error Availability checks do not receive caller principals.
+    void context.principal;
+    void deadline;
+    void signal;
+    return true;
+  },
   mapInput: ({ value }) => ({ key: value }),
   adapter: ({ key }, context) => {
     const deadline: number = context.deadlineMs;

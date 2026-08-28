@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { appendFile, mkdtemp, readFile, rm } from "node:fs/promises";
+import { appendFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,9 +10,8 @@ import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/cli
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "../..");
 const mcpServerName = "emseepea_eval";
-const copilotModel = "claude-sonnet-4.6";
+const claudeModel = "claude-sonnet-4-6";
 const providerTimeoutMs = 120_000;
-const copilotCreditCap = 30;
 const counters = new Map();
 const sha256 = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 
@@ -23,15 +22,31 @@ const examples = {
     arguments: { name: "Highland Bloom" },
   },
   "backend-no-ui": {
-    script: "examples/backend-no-ui/dist/server.js",
-    tool: "create-bean-report",
-    arguments: { roast: "dark" },
+    script: "tests/llm/fixtures/backend-no-ui.mjs",
+    tool: "search-coffee-catalog",
+    arguments: { query: "natural" },
+  },
+  "multi-instance": {
+    script: "examples/multi-instance/dist/server.js",
+    tool: "create-shared-bean-report",
+    arguments: { requestId: "daily-roast-report" },
+    environment: { EMSEEPEA_INSTANCE: "eval-instance" },
+  },
+  "native-ui": {
+    script: "examples/native-ui/dist/server.js",
+    tool: "preview-bean-report",
+    arguments: { title: "Dark roast preview", roast: "dark", includeNotes: true },
   },
   "protected-no-ui": {
     script: "examples/protected-no-ui/dist/server.js",
     tool: "get-private-inventory-report",
     arguments: {},
     token: "example-access-token",
+  },
+  "react-tailwind-ui": {
+    script: "examples/react-tailwind-ui/dist/server.js",
+    tool: "preview-bean-report",
+    arguments: { title: "Dark roast preview", roast: "dark", includeNotes: true },
   },
   "resources-prompts": {
     script: "examples/resources-prompts/dist/server.js",
@@ -154,6 +169,10 @@ function childEnvironment(extra = {}) {
   };
 }
 
+export function exampleEnvironment(extra = {}) {
+  return childEnvironment(extra);
+}
+
 function runProcess(command, args, options = {}) {
   const { timeoutMs = providerTimeoutMs, ...spawnOptions } = options;
   return new Promise((resolveRun) => {
@@ -190,7 +209,7 @@ async function startExample(example) {
   if (!definition) throw new Error(`unknown example: ${example}`);
   const child = spawn(process.execPath, [resolve(repoRoot, definition.script)], {
     cwd: repoRoot,
-    env: childEnvironment({ NODE_ENV: "test", PORT: "0" }),
+    env: exampleEnvironment({ NODE_ENV: "test", PORT: "0", ...definition.environment }),
     stdio: ["ignore", "pipe", "pipe"],
   });
   let output = "";
@@ -243,144 +262,88 @@ function parseJsonLines(stdout) {
   return stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
 }
 
-export function parseCopilotEvents(stdout, processExitCode = 0) {
+export function parseClaudeEvents(stdout, processExitCode = 0) {
   const events = parseJsonLines(stdout);
-  const errors = events.filter(({ type }) => type === "session.error");
-  const mcpWarnings = events.filter(({ type, data }) => (
-    type === "session.warning" && data?.warningType === "mcp"
+  const result = events.findLast(({ type }) => type === "result");
+  const notLoggedIn = events.some(({ message }) => (
+    Array.isArray(message?.content)
+    && message.content.some(({ type, text }) => type === "text" && /not logged in/i.test(text ?? ""))
   ));
-  const result = events.findLast(({ type }) => type === "result");
-  const models = events
-    .filter(({ type }) => type === "model.call_start" || type === "assistant.usage")
-    .map(({ data }) => data?.model)
-    .filter(Boolean);
-  const toolEvents = events.filter(({ type }) => type === "tool.execution_start");
-  const forbiddenEvents = events.filter(({ type }) => [
-    "skill.invoked",
-    "subagent.started",
-    "subagent.selected",
-    "user_input.requested",
-  ].includes(type));
-  const loadedServers = events
-    .filter(({ type }) => type === "session.mcp_servers_loaded")
-    .flatMap(({ data }) => data?.servers ?? [])
-    .map((server) => typeof server === "string" ? server : server?.name ?? server?.serverName)
-    .filter(Boolean);
-  const answer = events
-    .filter(({ type, data }) => type === "assistant.message" && typeof data?.content === "string")
-    .map(({ data }) => data.content)
-    .filter(Boolean)
-    .at(-1);
-  if (mcpWarnings.length > 0) throw new Error(`Copilot MCP failed: ${mcpWarnings[0].data?.message ?? "unknown"}`);
-  if (errors.length > 0) throw new Error(`Copilot session failed: ${errors[0].data?.errorType ?? "unknown"}`);
-  if (processExitCode !== 0) throw new Error(
-    `Copilot process exited ${processExitCode}${result ? "" : " without a result"}`,
-  );
-  if (!result) throw new Error(
-    "Copilot exited without a result",
-  );
-  if (result.exitCode !== 0) throw new Error(`Copilot exited ${result.exitCode}`);
-  if (!answer) throw new Error("Copilot emitted no final answer");
-  if (models.length === 0 || models.some((model) => model !== copilotModel)) {
-    throw new Error(`Copilot effective model was ${models.join(", ") || "unreported"}`);
-  }
-  if (forbiddenEvents.length > 0) throw new Error(`Copilot emitted forbidden event ${forbiddenEvents[0].type}`);
-  if (loadedServers.length > 0) {
-    throw new Error(`Copilot loaded MCP servers ${loadedServers.join(", ") || "none"}`);
-  }
-  if (toolEvents.length > 0) throw new Error("Copilot used a tool");
-  return {
-    answer,
-    model: copilotModel,
-    pathEvidence: [],
-    toolCallCount: 0,
-    turnCount: events.filter(({ type }) => type === "assistant.turn_start").length,
-  };
-}
-
-export function parseClaudeEvents(stdout) {
-  const events = parseJsonLines(stdout);
-  const result = events.findLast(({ type }) => type === "result");
   const allToolUses = events.flatMap(({ message }) => (
     Array.isArray(message?.content)
       ? message.content.filter(({ type }) => type === "tool_use")
       : []
   ));
+  if (notLoggedIn) throw new Error("Claude CLI is not signed in");
+  if (processExitCode !== 0) throw new Error(`Claude exited ${processExitCode}`);
   if (result?.is_error || typeof result?.result !== "string") {
     throw new Error(
       `Claude failed: ${result?.subtype ?? "no result"}; is_error=${String(result?.is_error)}; result=${typeof result?.result}`,
     );
   }
   if (allToolUses.length > 0) throw new Error(`Claude used forbidden tool ${allToolUses[0].name}`);
+  if (result.num_turns !== 1) throw new Error(`Claude used ${String(result.num_turns)} turns`);
+  if ((result.permission_denials?.length ?? 0) > 0) throw new Error("Claude attempted a forbidden action");
+  const mainModel = result.modelUsage?.[claudeModel];
+  if (mainModel?.canonicalModel !== claudeModel || mainModel.provider !== "firstParty") {
+    throw new Error("Claude did not use the required model");
+  }
   return {
     answer: result.result,
-    model: result.modelUsage ? Object.keys(result.modelUsage)[0] ?? "claude-advisory" : "claude-advisory",
+    model: claudeModel,
+    models: Object.keys(result.modelUsage),
     pathEvidence: [],
     toolCallCount: 0,
-    turnCount: events.filter(({ type }) => type === "assistant").length,
+    turnCount: result.num_turns,
   };
 }
 
-async function runCopilot(prompt, neutralDirectory) {
-  const tokenFile = process.env.EMSEEPEA_COPILOT_TOKEN_FILE;
-  if (!tokenFile) throw new Error("EMSEEPEA_COPILOT_TOKEN_FILE is required for authoritative evaluation");
-  const token = (await readFile(tokenFile, "utf8")).trim();
-  if (!token) throw new Error("Copilot credential file is empty");
-  const args = [
-    "-C", neutralDirectory,
-    "-p", prompt,
-    "--model", copilotModel,
-    "--effort", "low",
-    "--max-ai-credits", String(copilotCreditCap),
-    "--no-ask-user",
-    "--no-custom-instructions",
-    "--disable-builtin-mcps",
-    "--disallow-temp-dir",
-    "--no-auto-update",
-    "--no-experimental",
-    "--no-remote",
-    "--no-remote-export",
-    "--no-color",
-    "--log-level", "none",
-    "--output-format", "json",
-    "--silent",
-  ];
-  args.push("--available-tools", "");
-  const execution = await runProcess(resolve(repoRoot, "node_modules/.bin/copilot"), args, {
-    cwd: neutralDirectory,
-    env: childEnvironment({
-      COPILOT_HOME: join(neutralDirectory, "copilot-home"),
-      GITHUB_TOKEN: token,
-    }),
-  });
-  if (execution.timedOut) throw new Error("Copilot provider timed out");
-  if (execution.code !== 0 && !execution.stdout) throw new Error(`Copilot exited ${execution.code}`);
-  return parseCopilotEvents(execution.stdout, execution.code);
-}
-
-async function runClaude(prompt, neutralDirectory) {
+export function claudeInvocation(provider, prompt, neutralDirectory) {
+  const token = provider === "claude-ci" ? process.env.CLAUDE_CODE_OAUTH_TOKEN?.trim() : undefined;
+  if (provider === "claude-ci" && !token) throw new Error("Claude subscription authentication is unavailable");
+  const localHome = provider === "claude-local" ? process.env.HOME : undefined;
+  if (provider === "claude-local" && !localHome?.startsWith("/")) {
+    throw new Error("local Claude evaluation requires an absolute HOME for the signed-in CLI account");
+  }
   const args = [
     "--print", prompt,
+    "--model", claudeModel,
+    "--effort", "low",
+    "--safe-mode",
     "--strict-mcp-config",
     "--disable-slash-commands",
     "--no-session-persistence",
     "--permission-mode", "dontAsk",
-    "--model", "sonnet",
-    "--effort", "low",
-    "--max-budget-usd", "0.50",
-    "--output-format", "stream-json",
-    "--verbose",
     "--setting-sources", "",
     "--tools", "",
+    "--no-chrome",
+    "--prompt-suggestions", "false",
+    "--output-format", "stream-json",
+    "--verbose",
   ];
-  args.push("--safe-mode");
-  const execution = await runProcess("claude", args, {
+  return {
+    command: resolve(repoRoot, "node_modules/.bin/claude"),
+    args,
     cwd: neutralDirectory,
-    env: childEnvironment(),
+    env: childEnvironment(provider === "claude-ci"
+      ? {
+          CLAUDE_CONFIG_DIR: join(neutralDirectory, "claude-config"),
+          HOME: neutralDirectory,
+          CLAUDE_CODE_OAUTH_TOKEN: token,
+        }
+      : { HOME: localHome }),
+  };
+}
+
+async function runClaude(provider, prompt, neutralDirectory) {
+  const invocation = claudeInvocation(provider, prompt, neutralDirectory);
+  const execution = await runProcess(invocation.command, invocation.args, {
+    cwd: invocation.cwd,
+    env: invocation.env,
   });
   if (execution.timedOut) throw new Error("Claude provider timed out");
   if (execution.code !== 0 && !execution.stdout) throw new Error(`Claude exited ${execution.code}`);
-  return parseClaudeEvents(execution.stdout);
+  return parseClaudeEvents(execution.stdout, execution.code);
 }
 
 export function parseJudgeVerdict(output) {
@@ -411,7 +374,7 @@ async function recordEvidence(record) {
 export default class SemanticProvider {
   constructor(options = {}) {
     this.role = options.config?.role ?? "agent";
-    this.provider = process.env.EMSEEPEA_EVAL_PROVIDER ?? "claude";
+    this.provider = process.env.EMSEEPEA_EVAL_PROVIDER ?? "claude-local";
   }
 
   id() {
@@ -440,15 +403,14 @@ export default class SemanticProvider {
         pathEvidence = material.pathEvidence;
         materialSha256 = createHash("sha256").update(material.text).digest("hex");
       }
-      const result = this.provider === "copilot"
-        ? await runCopilot(effectivePrompt, neutralDirectory)
-        : await runClaude(effectivePrompt, neutralDirectory);
+      const result = await runClaude(this.provider, effectivePrompt, neutralDirectory);
       const combinedEvidence = [...pathEvidence, ...result.pathEvidence];
       let output = result.answer;
       if (this.role === "judge") output = output.trim();
       const metadata = {
         example,
         model: result.model,
+        models: result.models,
         materialSha256,
         pathEvidence: combinedEvidence,
         provider: this.provider,

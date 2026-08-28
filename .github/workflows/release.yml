@@ -15,7 +15,7 @@ jobs:
   exact-sha-quality:
     name: Exact commit / Node.js ${{ matrix.node-version }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
       contents: read
     strategy:
@@ -36,6 +36,8 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
+      - name: Install the browser used by UI checks
+        run: npx playwright install --with-deps chromium
       - name: Test the public boundary
         run: npm test
       - name: Check the JSON-boundary performance budget
@@ -46,12 +48,11 @@ jobs:
         run: npm audit --audit-level=high
 
   semantic-eval:
-    name: Semantic example qualification
+    name: Check whether examples are understood
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
       contents: read
-      copilot-requests: write
     outputs:
       has_changesets: ${{ steps.release-state.outputs.has_changesets }}
     steps:
@@ -76,18 +77,24 @@ jobs:
           else
             echo "has_changesets=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Qualify every example through Model Context Protocol (MCP)
+      - name: Prepare the pinned Claude CLI
+        if: steps.release-state.outputs.has_changesets == 'false'
+        run: |
+          test "$(node -p 'require("./node_modules/@anthropic-ai/claude-code/package.json").version')" = "2.1.248"
+          npm run claude:prepare
+          npm run claude:prepare
+          test -x node_modules/.bin/claude
+          target="$(realpath node_modules/.bin/claude)"
+          case "$target" in
+            "$GITHUB_WORKSPACE"/node_modules/@anthropic-ai/claude-code/*) ;;
+            *) echo "Claude CLI resolved outside the locked package" >&2; exit 1 ;;
+          esac
+      - name: Check whether a language model understands every example
         if: steps.release-state.outputs.has_changesets == 'false'
         env:
-          EMSEEPEA_COPILOT_TOKEN: ${{ github.token }}
-          EMSEEPEA_COPILOT_TOKEN_FILE: ${{ runner.temp }}/emseepea-copilot-token
-        run: |
-          umask 077
-          printf '%s' "$EMSEEPEA_COPILOT_TOKEN" > "$EMSEEPEA_COPILOT_TOKEN_FILE"
-          unset EMSEEPEA_COPILOT_TOKEN
-          trap 'rm -f "$EMSEEPEA_COPILOT_TOKEN_FILE"' EXIT
-          npm run test:eval:ci
-      - name: Upload redacted semantic evidence
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: npm run test:eval:ci
+      - name: Upload redacted language-model evidence
         if: ${{ always() && steps.release-state.outputs.has_changesets == 'false' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -236,17 +243,31 @@ jobs:
           node --input-type=module <<'NODE'
           import {
             createEmseepea,
+            defineElicitationView,
             defineMappedTool,
             definePrompt,
             defineResource,
             defineResourceTemplate,
             defineStreamingTool,
             defineTool,
+            renderElicitationForm,
             serveEmseepea,
           } from "@emseepea/server";
           import { z } from "zod";
 
           const value = z.object({ value: z.string() });
+          const view = defineElicitationView({
+            id: "smoke-view",
+            heading: "Smoke <view>",
+            legend: "Value",
+            fields: [{ kind: "text", id: "value", name: "value", label: "Value" }],
+            submitLabel: "Continue",
+            state: { kind: "ready", focusTarget: "none" },
+          });
+          const fragment = renderElicitationForm(view, { headingLevel: 2 });
+          if (!fragment.includes("Smoke &lt;view&gt;") || fragment.includes("<html")) {
+            throw new Error("installed package did not safely render an embedded UI fragment");
+          }
           const tool = defineTool({
             name: "smoke-tool",
             access: "public",
@@ -255,6 +276,7 @@ jobs:
             outputSchema: value,
             handler: ({ value }) => ({ text: value, data: { value } }),
           });
+          let availabilityCalls = 0;
           const mapped = defineMappedTool({
             name: "smoke-mapped-tool",
             access: "public",
@@ -263,6 +285,11 @@ jobs:
             outputSchema: value,
             backendInputSchema: value,
             backendOutputSchema: value,
+            isAvailable(context) {
+              availabilityCalls += 1;
+              if (!Object.isFrozen(context) || "principal" in context) return false;
+              return true;
+            },
             mapInput: ({ value }) => ({ value }),
             adapter: ({ value }) => ({ value }),
             mapOutput: ({ value }) => ({ text: value, data: { value } }),
@@ -315,6 +342,7 @@ jobs:
                 "MCP-Protocol-Version": "2026-07-28",
                 "Mcp-Method": method,
                 ...(method === "resources/read" ? { "Mcp-Name": params.uri } : {}),
+                ...(method === "tools/call" ? { "Mcp-Name": params.name } : {}),
               },
               body: JSON.stringify({
                 jsonrpc: "2.0",
@@ -334,6 +362,13 @@ jobs:
             return response.json();
           };
           try {
+            const mappedResult = await request("tools/call", {
+              name: "smoke-mapped-tool",
+              arguments: { value: "checked" },
+            });
+            if (mappedResult.result.structuredContent?.value !== "checked" || availabilityCalls !== 1) {
+              throw new Error("installed package did not run its checked mapped-tool boundary");
+            }
             const templates = await request("resources/templates/list");
             if (templates.result.resourceTemplates[0]?.uriTemplate !== "smoke://resource/{value}") {
               throw new Error("installed package did not expose its resource template");
