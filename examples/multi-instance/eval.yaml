@@ -1,0 +1,27 @@
+description: Reusing a request ID returns the original shared report
+server: ./dist/server.js
+environment:
+  EMSEEPEA_INSTANCE: eval-instance
+operations:
+  - method: tools/call
+    name: create-shared-bean-report
+    arguments:
+      requestId: daily-roast-report
+question: >-
+  Summarize daily-roast-report. Which server instance originally created it,
+  what are the roast counts, and what happens if another server instance uses
+  the same request ID?
+criticalFacts:
+  - eval-instance
+  - total beans
+  - "4"
+  - 1 light
+  - 2 medium
+  - 1 dark
+  - same stored report
+  - does not create
+criteria: >-
+  The answer says eval-instance originally created daily-roast-report, which
+  covers four beans: one light, two medium, and one dark. It says another server
+  using the same request ID receives that original stored report and does not
+  create a second report.

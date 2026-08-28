@@ -143,20 +143,20 @@ jobs:
           else
             echo "has_changesets=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Capture the current npm latest tag
+      - name: Capture the current npm latest tags
         if: steps.release-state.outputs.has_changesets == 'false'
         id: registry-before
         run: |
           node --input-type=module <<'NODE' >> "$GITHUB_OUTPUT"
-          const response = await fetch("https://registry.npmjs.org/@emseepea%2fserver");
-          if (response.status === 404) {
-            console.log("package_exists=false");
-            console.log("latest=");
-          } else {
+          for (const [key, encoded] of [["server", "@emseepea%2fserver"], ["testing", "@emseepea%2ftesting"]]) {
+            const response = await fetch(`https://registry.npmjs.org/${encoded}`);
+            if (response.status === 404) {
+              console.log(`${key}_latest=`);
+              continue;
+            }
             if (!response.ok) throw new Error(`registry returned ${response.status}`);
             const metadata = await response.json();
-            console.log("package_exists=true");
-            console.log(`latest=${metadata["dist-tags"]?.latest ?? ""}`);
+            console.log(`${key}_latest=${metadata["dist-tags"]?.latest ?? ""}`);
           }
           NODE
       - name: Prepare package evidence
@@ -169,20 +169,24 @@ jobs:
         run: |
           mkdir -p release-artifacts
           npm pack --workspace @emseepea/server --pack-destination release-artifacts --ignore-scripts
-          npm sbom --workspace @emseepea/server --omit=dev --package-lock-only --sbom-format cyclonedx --sbom-type framework > release-artifacts/sbom.cdx.json
+          npm pack --workspace @emseepea/testing --pack-destination release-artifacts --ignore-scripts
+          npm sbom --workspace @emseepea/server --omit=dev --package-lock-only --sbom-format cyclonedx --sbom-type framework > release-artifacts/server-sbom.cdx.json
+          npm sbom --workspace @emseepea/testing --omit=dev --package-lock-only --sbom-format cyclonedx --sbom-type framework > release-artifacts/testing-sbom.cdx.json
           sha256sum release-artifacts/*.tgz > release-artifacts/SHA256SUMS
-          version="$(node -p "require('./packages/framework/package.json').version")"
-          review_record="docs/reviews/$version-release-readiness.md"
+          server_version="$(node -p "require('./packages/framework/package.json').version")"
+          testing_version="$(node -p "require('./packages/testing/package.json').version")"
+          review_record="docs/reviews/$server_version-release-readiness.md"
           test -s "$review_record"
           grep -Fqx -- '- Result: PASS' "$review_record"
           grep -Fqx -- '- Final result: within appetite.' "$review_record"
           lock_sha="$(sha256sum package-lock.json | cut -d' ' -f1)"
           cat > release-artifacts/RELEASE-EVIDENCE.md <<EOF
-          # @emseepea/server $version release evidence
+          # Em See Pea release evidence
 
           - Commit: $RELEASE_SHA
           - Workflow: $RELEASE_RUN_URL
           - Lockfile SHA-256: $lock_sha
+          - Packages: @emseepea/server $server_version; @emseepea/testing $testing_version
           - Node.js: $(node --version)
           - npm: $(npm --version)
           - GitHub CLI: $(gh --version | head -1)
@@ -204,49 +208,60 @@ jobs:
         if: steps.changesets.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LATEST_BEFORE: ${{ steps.registry-before.outputs.latest }}
+          SERVER_LATEST_BEFORE: ${{ steps.registry-before.outputs.server_latest }}
+          TESTING_LATEST_BEFORE: ${{ steps.registry-before.outputs.testing_latest }}
           PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
         run: |
-          version="$(node -p "require('./packages/framework/package.json').version")"
-          node --input-type=module -e 'const packages = JSON.parse(process.env.PUBLISHED_PACKAGES); if (!packages.some(({ name, version }) => name === "@emseepea/server" && version === process.argv[1])) throw new Error(`published package list did not include @emseepea/server@${process.argv[1]}`)' "$version"
-          published=""
-          next=""
-          provenance=""
-          for attempt in 1 2 3 4 5 6 7 8 9 10; do
-            published="$(npm view "@emseepea/server@$version" version --userconfig /dev/null 2>/dev/null || true)"
-            next="$(npm view @emseepea/server dist-tags.next --userconfig /dev/null 2>/dev/null || true)"
-            provenance="$(npm view "@emseepea/server@$version" dist.attestations.provenance.predicateType --userconfig /dev/null 2>/dev/null || true)"
-            [ "$published" = "$version" ] && [ "$next" = "$version" ] && [ "$provenance" = "https://slsa.dev/provenance/v1" ] && break
-            sleep 3
-          done
-          test "$published" = "$version"
-          test "$next" = "$version"
-          test "$provenance" = "https://slsa.dev/provenance/v1"
-          latest_after="$(node --input-type=module <<'NODE'
-          const response = await fetch("https://registry.npmjs.org/@emseepea%2fserver");
-          if (!response.ok) throw new Error(`registry returned ${response.status}`);
-          const metadata = await response.json();
-          console.log(metadata["dist-tags"]?.latest ?? "");
+          server_version="$(node -p "require('./packages/framework/package.json').version")"
+          testing_version="$(node -p "require('./packages/testing/package.json').version")"
+          SERVER_VERSION="$server_version" TESTING_VERSION="$testing_version" node --input-type=module <<'NODE'
+          const packages = JSON.parse(process.env.PUBLISHED_PACKAGES);
+          for (const [name, version] of [["@emseepea/server", process.env.SERVER_VERSION], ["@emseepea/testing", process.env.TESTING_VERSION]]) {
+            if (!packages.some((entry) => entry.name === name && entry.version === version)) {
+              throw new Error(`published package list did not include ${name}@${version}`);
+            }
+          }
           NODE
-          )"
-          test "$latest_after" = "$LATEST_BEFORE"
+          for package in "@emseepea/server@$server_version" "@emseepea/testing@$testing_version"; do
+            name="${package%@*}"
+            version="${package##*@}"
+            for attempt in 1 2 3 4 5 6 7 8 9 10; do
+              published="$(npm view "$package" version --userconfig /dev/null 2>/dev/null || true)"
+              next="$(npm view "$name" dist-tags.next --userconfig /dev/null 2>/dev/null || true)"
+              provenance="$(npm view "$package" dist.attestations.provenance.predicateType --userconfig /dev/null 2>/dev/null || true)"
+              [ "$published" = "$version" ] && [ "$next" = "$version" ] && [ "$provenance" = "https://slsa.dev/provenance/v1" ] && break
+              sleep 3
+            done
+            test "$published" = "$version"
+            test "$next" = "$version"
+            test "$provenance" = "https://slsa.dev/provenance/v1"
+          done
+          test "$(npm view @emseepea/server dist-tags.latest --userconfig /dev/null 2>/dev/null || true)" = "$SERVER_LATEST_BEFORE"
+          test "$(npm view @emseepea/testing dist-tags.latest --userconfig /dev/null 2>/dev/null || true)" = "$TESTING_LATEST_BEFORE"
           mkdir -p registry-artifacts
-          npm pack "@emseepea/server@$version" --pack-destination registry-artifacts --ignore-scripts --userconfig /dev/null
-          test "$(sha256sum release-artifacts/*.tgz | cut -d' ' -f1)" = "$(sha256sum registry-artifacts/*.tgz | cut -d' ' -f1)"
-          integrity="$(npm view "@emseepea/server@$version" dist.integrity --userconfig /dev/null)"
-          attestations_url="$(npm view "@emseepea/server@$version" dist.attestations.url --userconfig /dev/null)"
-          test -n "$integrity"
-          test -n "$attestations_url"
+          npm pack "@emseepea/server@$server_version" --pack-destination registry-artifacts --ignore-scripts --userconfig /dev/null
+          npm pack "@emseepea/testing@$testing_version" --pack-destination registry-artifacts --ignore-scripts --userconfig /dev/null
+          test "$(sha256sum release-artifacts/*.tgz | cut -d' ' -f1 | sort | tr '\n' ' ')" = "$(sha256sum registry-artifacts/*.tgz | cut -d' ' -f1 | sort | tr '\n' ' ')"
+          server_integrity="$(npm view "@emseepea/server@$server_version" dist.integrity --userconfig /dev/null)"
+          testing_integrity="$(npm view "@emseepea/testing@$testing_version" dist.integrity --userconfig /dev/null)"
+          server_attestations_url="$(npm view "@emseepea/server@$server_version" dist.attestations.url --userconfig /dev/null)"
+          testing_attestations_url="$(npm view "@emseepea/testing@$testing_version" dist.attestations.url --userconfig /dev/null)"
+          test -n "$server_integrity"
+          test -n "$testing_integrity"
+          test -n "$server_attestations_url"
+          test -n "$testing_attestations_url"
           cat >> release-artifacts/RELEASE-EVIDENCE.md <<EOF
 
-          - Registry integrity: $integrity
-          - Provenance: $attestations_url
+          - @emseepea/server registry integrity: $server_integrity
+          - @emseepea/server provenance: $server_attestations_url
+          - @emseepea/testing registry integrity: $testing_integrity
+          - @emseepea/testing provenance: $testing_attestations_url
           EOF
           smoke_dir="$(mktemp -d)"
           trap 'rm -rf "$smoke_dir"' EXIT
           cd "$smoke_dir"
           npm init --yes >/dev/null
-          npm install --ignore-scripts --userconfig /dev/null "@emseepea/server@$version"
+          npm install --ignore-scripts --userconfig /dev/null "@emseepea/server@$server_version" "@emseepea/testing@$testing_version"
           npm audit signatures --userconfig /dev/null
           node --input-type=module <<'NODE'
           import {
@@ -436,5 +451,11 @@ jobs:
           }
           NODE
           cd "$GITHUB_WORKSPACE"
-          tag="@emseepea/server@$version"
-          gh release upload "$tag" release-artifacts/RELEASE-EVIDENCE.md release-artifacts/SHA256SUMS release-artifacts/sbom.cdx.json --clobber
+          for tag in "@emseepea/server@$server_version" "@emseepea/testing@$testing_version"; do
+            gh release upload "$tag" \
+              release-artifacts/RELEASE-EVIDENCE.md \
+              release-artifacts/SHA256SUMS \
+              release-artifacts/server-sbom.cdx.json \
+              release-artifacts/testing-sbom.cdx.json \
+              --clobber
+          done

@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { serveEmseepea } from "@emseepea/server";
-import { createBackendExample } from "../../examples/backend-no-ui/dist/app.js";
-import { brewmarkFixture } from "../fixtures/brewmark.mjs";
+import { createBackendExample } from "../dist/app.js";
+import { brewmarkFixture } from "../test-support/brewmark-fixture.mjs";
 
 test("the backend example maps, checks, and explains BrewMark data", async () => {
   const requests = [];

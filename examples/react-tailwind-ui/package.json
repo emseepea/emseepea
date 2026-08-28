@@ -6,7 +6,11 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json && esbuild src/client.tsx --bundle --minify --format=esm --platform=browser --outfile=dist/client.js",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "test": "npm run build && npm run test:built",
+    "test:built": "node --test test/*.test.mjs",
+    "test:llm": "npm run build && emseepea-test eval.yaml",
+    "lint": "oxlint src test"
   },
   "dependencies": {
     "@emseepea/example-ui-shared": "0.0.0",
@@ -17,9 +21,13 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@emseepea/testing": "0.0.0",
+    "@types/node": "24.13.3",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "typescript": "6.0.3",
+    "oxlint": "1.80.0"
   },
   "engines": {
     "node": ">=22"

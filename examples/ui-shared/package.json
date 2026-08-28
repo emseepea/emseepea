@@ -11,7 +11,10 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && npm run test:built",
+    "test:built": "node --test test/*.test.mjs",
+    "lint": "oxlint src test"
   },
   "dependencies": {
     "@emseepea/server": "0.0.0",
@@ -19,5 +22,8 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "devDependencies": {
+    "oxlint": "1.80.0"
   }
 }

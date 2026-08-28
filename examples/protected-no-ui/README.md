@@ -23,5 +23,19 @@ npm run start:protected
 The endpoint is `http://127.0.0.1:3000/mcp`. Clients may discover and list
 without signing in. Use `example-access-token` only to try the tool locally.
 
-Run the HTTP checks with `npm test`.
-Run the language-model understanding check with `npm run test:eval`.
+## Check This Example
+
+Run its build, public discovery, and signed-in tool checks:
+
+```sh
+npm test -w @emseepea/example-protected-no-ui
+```
+
+Check that Claude calculates available stock correctly:
+
+```sh
+npm run test:llm -w @emseepea/example-protected-no-ui
+```
+
+If Claude is not already signed in, run `npm run claude:login` from the
+repository root first.

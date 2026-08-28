@@ -12,7 +12,10 @@ retry changes an external service only once.
 
 ## Run Both Servers
 
+From the repository root:
+
 ```sh
+npm run build
 npm run start:multi-instance
 ```
 
@@ -35,3 +38,20 @@ unavailable, that tool returns a generic failure. It stays visible in
 - One database transaction per report request.
 - No claim for multiple computers, external service changes, retries, or
   throughput.
+
+## Check This Example
+
+Run its build and two-server MCP checks:
+
+```sh
+npm test -w @emseepea/example-multi-instance
+```
+
+Check that Claude understands report replay correctly:
+
+```sh
+npm run test:llm -w @emseepea/example-multi-instance
+```
+
+If Claude is not already signed in, run `npm run claude:login` from the
+repository root first.

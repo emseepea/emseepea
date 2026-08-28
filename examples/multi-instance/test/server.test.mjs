@@ -9,7 +9,7 @@ import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/cli
 import { DatabaseSync } from "node:sqlite";
 
 const serverPath = fileURLToPath(
-  new URL("../../examples/multi-instance/dist/server.js", import.meta.url),
+  new URL("../dist/server.js", import.meta.url),
 );
 const requestMeta = {
   "io.modelcontextprotocol/protocolVersion": "2026-07-28",

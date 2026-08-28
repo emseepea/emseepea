@@ -1,0 +1,46 @@
+{
+  "name": "@emseepea/testing",
+  "version": "0.0.0",
+  "description": "MCP integration and semantic testing helpers",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/windyroad/emseepea.git",
+    "directory": "packages/testing"
+  },
+  "homepage": "https://github.com/windyroad/emseepea#readme",
+  "bugs": "https://github.com/windyroad/emseepea/issues",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "tag": "next"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "emseepea-test": "./semantic/cli.mjs"
+  },
+  "files": [
+    "dist",
+    "semantic",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && npm run test:built",
+    "test:built": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.0.0",
+    "promptfoo": "0.122.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

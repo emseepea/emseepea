@@ -36,22 +36,26 @@
     "start:multi-instance": "npm run start -w @emseepea/example-multi-instance",
     "start:react-ui": "npm run start -w @emseepea/example-react-tailwind-ui",
     "start:streaming": "npm run start -w @emseepea/example-streaming-progress",
-    "test": "npm run decisions:check && npm run build && npm run typecheck && node --experimental-test-module-mocks --test tests/black-box/*.test.mjs tests/docs/*.test.mjs tests/llm/*.test.mjs",
-    "test:eval": "npm run build && node tests/llm/run-eval.mjs --provider claude-local",
-    "test:eval:ci": "node tests/llm/run-eval.mjs --provider claude-ci",
+    "test": "npm run decisions:check && npm run lint && npm run build && npm run typecheck && npm run test:examples && node --experimental-test-module-mocks --test --test-concurrency=1 tests/black-box/*.test.mjs tests/docs/*.test.mjs tests/llm/*.test.mjs",
+    "test:examples": "npm run test:built --workspaces --if-present",
+    "test:eval": "npm run build && emseepea-test --provider claude-local examples/basic-no-ui/eval.yaml examples/backend-no-ui/eval.yaml examples/multi-instance/eval.yaml examples/native-ui/eval.yaml examples/protected-no-ui/eval.yaml examples/react-tailwind-ui/eval.yaml examples/resources-prompts/eval.yaml examples/streaming-progress/eval.yaml",
+    "test:eval:ci": "emseepea-test --provider claude-ci examples/basic-no-ui/eval.yaml examples/backend-no-ui/eval.yaml examples/multi-instance/eval.yaml examples/native-ui/eval.yaml examples/protected-no-ui/eval.yaml examples/react-tailwind-ui/eval.yaml examples/resources-prompts/eval.yaml examples/streaming-progress/eval.yaml",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "version-packages": "changeset version"
+    "version-packages": "changeset version",
+    "lint": "oxlint ."
   },
   "devDependencies": {
     "@anthropic-ai/claude-code": "2.1.248",
     "@changesets/changelog-github": "1.0.0",
     "@changesets/cli": "3.0.1",
+    "@emseepea/testing": "0.0.0",
     "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "24.13.3",
     "axe-core": "4.13.0",
     "playwright": "1.62.1",
     "promptfoo": "0.122.1",
     "typescript": "6.0.3",
-    "zod": "4.4.3"
+    "zod": "4.4.3",
+    "oxlint": "1.80.0"
   }
 }

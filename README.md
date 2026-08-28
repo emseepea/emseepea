@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/assets/emseepea-signature-horizontal-colour-on-dark.svg">
+    <img src="docs/brand/assets/emseepea-signature-horizontal-colour-on-light.svg" alt="Em See Pea wordmark with pea pod logo" width="420">
+  </picture>
+</p>
+
 # Em See Pea
 
 Em See Pea is a general-purpose framework for Model Context Protocol (MCP)
@@ -133,7 +140,8 @@ Publication does not expand these claims.
 - [Brand style guide](docs/brand/STYLE-GUIDE.md)
 
 The source and examples are public under MIT. The root and examples remain
-private npm workspaces. Only `@emseepea/server` is eligible for publication.
+private npm workspaces. Only `@emseepea/server` and `@emseepea/testing` are
+eligible for publication.
 
 [cognitive-publication]: docs/decisions/0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md

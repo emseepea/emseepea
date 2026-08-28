@@ -30,6 +30,19 @@ npm run start:backend
 
 The endpoint is `http://127.0.0.1:3000/mcp`.
 
-Run the server boundary checks with `npm test`.
-Run the full language-model understanding suite with `npm run test:eval`; it
-includes this example.
+## Check This Example
+
+Run its build, mapping, validation, and MCP checks:
+
+```sh
+npm test -w @emseepea/example-backend-no-ui
+```
+
+Check that Claude understands the catalogue and rating scales correctly:
+
+```sh
+npm run test:llm -w @emseepea/example-backend-no-ui
+```
+
+If Claude is not already signed in, run `npm run claude:login` from the
+repository root first.

@@ -55,3 +55,18 @@ test("release preparation and publication do not run when release state is unkno
     /needs\.semantic-eval\.outputs\.has_changesets == 'true' \|\| needs\.semantic-eval\.result == 'success'/,
   );
 });
+
+test("publication evidence covers both public packages", () => {
+  assert.match(workflow, /npm pack --workspace @emseepea\/server/);
+  assert.match(workflow, /npm pack --workspace @emseepea\/testing/);
+  assert.match(workflow, /npm sbom --workspace @emseepea\/server/);
+  assert.match(workflow, /npm sbom --workspace @emseepea\/testing/);
+  assert.match(workflow, /@emseepea\/testing@\$testing_version/);
+  assert.match(workflow, /published package list did not include \$\{name\}@\$\{version\}/);
+  assert.match(workflow, /@emseepea\/testing registry integrity/);
+  assert.match(workflow, /@emseepea\/server@\$server_version/);
+  assert.match(workflow, /release-artifacts\/server-sbom\.cdx\.json/);
+  assert.match(workflow, /release-artifacts\/testing-sbom\.cdx\.json/);
+  assert.doesNotMatch(workflow, /@emseepea\/server@\$version/);
+  assert.doesNotMatch(workflow, /release-artifacts\/sbom\.cdx\.json/);
+});

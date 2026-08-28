@@ -6,11 +6,22 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/start-two.js"
+    "start": "node dist/start-two.js",
+    "test": "npm run build && npm run test:built",
+    "test:built": "node --test test/*.test.mjs",
+    "test:llm": "npm run build && emseepea-test eval.yaml",
+    "lint": "oxlint src test"
   },
   "dependencies": {
     "@emseepea/server": "0.0.0",
     "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@emseepea/testing": "0.0.0",
+    "@modelcontextprotocol/client": "2.0.0",
+    "@types/node": "24.13.3",
+    "typescript": "6.0.3",
+    "oxlint": "1.80.0"
   },
   "engines": {
     "node": ">=22.13.0"

@@ -1,0 +1,20 @@
+description: Strength and extraction remain separate concepts
+server: ./dist/server.js
+operations:
+  - method: resources/read
+    uri: guide://coffee/getting-started
+  - method: prompts/get
+    name: brew-guide
+    arguments:
+      topic: brew-ratio
+question: >-
+  Does making coffee stronger necessarily mean that extraction is higher?
+  Explain the distinction for a home brewer.
+criticalFacts:
+  - concentration
+  - extraction
+criteria: >-
+  The answer says stronger coffee does not necessarily mean higher extraction.
+  It explains that strength is concentration while extraction is how much
+  material left the grounds, and it does not describe the concepts as
+  interchangeable.

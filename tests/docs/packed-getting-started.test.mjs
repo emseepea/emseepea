@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 const root = new URL("../../", import.meta.url);
 
@@ -94,3 +95,58 @@ test("the packed server runs the public getting-started path", { timeout: 180_00
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test("a copied example owns deterministic and semantic checks", { timeout: 300_000 }, async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "emseepea-example-"));
+  try {
+    const serverTarball = await packPackage("./packages/framework", directory);
+    const testingTarball = await packPackage("./packages/testing", directory);
+    const example = path.join(directory, "basic-no-ui");
+    await cp(new URL("../../examples/basic-no-ui/", import.meta.url), example, {
+      recursive: true,
+      filter: (source) => !/(^|\/)(dist|node_modules|.* 2\.[^/]+)$/.test(source),
+    });
+
+    run("npm", [
+      "install",
+      "--ignore-scripts",
+      "--prefer-offline",
+      "--no-audit",
+      "--no-fund",
+      serverTarball,
+      testingTarball,
+    ], example);
+    run("npm", ["run", "lint"], example);
+    run("npm", ["test"], example);
+    run("npx", [
+      "--no-install",
+      "emseepea-test",
+      "--smoke",
+      "--model-command",
+      fileURLToPath(new URL("../../packages/testing/test/fake-model.mjs", import.meta.url)),
+      "--output",
+      "artifacts/smoke.json",
+      "eval.yaml",
+    ], example);
+
+    const evidence = JSON.parse(await readFile(path.join(example, "artifacts/smoke.json"), "utf8"));
+    const result = Object.values(evidence.cases)[0];
+    assert.equal(evidence.status, "passed");
+    assert.equal(result.agentTrials.length, 3);
+    assert.equal(result.judgeVerdicts.length, 9);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+async function packPackage(packagePath, directory) {
+  const packed = JSON.parse(run("npm", [
+    "pack",
+    "--json",
+    "--ignore-scripts",
+    "--pack-destination",
+    directory,
+    packagePath,
+  ], root));
+  return path.join(directory, packed[0].filename);
+}

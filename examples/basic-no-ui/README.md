@@ -27,12 +27,19 @@ npm run start:basic
 The endpoint is `http://127.0.0.1:3000/mcp` and the health check is
 `http://127.0.0.1:3000/healthz`.
 
-## Smoke Test
+## Check This Example
 
-Run the HTTP and client checks:
+Run its build and MCP checks:
 
 ```sh
-npm test
+npm test -w @emseepea/example-basic-no-ui
 ```
 
-Run the language-model understanding check with `npm run test:eval`.
+Check that Claude understands the result correctly:
+
+```sh
+npm run test:llm -w @emseepea/example-basic-no-ui
+```
+
+If Claude is not already signed in, run `npm run claude:login` from the
+repository root first.

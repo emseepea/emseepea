@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { serveEmseepea } from "@emseepea/server";
-import { createBackendExample } from "../../../examples/backend-no-ui/dist/app.js";
-import { brewmarkFixture } from "../../fixtures/brewmark.mjs";
+import { createBackendExample } from "../dist/app.js";
+import { brewmarkFixture } from "./brewmark-fixture.mjs";
 
 const app = createBackendExample({
   async get({ pathname, searchParams }) {
