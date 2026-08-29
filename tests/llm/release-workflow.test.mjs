@@ -56,6 +56,13 @@ test("release preparation and publication do not run when release state is unkno
   );
 });
 
+test("versioning refreshes the lockfile", () => {
+  assert.equal(
+    manifest.scripts["version-packages"],
+    "changeset version && npm install --package-lock-only --ignore-scripts",
+  );
+});
+
 test("publication evidence covers both public packages", () => {
   assert.match(workflow, /npm pack --workspace @emseepea\/server/);
   assert.match(workflow, /npm pack --workspace @emseepea\/testing/);

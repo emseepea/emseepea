@@ -41,7 +41,7 @@
     "test:eval": "npm run build && emseepea-test --provider claude-local examples/basic-no-ui/eval.yaml examples/backend-no-ui/eval.yaml examples/multi-instance/eval.yaml examples/native-ui/eval.yaml examples/protected-no-ui/eval.yaml examples/react-tailwind-ui/eval.yaml examples/resources-prompts/eval.yaml examples/streaming-progress/eval.yaml",
     "test:eval:ci": "emseepea-test --provider claude-ci examples/basic-no-ui/eval.yaml examples/backend-no-ui/eval.yaml examples/multi-instance/eval.yaml examples/native-ui/eval.yaml examples/protected-no-ui/eval.yaml examples/react-tailwind-ui/eval.yaml examples/resources-prompts/eval.yaml examples/streaming-progress/eval.yaml",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "version-packages": "changeset version",
+    "version-packages": "changeset version && npm install --package-lock-only --ignore-scripts",
     "lint": "oxlint ."
   },
   "devDependencies": {
