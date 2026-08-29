@@ -7,7 +7,8 @@ import { fileURLToPath } from "node:url";
 const concurrency = 16;
 const durationMs = 1_000;
 const runs = 3;
-const samples = 40;
+const cpuSamples = 400;
+const allocationSamples = 40;
 const requestBody = JSON.stringify({
   jsonrpc: "2.0",
   id: "benchmark",
@@ -63,12 +64,12 @@ try {
 
   const cpuMs = [];
   const allocations = [];
-  for (let index = 0; index < samples; index += 1) {
+  for (let index = 0; index < cpuSamples; index += 1) {
     await ask("cpu-start");
     await validRequest();
     cpuMs.push((await ask("cpu-stop")).value);
   }
-  for (let index = 0; index < samples; index += 1) {
+  for (let index = 0; index < allocationSamples; index += 1) {
     await ask("allocation-start");
     await validRequest();
     allocations.push((await ask("allocation-stop")).value);
@@ -92,7 +93,8 @@ try {
       concurrency,
       durationMs,
       runs,
-      samples,
+      cpuSamples,
+      allocationSamples,
       requestBytes: Buffer.byteLength(requestBody),
     },
     throughputRequestsPerSecond: summary(throughput),
