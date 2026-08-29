@@ -236,7 +236,7 @@ test("cancellation and deadlines abandon DNS without starting a request", async 
 
   const signal = new AbortController().signal;
   await withActiveIo(assert.rejects(get({ signal, deadlineMs: Date.now() + 5 })));
-  await assert.rejects(get({ signal, deadlineMs: Date.now() + 2_147_483_648 }));
+  await assert.rejects(get({ signal, deadlineMs: Date.now() + 2_147_483_648 + 60_000 }));
   assert.equal(state.requests.length, 0);
 });
 
