@@ -24,7 +24,7 @@ const requestBody = JSON.stringify({
   },
 });
 const headers = {
-  Accept: "application/json",
+  Accept: "application/json, text/event-stream",
   "Content-Type": "application/json",
   "MCP-Protocol-Version": "2026-07-28",
   "Mcp-Method": "tools/call",

@@ -1152,8 +1152,18 @@ async function validateMcpRequestHeaders(
   reply: FastifyReply,
 ): Promise<boolean> {
   const body = request.body;
+  const id = isRecord(body) ? requestId(body.id) : null;
+  if (!acceptsMcpResponses(request.headers.accept)) {
+    await sendRpcError(
+      reply,
+      406,
+      -32000,
+      "Not Acceptable: Client must accept both application/json and text/event-stream",
+      id,
+    );
+    return false;
+  }
   if (!isRecord(body) || typeof body.method !== "string") return true;
-  const id = requestId(body.id);
   const header = (name: string) => singleHeader(request.raw.rawHeaders, name);
   const rejectMismatch = async (name: string) => {
     await sendRpcError(reply, 400, -32020, `Missing or mismatched ${name} header`, id);
@@ -1190,6 +1200,15 @@ async function validateMcpRequestHeaders(
   const name = header("mcp-name");
   if (!name || decodeMcpHeaderValue(name) !== params[nameField]) return rejectMismatch("Mcp-Name");
   return true;
+}
+
+function acceptsMcpResponses(value: string | string[] | undefined): boolean {
+  const types = (Array.isArray(value) ? value : value ? [value] : [])
+    .flatMap((header) => header.split(","))
+    .filter((part) => !part.split(";").slice(1).some((parameter) =>
+      /^\s*q\s*=\s*0(?:\.0*)?\s*$/i.test(parameter)))
+    .map((part) => part.split(";", 1)[0]?.trim().toLowerCase());
+  return types.includes("application/json") && types.includes("text/event-stream");
 }
 
 function decodeMcpHeaderValue(value: string): string | undefined {

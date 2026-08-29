@@ -106,9 +106,12 @@ application work. See the
 
 ### Accepted Response Types
 
-**Status: Partial.** JSON and server-sent event responses work when the client
-offers both. Missing or incompatible `Accept` headers do not yet have exact
-tests. See the [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs) and
+**Status: Checked.** Clients must offer both JSON and server-sent events.
+Tests reject missing, wildcard-only, and single-type `Accept` values before sign-in
+or application work. They accept both tested orders and parameters. This is a
+narrow framework check, not a claim of complete HTTP content negotiation. See
+the [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
+[sign-in tests](../tests/black-box/oauth-protected-tools.test.mjs), and
 [progress tests](../tests/black-box/streaming-progress.test.mjs).
 
 ### Request Headers

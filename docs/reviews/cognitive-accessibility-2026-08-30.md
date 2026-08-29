@@ -7,6 +7,7 @@ Changed public prose reviewed:
 
 - `.changeset/quiet-pods-build.md`
 - `.changeset/calm-pods-route.md`
+- `.changeset/fresh-peas-accept.md`
 - `README.md`
 - `docs/jtbd/README.md`
 - `docs/jtbd/framework-maintainer/persona.md`
@@ -47,6 +48,10 @@ plain explanations of incomplete protocol work.
 
 The routing-header release note passed after proxy and stream language was
 rewritten to explain the adopter-visible protection in ordinary words.
+
+The response-type coverage statement and release note passed an independent
+review. They explain the rejected requests plainly and limit the claim to the
+exact behaviour tested.
 
 The specialist also passed this exact public npm deprecation message:
 

@@ -164,6 +164,18 @@ test("discovery stays public while protected invocation is fail-closed", async (
     assert.equal(unknown.body.error.code, -32602);
     assert.equal(verifierCalls, 0);
 
+    const unacceptable = await rpc(
+      running.url,
+      "tools/call",
+      { name: "protected-bean", arguments: { id: "bad-accept" } },
+      "valid",
+      { Accept: "application/json" },
+    );
+    assert.equal(unacceptable.response.status, 406);
+    assert.equal(unacceptable.body.error.code, -32000);
+    assert.equal(verifierCalls, 0);
+    assert.equal(protectedCalls, 0);
+
     for (const headers of [
       { "MCP-Protocol-Version": undefined },
       { "MCP-Protocol-Version": "2025-11-25" },

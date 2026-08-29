@@ -431,7 +431,7 @@ test("protected mapped tools reject authorization failures before adapter execut
 
 async function rpc(url, name, args, token, signal) {
   const headers = {
-    Accept: "application/json",
+    Accept: "application/json, text/event-stream",
     "Content-Type": "application/json",
     "MCP-Protocol-Version": "2026-07-28",
     "Mcp-Method": "tools/call",

@@ -144,7 +144,7 @@ async function call(url, extraHeaders) {
     const outgoing = request(url, {
       method: "POST",
       headers: {
-      Accept: "application/json",
+      Accept: "application/json, text/event-stream",
       "Content-Type": "application/json",
       "Content-Length": Buffer.byteLength(body),
       "MCP-Protocol-Version": "2026-07-28",

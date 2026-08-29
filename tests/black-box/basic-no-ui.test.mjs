@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { request } from "node:http";
 import { setTimeout as delay } from "node:timers/promises";
 import test from "node:test";
 import {
@@ -115,6 +116,30 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     assert.equal(call.body.result.isError, false);
     assert.equal(handlerCalls, 1);
 
+    for (const accept of [
+      undefined,
+      "application/json",
+      "text/event-stream",
+      "*/*",
+      "application/json, text/event-stream; q=0",
+    ]) {
+      const rejected = await rawRpc(running.url, "tools/call", {
+        name: "lookup-bean",
+        arguments: { id: "unacceptable-response-types" },
+      }, accept);
+      assert.equal(rejected.status, 406, `${String(accept)} must be rejected`);
+      assert.equal(rejected.body.error.code, -32000);
+      assert.equal(handlerCalls, 1);
+    }
+
+    const parameterizedAccept = await rawRpc(running.url, "tools/call", {
+      name: "lookup-bean",
+      arguments: { id: "parameterized-accept" },
+    }, "text/event-stream; q=0.9, application/json; charset=utf-8");
+    assert.equal(parameterizedAccept.status, 200);
+    assert.equal(parameterizedAccept.body.result.isError, false);
+    assert.equal(handlerCalls, 2);
+
     const mismatched = await rpc(
       running.url,
       "tools/call",
@@ -123,7 +148,7 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     );
     assert.equal(mismatched.response.status, 400);
     assert.equal(mismatched.body.error.code, -32020);
-    assert.equal(handlerCalls, 1);
+    assert.equal(handlerCalls, 2);
 
     for (const missingHeader of ["MCP-Protocol-Version", "Mcp-Method", "Mcp-Name"]) {
       const missing = await rpc(
@@ -135,7 +160,7 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
       assert.equal(missing.response.status, 400, `${missingHeader} must be required`);
       assert.equal(missing.body.error.code, -32020);
     }
-    assert.equal(handlerCalls, 1);
+    assert.equal(handlerCalls, 2);
 
     for (const headers of [
       { "MCP-Protocol-Version": "2025-11-25" },
@@ -151,7 +176,7 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
       assert.equal(mismatchedHeader.response.status, 400);
       assert.equal(mismatchedHeader.body.error.code, -32020);
     }
-    assert.equal(handlerCalls, 1);
+    assert.equal(handlerCalls, 2);
 
     const unsupportedVersion = "2025-11-25";
     const unsupported = await rpc(
@@ -164,7 +189,7 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     assert.equal(unsupported.response.status, 400);
     assert.equal(unsupported.body.error.code, -32022);
     assert.deepEqual(unsupported.body.error.data.supported, ["2026-07-28"]);
-    assert.equal(handlerCalls, 1);
+    assert.equal(handlerCalls, 2);
 
     const encodedName = await rpc(
       running.url,
@@ -174,7 +199,7 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     );
     assert.equal(encodedName.response.status, 200);
     assert.equal(encodedName.body.result.isError, false);
-    assert.equal(handlerCalls, 2);
+    assert.equal(handlerCalls, 3);
 
     const plainUnicodeName = await rpc(
       running.url,
@@ -193,7 +218,7 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     );
     assert.equal(encodedUnicodeName.response.status, 200);
     assert.equal(encodedUnicodeName.body.error.code, -32602);
-    assert.equal(handlerCalls, 2);
+    assert.equal(handlerCalls, 3);
 
     for (const [method, field] of [
       ["tools/call", "name"],
@@ -211,7 +236,7 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
         assert.equal(malformedNamedRequest.body.error.code, -32020);
       }
     }
-    assert.equal(handlerCalls, 2);
+    assert.equal(handlerCalls, 3);
 
     const invalidInput = await rpc(running.url, "tools/call", {
       name: "lookup-bean",
@@ -219,7 +244,7 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     });
     assert.equal(invalidInput.response.status, 200);
     assert.equal(invalidInput.body.result.isError, true);
-    assert.equal(handlerCalls, 2);
+    assert.equal(handlerCalls, 3);
 
     const invalidOutput = await rpc(running.url, "tools/call", {
       name: "lookup-bean",
@@ -321,4 +346,34 @@ async function rpc(url, method, params = {}, extraHeaders = {}, meta = requestMe
     body: JSON.stringify(body),
   });
   return { response, body: await response.json() };
+}
+
+async function rawRpc(url, method, params, accept) {
+  const body = JSON.stringify({
+    jsonrpc: "2.0",
+    id: crypto.randomUUID(),
+    method,
+    params: { ...params, _meta: requestMeta },
+  });
+  return await new Promise((resolve, reject) => {
+    const headers = {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(body),
+      "MCP-Protocol-Version": "2026-07-28",
+      "Mcp-Method": method,
+      "Mcp-Name": params.name,
+    };
+    if (accept !== undefined) headers.Accept = accept;
+    const outgoing = request(url, { method: "POST", headers }, (incoming) => {
+      let responseBody = "";
+      incoming.setEncoding("utf8");
+      incoming.on("data", (chunk) => { responseBody += chunk; });
+      incoming.on("end", () => resolve({
+        status: incoming.statusCode,
+        body: JSON.parse(responseBody),
+      }));
+    });
+    outgoing.on("error", reject);
+    outgoing.end(body);
+  });
 }
