@@ -27,6 +27,10 @@ The review expanded unexplained abbreviations, replaced ambiguous headings,
 removed release jargon, and split dense controls into plain-language
 protections. The corrected files passed a second independent review.
 
+The updated `R007` release-risk wording also passed an independent re-review.
+It now says plainly that the release stayed blocked after a duplicate test
+address and six high-severity dependency findings.
+
 The specialist also passed this exact public npm deprecation message:
 
 > Do not use this version. Files needed to run this package are missing.

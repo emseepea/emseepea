@@ -39,8 +39,9 @@ Impact × Likelihood *before* controls.
   client use fixed versions. Implemented in `.github/workflows/quality.yml` and
   `.github/workflows/release.yml`.
 - **Check the package after npm receives it** - Anonymous npm checks verify the
-  version, `next` tag, source evidence, clean installation, public import, and a
-  basic run before the GitHub release is created. Implemented in
+  version, `next` tag, source evidence, clean installation, dependency audit,
+  registry signatures, public import, and a basic run before the GitHub release
+  is created. Implemented in
   `.github/workflows/release.yml`.
 - **Check every public file before publishing** - The release job builds before
   packing, each public package builds itself before an ordinary pack, and
@@ -85,6 +86,11 @@ removal; it is not a reusable fallback.
   were published without their built files on 2026-08-29. Both versions were
   deprecated before announcement, and no Git tags or GitHub releases were
   created for them.
+- Realised-as: the `0.0.2` release stayed blocked after two checks failed.
+  One test used duplicate resource addresses. A fresh install also found six
+  high-severity dependency findings from Promptfoo's optional dependencies.
+  The installed-package check can now be run directly, and every GitHub release
+  must pass a fresh-install audit first.
 - Treatment ADRs:
   [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
 - Personas affected: package consumers, adopters, and maintainers
@@ -109,3 +115,5 @@ evidence, or risk policy change.
   implemented trusted-publishing and release-evidence workflow.
 - 2026-08-30: Recorded the incomplete 0.0.1 packages and added build,
   package-content, registry, and release-order safeguards.
+- 2026-08-30: Recorded the blocked 0.0.2 release and added a runnable
+  installed-package check plus a fresh-install vulnerability audit.

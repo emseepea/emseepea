@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import test from "node:test";
 
 import { assertPackedTargets } from "../../scripts/verify-packed-package.mjs";
@@ -16,6 +19,8 @@ const quality = await readFile(new URL("../../.github/workflows/quality.yml", im
 const manifest = JSON.parse(await readFile(new URL("../../package.json", import.meta.url), "utf8"));
 const serverManifest = JSON.parse(await readFile(new URL("../../packages/framework/package.json", import.meta.url), "utf8"));
 const testingManifest = JSON.parse(await readFile(new URL("../../packages/testing/package.json", import.meta.url), "utf8"));
+const installedSmoke = await readFile(new URL("../../scripts/verify-installed-package.mjs", import.meta.url), "utf8");
+const exec = promisify(execFile);
 
 test("every GitHub job uses the recorded npm version", () => {
   for (const source of [quality, workflow]) {
@@ -98,6 +103,7 @@ test("publication builds and verifies packages before creating public releases",
   assert.ok(job.indexOf("Build packages for publication") < job.indexOf("npm pack --workspace @emseepea/server"));
   assert.ok(job.indexOf("npm pack --workspace @emseepea/server") < job.indexOf("changesets/action@"));
   assert.ok(job.indexOf("verify-registry-release.mjs verify") < job.indexOf("npm audit signatures"));
+  assert.ok(job.indexOf("npm audit --audit-level=high --userconfig /dev/null") < job.indexOf("npm audit signatures"));
   assert.ok(job.indexOf("npm audit signatures") < job.indexOf("gh release create"));
   assert.match(job, /createGithubReleases: false/);
   assert.match(job, /if: steps\.registry-verify\.outputs\.published == 'true'/);
@@ -110,6 +116,13 @@ test("publication builds and verifies packages before creating public releases",
   assert.match(job, /gh release upload "\$tag" "\$@" --clobber/);
   assert.match(job, /--latest=false/);
   assert.doesNotMatch(job, /steps\.changesets\.outputs\.published/);
+});
+
+test("the installed-package smoke uses distinct fixed and template resource routes", async () => {
+  assert.match(installedSmoke, /const resourceUri = "smoke:\/\/static\/value"/);
+  assert.match(installedSmoke, /uriTemplate: "smoke:\/\/resource\/\{value\}"/);
+  assert.match(workflow, /node --input-type=module < "\$GITHUB_WORKSPACE\/scripts\/verify-installed-package\.mjs"/);
+  await exec(process.execPath, [fileURLToPath(new URL("../../scripts/verify-installed-package.mjs", import.meta.url))]);
 });
 
 test("public packages build themselves before an ordinary pack", () => {
