@@ -14,11 +14,11 @@
   },
   "dependencies": {
     "@emseepea/example-ui-shared": "0.0.0",
-    "@emseepea/server": "0.0.1",
+    "@emseepea/server": "0.0.2",
     "@emseepea/tailwind": "0.0.0"
   },
   "devDependencies": {
-    "@emseepea/testing": "0.0.1",
+    "@emseepea/testing": "0.0.2",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",
     "oxlint": "1.80.0"
