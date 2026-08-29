@@ -4,7 +4,6 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
 
 const root = new URL("../../", import.meta.url);
 
@@ -96,48 +95,85 @@ test("the packed server runs the public getting-started path", { timeout: 180_00
   }
 });
 
-test("a copied example owns deterministic and semantic checks", { timeout: 300_000 }, async () => {
+test("every copied example runs against packed packages", { timeout: 900_000 }, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-example-"));
   try {
-    const serverTarball = await packPackage("./packages/framework", directory);
-    const testingTarball = await packPackage("./packages/testing", directory);
-    const example = path.join(directory, "basic-no-ui");
-    await cp(new URL("../../examples/basic-no-ui/", import.meta.url), example, {
-      recursive: true,
-      filter: (source) => !/(^|\/)(dist|node_modules|.* 2\.[^/]+)$/.test(source),
-    });
+    const tarballs = new Map(await Promise.all([
+      ["@emseepea/server", "./packages/framework"],
+      ["@emseepea/testing", "./packages/testing"],
+      ["@emseepea/react", "./packages/react"],
+      ["@emseepea/tailwind", "./packages/tailwind"],
+      ["@emseepea/example-ui-shared", "./examples/ui-shared"],
+    ].map(async ([name, packagePath]) => [name, await packPackage(packagePath, directory)])));
+    const fakeModel = path.join(directory, "fake-model.mjs");
+    await writeFile(fakeModel, fakeModelSource, { mode: 0o700 });
 
-    run("npm", [
-      "install",
-      "--ignore-scripts",
-      "--prefer-offline",
-      "--no-audit",
-      "--no-fund",
-      serverTarball,
-      testingTarball,
-    ], example);
-    run("npm", ["run", "lint"], example);
-    run("npm", ["test"], example);
-    run("npx", [
-      "--no-install",
-      "emseepea-test",
-      "--smoke",
-      "--model-command",
-      fileURLToPath(new URL("../../packages/testing/test/fake-model.mjs", import.meta.url)),
-      "--output",
-      "artifacts/smoke.json",
-      "eval.yaml",
-    ], example);
+    for (const name of [
+      "basic-no-ui",
+      "backend-no-ui",
+      "protected-no-ui",
+      "resources-prompts",
+      "streaming-progress",
+      "multi-instance",
+      "native-ui",
+      "react-tailwind-ui",
+    ]) {
+      const example = path.join(directory, name);
+      await cp(new URL(`../../examples/${name}/`, import.meta.url), example, {
+        recursive: true,
+        filter: (source) => !/(^|\/)(dist|node_modules|artifacts|.* 2\.[^/]+)$/.test(source),
+      });
+      const manifest = JSON.parse(await readFile(path.join(example, "package.json"), "utf8"));
+      const internalPackages = Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })
+        .filter((dependency) => tarballs.has(dependency))
+        .map((dependency) => tarballs.get(dependency));
 
-    const evidence = JSON.parse(await readFile(path.join(example, "artifacts/smoke.json"), "utf8"));
-    const result = Object.values(evidence.cases)[0];
-    assert.equal(evidence.status, "passed");
-    assert.equal(result.agentTrials.length, 3);
-    assert.equal(result.judgeVerdicts.length, 9);
+      run("npm", [
+        "install",
+        "--ignore-scripts",
+        "--prefer-offline",
+        "--no-audit",
+        "--no-fund",
+        ...internalPackages,
+      ], example);
+      run("npm", ["run", "lint"], example);
+      run("npm", ["test"], example);
+      run("npx", [
+        "--no-install",
+        "emseepea-test",
+        "--smoke",
+        "--model-command",
+        fakeModel,
+        "--output",
+        "artifacts/smoke.json",
+        "eval.yaml",
+      ], example);
+
+      const evidence = JSON.parse(await readFile(path.join(example, "artifacts/smoke.json"), "utf8"));
+      const result = Object.values(evidence.cases)[0];
+      assert.equal(evidence.status, "passed", `${name} semantic smoke failed`);
+      assert.equal(result.agentTrials.length, 3);
+      assert.equal(result.judgeVerdicts.length, 9);
+    }
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+const fakeModelSource = `#!/usr/bin/env node
+const prompt = process.argv[process.argv.indexOf("--print") + 1] ?? "";
+const answer = prompt.includes("Return only JSON with this exact shape")
+  ? '{"pass":true,"score":1,"reason":"The answer preserves every required meaning."}'
+  : "The answer is supported by the supplied MCP material.";
+process.stdout.write(JSON.stringify({
+  type: "result",
+  is_error: false,
+  num_turns: 1,
+  permission_denials: [],
+  result: answer,
+  modelUsage: { "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" } },
+}) + "\\n");
+`;
 
 async function packPackage(packagePath, directory) {
   const packed = JSON.parse(run("npm", [

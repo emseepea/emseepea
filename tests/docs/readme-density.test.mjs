@@ -1,18 +1,37 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
 const maxParagraphCharacters = 400;
 
-test("the root README has no wall-of-text prose paragraphs", async () => {
-  const markdown = await readFile(new URL("../../README.md", import.meta.url), "utf8");
-  const paragraphs = proseParagraphs(markdown);
-  const dense = paragraphs.filter(({ text }) => text.length > maxParagraphCharacters);
+test("public READMEs have no wall-of-text prose paragraphs", async () => {
+  const readmes = [{ label: "README.md", url: new URL("../../README.md", import.meta.url) }];
+  for (const group of ["examples", "packages"]) {
+    const root = new URL(`../../${group}/`, import.meta.url);
+    for (const entry of await readdir(root, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const url = new URL(`${entry.name}/README.md`, root);
+      try {
+        await readFile(url, "utf8");
+        readmes.push({ label: `${group}/${entry.name}/README.md`, url });
+      } catch (error) {
+        if (error?.code !== "ENOENT") throw error;
+      }
+    }
+  }
+
+  const dense = [];
+  for (const readme of readmes) {
+    const markdown = await readFile(readme.url, "utf8");
+    dense.push(...proseParagraphs(markdown)
+      .filter(({ text }) => text.length > maxParagraphCharacters)
+      .map(({ line, text }) => ({ file: readme.label, line, characters: text.length, preview: text.slice(0, 80) })));
+  }
 
   assert.deepEqual(
-    dense.map(({ line, text }) => ({ line, characters: text.length, preview: text.slice(0, 80) })),
+    dense,
     [],
-    `README prose paragraphs must stay within ${maxParagraphCharacters} characters`,
+    `Public README prose paragraphs must stay within ${maxParagraphCharacters} characters`,
   );
 });
 

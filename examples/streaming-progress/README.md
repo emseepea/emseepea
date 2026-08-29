@@ -1,14 +1,18 @@
 # Streaming Progress Example
 
-This example shows one public tool that reports progress during a
-request. If the client asks for progress, the server sends server-sent events
-(SSE) over the same POST request. If not, the tool returns one JSON response.
+Choose this example when a tool takes long enough that people benefit from
+seeing progress before the final answer.
+
+The public tool reports progress during its request. A client can ask for
+server-sent events (SSE), which carry progress over the same `POST` request.
+Without that request, the tool returns one JSON response when it finishes.
 
 ## Run
 
 From the repository root:
 
 ```sh
+npm install
 npm run build
 npm run start -w @emseepea/example-streaming-progress
 ```

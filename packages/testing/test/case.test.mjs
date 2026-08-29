@@ -18,11 +18,21 @@ test("loads one self-contained semantic case", async () => {
     "operations:",
     "  - method: tools/call",
     "    name: get-bean",
-    "    arguments: { name: Riverlight }",
+    "    arguments:",
+    "      name: Riverlight",
+    "      includeNotes: true",
+    "      limit: 5",
+    '      literal: "true"',
   ].join("\n"));
   const value = await loadSemanticCase(path);
   assert.equal(value.server, join(directory, "dist/server.js"));
   assert.deepEqual(requiredPaths(value), ["tools/call:get-bean"]);
+  assert.deepEqual(value.operations[0].arguments, {
+    name: "Riverlight",
+    includeNotes: true,
+    limit: 5,
+    literal: "true",
+  });
 });
 
 test("rejects an incomplete semantic case", async () => {

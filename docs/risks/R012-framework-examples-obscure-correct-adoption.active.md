@@ -4,7 +4,7 @@
 **Category**: delivery
 **Identified**: 2026-08-28
 **Owner**: Framework developer-experience maintainer
-**Last reviewed**: 2026-08-28
+**Last reviewed**: 2026-08-29
 **Next review**: 2027-02-28
 
 ## Description
@@ -44,25 +44,32 @@ Impact × Likelihood *before* controls.
 - **Human comprehension review** - Changed public examples and their
   documentation receive cognitive-accessibility review before publication.
   Required by `QUALITY.md`.
+- **Goal-led example guides** - Every runnable example starts by saying when to
+  choose it, what it creates, how to run and check it, and what it does not
+  prove.
+- **Independent comprehension review** - A cognitive-accessibility specialist
+  checked the root guide, all eight runnable example guides, package guides,
+  and the path from each guide to its entry source. The final review passed.
+- **Copied-example checks** - Every runnable example passed its own lint,
+  deterministic tests, and semantic smoke check from a copied folder with Em
+  See Pea installed from package archives.
 
 ## Residual Risk
 
 Impact × Likelihood *after* controls.
 
 - **Impact**: 4 (Significant)
-- **Likelihood**: 5 (Almost certain)
-- **Residual Score**: 20
-- **Residual Band**: Very High
-- **Within appetite?**: No
+- **Likelihood**: 1 (Rare)
+- **Residual Score**: 4
+- **Residual Band**: Low
+- **Within appetite?**: Yes
 
 ## Treatment
 
-Mitigate. Residual risk remains the same as inherent risk until independent
-readers can complete the getting-started paths, explain the important
-boundaries, and use the examples without copying unnecessary setup.
-
-Publication remains blocked while the residual score is above the 5/25
-appetite.
+Mitigate. The current example set passed independent comprehension review and
+package-bound execution. Keep this risk active because new examples or public
+API changes can reintroduce unclear choices, toy behaviour, or unnecessary
+setup.
 
 ## Monitoring
 
@@ -84,3 +91,5 @@ appetite.
 
 - 2026-08-28: Initial identification after repeated schemas, opaque mapping,
   and low-value example behaviour were reported.
+- 2026-08-29: Reduced residual likelihood after job-led rewrites, independent
+  cognitive review, and copied-package checks passed for all runnable examples.

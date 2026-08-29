@@ -60,16 +60,16 @@ Build the workspaces first:
 npm run build
 ```
 
-Then choose one example:
+Then choose what you want to build:
 
-- `npm run start:basic` - a small tool with sample coffee data
-- `npm run start:backend` - a coffee report assembled from another service
-- `npm run start:protected` - a tool that requires a sample sign-in token
-- `npm run start:resources-prompts` - resources, templates, prompts, and completion
-- `npm run start:streaming` - loopback streaming progress with JSON fallback
-- `npm run start:multi-instance` - two local servers sharing one SQLite report store
-- `npm run start:native-ui` - a server-rendered form
-- `npm run start:react-ui` - the same form using React and the Em See Pea stylesheet
+- Start with one small public tool: `npm run start:basic`
+- Connect a tool to a public web service: `npm run start:backend`
+- Require sign-in for a tool while keeping discovery public: `npm run start:protected`
+- Give an assistant reference content and reusable prompts: `npm run start:resources-prompts`
+- Report progress while a slow tool runs: `npm run start:streaming`
+- Avoid creating the same local report twice across two server processes: `npm run start:multi-instance`
+- Add a server-rendered form without a UI framework: `npm run start:native-ui`
+- Add the same form to a React application: `npm run start:react-ui`
 
 The sign-in example uses the made-up token `example-access-token`. It shows
 where token checking fits. It is not a production sign-in system.

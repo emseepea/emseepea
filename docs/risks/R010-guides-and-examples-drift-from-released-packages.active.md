@@ -4,7 +4,7 @@
 **Category**: delivery
 **Identified**: 2026-08-28
 **Owner**: Documentation and examples maintainer
-**Last reviewed**: 2026-08-28
+**Last reviewed**: 2026-08-29
 **Next review**: 2027-02-28
 
 ## Description
@@ -37,23 +37,28 @@ Impact × Likelihood *before* controls.
 - **Published-package verification** - Release qualification requires an exact-
   version clean install, public import, and smoke execution. Defined in
   [ADR-0019: public pre-alpha releases through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md).
+- **Copied-example package checks** - Every runnable example is copied to a
+  temporary folder. Its Em See Pea dependencies are installed from package
+  archives, then the example runs its own lint, deterministic tests, and
+  semantic smoke check. Implemented in
+  `tests/docs/packed-getting-started.test.mjs`.
 
 ## Residual Risk
 
 Impact × Likelihood *after* controls.
 
 - **Impact**: 4 (Significant)
-- **Likelihood**: 3 (Possible)
-- **Residual Score**: 12
-- **Residual Band**: High
-- **Within appetite?**: No
+- **Likelihood**: 1 (Rare)
+- **Residual Score**: 4
+- **Residual Band**: Low
+- **Within appetite?**: Yes
 
 ## Treatment
 
-Mitigate. Current checks do not yet execute every guide and website example
-against the package version readers install. Publication remains blocked until
-all published getting-started paths run as version-bound tests and stale pages
-fail closed.
+Mitigate. The current public examples now run outside the workspace against
+package archives. Keep this risk active because a future guide, website page,
+or package can introduce drift. Add each new public path to the same check
+before publishing it.
 
 ## Monitoring
 
@@ -73,3 +78,5 @@ fail closed.
 ## Change Log
 
 - 2026-08-28: Initial identification before the documentation website exists.
+- 2026-08-29: Reduced residual likelihood after all eight runnable examples
+  passed from copied folders against packed Em See Pea packages.

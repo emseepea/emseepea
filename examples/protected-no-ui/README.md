@@ -1,5 +1,8 @@
 # Sign-In No-UI Example
 
+Choose this example when people should be able to discover your server and its
+tools without signing in, but must sign in before a particular tool runs.
+
 This local-only example lets anyone discover the Model Context Protocol (MCP)
 server and list its tools. Calling `get-private-inventory-report` requires the
 `inventory:read` permission. The report distinguishes stock on hand, reserved

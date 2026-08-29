@@ -1,14 +1,21 @@
 # Resources and Prompts Example
 
-This example exposes three public MCP features through
-`@emseepea/server`: one fixed resource, one resource address pattern, and one
-prompt. The resource pattern and prompt argument can offer checked suggestions.
+Choose this example when you want to give an assistant reusable reference
+content and guided starting questions, without adding another tool.
+
+It provides:
+
+- a fixed resource at one known address
+- a resource pattern for related content at predictable addresses
+- a reusable prompt with one checked argument
+- optional suggestions for the resource and prompt fields
 
 ## Run
 
 From the repository root:
 
 ```sh
+npm install
 npm run build
 npm run start -w @emseepea/example-resources-prompts
 ```

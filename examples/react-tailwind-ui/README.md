@@ -1,13 +1,23 @@
 # React and Tailwind UI Example
 
+Choose this example when your application already uses React and you want an
+accessible form without writing Tailwind configuration or component styles.
+
 This example makes the server-rendered form interactive with React and imports
 one compiled Em See Pea stylesheet. It needs no Tailwind configuration and uses
 the same sample states as the native example.
 
 ## Run
 
-From the repository root, run `npm run build`, then
-`npm run start:react-ui`. Open
+From the repository root:
+
+```sh
+npm install
+npm run build
+npm run start:react-ui
+```
+
+Open
 `http://127.0.0.1:3001/` for the page or use
 `http://127.0.0.1:3001/mcp` for Model Context Protocol (MCP).
 

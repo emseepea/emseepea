@@ -18,16 +18,35 @@ package supports and what it does not support.
 import { createEmseepea, defineMappedTool, defineTool, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
-const lookup = defineTool({
-  name: "lookup-bean",
-  access: "public",
-  description: "Look up a bean.",
-  inputSchema: z.object({ id: z.string() }),
-  outputSchema: z.object({ id: z.string() }),
-  handler: ({ id }) => ({ text: id, data: { id } }),
+const beanDetails = z.object({
+  name: z.string(),
+  origin: z.string(),
+  variety: z.string(),
+  process: z.enum(["washed", "natural"]),
+  roast: z.enum(["light", "medium", "dark"]),
+  tastingNotes: z.array(z.string()),
 });
 
-const app = createEmseepea({ name: "beans", version: "1.0.0", tools: [lookup] });
+const getBeanDetails = defineTool({
+  name: "get-bean-details",
+  access: "public",
+  description: "Get the origin, variety, process, roast, and tasting notes for one coffee.",
+  inputSchema: z.object({ name: z.string() }),
+  outputSchema: beanDetails,
+  handler: ({ name }) => {
+    const data = {
+      name,
+      origin: "Sample Highlands",
+      variety: "Bourbon",
+      process: "natural" as const,
+      roast: "medium" as const,
+      tastingNotes: ["berry", "cocoa"],
+    };
+    return { text: `${name} is a medium-roast natural Bourbon from Sample Highlands.`, data };
+  },
+});
+
+const app = createEmseepea({ name: "coffee-guide", version: "1.0.0", tools: [getBeanDetails] });
 await serveEmseepea(app);
 ```
 
@@ -42,17 +61,39 @@ returns the public output. `defineMappedTool` is for a real contract boundary,
 not an identity mapping.
 
 ```ts
-const lookup = defineMappedTool({
-  name: "lookup-bean",
+const backendCommand = z.object({ search: z.string() });
+const backendResult = z.object({
+  record: z.object({
+    name: z.string(),
+    country: z.string(),
+    variety: z.string(),
+    processCode: z.enum(["W", "N"]),
+    roastLevel: z.enum(["light", "medium", "dark"]),
+    flavourNotes: z.array(z.string()),
+  }),
+});
+
+const getBeanDetails = defineMappedTool({
+  name: "get-bean-details",
   access: "public",
-  description: "Look up a bean.",
-  inputSchema: z.object({ id: z.string() }),
-  outputSchema: z.object({ id: z.string() }),
-  backendInputSchema: z.object({ key: z.string() }),
-  backendOutputSchema: z.object({ record: z.object({ id: z.string() }) }),
-  mapInput: ({ id }) => ({ key: id }),
-  adapter: async ({ key }, { signal }) => backend.lookup(key, { signal }),
-  mapOutput: ({ record }) => ({ text: record.id, data: record }),
+  description: "Get clear coffee details from the catalogue service.",
+  inputSchema: z.object({ name: z.string() }),
+  outputSchema: beanDetails,
+  backendInputSchema: backendCommand,
+  backendOutputSchema: backendResult,
+  mapInput: ({ name }) => ({ search: name }),
+  adapter: async (command, { signal }) => backend.findCoffee(command, { signal }),
+  mapOutput: ({ record }) => {
+    const data = {
+      name: record.name,
+      origin: record.country,
+      variety: record.variety,
+      process: record.processCode === "W" ? "washed" as const : "natural" as const,
+      roast: record.roastLevel,
+      tastingNotes: record.flavourNotes,
+    };
+    return { text: `${data.name} is a ${data.roast}-roast ${data.process} coffee from ${data.origin}.`, data };
+  },
 });
 ```
 
@@ -142,10 +183,13 @@ const roast = defineStreamingTool({
 ```
 
 Progress is strictly increasing and defaults to at most 32 small notification
-payloads, measured before protocol encoding. Set
-`maxProgressEvents` and `maxProgressEventBytes` on `createEmseepea` to change
-those positive bounds. The reporter closes with the tool call, heartbeats are
-disabled, and invalid, oversized, late, or extra updates are rejected.
+payloads, measured before protocol encoding.
+
+Set `maxProgressEvents` and `maxProgressEventBytes` on `createEmseepea` to
+change those positive bounds. The reporter closes with the tool call.
+Heartbeats are disabled. Invalid, oversized, late, or extra updates are
+rejected.
+
 Streaming tools start only for local examples. They do not yet support:
 
 - long-running streams opened with GET
@@ -157,12 +201,15 @@ Streaming tools start only for local examples. They do not yet support:
 ## Public Resources and Prompts
 
 Static resources and prompts are public operations. Their handlers receive only
-the shared deadline and cancellation signal. The framework validates prompt
-arguments and both result types before emission. `operationTimeoutMs` bounds
-tool calls, resource reads, and prompt gets. `maxApplicationResultBytes` bounds
-each validated handler result before SDK encoding; SDK metadata, protocol
-envelopes, discovery, and catalogues are outside that limit. The settings
-default to 30 seconds and one mebibyte respectively.
+the shared deadline and cancellation signal. The framework checks prompt
+arguments and results before returning them.
+
+`operationTimeoutMs` limits tool calls, resource reads, and prompt requests. It
+defaults to 30 seconds.
+
+`maxApplicationResultBytes` limits each checked handler result before MCP
+encoding. It defaults to one mebibyte. The limit does not include MCP metadata,
+protocol envelopes, discovery, or catalogues.
 
 ```ts
 import {
@@ -266,8 +313,11 @@ const app = createEmseepea({
 ```
 
 The application's token checker must verify who issued the token and stop its
-own slow network or file work. Em See Pea limits how long the request waits, but
-the checker cannot receive a cancellation signal from the official MCP library.
-The application must also decide whether the signed-in person may access each
-record. The HTTP client described above is only for public, read-only JSON APIs;
-credentialed backend requests remain the application's responsibility.
+own slow network or file work. Em See Pea limits how long the request waits.
+The official MCP library cannot pass a cancellation signal to the checker.
+
+The application must decide whether the signed-in person may access each
+record.
+
+The HTTP client described above is only for public, read-only JSON APIs. The
+application remains responsible for backend requests that use credentials.

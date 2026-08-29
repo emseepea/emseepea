@@ -1,13 +1,24 @@
 # Native UI Example
 
+Choose this example when you need an accessible form but do not want React or
+another browser UI framework.
+
 This example adds one server-rendered form to the Fastify Model Context
 Protocol (MCP) server. It uses the native renderer and the same sample states as
-the React example.
+the React example. Choose the React example instead when your application
+already uses React and needs client-side updates.
 
 ## Run
 
-From the repository root, run `npm run build`, then
-`npm run start:native-ui`. Open
+From the repository root:
+
+```sh
+npm install
+npm run build
+npm run start:native-ui
+```
+
+Open
 `http://127.0.0.1:3000/` for the page or use
 `http://127.0.0.1:3000/mcp` for Model Context Protocol (MCP).
 

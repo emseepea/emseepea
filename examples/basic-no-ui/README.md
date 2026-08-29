@@ -1,18 +1,21 @@
-# Basic No-UI Example
+# Your First Public Tool
 
-This example exposes one self-contained, read-only `get-bean-details` tool
-through the public `@emseepea/server` API. It is the shortest path from
-validated input and output to a useful Model Context Protocol (MCP) tool.
+Choose this example when you want the smallest working server with one public,
+read-only tool and no web page.
 
-## Boundary
+The `get-bean-details` tool returns useful details about one sample coffee. Em
+See Pea checks the question and result before returning them through the public
+`@emseepea/server` API.
 
-- Model Context Protocol `2026-07-28` only
-- Streamable HTTP `POST /mcp`
-- JSON responses only for enabled methods
-- Anonymous, loopback-only serving
-- One read-only tool with sample data included in the example
-- No sessions, replay, subscriptions, effects, authentication, or production
-  network exposure
+## What This Example Includes
+
+- Model Context Protocol (MCP) `2026-07-28` over `POST /mcp`
+- one public, read-only tool with sample data
+- checks for tool input and output
+- local use on your computer only
+
+It does not include sign-in, saved sessions, live progress, changes to data, or
+production network setup.
 
 ## Run
 

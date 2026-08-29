@@ -1,11 +1,14 @@
 # Multi-Instance Example
 
+Choose this example when two local server processes may receive the same retry
+and must avoid creating the same stored report twice.
+
 This example starts two Em See Pea server processes on one computer. Each
 process has its own Fastify app and SQLite connection. Both connections use the
 same local database file.
 
-It demonstrates one narrow guarantee: the same request ID creates one stored
-bean report. A retry through either server returns that original report.
+The same request ID creates one stored bean report. A retry through either
+server returns that original report instead of creating another one.
 
 It does not work across multiple computers, and it does not promise that a
 retry changes an external service only once.
@@ -15,6 +18,7 @@ retry changes an external service only once.
 From the repository root:
 
 ```sh
+npm install
 npm run build
 npm run start:multi-instance
 ```

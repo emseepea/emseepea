@@ -112,7 +112,7 @@ function parseOperations(lines, start) {
       if (!pair) fail(`unsupported operation line: ${current}`);
       const [, key, raw = ""] = pair;
       if (key === "arguments" && raw.trimEnd() === "") {
-        const parsed = parseObject(lines, index + 1, "      ");
+        const parsed = parseObject(lines, index + 1, "      ", true);
         operation.arguments = parsed.value;
         index = parsed.next;
       } else {
@@ -138,12 +138,12 @@ function parseList(lines, start) {
   return { value: items, next: index };
 }
 
-function parseObject(lines, start, indent) {
+function parseObject(lines, start, indent, parseScalars = false) {
   const object = {};
   let index = start;
   while (index < lines.length) {
     if (!lines[index].startsWith(indent)) break;
-    applyPair(object, lines[index].slice(indent.length));
+    applyPair(object, lines[index].slice(indent.length), parseScalars);
     index += 1;
   }
   return { value: object, next: index };
@@ -160,10 +160,24 @@ function parseFoldedText(lines, start) {
   return { value: parts.join(" "), next: index };
 }
 
-function applyPair(target, source) {
+function applyPair(target, source, parseScalars = false) {
   const pair = /^([A-Za-z][A-Za-z0-9_]*):\s*(.*)$/.exec(source);
   if (!pair) fail(`expected key-value pair: ${source}`);
-  target[pair[1]] = unquote(pair[2].trimEnd());
+  target[pair[1]] = parseScalars ? parseArgumentScalar(pair[2]) : unquote(pair[2].trimEnd());
+}
+
+function parseArgumentScalar(value) {
+  const trimmed = value.trim();
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    return unquote(trimmed);
+  }
+  if (trimmed === "true") return true;
+  if (trimmed === "false") return false;
+  if (/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(trimmed)) {
+    const number = Number(trimmed);
+    if (Number.isFinite(number)) return number;
+  }
+  return trimmed;
 }
 
 function unquote(value) {

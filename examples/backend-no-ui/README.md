@@ -1,5 +1,8 @@
 # Public Web Service Backend Example
 
+Choose this example when your MCP tool needs to read a public web service and
+translate its data into a clear result for an assistant.
+
 This example exposes one read-only `search-coffee-catalog` tool. A normal run
 searches [BrewMark's public coffee catalogue](https://brewmark.io/developers/api-docs)
 and returns at most five coffees.
