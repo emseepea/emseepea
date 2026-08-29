@@ -15,13 +15,13 @@
   "dependencies": {
     "@emseepea/example-ui-shared": "0.0.0",
     "@emseepea/react": "0.0.0",
-    "@emseepea/server": "0.0.1",
+    "@emseepea/server": "0.0.2",
     "@emseepea/tailwind": "0.0.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
-    "@emseepea/testing": "0.0.1",
+    "@emseepea/testing": "0.0.2",
     "@types/node": "24.13.3",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
