@@ -33,6 +33,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
     "test": "npm run build && npm run test:built",
     "test:built": "node --test test/*.test.mjs"
   },

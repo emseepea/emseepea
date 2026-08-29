@@ -4,7 +4,7 @@
 **Category**: information security
 **Identified**: 2026-08-27
 **Owner**: Release maintainer
-**Last reviewed**: 2026-08-28
+**Last reviewed**: 2026-08-30
 **Next review**: 2027-02-28
 
 ## Description
@@ -27,22 +27,30 @@ Impact × Likelihood *before* controls.
 
 ## Controls
 
-- **Short-lived publication authority** - Routine npm publication uses trusted
-  publishing with workflow-scoped OpenID Connect (OIDC), not a durable npm write
-  token. Implemented in `.github/workflows/release.yml`.
-- **Exact-commit qualification** - Publication depends on clean-checkout tests,
-  audit, performance, package contents, and semantic evidence for the publishing
-  commit. Implemented in `.github/workflows/release.yml`.
-- **Pinned workflow dependencies** - Third-party GitHub Actions and the npm
+- **Publish without long-lived npm passwords** - Routine npm publication uses
+  trusted publishing with workflow-scoped OpenID Connect (OIDC). This means the
+  workflow gets short-lived permission only when it runs. Implemented in
+  `.github/workflows/release.yml`.
+- **Test the exact code being published** - Publication depends on tests,
+  audit, performance checks, package contents, and AI-understanding evidence for
+  the same commit that will be published. Implemented in
+  `.github/workflows/release.yml`.
+- **Use reviewed workflow versions** - Third-party GitHub Actions and the npm
   client use fixed versions. Implemented in `.github/workflows/quality.yml` and
   `.github/workflows/release.yml`.
-- **Post-publication verification** - Anonymous registry checks verify exact
-  version, `next` tag, unchanged `latest`, provenance, clean installation,
-  public import, and smoke execution before the GitHub release is created.
+- **Check the package after npm receives it** - Anonymous npm checks verify the
+  version, `next` tag, source evidence, clean installation, public import, and a
+  basic run before the GitHub release is created. Implemented in
+  `.github/workflows/release.yml`.
+- **Check every public file before publishing** - The release job builds before
+  packing, each public package builds itself before an ordinary pack, and
+  package inspection checks that every public import and command is present.
+  Implemented in `.github/workflows/release.yml`,
+  `packages/framework/package.json`, and `packages/testing/package.json`.
+- **Release artifacts** - The workflow records a checksum, a CycloneDX software
+  bill of materials (a list of package ingredients), the exact commit,
+  lockfile, supported features, excluded features, and readiness review.
   Implemented in `.github/workflows/release.yml`.
-- **Release artifacts** - The workflow records a checksum, CycloneDX software
-  bill of materials, exact commit, lockfile, supported slice, exclusions, and
-  readiness review. Implemented in `.github/workflows/release.yml`.
 
 ## Residual Risk
 
@@ -65,14 +73,18 @@ removal; it is not a reusable fallback.
 
 - **Trigger to re-assess**: Any dependency, workflow, credential, package,
   provenance, or publication change.
-- **Metrics**: Published package and commit mismatches; missing provenance,
-  checksum, software bill of materials, or evidence; unexpected `latest` tag
-  changes; durable npm write credentials; failed clean-install smoke checks.
+- **Metrics**: published package does not match the source commit; missing
+  source evidence; missing checksum; missing software bill of materials;
+  unexpected `latest` tag changes; long-lived npm write credentials; failed
+  clean-install checks.
 
 ## Related
 
 - Criteria: `RISK-POLICY.md`
-- Realised-as: none recorded
+- Realised-as: `@emseepea/server@0.0.1` and `@emseepea/testing@0.0.1`
+  were published without their built files on 2026-08-29. Both versions were
+  deprecated before announcement, and no Git tags or GitHub releases were
+  created for them.
 - Treatment ADRs:
   [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
 - Personas affected: package consumers, adopters, and maintainers
@@ -95,3 +107,5 @@ evidence, or risk policy change.
 - 2026-08-27: Auto-scaffolded from recurring pipeline findings.
 - 2026-08-28: Curated controls, ownership, scoring, and treatment from the
   implemented trusted-publishing and release-evidence workflow.
+- 2026-08-30: Recorded the incomplete 0.0.1 packages and added build,
+  package-content, registry, and release-order safeguards.

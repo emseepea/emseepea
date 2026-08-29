@@ -144,22 +144,12 @@ jobs:
           else
             echo "has_changesets=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Capture the current npm latest tags
+      - name: Build packages for publication
         if: steps.release-state.outputs.has_changesets == 'false'
-        id: registry-before
-        run: |
-          node --input-type=module <<'NODE' >> "$GITHUB_OUTPUT"
-          for (const [key, encoded] of [["server", "@emseepea%2fserver"], ["testing", "@emseepea%2ftesting"]]) {
-            const response = await fetch(`https://registry.npmjs.org/${encoded}`);
-            if (response.status === 404) {
-              console.log(`${key}_latest=`);
-              continue;
-            }
-            if (!response.ok) throw new Error(`registry returned ${response.status}`);
-            const metadata = await response.json();
-            console.log(`${key}_latest=${metadata["dist-tags"]?.latest ?? ""}`);
-          }
-          NODE
+        run: npm run build
+      - name: Capture the current npm package state
+        if: steps.release-state.outputs.has_changesets == 'false'
+        run: node scripts/verify-registry-release.mjs capture release-artifacts/registry-before.json
       - name: Prepare package evidence
         if: steps.release-state.outputs.has_changesets == 'false'
         env:
@@ -169,8 +159,10 @@ jobs:
           SEMANTIC_EVAL_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           mkdir -p release-artifacts
-          npm pack --workspace @emseepea/server --pack-destination release-artifacts --ignore-scripts
-          npm pack --workspace @emseepea/testing --pack-destination release-artifacts --ignore-scripts
+          npm pack --workspace @emseepea/server --pack-destination release-artifacts --ignore-scripts --json > release-artifacts/server-pack.json
+          npm pack --workspace @emseepea/testing --pack-destination release-artifacts --ignore-scripts --json > release-artifacts/testing-pack.json
+          node scripts/verify-packed-package.mjs packages/framework/package.json release-artifacts/server-pack.json
+          node scripts/verify-packed-package.mjs packages/testing/package.json release-artifacts/testing-pack.json
           npm sbom --workspace @emseepea/server --omit=dev --package-lock-only --sbom-format cyclonedx --sbom-type framework > release-artifacts/server-sbom.cdx.json
           npm sbom --workspace @emseepea/testing --omit=dev --package-lock-only --sbom-format cyclonedx --sbom-type framework > release-artifacts/testing-sbom.cdx.json
           sha256sum release-artifacts/*.tgz > release-artifacts/SHA256SUMS
@@ -204,41 +196,18 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           version: npm run version-packages
           publish: npm run release
-          createGithubReleases: true
-      - name: Verify and attach the published package
-        if: steps.changesets.outputs.published == 'true'
+          createGithubReleases: false
+      - name: Verify whether both packages were published
+        if: steps.release-state.outputs.has_changesets == 'false'
+        id: registry-verify
+        run: node scripts/verify-registry-release.mjs verify release-artifacts/registry-before.json release-artifacts/registry-after.json
+      - name: Verify the downloaded packages
+        if: steps.registry-verify.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SERVER_LATEST_BEFORE: ${{ steps.registry-before.outputs.server_latest }}
-          TESTING_LATEST_BEFORE: ${{ steps.registry-before.outputs.testing_latest }}
-          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
         run: |
           server_version="$(node -p "require('./packages/framework/package.json').version")"
           testing_version="$(node -p "require('./packages/testing/package.json').version")"
-          SERVER_VERSION="$server_version" TESTING_VERSION="$testing_version" node --input-type=module <<'NODE'
-          const packages = JSON.parse(process.env.PUBLISHED_PACKAGES);
-          for (const [name, version] of [["@emseepea/server", process.env.SERVER_VERSION], ["@emseepea/testing", process.env.TESTING_VERSION]]) {
-            if (!packages.some((entry) => entry.name === name && entry.version === version)) {
-              throw new Error(`published package list did not include ${name}@${version}`);
-            }
-          }
-          NODE
-          for package in "@emseepea/server@$server_version" "@emseepea/testing@$testing_version"; do
-            name="${package%@*}"
-            version="${package##*@}"
-            for attempt in 1 2 3 4 5 6 7 8 9 10; do
-              published="$(npm view "$package" version --userconfig /dev/null 2>/dev/null || true)"
-              next="$(npm view "$name" dist-tags.next --userconfig /dev/null 2>/dev/null || true)"
-              provenance="$(npm view "$package" dist.attestations.provenance.predicateType --userconfig /dev/null 2>/dev/null || true)"
-              [ "$published" = "$version" ] && [ "$next" = "$version" ] && [ "$provenance" = "https://slsa.dev/provenance/v1" ] && break
-              sleep 3
-            done
-            test "$published" = "$version"
-            test "$next" = "$version"
-            test "$provenance" = "https://slsa.dev/provenance/v1"
-          done
-          test "$(npm view @emseepea/server dist-tags.latest --userconfig /dev/null 2>/dev/null || true)" = "$SERVER_LATEST_BEFORE"
-          test "$(npm view @emseepea/testing dist-tags.latest --userconfig /dev/null 2>/dev/null || true)" = "$TESTING_LATEST_BEFORE"
           mkdir -p registry-artifacts
           npm pack "@emseepea/server@$server_version" --pack-destination registry-artifacts --ignore-scripts --userconfig /dev/null
           npm pack "@emseepea/testing@$testing_version" --pack-destination registry-artifacts --ignore-scripts --userconfig /dev/null
@@ -452,11 +421,76 @@ jobs:
           }
           NODE
           cd "$GITHUB_WORKSPACE"
-          for tag in "@emseepea/server@$server_version" "@emseepea/testing@$testing_version"; do
-            gh release upload "$tag" \
-              release-artifacts/RELEASE-EVIDENCE.md \
-              release-artifacts/SHA256SUMS \
-              release-artifacts/server-sbom.cdx.json \
-              release-artifacts/testing-sbom.cdx.json \
-              --clobber
-          done
+          SERVER_VERSION="$server_version" TESTING_VERSION="$testing_version" node --input-type=module <<'NODE'
+          import { readFile, writeFile } from "node:fs/promises";
+          for (const [key, version, path] of [
+            ["server", process.env.SERVER_VERSION, "packages/framework/CHANGELOG.md"],
+            ["testing", process.env.TESTING_VERSION, "packages/testing/CHANGELOG.md"],
+          ]) {
+            const changelog = await readFile(path, "utf8");
+            const start = changelog.indexOf(`## ${version}`);
+            if (start < 0) throw new Error(`${path} has no ${version} release notes`);
+            const next = changelog.indexOf("\n## ", start + 4);
+            await writeFile(`release-artifacts/${key}-release-notes.md`, `${changelog.slice(start, next < 0 ? undefined : next).trim()}\n`);
+          }
+          NODE
+          server_tag="@emseepea/server@$server_version"
+          testing_tag="@emseepea/testing@$testing_version"
+          remote_tag_target() {
+            peeled="$(git ls-remote --tags origin "refs/tags/$1^{}" | cut -f1)"
+            direct="$(git ls-remote --tags origin "refs/tags/$1" | cut -f1)"
+            printf '%s' "${peeled:-$direct}"
+          }
+          ensure_tag() {
+            target="$(remote_tag_target "$1")"
+            if [ -z "$target" ]; then
+              git tag --annotate "$1" "$GITHUB_SHA" --message "$1"
+              git push origin "$1"
+            else
+              test "$target" = "$GITHUB_SHA"
+            fi
+            test "$(remote_tag_target "$1")" = "$GITHUB_SHA"
+          }
+          ensure_release() {
+            tag="$1"
+            title="$2"
+            notes="$3"
+            shift 3
+            expected_assets="$(printf '%s\n' "$@" | xargs -n1 basename | sort)"
+            if gh release view "$tag" >/dev/null 2>&1; then
+              test "$(gh release view "$tag" --json tagName --jq .tagName)" = "$tag"
+              actual_assets="$(gh release view "$tag" --json assets --jq '.assets[].name' | sort)"
+              if [ "$(gh release view "$tag" --json isDraft --jq .isDraft)" = "false" ] \
+                  && [ "$(gh release view "$tag" --json isPrerelease --jq .isPrerelease)" = "true" ] \
+                  && [ "$actual_assets" = "$expected_assets" ]; then
+                return
+              fi
+              gh release edit "$tag" --draft --verify-tag --prerelease --latest=false --title "$title" --notes-file "$notes"
+            else
+              gh release create "$tag" --draft --verify-tag --prerelease --latest=false --title "$title" --notes-file "$notes"
+            fi
+            gh release view "$tag" --json assets --jq '.assets[].name' | while IFS= read -r asset; do
+              if ! printf '%s\n' "$expected_assets" | grep -Fqx "$asset"; then
+                gh release delete-asset "$tag" "$asset" --yes
+              fi
+            done
+            gh release upload "$tag" "$@" --clobber
+            test "$(gh release view "$tag" --json assets --jq '.assets[].name' | sort)" = "$expected_assets"
+            gh release edit "$tag" --draft=false --verify-tag --prerelease --latest=false --title "$title" --notes-file "$notes"
+            test "$(gh release view "$tag" --json tagName --jq .tagName)" = "$tag"
+            test "$(gh release view "$tag" --json isDraft --jq .isDraft)" = "false"
+            test "$(gh release view "$tag" --json isPrerelease --jq .isPrerelease)" = "true"
+            test "$(gh release view "$tag" --json assets --jq '.assets[].name' | sort)" = "$expected_assets"
+          }
+          ensure_tag "$server_tag"
+          ensure_tag "$testing_tag"
+          ensure_release "$server_tag" "$server_tag" release-artifacts/server-release-notes.md \
+            release-artifacts/emseepea-server-"$server_version".tgz \
+            release-artifacts/server-sbom.cdx.json \
+            release-artifacts/RELEASE-EVIDENCE.md \
+            release-artifacts/SHA256SUMS
+          ensure_release "$testing_tag" "$testing_tag" release-artifacts/testing-release-notes.md \
+            release-artifacts/emseepea-testing-"$testing_version".tgz \
+            release-artifacts/testing-sbom.cdx.json \
+            release-artifacts/RELEASE-EVIDENCE.md \
+            release-artifacts/SHA256SUMS

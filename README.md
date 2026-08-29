@@ -10,8 +10,11 @@
 Em See Pea is a general-purpose framework for Model Context Protocol (MCP)
 `2026-07-28` servers over Streamable HTTP.
 
-The project is pre-alpha. It currently supports a small, tested server surface;
-it does not claim complete MCP coverage.
+The project is pre-alpha. It supports a small set of tested MCP server features.
+It does not support the full MCP server protocol yet.
+
+Version 0.0.1 on npm is deprecated because it is missing the files needed to
+run. Do not use it. Install a newer version from the `next` tag when available.
 
 ## What You Can Build Today
 
@@ -50,7 +53,7 @@ It covers:
 - creating one stored report when two local server processes share a request ID
 
 For detailed gates and evidence, see the [quality policy][quality-policy] and
-[0.0.1 release-readiness review][release-readiness].
+[0.0.2 release-readiness review][release-readiness].
 
 ## Run an Example
 
@@ -148,6 +151,6 @@ eligible for publication.
 [cognitive-publication]: docs/decisions/0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md
 [quality-policy]: QUALITY.md
-[release-readiness]: docs/reviews/0.0.1-release-readiness.md
+[release-readiness]: docs/reviews/0.0.2-release-readiness.md
 [semantic-qualification]: docs/decisions/0024-subscription-backed-claude-semantic-release-checks.proposed.md
 [streaming-quality]: https://github.com/windyroad/emseepea/actions/runs/33070295308

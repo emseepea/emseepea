@@ -4,7 +4,7 @@
 **Category**: delivery
 **Identified**: 2026-08-28
 **Owner**: Documentation and examples maintainer
-**Last reviewed**: 2026-08-29
+**Last reviewed**: 2026-08-30
 **Next review**: 2027-02-28
 
 ## Description
@@ -28,19 +28,19 @@ Impact × Likelihood *before* controls.
 
 ## Controls
 
-- **Public-boundary examples** - Every example must import only the public
-  framework API for Model Context Protocol (MCP) behavior. Defined in
-  `QUALITY.md`.
-- **Exact-commit qualification** - Clean-checkout workflows build and test all
-  workspaces against the committed lockfile. Implemented in
+- **Examples use the public package API** - Every example must use the same
+  package entry points that adopters use. Defined in `QUALITY.md`.
+- **Test the exact code being published** - Workflows build and test a fresh
+  copy of the commit that will be published. Implemented in
   `.github/workflows/quality.yml` and `.github/workflows/release.yml`.
-- **Published-package verification** - Release qualification requires an exact-
-  version clean install, public import, and smoke execution. Defined in
+- **Install and run the package from npm before release** - Release checks use
+  the exact version from npm in a clean folder, import it, and make a basic MCP
+  call. Defined in
   [ADR-0019: public pre-alpha releases through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md).
-- **Copied-example package checks** - Every runnable example is copied to a
+- **Copy examples into a temporary folder and test them there** - Every runnable example is copied to a
   temporary folder. Its Em See Pea dependencies are installed from package
-  archives, then the example runs its own lint, deterministic tests, and
-  semantic smoke check. Implemented in
+  archives, then the example runs its own lint, repeatable tests, and a check
+  that an AI understands the example result. Implemented in
   `tests/docs/packed-getting-started.test.mjs`.
 
 ## Residual Risk
@@ -55,10 +55,10 @@ Impact × Likelihood *after* controls.
 
 ## Treatment
 
-Mitigate. The current public examples now run outside the workspace against
-package archives. Keep this risk active because a future guide, website page,
-or package can introduce drift. Add each new public path to the same check
-before publishing it.
+Mitigate. The current public examples are copied to a temporary folder and
+tested with packaged Em See Pea files. Keep this risk active because a future
+guide, website page, or package can drift. Add each new public path to the same
+check before publishing it.
 
 ## Monitoring
 
@@ -70,7 +70,9 @@ before publishing it.
 ## Related
 
 - Criteria: `RISK-POLICY.md`
-- Realised-as: none recorded
+- Realised-as: The 0.0.1 source and examples built correctly, but the npm
+  packages omitted their built files. Adopters therefore could not run the
+  published packages in the way the examples showed.
 - Treatment ADRs:
   [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
 - Personas affected: framework adopters, contributors, and maintainers
@@ -80,3 +82,5 @@ before publishing it.
 - 2026-08-28: Initial identification before the documentation website exists.
 - 2026-08-29: Reduced residual likelihood after all eight runnable examples
   passed from copied folders against packed Em See Pea packages.
+- 2026-08-30: Recorded the incomplete 0.0.1 packages and added checks against
+  the exact package files sent to npm.

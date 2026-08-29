@@ -4,7 +4,7 @@
 **Category**: brand
 **Identified**: 2026-08-27
 **Owner**: Documentation and release maintainer
-**Last reviewed**: 2026-08-28
+**Last reviewed**: 2026-08-30
 **Next review**: 2027-02-28
 
 ## Description
@@ -27,16 +27,16 @@ Impact × Likelihood *before* controls.
 
 ## Controls
 
-- **Exact-commit qualification** - Quality and release workflows build, test,
+- **Test the exact code being published** - Quality and release workflows build, test,
   benchmark, and audit a clean checkout of the exact commit. Implemented in
   `.github/workflows/quality.yml` and `.github/workflows/release.yml`.
-- **Bounded release claim** - Release evidence names the supported slice and
+- **Say only what the release proves** - Release evidence names the supported features and
   exclusions instead of implying full conformance. Implemented in
   `.github/workflows/release.yml`.
-- **Evidence record** - Publication requires a version-matched readiness record
+- **Keep a release-readiness record** - Publication requires a version-matched readiness record
   with exact pass markers. Implemented in `.github/workflows/release.yml` and
-  `docs/reviews/0.0.1-release-readiness.md`.
-- **Claim withdrawal rule** - A failed or drifting check withdraws the affected
+  `docs/reviews/0.0.2-release-readiness.md`.
+- **Remove claims when checks fail** - A failed or drifting check withdraws the affected
   claim until a later exact revision restores it. Defined in `QUALITY.md`.
 
 ## Residual Risk
@@ -51,9 +51,8 @@ Impact × Likelihood *after* controls.
 
 ## Treatment
 
-Mitigate. Exact-commit evidence and explicit exclusions are mandatory and cannot
-be bypassed. Proposed, planned, implemented, release-ready, published, and
-verified states must remain distinct in all public content.
+Mitigate. Public content must say what has been tested, what has not been
+tested, and whether a feature is only planned or already released.
 
 ## Monitoring
 
@@ -65,7 +64,10 @@ verified states must remain distinct in all public content.
 ## Related
 
 - Criteria: `RISK-POLICY.md`
-- Realised-as: none recorded
+- Realised-as: The 0.0.1 readiness record did not catch that the published
+  packages lacked the files needed to run. The README also kept linking to that
+  record after 0.0.1 was deprecated. Both claims were corrected before a public
+  release announcement.
 - Treatment ADRs:
   [ADR-0005: Active Streamable HTTP Scope and Adaptive Delivery](../decisions/0005-active-streamable-http-scope-and-adaptive-delivery.proposed.md)
   and
@@ -89,3 +91,5 @@ evidence, or risk policy change.
 - 2026-08-27: Auto-scaffolded from recurring pipeline findings.
 - 2026-08-28: Curated controls, ownership, scoring, and treatment from the
   exact-commit quality and release gates.
+- 2026-08-30: Recorded the incomplete 0.0.1 package claim, linked the corrected
+  0.0.2 readiness record, and added package-content checks.
