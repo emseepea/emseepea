@@ -72,6 +72,7 @@ function isPublicMarkdown(file) {
   if (!file.endsWith(".md")) return false;
   return (
     file === "README.md" ||
+    file === "BATTLE-PLAN.md" ||
     file === "QUALITY.md" ||
     file === "SECURITY.md" ||
     file === "SUPPORT.md" ||

@@ -47,6 +47,7 @@ test("POST-scoped progress stays checked, bounded, and terminal", async () => {
   const started = new Promise((resolve) => { disconnectStarted = resolve; });
   let observeCancellation;
   const cancelled = new Promise((resolve) => { observeCancellation = resolve; });
+  let validRuns = 0;
   const stream = defineStreamingTool({
     name: "brew-plan",
     access: "public",
@@ -57,11 +58,13 @@ test("POST-scoped progress stays checked, bounded, and terminal", async () => {
     outputSchema: z.object({ status: z.literal("complete"), steps: z.number().int() }),
     async handler({ mode }, { reportProgress, signal }) {
       retainedReport = reportProgress;
+      const run = mode === "valid" ? ++validRuns : 0;
+      const message = (value) => run ? `run ${run}: ${value}` : value;
       if (mode === "unawaited") {
         void reportProgress({ progress: 1, total: 1, message: "dose" });
         return { text: "Brew plan complete", data: { status: "complete", steps: 3 } };
       }
-      await reportProgress({ progress: 1, total: 3, message: "dose" });
+      await reportProgress({ progress: 1, total: 3, message: message("dose") });
       if (mode === "invalid") await reportProgress({ progress: 0, total: 3, message: "rewind" });
       if (mode === "equal") await reportProgress({ progress: 1, total: 3, message: "same" });
       if (mode === "caught-invalid") {
@@ -86,8 +89,8 @@ test("POST-scoped progress stays checked, bounded, and terminal", async () => {
         }
       }
       if (mode === "timeout") await delay(5_000, undefined, { signal });
-      await reportProgress({ progress: 2, total: 3, message: "pour" });
-      await reportProgress({ progress: 3, total: 3, message: "draw down" });
+      await reportProgress({ progress: 2, total: 3, message: message("pour") });
+      await reportProgress({ progress: 3, total: 3, message: message("draw down") });
       return { text: "Brew plan complete", data: { status: "complete", steps: 3 } };
     },
   });
@@ -140,11 +143,29 @@ test("POST-scoped progress stays checked, bounded, and terminal", async () => {
       undefined,
     );
     assert.match(streamed.response.headers.get("content-type"), /^text\/event-stream/);
+    assert.equal(streamed.response.headers.get("x-accel-buffering"), "no");
     assert.equal(streamed.messages.length, 4);
     assert.deepEqual(streamed.messages.slice(0, 3).map(({ params }) => params.progress), [1, 2, 3]);
     assert.ok(streamed.messages.slice(0, 3).every(({ params }) => params.progressToken === "progress-token"));
     assert.deepEqual(streamed.messages[3].result, json.body.result);
     await assert.rejects(retainedReport({ progress: 3, total: 3 }), /no longer available/);
+
+    const runsBeforeStaleHeader = validRuns;
+    const nonResumed = await rpc(
+      running.url,
+      "tools/call",
+      { name: "brew-plan", arguments: { mode: "valid" } },
+      "new-progress-token",
+      undefined,
+      undefined,
+      { "Last-Event-ID": "stale-event" },
+    );
+    assert.equal(validRuns, runsBeforeStaleHeader + 1);
+    assert.deepEqual(nonResumed.messages.slice(0, 3).map(({ params }) => params.progress), [1, 2, 3]);
+    assert.ok(nonResumed.messages.slice(0, 3).every(({ params }) => (
+      params.progressToken === "new-progress-token" && params.message.startsWith(`run ${validRuns}:`)
+    )));
+    assert.equal(nonResumed.messages.length, 4);
 
     const unawaited = await rpc(
       running.url,
@@ -313,7 +334,7 @@ function streamingTool(onCall) {
   });
 }
 
-async function rpc(url, method, params = {}, progressToken, signal, bearerToken) {
+async function rpc(url, method, params = {}, progressToken, signal, bearerToken, extraHeaders = {}) {
   const response = await fetch(url, {
     method: "POST",
     signal,
@@ -324,6 +345,7 @@ async function rpc(url, method, params = {}, progressToken, signal, bearerToken)
       "Mcp-Method": method,
       ...(method === "tools/call" ? { "Mcp-Name": params.name } : {}),
       ...(bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {}),
+      ...extraHeaders,
     },
     body: JSON.stringify({
       jsonrpc: "2.0",

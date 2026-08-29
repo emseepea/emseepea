@@ -275,15 +275,15 @@ test("disabled resource and prompt capabilities are absent and rejected", async 
     const discover = await rpc(running.url, "server/discover");
     assert.equal(discover.body.result.capabilities.resources, undefined);
     assert.equal(discover.body.result.capabilities.prompts, undefined);
-    for (const method of [
-      "resources/list",
-      "resources/templates/list",
-      "resources/read",
-      "prompts/list",
-      "prompts/get",
-      "completion/complete",
+    for (const [method, params] of [
+      ["resources/list", {}],
+      ["resources/templates/list", {}],
+      ["resources/read", { uri: "guide://missing" }],
+      ["prompts/list", {}],
+      ["prompts/get", { name: "missing" }],
+      ["completion/complete", {}],
     ]) {
-      const result = await rpc(running.url, method);
+      const result = await rpc(running.url, method, params);
       assert.equal(result.response.status, 404);
       assert.equal(result.body.error.code, -32601);
     }
@@ -749,7 +749,7 @@ test("prompt and resource-template completion is opt-in and checked", async () =
   });
   promptComplete.topic = () => ["mutated"];
   templateComplete.method = () => ["mutated"];
-  const running = await serveEmseepea(createEmseepea({
+  const app = createEmseepea({
     name: "completion",
     version: "0.0.0",
     prompts: [prompt],
@@ -773,7 +773,16 @@ test("prompt and resource-template completion is opt-in and checked", async () =
         },
       },
     },
-  }), { port: 0 });
+  });
+  let completedStreamRequests = 0;
+  app.addHook("preHandler", async (request) => {
+    if (request.body?.method === "completion/complete") {
+      Object.defineProperty(request.raw, "destroyed", { value: true, configurable: true });
+      Object.defineProperty(request.raw, "complete", { value: true, configurable: true });
+      completedStreamRequests += 1;
+    }
+  });
+  const running = await serveEmseepea(app, { port: 0 });
 
   try {
     const discover = await rpc(running.url, "server/discover", {}, "irrelevant");
@@ -790,11 +799,13 @@ test("prompt and resource-template completion is opt-in and checked", async () =
       argument: { name: "topic", value: "es" },
       context: { arguments: { style: "concise", topic: "current", unknown: "private" } },
     }, "irrelevant");
+    assert.equal(promptResult.body.error, undefined, JSON.stringify(promptResult.body.error));
     assert.deepEqual(promptResult.body.result.completion, {
       values: ["espresso"],
       total: 1,
       hasMore: false,
     });
+    assert.equal(completedStreamRequests, 1);
     assert.deepEqual({ ...observedPromptArguments }, { style: "concise" });
 
     const templateResult = await rpc(running.url, "completion/complete", {
@@ -937,13 +948,13 @@ test("disconnect cancels a cooperating completion handler", async () => {
   }
 });
 
-test("an already-closed request cannot start completion work", async () => {
+test("an already-aborted request cannot start completion work", async () => {
   let completionCalls = 0;
   const app = createEmseepea({
-    name: "completion-already-closed",
+    name: "completion-already-aborted",
     version: "0.0.0",
     prompts: [definePrompt({
-      name: "already-closed-completion",
+      name: "already-aborted-completion",
       argsSchema: z.object({ topic: z.string() }),
       complete: {
         topic: () => {
@@ -956,17 +967,16 @@ test("an already-closed request cannot start completion work", async () => {
   });
   app.addHook("preHandler", async (request) => {
     if (request.url === "/mcp") {
-      Object.defineProperty(request.raw, "destroyed", { value: true, configurable: true });
+      Object.defineProperty(request.raw, "aborted", { value: true, configurable: true });
     }
   });
   const running = await serveEmseepea(app, { port: 0 });
 
   try {
-    const result = await rpc(running.url, "completion/complete", {
-      ref: { type: "ref/prompt", name: "already-closed-completion" },
+    await assert.rejects(rpc(running.url, "completion/complete", {
+      ref: { type: "ref/prompt", name: "already-aborted-completion" },
       argument: { name: "topic", value: "e" },
-    });
-    assertGenericError(result, "Completion failed");
+    }));
     assert.equal(completionCalls, 0);
   } finally {
     await running.close();

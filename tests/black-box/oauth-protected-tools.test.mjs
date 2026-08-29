@@ -164,6 +164,42 @@ test("discovery stays public while protected invocation is fail-closed", async (
     assert.equal(unknown.body.error.code, -32602);
     assert.equal(verifierCalls, 0);
 
+    for (const headers of [
+      { "MCP-Protocol-Version": undefined },
+      { "MCP-Protocol-Version": "2025-11-25" },
+      { "Mcp-Method": undefined },
+      { "Mcp-Method": "tools/list" },
+      { "Mcp-Name": undefined },
+      { "Mcp-Name": "different-tool" },
+    ]) {
+      const malformedProtected = await rpc(
+        running.url,
+        "tools/call",
+        { name: "protected-bean", arguments: { id: "bad-routing-header" } },
+        "valid",
+        headers,
+      );
+      assert.equal(malformedProtected.response.status, 400);
+      assert.equal(malformedProtected.body.error.code, -32020);
+      assert.equal(verifierCalls, 0);
+      assert.equal(protectedCalls, 0);
+    }
+
+    const missingBodyVersion = { ...requestMeta };
+    delete missingBodyVersion["io.modelcontextprotocol/protocolVersion"];
+    const malformedBodyMetadata = await rpc(
+      running.url,
+      "tools/call",
+      { name: "protected-bean", arguments: { id: "missing-body-version" } },
+      "valid",
+      {},
+      missingBodyVersion,
+    );
+    assert.equal(malformedBodyMetadata.response.status, 400);
+    assert.equal(malformedBodyMetadata.body.error.code, -32020);
+    assert.equal(verifierCalls, 0);
+    assert.equal(protectedCalls, 0);
+
     const missing = await rpc(
       running.url,
       "tools/call",
@@ -281,14 +317,18 @@ function protectedCall(url, token) {
   );
 }
 
-async function rpc(url, method, params = {}, token) {
+async function rpc(url, method, params = {}, token, extraHeaders = {}, meta = requestMeta) {
   const headers = {
     Accept: "application/json, text/event-stream",
     "Content-Type": "application/json",
     "MCP-Protocol-Version": "2026-07-28",
     "Mcp-Method": method,
+    ...(method === "tools/call" ? { "Mcp-Name": params.name } : {}),
+    ...extraHeaders,
   };
-  if (method === "tools/call") headers["Mcp-Name"] = params.name;
+  for (const [name, value] of Object.entries(headers)) {
+    if (value === undefined) delete headers[name];
+  }
   if (token) headers.Authorization = `Bearer ${token}`;
   const response = await fetch(url, {
     method: "POST",
@@ -297,7 +337,7 @@ async function rpc(url, method, params = {}, token) {
       jsonrpc: "2.0",
       id: crypto.randomUUID(),
       method,
-      params: { ...params, _meta: requestMeta },
+      params: { ...params, _meta: meta },
     }),
   });
   return { response, body: await response.json() };

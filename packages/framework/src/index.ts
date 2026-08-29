@@ -8,6 +8,7 @@ import {
   McpServer,
   OAuthError,
   OAuthErrorCode,
+  ProtocolErrorCode,
   ResourceTemplate,
   bearerAuthChallengeResponse,
   buildOAuthProtectedResourceMetadata,
@@ -786,6 +787,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   app.post("/mcp", { bodyLimit: maxRequestBytes }, async (request, reply) => {
     if (deployment.mode === "production-behind-proxy" &&
         !validateProductionRequest(request, reply, deployment, limiter!)) return;
+    if (!await validateMcpRequestHeaders(request, reply)) return;
     if (isRecord(request.body) && typeof request.body.method === "string" &&
         !enabledMethods.has(request.body.method)) {
       await sendRpcError(reply, 404, -32601, "Method not found", requestId(request.body.id));
@@ -808,7 +810,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     const abort = () => disconnected.abort();
     request.raw.once("aborted", abort);
     reply.raw.once("close", abort);
-    if (request.raw.aborted || request.raw.destroyed || reply.raw.destroyed) abort();
+    if (requestAlreadyClosed(request, reply)) abort();
     reply.hijack();
     try {
       await requestOperations.run(
@@ -856,6 +858,7 @@ async function verifyProtectedCall(
   const abort = () => disconnected.abort();
   request.raw.once("aborted", abort);
   reply.raw.once("close", abort);
+  if (requestAlreadyClosed(request, reply)) abort();
   try {
     const authInfo = await runWithDeadline(
       disconnected.signal,
@@ -877,6 +880,10 @@ async function verifyProtectedCall(
     request.raw.off("aborted", abort);
     reply.raw.off("close", abort);
   }
+}
+
+function requestAlreadyClosed(request: FastifyRequest, reply: FastifyReply): boolean {
+  return request.raw.aborted || (request.raw.destroyed && !request.raw.complete) || reply.raw.destroyed;
 }
 
 async function sendWebResponse(reply: FastifyReply, response: Response): Promise<void> {
@@ -946,8 +953,13 @@ async function sendRpcError(
   code: number,
   message: string,
   id: string | number | null = null,
+  data?: Readonly<Record<string, unknown>>,
 ): Promise<void> {
-  await reply.code(status).send({ jsonrpc: "2.0", id, error: { code, message } });
+  await reply.code(status).send({
+    jsonrpc: "2.0",
+    id,
+    error: { code, message, ...(data ? { data } : {}) },
+  });
 }
 function isFastifyError(error: unknown): error is FastifyError {
   return error instanceof Error && "code" in error;
@@ -1133,6 +1145,68 @@ function singleHeader(rawHeaders: readonly string[], name: string): string | und
     if (rawHeaders[index]?.toLowerCase() === name) values.push(rawHeaders[index + 1] ?? "");
   }
   return values.length === 0 ? undefined : values.length === 1 ? values[0] : null;
+}
+
+async function validateMcpRequestHeaders(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<boolean> {
+  const body = request.body;
+  if (!isRecord(body) || typeof body.method !== "string") return true;
+  const id = requestId(body.id);
+  const header = (name: string) => singleHeader(request.raw.rawHeaders, name);
+  const rejectMismatch = async (name: string) => {
+    await sendRpcError(reply, 400, -32020, `Missing or mismatched ${name} header`, id);
+    return false;
+  };
+  const protocolVersion = header("mcp-protocol-version");
+  if (!protocolVersion) return rejectMismatch("MCP-Protocol-Version");
+  const params = isRecord(body.params) ? body.params : undefined;
+  const meta = params && isRecord(params._meta) ? params._meta : undefined;
+  const bodyVersion = meta?.["io.modelcontextprotocol/protocolVersion"];
+  if (typeof bodyVersion !== "string" || protocolVersion !== bodyVersion) {
+    return rejectMismatch("MCP-Protocol-Version");
+  }
+  if (protocolVersion !== PROTOCOL_VERSION) {
+    await sendRpcError(
+      reply,
+      400,
+      ProtocolErrorCode.UnsupportedProtocolVersion,
+      `Unsupported protocol version: ${protocolVersion}`,
+      id,
+      { requested: protocolVersion, supported: [PROTOCOL_VERSION] },
+    );
+    return false;
+  }
+  if (header("mcp-method") !== body.method) return rejectMismatch("Mcp-Method");
+
+  const nameField = body.method === "tools/call" || body.method === "prompts/get"
+    ? "name"
+    : body.method === "resources/read"
+      ? "uri"
+      : undefined;
+  if (!nameField) return true;
+  if (!params || typeof params[nameField] !== "string") return rejectMismatch("Mcp-Name");
+  const name = header("mcp-name");
+  if (!name || decodeMcpHeaderValue(name) !== params[nameField]) return rejectMismatch("Mcp-Name");
+  return true;
+}
+
+function decodeMcpHeaderValue(value: string): string | undefined {
+  const normalized = value.replace(/^[\t ]+|[\t ]+$/g, "");
+  const prefix = "=?base64?";
+  if (!normalized.startsWith(prefix) || !normalized.endsWith("?=")) {
+    return /^[\x20-\x7E\t]*$/.test(normalized) ? normalized : undefined;
+  }
+  const encoded = normalized.slice(prefix.length, -2);
+  if (!encoded || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(encoded)) {
+    return undefined;
+  }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(Buffer.from(encoded, "base64"));
+  } catch {
+    return undefined;
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

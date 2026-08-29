@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 27 decisions: 17 current and 10 historical.
+This project has 28 decisions: 18 current and 10 historical.
 
 ## Quick Index
 
@@ -28,6 +28,7 @@ This project has 27 decisions: 17 current and 10 historical.
 - [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.proposed.md) — Proposed; human review confirmed.
 - [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.proposed.md) — Proposed; human review confirmed.
 - [ADR-0028: Example-Owned Oxlint with Root Orchestration](0028-example-owned-oxlint-with-root-orchestration.proposed.md) — Proposed; human review confirmed.
+- [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md) — Proposed; human review pending.
 
 ### Historical decisions
 
@@ -603,3 +604,25 @@ Chosen option: **"Example-owned Oxlint dependency with root orchestration"**, be
 - The future `npm init` template test creates a project outside the monorepo and proves installation, linting, deterministic tests, and semantic checks.
 - Clean monorepo checkouts pass lint on both supported Node versions.
 - Intentional suppressions are narrow and state why they exist.
+
+### [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### Decision
+
+Chosen option: **"Direct code-first semantic tests"**, because normal code gives examples the needed flexibility. The existing runner already produces repeated answers and release evidence without Promptfoo.
+
+#### How We Check It
+
+- `@emseepea/testing` has no Promptfoo dependency and passes a clean high-severity dependency audit.
+- Every runnable example owns an executable semantic test and exposes `test:llm` from its package.
+- A copied example runs its ordinary, lint, and semantic checks using packed public packages rather than monorepo-only imports.
+- Tests demonstrate setup, cleanup, generated cases, several MCP operations, authentication, and a domain-specific assertion.
+- Semantic tests use the official MCP client and record request and response evidence for every required path.
+- Each case produces three fresh answers and nine independent judgment records, with no semantic retries or cache.
+- Tests reject missing evidence, failed critical facts, incorrect meaning, retries, tool use, extra turns, malformed output, wrong models, and provider failures.
+- Claude credentials reach only the isolated model process and never the example server, public evidence, package, or publication step.
+- The exact release revision passes all semantic cases before npm publication.
+- The clean packed-install example gate finishes without installing Promptfoo.

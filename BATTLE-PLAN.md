@@ -1,6 +1,6 @@
 # Battle Plan: Build Em See Pea
 
-Last updated: 2026-08-28
+Last updated: 2026-08-30
 
 This is an implementation plan designed to change when evidence shows a better
 route. It keeps the objective, boundaries, proof, and next decision clear.
@@ -34,21 +34,22 @@ Already implemented and checked in earlier revisions:
 - separate public and backend data checks with explicit mapping
 - public resources, resource patterns, prompts, and suggestions
 - bounded progress updates for local POST requests
+- native and React form renderers with a separate Tailwind package
+- native and React UI examples using the same form contract
+- a two-process SQLite example for one-computer deployments
+- deterministic tests and lint commands owned by every runnable example
 
-Current work:
+Current next action:
 
-- native form rendering
-- optional `@emseepea/react` rendering
-- optional `@emseepea/tailwind` styling
-- native and React UI examples using the same fixtures
-- a two-process, one-computer SQLite example that returns the same stored report
-  for repeated requests
-- Claude subscription checks that test whether a language model understands
-  every example
-- plain-language review of all changed public content
+1. Decide
+   [ADR-0029: Code-First Semantic Tests](docs/decisions/0029-code-first-semantic-tests.proposed.md).
+2. If ratified, replace the remaining YAML language-model cases with code-first
+   tests.
+3. Then close the partial and missing rows in the
+   [MCP server coverage ledger](docs/protocol-coverage.md).
 
-Publication waits for the GitHub language-model check on the commit being
-published.
+The documentation website remains required. Plain-language review and
+language-model understanding checks continue for every example.
 
 ## Definition of Victory
 
@@ -112,14 +113,13 @@ For each increment:
 
 ## Delivery Priorities
 
-### 1. Finish the Current UI and Release-Check Slice
+### 1. Close the Semantic-Testing and Coverage Decisions
 
-- finish native, React, and Tailwind public packages
-- keep both UI examples on one shared form contract
-- pass browser accessibility and styles-off checks
-- pass all deterministic tests from a fresh local copy
-- add the Claude subscription secret after interactive sign-in
-- commit, push, and confirm GitHub checks
+- ratify or reject the code-first semantic-testing decision
+- migrate the example tests only if that decision is ratified
+- keep every example independently copyable, testable, and lintable
+- maintain the active protocol coverage ledger from public sources and exact
+  tests
 
 ### 2. Complete Production Boundaries
 
@@ -225,9 +225,10 @@ signals, not proof that people will understand the content.
 ## Authoritative Records
 
 - [Architecture decisions](docs/decisions/README.md)
+- [MCP server coverage](docs/protocol-coverage.md)
 - [Quality policy](QUALITY.md)
 - [Risk register](docs/risks/README.md)
-- [Current release readiness](docs/reviews/0.0.1-release-readiness.md)
+- [Current release readiness](docs/reviews/0.0.2-release-readiness.md)
 - [Framework package guide](packages/framework/README.md)
 
 These records hold detail so this battle plan can remain a usable decision aid.
