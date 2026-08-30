@@ -292,6 +292,112 @@ test("disabled resource and prompt capabilities are absent and rejected", async 
   }
 });
 
+test("successful operations carry the active result envelopes", async () => {
+  const resourceUri = "envelope://coffee/catalogue";
+  const tool = defineTool({
+    name: "envelope-tool",
+    access: "public",
+    description: "Return one checked result.",
+    inputSchema: z.object({}),
+    outputSchema: z.object({ ok: z.literal(true) }),
+    handler: () => ({ text: "ok", data: { ok: true } }),
+  });
+  const resource = defineResource({
+    name: "envelope-resource",
+    uri: resourceUri,
+    handler: () => ({ contents: [{ uri: resourceUri, text: "catalogue" }] }),
+  });
+  const template = defineResourceTemplate({
+    name: "envelope-template",
+    uriTemplate: "envelope://topics/{topic}",
+    handler: ({ uri }) => ({ contents: [{ uri, text: "topic" }] }),
+  });
+  const prompt = definePrompt({
+    name: "envelope-prompt",
+    argsSchema: z.object({ topic: z.string() }),
+    complete: { topic: () => ["espresso"] },
+    handler: ({ topic }) => ({
+      messages: [{ role: "user", content: { type: "text", text: topic } }],
+    }),
+  });
+  const app = createEmseepea({
+    name: "result-envelope-test",
+    version: "0.0.0",
+    tools: [tool],
+    resources: [resource, template],
+    prompts: [prompt],
+  });
+  const running = await serveEmseepea(app, { port: 0 });
+
+  const operations = [
+    ["server/discover", {}],
+    ["tools/list", {}],
+    ["tools/call", { name: "envelope-tool", arguments: {} }],
+    ["resources/list", {}],
+    ["resources/templates/list", {}],
+    ["resources/read", { uri: resourceUri }],
+    ["prompts/list", {}],
+    ["prompts/get", { name: "envelope-prompt", arguments: { topic: "espresso" } }],
+    ["completion/complete", {
+      ref: { type: "ref/prompt", name: "envelope-prompt" },
+      argument: { name: "topic", value: "es" },
+    }],
+  ];
+  const cacheable = new Set([
+    "server/discover",
+    "tools/list",
+    "resources/list",
+    "resources/templates/list",
+    "resources/read",
+    "prompts/list",
+  ]);
+
+  try {
+    for (const [method, params] of operations) {
+      const result = await rpc(running.url, method, params);
+      assert.equal(result.response.status, 200, method);
+      assert.equal(result.body.result.resultType, "complete", method);
+      if (cacheable.has(method)) {
+        assert.equal(result.body.result.ttlMs, 0, method);
+        assert.equal(result.body.result.cacheScope, "private", method);
+      }
+    }
+
+    const client = new Client(
+      { name: "result-envelope-client", version: "0.0.0" },
+      { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+    );
+    await client.connect(new StreamableHTTPClientTransport(running.url));
+    try {
+      assert.ok((await client.discover()).capabilities.tools);
+      assert.equal((await client.listTools()).tools[0].name, "envelope-tool");
+      assert.equal((await client.callTool({
+        name: "envelope-tool",
+        arguments: {},
+      })).structuredContent.ok, true);
+      assert.equal((await client.listResources()).resources[0].name, "envelope-resource");
+      assert.equal(
+        (await client.listResourceTemplates()).resourceTemplates[0].name,
+        "envelope-template",
+      );
+      assert.equal((await client.readResource({ uri: resourceUri })).contents[0].text, "catalogue");
+      assert.equal((await client.listPrompts()).prompts[0].name, "envelope-prompt");
+      assert.equal((await client.getPrompt({
+        name: "envelope-prompt",
+        arguments: { topic: "espresso" },
+      })).messages[0].content.text, "espresso");
+      assert.deepEqual((await client.complete({
+        ref: { type: "ref/prompt", name: "envelope-prompt" },
+        argument: { name: "topic", value: "es" },
+      })).completion.values, ["espresso"]);
+    } finally {
+      await client.close();
+    }
+  } finally {
+    await running.close();
+  }
+});
+
 test("public resources and prompts stay checked and identity-free", async () => {
   let verifierCalls = 0;
   let resourceCalls = 0;

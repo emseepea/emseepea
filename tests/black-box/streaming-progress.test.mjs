@@ -147,6 +147,7 @@ test("POST-scoped progress stays checked, bounded, and terminal", async () => {
     assert.equal(streamed.messages.length, 4);
     assert.deepEqual(streamed.messages.slice(0, 3).map(({ params }) => params.progress), [1, 2, 3]);
     assert.ok(streamed.messages.slice(0, 3).every(({ params }) => params.progressToken === "progress-token"));
+    assert.equal(streamed.messages[3].result.resultType, "complete");
     assert.deepEqual(streamed.messages[3].result, json.body.result);
     await assert.rejects(retainedReport({ progress: 3, total: 3 }), /no longer available/);
 
