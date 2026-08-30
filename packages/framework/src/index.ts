@@ -1771,9 +1771,9 @@ function promptArguments(schema: z.ZodObject): readonly Readonly<Record<string, 
   const required = new Set(Array.isArray(jsonSchema.required) ? jsonSchema.required : []);
   return Object.freeze(Object.entries(properties).map(([name, property]) => Object.freeze({
     name,
-    description: isRecord(property) && typeof property.description === "string"
-      ? property.description
-      : undefined,
+    ...(isRecord(property) && typeof property.description === "string"
+      ? { description: property.description }
+      : {}),
     required: required.has(name),
   })));
 }
