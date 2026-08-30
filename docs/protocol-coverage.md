@@ -33,8 +33,8 @@ sign-in. See the
 ### `tools/list`
 
 **Status: Partial.** Lists registered tools with public input and output
-schemas. Advanced tool metadata and changing the list while the server is
-running are not supported. See the
+schemas, titles, icons, annotations, and public application metadata. Changing
+the list while the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
 [list-pagination tests](../tests/black-box/list-pagination.test.mjs).
@@ -132,6 +132,23 @@ successfully reads all nine results. The separately tested
 [client-input tests](../tests/black-box/input-required.test.mjs). See the
 [result-envelope tests](../tests/black-box/resources-prompts.test.mjs) and
 [streaming tests](../tests/black-box/streaming-progress.test.mjs).
+
+### Advertised Names, Icons, and Hints
+
+**Status: Checked.** Applications can give the server a website address. They
+can give the server and its tools, resources, resource address patterns, and
+prompts human-friendly titles, descriptions, and icons. Tools can provide
+standard usage hints. Resources can provide audience, importance, and
+known-size details. Each item may also include public application metadata.
+
+Tool annotations are hints for clients. They do not prove that a tool is safe,
+grant permission, or replace sign-in and authorization checks.
+
+The framework checks and copies these details before startup. Tests prove that
+invalid details fail early, later changes to the application's objects have no
+effect, and application metadata cannot replace the framework's tool-access
+description. See the
+[protocol metadata tests](../tests/black-box/protocol-metadata.test.mjs).
 
 ### Cache Instructions
 

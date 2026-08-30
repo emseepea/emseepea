@@ -29,18 +29,27 @@ import {
   type CallToolResult,
   type CacheHint,
   type GetPromptResult,
+  type Icon,
   type InputRequiredResult as SdkInputRequiredResult,
   type InputRequest,
   type InputResponses,
   type InputResponseView as SdkInputResponseView,
+  type Implementation,
   type ListPromptsResult,
   type ListResourcesResult,
   type ListResourceTemplatesResult,
   type ListToolsResult,
+  type MetaObject,
   type OAuthTokenVerifier,
+  type Annotations,
+  type Prompt,
   type ReadResourceResult,
+  type Resource as McpResource,
+  type ResourceTemplateType,
   type StandardSchemaV1,
   type ServerOptions,
+  type ToolAnnotations,
+  type Tool,
 } from "@modelcontextprotocol/server";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -177,6 +186,9 @@ interface ToolDefinitionBase<Input extends z.ZodObject, Output extends z.ZodObje
   readonly name: string;
   readonly title?: string;
   readonly description: string;
+  readonly icons?: readonly Icon[];
+  readonly annotations?: Readonly<ToolAnnotations>;
+  readonly _meta?: Readonly<MetaObject>;
   readonly inputSchema: Input;
   readonly outputSchema: Output;
 }
@@ -264,6 +276,10 @@ export interface ResourceDefinition {
   readonly title?: string;
   readonly description?: string;
   readonly mimeType?: string;
+  readonly icons?: readonly Icon[];
+  readonly annotations?: Readonly<Annotations>;
+  readonly size?: number;
+  readonly _meta?: Readonly<MetaObject>;
   readonly cacheHint?: CacheHint;
   readonly handler: (context: ClientInputContext) =>
     ReadResourceResult | InputRequiredResult | Promise<ReadResourceResult | InputRequiredResult>;
@@ -274,6 +290,9 @@ export interface ResourceTemplateDefinition {
   readonly title?: string;
   readonly description?: string;
   readonly mimeType?: string;
+  readonly icons?: readonly Icon[];
+  readonly annotations?: Readonly<Annotations>;
+  readonly _meta?: Readonly<MetaObject>;
   readonly cacheHint?: CacheHint;
   readonly complete?: Readonly<Record<string, CompletionHandler>>;
   readonly handler: (
@@ -316,6 +335,8 @@ export type PromptDefinition<Args extends z.ZodObject> = {
   readonly name: string;
   readonly title?: string;
   readonly description?: string;
+  readonly icons?: readonly Icon[];
+  readonly _meta?: Readonly<MetaObject>;
   readonly argsSchema: Args;
   readonly complete?: Readonly<Partial<Record<Extract<keyof z.input<Args>, string>, CompletionHandler>>>;
   readonly handler: (
@@ -339,6 +360,10 @@ export interface OAuthResourceServerOptions {
 export interface EmseepeaOptions {
   readonly name: string;
   readonly version: string;
+  readonly title?: string;
+  readonly description?: string;
+  readonly icons?: readonly Icon[];
+  readonly websiteUrl?: string;
   readonly instructions?: string;
   readonly tools?: readonly EmseepeaTool[];
   readonly resources?: readonly EmseepeaResource[];
@@ -449,10 +474,29 @@ export function defineMappedTool<
 }
 
 export function defineResource(definition: ResourceDefinition): EmseepeaResource {
-  const { name, title, description, mimeType, handler } = definition;
+  const { name, handler } = definition;
   assertRegistrationName("Resource", name);
   const uri = canonicalResourceUri(definition.uri);
-  const metadata = Object.freeze({ title, description, mimeType });
+  const listing = checkedProtocolValue<McpResource>("Resource", {
+    name,
+    uri,
+    title: definition.title,
+    description: definition.description,
+    mimeType: definition.mimeType,
+    icons: definition.icons,
+    annotations: definition.annotations,
+    size: definition.size,
+    _meta: definition._meta,
+  });
+  const metadata = Object.freeze({
+    title: listing.title,
+    description: listing.description,
+    mimeType: listing.mimeType,
+    icons: listing.icons,
+    annotations: listing.annotations,
+    size: listing.size,
+    _meta: listing._meta,
+  });
   const cacheHint = definition.cacheHint === undefined
     ? undefined
     : normalizeCacheHint(definition.cacheHint, `resource ${name}`);
@@ -462,7 +506,7 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
     [RESOURCE_KIND]: "static",
     [RESOURCE_LISTING]: Object.freeze({
       method: "resources/list",
-      value: Object.freeze({ uri, name, ...metadata }),
+      value: listing,
     }),
     [HAS_COMPLETION]: false,
     [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
@@ -505,11 +549,28 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
 }
 
 export function defineResourceTemplate(definition: ResourceTemplateDefinition): EmseepeaResource {
-  const { name, title, description, mimeType, handler } = definition;
+  const { name, handler } = definition;
   assertRegistrationName("Resource template", name);
   const { template, route } = checkedResourceTemplate(definition.uriTemplate);
   const uriTemplate = template.uriTemplate.toString();
-  const metadata = Object.freeze({ title, description, mimeType });
+  const listing = checkedProtocolValue<ResourceTemplateType>("ResourceTemplate", {
+    name,
+    uriTemplate,
+    title: definition.title,
+    description: definition.description,
+    mimeType: definition.mimeType,
+    icons: definition.icons,
+    annotations: definition.annotations,
+    _meta: definition._meta,
+  });
+  const metadata = Object.freeze({
+    title: listing.title,
+    description: listing.description,
+    mimeType: listing.mimeType,
+    icons: listing.icons,
+    annotations: listing.annotations,
+    _meta: listing._meta,
+  });
   const cacheHint = definition.cacheHint === undefined
     ? undefined
     : normalizeCacheHint(definition.cacheHint, `resource template ${name}`);
@@ -527,7 +588,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
     [RESOURCE_ROUTE]: route,
     [RESOURCE_LISTING]: Object.freeze({
       method: "resources/templates/list",
-      value: Object.freeze({ name, uriTemplate, ...metadata }),
+      value: listing,
     }),
     [HAS_COMPLETION]: completions.size > 0,
     [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
@@ -591,15 +652,23 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
 export function definePrompt<Args extends z.ZodObject>(
   definition: PromptDefinition<Args>,
 ): EmseepeaPrompt {
-  const { name, title, description, argsSchema, handler } = definition;
+  const { name, argsSchema, handler } = definition;
   assertRegistrationName("Prompt", name);
   const argumentNames = Object.keys(argsSchema.shape);
   const completions = checkedCompletionHandlers("Prompt", definition.complete, argumentNames);
-  const listing = Object.freeze({
+  const listing = checkedProtocolValue<Prompt>("Prompt", {
     name,
-    title,
-    description,
+    title: definition.title,
+    description: definition.description,
+    icons: definition.icons,
+    _meta: definition._meta,
     arguments: promptArguments(argsSchema),
+  });
+  const metadata = Object.freeze({
+    title: listing.title,
+    description: listing.description,
+    icons: listing.icons,
+    _meta: listing._meta,
   });
   const registration: EmseepeaPrompt = {
     [PROMPT_NAME]: name,
@@ -609,8 +678,7 @@ export function definePrompt<Args extends z.ZodObject>(
       server.registerPrompt(
         name,
         {
-          title,
-          description,
+          ...metadata,
           argsSchema: sdkPromptMetadataSchema(
             argsSchema,
             completions,
@@ -657,6 +725,9 @@ interface CheckedToolDefinition {
   readonly name: string;
   readonly title?: string;
   readonly description: string;
+  readonly icons?: readonly Icon[];
+  readonly annotations?: Readonly<ToolAnnotations>;
+  readonly _meta?: Readonly<MetaObject>;
   readonly inputSchema: z.ZodObject;
   readonly outputSchema: z.ZodObject;
   readonly access: ToolAccess;
@@ -679,7 +750,7 @@ function createCheckedTool(
   streaming: boolean,
   allowsInputRequired: boolean,
 ): EmseepeaTool {
-  const { name, title, description, inputSchema, outputSchema } = definition;
+  const { name, inputSchema, outputSchema } = definition;
   assertRegistrationName("Tool", name);
   assertValidMcpHeaderAnnotations(inputSchema);
   const access = normalizeToolAccess(definition.access, definition.requiredScopes);
@@ -688,25 +759,33 @@ function createCheckedTool(
     : Object.freeze({ type: "protected" as const, requiredScopes: [...access.requiredScopes] });
   const sdkInputSchema = sdkMetadataSchema(inputSchema);
   const sdkOutputSchema = sdkMetadataSchema(outputSchema);
+  const listing = checkedProtocolValue<Tool>("Tool", {
+    name,
+    title: definition.title,
+    description: definition.description,
+    icons: definition.icons,
+    annotations: definition.annotations,
+    inputSchema: jsonMetadataSchema(inputSchema, "input"),
+    outputSchema: jsonMetadataSchema(outputSchema, "output"),
+    _meta: {
+      ...definition._meta,
+      "io.emseepea/access": publicAccess,
+    },
+  });
   const metadata = Object.freeze({
-    title,
-    description,
+    title: listing.title,
+    description: listing.description,
+    icons: listing.icons,
+    annotations: listing.annotations,
     inputSchema: sdkInputSchema,
     outputSchema: sdkOutputSchema,
-    _meta: Object.freeze({ "io.emseepea/access": publicAccess }),
+    _meta: listing._meta,
   });
   const registration: EmseepeaTool = {
     [TOOL_NAME]: name,
     [TOOL_ACCESS]: access,
     [TOOL_STREAMING]: streaming,
-    [TOOL_LISTING]: Object.freeze({
-      name,
-      title,
-      description,
-      inputSchema: jsonMetadataSchema(inputSchema, "input"),
-      outputSchema: jsonMetadataSchema(outputSchema, "output"),
-      _meta: metadata._meta,
-    }),
+    [TOOL_LISTING]: listing,
     [REGISTER](server, timeoutMs, maxApplicationResultBytes, maxProgressEvents, maxProgressEventBytes) {
       server.registerTool(
         name,
@@ -987,6 +1066,14 @@ function installListPagination(server: McpServer, pagination: CompiledListPagina
 export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   assertNonEmpty("name", options.name);
   assertNonEmpty("version", options.version);
+  const serverInfo = checkedProtocolValue<Implementation>("Implementation", {
+    name: options.name,
+    version: options.version,
+    title: options.title,
+    description: options.description,
+    icons: options.icons,
+    websiteUrl: options.websiteUrl,
+  });
   const tools = Object.freeze([...(options.tools ?? [])]);
   const resources = Object.freeze([...(options.resources ?? [])]);
   const prompts = Object.freeze([...(options.prompts ?? [])]);
@@ -1051,7 +1138,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
 
   const sdkHandler = createMcpHandler(() => {
     const server = new McpServer(
-      { name: options.name, version: options.version },
+      serverInfo,
       {
         capabilities: {
           ...(tools.length ? { tools: { listChanged: false } } : {}),
@@ -1606,11 +1693,76 @@ function checkedInputResponses(
   return checked;
 }
 
+function checkedProtocolValue<T>(
+  type: "Implementation" | "Prompt" | "Resource" | "ResourceTemplate" | "Tool",
+  value: unknown,
+): Readonly<T> {
+  let copy: unknown;
+  try {
+    assertJsonValue(value, new WeakSet<object>(), true);
+    const encoded = JSON.stringify(structuredClone(value));
+    if (encoded === undefined) throw new TypeError("value is not JSON data");
+    copy = JSON.parse(encoded) as unknown;
+  } catch {
+    throw new TypeError(`${type} metadata must be JSON data`);
+  }
+  const schema = specTypeSchemas[type] as StandardSchemaV1;
+  const result = schema["~standard"].validate(copy);
+  if (result instanceof Promise || "issues" in result) {
+    throw new TypeError(`${type} metadata does not match the MCP schema`);
+  }
+  return deepFreeze(result.value) as Readonly<T>;
+}
+
+function assertJsonValue(
+  value: unknown,
+  seen: WeakSet<object>,
+  allowUndefinedProperties = false,
+): void {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new TypeError("number must be finite");
+    return;
+  }
+  if (typeof value !== "object") throw new TypeError("value is not JSON data");
+  if (seen.has(value)) throw new TypeError("value is cyclic");
+  seen.add(value);
+  if (Array.isArray(value)) {
+    if (Reflect.ownKeys(value).length !== value.length + 1) {
+      throw new TypeError("JSON arrays must contain only indexed values");
+    }
+    for (let index = 0; index < value.length; index += 1) {
+      if (!(index in value)) throw new TypeError("array must not be sparse");
+      assertJsonValue(value[index], seen);
+    }
+    seen.delete(value);
+    return;
+  }
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new TypeError("object must be a plain JSON object");
+  }
+  if (Reflect.ownKeys(value).length !== Object.keys(value).length) {
+    throw new TypeError("JSON object keys must be enumerable strings");
+  }
+  for (const child of Object.values(value)) {
+    if (child === undefined && allowUndefinedProperties) continue;
+    assertJsonValue(child, seen);
+  }
+  seen.delete(value);
+}
+
+function deepFreeze<T>(value: T): T {
+  if (value === null || typeof value !== "object" || Object.isFrozen(value)) return value;
+  for (const child of Object.values(value)) deepFreeze(child);
+  return Object.freeze(value);
+}
+
 function jsonMetadataSchema(
   schema: z.ZodObject,
   io: "input" | "output",
 ): Record<string, unknown> {
-  return z.toJSONSchema(schema, { target: "draft-2020-12", io });
+  return { ...z.toJSONSchema(schema, { target: "draft-2020-12", io }) };
 }
 
 function promptArguments(schema: z.ZodObject): readonly Readonly<Record<string, unknown>>[] {

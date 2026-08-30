@@ -25,6 +25,7 @@ Use the current framework to create:
 - tools that require a sign-in token before their code runs
 - tools that call another service and check its response
 - resources, reusable resource addresses, prompts, and field suggestions
+- clear names, descriptions, icons, and usage hints for clients to display
 - a server that tells clients when a list or resource is safe to reuse
 - a local server that reports live progress while work is running
 - two local server processes that share one SQLite report store

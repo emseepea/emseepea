@@ -12,6 +12,7 @@ Changed public prose reviewed:
 - `.changeset/fresh-peas-accept.md`
 - `.changeset/bright-peas-ask.md`
 - `.changeset/steady-peas-page.md`
+- `.changeset/clear-peas-metadata.md`
 - `README.md`
 - `docs/jtbd/README.md`
 - `docs/jtbd/framework-maintainer/persona.md`
@@ -87,3 +88,10 @@ The configurable-cache-instruction wording in `README.md`,
 independent review. It explains what application authors can configure, the
 safe default, resource overrides, when shared reuse is unsafe, and the exact
 tests behind the claim in short, scannable sections.
+
+The advertised-metadata wording in `README.md`, `packages/framework/README.md`,
+`docs/protocol-coverage.md`, and `.changeset/clear-peas-metadata.md` passed after
+the coverage page and release note were corrected. The final text makes clear
+that application authors create these details and that client hints do not
+prove safety or replace authorization. Source Markdown passed; rendered mobile
+pages remain a separate website check.
