@@ -8,6 +8,7 @@ Changed public prose reviewed:
 - `.changeset/quiet-pods-build.md`
 - `.changeset/calm-pods-route.md`
 - `.changeset/fresh-peas-accept.md`
+- `.changeset/bright-peas-ask.md`
 - `README.md`
 - `docs/jtbd/README.md`
 - `docs/jtbd/framework-maintainer/persona.md`
@@ -21,6 +22,7 @@ Changed public prose reviewed:
 - `docs/decisions/0029-code-first-semantic-tests.proposed.md`
 - `docs/decisions/README.md`
 - `docs/protocol-coverage.md`
+- `packages/framework/README.md`
 - `BATTLE-PLAN.md`
 - `docs/reviews/0.0.2-release-readiness.md`
 - `docs/risks/R007-release-pipeline-publishes-the-wrong-or-compromised-package.active.md`
@@ -52,6 +54,11 @@ rewritten to explain the adopter-visible protection in ordinary words.
 The response-type coverage statement and release note passed an independent
 review. They explain the rejected requests plainly and limit the claim to the
 exact behaviour tested.
+
+The client-input guide, coverage statement, and release note passed an
+independent review after they were rewritten to name application authors as the
+people creating these capabilities and to explain form input and URL-mode
+elicitation in plain language.
 
 The specialist also passed this exact public npm deprecation message:
 

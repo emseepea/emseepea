@@ -1,10 +1,12 @@
 import {
+  acceptedContent,
   defineMappedTool,
   definePrompt,
   defineResource,
   defineResourceTemplate,
   defineStreamingTool,
   defineTool,
+  inputRequired,
   type MappedToolDefinition,
   type ToolPrincipal,
 } from "../../packages/framework/src/index.js";
@@ -23,12 +25,19 @@ defineTool({
   description: "Compile-time public context check.",
   inputSchema: schema,
   outputSchema: schema,
-  handler: ({ value }, { deadlineMs, principal }) => {
+  handler: ({ value: _value }, { deadlineMs, inputResponses, principal }) => {
     const publicPrincipal: undefined = principal;
     const deadline: number = deadlineMs;
     void publicPrincipal;
     void deadline;
-    return { text: value, data: { value } };
+    const answer = acceptedContent(inputResponses, "answer", schema);
+    return answer
+      ? { text: answer.value, data: answer }
+      : inputRequired({
+          inputRequests: {
+            answer: inputRequired.elicit({ message: "Value?", requestedSchema: schema }),
+          },
+        });
   },
 });
 
@@ -38,8 +47,11 @@ defineStreamingTool({
   description: "Compile-time streaming context check.",
   inputSchema: schema,
   outputSchema: schema,
-  async handler({ value }, { principal, reportProgress }) {
+  async handler({ value }, context) {
+    const { principal, reportProgress } = context;
     const publicPrincipal: undefined = principal;
+    // @ts-expect-error Streaming tools cannot request more client input.
+    void context.inputResponses;
     await reportProgress({ progress: 1, total: 1, message: value });
     void publicPrincipal;
     return { text: value, data: { value } };
@@ -52,6 +64,7 @@ defineResource({
   handler: (context) => {
     const deadline: number = context.deadlineMs;
     const signal: AbortSignal = context.signal;
+    void context.inputResponses;
     // @ts-expect-error Public resource handlers do not receive caller principals.
     void context.principal;
     void deadline;
@@ -69,6 +82,8 @@ defineResourceTemplate({
       const deadline: number = context.deadlineMs;
       const signal: AbortSignal = context.signal;
       const siblings: Readonly<Record<string, string>> = context.arguments;
+      // @ts-expect-error Suggestions cannot request more client input.
+      void context.inputResponses;
       void deadline;
       void signal;
       void siblings;
@@ -80,6 +95,7 @@ defineResourceTemplate({
     const value: string | readonly string[] | undefined = variables.value;
     const deadline: number = context.deadlineMs;
     const signal: AbortSignal = context.signal;
+    void context.inputResponses;
     // @ts-expect-error Public resource-template handlers do not receive caller principals.
     void context.principal;
     void value;
@@ -102,6 +118,7 @@ definePrompt({
   handler: ({ value }, context) => {
     const deadline: number = context.deadlineMs;
     const signal: AbortSignal = context.signal;
+    void context.inputResponses;
     // @ts-expect-error Public prompt handlers do not receive caller principals.
     void context.principal;
     void deadline;
@@ -148,6 +165,8 @@ defineMappedTool({
   adapter: ({ key }, context) => {
     const deadline: number = context.deadlineMs;
     const signal: AbortSignal = context.signal;
+    // @ts-expect-error Backend adapters cannot request more client input.
+    void context.inputResponses;
     // @ts-expect-error Backend adapters do not receive caller principals.
     void context.principal;
     void deadline;
@@ -200,3 +219,8 @@ defineStreamingTool({
     return { text: value, data: { value: protectedPrincipal.clientId } };
   },
 });
+
+// @ts-expect-error Opaque request state is not supported without an integrity design.
+inputRequired({ requestState: "opaque" });
+// @ts-expect-error Roots are deprecated in MCP 2026-07-28.
+inputRequired.listRoots();

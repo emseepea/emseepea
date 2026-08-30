@@ -5,8 +5,9 @@ Protocol (MCP) `2026-07-28` servers over Streamable HTTP.
 
 It checks data when requests enter and leave the server. It supports public
 tools, tools that require sign-in, public resources and prompts, request time
-limits, and bounded progress updates for local examples. Prompt arguments and
-resource fields may also offer suggestions.
+limits, and bounded progress updates for local examples. Direct tools,
+resources, and prompts can ask capable clients for more information. Prompt
+arguments and resource fields may also offer suggestions.
 
 The package is pre-alpha. See the
 [repository README](https://github.com/windyroad/emseepea#readme) for what the
@@ -49,6 +50,65 @@ const getBeanDetails = defineTool({
 const app = createEmseepea({ name: "coffee-guide", version: "1.0.0", tools: [getBeanDetails] });
 await serveEmseepea(app);
 ```
+
+## Ask the Client for More Information
+
+Application authors can create a direct tool, resource, resource address
+pattern, or prompt that pauses and asks a capable client for more information.
+The client answers by making a fresh request, and the handler runs again with
+those answers in its context.
+
+This example asks the person for a coffee preference:
+
+```ts
+import { acceptedContent, defineTool, inputRequired } from "@emseepea/server";
+import { z } from "zod";
+
+const preference = z.object({ roast: z.enum(["light", "medium", "dark"]) });
+
+const chooseRoast = defineTool({
+  name: "choose-roast",
+  access: "public",
+  description: "Ask which roast a person prefers for one coffee.",
+  inputSchema: z.object({ coffee: z.string() }),
+  outputSchema: z.object({ coffee: z.string(), roast: z.string() }),
+  handler: ({ coffee }, context) => {
+    const answer = acceptedContent(context.inputResponses, "preference", preference);
+    if (!answer) {
+      return inputRequired({
+        inputRequests: {
+          preference: inputRequired.elicit({
+            message: `Which roast do you prefer for ${coffee}?`,
+            requestedSchema: preference,
+          }),
+        },
+      });
+    }
+    return {
+      text: `${answer.roast} roast selected for ${coffee}`,
+      data: { coffee, roast: answer.roast },
+    };
+  },
+});
+```
+
+Use `acceptedContent` with the same schema that described the form. Client
+answers are untrusted even when they have the expected wire shape. Use
+`inputResponse` when the handler must distinguish acceptance, refusal, and
+cancellation.
+
+A client answer supplies information. It is not proof of identity or permission
+to change data. Authorize any effect through the application's normal security
+boundary.
+
+The client must advertise elicitation for form input or URL-mode elicitation,
+where the client opens a URL. Em See Pea applies the normal result-size limit,
+time limit, cancellation, safe-error handling, and sign-in policy to every
+round.
+
+This release supports stateless requests only. It rejects opaque
+`requestState`. Mapped tools and progress-reporting tools return through their
+existing checked paths and cannot request more client input.
 
 ## Mapped Backend Tool
 

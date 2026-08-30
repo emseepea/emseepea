@@ -16,14 +16,24 @@ import {
   completable,
   createMcpHandler,
   getOAuthProtectedResourceMetadataUrl,
+  inputRequired as sdkInputRequired,
+  acceptedContent as sdkAcceptedContent,
+  inputResponse as sdkInputResponse,
+  isInputRequiredResult,
   oauthMetadataResponse,
+  specTypeSchemas,
   verifyBearerToken,
   type AuthInfo,
   type AuthMetadataOptions,
   type CallToolResult,
   type GetPromptResult,
+  type InputRequiredResult as SdkInputRequiredResult,
+  type InputRequest,
+  type InputResponses,
+  type InputResponseView as SdkInputResponseView,
   type OAuthTokenVerifier,
   type ReadResourceResult,
+  type StandardSchemaV1,
 } from "@modelcontextprotocol/server";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -31,6 +41,52 @@ import { isIP } from "node:net";
 import { z } from "zod";
 
 export * from "./ui.js";
+export type ClientInputRequest = Extract<InputRequest, { method: "elicitation/create" }>;
+export interface InputRequests {
+  readonly [key: string]: ClientInputRequest;
+}
+
+export type InputRequiredResult = SdkInputRequiredResult & {
+  readonly inputRequests: InputRequests;
+  readonly requestState?: never;
+};
+
+interface InputRequiredBuilder {
+  (spec: { readonly inputRequests: InputRequests }): InputRequiredResult;
+  elicit(
+    ...args: Parameters<typeof sdkInputRequired.elicit>
+  ): Extract<InputRequest, { method: "elicitation/create" }>;
+  elicitUrl(
+    ...args: Parameters<typeof sdkInputRequired.elicitUrl>
+  ): Extract<InputRequest, { method: "elicitation/create" }>;
+}
+
+export const inputRequired = Object.assign(
+  (spec: { readonly inputRequests: InputRequests }): InputRequiredResult =>
+    sdkInputRequired({ inputRequests: spec.inputRequests }) as InputRequiredResult,
+  {
+    elicit: sdkInputRequired.elicit,
+    elicitUrl: sdkInputRequired.elicitUrl,
+  },
+) as InputRequiredBuilder;
+
+export function acceptedContent<S extends StandardSchemaV1>(
+  responses: Readonly<Record<string, unknown>> | undefined,
+  key: string,
+  schema: S,
+): StandardSchemaV1.InferOutput<S> | undefined {
+  return sdkAcceptedContent(checkedInputResponses(responses), key, schema);
+}
+
+export type InputResponseView = Extract<SdkInputResponseView, { kind: "missing" | "elicit" }>;
+
+export function inputResponse(
+  responses: Readonly<Record<string, unknown>> | undefined,
+  key: string,
+): InputResponseView {
+  const response = sdkInputResponse(checkedInputResponses(responses), key);
+  return response.kind === "elicit" ? response : { kind: "missing" };
+}
 
 const PROTOCOL_VERSION = "2026-07-28";
 const REGISTER = Symbol("register");
@@ -60,6 +116,8 @@ export interface ToolContext<Access extends ToolAccess = ToolAccess> {
   readonly signal: AbortSignal;
   readonly deadlineMs: number;
   readonly principal: Access extends "public" ? undefined : ToolPrincipal;
+  /** Client-supplied responses from the current multi-round-trip retry. */
+  readonly inputResponses?: Readonly<Record<string, unknown>>;
 }
 export interface ProgressUpdate {
   readonly progress: number;
@@ -67,7 +125,10 @@ export interface ProgressUpdate {
   readonly message?: string;
 }
 export interface StreamingToolContext<Access extends ToolAccess = ToolAccess>
-  extends ToolContext<Access> {
+{
+  readonly signal: AbortSignal;
+  readonly deadlineMs: number;
+  readonly principal: Access extends "public" ? undefined : ToolPrincipal;
   readonly reportProgress: (update: ProgressUpdate) => Promise<void>;
 }
 export interface ToolResult<Output> { readonly text: string; readonly data: Output }
@@ -76,6 +137,10 @@ export interface BackendAdapterContext {
   readonly deadlineMs: number;
 }
 export type OperationContext = BackendAdapterContext;
+export interface ClientInputContext extends OperationContext {
+  /** Client-supplied responses from the current multi-round-trip retry. */
+  readonly inputResponses?: Readonly<Record<string, unknown>>;
+}
 export interface CompletionContext extends OperationContext {
   readonly arguments: Readonly<Record<string, string>>;
 }
@@ -101,13 +166,15 @@ export type ToolDefinition<Input extends z.ZodObject, Output extends z.ZodObject
         readonly access: "public";
         readonly requiredScopes?: never;
         readonly handler: (input: z.output<Input>, context: ToolContext<"public">) =>
-          ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
+          ToolResult<z.input<Output>> | InputRequiredResult |
+          Promise<ToolResult<z.input<Output>> | InputRequiredResult>;
       }
     | {
         readonly access: "protected";
         readonly requiredScopes: readonly string[];
         readonly handler: (input: z.output<Input>, context: ToolContext<"protected">) =>
-          ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
+          ToolResult<z.input<Output>> | InputRequiredResult |
+          Promise<ToolResult<z.input<Output>> | InputRequiredResult>;
       }
   );
 export type StreamingToolDefinition<Input extends z.ZodObject, Output extends z.ZodObject> =
@@ -176,8 +243,8 @@ export interface ResourceDefinition {
   readonly title?: string;
   readonly description?: string;
   readonly mimeType?: string;
-  readonly handler: (context: OperationContext) =>
-    ReadResourceResult | Promise<ReadResourceResult>;
+  readonly handler: (context: ClientInputContext) =>
+    ReadResourceResult | InputRequiredResult | Promise<ReadResourceResult | InputRequiredResult>;
 }
 export interface ResourceTemplateDefinition {
   readonly name: string;
@@ -191,8 +258,9 @@ export interface ResourceTemplateDefinition {
       readonly uri: string;
       readonly variables: Readonly<Record<string, string | readonly string[]>>;
     },
-    context: OperationContext,
-  ) => ReadResourceResult | Promise<ReadResourceResult>;
+    context: ClientInputContext,
+  ) => ReadResourceResult | InputRequiredResult |
+  Promise<ReadResourceResult | InputRequiredResult>;
 }
 interface ResourceTemplateRoute {
   readonly protocol: string;
@@ -225,8 +293,8 @@ export type PromptDefinition<Args extends z.ZodObject> = {
   readonly complete?: Readonly<Partial<Record<Extract<keyof z.input<Args>, string>, CompletionHandler>>>;
   readonly handler: (
     args: z.output<Args>,
-    context: OperationContext,
-  ) => GetPromptResult | Promise<GetPromptResult>;
+    context: ClientInputContext,
+  ) => GetPromptResult | InputRequiredResult | Promise<GetPromptResult | InputRequiredResult>;
 } & PromptInputConstraint<Args>;
 export interface EmseepeaPrompt {
   readonly [PROMPT_NAME]: string;
@@ -298,15 +366,16 @@ export function defineTool<Input extends z.ZodObject, Output extends z.ZodObject
   const handler = definition.handler as unknown as (
     input: z.output<Input>,
     context: ToolContext,
-  ) => ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
-  return createCheckedTool(definition, handler as CheckedToolExecutor, false);
+  ) => ToolResult<z.input<Output>> | InputRequiredResult |
+  Promise<ToolResult<z.input<Output>> | InputRequiredResult>;
+  return createCheckedTool(definition, handler as CheckedToolExecutor, false, true);
 }
 
 export function defineStreamingTool<Input extends z.ZodObject, Output extends z.ZodObject>(
   definition: StreamingToolDefinition<Input, Output>,
 ): EmseepeaTool {
   const handler = definition.handler as unknown as CheckedToolExecutor;
-  return createCheckedTool(definition, handler, true);
+  return createCheckedTool(definition, handler, true, false);
 }
 
 export function defineMappedTool<
@@ -342,7 +411,7 @@ export function defineMappedTool<
     context.signal.throwIfAborted();
     return mapOutput(parsedBackendResult.data);
   };
-  return createCheckedTool(definition, execute as CheckedToolExecutor, false);
+  return createCheckedTool(definition, execute as CheckedToolExecutor, false, false);
 }
 
 export function defineResource(definition: ResourceDefinition): EmseepeaResource {
@@ -363,13 +432,22 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
           description,
           mimeType,
         },
-        async (_requestedUri, context): Promise<ReadResourceResult> => {
+        async (_requestedUri, context): Promise<ReadResourceResult | InputRequiredResult> => {
           try {
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
               signal.throwIfAborted();
-              const result = await handler({ signal, deadlineMs });
+              const result = await handler({
+                signal,
+                deadlineMs,
+                inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
+              });
               signal.throwIfAborted();
+              if (isInputRequiredResult(result)) {
+                assertStatelessInputRequired(result);
+                assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
+                return result as InputRequiredResult;
+              }
               const parsed = await ReadResourceResultSchema.safeParseAsync(result);
               if (!parsed.success || parsed.data.contents.some((content) => content.uri !== uri)) {
                 throw new Error("Resource returned an invalid result");
@@ -426,13 +504,25 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
         name,
         registeredTemplate,
         { title, description, mimeType },
-        async (requestedUri, variables, context): Promise<ReadResourceResult> => {
+        async (requestedUri, variables, context): Promise<ReadResourceResult | InputRequiredResult> => {
           try {
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
               signal.throwIfAborted();
-              const result = await handler({ uri: requestedUri.href, variables }, { signal, deadlineMs });
+              const result = await handler(
+                { uri: requestedUri.href, variables },
+                {
+                  signal,
+                  deadlineMs,
+                  inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
+                },
+              );
               signal.throwIfAborted();
+              if (isInputRequiredResult(result)) {
+                assertStatelessInputRequired(result);
+                assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
+                return result as InputRequiredResult;
+              }
               const parsed = await ReadResourceResultSchema.safeParseAsync(result);
               if (!parsed.success ||
                   parsed.data.contents.some((content) => content.uri !== requestedUri.href)) {
@@ -476,15 +566,24 @@ export function definePrompt<Args extends z.ZodObject>(
             maxApplicationResultBytes,
           ),
         },
-        async (args, context): Promise<GetPromptResult> => {
+        async (args, context): Promise<GetPromptResult | InputRequiredResult> => {
           try {
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
               const parsedArgs = await argsSchema.safeParseAsync(args);
               if (!parsedArgs.success) throw new Error("Prompt received invalid arguments");
               signal.throwIfAborted();
-              const result = await handler(parsedArgs.data, { signal, deadlineMs });
+              const result = await handler(parsedArgs.data, {
+                signal,
+                deadlineMs,
+                inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
+              });
               signal.throwIfAborted();
+              if (isInputRequiredResult(result)) {
+                assertStatelessInputRequired(result);
+                assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
+                return result as InputRequiredResult;
+              }
               const parsedResult = await GetPromptResultSchema.safeParseAsync(result);
               if (!parsedResult.success) throw new Error("Prompt returned an invalid result");
               signal.throwIfAborted();
@@ -525,6 +624,7 @@ function createCheckedTool(
   definition: CheckedToolDefinition,
   execute: CheckedToolExecutor,
   streaming: boolean,
+  allowsInputRequired: boolean,
 ): EmseepeaTool {
   const { name, title, description, inputSchema, outputSchema } = definition;
   assertRegistrationName("Tool", name);
@@ -547,7 +647,7 @@ function createCheckedTool(
               : { type: "protected", requiredScopes: [...access.requiredScopes] },
           },
         },
-        async (input, context): Promise<CallToolResult> => {
+        async (input, context): Promise<CallToolResult | InputRequiredResult> => {
           try {
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(
@@ -573,12 +673,23 @@ function createCheckedTool(
                     signal,
                     deadlineMs,
                     principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
+                    ...(allowsInputRequired
+                      ? {
+                          inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
+                        }
+                      : {}),
                     ...(reporter ? { reportProgress: reporter.report } : {}),
                   });
                 } finally {
                   await reporter?.finish();
                 }
                 reporter?.throwIfFailed();
+                if (allowsInputRequired && isInputRequiredResult(result)) {
+                  signal.throwIfAborted();
+                  assertStatelessInputRequired(result);
+                  assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
+                  return result as InputRequiredResult;
+                }
                 if (!isRecord(result) || typeof result.text !== "string" || !("data" in result)) {
                   throw new Error("Tool returned an invalid result");
                 }
@@ -1232,6 +1343,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function checkedInputResponses(
+  responses: Readonly<Record<string, unknown>> | undefined,
+): InputResponses | undefined {
+  if (!responses) return undefined;
+  const checked: InputResponses = {};
+  for (const [key, value] of Object.entries(responses)) {
+    const elicitation = specTypeSchemas.ElicitResult["~standard"].validate(value);
+    if ("value" in elicitation) {
+      checked[key] = elicitation.value;
+      continue;
+    }
+  }
+  return checked;
+}
+
 function sdkMetadataSchema(schema: z.ZodObject): z.ZodObject {
   return {
     "~standard": {
@@ -1517,6 +1643,17 @@ function nonNegativePort(value: number): number {
     throw new TypeError("port must be an integer from 0 to 65535");
   }
   return value;
+}
+
+function assertStatelessInputRequired(
+  result: SdkInputRequiredResult,
+): asserts result is InputRequiredResult {
+  if (!result.inputRequests || result.requestState !== undefined) {
+    throw new Error("Client-input requests must be stateless");
+  }
+  if (Object.values(result.inputRequests).some((request) => request.method !== "elicitation/create")) {
+    throw new Error("Client-input request kind is not supported");
+  }
 }
 
 function assertResultSize(
