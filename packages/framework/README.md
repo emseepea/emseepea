@@ -51,6 +51,35 @@ const app = createEmseepea({ name: "coffee-guide", version: "1.0.0", tools: [get
 await serveEmseepea(app);
 ```
 
+## Describe What Clients Can Show
+
+Applications can give servers, tools, resources, reusable resource addresses,
+and prompts a human-friendly title, description, and icons. A server can also
+provide its website address. Tools can say whether they only read data and
+whether they contact services outside the application:
+
+```ts
+const getBeanDetails = defineTool({
+  name: "get-bean-details",
+  title: "Get bean details",
+  access: "public",
+  description: "Get the recorded details for one coffee.",
+  icons: [{ src: "https://coffee.example/icons/bean.png", mimeType: "image/png" }],
+  annotations: { readOnlyHint: true, openWorldHint: false },
+  inputSchema: z.object({ name: z.string() }),
+  outputSchema: beanDetails,
+  handler,
+});
+```
+
+Resources may also include their known byte size and hints about their intended
+audience and importance. Use `_meta` for application-specific public details.
+
+Em See Pea checks this metadata when the application starts and copies it, so
+later changes to the original objects have no effect. Tool annotations are
+hints for clients. They do not prove that a tool is safe, grant permission, or
+replace sign-in and authorization checks.
+
 ## Route with a Tool Argument
 
 A proxy can route a request using a checked tool argument without reading the
