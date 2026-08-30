@@ -124,7 +124,11 @@ async function validRequest() {
 
 async function invalidRequest() {
   const body = requestBody.replace('"id":"bench"', '"id":42');
-  const response = await fetch(serverUrl, { method: "POST", headers, body });
+  const response = await fetch(serverUrl, {
+    method: "POST",
+    headers: { ...headers, "Mcp-Param-Id": "42" },
+    body,
+  });
   assert.equal(response.status, 200);
   await response.arrayBuffer();
 }
