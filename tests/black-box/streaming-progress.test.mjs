@@ -17,7 +17,7 @@ const meta = {
   "io.modelcontextprotocol/clientCapabilities": {},
 };
 
-test("streaming configuration is bounded and loopback-only", () => {
+test("streaming configuration is bounded and public streaming permits a trusted proxy", async () => {
   const tool = streamingTool(() => {});
   assert.throws(
     () => createEmseepea({ name: "bad-count", version: "0.0.0", tools: [tool], maxProgressEvents: 0 }),
@@ -27,7 +27,7 @@ test("streaming configuration is bounded and loopback-only", () => {
     () => createEmseepea({ name: "bad-size", version: "0.0.0", tools: [tool], maxProgressEventBytes: 0 }),
     /maxProgressEventBytes must be a positive safe integer/,
   );
-  assert.throws(() => createEmseepea({
+  const app = createEmseepea({
     name: "production-streaming",
     version: "0.0.0",
     tools: [tool],
@@ -38,7 +38,35 @@ test("streaming configuration is bounded and loopback-only", () => {
       trustedProxyAddresses: ["127.0.0.1"],
       rateLimit: { maxRequests: 1, windowMs: 1_000, maxClients: 1 },
     },
-  }), /require the loopback deployment profile/);
+  });
+  await app.close();
+});
+
+test("production rejects signed-in streaming even with valid OAuth configuration", () => {
+  const tool = defineStreamingTool({
+    name: "signed-in-stream", access: "protected", requiredScopes: ["read"],
+    description: "Stream after sign-in.", inputSchema: z.object({}),
+    outputSchema: z.object({ ok: z.literal(true) }),
+    handler: () => ({ text: "ok", data: { ok: true } }),
+  });
+  assert.throws(() => createEmseepea({
+    name: "signed-in-stream-test", version: "0.0.0", tools: [tool],
+    oauth: {
+      verifier: { async verifyAccessToken() { throw new Error("must not be called"); } },
+      metadata: {
+        resourceServerUrl: new URL("https://api.example/mcp"),
+        oauthMetadata: {
+          issuer: "https://auth.example", authorization_endpoint: "https://auth.example/authorize",
+          token_endpoint: "https://auth.example/token", response_types_supported: ["code"],
+        },
+      },
+    },
+    deployment: {
+      mode: "production-behind-proxy", allowedAuthorities: ["api.example"],
+      allowedOrigins: ["https://api.example"], trustedProxyAddresses: ["127.0.0.1"],
+      rateLimit: { maxRequests: 10, windowMs: 1_000, maxClients: 1 },
+    },
+  }), /Protected streaming tools currently require the loopback deployment profile/);
 });
 
 test("POST-scoped progress stays checked, bounded, and terminal", async () => {

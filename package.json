@@ -20,6 +20,7 @@
   ],
   "scripts": {
     "benchmark": "npm run build && node --expose-gc benchmarks/json-boundary.mjs",
+    "test:load:streaming": "node --expose-gc --test tests/load/proxy-progress.test.mjs",
     "build": "npm run build -w @emseepea/server -w @emseepea/example-ui-shared && npm run build --workspaces --if-present",
     "claude:login": "claude auth login",
     "claude:prepare": "node node_modules/@anthropic-ai/claude-code/install.cjs",

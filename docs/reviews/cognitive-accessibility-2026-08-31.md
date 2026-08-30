@@ -21,3 +21,10 @@ and supersession, not feature completion.
 
 This was a source-level Markdown review, not a rendered mobile-browser test.
 The specialist also reviewed this evidence wording.
+
+## Public Proxy Progress
+
+Result: PASS. Reviewed `.changeset/tidy-pods-progress.md` and pull-request
+wording. The text describes what developers can enable and separates it from
+features not included. Load qualification remains a CI requirement, not a local
+result.

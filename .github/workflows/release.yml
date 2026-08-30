@@ -49,6 +49,8 @@ jobs:
         run: npm run benchmark
         env:
           EMSEEPEA_BENCHMARK_PROFILE: github-ubuntu-24.04-standard
+      - name: Check proxy progress under concurrent load and paused readers
+        run: npm run test:load:streaming
       - name: Audit dependencies
         run: npm audit --audit-level=high
 
