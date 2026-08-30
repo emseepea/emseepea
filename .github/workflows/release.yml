@@ -186,8 +186,29 @@ jobs:
           - Qualification: npm test; npm run benchmark; npm audit --audit-level=high; npm pack
           - Semantic qualification: $SEMANTIC_EVAL_RUN_URL, artifact $SEMANTIC_EVAL_ARTIFACT
           - Reviews: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/$review_record
-          - Supported slice: Fastify-first MCP 2026-07-28 server; JSON operations; checked, bounded, loopback-only POST SSE progress for explicitly streaming tools; public and invocation-scoped OAuth-protected tools; checked mapped adapters; public static-resource and non-enumerating resource-template discovery and reads; public prompt listing and rendering; opt-in prompt and resource-template completion; anonymous resource metadata and discovery
-          - Excluded: template enumeration, protected templates, pagination, configurable cache hints, object or tenant authorization, outbound HTTP policy, retries, effects, production or intermediary streaming, transport backpressure, queue overflow, resynchronisation, subscriptions, replay, sessions, shared state, UI packages, deployment, resource/prompt/template/completion/streaming performance, and full-profile conformance
+          - Supported slice:
+            - Fastify-first MCP 2026-07-28 server
+            - JSON operations
+            - checked, bounded, loopback-only POST SSE progress for explicitly streaming tools
+            - public and invocation-scoped OAuth-protected tools
+            - checked mapped adapters
+            - public static-resource and non-enumerating resource-template discovery and reads
+            - public prompt listing and rendering
+            - opt-in prompt and resource-template completion
+            - opt-in bounded pages for tool, resource, resource-address-pattern, and prompt catalogues with opaque cursors
+            - anonymous resource metadata and discovery
+          - Excluded:
+            - template enumeration and protected templates
+            - changing catalogues while a server runs
+            - configurable cache hints
+            - object or tenant authorization
+            - outbound HTTP policy, retries, or effects
+            - production or intermediary streaming
+            - transport backpressure and queue overflow
+            - resynchronisation, subscriptions, replay, sessions, and shared state
+            - UI packages and deployment
+            - resource, prompt, template, completion, or streaming performance
+            - full-profile conformance
           EOF
       - name: Create release pull request or publish
         id: changesets

@@ -122,7 +122,7 @@ even when using a tool requires permission.
   the same write
 - listing every possible resource address or requiring sign-in for resources and
   prompts
-- large result lists or configurable caching
+- changing catalogues while a server runs or configuring how clients cache them
 - production streaming through proxy servers
 - saved sessions, subscriptions, replay, or reconnect recovery
 - shared operation across computers or a promise that retries change an

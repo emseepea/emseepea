@@ -8,6 +8,7 @@ import {
   McpServer,
   OAuthError,
   OAuthErrorCode,
+  ProtocolError,
   ProtocolErrorCode,
   ResourceTemplate,
   bearerAuthChallengeResponse,
@@ -31,12 +32,17 @@ import {
   type InputRequest,
   type InputResponses,
   type InputResponseView as SdkInputResponseView,
+  type ListPromptsResult,
+  type ListResourcesResult,
+  type ListResourceTemplatesResult,
+  type ListToolsResult,
   type OAuthTokenVerifier,
   type ReadResourceResult,
   type StandardSchemaV1,
 } from "@modelcontextprotocol/server";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { createHash } from "node:crypto";
 import { isIP } from "node:net";
 import { z } from "zod";
 
@@ -93,13 +99,16 @@ const REGISTER = Symbol("register");
 const TOOL_NAME = Symbol("toolName");
 const TOOL_ACCESS = Symbol("toolAccess");
 const TOOL_STREAMING = Symbol("toolStreaming");
+const TOOL_LISTING = Symbol("toolListing");
 const RESOURCE_NAME = Symbol("resourceName");
 const RESOURCE_URI = Symbol("resourceUri");
 const RESOURCE_KIND = Symbol("resourceKind");
 const RESOURCE_MATCHES = Symbol("resourceMatches");
 const RESOURCE_ROUTE = Symbol("resourceRoute");
+const RESOURCE_LISTING = Symbol("resourceListing");
 const PROMPT_NAME = Symbol("promptName");
 const HAS_COMPLETION = Symbol("hasCompletion");
+const PROMPT_LISTING = Symbol("promptListing");
 const runtimes = new WeakMap<FastifyInstance, AppRuntime>();
 interface RequestOperation {
   readonly deadlineMs: number;
@@ -229,6 +238,7 @@ export interface EmseepeaTool {
   readonly [TOOL_NAME]: string;
   readonly [TOOL_ACCESS]: "public" | ProtectedToolAccess;
   readonly [TOOL_STREAMING]: boolean;
+  readonly [TOOL_LISTING]: Readonly<Record<string, unknown>>;
   readonly [REGISTER]: (
     server: McpServer,
     timeoutMs: number,
@@ -273,6 +283,10 @@ export interface EmseepeaResource {
   readonly [RESOURCE_KIND]: "static" | "template";
   readonly [RESOURCE_MATCHES]?: (uri: string) => boolean;
   readonly [RESOURCE_ROUTE]?: ResourceTemplateRoute;
+  readonly [RESOURCE_LISTING]: {
+    readonly method: "resources/list" | "resources/templates/list";
+    readonly value: Readonly<Record<string, unknown>>;
+  };
   readonly [HAS_COMPLETION]: boolean;
   readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
 }
@@ -299,6 +313,7 @@ export type PromptDefinition<Args extends z.ZodObject> = {
 export interface EmseepeaPrompt {
   readonly [PROMPT_NAME]: string;
   readonly [HAS_COMPLETION]: boolean;
+  readonly [PROMPT_LISTING]: Readonly<Record<string, unknown>>;
   readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
 }
 export interface OAuthResourceServerOptions {
@@ -315,6 +330,7 @@ export interface EmseepeaOptions {
   readonly tools?: readonly EmseepeaTool[];
   readonly resources?: readonly EmseepeaResource[];
   readonly prompts?: readonly EmseepeaPrompt[];
+  readonly listPagination?: ListPaginationOptions;
   readonly maxRequestBytes?: number;
   readonly maxApplicationResultBytes?: number;
   readonly maxProgressEvents?: number;
@@ -322,6 +338,10 @@ export interface EmseepeaOptions {
   readonly operationTimeoutMs?: number;
   readonly deployment?: DeploymentProfile;
   readonly oauth?: OAuthResourceServerOptions;
+}
+export interface ListPaginationOptions {
+  readonly pageSize: number;
+  readonly maxPageBytes?: number;
 }
 export type DeploymentProfile =
   | { readonly mode: "loopback" }
@@ -418,20 +438,21 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
   const { name, title, description, mimeType, handler } = definition;
   assertRegistrationName("Resource", name);
   const uri = canonicalResourceUri(definition.uri);
+  const metadata = Object.freeze({ title, description, mimeType });
   const registration: EmseepeaResource = {
     [RESOURCE_NAME]: name,
     [RESOURCE_URI]: uri,
     [RESOURCE_KIND]: "static",
+    [RESOURCE_LISTING]: Object.freeze({
+      method: "resources/list",
+      value: Object.freeze({ uri, name, ...metadata }),
+    }),
     [HAS_COMPLETION]: false,
     [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
       server.registerResource(
         name,
         uri,
-        {
-          title,
-          description,
-          mimeType,
-        },
+        metadata,
         async (_requestedUri, context): Promise<ReadResourceResult | InputRequiredResult> => {
           try {
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
@@ -471,6 +492,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
   assertRegistrationName("Resource template", name);
   const { template, route } = checkedResourceTemplate(definition.uriTemplate);
   const uriTemplate = template.uriTemplate.toString();
+  const metadata = Object.freeze({ title, description, mimeType });
   const variableNames = [...template.uriTemplate.variableNames];
   const completions = checkedCompletionHandlers(
     "Resource template",
@@ -483,6 +505,10 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
     [RESOURCE_KIND]: "template",
     [RESOURCE_MATCHES]: (uri) => template.uriTemplate.match(uri) !== null,
     [RESOURCE_ROUTE]: route,
+    [RESOURCE_LISTING]: Object.freeze({
+      method: "resources/templates/list",
+      value: Object.freeze({ name, uriTemplate, ...metadata }),
+    }),
     [HAS_COMPLETION]: completions.size > 0,
     [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
       const registeredTemplate = completions.size === 0
@@ -503,7 +529,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
       server.registerResource(
         name,
         registeredTemplate,
-        { title, description, mimeType },
+        metadata,
         async (requestedUri, variables, context): Promise<ReadResourceResult | InputRequiredResult> => {
           try {
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
@@ -549,9 +575,16 @@ export function definePrompt<Args extends z.ZodObject>(
   assertRegistrationName("Prompt", name);
   const argumentNames = Object.keys(argsSchema.shape);
   const completions = checkedCompletionHandlers("Prompt", definition.complete, argumentNames);
+  const listing = Object.freeze({
+    name,
+    title,
+    description,
+    arguments: promptArguments(argsSchema),
+  });
   const registration: EmseepeaPrompt = {
     [PROMPT_NAME]: name,
     [HAS_COMPLETION]: completions.size > 0,
+    [PROMPT_LISTING]: listing,
     [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
       server.registerPrompt(
         name,
@@ -630,24 +663,34 @@ function createCheckedTool(
   assertRegistrationName("Tool", name);
   assertValidMcpHeaderAnnotations(inputSchema);
   const access = normalizeToolAccess(definition.access, definition.requiredScopes);
+  const publicAccess = access === "public"
+    ? Object.freeze({ type: "public" as const })
+    : Object.freeze({ type: "protected" as const, requiredScopes: [...access.requiredScopes] });
+  const sdkInputSchema = sdkMetadataSchema(inputSchema);
+  const sdkOutputSchema = sdkMetadataSchema(outputSchema);
+  const metadata = Object.freeze({
+    title,
+    description,
+    inputSchema: sdkInputSchema,
+    outputSchema: sdkOutputSchema,
+    _meta: Object.freeze({ "io.emseepea/access": publicAccess }),
+  });
   const registration: EmseepeaTool = {
     [TOOL_NAME]: name,
     [TOOL_ACCESS]: access,
     [TOOL_STREAMING]: streaming,
+    [TOOL_LISTING]: Object.freeze({
+      name,
+      title,
+      description,
+      inputSchema: jsonMetadataSchema(inputSchema, "input"),
+      outputSchema: jsonMetadataSchema(outputSchema, "output"),
+      _meta: metadata._meta,
+    }),
     [REGISTER](server, timeoutMs, maxApplicationResultBytes, maxProgressEvents, maxProgressEventBytes) {
       server.registerTool(
         name,
-        {
-          title,
-          description,
-          inputSchema: sdkMetadataSchema(inputSchema),
-          outputSchema: sdkMetadataSchema(outputSchema),
-          _meta: {
-            "io.emseepea/access": access === "public"
-              ? { type: "public" }
-              : { type: "protected", requiredScopes: [...access.requiredScopes] },
-          },
-        },
+        metadata,
         async (input, context): Promise<CallToolResult | InputRequiredResult> => {
           try {
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
@@ -790,6 +833,137 @@ function progressReporter(
   };
 }
 
+type ListMethod =
+  | "tools/list"
+  | "resources/list"
+  | "resources/templates/list"
+  | "prompts/list";
+interface NormalizedListPagination { readonly pageSize: number; readonly maxPageBytes: number }
+interface CompiledCataloguePages {
+  readonly first: Readonly<Record<string, unknown>>;
+  readonly byCursor: ReadonlyMap<string, Readonly<Record<string, unknown>>>;
+}
+type CompiledListPagination = ReadonlyMap<ListMethod, CompiledCataloguePages>;
+
+function normalizeListPagination(options: ListPaginationOptions): NormalizedListPagination {
+  const pageSize = positiveInteger("listPagination.pageSize", options.pageSize);
+  if (pageSize > 100) throw new TypeError("listPagination.pageSize must not exceed 100");
+  return Object.freeze({
+    pageSize,
+    maxPageBytes: positiveInteger(
+      "listPagination.maxPageBytes",
+      options.maxPageBytes ?? 1024 * 1024,
+    ),
+  });
+}
+
+function compileListPagination(
+  options: NormalizedListPagination,
+  catalogues: ReadonlyMap<ListMethod, readonly Readonly<Record<string, unknown>>[]>,
+): CompiledListPagination {
+  const compiled = new Map<ListMethod, CompiledCataloguePages>();
+  for (const [method, entries] of catalogues) {
+    if (entries.length === 0) continue;
+    const resultKey = method === "tools/list"
+      ? "tools"
+      : method === "prompts/list"
+        ? "prompts"
+        : method === "resources/templates/list"
+          ? "resourceTemplates"
+          : "resources";
+    compiled.set(method, compileCataloguePages(method, resultKey, entries, options));
+  }
+  return compiled;
+}
+
+function compileCataloguePages(
+  method: ListMethod,
+  resultKey: string,
+  entries: readonly Readonly<Record<string, unknown>>[],
+  options: NormalizedListPagination,
+): CompiledCataloguePages {
+  const groups: Readonly<Record<string, unknown>>[][] = [];
+  for (let index = 0; index < entries.length;) {
+    const group: Readonly<Record<string, unknown>>[] = [];
+    while (group.length < options.pageSize && index < entries.length) {
+      const candidate = [...group, entries[index]!];
+      const hasNext = index + 1 < entries.length;
+      if (cataloguePageBytes(resultKey, candidate, hasNext) > options.maxPageBytes) {
+        if (group.length === 0) {
+          throw new TypeError(`${method} has an entry larger than listPagination.maxPageBytes`);
+        }
+        break;
+      }
+      group.push(entries[index]!);
+      index += 1;
+    }
+    groups.push(group);
+  }
+
+  const catalogueDigest = createHash("sha256").update(JSON.stringify(entries)).digest("base64url");
+  const cursorFor = (page: number) => createHash("sha256").update([
+    "emseepea-list-cursor-v1",
+    method,
+    String(page),
+    String(options.pageSize),
+    String(options.maxPageBytes),
+    catalogueDigest,
+  ].join("\n")).digest("base64url");
+  const pages = groups.map((group, index) => Object.freeze({
+    [resultKey]: Object.freeze([...group]),
+    ...(index + 1 < groups.length ? { nextCursor: cursorFor(index + 1) } : {}),
+  }));
+  const byCursor = new Map<string, Readonly<Record<string, unknown>>>();
+  for (let index = 1; index < pages.length; index += 1) {
+    byCursor.set(cursorFor(index), pages[index]!);
+  }
+  return Object.freeze({ first: pages[0]!, byCursor });
+}
+
+function cataloguePageBytes(
+  resultKey: string,
+  entries: readonly Readonly<Record<string, unknown>>[],
+  hasNext: boolean,
+): number {
+  return Buffer.byteLength(JSON.stringify({
+    [resultKey]: entries,
+    ...(hasNext ? { nextCursor: "x".repeat(43) } : {}),
+  }), "utf8");
+}
+
+function paginationPage(
+  pages: CompiledCataloguePages,
+  cursor: string | undefined,
+): Readonly<Record<string, unknown>> {
+  if (cursor === undefined) return pages.first;
+  const page = /^[A-Za-z0-9_-]{43}$/.test(cursor) ? pages.byCursor.get(cursor) : undefined;
+  if (!page) throw new ProtocolError(ProtocolErrorCode.InvalidParams, "Invalid pagination cursor");
+  return page;
+}
+
+function installListPagination(server: McpServer, pagination: CompiledListPagination): void {
+  const tools = pagination.get("tools/list");
+  if (tools) server.server.setRequestHandler(
+    "tools/list",
+    (request) => paginationPage(tools, request.params?.cursor) as unknown as ListToolsResult,
+  );
+  const resources = pagination.get("resources/list");
+  if (resources) server.server.setRequestHandler(
+    "resources/list",
+    (request) => paginationPage(resources, request.params?.cursor) as unknown as ListResourcesResult,
+  );
+  const templates = pagination.get("resources/templates/list");
+  if (templates) server.server.setRequestHandler(
+    "resources/templates/list",
+    (request) => paginationPage(templates, request.params?.cursor) as unknown as ListResourceTemplatesResult,
+  );
+  const prompts = pagination.get("prompts/list");
+  if (prompts) server.server.setRequestHandler(
+    "prompts/list",
+    (request) => paginationPage(prompts, request.params?.cursor) as unknown as ListPromptsResult,
+  );
+}
+
 export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   assertNonEmpty("name", options.name);
   assertNonEmpty("version", options.version);
@@ -799,6 +973,21 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   assertUniqueToolNames(tools);
   assertUniqueResources(resources);
   assertUniquePromptNames(prompts);
+  const paginationOptions = options.listPagination
+    ? normalizeListPagination(options.listPagination)
+    : undefined;
+  const pagination = paginationOptions
+    ? compileListPagination(paginationOptions, new Map([
+        ["tools/list", tools.map((tool) => tool[TOOL_LISTING])],
+        ["resources/list", resources
+          .filter((resource) => resource[RESOURCE_LISTING].method === "resources/list")
+          .map((resource) => resource[RESOURCE_LISTING].value)],
+        ["resources/templates/list", resources
+          .filter((resource) => resource[RESOURCE_LISTING].method === "resources/templates/list")
+          .map((resource) => resource[RESOURCE_LISTING].value)],
+        ["prompts/list", prompts.map((prompt) => prompt[PROMPT_LISTING])],
+      ] as const))
+    : undefined;
   const maxRequestBytes = positiveInteger("maxRequestBytes", options.maxRequestBytes ?? 1024 * 1024);
   const maxApplicationResultBytes = positiveInteger(
     "maxApplicationResultBytes",
@@ -862,6 +1051,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     }
     for (const resource of resources) resource[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
     for (const prompt of prompts) prompt[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
+    if (pagination) installListPagination(server, pagination);
     return server;
   }, {
     legacy: "reject",
@@ -1359,6 +1549,26 @@ function checkedInputResponses(
   return checked;
 }
 
+function jsonMetadataSchema(
+  schema: z.ZodObject,
+  io: "input" | "output",
+): Record<string, unknown> {
+  return z.toJSONSchema(schema, { target: "draft-2020-12", io });
+}
+
+function promptArguments(schema: z.ZodObject): readonly Readonly<Record<string, unknown>>[] {
+  const jsonSchema = jsonMetadataSchema(schema, "input");
+  const properties = isRecord(jsonSchema.properties) ? jsonSchema.properties : {};
+  const required = new Set(Array.isArray(jsonSchema.required) ? jsonSchema.required : []);
+  return Object.freeze(Object.entries(properties).map(([name, property]) => Object.freeze({
+    name,
+    description: isRecord(property) && typeof property.description === "string"
+      ? property.description
+      : undefined,
+    required: required.has(name),
+  })));
+}
+
 function sdkMetadataSchema(schema: z.ZodObject): z.ZodObject {
   return {
     "~standard": {
@@ -1366,8 +1576,8 @@ function sdkMetadataSchema(schema: z.ZodObject): z.ZodObject {
       vendor: "emseepea",
       validate: (value: unknown) => ({ value }),
       jsonSchema: {
-        input: () => z.toJSONSchema(schema, { target: "draft-2020-12", io: "input" }),
-        output: () => z.toJSONSchema(schema, { target: "draft-2020-12", io: "output" }),
+        input: () => jsonMetadataSchema(schema, "input"),
+        output: () => jsonMetadataSchema(schema, "output"),
       },
     },
   } as unknown as z.ZodObject;

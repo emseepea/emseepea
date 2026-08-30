@@ -11,6 +11,7 @@ Changed public prose reviewed:
 - `.changeset/calm-pods-route.md`
 - `.changeset/fresh-peas-accept.md`
 - `.changeset/bright-peas-ask.md`
+- `.changeset/steady-peas-page.md`
 - `README.md`
 - `docs/jtbd/README.md`
 - `docs/jtbd/framework-maintainer/persona.md`
@@ -74,3 +75,8 @@ values, rejection behaviour, and security limits in plain language.
 The result-envelope coverage statement and release note passed review after
 they explained the fixed cache instructions, evidence, and remaining
 pagination gap in plain language.
+
+The bounded-pagination guide, coverage statement, and release note passed
+review after `MiB` was written as `mebibyte` and the remaining gap was narrowed
+to catalogue pages without the documented bounds. The matching release evidence
+uses the same plain description of the supported catalogues.

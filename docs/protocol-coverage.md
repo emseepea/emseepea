@@ -36,6 +36,8 @@ sign-in. See the
 schemas. Advanced tool metadata and changing the list while the server is
 running are not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
+Opt-in bounded pages are covered by the
+[list-pagination tests](../tests/black-box/list-pagination.test.mjs).
 
 ### `tools/call`
 
@@ -53,12 +55,16 @@ See the
 **Status: Partial.** Lists registered public resources. Changing the list while
 the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
+Opt-in bounded pages are covered by the
+[list-pagination tests](../tests/black-box/list-pagination.test.mjs).
 
 ### `resources/templates/list`
 
 **Status: Partial.** Lists registered public resource address patterns.
 Changing the list while the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
+Opt-in bounded pages are covered by the
+[list-pagination tests](../tests/black-box/list-pagination.test.mjs).
 
 ### `resources/read`
 
@@ -74,6 +80,8 @@ supported. See the
 **Status: Partial.** Lists registered public prompts. Changing the list while
 the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
+Opt-in bounded pages are covered by the
+[list-pagination tests](../tests/black-box/list-pagination.test.mjs).
 
 ### `prompts/get`
 
@@ -122,9 +130,22 @@ Raw HTTP tests cover every enabled operation. The pinned official client also
 successfully reads all nine results. The separately tested
 `resultType: "input_required"` path is covered by the
 [client-input tests](../tests/black-box/input-required.test.mjs). Configurable
-cache instructions and pagination are not yet supported. See the
+cache instructions are not yet supported. See the
 [result-envelope tests](../tests/black-box/resources-prompts.test.mjs) and
 [streaming tests](../tests/black-box/streaming-progress.test.mjs).
+
+### List Pagination
+
+**Status: Checked.** Applications can opt in to bounded pages for tool,
+resource, resource-address, and prompt catalogues. Page size is limited to 100,
+and a separate byte limit stops oversized catalogue pages.
+
+Cursors are tied to the exact ordered public catalogue, list method, and page
+limits. Identical server instances accept the same cursor. Changed, malformed,
+and cross-method cursors are rejected without calling application handlers.
+Raw HTTP and the pinned official client cover all four list methods across
+three pages. Catalogues remain fixed for the lifetime of the server. See the
+[list-pagination tests](../tests/black-box/list-pagination.test.mjs).
 
 ### Accepted Response Types
 
@@ -240,7 +261,7 @@ tests from clean checkouts with two independent MCP clients.
 
 Work should close one row at a time:
 
-1. add bounded pagination for list results
+1. add configurable cache instructions
 2. add subscriptions only after slow-reader memory is bounded
 3. compare this page with every active server rule in the pinned specification
 4. rerun every row on this page with two independent clients from clean copies
