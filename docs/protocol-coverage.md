@@ -40,11 +40,13 @@ running are not supported. See the
 ### `tools/call`
 
 **Status: Partial.** Supports checked public, signed-in, mapped, and
-progress-reporting tools that return a final result. Results that ask the client
-for more input are not supported. See the
+progress-reporting tools. A direct tool may ask a capable client for more input
+before returning its final result. Mapped and progress-reporting tools cannot.
+See the
 [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
-[mapped backend tests](../tests/black-box/mapped-adapter.test.mjs), and
-[progress tests](../tests/black-box/streaming-progress.test.mjs).
+[mapped backend tests](../tests/black-box/mapped-adapter.test.mjs),
+[progress tests](../tests/black-box/streaming-progress.test.mjs), and
+[client-input tests](../tests/black-box/input-required.test.mjs).
 
 ### `resources/list`
 
@@ -61,8 +63,11 @@ Changing the list while the server is running is not supported. See the
 ### `resources/read`
 
 **Status: Partial.** Reads registered public resources and checks their result.
-Signed-in resources and resource update subscriptions are not supported. See
-the [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
+A resource may ask a capable client for more input before returning its final
+result. Signed-in resources and resource update subscriptions are not
+supported. See the
+[resource and prompt tests](../tests/black-box/resources-prompts.test.mjs) and
+[client-input tests](../tests/black-box/input-required.test.mjs).
 
 ### `prompts/list`
 
@@ -72,9 +77,11 @@ the server is running is not supported. See the
 
 ### `prompts/get`
 
-**Status: Partial.** Gets a registered public prompt and checks its result.
-Signed-in prompts are not supported. See the
-[resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
+**Status: Partial.** Gets a registered public prompt and checks its result. A
+prompt may ask a capable client for more input before returning its final
+result. Signed-in prompts are not supported. See the
+[resource and prompt tests](../tests/black-box/resources-prompts.test.mjs) and
+[client-input tests](../tests/black-box/input-required.test.mjs).
 
 ### `completion/complete`
 
@@ -176,9 +183,18 @@ without replay. See the
 
 ### Requests for More Client Input
 
-**Status: Not built.** Sampling, elicitation, and roots through multi-round-trip
-results are not supported. The existing form renderers do not make this
-protocol claim.
+**Status: Checked.** Application authors can create direct tools, resources,
+resource address patterns, and prompts that pause and ask a capable client for
+form input or URL-mode elicitation. Each reply reaches a fresh request and is
+treated as untrusted input.
+
+Tests cover accepted, declined, and cancelled replies, invalid client
+responses, oversized input-required results, time limits, and disconnections.
+They also prove that every signed-in round checks the caller again and that
+retries use fresh JSON-RPC identifiers. Opaque `requestState` is deliberately
+rejected because the framework does not yet provide the integrity and replay
+controls it would need. See the
+[client-input tests](../tests/black-box/input-required.test.mjs).
 
 ### Long-Lived Change Notifications
 
@@ -195,8 +211,8 @@ input/output transport.
 
 Em See Pea supports useful parts of the active server surface, but it does not
 yet support every active request, result shape, notification, and transport
-rule. In particular, it lacks multi-round-trip input requests and bounded
-subscriptions.
+rule. In particular, it lacks bounded subscriptions and several partial
+capabilities listed above.
 
 The full active server-surface claim stays withdrawn until a fresh comparison
 with the pinned public specification proves that this page lists every active
@@ -207,12 +223,11 @@ tests from clean checkouts with two independent MCP clients.
 
 Work should close one row at a time:
 
-1. add checked results that ask a client for more input
-2. add tests for the next unsupported result shape named on this page
-3. cover custom request-header projection and validation
-4. add subscriptions only after slow-reader memory is bounded
-5. compare this page with every active server rule in the pinned specification
-6. rerun every row on this page with two independent clients from clean copies
+1. add tests for the next unsupported result shape named on this page
+2. cover custom request-header projection and validation
+3. add subscriptions only after slow-reader memory is bounded
+4. compare this page with every active server rule in the pinned specification
+5. rerun every row on this page with two independent clients from clean copies
 
 If public MCP sources change, update this page and its tests before changing the
 claim.
