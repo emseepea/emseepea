@@ -226,9 +226,25 @@ progress work. See the
 
 ### Progress Updates
 
-**Status: Partial.** Checked and bounded progress works on a local request.
-Proxy operation, recovery, and more than one server instance are not supported.
-See the [progress tests](../tests/black-box/streaming-progress.test.mjs).
+**Status: Partial.** Public tools can send bounded progress through a trusted
+proxy on the same POST response. Independent requests can reach different
+server processes without requiring the client to stay with one process.
+This addition is checked in source, not yet published to npm.
+
+The [proxy tests](../tests/black-box/proxy-progress.test.mjs) check incremental
+delivery, final responses, request isolation, cancellation, and configured
+limits. The [CI load test](../tests/load/proxy-progress.test.mjs) adds concurrent
+calls and paused readers, with fixed memory limits.
+
+[Node.js 22 and 24 passed](https://github.com/windyroad/emseepea/actions/runs/33341972321)
+at revision `0178dc802c52e395f4907b90b2fbd2bfc324cb9c`. The tested setup uses
+two independent processes behind an HTTP proxy that supplies forwarded HTTPS
+metadata. It does not test a real TLS terminator or every proxy product.
+
+There is no throughput or load-balancing fairness guarantee. Rate limits remain
+per server, and application state is not shared. Paused-reader memory checks
+do not prove that a slow reader slows the producer. Recovery, replay,
+subscriptions, and deployed streaming tools requiring sign-in remain unsupported.
 
 ### Server-Sent Event Completion
 
@@ -238,9 +254,12 @@ then closes. See the
 
 ### Proxy Buffering Header
 
-**Status: Checked.** Streamed responses include `X-Accel-Buffering: no` so
-compatible proxy servers do not hold progress updates. See the
-[progress tests](../tests/black-box/streaming-progress.test.mjs).
+**Status: Checked.** Streamed responses include `X-Accel-Buffering: no`, which
+asks compatible proxies not to hold progress updates. It is not a guarantee
+that every proxy obeys. The
+[progress tests](../tests/black-box/streaming-progress.test.mjs) check the header;
+the [proxy tests](../tests/black-box/proxy-progress.test.mjs) check delivery before
+the final response in the tested proxy setup.
 
 ### Stream Resumption
 

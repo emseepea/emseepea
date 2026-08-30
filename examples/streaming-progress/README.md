@@ -18,8 +18,13 @@ npm run start -w @emseepea/example-streaming-progress
 ```
 
 The server listens on `http://127.0.0.1:3000/mcp` by default. Set `PORT` to
-choose another port. This initial slice is loopback-only: it has no GET stream,
-session, replay, subscription, proxy, or multi-instance claim.
+choose another port. This example starts locally and does not configure a proxy.
+
+To adapt it for a public server, see
+[Use Progress Behind a Proxy](../../packages/framework/README.md#use-progress-behind-a-proxy).
+That option is available in the current source, not yet in a published npm
+release. It does not add saved sessions, replay, subscriptions, or recovery
+after reconnecting.
 
 ## Check This Example
 

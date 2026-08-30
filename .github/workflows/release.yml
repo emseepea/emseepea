@@ -185,13 +185,13 @@ jobs:
           - Node.js: $(node --version)
           - npm: $(npm --version)
           - GitHub CLI: $(gh --version | head -1)
-          - Qualification: npm test; npm run benchmark; npm audit --audit-level=high; npm pack
+          - Qualification: npm test; npm run benchmark; npm run test:load:streaming; npm audit --audit-level=high; npm pack
           - Semantic qualification: $SEMANTIC_EVAL_RUN_URL, artifact $SEMANTIC_EVAL_ARTIFACT
           - Reviews: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/$review_record
           - Supported slice:
             - Fastify-first MCP 2026-07-28 server
             - JSON operations
-            - checked, bounded, loopback-only POST SSE progress for explicitly streaming tools
+            - checked, bounded public POST progress through a trusted proxy
             - public and invocation-scoped OAuth-protected tools
             - checked mapped adapters
             - public static-resource and non-enumerating resource-template discovery and reads
@@ -205,7 +205,7 @@ jobs:
             - changing catalogues while a server runs
             - object or tenant authorization
             - outbound HTTP policy, retries, or effects
-            - production or intermediary streaming
+            - deployed streaming tools requiring sign-in
             - transport backpressure and queue overflow
             - resynchronisation, subscriptions, replay, sessions, and shared state
             - UI packages and deployment
