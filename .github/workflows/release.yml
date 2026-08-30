@@ -196,11 +196,11 @@ jobs:
             - public prompt listing and rendering
             - opt-in prompt and resource-template completion
             - opt-in bounded pages for tool, resource, resource-address-pattern, and prompt catalogues with opaque cursors
+            - configurable reuse instructions for discovery, catalogues, and resource reads
             - anonymous resource metadata and discovery
           - Excluded:
             - template enumeration and protected templates
             - changing catalogues while a server runs
-            - configurable cache hints
             - object or tenant authorization
             - outbound HTTP policy, retries, or effects
             - production or intermediary streaming

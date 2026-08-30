@@ -27,6 +27,7 @@ import {
   type AuthInfo,
   type AuthMetadataOptions,
   type CallToolResult,
+  type CacheHint,
   type GetPromptResult,
   type InputRequiredResult as SdkInputRequiredResult,
   type InputRequest,
@@ -39,6 +40,7 @@ import {
   type OAuthTokenVerifier,
   type ReadResourceResult,
   type StandardSchemaV1,
+  type ServerOptions,
 } from "@modelcontextprotocol/server";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -109,6 +111,15 @@ const RESOURCE_LISTING = Symbol("resourceListing");
 const PROMPT_NAME = Symbol("promptName");
 const HAS_COMPLETION = Symbol("hasCompletion");
 const PROMPT_LISTING = Symbol("promptListing");
+const CACHEABLE_METHODS = [
+  "tools/list",
+  "prompts/list",
+  "resources/list",
+  "resources/templates/list",
+  "resources/read",
+  "server/discover",
+] as const;
+type CacheHints = NonNullable<ServerOptions["cacheHints"]>;
 const runtimes = new WeakMap<FastifyInstance, AppRuntime>();
 interface RequestOperation {
   readonly deadlineMs: number;
@@ -253,6 +264,7 @@ export interface ResourceDefinition {
   readonly title?: string;
   readonly description?: string;
   readonly mimeType?: string;
+  readonly cacheHint?: CacheHint;
   readonly handler: (context: ClientInputContext) =>
     ReadResourceResult | InputRequiredResult | Promise<ReadResourceResult | InputRequiredResult>;
 }
@@ -262,6 +274,7 @@ export interface ResourceTemplateDefinition {
   readonly title?: string;
   readonly description?: string;
   readonly mimeType?: string;
+  readonly cacheHint?: CacheHint;
   readonly complete?: Readonly<Record<string, CompletionHandler>>;
   readonly handler: (
     input: {
@@ -331,6 +344,7 @@ export interface EmseepeaOptions {
   readonly resources?: readonly EmseepeaResource[];
   readonly prompts?: readonly EmseepeaPrompt[];
   readonly listPagination?: ListPaginationOptions;
+  readonly cacheHints?: CacheHints;
   readonly maxRequestBytes?: number;
   readonly maxApplicationResultBytes?: number;
   readonly maxProgressEvents?: number;
@@ -439,6 +453,9 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
   assertRegistrationName("Resource", name);
   const uri = canonicalResourceUri(definition.uri);
   const metadata = Object.freeze({ title, description, mimeType });
+  const cacheHint = definition.cacheHint === undefined
+    ? undefined
+    : normalizeCacheHint(definition.cacheHint, `resource ${name}`);
   const registration: EmseepeaResource = {
     [RESOURCE_NAME]: name,
     [RESOURCE_URI]: uri,
@@ -452,7 +469,7 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
       server.registerResource(
         name,
         uri,
-        metadata,
+        cacheHint ? { ...metadata, cacheHint } : metadata,
         async (_requestedUri, context): Promise<ReadResourceResult | InputRequiredResult> => {
           try {
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
@@ -493,6 +510,9 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
   const { template, route } = checkedResourceTemplate(definition.uriTemplate);
   const uriTemplate = template.uriTemplate.toString();
   const metadata = Object.freeze({ title, description, mimeType });
+  const cacheHint = definition.cacheHint === undefined
+    ? undefined
+    : normalizeCacheHint(definition.cacheHint, `resource template ${name}`);
   const variableNames = [...template.uriTemplate.variableNames];
   const completions = checkedCompletionHandlers(
     "Resource template",
@@ -529,7 +549,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
       server.registerResource(
         name,
         registeredTemplate,
-        metadata,
+        cacheHint ? { ...metadata, cacheHint } : metadata,
         async (requestedUri, variables, context): Promise<ReadResourceResult | InputRequiredResult> => {
           try {
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
@@ -976,18 +996,6 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   const paginationOptions = options.listPagination
     ? normalizeListPagination(options.listPagination)
     : undefined;
-  const pagination = paginationOptions
-    ? compileListPagination(paginationOptions, new Map([
-        ["tools/list", tools.map((tool) => tool[TOOL_LISTING])],
-        ["resources/list", resources
-          .filter((resource) => resource[RESOURCE_LISTING].method === "resources/list")
-          .map((resource) => resource[RESOURCE_LISTING].value)],
-        ["resources/templates/list", resources
-          .filter((resource) => resource[RESOURCE_LISTING].method === "resources/templates/list")
-          .map((resource) => resource[RESOURCE_LISTING].value)],
-        ["prompts/list", prompts.map((prompt) => prompt[PROMPT_LISTING])],
-      ] as const))
-    : undefined;
   const maxRequestBytes = positiveInteger("maxRequestBytes", options.maxRequestBytes ?? 1024 * 1024);
   const maxApplicationResultBytes = positiveInteger(
     "maxApplicationResultBytes",
@@ -1025,6 +1033,21 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   const hasCompletion = resources.some((resource) => resource[HAS_COMPLETION]) ||
     prompts.some((prompt) => prompt[HAS_COMPLETION]);
   if (hasCompletion) enabledMethods.add("completion/complete");
+  const cacheHints = options.cacheHints === undefined
+    ? undefined
+    : normalizeCacheHints(options.cacheHints, enabledMethods);
+  const pagination = paginationOptions
+    ? compileListPagination(paginationOptions, new Map([
+        ["tools/list", tools.map((tool) => tool[TOOL_LISTING])],
+        ["resources/list", resources
+          .filter((resource) => resource[RESOURCE_LISTING].method === "resources/list")
+          .map((resource) => resource[RESOURCE_LISTING].value)],
+        ["resources/templates/list", resources
+          .filter((resource) => resource[RESOURCE_LISTING].method === "resources/templates/list")
+          .map((resource) => resource[RESOURCE_LISTING].value)],
+        ["prompts/list", prompts.map((prompt) => prompt[PROMPT_LISTING])],
+      ] as const))
+    : undefined;
 
   const sdkHandler = createMcpHandler(() => {
     const server = new McpServer(
@@ -1037,6 +1060,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
           ...(hasCompletion ? { completions: {} } : {}),
         },
         instructions: options.instructions,
+        cacheHints,
         supportedProtocolVersions: [PROTOCOL_VERSION],
       },
     );
@@ -1532,6 +1556,39 @@ function decodeMcpHeaderValue(value: string): string | undefined {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizeCacheHint(value: unknown, field: string): Readonly<CacheHint> {
+  if (!isRecord(value)) throw new TypeError(`${field} cacheHint must be an object`);
+  const unknownField = Object.keys(value).find((key) => key !== "ttlMs" && key !== "cacheScope");
+  if (unknownField) throw new TypeError(`${field} cacheHint has an unknown field: ${unknownField}`);
+  const { ttlMs, cacheScope } = value;
+  if (ttlMs !== undefined && (!Number.isSafeInteger(ttlMs) || (ttlMs as number) < 0)) {
+    throw new TypeError(`${field} cacheHint.ttlMs must be a non-negative safe integer`);
+  }
+  if (cacheScope !== undefined && cacheScope !== "public" && cacheScope !== "private") {
+    throw new TypeError(`${field} cacheHint.cacheScope must be public or private`);
+  }
+  return Object.freeze({
+    ...(ttlMs === undefined ? {} : { ttlMs: ttlMs as number }),
+    ...(cacheScope === undefined ? {} : { cacheScope }),
+  });
+}
+
+function normalizeCacheHints(value: unknown, enabledMethods: ReadonlySet<string>): CacheHints {
+  if (!isRecord(value)) throw new TypeError("cacheHints must be an object");
+  const allowed = new Set<string>(CACHEABLE_METHODS);
+  const normalized: Partial<Record<(typeof CACHEABLE_METHODS)[number], Readonly<CacheHint>>> = {};
+  for (const [method, hint] of Object.entries(value)) {
+    if (!allowed.has(method)) throw new TypeError(`cacheHints has an unknown method: ${method}`);
+    if (hint === undefined) continue;
+    if (!enabledMethods.has(method)) throw new TypeError(`cacheHints cannot configure disabled method: ${method}`);
+    normalized[method as (typeof CACHEABLE_METHODS)[number]] = normalizeCacheHint(
+      hint,
+      `cacheHints.${method}`,
+    );
+  }
+  return Object.freeze(normalized) as CacheHints;
 }
 
 function checkedInputResponses(
