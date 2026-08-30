@@ -5,6 +5,7 @@ accessibility workflow.
 
 Changed public prose reviewed:
 
+- `.changeset/gentle-peas-route.md`
 - `.changeset/quiet-pods-build.md`
 - `.changeset/calm-pods-route.md`
 - `.changeset/fresh-peas-accept.md`
@@ -64,3 +65,7 @@ The specialist also passed this exact public npm deprecation message:
 
 > Do not use this version. Files needed to run this package are missing.
 > Install a newer version instead.
+
+The custom request-header guide, coverage statement, and release note passed
+review after they were written to explain the user-visible purpose, supported
+values, rejection behaviour, and security limits in plain language.

@@ -6,7 +6,7 @@ const tool = defineMappedTool({
   name: "synthetic-read",
   access: "public",
   description: "Return one synthetic record.",
-  inputSchema: z.object({ id: z.string() }),
+  inputSchema: z.object({ id: z.string().meta({ "x-mcp-header": "Id" }) }),
   outputSchema: z.object({ id: z.string(), value: z.string() }),
   backendInputSchema: z.object({ id: z.string() }),
   backendOutputSchema: z.object({ id: z.string(), value: z.string() }),

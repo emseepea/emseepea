@@ -29,6 +29,7 @@ const headers = {
   "MCP-Protocol-Version": "2026-07-28",
   "Mcp-Method": "tools/call",
   "Mcp-Name": "synthetic-read",
+  "Mcp-Param-Id": "bench",
 };
 let nextMessageId = 0;
 
