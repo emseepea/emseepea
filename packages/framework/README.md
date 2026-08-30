@@ -51,6 +51,24 @@ const app = createEmseepea({ name: "coffee-guide", version: "1.0.0", tools: [get
 await serveEmseepea(app);
 ```
 
+## Route with a Tool Argument
+
+A proxy can route a request using a checked tool argument without reading the
+JSON body. Mark a string, integer, or boolean property with `x-mcp-header`:
+
+```ts
+const inputSchema = z.object({
+  region: z.string().meta({ "x-mcp-header": "Region" }),
+});
+```
+
+Compatible clients send the same value as `Mcp-Param-Region`. The tool still
+receives and checks `region` normally. The server rejects a missing or
+different header before the tool runs.
+
+This header is a copy of tool input. It does not identify a person, prove that
+they signed in, grant permission, or protect a secret.
+
 ## Ask the Client for More Information
 
 Application authors can create a direct tool, resource, resource address

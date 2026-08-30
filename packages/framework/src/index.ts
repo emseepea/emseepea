@@ -628,6 +628,7 @@ function createCheckedTool(
 ): EmseepeaTool {
   const { name, title, description, inputSchema, outputSchema } = definition;
   assertRegistrationName("Tool", name);
+  assertValidMcpHeaderAnnotations(inputSchema);
   const access = normalizeToolAccess(definition.access, definition.requiredScopes);
   const registration: EmseepeaTool = {
     [TOOL_NAME]: name,
@@ -1370,6 +1371,57 @@ function sdkMetadataSchema(schema: z.ZodObject): z.ZodObject {
       },
     },
   } as unknown as z.ZodObject;
+}
+
+const MCP_HEADER_NAME = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+
+function assertValidMcpHeaderAnnotations(schema: z.ZodObject): void {
+  const jsonSchema = z.toJSONSchema(schema, { target: "draft-2020-12", io: "input" });
+  const names = new Set<string>();
+
+  function visit(value: unknown, path: string[], reachable: boolean): void {
+    if (!isRecord(value)) return;
+    if ("x-mcp-header" in value) {
+      const name = value["x-mcp-header"];
+      const location = path.join(".") || "the schema root";
+      if (!reachable || path.length === 0) {
+        throw new TypeError(`Tool x-mcp-header at ${location} is not reachable through properties`);
+      }
+      if (typeof name !== "string" || !MCP_HEADER_NAME.test(name)) {
+        throw new TypeError(`Tool x-mcp-header at ${location} must be a non-empty HTTP header token`);
+      }
+      if (value.type !== "string" && value.type !== "integer" && value.type !== "boolean") {
+        throw new TypeError(`Tool x-mcp-header at ${location} must describe a string, integer, or boolean`);
+      }
+      const normalized = name.toLowerCase();
+      if (names.has(normalized)) {
+        throw new TypeError(`Tool x-mcp-header name is duplicated: ${name}`);
+      }
+      names.add(normalized);
+    }
+
+    if (isRecord(value.properties)) {
+      for (const [property, propertySchema] of Object.entries(value.properties)) {
+        visit(propertySchema, [...path, property], reachable);
+      }
+    }
+    for (const key of ["prefixItems", "oneOf", "anyOf", "allOf"] as const) {
+      const schemas = value[key];
+      if (Array.isArray(schemas)) for (const child of schemas) visit(child, path, false);
+    }
+    for (const key of [
+      "items", "contains", "additionalProperties", "unevaluatedProperties",
+      "unevaluatedItems", "propertyNames", "not", "if", "then", "else",
+    ] as const) {
+      visit(value[key], path, false);
+    }
+    for (const key of ["patternProperties", "dependentSchemas", "$defs", "definitions"] as const) {
+      const schemas = value[key];
+      if (isRecord(schemas)) for (const child of Object.values(schemas)) visit(child, path, false);
+    }
+  }
+
+  visit(jsonSchema, [], true);
 }
 
 function checkedCompletionHandlers(

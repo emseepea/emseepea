@@ -123,11 +123,13 @@ the [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
 
 ### Request Headers
 
-**Status: Partial.** Tests cover the protocol version, method, name, and
-missing or mismatched header rejection before authentication. Tool values
-copied into custom HTTP headers are not yet covered. See the
-[basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs) and
-[sign-in tests](../tests/black-box/oauth-protected-tools.test.mjs).
+**Status: Checked.** Tests cover the protocol version, method, name, and tool
+values copied into custom HTTP headers. They cover string, integer, and boolean
+values, safe encoding, optional values, unknown headers, and rejection of
+invalid declarations or missing, different, and malformed values before the
+tool runs. See the [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
+[sign-in tests](../tests/black-box/oauth-protected-tools.test.mjs), and
+[custom request-header tests](../tests/black-box/request-headers.test.mjs).
 
 ### Notification `POST` Requests
 
@@ -224,10 +226,9 @@ tests from clean checkouts with two independent MCP clients.
 Work should close one row at a time:
 
 1. add tests for the next unsupported result shape named on this page
-2. cover custom request-header projection and validation
-3. add subscriptions only after slow-reader memory is bounded
-4. compare this page with every active server rule in the pinned specification
-5. rerun every row on this page with two independent clients from clean copies
+2. add subscriptions only after slow-reader memory is bounded
+3. compare this page with every active server rule in the pinned specification
+4. rerun every row on this page with two independent clients from clean copies
 
 If public MCP sources change, update this page and its tests before changing the
 claim.
