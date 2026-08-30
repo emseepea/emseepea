@@ -5,13 +5,12 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 28 decisions: 18 current and 10 historical.
+This project has 29 decisions: 18 current and 11 historical.
 
 ## Quick Index
 
 ### Current decisions
 
-- [ADR-0002: Explicit Anonymous Production Boundary Behind a Trusted Proxy](0002-anonymous-production-boundary.proposed.md) — Proposed; human review confirmed.
 - [ADR-0005: Active Streamable HTTP Scope and Adaptive Delivery](0005-active-streamable-http-scope-and-adaptive-delivery.proposed.md) — Proposed; human review confirmed.
 - [ADR-0006: Canonical Public Contract and Private Manifest Compilation](0006-canonical-public-contract-and-private-manifest-compilation.proposed.md) — Proposed; human review confirmed.
 - [ADR-0007: Deterministic Execution Kernel and Checked Boundaries](0007-deterministic-execution-kernel-and-checked-boundaries.proposed.md) — Proposed; human review confirmed.
@@ -29,10 +28,12 @@ This project has 28 decisions: 18 current and 10 historical.
 - [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.proposed.md) — Proposed; human review confirmed.
 - [ADR-0028: Example-Owned Oxlint with Root Orchestration](0028-example-owned-oxlint-with-root-orchestration.proposed.md) — Proposed; human review confirmed.
 - [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md) — Proposed; human review pending.
+- [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.proposed.md) — Proposed; human review confirmed.
 
 ### Historical decisions
 
 - [ADR-0001: Public-Specification-First TypeScript Framework Foundation](0001-foundation.superseded.md) — Superseded; human review confirmed.
+- [ADR-0002: Explicit Anonymous Production Boundary Behind a Trusted Proxy](0002-anonymous-production-boundary.superseded.md) — Superseded; human review confirmed.
 - [ADR-0003: Public Windy Road Repository with Gated Changesets Releases](0003-public-repository-and-release-governance.superseded.md) — Superseded; human review confirmed.
 - [ADR-0004: Fastify-First TypeScript Framework Foundation](0004-fastify-first-typescript-foundation.superseded.md) — Superseded; human review confirmed.
 - [ADR-0008: Public and OAuth Protected Resource Security](0008-public-and-oauth-protected-resource-security.superseded.md) — Superseded; human review confirmed.
@@ -64,10 +65,11 @@ Chosen option: **"Public-specification-first framework using the official SDK"**
 - Capability advertisements are derived from enabled handlers and match tested behavior.
 - UI qualification includes semantic structure, keyboard operation, visible focus, accessible names, status announcements, and automated accessibility checks.
 
-### [ADR-0002: Explicit Anonymous Production Boundary Behind a Trusted Proxy](0002-anonymous-production-boundary.proposed.md)
+### [ADR-0002: Explicit Anonymous Production Boundary Behind a Trusted Proxy](0002-anonymous-production-boundary.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.proposed.md)
 
 #### Decision
 
@@ -626,3 +628,31 @@ Chosen option: **"Direct code-first semantic tests"**, because normal code gives
 - Claude credentials reach only the isolated model process and never the example server, public evidence, package, or publication step.
 - The exact release revision passes all semantic cases before npm publication.
 - The clean packed-install example gate finishes without installing Promptfoo.
+
+### [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0002: Explicit Anonymous Production Boundary Behind a Trusted Proxy](0002-anonymous-production-boundary.superseded.md)
+
+#### Decision
+
+Chosen option: **"Public POST progress through a trusted proxy"**, because a POST-scoped stream does not require shared state. A reverse proxy can select an instance and that instance can own the response until it ends.
+
+#### How We Check It
+
+- Configuration rejects production progress for tools that require sign-in.
+- Black-box tests start a real reverse proxy and two independent Em See Pea server processes.
+- The proxy selects instances across requests while one instance owns each response until completion.
+- Concurrent public calls receive their own ordered progress events and final result without events crossing between calls or instances.
+- The proxy receives the no-buffering response instruction and forwards the streamed response without collecting it first.
+- Invalid forwarding data is rejected before any tool handler runs.
+- Client disconnection cancels work in the selected instance.
+- Event count, event size, final response size, deadline, and cancellation limits remain enforced under load.
+- The proxy load scenario runs in the pull-request and exact-release workflows.
+- The scenario runs on Node.js 22 and 24.
+- Every request completes correctly and memory stays within the limit printed by the test.
+- The job fails if an event appears in the wrong request stream, is missing, appears twice, arrives after the final result or cancellation, or exceeds its size limit.
+- The existing performance limits for ordinary JSON requests remain unchanged and continue to run in the same CI jobs.
+- Public documentation describes only POST-scoped public progress and passes cognitive accessibility review.
+- No session, replay, shared-rate-limit, signed-in-streaming, GET-streaming, or subscription capability is advertised.
