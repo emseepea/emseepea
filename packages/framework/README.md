@@ -69,6 +69,29 @@ different header before the tool runs.
 This header is a copy of tool input. It does not identify a person, prove that
 they signed in, grant permission, or protect a secret.
 
+## Bound Large Catalogues
+
+Split long tool, resource, resource-address, and prompt lists into pages by
+adding one option to the server:
+
+```ts
+const app = createEmseepea({
+  name: "coffee-guide",
+  version: "1.0.0",
+  tools,
+  listPagination: { pageSize: 50, maxPageBytes: 256 * 1024 },
+});
+```
+
+`pageSize` must be between 1 and 100. `maxPageBytes` defaults to one mebibyte and
+stops a page earlier when its public catalogue details would be too large. The
+server stops at startup if one item cannot fit.
+
+Clients receive an opaque cursor for the next page. Identical server instances
+accept the same cursor. Changing the catalogue or either limit makes old
+cursors invalid. Cursors select public catalogue pages; they do not identify a
+person or grant permission. Omit `listPagination` to keep one-page lists.
+
 ## Ask the Client for More Information
 
 Application authors can create a direct tool, resource, resource address
@@ -350,8 +373,8 @@ Pea checks the returned suggestions and keeps at most the first 100.
 Suggestions are public even when some tools require sign-in. Return only text
 that is safe for anyone to discover.
 
-Listing every matching address, large result pages, sign-in for resources, and
-custom caching are not included yet.
+Listing every matching address, catalogue pages without the bounds above,
+sign-in for resources, and custom caching are not included yet.
 
 ## Tool That Requires Sign-In
 
