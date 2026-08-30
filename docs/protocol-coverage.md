@@ -111,6 +111,21 @@ application work. See the
 [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs) and
 [sign-in tests](../tests/black-box/oauth-protected-tools.test.mjs).
 
+### Result Envelopes
+
+**Status: Checked.** Every enabled successful operation returns
+`resultType: "complete"`. Discovery, list, and resource-reading results also
+tell clients not to reuse the response and not to share it between callers by
+returning `ttlMs: 0` and `cacheScope: "private"`.
+
+Raw HTTP tests cover every enabled operation. The pinned official client also
+successfully reads all nine results. The separately tested
+`resultType: "input_required"` path is covered by the
+[client-input tests](../tests/black-box/input-required.test.mjs). Configurable
+cache instructions and pagination are not yet supported. See the
+[result-envelope tests](../tests/black-box/resources-prompts.test.mjs) and
+[streaming tests](../tests/black-box/streaming-progress.test.mjs).
+
 ### Accepted Response Types
 
 **Status: Checked.** Clients must offer both JSON and server-sent events.
@@ -225,7 +240,7 @@ tests from clean checkouts with two independent MCP clients.
 
 Work should close one row at a time:
 
-1. add tests for the next unsupported result shape named on this page
+1. add bounded pagination for list results
 2. add subscriptions only after slow-reader memory is bounded
 3. compare this page with every active server rule in the pinned specification
 4. rerun every row on this page with two independent clients from clean copies

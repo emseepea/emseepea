@@ -5,6 +5,7 @@ accessibility workflow.
 
 Changed public prose reviewed:
 
+- `.changeset/kind-peas-complete.md`
 - `.changeset/gentle-peas-route.md`
 - `.changeset/quiet-pods-build.md`
 - `.changeset/calm-pods-route.md`
@@ -69,3 +70,7 @@ The specialist also passed this exact public npm deprecation message:
 The custom request-header guide, coverage statement, and release note passed
 review after they were written to explain the user-visible purpose, supported
 values, rejection behaviour, and security limits in plain language.
+
+The result-envelope coverage statement and release note passed review after
+they explained the fixed cache instructions, evidence, and remaining
+pagination gap in plain language.
