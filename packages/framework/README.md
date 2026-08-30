@@ -327,6 +327,7 @@ const guide = defineResource({
   name: "getting-started",
   uri: guideUri,
   mimeType: "text/markdown",
+  cacheHint: { ttlMs: 30_000 },
   handler: () => ({ contents: [{ uri: guideUri, text: "# Brew safely" }] }),
 });
 
@@ -358,8 +359,30 @@ const app = createEmseepea({
   version: "1.0.0",
   resources: [guide, methodGuide],
   prompts: [brew],
+  cacheHints: {
+    "resources/list": { ttlMs: 60_000, cacheScope: "public" },
+    "resources/read": { ttlMs: 5_000, cacheScope: "private" },
+  },
 });
 ```
+
+## Tell Clients When They May Reuse Results
+
+By default, clients are told not to reuse lists, discovery details, or resource
+content. `cacheHints` sets a time limit in milliseconds and says whether a
+shared cache may store the result.
+
+Use `public` only when every caller receives the same non-sensitive result.
+Use `private` for results that only the requesting client may keep. These
+instructions do not grant access and do not make changing or personal data safe
+to share.
+
+An individual resource or reusable resource address can override either field.
+In the example, `guide` overrides the time limit while its missing
+`cacheScope` still comes from `cacheHints["resources/read"]`.
+
+Cache instructions are supported for discovery, tool lists, resource lists,
+reusable resource-address lists, prompt lists, and resource reads.
 
 Resource templates advertise an address pattern rather than listing every
 possible address. Clients list the patterns, then read an address that matches
@@ -373,8 +396,8 @@ Pea checks the returned suggestions and keeps at most the first 100.
 Suggestions are public even when some tools require sign-in. Return only text
 that is safe for anyone to discover.
 
-Listing every matching address, catalogue pages without the bounds above,
-sign-in for resources, and custom caching are not included yet.
+Listing every matching address, catalogue pages without the bounds above, and
+sign-in for resources are not included yet.
 
 ## Tool That Requires Sign-In
 

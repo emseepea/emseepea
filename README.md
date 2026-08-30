@@ -25,6 +25,7 @@ Use the current framework to create:
 - tools that require a sign-in token before their code runs
 - tools that call another service and check its response
 - resources, reusable resource addresses, prompts, and field suggestions
+- a server that tells clients when a list or resource is safe to reuse
 - a local server that reports live progress while work is running
 - two local server processes that share one SQLite report store
 - a server with a native HTML form, or the same form rendered with React and
@@ -91,15 +92,8 @@ Returning valid JSON is not enough.
 
 Skip `npm run claude:login` when Claude is already signed in on your computer.
 
-## Run the Provisional Performance Check
-
-```sh
-npm run benchmark
-```
-
-This measures the current JSON handling. It does not measure connected
-services, tools that require sign-in, resources, prompts, suggestions, or live
-progress.
+The pull-request checks run the current JSON performance test on Node.js 22 and
+24. Load and performance results come from CI, not a developer's computer.
 
 ## Current Security Boundary
 
@@ -122,7 +116,7 @@ even when using a tool requires permission.
   the same write
 - listing every possible resource address or requiring sign-in for resources and
   prompts
-- changing catalogues while a server runs or configuring how clients cache them
+- changing catalogues while a server runs
 - production streaming through proxy servers
 - saved sessions, subscriptions, replay, or reconnect recovery
 - shared operation across computers or a promise that retries change an

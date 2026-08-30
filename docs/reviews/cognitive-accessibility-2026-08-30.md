@@ -80,3 +80,10 @@ The bounded-pagination guide, coverage statement, and release note passed
 review after `MiB` was written as `mebibyte` and the remaining gap was narrowed
 to catalogue pages without the documented bounds. The matching release evidence
 uses the same plain description of the supported catalogues.
+
+The configurable-cache-instruction wording in `README.md`,
+`packages/framework/README.md`, `docs/protocol-coverage.md`,
+`.changeset/soft-peas-cache.md`, and `.github/workflows/release.yml` passed an
+independent review. It explains what application authors can configure, the
+safe default, resource overrides, when shared reuse is unsafe, and the exact
+tests behind the claim in short, scannable sections.

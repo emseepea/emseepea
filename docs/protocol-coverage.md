@@ -129,10 +129,23 @@ returning `ttlMs: 0` and `cacheScope: "private"`.
 Raw HTTP tests cover every enabled operation. The pinned official client also
 successfully reads all nine results. The separately tested
 `resultType: "input_required"` path is covered by the
-[client-input tests](../tests/black-box/input-required.test.mjs). Configurable
-cache instructions are not yet supported. See the
+[client-input tests](../tests/black-box/input-required.test.mjs). See the
 [result-envelope tests](../tests/black-box/resources-prompts.test.mjs) and
 [streaming tests](../tests/black-box/streaming-progress.test.mjs).
+
+### Cache Instructions
+
+**Status: Checked.** Applications can tell clients how long they may reuse
+discovery details, lists, and resource content. They can also say whether a
+shared cache may keep the result. An individual resource or reusable resource
+address can override either part of the resource-reading instruction.
+
+Invalid instructions and instructions for features the application has not
+enabled stop the server from being created. Results that ask the client for
+more input are never marked as reusable. Tests cover raw HTTP, the pinned MCP
+client, bounded catalogue pages, defaults, overrides, and proof that later
+changes to caller-owned configuration objects have no effect. See the
+[cache-instruction tests](../tests/black-box/cache-hints.test.mjs).
 
 ### List Pagination
 
@@ -261,10 +274,9 @@ tests from clean checkouts with two independent MCP clients.
 
 Work should close one row at a time:
 
-1. add configurable cache instructions
-2. add subscriptions only after slow-reader memory is bounded
-3. compare this page with every active server rule in the pinned specification
-4. rerun every row on this page with two independent clients from clean copies
+1. add subscriptions only after slow-reader memory is bounded
+2. compare this page with every active server rule in the pinned specification
+3. rerun every row on this page with two independent clients from clean copies
 
 If public MCP sources change, update this page and its tests before changing the
 claim.
