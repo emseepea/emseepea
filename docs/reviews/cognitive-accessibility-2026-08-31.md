@@ -135,3 +135,28 @@ recorded. The decision preserves model isolation, three answers, and nine
 judgments.
 
 This was a source Markdown review, not rendered browser verification.
+
+## Website Decision Split
+
+Reviewed files:
+
+- `docs/decisions/0025-static-documentation-website-with-astro-starlight.proposed.md`
+- `docs/decisions/0031-website-workspace-in-the-existing-monorepo.proposed.md`
+- `docs/decisions/0032-static-only-website-runtime.proposed.md`
+- `docs/decisions/0033-github-pages-website-hosting.proposed.md`
+- `docs/decisions/0034-one-source-for-reader-guides.proposed.md`
+- `docs/decisions/0035-verified-guides-before-website-publication.proposed.md`
+- `docs/decisions/0036-one-current-documentation-set.proposed.md`
+- `docs/decisions/0037-local-website-search.proposed.md`
+- `docs/decisions/0038-measured-website-performance-before-publication.proposed.md`
+- `docs/decisions/README.md`
+- `docs/reviews/cognitive-accessibility-2026-08-31.md` (this section)
+
+Result: PASS. Each record states one website decision. The workspace record
+explains that this is the only Em See Pea website in the existing public MIT
+monorepo. The records distinguish approved design from a deployed website and
+from the numerical performance budget still to be agreed.
+
+Source-level Markdown and cognitive-accessibility review only; no website has
+been built or browser-tested by this review. The specialist also reviewed this
+evidence wording.
