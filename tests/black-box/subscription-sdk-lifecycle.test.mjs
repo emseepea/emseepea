@@ -5,27 +5,22 @@ import { createMcpFastifyApp } from "@modelcontextprotocol/fastify";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { createMcpHandler, InMemoryServerEventBus, McpServer } from "@modelcontextprotocol/server";
 import { readMessages } from "../fixtures/proxy-progress.mjs";
+import { listenOptions, startSubscriptionProbe } from "../fixtures/subscription-sdk.mjs";
 
-function listenOptions(uri, signal) {
-  return {
-    method: "POST", signal,
-    headers: {
-      "content-type": "application/json", accept: "application/json, text/event-stream",
-      "mcp-method": "subscriptions/listen", "mcp-protocol-version": "2026-07-28",
-    },
-    body: JSON.stringify({
-      jsonrpc: "2.0", id: "same-id", method: "subscriptions/listen",
-      params: {
-        notifications: { resourceSubscriptions: [uri], toolsListChanged: true },
-        _meta: {
-          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-          "io.modelcontextprotocol/clientInfo": { name: "subscription-probe", version: "0.0.0" },
-          "io.modelcontextprotocol/clientCapabilities": {},
-        },
-      },
-    }),
-  };
-}
+test("shared stream reader keeps its default and checks an explicit byte budget", async () => {
+  const frame = Buffer.from(`event: message\ndata: ${JSON.stringify({
+    jsonrpc: "2.0", id: 1, result: { padding: "x".repeat(1_400_000) },
+  })}\n\n`);
+  const response = { status: 200, headers: new Headers({
+    "content-type": "text/event-stream", "x-accel-buffering": "no",
+  }), body: [frame] };
+  await assert.rejects(readMessages(response), /stream exceeds combined response budget/);
+  assert.equal((await readMessages(response, undefined, frame.byteLength)).length, 1);
+  await assert.rejects(readMessages(response, undefined, frame.byteLength - 1), /stream exceeds combined response budget/);
+  for (const invalid of [0, -1, 1.5, Infinity, NaN]) {
+    await assert.rejects(readMessages(response, undefined, invalid), /positive safe integer/);
+  }
+});
 
 test("SDK feasibility: independent subscription closure through Fastify HTTP", { timeout: 10_000 }, async (t) => {
   const bus = new InMemoryServerEventBus();
@@ -109,73 +104,46 @@ test("SDK feasibility: independent subscription closure through Fastify HTTP", {
   assert.equal(bus.listenerCount, 0);
 });
 
+test("SDK feasibility: capacity, input bounds, expiry and disconnect release listeners", { timeout: 10_000 }, async (t) => {
+  const probe = await startSubscriptionProbe({ maxActive: 1, lifetimeMs: 500 });
+  t.after(() => probe.close());
+  const response = await fetch(probe.url, listenOptions("probe://resource/expiry", t.signal));
+  const frames = [];
+  const expired = assert.rejects(readMessages(response, (frame) => frames.push(frame)),
+    (error) => error.cause?.code === "UND_ERR_SOCKET");
+  const record = probe.requests[0];
+  const refused = await fetch(probe.url, listenOptions("probe://resource/excess", t.signal));
+  assert.equal(refused.status, 503);
+  await refused.text();
+  assert.equal(probe.requests.length, 1, "capacity refusal must not create a handler");
+  await expired;
+  await record.closed;
+  assert.equal(record.reason, "deadline");
+  assert.equal(probe.active.size, 0);
+  assert.equal(probe.bus.listenerCount, 0);
+  assert.deepEqual(frames.map((frame) => frame.method), ["notifications/subscriptions/acknowledged"]);
+  const invalid = await fetch(probe.url, listenOptions(`probe://${"x".repeat(513)}`, t.signal));
+  assert.equal(invalid.status, 400);
+  await invalid.text();
+  assert.equal(probe.requests.length, 1, "input refusal must not create a handler");
+  const cancelled = new AbortController();
+  const reopened = await fetch(probe.url, listenOptions("probe://resource/reopened",
+    AbortSignal.any([t.signal, cancelled.signal])));
+  assert.equal(reopened.status, 200, "expiry must release admission capacity");
+  const disconnected = assert.rejects(readMessages(reopened), { name: "AbortError" });
+  cancelled.abort();
+  await disconnected;
+  await probe.requests.at(-1).closed;
+  assert.equal(probe.active.size, 0);
+  assert.equal(probe.bus.listenerCount, 0);
+});
+
 // Feasibility only: caps total generated event bytes, not measured heap or a
 // rolling queue. A production design also needs shared capacity and deadlines.
 test("SDK feasibility: bounded event admission isolates overflow", { timeout: 10_000 }, async (t) => {
-  const bus = new InMemoryServerEventBus();
-  const requests = [];
-  const app = createMcpFastifyApp({ host: "127.0.0.1", bodyLimit: 4_096 });
-  t.after(async () => {
-    for (const record of requests) record.stop();
-    await Promise.all(requests.map((record) => record.closed));
-    app.server.closeAllConnections();
-    await app.close();
-  });
-  app.post("/mcp", async (request, reply) => {
-    const uri = request.body?.params?.notifications?.resourceSubscriptions?.[0];
-    if (request.body?.id !== "same-id" || typeof uri !== "string" || Buffer.byteLength(uri) > 512) {
-      return reply.code(400).send({ error: "Probe input limit" });
-    }
-    let ended = false;
-    let detach = () => {};
-    const record = {
-      admitted: 0, bytes: 0, reason: undefined,
-      closed: once(reply.raw, "close"),
-      stop(reason) {
-        if (ended) return;
-        ended = true;
-        record.reason = reason;
-        detach();
-        reply.raw.destroy();
-      },
-    };
-    const boundedBus = {
-      publish: (event) => bus.publish(event),
-      subscribe(listener) {
-        detach = bus.subscribe((event) => {
-          // Filter before charging capacity; an unrelated publisher cannot
-          // disconnect this request or consume its allowance.
-          if (ended || event.kind !== "resource_updated" || event.uri !== uri) return;
-          const frame = `event: message\ndata: ${JSON.stringify({
-            jsonrpc: "2.0", method: "notifications/resources/updated",
-            params: { uri, _meta: { "io.modelcontextprotocol/subscriptionId": "same-id" } },
-          })}\n\n`;
-          const bytes = Buffer.byteLength(frame);
-          if (bytes > 256) return record.stop("event-size");
-          if (record.admitted === 4) return record.stop("event-count");
-          record.admitted++;
-          record.bytes += bytes;
-          listener(event);
-        });
-        return () => { ended = true; detach(); };
-      },
-    };
-    const handler = createMcpHandler(() => new McpServer(
-      { name: "subscription-bounds-probe", version: "0.0.0" },
-      { capabilities: { resources: { subscribe: true } }, supportedProtocolVersions: ["2026-07-28"] },
-    ), { legacy: "reject", bus: boundedBus, keepAliveMs: 0, maxSubscriptions: 1 });
-    record.handler = handler;
-    requests.push(record);
-    reply.hijack();
-    try { await toNodeHandler(handler)(request.raw, reply.raw, request.body); }
-    finally {
-      // Observe abort before SDK cleanup, which otherwise emits "complete".
-      await record.closed;
-      await handler.close();
-    }
-  });
-  await app.listen({ host: "127.0.0.1", port: 0 });
-  const url = `http://127.0.0.1:${app.server.address().port}/mcp`;
+  const probe = await startSubscriptionProbe();
+  t.after(() => probe.close());
+  const { bus, requests, url } = probe;
   async function open(uri) {
     const response = await fetch(url, listenOptions(uri, t.signal));
     const observed = [];

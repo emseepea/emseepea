@@ -51,5 +51,7 @@ jobs:
           EMSEEPEA_BENCHMARK_PROFILE: github-ubuntu-24.04-standard
       - name: Check proxy progress under concurrent load and paused readers
         run: npm run test:load:streaming
+      - name: Check subscription SDK memory with paused readers
+        run: node --expose-gc --test tests/load/subscription-sdk.test.mjs
       - name: Audit dependencies
         run: npm audit --audit-level=high
