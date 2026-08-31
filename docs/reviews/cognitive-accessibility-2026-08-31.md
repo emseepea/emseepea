@@ -160,3 +160,17 @@ from the numerical performance budget still to be agreed.
 Source-level Markdown and cognitive-accessibility review only; no website has
 been built or browser-tested by this review. The specialist also reviewed this
 evidence wording.
+
+## Fresh-Install Release Checks
+
+Reviewed files:
+
+- `docs/risks/R007-release-pipeline-publishes-the-wrong-or-compromised-package.active.md`
+- `docs/reviews/cognitive-accessibility-2026-08-31.md` (this section)
+
+Result: PASS. The risk record distinguishes npm publication from a completed
+GitHub release. It explains what the fresh-install checks do and when they run.
+The six dependency findings are attributed to the historical run, not the
+current package.
+
+This was a source Markdown review, not rendered browser verification.
