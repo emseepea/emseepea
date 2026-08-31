@@ -308,10 +308,29 @@ context, concurrent requests, sign-in rejection, tool errors, exporter failures,
 stream deadlines, disconnects, and shutdown. HTTP completion is not treated as
 tool success. Framework measurements exclude application data.
 
-Logs, dependency-aware readiness, and bounded telemetry flushing on shutdown
-remain unfinished. Existing health endpoints do not prove dependency health.
+Structured logs remain unfinished.
 The CI benchmark compares disabled telemetry with enabled telemetry without a
 provider; it does not measure the cost of an adopter's exporter.
+
+### Dependency Readiness and Shutdown Flushing
+
+**Status: Partial.** This checkout adds an optional dependency-readiness callback
+and an optional shutdown-flush callback. Neither is published to npm yet.
+
+Readiness uses fixed responses without dependency details. Tests cover failure,
+recovery, timeouts, late callback results, cancellation, and one unfinished
+dependency check at a time. An unhealthy readiness response does not disable
+independent tool calls. Without a callback, readiness does not check dependencies.
+
+Shutdown stops admission and bounds request draining separately from telemetry
+flushing. The flush budget includes waiting for HTTP closure and final request
+measurements. Tests cover forced stream closure, stalled close hooks, flusher
+failures, expired budgets, and repeated close calls. See the
+[operations HTTP tests](../tests/black-box/operations.test.mjs).
+
+An uncooperative callback can outlive the framework's wait. Successful shutdown
+does not prove delivery to an external telemetry service. Together with the
+missing structured logs, these limits keep the operations claim partial.
 
 ## Why Full Coverage Is Not Claimed
 

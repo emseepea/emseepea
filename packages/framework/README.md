@@ -86,8 +86,56 @@ Ordinary telemetry API and exporter failures do not change tool results.
 An adopter exporter that blocks the process or throws outside the telemetry
 call is not isolated.
 
-Logs, dependency health checks, and automatic telemetry flushing on shutdown are
-not included yet.
+Structured logs are not included yet.
+
+## Report Dependency Readiness
+
+Available in this checkout; not yet published to npm.
+
+Pass a `readiness` callback to `createEmseepea` to check the dependencies your
+server needs. The callback receives `{ signal }` and must return `true` only
+when those dependencies are ready. It may return a promise.
+
+`GET /readyz` returns:
+
+- HTTP 200 and `ready` when the check succeeds
+- HTTP 503 and `not ready` when it fails, throws, or takes too long
+
+The reply never includes dependency details or error messages. It is not cached.
+`GET /healthz` continues to report that the process is alive, not that its
+dependencies work. Without a callback, readiness does not check dependencies.
+
+Set `readinessTimeoutMs` to limit the check. It defaults to 1,000 milliseconds
+and accepts whole numbers from 1 to 60,000. A timeout or shutdown signals
+cancellation. Only one dependency check can remain unfinished at a time; if it
+ignores cancellation, later probes return not-ready until it settles.
+
+Readiness reports health for a load balancer or monitoring system. It does not
+block MCP calls itself. Tool handlers must still handle an unavailable backend.
+
+## Flush Measurements on Shutdown
+
+Available in this checkout; not yet published to npm.
+
+Pass `flushTelemetry` to `serveEmseepea` to flush your OpenTelemetry providers
+when the returned server's `close()` method runs. The callback receives
+`{ signal }`; it can call your providers' `forceFlush()` methods. Calling the
+Fastify app's `close()` directly does not run this callback.
+
+Shutdown uses two time limits:
+
+- `shutdownTimeoutMs`: finish existing requests, then close remaining
+  connections. The default is 5,000 milliseconds.
+- `telemetryFlushTimeoutMs`: wait for the final request measurements, then flush.
+  The default is 1,000 milliseconds; the allowed range is 1 to 60,000.
+
+The total waiting budget is the sum of those limits. The second limit applies
+only when you provide `flushTelemetry`. If final measurements are not ready in
+time, flushing is skipped. Repeated `close()` calls share the same work.
+
+Flushing is best-effort. Its errors do not change tool responses, and completion
+of `close()` does not prove that an exporter delivered data. Callbacks that block
+JavaScript or ignore cancellation cannot be forcibly stopped by the framework.
 
 ## Describe What Clients Can Show
 

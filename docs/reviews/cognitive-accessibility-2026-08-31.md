@@ -65,3 +65,18 @@ limits. It distinguishes source availability from npm publication and transport
 completion from tool success.
 
 This was a source-level Markdown review, not a rendered mobile-browser test.
+
+## Readiness and Shutdown
+
+Reviewed files:
+
+- `packages/framework/README.md`
+- `docs/protocol-coverage.md`
+- `.changeset/calm-pods-shutdown.md`
+- `docs/reviews/cognitive-accessibility-2026-08-31.md`
+
+Result: PASS. The guide separates dependency status from tool access and
+explains both shutdown time limits. It makes the callback cancellation and
+delivery limits explicit.
+
+This was a source-level Markdown review, not a rendered mobile-browser test.
