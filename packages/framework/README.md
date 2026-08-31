@@ -51,6 +51,44 @@ const app = createEmseepea({ name: "coffee-guide", version: "1.0.0", tools: [get
 await serveEmseepea(app);
 ```
 
+## Measure Requests
+
+Available in this checkout; not yet published to npm.
+
+Set `telemetry: true` in `createEmseepea` to record request traces, counts, and
+response times through OpenTelemetry. Leave it out to disable these measurements.
+
+Configure your OpenTelemetry providers and context manager before creating the
+app. Em See Pea does not choose an exporter or send data to a service.
+
+### What Gets Measured
+
+Each trace covers one `/mcp` request through response completion or
+disconnection, including progress updates. Measurements report:
+
+- the HTTP method and status
+- the known MCP method, or `_OTHER` for unknown names
+- whether the response finished or disconnected
+
+An HTTP 200 response can still contain a tool error. These measurements describe
+the response, not whether the tool achieved its task.
+
+### What Stays Out
+
+The framework does not attach tool names, request data, tokens, URLs, or error
+messages. It preserves a valid active parent trace identity, but drops baggage
+and other context data. It does not read trace headers itself.
+
+### Current Limits
+
+SDK host and origin rejections happen before this measurement starts.
+Ordinary telemetry API and exporter failures do not change tool results.
+An adopter exporter that blocks the process or throws outside the telemetry
+call is not isolated.
+
+Logs, dependency health checks, and automatic telemetry flushing on shutdown are
+not included yet.
+
 ## Describe What Clients Can Show
 
 Applications can give servers, tools, resources, reusable resource addresses,

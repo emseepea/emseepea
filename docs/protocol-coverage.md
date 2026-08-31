@@ -294,6 +294,25 @@ updates need `subscriptions/listen`, which is not yet supported.
 cancellation signal for Streamable HTTP. The notification is for the standard
 input/output transport.
 
+## Operations Support
+
+### Request Traces and Metrics
+
+**Status: Partial.** This checkout supports opt-in OpenTelemetry traces,
+request counts, and response times. These are not yet published to npm.
+They cover `/mcp` responses, including progress, until completion or
+disconnection. SDK host and origin rejections happen before measurement starts.
+
+The [telemetry HTTP tests](../tests/black-box/telemetry.test.mjs) check safe parent
+context, concurrent requests, sign-in rejection, tool errors, exporter failures,
+stream deadlines, disconnects, and shutdown. HTTP completion is not treated as
+tool success. Framework measurements exclude application data.
+
+Logs, dependency-aware readiness, and bounded telemetry flushing on shutdown
+remain unfinished. Existing health endpoints do not prove dependency health.
+The CI benchmark compares disabled telemetry with enabled telemetry without a
+provider; it does not measure the cost of an adopter's exporter.
+
 ## Why Full Coverage Is Not Claimed
 
 Em See Pea supports useful parts of the active server surface, but it does not

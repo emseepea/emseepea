@@ -19,7 +19,7 @@
     "examples/*"
   ],
   "scripts": {
-    "benchmark": "npm run build && node --expose-gc benchmarks/json-boundary.mjs",
+    "benchmark": "npm run build && node --expose-gc benchmarks/json-boundary.mjs && node --expose-gc benchmarks/json-boundary.mjs --telemetry",
     "test:load:streaming": "node --expose-gc --test tests/load/proxy-progress.test.mjs",
     "build": "npm run build -w @emseepea/server -w @emseepea/example-ui-shared && npm run build --workspaces --if-present",
     "claude:login": "claude auth login",
@@ -46,6 +46,9 @@
     "lint": "oxlint ."
   },
   "devDependencies": {
+    "@opentelemetry/context-async-hooks": "2.10.0",
+    "@opentelemetry/sdk-metrics": "2.10.0",
+    "@opentelemetry/sdk-trace": "2.10.0",
     "@anthropic-ai/claude-code": "2.1.248",
     "@changesets/changelog-github": "1.0.0",
     "@changesets/cli": "3.0.1",
