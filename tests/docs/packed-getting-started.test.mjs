@@ -15,18 +15,13 @@ function run(command, args, cwd) {
   return result.stdout;
 }
 
-test("the packed server runs the public getting-started path", { timeout: 180_000 }, async () => {
+test("the packed public packages pass a fresh-install audit and getting-started checks", { timeout: 180_000 }, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-packed-"));
   try {
-    const packed = JSON.parse(run("npm", [
-      "pack",
-      "--json",
-      "--ignore-scripts",
-      "--pack-destination",
-      directory,
-      "./packages/framework",
-    ], root));
-    const tarball = path.join(directory, packed[0].filename);
+    const tarballs = await Promise.all([
+      packPackage("./packages/framework", directory),
+      packPackage("./packages/testing", directory),
+    ]);
 
     run("npm", ["init", "--yes"], directory);
     run("npm", [
@@ -35,14 +30,21 @@ test("the packed server runs the public getting-started path", { timeout: 180_00
       "--prefer-offline",
       "--no-audit",
       "--no-fund",
-      tarball,
+      "--userconfig", "/dev/null",
+      ...tarballs,
       "zod@4.4.3",
     ], directory);
+    run("npm", ["audit", "--audit-level=high", "--userconfig", "/dev/null"], directory);
 
     await writeFile(path.join(directory, "check.mjs"), `
       import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
+      import { startMcpServer } from "@emseepea/testing";
+      import { semanticTest } from "@emseepea/testing/semantic";
       import { z } from "zod";
 
+      if (typeof startMcpServer !== "function" || typeof semanticTest !== "function") {
+        throw new Error("packed testing package is missing its public helpers");
+      }
       const value = z.object({ value: z.string() });
       const tool = defineTool({
         name: "echo-value",
@@ -90,6 +92,8 @@ test("the packed server runs the public getting-started path", { timeout: 180_00
     `);
 
     run(process.execPath, ["check.mjs"], directory);
+    await cp(new URL("scripts/verify-installed-package.mjs", root), path.join(directory, "verify-installed-package.mjs"));
+    run(process.execPath, ["verify-installed-package.mjs"], directory);
     const installed = JSON.parse(await readFile(path.join(directory, "node_modules/@emseepea/server/package.json"), "utf8"));
     assert.equal(installed.name, "@emseepea/server");
   } finally {
