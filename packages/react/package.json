@@ -19,7 +19,7 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@emseepea/server": "0.0.2"
+    "@emseepea/server": "0.0.3"
   },
   "peerDependencies": {
     "react": "^19.0.0",
