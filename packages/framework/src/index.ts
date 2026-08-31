@@ -56,6 +56,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
 import { isIP } from "node:net";
 import { z } from "zod";
+import { installRequestTelemetry } from "./telemetry.js";
 
 export * from "./ui.js";
 export type ClientInputRequest = Extract<InputRequest, { method: "elicitation/create" }>;
@@ -358,6 +359,7 @@ export interface OAuthResourceServerOptions {
   readonly verificationTimeoutMs?: number;
 }
 export interface EmseepeaOptions {
+  readonly telemetry?: boolean;
   readonly name: string;
   readonly version: string;
   readonly title?: string;
@@ -1064,6 +1066,9 @@ function installListPagination(server: McpServer, pagination: CompiledListPagina
 }
 
 export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
+  if (options.telemetry !== undefined && typeof options.telemetry !== "boolean") {
+    throw new TypeError("telemetry must be a boolean");
+  }
   assertNonEmpty("name", options.name);
   assertNonEmpty("version", options.version);
   const serverInfo = checkedProtocolValue<Implementation>("Implementation", {
@@ -1172,6 +1177,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   });
   const nodeHandler = toNodeHandler(sdkHandler);
   const app = createMcpFastifyApp({ host: deployment.mode === "loopback" ? "127.0.0.1" : "0.0.0.0" });
+  if (options.telemetry === true) installRequestTelemetry(app);
   const limiter = deployment.mode === "production-behind-proxy"
     ? new FixedWindowRateLimiter(deployment.rateLimit)
     : undefined;

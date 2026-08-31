@@ -40,6 +40,7 @@
     "prepack": "npm run build"
   },
   "dependencies": {
+    "@opentelemetry/api": "1.9.1",
     "@modelcontextprotocol/core": "2.0.0",
     "@modelcontextprotocol/fastify": "2.0.0",
     "@modelcontextprotocol/node": "2.0.0",

@@ -50,3 +50,18 @@ This was a source-level Markdown review, not a rendered mobile-browser test.
 Also reviewed the generated release-evidence wording in
 `.github/workflows/release.yml`. Result: PASS. It records the new load check and
 separates public progress from streaming features not included.
+
+## Request Telemetry
+
+Reviewed files:
+
+- `packages/framework/README.md`
+- `docs/protocol-coverage.md`
+- `.changeset/quiet-pods-telemetry.md`
+- `docs/reviews/cognitive-accessibility-2026-08-31.md`
+
+Result: PASS. The guide separates setup, measurements, privacy, and current
+limits. It distinguishes source availability from npm publication and transport
+completion from tool success.
+
+This was a source-level Markdown review, not a rendered mobile-browser test.

@@ -14,7 +14,10 @@ const tool = defineMappedTool({
   adapter: ({ id }) => ({ id, value: "synthetic" }),
   mapOutput: (data) => ({ text: "synthetic", data }),
 });
-const app = createEmseepea({ name: "emseepea-benchmark", version: "0.0.0", tools: [tool] });
+const app = createEmseepea({
+  name: "emseepea-benchmark", version: "0.0.0", tools: [tool],
+  telemetry: process.argv.includes("--telemetry"),
+});
 const running = await serveEmseepea(app, { port: 0 });
 let cpuStart;
 let allocationSession;
