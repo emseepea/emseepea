@@ -84,7 +84,6 @@ async function capture(path) {
       latest: metadata?.["dist-tags"]?.latest ?? "",
     };
   }));
-  assert.equal(new Set(packages.map(({ version }) => version)).size, 1, "public package versions differ");
   await writeJson(path, { packages });
 }
 

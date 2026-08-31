@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import test from "node:test";
@@ -146,6 +148,38 @@ test("packed-package inspection rejects a missing public target", () => {
     () => assertPackedTargets(manifestWithTargets, { files: complete.files.slice(1) }),
     /missing \.\/dist\/index\.d\.ts/,
   );
+});
+
+test("registry capture keeps each package's own release version", async (t) => {
+  const cwd = await mkdtemp(join(tmpdir(), "emseepea-registry-capture-"));
+  t.after(() => rm(cwd, { recursive: true, force: true }));
+  for (const [directory, version] of [["framework", "0.0.3"], ["testing", "0.1.0"]]) {
+    await mkdir(join(cwd, "packages", directory), { recursive: true });
+    await writeFile(join(cwd, "packages", directory, "package.json"), JSON.stringify({ version }));
+  }
+  const mockRegistry = `
+    import assert from 'node:assert/strict';
+    globalThis.fetch = async (url) => {
+      assert.ok([
+        'https://registry.npmjs.org/%40emseepea%2Fserver',
+        'https://registry.npmjs.org/%40emseepea%2Ftesting',
+      ].includes(url));
+      return { ok: true, status: 200, json: async () => ({
+        versions: { '0.0.2': {} }, 'dist-tags': { latest: '0.0.0' },
+      }) };
+    };
+  `;
+  await exec(process.execPath, [
+    "--import", `data:text/javascript,${encodeURIComponent(mockRegistry)}`,
+    fileURLToPath(new URL("../../scripts/verify-registry-release.mjs", import.meta.url)),
+    "capture", "before.json",
+  ], { cwd });
+  assert.deepEqual(JSON.parse(await readFile(join(cwd, "before.json"), "utf8")), {
+    packages: [
+      { name: "@emseepea/server", version: "0.0.3", present: false, latest: "0.0.0" },
+      { name: "@emseepea/testing", version: "0.1.0", present: false, latest: "0.0.0" },
+    ],
+  });
 });
 
 test("registry publication detection fails on partial publication", () => {

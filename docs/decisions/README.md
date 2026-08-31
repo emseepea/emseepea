@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 29 decisions: 15 current and 14 historical.
+This project has 37 decisions: 23 current and 14 historical.
 
 ## Quick Index
 
@@ -22,10 +22,18 @@ This project has 29 decisions: 15 current and 14 historical.
 - [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.proposed.md) — Proposed; human review confirmed.
 - [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md) — Proposed; human review confirmed.
 - [ADR-0023: Mandatory Cognitive-Accessibility Review for Published Content](0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md) — Proposed; human review confirmed.
-- [ADR-0025: Static Documentation Website with Astro Starlight](0025-static-documentation-website-with-astro-starlight.proposed.md) — Proposed; human review pending.
+- [ADR-0025: Astro Starlight Documentation Generator](0025-static-documentation-website-with-astro-starlight.proposed.md) — Proposed; human review confirmed.
 - [ADR-0028: Example-Owned Oxlint with Root Orchestration](0028-example-owned-oxlint-with-root-orchestration.proposed.md) — Proposed; human review confirmed.
 - [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md) — Proposed; human review confirmed.
 - [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.proposed.md) — Proposed; human review confirmed.
+- [ADR-0031: Website Workspace in the Existing Monorepo](0031-website-workspace-in-the-existing-monorepo.proposed.md) — Proposed; human review confirmed.
+- [ADR-0032: Static-Only Website Runtime](0032-static-only-website-runtime.proposed.md) — Proposed; human review confirmed.
+- [ADR-0033: GitHub Pages Website Hosting](0033-github-pages-website-hosting.proposed.md) — Proposed; human review confirmed.
+- [ADR-0034: One Source for Reader Guides](0034-one-source-for-reader-guides.proposed.md) — Proposed; human review confirmed.
+- [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.proposed.md) — Proposed; human review confirmed.
+- [ADR-0036: One Current Documentation Set](0036-one-current-documentation-set.proposed.md) — Proposed; human review confirmed.
+- [ADR-0037: Local Website Search](0037-local-website-search.proposed.md) — Proposed; human review confirmed.
+- [ADR-0038: Measured Website Performance Before Publication](0038-measured-website-performance-before-publication.proposed.md) — Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -517,30 +525,20 @@ Chosen option: **"Pinned Claude CLI with subscription OAuth"**, because it prese
 - Copilot permissions, credentials, packages, commands, and provider code are absent.
 - A real GitHub run using the subscription token passes before the release risk is reduced or publication is described as ready.
 
-### [ADR-0025: Static Documentation Website with Astro Starlight](0025-static-documentation-website-with-astro-starlight.proposed.md)
+### [ADR-0025: Astro Starlight Documentation Generator](0025-static-documentation-website-with-astro-starlight.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
+- Human review: Confirmed
 
 #### Decision
 
-Chosen option: **"Astro Starlight"**, because it is the smallest maintained option that supplies the documentation navigation and search Em See Pea needs without making the project maintain another web framework.
+Chosen option: **"Astro Starlight"**, because it supplies documentation layouts with little custom code.
 
 #### How We Check It
 
-- The website is a private workspace. No published package depends on it.
-- A clean Node.js 22 and 24 checkout builds the static site.
-- The build uses no server adapter, API route, runtime secret, analytics, or cookie.
-- Automated checks pass for routes, links, fragments, assets, canonical URLs, and the sitemap.
-- Every generated page passes Playwright and axe checks in light and dark themes.
-- Before publication, named evidence exists for keyboard use, focus, screen reader output, 320 CSS pixel reflow, 400% zoom, forced colors, reduced motion, contrast, search, navigation, and code copying.
-- Every changed public page has a named cognitive-accessibility review result.
-- Runnable guides pass in a clean consumer project against packages built from the current source before merge.
-- Every runnable snippet is either extracted and tested from its guide or links to a canonical source file. Unchecked copies stop publication.
-- Deployment repeats guide checks against the same public package versions readers will install.
-- Publication stops when any required package or check is unavailable.
-- The GitHub Pages workflow uses fixed action revisions, least permissions, no pull-request deployment credentials, and only the checked revision.
-- Compressed HTML, CSS, JavaScript, browser processing time, and memory are measured from the first build. Public deployment waits for a separately ratified website performance budget based on that evidence.
+- A clean Node.js 22 and 24 checkout builds the site.
+- The site uses the existing brand and accessibility requirements.
+- No custom theme components are introduced without a demonstrated need.
 
 ### [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.superseded.md)
 
@@ -660,3 +658,130 @@ Chosen option: **"Public POST progress through a trusted proxy"**, because a POS
 - The existing performance limits for ordinary JSON requests remain unchanged and continue to run in the same CI jobs.
 - Public documentation describes only POST-scoped public progress and passes cognitive accessibility review.
 - No session, replay, shared-rate-limit, signed-in-streaming, GET-streaming, or subscription capability is advertised.
+
+### [ADR-0031: Website Workspace in the Existing Monorepo](0031-website-workspace-in-the-existing-monorepo.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"Website workspace in this monorepo"**, because it keeps website tooling separate from published packages.
+
+#### How We Check It
+
+- The website has its own package manifest with `private: true`.
+- No published package depends on the website workspace.
+- Website source and examples remain in the same public MIT repository.
+
+### [ADR-0032: Static-Only Website Runtime](0032-static-only-website-runtime.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"Static files"**, because the initial website does not need application services.
+
+#### How We Check It
+
+- Build output can be served as static files without an application process.
+- The site has no server adapter, API route, runtime secret, analytics, or cookies.
+- Core guide content and navigation remain usable with JavaScript disabled.
+
+### [ADR-0033: GitHub Pages Website Hosting](0033-github-pages-website-hosting.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"GitHub Pages"**, because it fits the existing repository workflow.
+
+#### How We Check It
+
+- Only checked static output is deployed from the selected revision.
+- Workflow actions are pinned and permissions are limited to their tasks.
+- Pull requests cannot access deployment credentials.
+- Guide checks and the website performance gate pass before publication.
+
+### [ADR-0034: One Source for Reader Guides](0034-one-source-for-reader-guides.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"One guide source"**, because it avoids inconsistent copies.
+
+#### How We Check It
+
+- Each guide has one maintained source, with descriptive README links.
+- Runnable snippets have one source rather than separately edited copies.
+- Governance records do not displace getting-started guidance.
+
+### [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"Executable guide checks"**, because readers need commands proven against installable packages.
+
+#### How We Check It
+
+- Build and guide checks pass on clean Node.js 22 and 24 checkouts.
+- Routes, links, fragments, assets, canonical URLs, and sitemap checks pass.
+- Every runnable snippet is extracted and tested or links to tested source.
+- Every page passes automated accessibility checks in light and dark themes.
+- Named manual evidence covers keyboard use, focus, screen-reader output, 320 CSS pixel reflow, 400% zoom, forced colors, reduced motion, contrast, search, navigation, and code copying.
+- Every changed public page receives cognitive-accessibility review.
+- Published guide tests use the exact npm versions named to readers.
+
+### [ADR-0036: One Current Documentation Set](0036-one-current-documentation-set.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"One current set"**, because multiple supported documentation versions are not yet needed.
+
+#### How We Check It
+
+- The initial site has one maintained current guide set.
+- Pages and runnable guides agree on the supported package versions.
+- Simultaneous incompatible support triggers reassessment before release.
+
+### [ADR-0037: Local Website Search](0037-local-website-search.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"Local search"**, because it avoids adding a hosted search service.
+
+#### How We Check It
+
+- Search uses the built site index without hosted search credentials.
+- Keyboard and screen-reader users can operate search.
+- Search works for the published guide content.
+- Index size and browser work are included in website performance measurements.
+
+### [ADR-0038: Measured Website Performance Before Publication](0038-measured-website-performance-before-publication.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"Measure, then approve a budget"**, because website limits need website evidence.
+
+#### How We Check It
+
+- Measurements identify the tested website build and measurement conditions.
+- All named resource, processing, and memory measurements are recorded.
+- A separate numerical budget is ratified before public deployment.
+- The selected publication build passes that budget.
