@@ -1,6 +1,36 @@
 # Cognitive-Accessibility Review 2026-08-31
 
+## Initial Website Guides
+
+Result: PASS. Reviewed the five initial website guides and their README entry
+points. The site offers separate paths for creating a server, testing an
+existing server, and reducing maintained server code.
+
+This review checks clarity of the source text; it does not establish browser
+accessibility, working commands, or publication readiness. The independent
+cognitive-accessibility specialist also reviewed this evidence wording.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `website/src/content/docs/index.md` | `9ac58526221cc62ea93d57c0fb77c3858a152d4b1a4b87aecebd6877381da94a` |
+| `website/src/content/docs/getting-started.md` | `a3d398684a02886dac300f78a5cd79dcea017abe654b1d52834aea5a7ad52c3c` |
+| `website/src/content/docs/examples.md` | `f5ac364737a957bf81d080fd2d9759cbacb93985271d10a22c8652d214c583b6` |
+| `website/src/content/docs/ai-tests.md` | `aab08861a3215b71aebacbbf005d897f4f7a93487ea9eebd0cfe4b4110001542` |
+| `website/src/content/docs/less-server-code.md` | `a40be236c5b1f5bc249855726e9710e14514c0d07e56432e07874013b68bca74` |
+| `README.md` | `08b5e05b821628a9d8f0fde7b3cd916627e34b1132fbb30b5a67c1f2be34083e` |
+| `packages/testing/README.md` | `01ab71ec2913ee4e7329030e784256724730bb869624e7e9674317b4933c3504` |
+| `docs/guides/getting-started.md` | `ce11c542e70fd7fa9494478575f3cb0df37e54ee62b46d2bb6b4c19866cffe6b` |
+
 Reviewer: independent cognitive-accessibility specialist.
+
+### Page-not-found guidance
+
+Result: PASS. The page names the problem and offers home or search as recovery
+paths. Source-text review only.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `website/src/content/docs/404.md` | `c67038cd4b28cb6a4d778ec3cbf327c978e90be856589d0fea1f24ddcb7e225d` |
 
 ## ADR-0030 Ratification
 

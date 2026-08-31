@@ -1,0 +1,20 @@
+{
+  "name": "@emseepea/website",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1",
+    "build": "astro build && pagefind --site dist",
+    "preview": "astro preview --host 127.0.0.1",
+    "test:built": "node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "@astrojs/markdown-remark": "7.2.4",
+    "@astrojs/starlight": "0.41.10",
+    "astro": "7.2.9",
+    "pagefind": "1.5.2"
+  },
+  "engines": { "node": ">=22.12.0" }
+}
