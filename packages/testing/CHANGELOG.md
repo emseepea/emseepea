@@ -1,5 +1,20 @@
 # @emseepea/testing
 
+## 0.1.0
+
+### Minor Changes
+
+- [#13](https://github.com/windyroad/emseepea/pull/13) [`a53f874`](https://github.com/windyroad/emseepea/commit/a53f8748bf5c8e8751e54c061c61eab6b8d19d46) Thanks [@tompahoward](https://github.com/tompahoward)! - Write AI understanding tests in JavaScript instead of YAML. Tests can use setup
+  hooks, several MCP calls, generated cases, and custom assertions.
+  
+  Move cases into an `eval/` directory and run `emseepea-test eval`. Ordinary
+  tests stay in `test/`. The runner finds nested test files automatically.
+  
+  YAML cases are no longer supported. Use `semanticTest` from
+  `@emseepea/testing/semantic` to migrate them. Each case still requires three
+  fresh answers and nine independent judgments. Promptfoo is no longer a
+  dependency.
+
 ## 0.0.2
 
 ### Patch Changes
