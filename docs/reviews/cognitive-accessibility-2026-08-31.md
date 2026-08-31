@@ -1,5 +1,21 @@
 # Cognitive-Accessibility Review 2026-08-31
 
+## Published Release Status
+
+Result: PASS. Reviewed the release-status corrections and current next steps
+in the battle plan and protocol coverage guide. The text distinguishes
+published packages from unpublished website and UI packages. It keeps partial
+protocol support and model-test limits explicit. Source-text review only;
+this does not establish website publication readiness.
+
+Reviewer: independent cognitive-accessibility specialist. The specialist also
+reviewed this evidence wording.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `BATTLE-PLAN.md` | `e4958cd19bea3c18df0ab5d699a6c10536c04b9e0d0e092704748bfe3354e097` |
+| `docs/protocol-coverage.md` | `069c514581004577443d8f6a6791ec91d8519374e099978cca97ce05fcb6ca1e` |
+
 ## Website Budget Proposal
 
 Result: PASS. Reviewed the proposed website limits and the matching

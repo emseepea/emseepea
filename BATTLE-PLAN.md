@@ -39,17 +39,23 @@ Already implemented and checked in earlier revisions:
 - a two-process SQLite example for one-computer deployments
 - deterministic tests and lint commands owned by every runnable example
 
-New source work passed Node.js 22 and 24 CI: public tools can send bounded
-progress through a trusted proxy, with each request handled by one of two
-independent server processes. This is not yet published to npm. See the
-[progress coverage and limits](docs/protocol-coverage.md#progress-updates).
+`@emseepea/server` 0.0.3 and `@emseepea/testing` 0.1.0 are published on npm
+under the `next` tag. The release includes public progress through a trusted
+proxy, optional request telemetry, readiness and shutdown hooks, and code-first
+language-model tests. See the
+[release evidence](https://github.com/windyroad/emseepea/releases/tag/%40emseepea/server%400.0.3)
+and [coverage limits](docs/protocol-coverage.md).
+
+All eight example cases passed the release's language-model checks: 24 answers
+and 72 judgments. This does not prove independent tool selection or complete
+protocol coverage. The React and Tailwind packages and website are not yet
+published.
 
 Current next action:
 
-1. Finish and independently review the code-first LLM tests. Each example keeps
-   them in `eval/`, separate from ordinary tests in `test/`.
-2. Verify copied examples and the real-model release checks before publishing
-   the updated testing package.
+1. Finish the website's manual accessibility and published-guide checks.
+2. Obtain approval for its proposed performance limits, enforce them in CI,
+   then publish and verify the site on GitHub Pages.
 3. Then close the partial and missing rows in the
    [MCP server coverage ledger](docs/protocol-coverage.md).
 
@@ -118,10 +124,10 @@ For each increment:
 
 ## Delivery Priorities
 
-### 1. Close the Semantic-Testing and Coverage Decisions
+### 1. Keep Semantic Tests and Coverage Current
 
-- ratify or reject the code-first semantic-testing decision
-- migrate the example tests only if that decision is ratified
+- keep code-first language-model tests in `eval/`, separate from `test/`
+- rerun every example's meaning checks for each publication revision
 - keep every example independently copyable, testable, and lintable
 - maintain the active protocol coverage ledger from public sources and exact
   tests
@@ -233,7 +239,7 @@ signals, not proof that people will understand the content.
 - [MCP server coverage](docs/protocol-coverage.md)
 - [Quality policy](QUALITY.md)
 - [Risk register](docs/risks/README.md)
-- [Current release readiness](docs/reviews/0.0.2-release-readiness.md)
+- [Published release evidence](https://github.com/windyroad/emseepea/releases/tag/%40emseepea/server%400.0.3)
 - [Framework package guide](packages/framework/README.md)
 
 These records hold detail so this battle plan can remain a usable decision aid.
