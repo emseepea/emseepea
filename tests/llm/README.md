@@ -1,22 +1,23 @@
-# Language-Model Understanding Checks
+# Release Checks for AI Understanding
 
-`@emseepea/testing` checks whether a language model understands every example.
-It uses Promptfoo to collect three fresh answers and three independent reviews
-of each answer. The check also records which Model Context Protocol (MCP)
-operation supplied the data. The model receives the question and result, but it
-cannot call MCP tools itself.
+The actual LLM tests live in each example's `eval/` directory. This directory
+contains checks for the release workflow, not example questions or answers.
+See the [semantic testing guide](../../packages/testing/README.md) for writing
+and organizing cases.
 
-Each runnable example keeps its server entry point, MCP operations, question,
-required facts, and review rules in `eval.yaml`. To check one copied example,
-run its own command:
+## Run One Example
 
 ```sh
 cd examples/basic-no-ui
 npm run test:llm
 ```
 
-Return to the repository root, prepare the pinned Claude CLI, then run the
-local check after signing in:
+This command uses a real Claude model. Ordinary tests remain separate and run
+with `npm test`.
+
+## Run All Examples Locally
+
+From the repository root:
 
 ```sh
 npm run claude:prepare
@@ -24,17 +25,23 @@ npm run claude:login
 npm run test:eval
 ```
 
-The preparation command makes the locked Claude CLI executable. It does not
-sign in or run the language-model check.
+Skip the login command if Claude is already signed in. Preparation makes the
+pinned CLI executable; it does not sign in or run model tests.
 
-The local check uses the Claude CLI account already signed in on your computer.
-The repository does not read or store that account's credentials. GitHub uses
-the repository's Claude OAuth secret instead.
+## Release Requirements
 
-Skip `npm run claude:login` when Claude is already signed in on your computer.
+GitHub runs `npm run test:eval:ci` with the pinned Claude CLI and
+`claude-sonnet-4-6`. Its OAuth secret reaches only the model process, not the
+example server or publishing job.
 
-GitHub Actions runs `npm run test:eval:ci` with the pinned Claude CLI and
-`claude-sonnet-4-6`, using the repository's Claude subscription secret. Only a
-passing check for the code being released permits publication. Redacted results
-are written under `artifacts/llm-eval/`. Promptfoo does not retry a failed
-answer, and every Claude call has a time limit.
+Each test needs three fresh answers and three independent judgments of each
+answer. Failed answers are not retried. Missing facts, missing MCP calls, or a
+failed judgment block publication. Every model call has a time limit.
+
+Only checks on the revision being released approve publication. Local checks
+do not substitute for this release check. Each example writes a redacted report
+to `artifacts/llm-eval/evidence.json`; GitHub retains these reports for 14 days.
+
+Separate copied-example smoke tests use `--smoke --model-command` with a fake
+model to check installation and test wiring. Those smoke tests do not prove
+real-model understanding and cannot approve a release.

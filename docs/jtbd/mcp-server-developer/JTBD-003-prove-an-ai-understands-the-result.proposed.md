@@ -5,7 +5,7 @@ persona: mcp-server-developer
 date-created: 2026-08-29
 human-oversight: unconfirmed
 screens:
-  - examples/*/eval.yaml
+  - examples/*/eval/*.test.mjs
 ---
 
 # JTBD-003: Prove Artificial Intelligence Understands the Result

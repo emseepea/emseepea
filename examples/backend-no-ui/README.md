@@ -35,6 +35,10 @@ The endpoint is `http://127.0.0.1:3000/mcp`.
 
 ## Check This Example
 
+[Ordinary tests](test/) live in `test/`.
+The [AI understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
+The commands below run each suite independently.
+
 Run its build, mapping, validation, and MCP checks:
 
 ```sh

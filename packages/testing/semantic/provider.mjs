@@ -1,14 +1,15 @@
 import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
-import { appendFile, mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { loadSemanticCase } from "./case.mjs";
-import { collectMcpMaterial, startSemanticServer, stopSemanticServer } from "./material.mjs";
 
 const model = "claude-sonnet-4-6";
-const counters = new Map();
+
+export async function modelVersion() {
+  const result = await runProcess("claude", ["--version"], { env: modelEnvironment({}) });
+  const version = result.stdout.trim().match(/^(\d+\.\d+\.\d+)\b/)?.[1];
+  if (result.code !== 0 || !version) throw new Error("Could not verify Claude CLI version");
+  return version;
+}
 
 export function parseClaudeEvents(stdout, processExitCode = 0) {
   const events = stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
@@ -79,65 +80,14 @@ export function modelInvocation(provider, prompt, directory) {
   };
 }
 
-export default class SemanticProvider {
-  constructor(options = {}) {
-    this.role = options.config?.role ?? "agent";
-    this.provider = process.env.EMSEEPEA_EVAL_PROVIDER ?? "claude-local";
-  }
-
-  id() {
-    return `${this.provider}-${this.role}`;
-  }
-
-  async callApi(prompt, context = {}) {
-    const casePath = String(context.vars?.casePath ?? "");
-    const trial = nextTrial(`${casePath}:${this.role}`);
-    const directory = await mkdtemp(join(tmpdir(), `emseepea-${this.role}-`));
-    let running;
-    try {
-      let effectivePrompt = prompt;
-      let pathEvidence = [];
-      let materialSha256;
-      if (this.role === "agent") {
-        const testCase = await loadSemanticCase(casePath);
-        running = await startSemanticServer(testCase);
-        const material = await collectMcpMaterial(running.url, testCase);
-        effectivePrompt = `${material.text}\n\nAnswer only from that MCP material.\n\nQuestion:\n${prompt}`;
-        pathEvidence = material.pathEvidence;
-        materialSha256 = createHash("sha256").update(material.text).digest("hex");
-      }
-      const result = await runModel(this.provider, effectivePrompt, directory);
-      const output = this.role === "judge" ? result.answer.trim() : result.answer;
-      const verdict = this.role === "judge" ? parseJudgeVerdict(output) : undefined;
-      const metadata = {
-        casePath,
-        materialSha256,
-        models: result.models,
-        pathEvidence,
-        provider: this.provider,
-        role: this.role,
-        toolCallCount: 0,
-        trial,
-        turnCount: result.turnCount,
-      };
-      await recordEvidence({ ...metadata, status: "completed", verdict });
-      return { output, metadata };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      await recordEvidence({ casePath, error: message, provider: this.provider, role: this.role, status: "error", trial });
-      return { error: message };
-    } finally {
-      if (running) await stopSemanticServer(running.child);
-      await rm(directory, { force: true, recursive: true });
-    }
-  }
-}
-
-export async function runModel(provider, prompt, directory) {
+export async function runModel(provider, prompt, directory, signal) {
+  signal?.throwIfAborted();
   const invocation = modelInvocation(provider, prompt, directory);
   const execution = await runProcess(invocation.command, invocation.args, {
     cwd: invocation.cwd,
     env: invocation.env,
+    signal,
+    killSignal: "SIGKILL",
   });
   if (execution.timedOut) throw new Error("Model command timed out");
   if (execution.code !== 0 && !execution.stdout) throw new Error(`Model command exited ${execution.code}`);
@@ -151,7 +101,8 @@ function runProcess(command, args, options) {
     const timer = setTimeout(() => child.kill("SIGKILL"), 120_000);
     let timedOut = false;
     timer.unref();
-    child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stdout.on("data", (chunk) => { stdout += chunk; if (stdout.length > 1_048_576) child.kill("SIGKILL"); });
+    child.stderr.resume();
     child.once("error", (error) => {
       clearTimeout(timer);
       resolve({ code: 1, error: error.message, stdout, timedOut });
@@ -176,15 +127,4 @@ function modelEnvironment(extra) {
     USER: process.env.USER,
     ...extra,
   }).filter(([, value]) => value !== undefined));
-}
-
-function nextTrial(key) {
-  const trial = (counters.get(key) ?? 0) + 1;
-  counters.set(key, trial);
-  return trial;
-}
-
-async function recordEvidence(record) {
-  const path = process.env.EMSEEPEA_EVAL_PROVIDER_EVIDENCE;
-  if (path) await appendFile(path, `${JSON.stringify(record)}\n`, { encoding: "utf8", mode: 0o600 });
 }

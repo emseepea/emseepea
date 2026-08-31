@@ -88,9 +88,12 @@ npm run claude:login
 npm run test:eval
 ```
 
-This Promptfoo check asks a language model questions about every running
-example. It catches answers that look plausible but misunderstand the data.
+These checks ask a language model questions about every running example.
+They catch answers that look plausible but misunderstand the data.
 Returning valid JSON is not enough.
+
+Each example keeps its JavaScript LLM tests in `eval/`, separate from ordinary
+tests in `test/`. See the [guide to writing AI understanding tests](packages/testing/README.md).
 
 Skip `npm run claude:login` when Claude is already signed in on your computer.
 

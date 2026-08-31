@@ -8,8 +8,10 @@ import test from "node:test";
 const root = new URL("../../", import.meta.url);
 
 function run(command, args, cwd) {
-  const result = spawnSync(command, args, { cwd, encoding: "utf8", timeout: 120_000 });
-  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const environment = { ...process.env };
+  delete environment.NODE_TEST_CONTEXT;
+  const result = spawnSync(command, args, { cwd, encoding: "utf8", timeout: 120_000, env: environment });
+  assert.equal(result.status, 0, [command, String(cwd), result.error?.code, result.signal, result.stdout, result.stderr].filter(Boolean).join("\n"));
   return result.stdout;
 }
 
@@ -146,13 +148,13 @@ test("every copied example runs against packed packages", { timeout: 900_000 }, 
         fakeModel,
         "--output",
         "artifacts/smoke.json",
-        "eval.yaml",
+        "eval",
       ], example);
 
       const evidence = JSON.parse(await readFile(path.join(example, "artifacts/smoke.json"), "utf8"));
       const result = Object.values(evidence.cases)[0];
       assert.equal(evidence.status, "passed", `${name} semantic smoke failed`);
-      assert.equal(result.agentTrials.length, 3);
+      assert.equal(result.answerTrials.length, 3);
       assert.equal(result.judgeVerdicts.length, 9);
     }
   } finally {
@@ -164,7 +166,11 @@ const fakeModelSource = `#!/usr/bin/env node
 const prompt = process.argv[process.argv.indexOf("--print") + 1] ?? "";
 const answer = prompt.includes("Return only JSON with this exact shape")
   ? '{"pass":true,"score":1,"reason":"The answer preserves every required meaning."}'
-  : "The answer is supported by the supplied MCP material.";
+  : prompt.includes("reusesOriginalReport (boolean)")
+    ? JSON.stringify({ createdByInstance: "eval-instance", totalBeans: 4,
+        roastCounts: { light: 1, medium: 2, dark: 1 },
+        reusesOriginalReport: true, createsAnotherReport: false })
+    : prompt;
 process.stdout.write(JSON.stringify({
   type: "result",
   is_error: false,

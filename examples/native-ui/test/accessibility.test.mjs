@@ -1,4 +1,4 @@
-import { testUiExample } from "../../ui-shared/test/browser-contract.mjs";
+import { testUiExample } from "@emseepea/example-ui-shared/testing";
 
 testUiExample({
   name: "native",

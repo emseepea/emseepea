@@ -25,6 +25,10 @@ The page previews content only. It does not send or store a report.
 
 ## Check This Example
 
+[Ordinary tests](test/) live in `test/`.
+The [AI understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
+The commands below run each suite independently.
+
 Run its build, browser, keyboard, React, and accessibility checks:
 
 ```sh
