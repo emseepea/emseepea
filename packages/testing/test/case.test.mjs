@@ -4,7 +4,12 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { validateSemanticCase, checkMeaningEvidence } from "../semantic/case.mjs";
+import {
+  checkMeaningEvidence,
+  parseToolSelection,
+  validateSemanticCase,
+  validateToolSelectionCase,
+} from "../semantic/case.mjs";
 import { discoverTests } from "../semantic/discover.mjs";
 
 const options = { server: new URL("./fake-model.mjs", import.meta.url), question: "What is the balance?",
@@ -42,6 +47,36 @@ test("code-first cases require a callback, facts, and expected MCP paths", () =>
   assert.throws(() => validateSemanticCase({ ...options, requiredPaths: [] }));
   assert.doesNotThrow(() => validateSemanticCase({ ...options, criticalFacts: [/overdraft/i] }));
   assert.throws(() => validateSemanticCase({ ...options, criticalFacts: [() => true] }));
+});
+
+test("tool-selection cases require a bounded expected sequence", () => {
+  const selection = {
+    ...options,
+    expectedTools: ["balance"],
+    requiredPaths: undefined,
+    exercise: undefined,
+  };
+  const validated = validateToolSelectionCase(selection);
+  assert.deepEqual(validated.requiredPaths, ["tools/call:balance"]);
+  assert.throws(() => validateToolSelectionCase({ ...selection, expectedTools: [] }));
+  assert.throws(() => validateToolSelectionCase({ ...selection, expectedTools: ["a", "b", "c", "d"] }));
+  assert.throws(() => validateToolSelectionCase({ ...selection, exercise: async () => {} }));
+});
+
+test("tool selections reject missing, unknown, extra, malformed, and over-limit calls", () => {
+  const tools = [{ name: "balance", description: "Read the balance.", inputSchema: { type: "object" } }];
+  const valid = '{"calls":[{"name":"balance","arguments":{"account":"current"}}]}';
+  assert.deepEqual(parseToolSelection(valid, tools, ["balance"]), [
+    { name: "balance", arguments: { account: "current" } },
+  ]);
+  for (const [output, expected] of [
+    ['{"calls":[]}', /between one and three/],
+    ['{"calls":[{"name":"unknown","arguments":{}}]}', /invalid or unadvertised/],
+    ['{"calls":[{"name":"balance","arguments":{}},{"name":"balance","arguments":{}}]}', /wrong tool sequence/],
+    ['{"calls":[{"name":"balance","arguments":[]}]}', /invalid or unadvertised/],
+    ['{"calls":[{"name":"balance","arguments":{}},{"name":"balance","arguments":{}},{"name":"balance","arguments":{}},{"name":"balance","arguments":{}}]}', /between one and three/],
+    ["not JSON", /valid JSON/],
+  ]) assert.throws(() => parseToolSelection(output, tools, ["balance"]), expected);
 });
 
 test("missing facts and missing MCP calls fail even if a judge would approve", () => {

@@ -84,8 +84,7 @@ try {
   }
   for (const file of files) {
     const cases = Object.values(evidence.cases).filter((record) => record.file === file);
-    if (!cases.length || cases.some((record) => record.status !== "passed" || record.authoritative !== evidence.authoritative ||
-      record.smoke !== smoke || record.answerTrials?.length !== 3 || record.judgeVerdicts?.length !== 9)) {
+    if (!cases.length || cases.some((record) => !validRecord(record, evidence.authoritative, smoke))) {
       evidence.errors.push(`Missing or failed qualification: ${file}`);
     }
   }
@@ -98,3 +97,13 @@ try {
 }
 if (evidence.status !== "passed") process.exitCode = 1;
 console.log(`Semantic checks ${evidence.status}; evidence: ${output}`);
+
+function validRecord(record, authoritative, smoke) {
+  if (record.status !== "passed" || record.authoritative !== authoritative || record.smoke !== smoke
+    || record.answerTrials?.length !== 3 || record.judgeVerdicts?.length !== 9) return false;
+  if (record.mode !== "tool-selection") return record.mode === "prepared";
+  return record.answerTrials.every((trial) => trial.selectionTurnCount === 1
+    && Number.isInteger(trial.toolCallCount) && trial.toolCallCount >= 1 && trial.toolCallCount <= 3
+    && typeof trial.advertisedToolsSha256 === "string" && typeof trial.selectedCallsSha256 === "string"
+    && JSON.stringify(trial.selectedTools) === JSON.stringify(trial.expectedTools));
+}

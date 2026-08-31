@@ -1,6 +1,6 @@
 ---
-title: Build tools AI can understand
-description: Create MCP servers with Em See Pea and test the meaning of their results.
+title: Build tools AI can use correctly
+description: Create MCP servers and test whether AI chooses the right tools and understands their results.
 ---
 
 Em See Pea helps you build tools that AI assistants can use through the
@@ -8,8 +8,7 @@ Model Context Protocol (MCP). It handles the server, checks incoming data,
 and checks the results your tools return.
 
 Correct data is only half the job. Its testing package checks whether a
-language model explains that data correctly, including the details that
-could change an answer.
+language model chooses the right tool and explains the result correctly.
 
 ## What do you want to do?
 
@@ -22,10 +21,10 @@ then add the capabilities you need.
 
 ### Test an existing MCP server
 
-Keep your server. Add tests that check whether a model understands its results,
-including distinctions that could change the answer.
+Keep your server. Add tests that check whether a model chooses the expected
+tool and understands its result.
 
-[Add AI understanding tests](./ai-tests/).
+[Add AI tool-choice and understanding tests](./ai-tests/).
 
 ### Maintain less server code
 
@@ -44,17 +43,18 @@ take over, and which application responsibilities remain yours.
 
 [Choose an example](./examples/) that matches what you want to build.
 
-## Test the meaning, not just the response
+## Test the choice and meaning, not just the response
 
 A response can contain all the right fields and still lead to a wrong answer.
 An assistant might confuse money available to spend with money owed, or a
 payment received with a payment matched to an invoice.
 
-Em See Pea lets you describe the distinction in a JavaScript test. The test
-calls your MCP server, asks a model to interpret the result, and checks its
-answer. Keep these tests in `eval/`, separate from ordinary tests in `test/`.
+Em See Pea lets you describe the expected tool and meaning in a JavaScript test.
+The model chooses from your server's advertised tools. The test runs the chosen
+call against your server, then checks whether the model understands the result.
+Keep these tests in `eval/`, separate from ordinary tests in `test/`.
 
-[Write an AI understanding test](./ai-tests/).
+[Write an AI tool-choice test](./ai-tests/).
 
 ## Before you start
 

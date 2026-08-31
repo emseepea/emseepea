@@ -22,7 +22,7 @@ migration, not a drop-in replacement.
 
 You may already have a small implementation of these features. Migration may
 not save enough work to justify changing it. Try the testing package first if
-your immediate problem is incorrect AI explanations.
+your immediate problem is wrong tool choices or incorrect AI explanations.
 
 ## What stays yours
 
@@ -37,7 +37,7 @@ the response means.
 ## Try one tool before migrating the server
 
 1. Record how one existing read-only tool behaves, including errors and who may use it.
-2. Keep those checks, and add a meaning test for an important edge case.
+2. Keep those checks, and add an AI tool-choice test for an important edge case.
 3. Implement that tool in a separate Em See Pea trial server.
 4. Run the same checks against both implementations.
 5. Compare the code you can remove with the code and dependencies you would add.
@@ -53,9 +53,9 @@ Em See Pea is pre-alpha and implements part of MCP `2026-07-28`. Check your
 clients, published schemas, metadata, and any ChatGPT widgets explicitly.
 Do not assume they will behave identically after a framework change.
 
-Keep end-to-end client journeys and tool-selection tests. The current AI
-understanding tests interpret results collected by test code; they do not
-prove that the model can choose the right tool unaided.
+Keep end-to-end client journeys. Em See Pea can test whether its configured
+model selects the expected tool, but it cannot prove that every deployed client,
+model, prompt, and permission configuration will make the same choice.
 
 Read the [current feature boundaries](https://github.com/windyroad/emseepea/blob/main/docs/protocol-coverage.md)
 before committing to a migration. Keep your existing implementation until the

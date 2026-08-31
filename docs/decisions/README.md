@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 38 decisions: 24 current and 14 historical.
+This project has 39 decisions: 24 current and 15 historical.
 
 ## Quick Index
 
@@ -24,7 +24,6 @@ This project has 38 decisions: 24 current and 14 historical.
 - [ADR-0023: Mandatory Cognitive-Accessibility Review for Published Content](0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md) — Proposed; human review confirmed.
 - [ADR-0025: Astro Starlight Documentation Generator](0025-static-documentation-website-with-astro-starlight.proposed.md) — Proposed; human review confirmed.
 - [ADR-0028: Example-Owned Oxlint with Root Orchestration](0028-example-owned-oxlint-with-root-orchestration.proposed.md) — Proposed; human review confirmed.
-- [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md) — Proposed; human review confirmed.
 - [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.proposed.md) — Proposed; human review confirmed.
 - [ADR-0031: Website Workspace in the Existing Monorepo](0031-website-workspace-in-the-existing-monorepo.proposed.md) — Proposed; human review confirmed.
 - [ADR-0032: Static-Only Website Runtime](0032-static-only-website-runtime.proposed.md) — Proposed; human review confirmed.
@@ -35,6 +34,7 @@ This project has 38 decisions: 24 current and 14 historical.
 - [ADR-0037: Local Website Search](0037-local-website-search.proposed.md) — Proposed; human review confirmed.
 - [ADR-0038: Measured Website Performance Before Publication](0038-measured-website-performance-before-publication.proposed.md) — Proposed; human review confirmed.
 - [ADR-0039: Website Performance Budget](0039-website-performance-budget.proposed.md) — Proposed; human review confirmed.
+- [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.proposed.md) — Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -52,6 +52,7 @@ This project has 38 decisions: 24 current and 14 historical.
 - [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.superseded.md) — Superseded; human review confirmed.
 - [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.superseded.md) — Superseded; human review confirmed.
 - [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md) — Superseded; human review confirmed.
+- [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md) — Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -509,7 +510,7 @@ Chosen option: **"Mandatory specialist review plus a density guard"**, because t
 - Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0022: Harness-Mediated Semantic LLM Qualification for Examples and Releases](0022-harness-mediated-semantic-llm-qualification-for-examples-and-releases.superseded.md)
-- Replaced by: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md)
+- Replaced by: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md)
 
 #### Decision
 
@@ -545,7 +546,7 @@ Chosen option: **"Astro Starlight"**, because it supplies documentation layouts 
 
 - Status: Superseded
 - Human review: Confirmed
-- Replaced by: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md)
+- Replaced by: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md)
 
 #### Decision
 
@@ -566,7 +567,7 @@ Chosen option: **"Example-owned quality commands with shared tooling"**, because
 - Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
-- Replaced by: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md)
+- Replaced by: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md)
 
 #### Decision
 
@@ -609,11 +610,12 @@ Chosen option: **"Example-owned Oxlint dependency with root orchestration"**, be
 - Clean monorepo checkouts pass lint on both supported Node versions.
 - Intentional suppressions are narrow and state why they exist.
 
-### [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md)
+### [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.superseded.md), [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.superseded.md), [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md)
+- Replaced by: [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.proposed.md)
 
 #### Decision
 
@@ -804,3 +806,25 @@ Chosen option: **"Adopt the measured-build limits"**, because the first build pa
 - Reject missing, invalid, non-finite, or failed measurements and incomplete trials.
 - Require all numerical limits to pass; preserve failed results for diagnosis.
 - Keep guide and accessibility checks required by the other website decisions.
+
+### [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md)
+
+#### Decision
+
+Chosen option: **"Validated model-selected call plans"**, because it tests the model's choice while keeping execution, validation, credentials, cancellation, and evidence under one deterministic harness.
+
+#### How We Check It
+
+- Deterministic tests accept correct advertised selections and reject missing, unknown, extra, malformed, and over-limit selections.
+- Arguments must be objects and are checked again by the real MCP server.
+- Selected calls are executed only through the instrumented official MCP client.
+- Protected-tool tests prove the server receives its test token while model processes receive neither that token nor provider credentials they do not own.
+- Cancellation stops selection, MCP execution, answer, and judgment work.
+- Evidence records selection and operation hashes without raw private material.
+- Every tool-based example uses `toolSelectionTest`; the resource/prompt example retains `semanticTest`.
+- Copied examples pass lint, ordinary tests, and semantic smoke checks using packed public packages.
+- The exact publishing revision passes all real-model semantic cases before npm publication.

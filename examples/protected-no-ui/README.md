@@ -29,7 +29,7 @@ without signing in. Use `example-access-token` only to try the tool locally.
 ## Check This Example
 
 [Ordinary tests](test/) live in `test/`.
-The [AI understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
+The [AI tool-choice and understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
 The commands below run each suite independently.
 
 Run its build, public discovery, and signed-in tool checks:
@@ -38,7 +38,7 @@ Run its build, public discovery, and signed-in tool checks:
 npm test -w @emseepea/example-protected-no-ui
 ```
 
-Check that Claude calculates available stock correctly:
+Check that Claude chooses the inventory report and calculates available stock:
 
 ```sh
 npm run test:llm -w @emseepea/example-protected-no-ui

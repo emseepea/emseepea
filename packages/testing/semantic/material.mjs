@@ -60,20 +60,7 @@ export async function stopSemanticServer(child) {
 
 export async function collectMcpMaterial(url, testCase, signal) {
   signal?.throwIfAborted();
-  const token = testCase.authToken ?? (testCase.authTokenEnvironment
-    ? process.env[testCase.authTokenEnvironment]?.trim()
-    : undefined);
-  if (testCase.authTokenEnvironment && !token) {
-    throw new Error(`Required authentication is unavailable: ${testCase.authTokenEnvironment}`);
-  }
-  const client = new Client(
-    { name: "emseepea-semantic-test", version: "0.0.0" },
-    { versionNegotiation: { mode: { pin: "2026-07-28" } } },
-  );
-  await client.connect(new StreamableHTTPClientTransport(
-    new URL(url),
-    token ? { authProvider: { token: async () => token } } : undefined,
-  ));
+  const client = await openClient(url, testCase);
   const evidence = [];
   const material = [];
   const pending = [];
@@ -119,6 +106,37 @@ export async function collectMcpMaterial(url, testCase, signal) {
   };
 }
 
+export async function listMcpTools(url, testCase, signal) {
+  signal?.throwIfAborted();
+  const client = await openClient(url, testCase);
+  let abort;
+  const cancelled = new Promise((_, reject) => {
+    abort = () => { void client.close().catch(() => {}); reject(new Error("Semantic test cancelled")); };
+    signal?.addEventListener("abort", abort, { once: true });
+  });
+  try {
+    const response = await Promise.race([client.listTools(), cancelled]);
+    const tools = response.tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
+    tools.sort((left, right) => left.name.localeCompare(right.name));
+    if (new Set(tools.map(({ name }) => name)).size !== tools.length) {
+      throw new Error("MCP server advertised duplicate tool names");
+    }
+    return tools;
+  } finally {
+    signal?.removeEventListener("abort", abort);
+    await client.close();
+  }
+}
+
+export function collectSelectedToolMaterial(url, testCase, calls, signal) {
+  return collectMcpMaterial(url, {
+    ...testCase,
+    async exercise(client) {
+      for (const call of calls) await client.callTool(call);
+    },
+  }, signal);
+}
+
 function requestFor(operation) {
   if (operation.method === "tools/call") {
     return { method: operation.method, name: operation.name, arguments: operation.arguments ?? {} };
@@ -139,6 +157,24 @@ async function perform(client, operation) {
   }
   if (operation.method === "resources/read") return client.readResource({ uri: operation.uri });
   return client.getPrompt({ name: operation.name, arguments: operation.arguments ?? {} });
+}
+
+async function openClient(url, testCase) {
+  const token = testCase.authToken ?? (testCase.authTokenEnvironment
+    ? process.env[testCase.authTokenEnvironment]?.trim()
+    : undefined);
+  if (testCase.authTokenEnvironment && !token) {
+    throw new Error(`Required authentication is unavailable: ${testCase.authTokenEnvironment}`);
+  }
+  const client = new Client(
+    { name: "emseepea-semantic-test", version: "0.0.0" },
+    { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+  );
+  await client.connect(new StreamableHTTPClientTransport(
+    new URL(url),
+    token ? { authProvider: { token: async () => token } } : undefined,
+  ));
+  return client;
 }
 
 function serverEnvironment(extra = {}) {

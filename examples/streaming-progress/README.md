@@ -29,7 +29,7 @@ after reconnecting.
 ## Check This Example
 
 [Ordinary tests](test/) live in `test/`.
-The [AI understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
+The [AI tool-choice and understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
 The commands below run each suite independently.
 
 Run its build and progress-stream checks:
@@ -38,7 +38,7 @@ Run its build and progress-stream checks:
 npm test -w @emseepea/example-streaming-progress
 ```
 
-Check that Claude keeps progress updates and the final result distinct:
+Check that Claude chooses the roast tool and keeps progress separate from the result:
 
 ```sh
 npm run test:llm -w @emseepea/example-streaming-progress

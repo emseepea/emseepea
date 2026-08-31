@@ -27,7 +27,7 @@ The page previews content only. It does not send or store a report.
 ## Check This Example
 
 [Ordinary tests](test/) live in `test/`.
-The [AI understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
+The [AI tool-choice and understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
 The commands below run each suite independently.
 
 Run its build, browser, keyboard, and accessibility checks:
@@ -36,7 +36,7 @@ Run its build, browser, keyboard, and accessibility checks:
 npm test -w @emseepea/example-native-ui
 ```
 
-Check that Claude understands that a preview changes nothing:
+Check that Claude chooses the preview tool and understands that it changes nothing:
 
 ```sh
 npm run test:llm -w @emseepea/example-native-ui
