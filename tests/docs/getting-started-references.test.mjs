@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { access, cp, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import { promisify } from "node:util";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -70,6 +71,69 @@ test("the copied quickstart passes its documented checks with exact public npm p
     for (const name of ["@emseepea/server", "@emseepea/testing"]) {
       const installed = JSON.parse(await readFile(path.join(directory, "node_modules", name, "package.json"), "utf8"));
       assert.equal(installed.version, manifest.dependencies?.[name] ?? manifest.devDependencies?.[name]);
+    }
+
+    // Exercise the documented command, not a direct launch that bypasses its script.
+    const child = spawn("npm", ["start"], {
+      cwd: directory, env: { ...env, PORT: "0" }, detached: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let output = "";
+    let errors = "";
+    let launchError;
+    child.on("error", (error) => { launchError = error; });
+    child.stderr.on("data", (chunk) => { errors = `${errors}${chunk}`.slice(-16_384); });
+    const closed = new Promise((resolve) => child.once("close", (code, signal) => resolve({ code, signal })));
+    let client;
+    let startupTimer;
+    let shutdownTimer;
+    try {
+      const url = await new Promise((resolve, reject) => {
+        startupTimer = setTimeout(() => reject(new Error(`npm start timed out: ${errors}`)), 15_000);
+        child.stdout.on("data", (chunk) => {
+          output = `${output}${chunk}`.slice(-16_384);
+          const address = output.match(/http:\/\/127\.0\.0\.1:\d+\/mcp/)?.[0];
+          if (address) resolve(new URL(address));
+        });
+        closed.then(() => reject(launchError ?? new Error(`npm start exited before readiness: ${errors}`)));
+      }).finally(() => clearTimeout(startupTimer));
+      assert.notEqual(url.port, "0", "the example must print its listening port");
+      const { Client, StreamableHTTPClientTransport } = createRequire(path.join(directory, "package.json"))("@modelcontextprotocol/client");
+      client = new Client({ name: "website-quickstart", version: "0.0.0" }, {
+        versionNegotiation: { mode: { pin: "2026-07-28" } },
+      });
+      await client.connect(new StreamableHTTPClientTransport(url), { timeout: 5_000 });
+      const result = await client.callTool({
+        name: "get-bean-details", arguments: { name: "Highland Bloom" },
+      }, { timeout: 5_000 });
+      assert.equal(result.isError, false);
+      assert.deepEqual(result.structuredContent, {
+        name: "Highland Bloom", origin: "Sample Highlands", variety: "Bourbon",
+        process: "natural", roast: "medium", tastingNotes: ["berry", "cocoa"],
+      });
+      await client.close();
+      client = undefined;
+      // Ctrl-C reaches the whole terminal process group, including npm's child.
+      process.kill(-child.pid, "SIGINT");
+      const exit = await Promise.race([
+        closed,
+        new Promise((_, reject) => {
+          shutdownTimer = setTimeout(() => reject(new Error("npm start did not stop after Ctrl-C")), 5_000);
+        }),
+      ]).finally(() => clearTimeout(shutdownTimer));
+      assert.ok(exit.code === 0 || exit.code === 130 || exit.signal === "SIGINT", JSON.stringify(exit));
+      await assert.rejects(fetch(url, { signal: AbortSignal.timeout(1_000) }),
+        (error) => error.cause?.code === "ECONNREFUSED", "Ctrl-C must close the listening socket");
+    } finally {
+      clearTimeout(startupTimer);
+      clearTimeout(shutdownTimer);
+      // Only this test's detached group; forced cleanup never turns a failure into a pass.
+      if (child.pid) {
+        try { process.kill(-child.pid, "SIGKILL"); }
+        catch (error) { if (error.code !== "ESRCH") throw error; }
+      }
+      await client?.close();
+      await closed;
     }
   } finally {
     await rm(directory, { recursive: true, force: true });

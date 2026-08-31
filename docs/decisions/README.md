@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 37 decisions: 23 current and 14 historical.
+This project has 38 decisions: 24 current and 14 historical.
 
 ## Quick Index
 
@@ -34,6 +34,7 @@ This project has 37 decisions: 23 current and 14 historical.
 - [ADR-0036: One Current Documentation Set](0036-one-current-documentation-set.proposed.md) — Proposed; human review confirmed.
 - [ADR-0037: Local Website Search](0037-local-website-search.proposed.md) — Proposed; human review confirmed.
 - [ADR-0038: Measured Website Performance Before Publication](0038-measured-website-performance-before-publication.proposed.md) — Proposed; human review confirmed.
+- [ADR-0039: Website Performance Budget](0039-website-performance-budget.proposed.md) — Proposed; human review pending.
 
 ### Historical decisions
 
@@ -785,3 +786,21 @@ Chosen option: **"Measure, then approve a budget"**, because website limits need
 - All named resource, processing, and memory measurements are recorded.
 - A separate numerical budget is ratified before public deployment.
 - The selected publication build passes that budget.
+
+### [ADR-0039: Website Performance Budget](0039-website-performance-budget.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### Decision
+
+Chosen option: **"Adopt the measured-build limits"** is the proposed direction, because the first build passes them with room for variation. Human approval is still pending.
+
+#### How We Check It
+
+- Obtain human approval before enforcing the limits or publishing the website.
+- Bind the report to the exact Git revision and built-file hashes being published.
+- Check every file category and every phase in every required trial.
+- Reject missing, invalid, non-finite, or failed measurements and incomplete trials.
+- Require all numerical limits to pass; preserve failed results for diagnosis.
+- Keep guide and accessibility checks required by the other website decisions.

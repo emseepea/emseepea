@@ -1,5 +1,21 @@
 # Cognitive-Accessibility Review 2026-08-31
 
+## Website Budget Proposal
+
+Result: PASS. Reviewed the proposed website limits and the matching
+decisions-index entry. The text distinguishes an unapproved proposal, observed
+measurements, and future publication checks. It explains units, test conditions,
+and measurement limits. Source-text review only; this does not approve the budget
+or establish website publication readiness.
+
+Reviewer: independent cognitive-accessibility specialist. The specialist also
+reviewed this evidence wording.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `docs/decisions/0039-website-performance-budget.proposed.md` | `56ac8ea9a8831bbbc8d7a20a8e7a3e4ba63aa06f07666698d24285a22aa24054` |
+| `docs/decisions/README.md` | `7857f8a286c94510bec4427d5a0863c098711bd16f3878a314b87e4e7e9df7ed` |
+
 ## Initial Website Guides
 
 Result: PASS. Reviewed the five initial website guides and their README entry
