@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -18,13 +19,37 @@ test("changed public Markdown has cognitive-accessibility review evidence", asyn
   if (changedMarkdown.length === 0) return;
 
   const evidence = await reviewEvidence();
-  const missing = changedMarkdown.filter((file) => !evidence.includes(`\`${file}\``));
+  const missing = [];
+  for (const file of changedMarkdown) {
+    const content = await readFile(path.join(root, file), "utf8");
+    if (!hasCurrentReview(evidence, file, content)) missing.push(file);
+  }
 
   assert.deepEqual(
     missing,
     [],
-    "changed public Markdown must be named in docs/reviews/cognitive-accessibility-YYYY-MM-DD.md",
+    "changed public Markdown needs its path and current SHA-256 together in a cognitive-accessibility review table",
   );
+});
+
+function hasCurrentReview(evidence, file, content) {
+  const digest = createHash("sha256").update(content).digest("hex");
+  return evidence.includes(`| \`${file}\` | \`${digest}\` |`);
+}
+
+test("review evidence is bound to the same file and unchanged content", () => {
+  const file = "website/src/content/docs/index.md";
+  const content = "# Clear instructions\n";
+  const digest = createHash("sha256").update(content).digest("hex");
+  const evidence = `| \`${file}\` | \`${digest}\` |`;
+  assert.equal(hasCurrentReview(evidence, file, content), true);
+  assert.equal(hasCurrentReview(evidence, file, `${content}Unreviewed wording`), false);
+  assert.equal(hasCurrentReview(evidence, "README.md", content), false);
+  assert.equal(hasCurrentReview(`${file}\n| \`README.md\` | \`${digest}\` |`, file, content), false);
+});
+
+test("review discovery reports Git failures instead of treating them as no changes", () => {
+  assert.throws(() => gitRaw(["--not-a-valid-option"]));
 });
 
 function changedFiles() {
@@ -60,16 +85,12 @@ function git(args) {
 }
 
 function gitRaw(args) {
-  try {
-    return execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })
-      .trimEnd();
-  } catch {
-    return "";
-  }
+  return execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] })
+    .trimEnd();
 }
 
 function isPublicMarkdown(file) {
-  if (!file.endsWith(".md")) return false;
+  if (!/\.mdx?$/.test(file)) return false;
   return (
     file === "README.md" ||
     file === "BATTLE-PLAN.md" ||
@@ -78,6 +99,7 @@ function isPublicMarkdown(file) {
     file === "SUPPORT.md" ||
     file === "CONTRIBUTING.md" ||
     file.startsWith("docs/") ||
+    file.startsWith("website/") ||
     /^examples\/[^/]+\/README\.md$/.test(file) ||
     /^packages\/[^/]+\/README\.md$/.test(file) ||
     /^\.changeset\/(?!README\.md$).+\.md$/.test(file)

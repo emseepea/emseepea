@@ -132,6 +132,7 @@ Publication does not expand these claims.
 
 ## Project Documents
 
+- [Documentation and the three ways to use Em See Pea](website/src/content/docs/index.md)
 - [Getting started from source](docs/guides/getting-started.md)
 - [Battle plan](BATTLE-PLAN.md)
 - [Quality policy][quality-policy]

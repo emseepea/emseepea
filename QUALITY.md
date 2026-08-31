@@ -124,8 +124,10 @@ Accessibility Guidelines (WCAG) conformance.
 - Routine publication uses npm trusted publishing without a long-lived npm
   write token. It records the source and build, a checksum, and a list of the
   package's included software dependencies.
-- Do not add deployment, production attestation, signing, or environment
-  verification workflows to this framework repository.
+- The documentation website may deploy to GitHub Pages after its guide,
+  accessibility, and performance checks pass. Do not add framework-service
+  deployment, production attestation, signing, or environment-verification
+  workflows to this repository.
 
 ## Evidence and Claims
 

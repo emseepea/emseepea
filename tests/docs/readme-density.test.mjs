@@ -4,7 +4,7 @@ import test from "node:test";
 
 const maxParagraphCharacters = 400;
 
-test("public READMEs have no wall-of-text prose paragraphs", async () => {
+test("public READMEs and website guides have no wall-of-text prose paragraphs", async () => {
   const readmes = [{ label: "README.md", url: new URL("../../README.md", import.meta.url) }];
   for (const group of ["examples", "packages"]) {
     const root = new URL(`../../${group}/`, import.meta.url);
@@ -18,6 +18,11 @@ test("public READMEs have no wall-of-text prose paragraphs", async () => {
         if (error?.code !== "ENOENT") throw error;
       }
     }
+  }
+
+  const contentRoot = new URL("../../website/src/content/docs/", import.meta.url);
+  for (const file of await readdir(contentRoot, { recursive: true })) {
+    if (/\.mdx?$/.test(file)) readmes.push({ label: `website/src/content/docs/${file}`, url: new URL(file, contentRoot) });
   }
 
   const dense = [];

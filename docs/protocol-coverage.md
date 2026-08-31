@@ -229,7 +229,8 @@ progress work. See the
 **Status: Partial.** Public tools can send bounded progress through a trusted
 proxy on the same POST response. Independent requests can reach different
 server processes without requiring the client to stay with one process.
-This addition is checked in source, not yet published to npm.
+This capability is published in `@emseepea/server` 0.0.3 under the `next` tag.
+See the [release evidence](https://github.com/windyroad/emseepea/releases/tag/%40emseepea/server%400.0.3).
 
 The [proxy tests](../tests/black-box/proxy-progress.test.mjs) check incremental
 delivery, final responses, request isolation, cancellation, and configured
@@ -298,8 +299,8 @@ input/output transport.
 
 ### Request Traces and Metrics
 
-**Status: Partial.** This checkout supports opt-in OpenTelemetry traces,
-request counts, and response times. These are not yet published to npm.
+**Status: Partial.** `@emseepea/server` 0.0.3 supports opt-in OpenTelemetry
+traces, request counts, and response times. It is published under the `next` tag.
 They cover `/mcp` responses, including progress, until completion or
 disconnection. SDK host and origin rejections happen before measurement starts.
 
@@ -314,8 +315,9 @@ provider; it does not measure the cost of an adopter's exporter.
 
 ### Dependency Readiness and Shutdown Flushing
 
-**Status: Partial.** This checkout adds an optional dependency-readiness callback
-and an optional shutdown-flush callback. Neither is published to npm yet.
+**Status: Partial.** `@emseepea/server` 0.0.3 includes an optional
+dependency-readiness callback and an optional shutdown-flush callback.
+It is published under the `next` tag.
 
 Readiness uses fixed responses without dependency details. Tests cover failure,
 recovery, timeouts, late callback results, cancellation, and one unfinished

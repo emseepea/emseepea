@@ -1,6 +1,84 @@
 # Cognitive-Accessibility Review 2026-08-31
 
+## Website Publication Controls
+
+Result: PASS. Reviewed the approved performance limits, deployment policy, and
+matching decisions index. The text keeps approval separate from passing checks.
+This is a source-text review, not evidence that the website has been published
+or that manual accessibility checks have passed.
+
+Reviewer: independent cognitive-accessibility specialist. The specialist also
+reviewed this evidence wording.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `QUALITY.md` | `b8efa43f066d27ffeb62fc123de3dba34b7f38178412c387f78572c5c10bf482` |
+| `docs/decisions/0039-website-performance-budget.proposed.md` | `fdc093579984883e711cd87e006f6ae45d67ba0410fcbefe944d6f5af72d4923` |
+| `docs/decisions/README.md` | `c570ad581c27c4267f4e23cc8b3d2c095ef0fd9162047c8a5175d33c4226ce72` |
+
+## Published Release Status
+
+Result: PASS. Reviewed the release-status corrections and current next steps
+in the battle plan and protocol coverage guide. The text distinguishes
+published packages from unpublished website and UI packages. It keeps partial
+protocol support and model-test limits explicit. Source-text review only;
+this does not establish website publication readiness.
+
+Reviewer: independent cognitive-accessibility specialist. The specialist also
+reviewed this evidence wording.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `BATTLE-PLAN.md` | `e4958cd19bea3c18df0ab5d699a6c10536c04b9e0d0e092704748bfe3354e097` |
+| `docs/protocol-coverage.md` | `069c514581004577443d8f6a6791ec91d8519374e099978cca97ce05fcb6ca1e` |
+
+## Website Budget Proposal
+
+Result: PASS. Reviewed the proposed website limits and the matching
+decisions-index entry. The text distinguishes an unapproved proposal, observed
+measurements, and future publication checks. It explains units, test conditions,
+and measurement limits. Source-text review only; this does not approve the budget
+or establish website publication readiness.
+
+Reviewer: independent cognitive-accessibility specialist. The specialist also
+reviewed this evidence wording.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `docs/decisions/0039-website-performance-budget.proposed.md` | `56ac8ea9a8831bbbc8d7a20a8e7a3e4ba63aa06f07666698d24285a22aa24054` |
+| `docs/decisions/README.md` | `7857f8a286c94510bec4427d5a0863c098711bd16f3878a314b87e4e7e9df7ed` |
+
+## Initial Website Guides
+
+Result: PASS. Reviewed the five initial website guides and their README entry
+points. The site offers separate paths for creating a server, testing an
+existing server, and reducing maintained server code.
+
+This review checks clarity of the source text; it does not establish browser
+accessibility, working commands, or publication readiness. The independent
+cognitive-accessibility specialist also reviewed this evidence wording.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `website/src/content/docs/index.md` | `9ac58526221cc62ea93d57c0fb77c3858a152d4b1a4b87aecebd6877381da94a` |
+| `website/src/content/docs/getting-started.md` | `a3d398684a02886dac300f78a5cd79dcea017abe654b1d52834aea5a7ad52c3c` |
+| `website/src/content/docs/examples.md` | `f5ac364737a957bf81d080fd2d9759cbacb93985271d10a22c8652d214c583b6` |
+| `website/src/content/docs/ai-tests.md` | `aab08861a3215b71aebacbbf005d897f4f7a93487ea9eebd0cfe4b4110001542` |
+| `website/src/content/docs/less-server-code.md` | `a40be236c5b1f5bc249855726e9710e14514c0d07e56432e07874013b68bca74` |
+| `README.md` | `08b5e05b821628a9d8f0fde7b3cd916627e34b1132fbb30b5a67c1f2be34083e` |
+| `packages/testing/README.md` | `01ab71ec2913ee4e7329030e784256724730bb869624e7e9674317b4933c3504` |
+| `docs/guides/getting-started.md` | `ce11c542e70fd7fa9494478575f3cb0df37e54ee62b46d2bb6b4c19866cffe6b` |
+
 Reviewer: independent cognitive-accessibility specialist.
+
+### Page-not-found guidance
+
+Result: PASS. The page names the problem and offers home or search as recovery
+paths. Source-text review only.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `website/src/content/docs/404.md` | `c67038cd4b28cb6a4d778ec3cbf327c978e90be856589d0fea1f24ddcb7e225d` |
 
 ## ADR-0030 Ratification
 
