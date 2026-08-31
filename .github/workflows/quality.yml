@@ -51,11 +51,13 @@ jobs:
           EMSEEPEA_BENCHMARK_PROFILE: github-ubuntu-24.04-standard
       - name: Check proxy progress under concurrent load and paused readers
         run: npm run test:load:streaming
+      - name: Check subscription SDK memory with paused readers
+        run: node --expose-gc --test tests/load/subscription-sdk.test.mjs
       - name: Audit dependencies
         run: npm audit --audit-level=high
 
   website-performance:
-    name: Website performance measurements
+    name: Website publication checks
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -78,7 +80,9 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Build the website and search index
         run: npm run website:build
-      - name: Measure the website without setting a publication budget
+      - name: Check the built website
+        run: npm run test:built -w @emseepea/website
+      - name: Enforce the website performance limits
         run: node website/scripts/measure-performance.mjs
       - name: Upload website measurements, including failures
         if: ${{ always() }}
@@ -88,3 +92,25 @@ jobs:
           path: website/artifacts/performance.json
           if-no-files-found: error
           retention-days: 14
+      - name: Upload the checked website
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: website/dist
+
+  deploy-website:
+    name: Publish website
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: [test, website-performance]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy the checked website
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

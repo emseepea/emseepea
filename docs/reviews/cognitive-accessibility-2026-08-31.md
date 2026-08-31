@@ -1,5 +1,21 @@
 # Cognitive-Accessibility Review 2026-08-31
 
+## Website Publication Controls
+
+Result: PASS. Reviewed the approved performance limits, deployment policy, and
+matching decisions index. The text keeps approval separate from passing checks.
+This is a source-text review, not evidence that the website has been published
+or that manual accessibility checks have passed.
+
+Reviewer: independent cognitive-accessibility specialist. The specialist also
+reviewed this evidence wording.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `QUALITY.md` | `b8efa43f066d27ffeb62fc123de3dba34b7f38178412c387f78572c5c10bf482` |
+| `docs/decisions/0039-website-performance-budget.proposed.md` | `fdc093579984883e711cd87e006f6ae45d67ba0410fcbefe944d6f5af72d4923` |
+| `docs/decisions/README.md` | `c570ad581c27c4267f4e23cc8b3d2c095ef0fd9162047c8a5175d33c4226ce72` |
+
 ## Published Release Status
 
 Result: PASS. Reviewed the release-status corrections and current next steps

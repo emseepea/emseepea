@@ -4,7 +4,45 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import test from "node:test";
-import { describeFile, processDelta, processingDelta, rssBytes, summarise } from "../scripts/measure-performance.mjs";
+import { checkBudget, describeFile, processDelta, processingDelta, rssBytes, summarise } from "../scripts/measure-performance.mjs";
+
+test("publication checks every trial and rejects missing, invalid or over-budget measurements", () => {
+  const routes = ["/emseepea/", "/emseepea/getting-started/"];
+  const report = {
+    files: [{ name: "index.html", kind: "html", gzipBytes: 24 * 1024 },
+      { name: "style.css", kind: "css", gzipBytes: 40 * 1024 },
+      { name: "pagefind/index.js", kind: "js", search: true, gzipBytes: 192 * 1024 }],
+    samples: routes.flatMap((route) => [1280, 320].flatMap((width) => Array.from({ length: 5 }, (_, i) => ({
+      route, width, trial: i + 1, cpuSlowdown: width === 1280 ? 1 : 4, errors: [],
+      phases: Object.fromEntries(["initial", "search", "noResults"].map((phase) => [phase, {
+        TaskDurationMs: width === 1280 ? 150 : 500,
+        observedProcessCpuMs: width === 1280 ? 800 : 2000,
+        listedProcessRssBytes: 512 * 1024 * 1024,
+      }])),
+    })))),
+  };
+  checkBudget(report, routes);
+  const fails = (change) => { const changed = structuredClone(report); change(changed); assert.throws(() => checkBudget(changed, routes)); };
+  fails((value) => value.samples.pop());
+  fails((value) => { value.samples[1] = structuredClone(value.samples[0]); });
+  fails((value) => value.samples[0].errors.push("failed search"));
+  fails((value) => { value.samples[0].cpuSlowdown = 4; });
+  fails((value) => { delete value.samples[0].phases.search; });
+  for (const metric of ["TaskDurationMs", "observedProcessCpuMs", "listedProcessRssBytes"]) {
+    for (const invalid of [NaN, Infinity, -1, undefined]) {
+      fails((value) => { value.samples[0].phases.initial[metric] = invalid; });
+    }
+    for (const index of [0, 5, 19]) {
+      fails((value) => { value.samples[index].phases.noResults[metric] += 1; });
+    }
+  }
+  for (const index of [0, 1, 2]) fails((value) => { value.files[index].gzipBytes += 1; });
+  fails((value) => { value.files[0].gzipBytes = NaN; });
+  fails((value) => { value.files = []; });
+  fails((value) => value.files.push({ name: "pagefind/data", kind: "other", search: true, gzipBytes: 193 * 1024 }));
+  fails((value) => value.files.push({ name: "image.svg", kind: "other", gzipBytes: 281 * 1024 }));
+  assert.throws(() => checkBudget(report, []));
+});
 
 test("measurement arithmetic preserves units, search grouping, hashes and invalid samples", () => {
   const body = Buffer.from("example search data");

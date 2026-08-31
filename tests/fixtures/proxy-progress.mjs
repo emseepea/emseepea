@@ -126,7 +126,8 @@ export function callOptions(id, mode = "normal", { signal, token = true, headers
   };
 }
 
-export async function readMessages(response, onMessage = () => {}) {
+export async function readMessages(response, onMessage = () => {}, maxBytes = 1_400_000) {
+  assert.ok(Number.isSafeInteger(maxBytes) && maxBytes > 0, "response budget must be a positive safe integer");
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type"), /^text\/event-stream/);
   assert.equal(response.headers.get("x-accel-buffering"), "no");
@@ -136,7 +137,7 @@ export async function readMessages(response, onMessage = () => {}) {
   let bytes = 0;
   for await (const chunk of response.body) {
     bytes += chunk.byteLength;
-    assert.ok(bytes <= 1_400_000, "stream exceeds combined response budget");
+    assert.ok(bytes <= maxBytes, "stream exceeds combined response budget");
     buffer += decoder.decode(chunk, { stream: true });
     let boundary;
     while ((boundary = buffer.indexOf("\n\n")) !== -1) {

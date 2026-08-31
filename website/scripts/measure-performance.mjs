@@ -59,6 +59,41 @@ export function processDelta(before, after) {
     listedProcessRssBytes: after.reduce((sum, process) => sum + process.rssBytes, 0) };
 }
 
+export function checkBudget(report, routes) {
+  assert.ok(routes.length > 0 && new Set(routes).size === routes.length, "missing or duplicate routes");
+  assert.ok(report.files.length > 0, "missing build inventory");
+  for (const file of report.files) {
+    assert.ok(Number.isSafeInteger(file.gzipBytes) && file.gzipBytes > 0, "invalid compressed size");
+    if (file.kind === "html") assert.ok(file.gzipBytes <= 24 * 1024, `HTML budget: ${file.name}`);
+  }
+  for (const [label, files, limit] of [
+    ["CSS", report.files.filter((file) => file.kind === "css"), 40 * 1024],
+    ["JavaScript", report.files.filter((file) => file.kind === "js"), 192 * 1024],
+    ["search", report.files.filter((file) => file.search), 384 * 1024],
+    ["non-HTML", report.files.filter((file) => file.kind !== "html"), 512 * 1024],
+  ]) assert.ok(files.reduce((sum, file) => sum + file.gzipBytes, 0) <= limit, `${label} size budget`);
+  assert.equal(report.samples.length, routes.length * 10, "incomplete trial count");
+  for (const route of routes) {
+    for (const [width, slowdown, taskLimit, cpuLimit] of [[1280, 1, 150, 800], [320, 4, 500, 2000]]) {
+      for (let trial = 1; trial <= 5; trial++) {
+        const matches = report.samples.filter((sample) => sample.route === route && sample.width === width && sample.trial === trial);
+        assert.equal(matches.length, 1, `missing or duplicate trial: ${route} ${width}px ${trial}`);
+        const sample = matches[0];
+        assert.equal(sample.cpuSlowdown, slowdown, "incorrect CPU slowdown");
+        assert.deepEqual(sample.errors, [], "failed trial");
+        for (const phase of ["initial", "search", "noResults"]) {
+          const data = sample.phases[phase];
+          for (const [metric, limit] of [["TaskDurationMs", taskLimit], ["observedProcessCpuMs", cpuLimit], ["listedProcessRssBytes", 512 * 1024 * 1024]]) {
+            const value = data?.[metric];
+            assert.ok(Number.isFinite(value) && value >= 0 && (metric !== "listedProcessRssBytes" || value > 0), `invalid ${metric}`);
+            assert.ok(value <= limit, `${route} ${width}px trial ${trial} ${phase}: ${metric} ${value} exceeds ${limit}`);
+          }
+        }
+      }
+    }
+  }
+}
+
 async function measure() {
   assert.equal(process.env.GITHUB_ACTIONS, "true", "Run website performance measurements on GitHub Actions, not locally");
   const reportPath = new URL("../artifacts/performance.json", import.meta.url);
@@ -172,7 +207,8 @@ async function measure() {
         report.summaries.push({ route, ...profile, phases });
       }
     }
-    report.status = "measured-not-budgeted";
+    checkBudget(report, site.routes);
+    report.status = "passed";
   } catch (error) {
     report.error = error.message;
     process.exitCode = 1;

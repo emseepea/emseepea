@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-08-31
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-08-31
 decision-makers: ["Tom Howard"]
 consulted: []
 informed: []
@@ -10,9 +11,10 @@ reassessment-date: 2026-11-30
 
 # Website Performance Budget
 
-This is an agent-drafted proposal awaiting approval. It does not authorize
-enforcement or website publication. This repository uses `pending` for
-unapproved decisions; the capture skill calls that state `unconfirmed`.
+Tom approved these performance limits for publication on 2026-08-31 after
+being told that the limits and remaining accessibility checks were publication
+requirements. The limits below are approved; the checks must still pass before
+publication.
 
 ## Context and Problem Statement
 
@@ -28,21 +30,20 @@ We need agreed limits before publishing, as required by
 
 ## Considered Options
 
-1. **Adopt the measured-build limits** - Use the proposed limits below.
+1. **Adopt the measured-build limits** - Use the limits below.
 2. **Keep measuring before choosing limits** - Gather more evidence; publication waits.
 
 ## Decision Outcome
 
-Chosen option: **"Adopt the measured-build limits"** is the proposed direction,
-because the first build passes them with room for variation. Human approval is
-still pending.
+Chosen option: **"Adopt the measured-build limits"**, because the first build
+passes them with room for variation.
 
-### Proposed limits
+### Approved limits
 
 For sizes, 1 KiB means 1,024 bytes. Compress each file separately with gzip
 level 9. Search files are a subset of the totals, not an extra download.
 
-| Compressed files | First build | Proposed maximum |
+| Compressed files | First build | Approved maximum |
 | --- | ---: | ---: |
 | Largest individual HTML page | 9,370 bytes | 24 KiB |
 | All CSS files | 27,481 bytes | 40 KiB |
@@ -132,7 +133,7 @@ These values and identifiers remain here after the downloadable CI artifact's
 
 ## Confirmation
 
-- Obtain human approval before enforcing the limits or publishing the website.
+- Preserve the approved limits when checking a build for publication.
 - Bind the report to the exact Git revision and built-file hashes being published.
 - Check every file category and every phase in every required trial.
 - Reject missing, invalid, non-finite, or failed measurements and incomplete trials.
