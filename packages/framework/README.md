@@ -5,7 +5,7 @@ Protocol (MCP) `2026-07-28` servers over Streamable HTTP.
 
 It checks data when requests enter and leave the server. It supports public
 tools, tools that require sign-in, public resources and prompts, request time
-limits, and bounded progress updates for local examples. Direct tools,
+limits, and bounded progress updates. Direct tools,
 resources, and prompts can ask capable clients for more information. Prompt
 arguments and resource fields may also offer suggestions.
 
@@ -296,7 +296,8 @@ progress, the official MCP library sends progress events over the same POST
 request. Otherwise the call returns one JSON response.
 
 ```ts
-import { defineStreamingTool } from "@emseepea/server";
+import { createEmseepea, defineStreamingTool } from "@emseepea/server";
+import { z } from "zod";
 
 const roast = defineStreamingTool({
   name: "roast-batch",
@@ -320,13 +321,64 @@ change those positive bounds. The reporter closes with the tool call.
 Heartbeats are disabled. Invalid, oversized, late, or extra updates are
 rejected.
 
-Streaming tools start only for local examples. They do not yet support:
+### Use Progress Behind a Proxy
+
+In the current source, public tools can also report progress behind a trusted
+HTTPS proxy. This addition is not yet in a published npm release.
+
+Using the `roast` tool above, configure the proxy's exact address and the public
+host and origin your clients use:
+
+```ts
+const app = createEmseepea({
+  name: "coffee-guide",
+  version: "1.0.0",
+  tools: [roast],
+  deployment: {
+    mode: "production-behind-proxy",
+    trustedProxyAddresses: ["10.0.0.10"],
+    allowedAuthorities: ["mcp.example.com"],
+    allowedOrigins: ["https://mcp.example.com"],
+    rateLimit: { maxRequests: 100, windowMs: 60_000, maxClients: 1_000 },
+  },
+});
+```
+
+Replace these example addresses with yours. The server still listens locally
+by default. Choose a private listening address explicitly when starting it,
+and restrict network access so only your proxy can reach it.
+
+Your proxy must replace caller-supplied forwarding headers and send:
+
+- `X-Forwarded-Proto: https` for the original HTTPS connection
+- `X-Forwarded-For` containing one client IP address, not a comma-separated chain
+- `Host` matching an entry in `allowedAuthorities`
+
+It must also forward streamed responses without buffering them.
+`X-Accel-Buffering: no` asks compatible proxies not to buffer; it does not
+configure your proxy for you.
+
+Each call sends progress on its already-open HTTP response. A later call can
+go to another server without pinning that client to the first server. This
+does not share application state or rate limits: the configured limit applies
+to each server separately.
+
+### Limits
+
+Progress remains limited by the event count, event size, result size, and
+request deadline. Disconnecting cancels work that observes the cancellation
+signal. These checks do not slow the producer to match a slow reader.
+
+Not supported yet:
 
 - long-running streams opened with GET
 - saved sessions, replay, or subscriptions
-- proxy servers or recovery after reconnecting
+- recovery after reconnecting
 - slowing the producer when a client cannot keep up
-- more than one server instance
+- progress from tools requiring sign-in outside local development
+
+See the [progress coverage and tested proxy setup](../../docs/protocol-coverage.md#progress-updates)
+for the current checks and their limits.
 
 ## Public Resources and Prompts
 

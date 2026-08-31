@@ -21,3 +21,32 @@ and supersession, not feature completion.
 
 This was a source-level Markdown review, not a rendered mobile-browser test.
 The specialist also reviewed this evidence wording.
+
+## Public Proxy Progress
+
+Result: PASS. Reviewed `.changeset/tidy-pods-progress.md` and pull-request
+wording. The text describes what developers can enable and separates it from
+features not included. Load qualification remains a CI requirement, not a local
+result.
+
+## Proxy Progress Guides
+
+Reviewed files:
+
+- `README.md`
+- `packages/framework/README.md`
+- `examples/streaming-progress/README.md`
+- `docs/protocol-coverage.md`
+- `BATTLE-PLAN.md`
+- `docs/reviews/cognitive-accessibility-2026-08-31.md`
+
+Result: PASS. The guides explain how developers can enable progress on public
+tools and distinguish source availability from npm publication. Configuration,
+proxy responsibilities, and unsupported features are separate short sections.
+CI details stay in the coverage ledger.
+
+This was a source-level Markdown review, not a rendered mobile-browser test.
+
+Also reviewed the generated release-evidence wording in
+`.github/workflows/release.yml`. Result: PASS. It records the new load check and
+separates public progress from streaming features not included.

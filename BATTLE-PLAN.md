@@ -1,6 +1,6 @@
 # Battle Plan: Build Em See Pea
 
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 
 This is an implementation plan designed to change when evidence shows a better
 route. It keeps the objective, boundaries, proof, and next decision clear.
@@ -38,6 +38,11 @@ Already implemented and checked in earlier revisions:
 - native and React UI examples using the same form contract
 - a two-process SQLite example for one-computer deployments
 - deterministic tests and lint commands owned by every runnable example
+
+New source work passed Node.js 22 and 24 CI: public tools can send bounded
+progress through a trusted proxy, with each request handled by one of two
+independent server processes. This is not yet published to npm. See the
+[progress coverage and limits](docs/protocol-coverage.md#progress-updates).
 
 Current next action:
 

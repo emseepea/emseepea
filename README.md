@@ -27,14 +27,15 @@ Use the current framework to create:
 - resources, reusable resource addresses, prompts, and field suggestions
 - clear names, descriptions, icons, and usage hints for clients to display
 - a server that tells clients when a list or resource is safe to reuse
-- a local server that reports live progress while work is running
+- public tools that report live progress while work is running
 - two local server processes that share one SQLite report store
 - a server with a native HTML form, or the same form rendered with React and
   the Em See Pea stylesheet
 
-The live-progress feature passed its
-[Node.js 22 and 24 test run][streaming-quality]. It is not ready for production
-servers or proxies yet.
+The current source also lets public tools report progress behind a trusted
+proxy. This addition is not yet published to npm. See
+[how to configure proxy progress](packages/framework/README.md#use-progress-behind-a-proxy)
+and its [tested limits](docs/protocol-coverage.md#progress-updates).
 
 ## Verify It Locally
 
@@ -118,7 +119,7 @@ even when using a tool requires permission.
 - listing every possible resource address or requiring sign-in for resources and
   prompts
 - changing catalogues while a server runs
-- production streaming through proxy servers
+- deployed progress streams from tools that require sign-in
 - saved sessions, subscriptions, replay, or reconnect recovery
 - shared operation across computers or a promise that retries change an
   external service only once
@@ -148,4 +149,3 @@ eligible for publication.
 [quality-policy]: QUALITY.md
 [release-readiness]: docs/reviews/0.0.2-release-readiness.md
 [semantic-qualification]: docs/decisions/0024-subscription-backed-claude-semantic-release-checks.proposed.md
-[streaming-quality]: https://github.com/windyroad/emseepea/actions/runs/33070295308
