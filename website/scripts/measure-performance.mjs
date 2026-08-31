@@ -33,13 +33,39 @@ export function processingDelta(before, after) {
   }));
 }
 
+export function rssBytes(smaps) {
+  const match = /^Rss:\s+(\d+) kB$/m.exec(smaps);
+  const bytes = Number(match?.[1]) * 1024;
+  assert.ok(Number.isSafeInteger(bytes) && bytes > 0, "missing or invalid process RSS");
+  return bytes;
+}
+
+export function processDelta(before, after) {
+  for (const snapshot of [before, after]) {
+    assert.ok(snapshot.length > 0 && new Set(snapshot.map(({ id }) => id)).size === snapshot.length, "empty or duplicate processes");
+    for (const process of snapshot) {
+      assert.ok(Number.isSafeInteger(process.id) && process.id > 0
+        && Number.isFinite(process.cpuTime) && process.cpuTime >= 0
+        && Number.isSafeInteger(process.rssBytes) && process.rssBytes > 0, "invalid process measurement");
+    }
+  }
+  assert.ok(before.every(({ id }) => after.some((process) => process.id === id)), "process disappeared during measurement");
+  const deltas = after.map((process) => {
+    const delta = process.cpuTime - (before.find(({ id }) => id === process.id)?.cpuTime ?? 0);
+    assert.ok(delta >= 0, "process CPU counter reversed");
+    return delta;
+  });
+  return { observedProcessCpuMs: deltas.reduce((sum, delta) => sum + delta, 0) * 1000,
+    listedProcessRssBytes: after.reduce((sum, process) => sum + process.rssBytes, 0) };
+}
+
 async function measure() {
   assert.equal(process.env.GITHUB_ACTIONS, "true", "Run website performance measurements on GitHub Actions, not locally");
   const reportPath = new URL("../artifacts/performance.json", import.meta.url);
   await mkdir(new URL("../artifacts/", import.meta.url), { recursive: true });
   const root = fileURLToPath(new URL("../../", import.meta.url));
   const report = {
-    schemaVersion: 1, status: "incomplete", startedAt: new Date().toISOString(),
+    schemaVersion: 2, status: "incomplete", startedAt: new Date().toISOString(),
     commit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
     conditions: {
       node: process.version, os: `${os.platform()} ${os.release()} ${os.arch()}`,
@@ -51,6 +77,8 @@ async function measure() {
       sizes: "gzip level 9 per build file, not observed hosting transfer sizes. Search is a subset of totals. Inventory includes files not fetched by a page.",
       processing: "CDP timeTicks duration deltas in ms for renderer tasks, script and layout; these overlap and must not be added. Forced GC excluded. Not process CPU time.",
       memory: "JSHeapUsedSize after forced GC, in bytes. Retained main-renderer JavaScript heap only, not peak, WASM, browser RSS or process memory.",
+      processMemory: "Sum of smaps_rollup Rss for all CDP-listed browser processes before forced GC, in bytes. Includes resident worker/WASM allocations and browser baseline; counts shared pages more than once. Snapshot, not peak or unique physical memory. Excludes unlisted OS helpers and Node test server.",
+      processCpu: "Observed all-thread CPU seconds delta across CDP-listed browser processes, converted to ms. Includes browser background/instrumentation work; forced GC excluded. Rejects disappeared PIDs or reversed counters, but two snapshots cannot detect processes born and exited between them.",
       phases: "Initial: before navigation to network idle. Search: before opening dialog through coffee results and network idle. No-results: input fill through announcement and network idle. Automation turnaround includes driver and idle waits.",
     }, files: [], totals: {}, samples: [], summaries: [],
   };
@@ -70,10 +98,15 @@ async function measure() {
     site = await serveSite();
     browser = await chromium.launch();
     report.conditions.chromium = browser.version();
+    const browserCdp = await browser.newBrowserCDPSession();
+    const processes = async () => Promise.all((await browserCdp.send("SystemInfo.getProcessInfo")).processInfo.map(async (process) => {
+      assert.ok(Number.isSafeInteger(process.id) && process.id > 0, "invalid browser process ID");
+      return { ...process, rssBytes: rssBytes(await readFile(`/proc/${process.id}/smaps_rollup`, "utf8")) };
+    }));
     for (const profile of report.conditions.profiles) {
       for (const route of site.routes.sort()) {
         for (let trial = 1; trial <= report.conditions.samplesPerRouteAndViewport; trial++) {
-          const sample = { route, ...profile, trial, phases: {}, errors: [] };
+          const sample = { route, ...profile, trial, phases: {}, processes: {}, workers: [], errors: [] };
           report.samples.push(sample);
           const context = await browser.newContext({ colorScheme: "light", viewport: { width: profile.width, height: 900 } });
           try {
@@ -103,16 +136,20 @@ async function measure() {
               },
             };
             for (const [phase, action] of Object.entries(phases)) {
+              const processSamples = { before: await processes() };
+              sample.processes[phase] = processSamples;
               const before = await metrics();
               const start = performance.now();
               await action();
               await page.waitForLoadState("networkidle");
               const automationTurnaroundMs = performance.now() - start;
               const after = await metrics();
+              processSamples.after = await processes();
+              sample.workers = page.workers().map((worker) => new URL(worker.url()).pathname);
               await cdp.send("HeapProfiler.collectGarbage");
               const retainedJsHeapBytes = (await metrics()).JSHeapUsedSize;
               assert.ok(Number.isFinite(retainedJsHeapBytes) && retainedJsHeapBytes > 0, "missing heap measurement");
-              sample.phases[phase] = { ...processingDelta(before, after), retainedJsHeapBytes, automationTurnaroundMs };
+              sample.phases[phase] = { ...processingDelta(before, after), ...processDelta(processSamples.before, processSamples.after), retainedJsHeapBytes, automationTurnaroundMs };
             }
           } catch (error) {
             sample.errors.push(error.message);
@@ -120,6 +157,7 @@ async function measure() {
             await context.close();
           }
           console.log(`${profile.width}px ${route} trial ${trial}: ${sample.errors.length ? "FAILED" : "recorded"}`);
+          await writeFile(reportPath, JSON.stringify(report, null, 2) + "\n");
         }
       }
     }

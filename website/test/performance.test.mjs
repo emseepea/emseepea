@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import test from "node:test";
-import { describeFile, processingDelta, summarise } from "../scripts/measure-performance.mjs";
+import { describeFile, processDelta, processingDelta, rssBytes, summarise } from "../scripts/measure-performance.mjs";
 
 test("measurement arithmetic preserves units, search grouping, hashes and invalid samples", () => {
   const body = Buffer.from("example search data");
@@ -26,6 +26,22 @@ test("measurement arithmetic preserves units, search grouping, hashes and invali
   });
   assert.throws(() => processingDelta(before, {}), /invalid/);
   assert.throws(() => processingDelta(before, { ...before, TaskDuration: 0 }), /invalid/);
+});
+
+test("process measurements include worker-hosting and child processes without accepting missing data", () => {
+  assert.equal(rssBytes("00400000-00500000 ---p [rollup]\nRss:                 123 kB\nPss:                  90 kB\n"), 123 * 1024);
+  for (const invalid of ["", "Rss: -1 kB", "Rss: 2 MB", "Rss: 0 kB", "Rss: 99999999999999999999 kB"]) {
+    assert.throws(() => rssBytes(invalid), /invalid process RSS/);
+  }
+  const before = [{ id: 1, type: "browser", cpuTime: 1, rssBytes: 1024 }, { id: 2, type: "renderer", cpuTime: 2, rssBytes: 2048 }];
+  const after = [{ ...before[0], cpuTime: 2 }, { ...before[1], cpuTime: 4 }, { id: 3, type: "NetworkService", cpuTime: 1, rssBytes: 4096 }];
+  assert.deepEqual(processDelta(before, after), { observedProcessCpuMs: 4000, listedProcessRssBytes: 7168 });
+  assert.throws(() => processDelta(before, after.filter(({ id }) => id !== 2)), /disappeared/);
+  assert.throws(() => processDelta(before, [{ ...before[0], cpuTime: 0 }, before[1]]), /reversed/);
+  assert.throws(() => processDelta(before, [after[0], after[0]]), /duplicate/);
+  assert.throws(() => processDelta([], after), /empty/);
+  assert.throws(() => processDelta(before, [{ ...after[0], cpuTime: NaN }]), /invalid process/);
+  assert.throws(() => processDelta(before, [{ ...after[0], rssBytes: 0 }]), /invalid process/);
 });
 
 test("performance command refuses local execution before measuring anything", () => {
