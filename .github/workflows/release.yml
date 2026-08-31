@@ -188,6 +188,7 @@ jobs:
           - Qualification: npm test; npm run benchmark; npm run test:load:streaming; npm audit --audit-level=high; npm pack
           - Semantic qualification: $SEMANTIC_EVAL_RUN_URL, artifact $SEMANTIC_EVAL_ARTIFACT
           - Reviews: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/$review_record
+          - Coverage and limits: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/docs/protocol-coverage.md
           - Supported slice:
             - Fastify-first MCP 2026-07-28 server
             - JSON operations
@@ -200,15 +201,21 @@ jobs:
             - opt-in bounded pages for tool, resource, resource-address-pattern, and prompt catalogues with opaque cursors
             - configurable reuse instructions for discovery, catalogues, and resource reads
             - anonymous resource metadata and discovery
+            - checked request headers and advertised metadata
+            - direct tools, resources, and prompts that request more client input
+            - fixed-origin HTTPS JSON GET client with network-address and response checks
+            - native HTML form rendering
+            - optional request telemetry, dependency readiness, and bounded shutdown flushing
+            - code-first AI understanding tests with three answers and nine judgments per case
           - Excluded:
             - template enumeration and protected templates
             - changing catalogues while a server runs
             - object or tenant authorization
-            - outbound HTTP policy, retries, or effects
+            - general or authenticated outbound HTTP policy, retries, or effects
             - deployed streaming tools requiring sign-in
             - transport backpressure and queue overflow
-            - resynchronisation, subscriptions, replay, sessions, and shared state
-            - UI packages and deployment
+            - resynchronisation, subscriptions, replay, sessions, and framework-managed shared state
+            - publication of React and Tailwind packages, or website deployment
             - resource, prompt, template, completion, or streaming performance
             - full-profile conformance
           EOF
