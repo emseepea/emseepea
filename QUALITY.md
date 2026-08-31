@@ -88,8 +88,9 @@ Accessibility Guidelines (WCAG) conformance.
 - User interface examples must test both light and dark color pairs, keyboard
   operation, accessible names, focus visibility, status announcements, and
   Web Content Accessibility Guidelines (WCAG) 2.2 AA.
-- Every example must have a Promptfoo language-model understanding case. It
-  requires three fresh answers, three independent judgments made without MCP
+- Every example must have an executable language-model understanding case in
+  `eval/`, separate from ordinary tests in `test/`. It requires three fresh
+  answers and three independent judgments per answer, made without MCP
   tools, fixed critical facts, and evidence of the exact MCP operation. All
   three answers must pass.
 - For every trial, the harness must execute the exact tool call, resource read,
@@ -99,7 +100,7 @@ Accessibility Guidelines (WCAG) conformance.
 - The understanding check never retries a wrong answer. An unknown provider,
   model, credential, path, judgment, timeout, configuration, or evidence result
   stops publication.
-- Promptfoo provider retries are disabled. Provider-internal transport retries
+- Semantic retries are disabled. Provider-internal transport retries
   are reported as unobservable and remain bounded by the provider timeout.
 
 ## Automation Rules
@@ -116,7 +117,7 @@ Accessibility Guidelines (WCAG) conformance.
   Required pull-request and language-model checks must pass for the merged
   commit. The root, examples, React package, and Tailwind package remain
   private.
-- The release job must depend on a passing Promptfoo check for the publishing
+- The release job must depend on passing language-model checks for the publishing
   SHA through pinned Claude CLI and `claude-sonnet-4-6`. It uses the Claude
   subscription OAuth secret, and redacted evidence is retained for exactly 14
   days.

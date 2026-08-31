@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 29 decisions: 18 current and 11 historical.
+This project has 29 decisions: 15 current and 14 historical.
 
 ## Quick Index
 
@@ -22,12 +22,9 @@ This project has 29 decisions: 18 current and 11 historical.
 - [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.proposed.md) — Proposed; human review confirmed.
 - [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md) — Proposed; human review confirmed.
 - [ADR-0023: Mandatory Cognitive-Accessibility Review for Published Content](0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md) — Proposed; human review confirmed.
-- [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.proposed.md) — Proposed; human review confirmed.
 - [ADR-0025: Static Documentation Website with Astro Starlight](0025-static-documentation-website-with-astro-starlight.proposed.md) — Proposed; human review pending.
-- [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.proposed.md) — Proposed; human review confirmed.
-- [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.proposed.md) — Proposed; human review confirmed.
 - [ADR-0028: Example-Owned Oxlint with Root Orchestration](0028-example-owned-oxlint-with-root-orchestration.proposed.md) — Proposed; human review confirmed.
-- [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md) — Proposed; human review pending.
+- [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md) — Proposed; human review confirmed.
 - [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.proposed.md) — Proposed; human review confirmed.
 
 ### Historical decisions
@@ -43,6 +40,9 @@ This project has 29 decisions: 18 current and 11 historical.
 - [ADR-0020: Mandatory Semantic LLM Qualification for Examples and Releases](0020-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md) — Superseded; human review confirmed.
 - [ADR-0021: Mandatory Semantic LLM Qualification for Examples and Releases](0021-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md) — Superseded; human review confirmed.
 - [ADR-0022: Harness-Mediated Semantic LLM Qualification for Examples and Releases](0022-harness-mediated-semantic-llm-qualification-for-examples-and-releases.superseded.md) — Superseded; human review confirmed.
+- [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.superseded.md) — Superseded; human review confirmed.
+- [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.superseded.md) — Superseded; human review confirmed.
+- [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md) — Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -380,7 +380,7 @@ Chosen option: **"Public discovery with invocation-scoped OAuth and retained out
 - Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0003: Public Windy Road Repository with Gated Changesets Releases](0003-public-repository-and-release-governance.superseded.md)
-- Replaced by: [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.proposed.md)
+- Replaced by: [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md)
 
 #### Decision
 
@@ -455,7 +455,7 @@ Chosen option: **"Mandatory Promptfoo qualification with GitHub Copilot CLI"**, 
 - Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0021: Mandatory Semantic LLM Qualification for Examples and Releases](0021-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md)
-- Replaced by: [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.proposed.md)
+- Replaced by: [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.superseded.md)
 
 #### Decision
 
@@ -495,11 +495,12 @@ Chosen option: **"Mandatory specialist review plus a density guard"**, because t
 - Changed Changesets, release notes, website prose, and outbound repository prose cannot publish without named review evidence.
 - No document claims cognitive accessibility or comprehension solely because an automated check passed.
 
-### [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.proposed.md)
+### [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0022: Harness-Mediated Semantic LLM Qualification for Examples and Releases](0022-harness-mediated-semantic-llm-qualification-for-examples-and-releases.superseded.md)
+- Replaced by: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md)
 
 #### Decision
 
@@ -541,10 +542,11 @@ Chosen option: **"Astro Starlight"**, because it is the smallest maintained opti
 - The GitHub Pages workflow uses fixed action revisions, least permissions, no pull-request deployment credentials, and only the checked revision.
 - Compressed HTML, CSS, JavaScript, browser processing time, and memory are measured from the first build. Public deployment waits for a separately ratified website performance budget based on that evidence.
 
-### [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.proposed.md)
+### [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md)
 
 #### Decision
 
@@ -560,11 +562,12 @@ Chosen option: **"Example-owned quality commands with shared tooling"**, because
 - `tests/docs/example-quality.test.mjs` fails when a runnable example omits its `test` command, `test:built` command, `test:llm` command, ordinary test file, or `eval.yaml` scenario.
 - Native and React examples run browser, keyboard, and accessibility checks from their own workspaces.
 
-### [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.proposed.md)
+### [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
+- Replaced by: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md)
 
 #### Decision
 
@@ -610,7 +613,8 @@ Chosen option: **"Example-owned Oxlint dependency with root orchestration"**, be
 ### [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
+- Human review: Confirmed
+- Replaces: [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.superseded.md), [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.superseded.md), [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md)
 
 #### Decision
 

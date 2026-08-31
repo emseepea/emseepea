@@ -1,11 +1,13 @@
 ---
 status: "proposed"
 date: 2026-08-30
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-08-31
 decision-makers: ["Tom Howard"]
 consulted: []
 informed: []
 reassessment-date: 2026-11-30
+supersedes: ["ADR-0024", "ADR-0026", "ADR-0027"]
 ---
 
 # Code-First Semantic Tests
@@ -55,9 +57,12 @@ Chosen option: **"Direct code-first semantic tests"**, because normal code gives
 examples the needed flexibility. The existing runner already produces repeated
 answers and release evidence without Promptfoo.
 
-Every runnable example owns a `test/semantics.test.mjs` file and a short
-`test:llm` command. The file is an ordinary Node test, so it can use imports,
-hooks, loops, generated cases, and `node:assert`.
+Every runnable example owns an `eval/` directory beside its ordinary `test/`
+directory, with a separate `test:llm` command. Each LLM test is an ordinary Node
+test, so it can use imports, hooks, loops, generated cases, and `node:assert`.
+
+The runner discovers `*.test.mjs` files recursively in that directory. Adding
+100 cases does not require 100 root files or edits to a central file list.
 
 `@emseepea/testing` exposes one small semantic-test helper. It starts or connects
 to the server, provides an instrumented official MCP client to the test, records
@@ -75,6 +80,21 @@ The existing isolated Claude subscription provider remains the release
 provider. Removing Promptfoo does not change where credentials can go, which
 model is used, how checks attach to a release, or when publication is blocked.
 
+The repository pins the Claude CLI and official MCP client exactly. Evaluation
+uses the repository-local Claude binary and `claude-sonnet-4-6`, with no tools,
+inherited settings, saved sessions, or access to example servers. The evaluation
+job has only `contents: read`. Its subscription token reaches only the model
+child, never the server, evidence, or publication job. Redacted evidence records
+the exact revision, dependency/model pins, case digest, and MCP operation
+digests, and is retained for 14 days. Missing or failed evidence blocks release.
+
+`@emseepea/testing` remains public MIT software, independent of the server
+package and without a bundled model CLI. Both approved public packages retain
+Changesets release PRs, the `next` tag, and npm trusted publishing. The root,
+examples, React, and Tailwind packages remain unpublished. Each runnable example
+retains its own ordinary tests and lint command; UI examples retain their
+browser and accessibility checks.
+
 Promptfoo and the YAML parser are removed from `@emseepea/testing` and the
 monorepo. Evidence uses product terms such as `answerTrials` and
 `judgeVerdicts`, not Promptfoo-specific fields.
@@ -82,10 +102,13 @@ monorepo. Evidence uses product terms such as `answerTrials` and
 There is no Promptfoo compatibility layer in this change. An optional bridge
 can be considered later if adopters need Promptfoo's reports or integrations.
 
-If ratified, this decision will replace ADR-0024, ADR-0026, and ADR-0027. Their
+This decision replaces ADR-0024, ADR-0026, and ADR-0027. Their
 provider, example-owned quality, and public testing-package decisions are
-preserved here without the Promptfoo and YAML requirements. Until then, those
-three confirmed decisions remain authoritative.
+preserved here without the Promptfoo and YAML requirements. Confirmation records
+the owner's explicit instruction on 2026-08-31 to implement code-first tests
+in each example's separate `eval/` directory immediately. On the same date,
+the owner explicitly approved updating this decision in place to record that
+directory choice rather than creating a replacement decision.
 
 ## Consequences
 

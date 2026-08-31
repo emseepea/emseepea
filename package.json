@@ -8,12 +8,6 @@
   "engines": {
     "node": ">=22"
   },
-  "overrides": {
-    "onnxruntime-node": {
-      "adm-zip": "0.6.0"
-    },
-    "sharp": "0.35.4"
-  },
   "workspaces": [
     "packages/*",
     "examples/*"
@@ -39,8 +33,8 @@
     "start:streaming": "npm run start -w @emseepea/example-streaming-progress",
     "test": "npm run decisions:check && npm run lint && npm run build && npm run typecheck && npm run test:examples && node --experimental-test-module-mocks --test --test-concurrency=1 tests/black-box/*.test.mjs tests/docs/*.test.mjs tests/llm/*.test.mjs",
     "test:examples": "npm run test:built --workspaces --if-present",
-    "test:eval": "npm run build && emseepea-test --provider claude-local examples/basic-no-ui/eval.yaml examples/backend-no-ui/eval.yaml examples/multi-instance/eval.yaml examples/native-ui/eval.yaml examples/protected-no-ui/eval.yaml examples/react-tailwind-ui/eval.yaml examples/resources-prompts/eval.yaml examples/streaming-progress/eval.yaml",
-    "test:eval:ci": "emseepea-test --provider claude-ci examples/basic-no-ui/eval.yaml examples/backend-no-ui/eval.yaml examples/multi-instance/eval.yaml examples/native-ui/eval.yaml examples/protected-no-ui/eval.yaml examples/react-tailwind-ui/eval.yaml examples/resources-prompts/eval.yaml examples/streaming-progress/eval.yaml",
+    "test:eval": "npm run build && npm run test:llm:built --workspaces --if-present",
+    "test:eval:ci": "npm run test:llm:built --workspaces --if-present -- --provider claude-ci",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "version-packages": "changeset version && npm install --package-lock-only --ignore-scripts",
     "lint": "oxlint ."
@@ -57,7 +51,6 @@
     "@types/node": "24.13.3",
     "axe-core": "4.13.0",
     "playwright": "1.62.1",
-    "promptfoo": "0.122.1",
     "typescript": "6.0.3",
     "zod": "4.4.3",
     "oxlint": "1.80.0"

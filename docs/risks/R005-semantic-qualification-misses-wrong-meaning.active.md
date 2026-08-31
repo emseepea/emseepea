@@ -29,14 +29,15 @@ Impact × Likelihood *before* controls.
 
 - **Live MCP material** - The harness performs the exact operation through the
   official MCP client and binds the returned material to each trial. Implemented
-  in `tests/llm/run-eval.mjs`.
+  in `packages/testing/semantic/material.mjs`.
 - **Independent interpretation checks** - Every example requires three fresh
-  agent trials, three independent judge verdicts, deterministic critical facts,
+  answers, three independent judgments per answer, required facts,
   and exact MCP path evidence. Defined in `QUALITY.md` and
-  `tests/llm/promptfooconfig.yaml`.
+  `examples/*/eval/*.test.mjs`. The shared runner enforces the trial counts.
 - **Stop on uncertainty** - An unknown provider, model, credential, path,
   timeout, verdict, or evidence result stops the evaluation. Tested in
-  `tests/llm/provider.test.mjs` and `tests/llm/release-workflow.test.mjs`.
+  `packages/testing/test/provider.test.mjs`,
+  `packages/testing/test/runner.test.mjs`, and `tests/llm/release-workflow.test.mjs`.
 - **Separate publication authority** - The model job has no publishing
   permission. Publication depends on its result for the commit being published.
   Implemented in
@@ -71,7 +72,7 @@ or a local model run does not make this risk acceptable for publication.
 - Criteria: `RISK-POLICY.md`
 - Realised-as: none recorded
 - Treatment ADRs:
-  [ADR-0024: Subscription-Backed Claude Language-Model Understanding Checks](../decisions/0024-subscription-backed-claude-semantic-release-checks.proposed.md)
+  [ADR-0029: Code-First Semantic Tests](../decisions/0029-code-first-semantic-tests.proposed.md)
 - Personas affected: adopters and end users of adopter-built servers
 
 ## Source Evidence (auto-scaffolded 2026-08-27)

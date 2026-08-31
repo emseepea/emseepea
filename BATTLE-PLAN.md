@@ -46,10 +46,10 @@ independent server processes. This is not yet published to npm. See the
 
 Current next action:
 
-1. Decide
-   [ADR-0029: Code-First Semantic Tests](docs/decisions/0029-code-first-semantic-tests.proposed.md).
-2. If ratified, replace the remaining YAML language-model cases with code-first
-   tests.
+1. Finish and independently review the code-first LLM tests. Each example keeps
+   them in `eval/`, separate from ordinary tests in `test/`.
+2. Verify copied examples and the real-model release checks before publishing
+   the updated testing package.
 3. Then close the partial and missing rows in the
    [MCP server coverage ledger](docs/protocol-coverage.md).
 

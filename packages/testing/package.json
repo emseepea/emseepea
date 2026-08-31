@@ -20,6 +20,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./semantic": {
+      "types": "./semantic/test.d.mts",
+      "import": "./semantic/test.mjs"
     }
   },
   "bin": {
@@ -38,8 +42,7 @@
     "test:built": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/client": "2.0.0",
-    "promptfoo": "0.122.1"
+    "@modelcontextprotocol/client": "2.0.0"
   },
   "engines": {
     "node": ">=22"

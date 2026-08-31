@@ -1,189 +1,44 @@
-import { readFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 
-const methods = new Set(["tools/call", "resources/read", "prompts/get"]);
-
-export async function loadSemanticCase(path) {
-  const absolutePath = path instanceof URL ? fileURLToPath(path) : resolve(path);
-  const value = parseCase(await readFile(absolutePath, "utf8"));
-  if (!value || typeof value !== "object" || Array.isArray(value)) fail("must be an object");
-  for (const key of ["description", "question", "criteria", "server"]) {
-    if (typeof value[key] !== "string" || value[key].trim() === "") fail(`${key} must be text`);
+export function validateSemanticCase(value) {
+  if (!value || typeof value !== "object") throw new Error("Semantic test needs options");
+  for (const key of ["question", "criteria"]) {
+    if (typeof value[key] !== "string" || !value[key].trim()) throw new Error(`${key} must be text`);
   }
-  if (!Array.isArray(value.criticalFacts) || value.criticalFacts.some((fact) => typeof fact !== "string" || !fact)) {
-    fail("criticalFacts must be a non-empty text list");
-  }
-  if (!Array.isArray(value.operations) || value.operations.length === 0) fail("operations must not be empty");
-  for (const operation of value.operations) {
-    if (!operation || typeof operation !== "object" || !methods.has(operation.method)) {
-      fail("each operation needs a supported method");
-    }
-    const target = operation.name ?? operation.uri;
-    if (typeof target !== "string" || target === "") fail("each operation needs a name or uri");
-  }
-  if (value.environment !== undefined && (!value.environment || typeof value.environment !== "object" || Array.isArray(value.environment))) {
-    fail("environment must be an object");
-  }
-  if (value.authTokenEnvironment !== undefined && typeof value.authTokenEnvironment !== "string") {
-    fail("authTokenEnvironment must be text");
-  }
-  if (value.authToken !== undefined && typeof value.authToken !== "string") fail("authToken must be text");
-  return {
-    ...value,
-    path: absolutePath,
-    directory: dirname(absolutePath),
-    server: resolve(dirname(absolutePath), value.server),
-  };
-}
-
-export function requiredPaths(testCase) {
-  return testCase.operations.map((operation) => (
-    `${operation.method}:${operation.name ?? operation.uri}`
-  ));
-}
-
-function fail(message) {
-  throw new Error(`Invalid semantic case: ${message}`);
-}
-
-function parseCase(source) {
-  const lines = source.split(/\r?\n/);
-  const value = {};
-  for (let index = 0; index < lines.length;) {
-    const line = lines[index];
-    if (line.trim() === "" || line.trimStart().startsWith("#")) {
-      index += 1;
-      continue;
-    }
-    const top = /^([A-Za-z][A-Za-z0-9]*):(?:\s*(.*))?$/.exec(line);
-    if (!top) fail(`unsupported line: ${line}`);
-    const [, key, raw = ""] = top;
-    const rest = raw.trimEnd();
-    if (key === "operations") {
-      const parsed = parseOperations(lines, index + 1);
-      value.operations = parsed.value;
-      index = parsed.next;
-    } else if (rest === ">-") {
-      const parsed = parseFoldedText(lines, index + 1);
-      value[key] = parsed.value;
-      index = parsed.next;
-    } else if (key === "environment" && rest === "") {
-      const parsed = parseObject(lines, index + 1, "  ");
-      value.environment = parsed.value;
-      index = parsed.next;
-    } else if (rest === "") {
-      const parsed = parseList(lines, index + 1);
-      value[key] = parsed.value;
-      index = parsed.next;
-    } else if (rest.startsWith("[") && rest.endsWith("]")) {
-      value[key] = rest.slice(1, -1).split(",").map((item) => unquote(item.trim())).filter(Boolean);
-      index += 1;
-    } else {
-      value[key] = unquote(rest);
-      index += 1;
+  if (!(value.server instanceof URL) || value.server.protocol !== "file:") throw new Error("server must be a file URL");
+  for (const key of ["criticalFacts", "requiredPaths"]) {
+    if (!Array.isArray(value[key]) || !value[key].length || value[key].some((item) =>
+      !(key === "criticalFacts" && item instanceof RegExp) && (typeof item !== "string" || !item.trim()))) {
+      throw new Error(`${key} must contain text${key === "criticalFacts" ? " or regular expressions" : ""}`);
     }
   }
-  return value;
+  if (typeof value.exercise !== "function") throw new Error("exercise must be a function");
+  if (value.assertAnswer !== undefined && typeof value.assertAnswer !== "function") throw new Error("assertAnswer must be a function");
+  if (value.requiredPaths.some((path) => !/^(tools\/call|resources\/read|prompts\/get):.+$/.test(path))) {
+    throw new Error("requiredPaths must name a supported MCP method and target");
+  }
+  for (const key of ["authToken", "authTokenEnvironment"]) {
+    if (value[key] !== undefined && (typeof value[key] !== "string" || !value[key].trim())) throw new Error(`${key} must be non-empty text`);
+  }
+  if (value.authToken !== undefined && value.authTokenEnvironment !== undefined) throw new Error("Choose one authentication source");
+  if (value.environment !== undefined && (!value.environment || typeof value.environment !== "object" ||
+    Array.isArray(value.environment) || Object.values(value.environment).some((item) => typeof item !== "string"))) {
+    throw new Error("environment must contain string values");
+  }
+  const server = fileURLToPath(value.server);
+  return { ...value, server, directory: dirname(server) };
 }
 
-function parseOperations(lines, start) {
-  const operations = [];
-  let index = start;
-  while (index < lines.length) {
-    const line = lines[index];
-    if (line.trim() === "") {
-      index += 1;
-      continue;
-    }
-    if (!line.startsWith("  - ")) break;
-    const operation = {};
-    const first = line.slice(4);
-    applyPair(operation, first);
-    index += 1;
-    while (index < lines.length) {
-      const current = lines[index];
-      if (current.trim() === "") {
-        index += 1;
-        continue;
-      }
-      if (current.startsWith("  - ") || !current.startsWith("    ")) break;
-      const pair = /^    ([A-Za-z][A-Za-z0-9]*):(?:\s*(.*))?$/.exec(current);
-      if (!pair) fail(`unsupported operation line: ${current}`);
-      const [, key, raw = ""] = pair;
-      if (key === "arguments" && raw.trimEnd() === "") {
-        const parsed = parseObject(lines, index + 1, "      ", true);
-        operation.arguments = parsed.value;
-        index = parsed.next;
-      } else {
-        operation[key] = unquote(raw.trimEnd());
-        index += 1;
-      }
-    }
-    operations.push(operation);
+export function checkMeaningEvidence(options, answer, paths) {
+  const seen = new Set(paths.map(({ method, target }) => `${method}:${target}`));
+  if (options.requiredPaths.some((path) => !seen.has(path))) throw new Error("Required MCP path evidence is missing");
+  const missingFactIndices = options.criticalFacts.flatMap((fact, index) =>
+    (fact instanceof RegExp ? new RegExp(fact.source, fact.flags).test(answer)
+      : answer.toLowerCase().includes(fact.toLowerCase())) ? [] : [index]);
+  if (missingFactIndices.length) {
+    throw Object.assign(new Error("Answer is missing a required fact"), {
+      code: "missing-critical-facts", missingFactIndices,
+    });
   }
-  return { value: operations, next: index };
-}
-
-function parseList(lines, start) {
-  const items = [];
-  let index = start;
-  while (index < lines.length) {
-    const item = /^  -\s+(.+)$/.exec(lines[index]);
-    if (!item) break;
-    items.push(unquote(item[1].trimEnd()));
-    index += 1;
-  }
-  if (items.length === 0) fail("expected a list");
-  return { value: items, next: index };
-}
-
-function parseObject(lines, start, indent, parseScalars = false) {
-  const object = {};
-  let index = start;
-  while (index < lines.length) {
-    if (!lines[index].startsWith(indent)) break;
-    applyPair(object, lines[index].slice(indent.length), parseScalars);
-    index += 1;
-  }
-  return { value: object, next: index };
-}
-
-function parseFoldedText(lines, start) {
-  const parts = [];
-  let index = start;
-  while (index < lines.length) {
-    if (!lines[index].startsWith("  ")) break;
-    parts.push(lines[index].trim());
-    index += 1;
-  }
-  return { value: parts.join(" "), next: index };
-}
-
-function applyPair(target, source, parseScalars = false) {
-  const pair = /^([A-Za-z][A-Za-z0-9_]*):\s*(.*)$/.exec(source);
-  if (!pair) fail(`expected key-value pair: ${source}`);
-  target[pair[1]] = parseScalars ? parseArgumentScalar(pair[2]) : unquote(pair[2].trimEnd());
-}
-
-function parseArgumentScalar(value) {
-  const trimmed = value.trim();
-  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
-    return unquote(trimmed);
-  }
-  if (trimmed === "true") return true;
-  if (trimmed === "false") return false;
-  if (/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(trimmed)) {
-    const number = Number(trimmed);
-    if (Number.isFinite(number)) return number;
-  }
-  return trimmed;
-}
-
-function unquote(value) {
-  const trimmed = value.trim();
-  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
-    return trimmed.slice(1, -1);
-  }
-  return trimmed;
 }

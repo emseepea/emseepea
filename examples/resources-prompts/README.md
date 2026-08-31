@@ -25,6 +25,10 @@ choose another port.
 
 ## Check This Example
 
+[Ordinary tests](test/) live in `test/`.
+The [AI understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
+The commands below run each suite independently.
+
 Run its build and MCP resource and prompt checks:
 
 ```sh

@@ -5,14 +5,20 @@ import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/cli
 
 const sha256 = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 
-export async function startSemanticServer(testCase) {
+export async function startSemanticServer(testCase, signal) {
+  signal?.throwIfAborted();
   const child = spawn(process.execPath, [testCase.server], {
     cwd: testCase.directory,
     env: serverEnvironment(testCase.environment),
     stdio: ["ignore", "pipe", "pipe"],
+    signal,
+    killSignal: "SIGKILL",
   });
   let output = "";
   child.stdout.on("data", (chunk) => { output = `${output}${chunk}`.slice(-16_384); });
+  child.stderr.resume();
+  // Abort after startup still emits an error event from spawn's signal handler.
+  child.on("error", () => {});
   try {
     const url = await new Promise((resolve, reject) => {
       const finish = (error, value) => {
@@ -43,16 +49,17 @@ export async function startSemanticServer(testCase) {
 }
 
 export async function stopSemanticServer(child) {
-  if (child.exitCode !== null) return;
-  child.kill("SIGTERM");
-  await Promise.race([
-    new Promise((resolve) => child.once("close", resolve)),
-    new Promise((resolve) => setTimeout(resolve, 3_000)),
-  ]);
-  if (child.exitCode === null) child.kill("SIGKILL");
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  await new Promise((resolve) => {
+    const timer = setTimeout(() => { child.kill("SIGKILL"); finish(); }, 3_000);
+    const finish = () => { clearTimeout(timer); child.off("close", finish); resolve(); };
+    child.once("close", finish);
+    child.kill("SIGTERM");
+  });
 }
 
-export async function collectMcpMaterial(url, testCase) {
+export async function collectMcpMaterial(url, testCase, signal) {
+  signal?.throwIfAborted();
   const token = testCase.authToken ?? (testCase.authTokenEnvironment
     ? process.env[testCase.authTokenEnvironment]?.trim()
     : undefined);
@@ -69,19 +76,41 @@ export async function collectMcpMaterial(url, testCase) {
   ));
   const evidence = [];
   const material = [];
+  const pending = [];
+  let abort;
+  const cancelled = new Promise((_, reject) => {
+    abort = () => { void client.close().catch(() => {}); reject(new Error("Semantic test cancelled")); };
+    signal?.addEventListener("abort", abort, { once: true });
+  });
   try {
-    for (const operation of testCase.operations) {
-      const request = requestFor(operation);
-      const response = await perform(client, operation);
-      evidence.push({
-        method: operation.method,
-        target: operation.name ?? operation.uri,
-        requestSha256: sha256(request),
-        responseSha256: sha256(response),
-      });
-      material.push(`Operation: ${JSON.stringify(request)}\nResult: ${JSON.stringify(response)}`);
-    }
+    signal?.throwIfAborted();
+    const invoke = (operation) => {
+      const call = (async () => {
+        const request = requestFor(operation);
+        const response = await perform(client, operation);
+        evidence.push({
+          method: operation.method,
+          target: operation.name ?? operation.uri,
+          requestSha256: sha256(request),
+          responseSha256: sha256(response),
+        });
+        material.push(`Operation: ${JSON.stringify(request)}\nResult: ${JSON.stringify(response)}`);
+        return operation.method === "tools/call" ? response.result : response;
+      })();
+      // Observe early failures even if the callback awaits another operation first.
+      void call.catch(() => {});
+      pending.push(call);
+      return call;
+    };
+    await Promise.race([testCase.exercise(Object.freeze({
+      callTool: (params) => invoke({ ...params, method: "tools/call" }),
+      readResource: (params) => invoke({ ...params, method: "resources/read" }),
+      getPrompt: (params) => invoke({ ...params, method: "prompts/get" }),
+    })), cancelled]);
+    await Promise.all(pending);
   } finally {
+    signal?.removeEventListener("abort", abort);
+    await Promise.allSettled(pending);
     await client.close();
   }
   return {
@@ -113,6 +142,9 @@ async function perform(client, operation) {
 }
 
 function serverEnvironment(extra = {}) {
+  if (Object.keys(extra).some((key) => /^(CLAUDE|ANTHROPIC|OPENAI|CODEX|GITHUB|NODE_OPTIONS|NODE_PATH)/i.test(key))) {
+    throw new Error("Provider credentials and runtime injection are not server environment options");
+  }
   return Object.fromEntries(Object.entries({
     CI: "true",
     HOME: process.env.HOME,

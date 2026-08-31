@@ -80,3 +80,58 @@ explains both shutdown time limits. It makes the callback cancellation and
 delivery limits explicit.
 
 This was a source-level Markdown review, not a rendered mobile-browser test.
+
+## Code-First AI Understanding Tests
+
+Reviewed files:
+
+- `README.md`
+- `QUALITY.md`
+- `BATTLE-PLAN.md`
+- `packages/testing/README.md`
+- `tests/llm/README.md`
+- `examples/basic-no-ui/README.md`
+- `examples/backend-no-ui/README.md`
+- `examples/protected-no-ui/README.md`
+- `examples/resources-prompts/README.md`
+- `examples/multi-instance/README.md`
+- `examples/streaming-progress/README.md`
+- `examples/native-ui/README.md`
+- `examples/react-tailwind-ui/README.md`
+- `docs/risks/R005-semantic-qualification-misses-wrong-meaning.active.md`
+- `docs/jtbd/mcp-server-developer/JTBD-003-prove-an-ai-understands-the-result.proposed.md`
+- `.changeset/plain-peas-evals.md`
+- `docs/reviews/cognitive-accessibility-2026-08-31.md`
+
+Result: PASS. Reviewed changed guides and examples. Separate commands and
+directories, model prerequisites, and limitations are stated plainly. Real
+model checks are distinguished from simulated-model smoke tests.
+
+This was a source Markdown review, not rendered browser verification.
+
+### Historical Decisions
+
+Reviewed unchanged historical files:
+
+- `docs/decisions/0024-subscription-backed-claude-semantic-release-checks.superseded.md`
+- `docs/decisions/0026-example-owned-quality-assurance-surfaces.superseded.md`
+- `docs/decisions/0027-public-semantic-testing-package.superseded.md`
+
+Result: QUALIFIED PASS. These preserve historical Promptfoo and YAML wording.
+They are superseded records, not current setup instructions; the decisions
+index identifies their replacement. ADR-0029 was not part of this review.
+
+### Code-First Decision Alignment
+
+Reviewed files:
+
+- `docs/decisions/0029-code-first-semantic-tests.proposed.md`
+- `docs/decisions/README.md`
+- `docs/reviews/cognitive-accessibility-2026-08-31.md`
+
+Result: PASS. The decision now matches the examples: ordinary tests live in
+`test/`, and LLM tests live in `eval/`. The owner-approved in-place update is
+recorded. The decision preserves model isolation, three answers, and nine
+judgments.
+
+This was a source Markdown review, not rendered browser verification.

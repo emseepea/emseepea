@@ -9,8 +9,9 @@
     "start": "node dist/server.js",
     "test": "npm run build && npm run test:built",
     "test:built": "node --test test/*.test.mjs",
-    "test:llm": "npm run build && emseepea-test eval.yaml",
-    "lint": "oxlint src test"
+    "test:llm": "npm run build && npm run test:llm:built",
+    "test:llm:built": "emseepea-test eval",
+    "lint": "oxlint src test eval"
   },
   "dependencies": {
     "@emseepea/example-ui-shared": "0.0.0",
@@ -21,6 +22,8 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "playwright": "1.62.1",
+    "axe-core": "4.13.0",
     "@emseepea/testing": "0.0.2",
     "@types/node": "24.13.3",
     "@types/react": "19.2.18",

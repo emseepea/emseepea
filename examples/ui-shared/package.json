@@ -8,7 +8,8 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./testing": "./test/browser-contract.mjs"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -25,5 +26,13 @@
   },
   "devDependencies": {
     "oxlint": "1.80.0"
+  },
+  "peerDependencies": {
+    "playwright": "1.62.1",
+    "axe-core": "4.13.0"
+  },
+  "peerDependenciesMeta": {
+    "playwright": { "optional": true },
+    "axe-core": { "optional": true }
   }
 }
