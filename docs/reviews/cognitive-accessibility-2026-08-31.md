@@ -109,6 +109,27 @@ model checks are distinguished from simulated-model smoke tests.
 
 This was a source Markdown review, not rendered browser verification.
 
+## Next Release Review
+
+Reviewed files:
+
+- `docs/reviews/0.0.3-release-readiness.md`
+- `.github/workflows/release.yml` (generated release-evidence prose)
+- `packages/framework/CHANGELOG.md` (planned 0.0.3 section)
+- `packages/testing/CHANGELOG.md` (planned 0.1.0 section)
+- `docs/reviews/cognitive-accessibility-2026-08-31.md` (this section)
+
+The changelog review used release-PR revision
+`31bc390d76d0e0006773695d16bc87090742e9ac`.
+
+Result: PASS. The record separates reviewed source, pending publication checks,
+and completed publication. The generated evidence describes the supported HTTP
+client without claiming general outbound-call support. The release notes
+explain the JavaScript migration and remaining limits.
+
+This was a source-text review, not rendered browser verification. Release
+qualification remains pending.
+
 ### Historical Decisions
 
 Reviewed unchanged historical files:
