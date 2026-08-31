@@ -16,7 +16,8 @@ function safely<T>(work: () => T): T | undefined {
   try { return work(); } catch { return undefined; }
 }
 
-export function installRequestTelemetry(app: FastifyInstance): void {
+export function installRequestTelemetry(app: FastifyInstance): () => Promise<void> {
+  const pending = new Set<Promise<void>>();
   const tracer = safely(() => trace.getTracer("@emseepea/server"));
   const meter = safely(() => metrics.getMeter("@emseepea/server"));
   const calls = safely(() => meter?.createCounter("emseepea.http.requests", { unit: "{request}" }));
@@ -25,6 +26,9 @@ export function installRequestTelemetry(app: FastifyInstance): void {
   // SDK host/origin checks run first. Requests they reject are not measured.
   app.addHook("onRequest", (request, reply, done) => {
     if (request.routeOptions.url !== "/mcp") { done(); return; }
+    let complete!: () => void;
+    const completion = new Promise<void>((resolve) => { complete = resolve; });
+    pending.add(completion);
     const started = performance.now();
     const parentContext = safely(() => {
       const parent = trace.getSpanContext(context.active());
@@ -47,20 +51,25 @@ export function installRequestTelemetry(app: FastifyInstance): void {
       ended = true;
       reply.raw.off("finish", finish);
       reply.raw.off("close", close);
-      const method = request.body && typeof request.body === "object" && "method" in request.body
-        ? request.body.method : undefined;
-      const status = reply.raw.statusCode;
-      const attributes = {
-        "mcp.method": typeof method === "string" && methods.has(method) ? method : "_OTHER",
-        "http.request.method": httpMethods.has(request.method) ? request.method : "_OTHER",
-        "http.response.status_code": reply.raw.headersSent && Number.isInteger(status) &&
-          status >= 100 && status <= 599 ? status : 0,
-        "emseepea.transport.outcome": outcome,
-      };
-      safely(() => span?.setAttributes(attributes));
-      safely(() => calls?.add(1, attributes, requestContext));
-      safely(() => duration?.record((performance.now() - started) / 1_000, attributes, requestContext));
-      safely(() => span?.end());
+      try {
+        const method = request.body && typeof request.body === "object" && "method" in request.body
+          ? request.body.method : undefined;
+        const status = reply.raw.statusCode;
+        const attributes = {
+          "mcp.method": typeof method === "string" && methods.has(method) ? method : "_OTHER",
+          "http.request.method": httpMethods.has(request.method) ? request.method : "_OTHER",
+          "http.response.status_code": reply.raw.headersSent && Number.isInteger(status) &&
+            status >= 100 && status <= 599 ? status : 0,
+          "emseepea.transport.outcome": outcome,
+        };
+        safely(() => span?.setAttributes(attributes));
+        safely(() => calls?.add(1, attributes, requestContext));
+        safely(() => duration?.record((performance.now() - started) / 1_000, attributes, requestContext));
+        safely(() => span?.end());
+      } finally {
+        pending.delete(completion);
+        complete();
+      }
     }
     reply.raw.once("finish", finish);
     reply.raw.once("close", close);
@@ -75,4 +84,5 @@ export function installRequestTelemetry(app: FastifyInstance): void {
     // guard is set before middleware runs, so fallback cannot replay it.
     next();
   });
+  return async () => { await Promise.all(pending); };
 }

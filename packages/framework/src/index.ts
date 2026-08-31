@@ -360,6 +360,8 @@ export interface OAuthResourceServerOptions {
 }
 export interface EmseepeaOptions {
   readonly telemetry?: boolean;
+  readonly readiness?: (context: { readonly signal: AbortSignal }) => boolean | Promise<boolean>;
+  readonly readinessTimeoutMs?: number;
   readonly name: string;
   readonly version: string;
   readonly title?: string;
@@ -397,6 +399,8 @@ export interface ServeOptions {
   readonly host?: "127.0.0.1" | "::1" | "localhost" | "0.0.0.0" | "::";
   readonly port?: number;
   readonly shutdownTimeoutMs?: number;
+  readonly flushTelemetry?: (context: { readonly signal: AbortSignal }) => void | Promise<void>;
+  readonly telemetryFlushTimeoutMs?: number;
 }
 export interface RunningEmseepeaServer {
   readonly url: URL;
@@ -413,7 +417,12 @@ type NormalizedDeployment =
       readonly trustedProxyAddresses: ReadonlySet<string>;
       readonly rateLimit: Readonly<RateLimitOptions>;
     };
-interface AppRuntime { deployment: NormalizedDeployment; requestTimeoutMs: number }
+interface AppRuntime {
+  deployment: NormalizedDeployment;
+  requestTimeoutMs: number;
+  stopping: AbortController;
+  finishTelemetry: (() => Promise<void>) | undefined;
+}
 interface NormalizedOAuth {
   readonly verifier: OAuthTokenVerifier;
   readonly metadata: AuthMetadataOptions;
@@ -1069,6 +1078,23 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   if (options.telemetry !== undefined && typeof options.telemetry !== "boolean") {
     throw new TypeError("telemetry must be a boolean");
   }
+  const readiness = options.readiness;
+  const readinessTimeoutMs = callbackTimeout("readiness", readiness, "readinessTimeoutMs", options.readinessTimeoutMs);
+  const stopping = new AbortController();
+  let pendingReadiness: Promise<boolean> | undefined;
+  async function ready(): Promise<boolean> {
+    if (stopping.signal.aborted) return false;
+    if (!readiness) return true;
+    if (!pendingReadiness) {
+      const deadline = Date.now() + readinessTimeoutMs;
+      pendingReadiness = runWithDeadline(stopping.signal, deadline, async (signal) => {
+        try { return await readiness({ signal }) === true && Date.now() < deadline; }
+        finally { pendingReadiness = undefined; }
+      }).catch(() => false);
+    }
+    const result = await pendingReadiness;
+    return result && !stopping.signal.aborted;
+  }
   assertNonEmpty("name", options.name);
   assertNonEmpty("version", options.version);
   const serverInfo = checkedProtocolValue<Implementation>("Implementation", {
@@ -1177,13 +1203,18 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   });
   const nodeHandler = toNodeHandler(sdkHandler);
   const app = createMcpFastifyApp({ host: deployment.mode === "loopback" ? "127.0.0.1" : "0.0.0.0" });
-  if (options.telemetry === true) installRequestTelemetry(app);
+  const finishTelemetry = options.telemetry === true ? installRequestTelemetry(app) : undefined;
   const limiter = deployment.mode === "production-behind-proxy"
     ? new FixedWindowRateLimiter(deployment.rateLimit)
     : undefined;
 
   app.get("/healthz", health("ok\n"));
-  app.get("/readyz", health("ready\n"));
+  app.get("/readyz", async (_request, reply) => {
+    const available = await ready();
+    await reply.header("cache-control", "no-store").type("text/plain; charset=utf-8")
+      .code(available ? 200 : 503).send(available ? "ready\n" : "not ready\n");
+  });
+  app.addHook("preClose", async () => { stopping.abort(); });
   if (oauth) {
     app.all("/.well-known/*", async (request, reply) => {
       const response = oauthMetadataResponse(
@@ -1252,7 +1283,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     }
   });
   app.addHook("onClose", async () => sdkHandler.close());
-  runtimes.set(app, { deployment, requestTimeoutMs: operationTimeoutMs + 5_000 });
+  runtimes.set(app, { deployment, requestTimeoutMs: operationTimeoutMs + 5_000, stopping, finishTelemetry });
   return app;
 }
 
@@ -1343,6 +1374,10 @@ export async function serveEmseepea(
   }
   const port = nonNegativePort(options.port ?? 3000);
   const shutdownTimeoutMs = positiveInteger("shutdownTimeoutMs", options.shutdownTimeoutMs ?? 5_000);
+  const flushTelemetry = options.flushTelemetry;
+  const telemetryFlushTimeoutMs = callbackTimeout(
+    "flushTelemetry", flushTelemetry, "telemetryFlushTimeoutMs", options.telemetryFlushTimeoutMs,
+  );
   await app.listen({ host, port });
   app.server.headersTimeout = 10_000;
   app.server.keepAliveTimeout = 5_000;
@@ -1358,7 +1393,10 @@ export async function serveEmseepea(
   let closing: Promise<void> | undefined;
   return {
     url: new URL(`http://${urlHost}:${address.port}/mcp`),
-    close: () => closing ??= closeApp(app, shutdownTimeoutMs),
+    close: () => {
+      runtime.stopping.abort();
+      return closing ??= closeApp(app, shutdownTimeoutMs, flushTelemetry, telemetryFlushTimeoutMs, runtime.finishTelemetry);
+    },
   };
 }
 
@@ -2116,6 +2154,13 @@ function positiveInteger(field: string, value: number): number {
   if (!Number.isSafeInteger(value) || value <= 0) throw new TypeError(`${field} must be a positive safe integer`);
   return value;
 }
+function callbackTimeout(callbackName: string, callback: unknown, timeoutName: string, value: number | undefined): number {
+  if (callback !== undefined && typeof callback !== "function") throw new TypeError(`${callbackName} must be a function`);
+  if (value !== undefined && callback === undefined) throw new TypeError(`${timeoutName} requires ${callbackName}`);
+  const timeout = positiveInteger(timeoutName, value === undefined ? 1_000 : value);
+  if (timeout > 60_000) throw new TypeError(`${timeoutName} must not exceed 60000`);
+  return timeout;
+}
 function nonNegativePort(value: number): number {
   if (!Number.isSafeInteger(value) || value < 0 || value > 65_535) {
     throw new TypeError("port must be an integer from 0 to 65535");
@@ -2156,12 +2201,52 @@ function isLoopbackHost(host: string): boolean {
   return host === "127.0.0.1" || host === "::1" || host === "localhost";
 }
 
-async function closeApp(app: FastifyInstance, timeoutMs: number): Promise<void> {
+async function closeApp(
+  app: FastifyInstance,
+  timeoutMs: number,
+  flushTelemetry: ServeOptions["flushTelemetry"],
+  flushTimeoutMs: number,
+  finishTelemetry: AppRuntime["finishTelemetry"],
+): Promise<void> {
   let timer: NodeJS.Timeout | undefined;
+  let onClosed: () => void;
+  const httpClosed = new Promise<void>((resolve) => { onClosed = resolve; });
+  app.server.once("close", onClosed!);
   const timeout = new Promise<void>((resolve) => {
-    timer = setTimeout(() => { app.server.closeAllConnections(); resolve(); }, timeoutMs);
+    timer = setTimeout(() => {
+      app.server.close();
+      app.server.closeAllConnections();
+      resolve();
+    }, timeoutMs);
     timer.unref();
   });
-  await Promise.race([app.close(), timeout]);
-  if (timer) clearTimeout(timer);
+  try {
+    await Promise.race([app.close(), timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+    if (flushTelemetry) {
+      const controller = new AbortController();
+      const flushDeadline = Date.now() + flushTimeoutMs;
+      const expired = new Promise<void>((resolve) => {
+        // Keep the process alive long enough to finish flushing after sockets close.
+        timer = setTimeout(() => { controller.abort(); resolve(); }, flushTimeoutMs);
+      });
+      try {
+        await Promise.race([
+          httpClosed.then(async () => {
+            await finishTelemetry?.();
+            if (!controller.signal.aborted && Date.now() < flushDeadline) {
+              await flushTelemetry({ signal: controller.signal });
+            }
+          }).catch(() => {}),
+          expired,
+        ]);
+      } finally {
+        if (timer) clearTimeout(timer);
+        app.server.off("close", onClosed!);
+      }
+    } else {
+      app.server.off("close", onClosed!);
+    }
+  }
 }

@@ -32,13 +32,13 @@ function providers(t) {
   return { manager, tracing, spans, metering, metricExport };
 }
 
-async function server(t, { telemetry = true, handler = () => result, streaming = false, parent = ROOT_CONTEXT, operationTimeoutMs } = {}) {
+async function server(t, { telemetry = true, handler = () => result, streaming = false, parent = ROOT_CONTEXT, operationTimeoutMs, flushTelemetry } = {}) {
   const tool = (streaming ? defineStreamingTool : defineTool)({
     name: "progress", access: "public", description: secret,
     inputSchema, outputSchema, handler,
   });
   const app = createEmseepea({ name: secret, version: "0.0.0", tools: [tool], telemetry, operationTimeoutMs });
-  const running = await context.with(parent, () => serveEmseepea(app, { port: 0, shutdownTimeoutMs: 100 }));
+  const running = await context.with(parent, () => serveEmseepea(app, { port: 0, shutdownTimeoutMs: 100, flushTelemetry }));
   t.after(() => running.close());
   return running;
 }
@@ -333,7 +333,8 @@ test("telemetry API failures do not change successful or failed tool responses",
         createHistogram: attempt("createHistogram", { record: attempt("record") }),
       }));
       let calls = 0;
-      const running = await server(t, { handler: () => {
+      let flushed = 0;
+      const running = await server(t, { flushTelemetry: () => { flushed += 1; }, handler: () => {
         if (++calls === 2) throw new Error(secret);
         return result;
       } });
@@ -346,6 +347,8 @@ test("telemetry API failures do not change successful or failed tool responses",
       assert.ok(!JSON.stringify(failure.body.result.content).includes(secret));
       assert.equal(calls, 2);
       assert.ok(failures > 0, `${fails} was not exercised`);
+      await running.close();
+      assert.equal(flushed, 1, "telemetry failure must not leave pending request tracking behind");
     });
   }
 });
