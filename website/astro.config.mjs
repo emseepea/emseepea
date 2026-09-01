@@ -2,7 +2,7 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
 export default defineConfig({
-  site: "https://windyroad.github.io",
+  site: "https://emseepea.github.io",
   base: "/emseepea",
   output: "static",
   publicDir: "../docs/brand/assets",
@@ -18,8 +18,8 @@ export default defineConfig({
       alt: "",
       replacesTitle: true,
     },
-    social: [{ icon: "github", label: "Em See Pea on GitHub", href: "https://github.com/windyroad/emseepea" }],
-    editLink: { baseUrl: "https://github.com/windyroad/emseepea/edit/main/website/" },
+    social: [{ icon: "github", label: "Em See Pea on GitHub", href: "https://github.com/emseepea/emseepea" }],
+    editLink: { baseUrl: "https://github.com/emseepea/emseepea/edit/main/website/" },
     customCss: ["./src/styles/brand.css"],
     components: {
       MobileMenuToggle: "./src/components/MobileMenuToggle.astro",

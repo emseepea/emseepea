@@ -42,9 +42,9 @@ the response means.
 4. Run the same checks against both implementations.
 5. Compare the code you can remove with the code and dependencies you would add.
 
-Use [the basic example](https://github.com/windyroad/emseepea/tree/main/examples/basic-no-ui)
+Use [the basic example](https://github.com/emseepea/emseepea/tree/main/examples/basic-no-ui)
 when your handler can return the public result directly. Use
-[the backend example](https://github.com/windyroad/emseepea/tree/main/examples/backend-no-ui)
+[the backend example](https://github.com/emseepea/emseepea/tree/main/examples/backend-no-ui)
 when the connected service uses a different input or output format.
 
 ## Check compatibility before switching
@@ -57,6 +57,6 @@ Keep end-to-end client journeys. Em See Pea can test whether its configured
 model selects the expected tool, but it cannot prove that every deployed client,
 model, prompt, and permission configuration will make the same choice.
 
-Read the [current feature boundaries](https://github.com/windyroad/emseepea/blob/main/docs/protocol-coverage.md)
+Read the [current feature boundaries](https://github.com/emseepea/emseepea/blob/main/docs/protocol-coverage.md)
 before committing to a migration. Keep your existing implementation until the
 replacement passes the checks your application relies on.

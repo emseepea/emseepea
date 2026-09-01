@@ -8,7 +8,7 @@ import axe from "axe-core";
 import { base, output, serveSite } from "../test-support/site.mjs";
 
 const screenshots = new URL("../artifacts/", import.meta.url);
-const publicOrigin = "https://windyroad.github.io";
+const publicOrigin = "https://emseepea.github.io";
 let server;
 let browser;
 let origin;

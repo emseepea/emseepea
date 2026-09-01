@@ -9,7 +9,7 @@ backport commitment is made yet.
 ## Report a Vulnerability
 
 Do not open a public issue for a suspected vulnerability. Use
-[GitHub private vulnerability reporting](https://github.com/windyroad/emseepea/security/advisories/new)
+[GitHub private vulnerability reporting](https://github.com/emseepea/emseepea/security/advisories/new)
 and include the affected version, impact, reproduction steps, and any suggested
 mitigation. Do not include real credentials, personal data, or third-party
 secrets.

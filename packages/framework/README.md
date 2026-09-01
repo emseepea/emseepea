@@ -10,7 +10,7 @@ resources, and prompts can ask capable clients for more information. Prompt
 arguments and resource fields may also offer suggestions.
 
 The package is pre-alpha. See the
-[repository README](https://github.com/windyroad/emseepea#readme) for what the
+[repository README](https://github.com/emseepea/emseepea#readme) for what the
 package supports and what it does not support.
 
 ## Public Tool

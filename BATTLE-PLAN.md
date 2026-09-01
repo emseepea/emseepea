@@ -43,7 +43,7 @@ Already implemented and checked in earlier revisions:
 under the `next` tag. The release includes public progress through a trusted
 proxy, optional request telemetry, readiness and shutdown hooks, and code-first
 language-model tests. See the
-[release evidence](https://github.com/windyroad/emseepea/releases/tag/%40emseepea/server%400.0.3)
+[release evidence](https://github.com/emseepea/emseepea/releases/tag/%40emseepea/server%400.0.3)
 and [coverage limits](docs/protocol-coverage.md).
 
 All eight example cases passed the release's language-model checks: 24 answers
@@ -239,7 +239,7 @@ signals, not proof that people will understand the content.
 - [MCP server coverage](docs/protocol-coverage.md)
 - [Quality policy](QUALITY.md)
 - [Risk register](docs/risks/README.md)
-- [Published release evidence](https://github.com/windyroad/emseepea/releases/tag/%40emseepea/server%400.0.3)
+- [Published release evidence](https://github.com/emseepea/emseepea/releases/tag/%40emseepea/server%400.0.3)
 - [Framework package guide](packages/framework/README.md)
 
 These records hold detail so this battle plan can remain a usable decision aid.

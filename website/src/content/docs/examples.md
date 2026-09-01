@@ -22,7 +22,7 @@ Use it to learn the tool definition without another service to configure.
 npm run start:basic
 ```
 
-[Read the basic example](https://github.com/windyroad/emseepea/tree/main/examples/basic-no-ui).
+[Read the basic example](https://github.com/emseepea/emseepea/tree/main/examples/basic-no-ui).
 
 ## Connect a public API
 
@@ -34,7 +34,7 @@ between your tool's contract and a service's different contract.
 npm run start:backend
 ```
 
-[Read the backend example](https://github.com/windyroad/emseepea/tree/main/examples/backend-no-ui).
+[Read the backend example](https://github.com/emseepea/emseepea/tree/main/examples/backend-no-ui).
 
 ## Require sign-in for a tool
 
@@ -46,7 +46,7 @@ using it in a real application.
 npm run start:protected
 ```
 
-[Read the sign-in example](https://github.com/windyroad/emseepea/tree/main/examples/protected-no-ui).
+[Read the sign-in example](https://github.com/emseepea/emseepea/tree/main/examples/protected-no-ui).
 
 ## Share reference material and prompts
 
@@ -57,7 +57,7 @@ prompts, and suggestions for prompt fields.
 npm run start:resources-prompts
 ```
 
-[Read the resources and prompts example](https://github.com/windyroad/emseepea/tree/main/examples/resources-prompts).
+[Read the resources and prompts example](https://github.com/emseepea/emseepea/tree/main/examples/resources-prompts).
 
 ## Report progress during a tool call
 
@@ -68,7 +68,7 @@ result. This is not a saved session or a reconnectable subscription.
 npm run start:streaming
 ```
 
-[Read the progress example](https://github.com/windyroad/emseepea/tree/main/examples/streaming-progress).
+[Read the progress example](https://github.com/emseepea/emseepea/tree/main/examples/streaming-progress).
 
 ## Add a web form
 
@@ -88,8 +88,8 @@ For React:
 npm run start:react-ui
 ```
 
-[Read the native HTML example](https://github.com/windyroad/emseepea/tree/main/examples/native-ui)
-or [the React example](https://github.com/windyroad/emseepea/tree/main/examples/react-tailwind-ui).
+[Read the native HTML example](https://github.com/emseepea/emseepea/tree/main/examples/native-ui)
+or [the React example](https://github.com/emseepea/emseepea/tree/main/examples/react-tailwind-ui).
 
 ## Share a report store between two processes
 
@@ -101,4 +101,4 @@ exactly-once changes to an external service or support multiple computers.
 npm run start:multi-instance
 ```
 
-[Read the two-process example](https://github.com/windyroad/emseepea/tree/main/examples/multi-instance).
+[Read the two-process example](https://github.com/emseepea/emseepea/tree/main/examples/multi-instance).

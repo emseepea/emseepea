@@ -255,10 +255,10 @@ test("registry checks preserve tags and exact provenance", () => {
 
   const expected = {
     ref: "refs/heads/main",
-    repository: "https://github.com/windyroad/emseepea",
+    repository: "https://github.com/emseepea/emseepea",
     workflowPath: ".github/workflows/release.yml",
     sha: "abc123",
-    invocationPrefix: "https://github.com/windyroad/emseepea/actions/runs/42/",
+    invocationPrefix: "https://github.com/emseepea/emseepea/actions/runs/42/",
     subject: "pkg:npm/%40emseepea/server@0.0.2",
     sha512: "00",
   };

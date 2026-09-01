@@ -5,11 +5,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/windyroad/emseepea.git",
+    "url": "git+https://github.com/emseepea/emseepea.git",
     "directory": "packages/testing"
   },
-  "homepage": "https://github.com/windyroad/emseepea#readme",
-  "bugs": "https://github.com/windyroad/emseepea/issues",
+  "homepage": "https://emseepea.github.io/emseepea/ai-tests/",
+  "bugs": "https://github.com/emseepea/emseepea/issues",
   "publishConfig": {
     "access": "public",
     "provenance": true,

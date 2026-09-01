@@ -44,9 +44,9 @@ The LLM runner finds every `*.test.mjs` file inside `eval/`.
 
 Import `toolSelectionTest` from `@emseepea/testing/semantic` in a file such as
 `eval/coffee.test.mjs`. Start with the
-[basic coffee test](https://github.com/windyroad/emseepea/blob/main/examples/basic-no-ui/eval/meaning.test.mjs)
+[basic coffee test](https://github.com/emseepea/emseepea/blob/main/examples/basic-no-ui/eval/meaning.test.mjs)
 or the
-[report test with repeated calls](https://github.com/windyroad/emseepea/blob/main/examples/multi-instance/eval/meaning.test.mjs).
+[report test with repeated calls](https://github.com/emseepea/emseepea/blob/main/examples/multi-instance/eval/meaning.test.mjs).
 
 Each test describes:
 
