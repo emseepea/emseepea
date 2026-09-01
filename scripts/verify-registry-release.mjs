@@ -12,12 +12,11 @@ const packageFiles = [
 ];
 
 export function classifyPublication(before, after) {
-  const previous = before.packages.map(({ present }) => present);
-  if (previous.every(Boolean)) return "unchanged";
-  assert.ok(previous.every((present) => !present), "only one package version existed before publication");
-  const current = after.packages.map(({ present }) => present);
+  const pending = before.packages.filter(({ present }) => !present);
+  if (pending.length === 0) return "unchanged";
+  const current = pending.map(({ name }) => after.packages.find((item) => item.name === name)?.present);
   if (current.every(Boolean)) return "published";
-  if (current.some(Boolean)) throw new Error("only one package was published");
+  if (current.some(Boolean)) throw new Error("only some pending packages were published");
   return "missing";
 }
 
@@ -27,6 +26,7 @@ export function assertRegistryState(before, after) {
     const actual = after.packages.find(({ name }) => name === expected.name);
     assert.ok(actual, `${expected.name} registry metadata is missing`);
     assert.equal(actual.version, expected.version);
+    assert.equal(actual.present, true, `${expected.name}@${expected.version} is missing`);
     assert.equal(actual.next, expected.version, `${expected.name} next tag is wrong`);
     assert.equal(actual.latest, expected.latest, `${expected.name} latest tag changed`);
     assert.notEqual(actual.latest, expected.version, `${expected.name} latest tag points to the pre-alpha release`);
@@ -65,12 +65,11 @@ export function provenanceIncludesCommit(statement, sha) {
   ));
 }
 
-export function classifyRecovery(statements, sha) {
-  const matches = statements.map((statement) => provenanceIncludesCommit(statement, sha));
-  if (matches.some(Boolean) && !matches.every(Boolean)) {
-    throw new Error("only one package has provenance for this release commit");
-  }
-  return matches.every(Boolean) ? "recovery" : "unrelated";
+export function provenanceCommit(statement) {
+  const commits = statement?.predicate?.buildDefinition?.resolvedDependencies
+    ?.flatMap(({ digest }) => typeof digest?.gitCommit === "string" ? [digest.gitCommit] : []) ?? [];
+  assert.equal(commits.length, 1, "provenance must bind exactly one release commit");
+  return commits[0];
 }
 
 async function capture(path) {
@@ -94,15 +93,9 @@ async function verify(beforePath, afterPath) {
     const after = { packages: await Promise.all(before.packages.map(readCurrent)) };
     assertRegistryState(before, after);
     const statements = await Promise.all(after.packages.map(readProvenance));
-    const recovery = classifyRecovery(statements, process.env.GITHUB_SHA);
-    if (recovery === "recovery") {
-      assertStatements(after, statements, `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/`);
-      await writeOutput("published", "true");
-      await writeOutput("recovery", "true");
-    } else {
-      await writeOutput("published", "false");
-      await writeOutput("recovery", "false");
-    }
+    const commits = statements.map(provenanceCommit);
+    assertStatements(after, statements, commits);
+    await writeReleaseOutputs(after, commits);
     await writeJson(afterPath, after);
     return;
   }
@@ -119,31 +112,38 @@ async function verify(beforePath, afterPath) {
   assertRegistryState(before, after);
 
   const statements = await Promise.all(after.packages.map(readProvenance));
-  assertStatements(
-    after,
-    statements,
-    `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}/`,
-  );
+  const commits = statements.map(provenanceCommit);
+  for (const [index, item] of before.packages.entries()) {
+    if (!item.present) assert.equal(commits[index], process.env.GITHUB_SHA, `${item.name} provenance does not bind this release commit`);
+  }
+  assertStatements(after, statements, commits);
   await writeJson(afterPath, after);
-  await writeOutput("published", "true");
-  await writeOutput("recovery", "false");
+  await writeReleaseOutputs(after, commits);
 }
 
-function assertStatements(after, statements, invocationPrefix) {
+function assertStatements(after, statements, commits) {
   const expectedRun = {
     ref: process.env.GITHUB_REF,
     repository: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`,
     workflowPath: ".github/workflows/release.yml",
-    sha: process.env.GITHUB_SHA,
-    invocationPrefix,
+    invocationPrefix: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/`,
   };
   for (const [index, item] of after.packages.entries()) {
     const statement = statements[index];
     assertProvenance(statement, {
       ...expectedRun,
+      sha: commits[index],
       subject: `pkg:npm/${encodeURIComponent(item.name).replace("%2F", "/")}@${item.version}`,
       sha512: Buffer.from(item.integrity.slice("sha512-".length), "base64").toString("hex"),
     });
+  }
+}
+
+async function writeReleaseOutputs(after, commits) {
+  await writeOutput("ready", "true");
+  for (const [index, item] of after.packages.entries()) {
+    const key = item.name === "@emseepea/server" ? "server_sha" : "testing_sha";
+    await writeOutput(key, commits[index]);
   }
 }
 
