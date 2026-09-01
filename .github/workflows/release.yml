@@ -127,6 +127,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
@@ -227,14 +229,16 @@ jobs:
           version: npm run version-packages
           publish: npm run release
           createGithubReleases: false
-      - name: Verify whether both packages were published
+      - name: Verify package publication
         if: steps.release-state.outputs.has_changesets == 'false'
         id: registry-verify
         run: node scripts/verify-registry-release.mjs verify release-artifacts/registry-before.json release-artifacts/registry-after.json
       - name: Verify the downloaded packages
-        if: steps.registry-verify.outputs.published == 'true'
+        if: steps.registry-verify.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SERVER_RELEASE_SHA: ${{ steps.registry-verify.outputs.server_sha }}
+          TESTING_RELEASE_SHA: ${{ steps.registry-verify.outputs.testing_sha }}
         run: |
           server_version="$(node -p "require('./packages/framework/package.json').version")"
           testing_version="$(node -p "require('./packages/testing/package.json').version")"
@@ -290,12 +294,12 @@ jobs:
           ensure_tag() {
             target="$(remote_tag_target "$1")"
             if [ -z "$target" ]; then
-              git tag --annotate "$1" "$GITHUB_SHA" --message "$1"
+              git tag --annotate "$1" "$2" --message "$1"
               git push origin "$1"
             else
-              test "$target" = "$GITHUB_SHA"
+              test "$target" = "$2"
             fi
-            test "$(remote_tag_target "$1")" = "$GITHUB_SHA"
+            test "$(remote_tag_target "$1")" = "$2"
           }
           ensure_release() {
             tag="$1"
@@ -328,8 +332,8 @@ jobs:
             test "$(gh release view "$tag" --json isPrerelease --jq .isPrerelease)" = "true"
             test "$(gh release view "$tag" --json assets --jq '.assets[].name' | sort)" = "$expected_assets"
           }
-          ensure_tag "$server_tag"
-          ensure_tag "$testing_tag"
+          ensure_tag "$server_tag" "$SERVER_RELEASE_SHA"
+          ensure_tag "$testing_tag" "$TESTING_RELEASE_SHA"
           ensure_release "$server_tag" "$server_tag" release-artifacts/server-release-notes.md \
             release-artifacts/emseepea-server-"$server_version".tgz \
             release-artifacts/server-sbom.cdx.json \

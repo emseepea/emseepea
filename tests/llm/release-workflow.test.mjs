@@ -12,7 +12,7 @@ import {
   assertProvenance,
   assertRegistryState,
   classifyPublication,
-  classifyRecovery,
+  provenanceCommit,
   provenanceIncludesCommit,
 } from "../../scripts/verify-registry-release.mjs";
 
@@ -101,6 +101,7 @@ test("publication evidence covers both public packages", () => {
 
 test("publication builds and verifies packages before creating public releases", () => {
   const job = workflow.match(/  changesets:[\s\S]*/)?.[0] ?? "";
+  assert.match(job, /actions\/checkout@[a-f0-9]+[\s\S]*?with:\n\s+fetch-depth: 0/);
   assert.ok(job.indexOf("npm ci --ignore-scripts") < job.indexOf("Build packages for publication"));
   assert.ok(job.indexOf("Build packages for publication") < job.indexOf("npm pack --workspace @emseepea/server"));
   assert.ok(job.indexOf("npm pack --workspace @emseepea/server") < job.indexOf("changesets/action@"));
@@ -108,7 +109,11 @@ test("publication builds and verifies packages before creating public releases",
   assert.ok(job.indexOf("npm audit --audit-level=high --userconfig /dev/null") < job.indexOf("npm audit signatures"));
   assert.ok(job.indexOf("npm audit signatures") < job.indexOf("gh release create"));
   assert.match(job, /createGithubReleases: false/);
-  assert.match(job, /if: steps\.registry-verify\.outputs\.published == 'true'/);
+  assert.match(job, /if: steps\.registry-verify\.outputs\.ready == 'true'/);
+  assert.match(job, /SERVER_RELEASE_SHA: \$\{\{ steps\.registry-verify\.outputs\.server_sha \}\}/);
+  assert.match(job, /TESTING_RELEASE_SHA: \$\{\{ steps\.registry-verify\.outputs\.testing_sha \}\}/);
+  assert.match(job, /ensure_tag "\$server_tag" "\$SERVER_RELEASE_SHA"/);
+  assert.match(job, /ensure_tag "\$testing_tag" "\$TESTING_RELEASE_SHA"/);
   assert.match(job, /EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry node --test tests\/docs\/getting-started-references\.test\.mjs/);
   assert.ok(job.indexOf("verify-registry-release.mjs verify") < job.indexOf("EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry"));
   assert.match(job, /remote_tag_target\(\)/);
@@ -184,7 +189,7 @@ test("registry capture keeps each package's own release version", async (t) => {
   });
 });
 
-test("registry publication detection fails on partial publication", () => {
+test("registry publication detection supports independently versioned packages", () => {
   const before = { packages: [
     { name: "server", present: false },
     { name: "testing", present: false },
@@ -198,16 +203,23 @@ test("registry publication detection fails on partial publication", () => {
     ),
     "unchanged",
   );
-  assert.throws(
-    () => classifyPublication(before, { packages: [{ ...before.packages[0], present: true }, before.packages[1]] }),
-    /only one package was published/,
+  assert.equal(
+    classifyPublication(
+      { packages: [{ ...before.packages[0], present: true }, before.packages[1]] },
+      { packages: before.packages.map((item) => ({ ...item, present: true })) },
+    ),
+    "published",
+  );
+  assert.equal(
+    classifyPublication(
+      { packages: [before.packages[0], { ...before.packages[1], present: true }] },
+      { packages: before.packages.map((item) => ({ ...item, present: true })) },
+    ),
+    "published",
   );
   assert.throws(
-    () => classifyPublication(
-      { packages: [{ ...before.packages[0], present: true }, before.packages[1]] },
-      { packages: before.packages },
-    ),
-    /only one package version existed before publication/,
+    () => classifyPublication(before, { packages: [{ ...before.packages[0], present: true }, before.packages[1]] }),
+    /only some pending packages were published/,
   );
 });
 
@@ -225,6 +237,10 @@ test("registry checks preserve tags and exact provenance", () => {
     signatures: 1,
   }] };
   assert.doesNotThrow(() => assertRegistryState(before, after));
+  assert.throws(
+    () => assertRegistryState(before, { packages: [{ ...after.packages[0], present: false }] }),
+    /server@0\.0\.2 is missing/,
+  );
   assert.throws(
     () => assertRegistryState(before, { packages: [{ ...after.packages[0], latest: "0.0.2" }] }),
     /latest tag changed/,
@@ -265,12 +281,8 @@ test("registry checks preserve tags and exact provenance", () => {
   assert.doesNotThrow(() => assertProvenance(statement, expected));
   assert.equal(provenanceIncludesCommit(statement, expected.sha), true);
   assert.equal(provenanceIncludesCommit(statement, "wrong"), false);
-  assert.equal(classifyRecovery([statement, statement], expected.sha), "recovery");
-  assert.equal(classifyRecovery([statement, statement], "wrong"), "unrelated");
-  assert.throws(
-    () => classifyRecovery([statement, { ...statement, predicate: {} }], expected.sha),
-    /only one package has provenance/,
-  );
+  assert.equal(provenanceCommit(statement), expected.sha);
+  assert.throws(() => provenanceCommit({ ...statement, predicate: {} }), /exactly one release commit/);
   assert.throws(
     () => assertProvenance(statement, { ...expected, sha: "wrong" }),
     /does not bind the release commit/,
