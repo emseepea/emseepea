@@ -1,7 +1,6 @@
-import assert from "node:assert/strict";
-import { semanticTest } from "@emseepea/testing/semantic";
+import { toolSelectionTest } from "@emseepea/testing/semantic";
 
-semanticTest("Inventory availability excludes reserved and inbound bags", {
+toolSelectionTest("Inventory availability excludes reserved and inbound bags", {
   server: new URL("../dist/server.js", import.meta.url),
   authToken: "example-access-token",
   question:
@@ -17,9 +16,5 @@ semanticTest("Inventory availability excludes reserved and inbound bags", {
     "The answer calculates 85 bags available to promise as 120 on hand minus 35 " +
     "reserved. It says the 40 inbound bags are not yet available to promise and " +
     "does not add them to the current 85.",
-  requiredPaths: ["tools/call:get-private-inventory-report"],
-  async exercise(client) {
-    const result1 = await client.callTool({"name":"get-private-inventory-report"});
-    assert.ok(result1);
-  },
+  expectedTools: ["get-private-inventory-report"],
 });

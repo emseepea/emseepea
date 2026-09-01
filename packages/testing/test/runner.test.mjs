@@ -11,6 +11,7 @@ import { collectMcpMaterial, startSemanticServer, stopSemanticServer } from "../
 const cli = fileURLToPath(new URL("../semantic/cli.mjs", import.meta.url));
 const helper = new URL("../semantic/test.mjs", import.meta.url).href;
 const server = new URL("../../../examples/basic-no-ui/dist/server.js", import.meta.url).href;
+const protectedServer = new URL("../../../examples/protected-no-ui/dist/server.js", import.meta.url).href;
 
 test("cancellation stops MCP collection and the server receives no model token", { timeout: 15_000 }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "semantic-cancel-"));
@@ -173,4 +174,73 @@ ${suffix}`;
   }
   await writeFile(file, source("", 'semanticTest("variety", options);'));
   assert.equal(run().status, 1, "Duplicate test names must fail");
+});
+
+test("tool-selection trials choose advertised tools without exposing authentication", { timeout: 90_000 }, async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "tool-selection-runner-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  await mkdir(join(directory, "eval"));
+  const model = join(directory, "model.mjs");
+  const modelLog = join(directory, "model-log.jsonl");
+  const file = join(directory, "eval", "meaning.test.mjs");
+  const output = join(directory, "evidence.json");
+  await writeFile(file, `
+import { toolSelectionTest } from ${JSON.stringify(helper)};
+toolSelectionTest("inventory", {
+  server: new URL(${JSON.stringify(protectedServer)}),
+  authToken: "example-access-token",
+  question: "How many bags can we promise now, and do inbound bags count?",
+  criticalFacts: ["120", "35", "85", "40"],
+  criteria: "Calculate available bags and exclude inbound stock.",
+  expectedTools: ["get-private-inventory-report"],
+});
+`);
+  const modelSource = (plan) => `#!/usr/bin/env node
+import { appendFileSync } from "node:fs";
+const prompt = process.argv[process.argv.indexOf("--print") + 1];
+appendFileSync(${JSON.stringify(modelLog)}, JSON.stringify({
+  hasServerToken: Object.values(process.env).includes("example-access-token"),
+  selection: prompt.includes("JSON tool plan"),
+  cwd: process.cwd(),
+}) + "\\n");
+const answer = prompt.includes("JSON tool plan")
+  ? ${JSON.stringify(plan)}
+  : prompt.includes("Return only JSON with this exact shape")
+    ? '{"pass":true,"score":1,"reason":"Every criterion passed."}'
+    : "120 on hand minus 35 reserved leaves 85 available; the 40 inbound bags do not count yet.";
+process.stdout.write(JSON.stringify({ type: "result", is_error: false, num_turns: 1,
+  permission_denials: [], result: answer, modelUsage: {
+    "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" }
+  } }) + "\\n");
+`;
+  const run = () => spawnSync(process.execPath, [cli, "--smoke", "--model-command", model, "--output", output], {
+    cwd: directory, encoding: "utf8", timeout: 30_000,
+  });
+
+  await writeFile(model, modelSource('{"calls":[{"name":"get-private-inventory-report","arguments":{}}]}'), { mode: 0o700 });
+  const passed = run();
+  assert.equal(passed.status, 0, passed.stdout + passed.stderr);
+  const record = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+  assert.equal(record.mode, "tool-selection");
+  assert.equal(record.answerTrials.length, 3);
+  assert.ok(record.answerTrials.every((trial) => trial.toolCallCount === 1));
+  assert.ok(record.answerTrials.every((trial) => trial.selectionTurnCount === 1));
+  assert.ok(record.answerTrials.every((trial) => trial.selectedTools[0] === "get-private-inventory-report"));
+  assert.ok(record.answerTrials.every((trial) => trial.pathEvidence[0].target === "get-private-inventory-report"));
+  const modelCalls = (await readFile(modelLog, "utf8")).trim().split("\n").map(JSON.parse);
+  assert.ok(modelCalls.every(({ hasServerToken }) => hasServerToken === false));
+  assert.equal(modelCalls.filter(({ selection }) => selection).length, 3);
+  assert.equal(new Set(modelCalls.map(({ cwd }) => cwd)).size, 15);
+
+  for (const plan of [
+    '{"calls":[]}',
+    '{"calls":[{"name":"unknown-tool","arguments":{}}]}',
+    '{"calls":[{"name":"get-private-inventory-report","arguments":{}},{"name":"get-private-inventory-report","arguments":{}}]}',
+  ]) {
+    await writeFile(model, modelSource(plan), { mode: 0o700 });
+    const failed = run();
+    assert.equal(failed.status, 1, failed.stdout + failed.stderr);
+    const failure = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+    assert.equal(failure.failedPhase, "tool selection validation");
+  }
 });

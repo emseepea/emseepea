@@ -46,7 +46,7 @@ unavailable, that tool returns a generic failure. It stays visible in
 ## Check This Example
 
 [Ordinary tests](test/) live in `test/`.
-The [AI understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
+The [AI tool-choice and understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
 The commands below run each suite independently.
 
 Run its build and two-server MCP checks:

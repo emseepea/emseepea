@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/brand/assets/emseepea-signature-horizontal-colour-on-dark.svg">
-    <img src="docs/brand/assets/emseepea-signature-horizontal-colour-on-light.svg" alt="Em See Pea wordmark with pea pod logo" width="420">
+    <img src="docs/brand/assets/emseepea-signature-horizontal-colour-on-light.svg" alt="" width="420">
   </picture>
 </p>
 
@@ -12,9 +12,6 @@ Em See Pea is a general-purpose framework for Model Context Protocol (MCP)
 
 The project is pre-alpha. It supports a small set of tested MCP server features.
 It does not support the full MCP server protocol yet.
-
-Version 0.0.1 on npm is deprecated because it is missing the files needed to
-run. Do not use it. Install a newer version from the `next` tag when available.
 
 ## What You Can Build Today
 
@@ -80,7 +77,7 @@ Then choose what you want to build:
 The sign-in example uses the made-up token `example-access-token`. It shows
 where token checking fits. It is not a production sign-in system.
 
-## Check Whether a Language Model Understands the Results
+## Check Whether AI Chooses and Uses the Right Tool
 
 ```sh
 npm run claude:prepare
@@ -88,12 +85,13 @@ npm run claude:login
 npm run test:eval
 ```
 
-These checks ask a language model questions about every running example.
-They catch answers that look plausible but misunderstand the data.
-Returning valid JSON is not enough.
+These checks ask a language model questions about every running example. For
+tool examples, the model must select the expected advertised tool before it can
+interpret the result. The checks catch wrong tool choices and answers that look
+plausible but misunderstand the data. Returning valid JSON is not enough.
 
 Each example keeps its JavaScript LLM tests in `eval/`, separate from ordinary
-tests in `test/`. See the [guide to writing AI understanding tests](packages/testing/README.md).
+tests in `test/`. See the [guide to writing AI tool-choice tests](packages/testing/README.md).
 
 Skip `npm run claude:login` when Claude is already signed in on your computer.
 

@@ -39,10 +39,11 @@ test("the packed public packages pass a fresh-install audit and getting-started 
     await writeFile(path.join(directory, "check.mjs"), `
       import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
       import { startMcpServer } from "@emseepea/testing";
-      import { semanticTest } from "@emseepea/testing/semantic";
+      import { semanticTest, toolSelectionTest } from "@emseepea/testing/semantic";
       import { z } from "zod";
 
-      if (typeof startMcpServer !== "function" || typeof semanticTest !== "function") {
+      if (typeof startMcpServer !== "function" || typeof semanticTest !== "function"
+          || typeof toolSelectionTest !== "function") {
         throw new Error("packed testing package is missing its public helpers");
       }
       const value = z.object({ value: z.string() });
@@ -113,6 +114,15 @@ test("every copied example runs against packed packages", { timeout: 900_000 }, 
     ].map(async ([name, packagePath]) => [name, await packPackage(packagePath, directory)])));
     const fakeModel = path.join(directory, "fake-model.mjs");
     await writeFile(fakeModel, fakeModelSource, { mode: 0o700 });
+    const expectedTools = {
+      "backend-no-ui": ["search-coffee-catalog"],
+      "basic-no-ui": ["get-bean-details"],
+      "multi-instance": ["create-shared-bean-report", "create-shared-bean-report"],
+      "native-ui": ["preview-bean-report"],
+      "protected-no-ui": ["get-private-inventory-report"],
+      "react-tailwind-ui": ["preview-bean-report"],
+      "streaming-progress": ["roast-sample-batch"],
+    };
 
     for (const name of [
       "basic-no-ui",
@@ -160,6 +170,15 @@ test("every copied example runs against packed packages", { timeout: 900_000 }, 
       assert.equal(evidence.status, "passed", `${name} semantic smoke failed`);
       assert.equal(result.answerTrials.length, 3);
       assert.equal(result.judgeVerdicts.length, 9);
+      if (name === "resources-prompts") {
+        assert.equal(result.mode, "prepared");
+      } else {
+        assert.equal(result.mode, "tool-selection");
+        for (const trial of result.answerTrials) {
+          assert.deepEqual(trial.expectedTools, expectedTools[name]);
+          assert.deepEqual(trial.selectedTools, expectedTools[name]);
+        }
+      }
     }
   } finally {
     await rm(directory, { recursive: true, force: true });
@@ -168,9 +187,22 @@ test("every copied example runs against packed packages", { timeout: 900_000 }, 
 
 const fakeModelSource = `#!/usr/bin/env node
 const prompt = process.argv[process.argv.indexOf("--print") + 1] ?? "";
-const answer = prompt.includes("Return only JSON with this exact shape")
-  ? '{"pass":true,"score":1,"reason":"The answer preserves every required meaning."}'
-  : prompt.includes("reusesOriginalReport (boolean)")
+const plans = [
+  ["create-shared-bean-report", [{ name: "create-shared-bean-report", arguments: { requestId: "daily-roast-report" } },
+    { name: "create-shared-bean-report", arguments: { requestId: "daily-roast-report" } }]],
+  ["get-bean-details", [{ name: "get-bean-details", arguments: { name: "Highland Bloom" } }]],
+  ["search-coffee-catalog", [{ name: "search-coffee-catalog", arguments: { query: "natural process coffee" } }]],
+  ["get-private-inventory-report", [{ name: "get-private-inventory-report", arguments: {} }]],
+  ["preview-bean-report", [{ name: "preview-bean-report",
+    arguments: { title: "Dark roast preview", roast: "dark", includeNotes: true } }]],
+  ["roast-sample-batch", [{ name: "roast-sample-batch", arguments: { batch: "sample-batch" } }]],
+];
+const selected = plans.find(([name]) => prompt.includes(name));
+const answer = prompt.includes("JSON tool plan")
+  ? JSON.stringify({ calls: selected?.[1] ?? [] })
+  : prompt.includes("Return only JSON with this exact shape")
+    ? '{"pass":true,"score":1,"reason":"The answer preserves every required meaning."}'
+    : prompt.includes("reusesOriginalReport (boolean)")
     ? JSON.stringify({ createdByInstance: "eval-instance", totalBeans: 4,
         roastCounts: { light: 1, medium: 2, dark: 1 },
         reusesOriginalReport: true, createsAnotherReport: false })

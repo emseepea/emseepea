@@ -1,7 +1,6 @@
-import assert from "node:assert/strict";
-import { semanticTest } from "@emseepea/testing/semantic";
+import { toolSelectionTest } from "@emseepea/testing/semantic";
 
-semanticTest("Coffee ratings retain their documented meaning", {
+toolSelectionTest("Coffee ratings retain their documented meaning", {
   server: new URL("../test-support/llm-server.mjs", import.meta.url),
   question:
     "Search the coffee catalogue for natural coffees. Name each returned coffee, " +
@@ -29,9 +28,5 @@ semanticTest("Coffee ratings retain their documented meaning", {
     "It identifies Riverlight Natural as more acidic and Cedar Grove as having the " +
     "fuller body. It does not treat either score as a quality rating or reverse " +
     "either scale.",
-  requiredPaths: ["tools/call:search-coffee-catalog"],
-  async exercise(client) {
-    const result1 = await client.callTool({"name":"search-coffee-catalog","arguments":{"query":"natural"}});
-    assert.ok(result1);
-  },
+  expectedTools: ["search-coffee-catalog"],
 });

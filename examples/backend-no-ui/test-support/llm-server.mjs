@@ -6,7 +6,9 @@ import { brewmarkFixture } from "./brewmark-fixture.mjs";
 const app = createBackendExample({
   async get({ pathname, searchParams }) {
     assert.equal(pathname, "/api/coffees");
-    assert.deepEqual(searchParams, { q: "natural", sort: "alpha", limit: "5" });
+    const { q, ...options } = searchParams;
+    assert.match(q, /\bnatural\b/i);
+    assert.deepEqual(options, { sort: "alpha", limit: "5" });
     return brewmarkFixture;
   },
 });

@@ -36,7 +36,7 @@ The endpoint is `http://127.0.0.1:3000/mcp`.
 ## Check This Example
 
 [Ordinary tests](test/) live in `test/`.
-The [AI understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
+The [AI tool-choice and understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
 The commands below run each suite independently.
 
 Run its build, mapping, validation, and MCP checks:
@@ -45,7 +45,7 @@ Run its build, mapping, validation, and MCP checks:
 npm test -w @emseepea/example-backend-no-ui
 ```
 
-Check that Claude understands the catalogue and rating scales correctly:
+Check that Claude chooses catalogue search and understands the rating scales:
 
 ```sh
 npm run test:llm -w @emseepea/example-backend-no-ui

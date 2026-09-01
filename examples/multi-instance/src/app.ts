@@ -74,7 +74,7 @@ export function createMultiInstanceExample(options: MultiInstanceExampleOptions)
   const createSharedBeanReport = defineMappedTool({
     name: "create-shared-bean-report",
     access: "public",
-    description: "Create one stored bean report per request ID, even when server instances share the request.",
+    description: "Create or return one stored bean report per request ID. The result identifies its original server instance.",
     inputSchema: reportInputSchema,
     outputSchema: reportOutputSchema,
     backendInputSchema: backendCommandSchema,
@@ -176,7 +176,7 @@ export function createMultiInstanceExample(options: MultiInstanceExampleOptions)
   const describeInstance = defineTool({
     name: "describe-instance",
     access: "public",
-    description: "Return the name of the server instance handling this request.",
+    description: "Return the server instance handling this request, not the instance that created a stored report.",
     inputSchema: z.object({}),
     outputSchema: z.object({ instanceName: z.string() }),
     handler: () => ({ text: instanceName, data: { instanceName } }),

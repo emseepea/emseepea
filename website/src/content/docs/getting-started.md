@@ -6,7 +6,7 @@ example: basic-no-ui
 
 Start with the coffee example. It answers questions about the origin, roast,
 processing method, and tasting notes of two made-up coffees. It includes both
-ordinary tests and tests of AI explanations.
+ordinary tests and tests of AI tool choice and explanations.
 
 You need Git, Node.js 22 or 24, and npm. This is a local development quickstart,
 not production deployment guidance.
@@ -68,21 +68,22 @@ Open `src/server.ts` in your project:
 Em See Pea checks the input and output. Your handler supplies the behaviour.
 Update `test/server.test.mjs` for your data, then run `npm test` again.
 
-## Check the AI's explanation
+## Check the AI's tool choice and explanation
 
 The example's `eval/meaning.test.mjs` checks that a model does not confuse
 origin, variety, processing, and roast. Adapt its question and expected facts
 when you change the tool.
 
 This check requires a signed-in Claude CLI and uses model allowance. See
-[the AI understanding test guide](../ai-tests/) for setup and what the results prove.
+[the AI testing guide](../ai-tests/) for setup and what the results prove.
 
-```sh title="Check AI understanding"
+```sh title="Check AI tool choice and understanding"
 npm run test:llm
 ```
 
-The test code chooses the MCP call; the model interprets its result. These
-checks do not prove that the model will independently select the correct tool.
+The model sees the advertised tools and must select `get-bean-details` with
+arguments that the real server accepts. The test then checks whether the model
+understands the returned coffee details.
 
 ## Add another capability
 
