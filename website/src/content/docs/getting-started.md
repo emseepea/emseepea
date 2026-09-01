@@ -22,8 +22,8 @@ cp -R emseepea/examples/basic-no-ui my-mcp
 cd my-mcp
 ```
 
-Your project is now separate from the monorepo. It uses `@emseepea/server`
-0.0.3 and `@emseepea/testing` 0.1.0 from npm. Both packages are pre-alpha.
+Your project is now separate from the monorepo. Its `package.json` pins exact
+pre-alpha versions of `@emseepea/server` and `@emseepea/testing`.
 
 ## Install and check it
 

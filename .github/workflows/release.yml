@@ -266,6 +266,7 @@ jobs:
           npm audit signatures --userconfig /dev/null
           node --input-type=module < "$GITHUB_WORKSPACE/scripts/verify-installed-package.mjs"
           cd "$GITHUB_WORKSPACE"
+          EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry node --test tests/docs/getting-started-references.test.mjs
           SERVER_VERSION="$server_version" TESTING_VERSION="$testing_version" node --input-type=module <<'NODE'
           import { readFile, writeFile } from "node:fs/promises";
           for (const [key, version, path] of [
