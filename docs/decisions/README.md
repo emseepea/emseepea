@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 40 decisions: 24 current and 16 historical.
+This project has 41 decisions: 25 current and 16 historical.
 
 ## Quick Index
 
@@ -35,6 +35,7 @@ This project has 40 decisions: 24 current and 16 historical.
 - [ADR-0039: Website Performance Budget](0039-website-performance-budget.proposed.md) — Proposed; human review confirmed.
 - [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.proposed.md) — Proposed; human review confirmed.
 - [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md) — Proposed; human review confirmed.
+- [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.proposed.md) — Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -850,3 +851,24 @@ Chosen option: **"Em See Pea organisation ownership"**, because the product now 
 - Both public packages trust `.github/workflows/release.yml` in `emseepea/emseepea`.
 - A release from the transferred repository passes exact-revision checks and npm provenance verification.
 - Existing releases and historical records are not rewritten.
+
+### [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"One initializer package per example"**, because each command states the project being created and maps directly to npm's scoped initializer convention.
+
+#### How We Check It
+
+- Each documented `npm init @emseepea/<name>@next -- <directory>` command creates the named starter in an empty destination.
+- Every command refuses path traversal, a non-empty destination, and overwriting.
+- Generated projects are private and contain no workspace, root-relative, `file:`, or `@emseepea/example-*` dependency.
+- Every generated project installs, lints, builds, runs ordinary tests, and runs its semantic smoke test outside the monorepo.
+- HTML and React projects retain their browser, keyboard, and accessibility tests.
+- Existing `examples/*` directories remain the only maintained template sources.
+- Changesets and the release workflow verify each initializer's package contents, provenance, SBOM, registry metadata, clean installation, and exact documented command.
+- The repository uses one canonical list of public release packages.
+- Public guides and package READMEs explain the commands in plain language and pass the required cognitive-accessibility review.
