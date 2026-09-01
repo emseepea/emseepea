@@ -21,7 +21,7 @@
   "devDependencies": {
     "playwright": "1.62.1",
     "axe-core": "4.13.0",
-    "@emseepea/testing": "0.1.0",
+    "@emseepea/testing": "0.2.0",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",
     "oxlint": "1.80.0"
