@@ -9,19 +9,19 @@ Without that request, the tool returns one JSON response when it finishes.
 
 ## Run
 
-From the repository root:
+From this directory:
 
 ```sh
 npm install
 npm run build
-npm run start -w @emseepea/example-streaming-progress
+npm start
 ```
 
 The server listens on `http://127.0.0.1:3000/mcp` by default. Set `PORT` to
 choose another port. This example starts locally and does not configure a proxy.
 
 To adapt it for a public server, see
-[Use Progress Behind a Proxy](../../packages/framework/README.md#use-progress-behind-a-proxy).
+[Use Progress Behind a Proxy](https://github.com/emseepea/emseepea/blob/main/packages/framework/README.md#use-progress-behind-a-proxy).
 That option is available in the current source, not yet in a published npm
 release. It does not add saved sessions, replay, subscriptions, or recovery
 after reconnecting.
@@ -35,14 +35,13 @@ The commands below run each suite independently.
 Run its build and progress-stream checks:
 
 ```sh
-npm test -w @emseepea/example-streaming-progress
+npm test
 ```
 
 Check that Claude chooses the roast tool and keeps progress separate from the result:
 
 ```sh
-npm run test:llm -w @emseepea/example-streaming-progress
+npm run test:llm
 ```
 
-If Claude is not already signed in, run `npm run claude:login` from the
-repository root first.
+If Claude is not already signed in, run `claude auth login` first.

@@ -55,24 +55,25 @@ It covers:
 For detailed gates and evidence, see the [quality policy][quality-policy] and
 [0.0.2 release-readiness review][release-readiness].
 
-## Run an Example
+## Create a Project
 
-Build the workspaces first:
+These commands are queued for the next pre-alpha release. They will work after
+that release publishes the initializer packages to npm. Until then, run the
+matching example from this repository. Replace `my-server` with an unused
+directory name:
 
-```sh
-npm run build
-```
+- One public tool: `npm init @emseepea/tool-server@next -- my-server`
+- A public web API: `npm init @emseepea/api-backed-server@next -- my-server`
+- A sign-in protected tool: `npm init @emseepea/sign-in-tool-server@next -- my-server`
+- Resources and prompts: `npm init @emseepea/resources-and-prompts-server@next -- my-server`
+- Progress streaming: `npm init @emseepea/progress-streaming-server@next -- my-server`
+- An HTML form, after its release checks pass: `npm init @emseepea/html-ui-server@next -- my-server`
+- A React form, after its release checks pass: `npm init @emseepea/react-ui-server@next -- my-server`
+- Two processes sharing SQLite: `npm init @emseepea/multi-instance-sqlite-server@next -- my-server`
 
-Then choose what you want to build:
-
-- Start with one small public tool: `npm run start:basic`
-- Connect a tool to a public web service: `npm run start:backend`
-- Require sign-in for a tool while keeping discovery public: `npm run start:protected`
-- Give an assistant reference content and reusable prompts: `npm run start:resources-prompts`
-- Report progress while a slow tool runs: `npm run start:streaming`
-- Avoid creating the same local report twice across two server processes: `npm run start:multi-instance`
-- Add a server-rendered form without a UI framework: `npm run start:native-ui`
-- Add the same form to a React application: `npm run start:react-ui`
+Each command creates a private standalone project with its lint, ordinary tests,
+and semantic tests. The two form starters also include browser accessibility
+tests. The `next` tag identifies the pre-alpha release.
 
 The sign-in example uses the made-up token `example-access-token`. It shows
 where token checking fits. It is not a production sign-in system.
@@ -136,18 +137,19 @@ Publication does not expand these claims.
 - [Quality policy][quality-policy]
 - [Release-readiness review][release-readiness]
 - [Risk register](docs/risks/README.md)
-- [Server package decision](docs/decisions/0016-em-see-pea-product-npm-scope-and-server-package.proposed.md)
+- [Server package decision](docs/decisions/0016-em-see-pea-product-npm-scope-and-server-package.superseded.md)
 - [Public discovery and sign-in checks][public-discovery]
 - [Language-model understanding checks][semantic-qualification]
 - [Cognitive-accessibility publication rule][cognitive-publication]
 - [Brand style guide](docs/brand/STYLE-GUIDE.md)
 
 The source and examples are public under MIT. The root and examples remain
-private npm workspaces. Only `@emseepea/server` and `@emseepea/testing` are
-eligible for publication.
+private npm workspaces. The server, testing helpers, and six non-UI initializer
+packages are eligible for publication. React, Tailwind, and the two UI
+initializer packages remain gated until their independent release checks pass.
 
 [cognitive-publication]: docs/decisions/0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md
 [quality-policy]: QUALITY.md
 [release-readiness]: docs/reviews/0.0.2-release-readiness.md
-[semantic-qualification]: docs/decisions/0024-subscription-backed-claude-semantic-release-checks.proposed.md
+[semantic-qualification]: docs/decisions/0040-model-selected-tool-semantic-tests.proposed.md

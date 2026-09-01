@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { execFile, spawn } from "node:child_process";
 import { createRequire } from "node:module";
@@ -15,7 +15,7 @@ const example = "basic-no-ui";
 const manifest = JSON.parse(await readFile(path.join(root, `examples/${example}/package.json`), "utf8"));
 const exec = promisify(execFile);
 
-test("the quickstart references the copied example's scripts, packages and guide links", async () => {
+test("the quickstart references the initializer's scripts, packages and guide links", async () => {
   assert.ok(guide.includes(`example: ${example}`));
   for (const name of ["@emseepea/server", "@emseepea/testing"]) {
     assert.ok(guide.includes(`\`${name}\``));
@@ -25,7 +25,7 @@ test("the quickstart references the copied example's scripts, packages and guide
   assert.ok(commands.length > 0);
 
   for (const command of commands) {
-    if (["git clone https://github.com/emseepea/emseepea.git", `cp -R emseepea/examples/${example} my-mcp`, "cd my-mcp", "npm install --ignore-scripts"].includes(command)) continue;
+    if (["npm init @emseepea/tool-server@next -- my-mcp", "cd my-mcp", "npm install --ignore-scripts"].includes(command)) continue;
     if (command === "npm test" || command === "npm start") {
       assert.ok(manifest.scripts[command.split(" ")[1]], `missing example script: ${command}`);
       continue;
@@ -49,20 +49,27 @@ test("the quickstart references the copied example's scripts, packages and guide
   }
 });
 
-test("the copied quickstart passes its documented checks", { timeout: 180_000 }, async () => {
+test("the initialized quickstart passes its documented checks", { timeout: 180_000 }, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-website-guide-"));
   try {
-    await cp(path.join(root, `examples/${example}`), directory, {
-      recursive: true,
-      filter: (source) => !/(^|\/)(node_modules|dist|artifacts)$/.test(source),
-    });
     const packageSource = process.env.EMSEEPEA_GUIDE_PACKAGE_SOURCE ?? "packed";
     assert.ok(["packed", "registry"].includes(packageSource), `unknown package source: ${packageSource}`);
     if (packageSource === "packed") {
-      const copiedManifest = JSON.parse(await readFile(path.join(directory, "package.json"), "utf8"));
-      copiedManifest.dependencies["@emseepea/server"] = `file:${await packPackage("packages/framework", directory)}`;
-      copiedManifest.devDependencies["@emseepea/testing"] = `file:${await packPackage("packages/testing", directory)}`;
-      await writeFile(path.join(directory, "package.json"), `${JSON.stringify(copiedManifest, null, 2)}\n`);
+      const initializer = await packPackage("packages/create-tool-server", directory);
+      await exec("npm", ["exec", "--yes", "--userconfig", "/dev/null", "--package", initializer, "--", "create-tool-server", "my-mcp"], {
+        cwd: directory, timeout: 120_000, maxBuffer: 1024 * 1024,
+      });
+    } else {
+      await exec("npm", ["init", "@emseepea/tool-server@next", "--", "my-mcp"], {
+        cwd: directory, timeout: 120_000, maxBuffer: 1024 * 1024,
+      });
+    }
+    const project = path.join(directory, "my-mcp");
+    if (packageSource === "packed") {
+      const generatedManifest = JSON.parse(await readFile(path.join(project, "package.json"), "utf8"));
+      generatedManifest.dependencies["@emseepea/server"] = `file:${await packPackage("packages/framework", directory)}`;
+      generatedManifest.devDependencies["@emseepea/testing"] = `file:${await packPackage("packages/testing", directory)}`;
+      await writeFile(path.join(project, "package.json"), `${JSON.stringify(generatedManifest, null, 2)}\n`);
     }
     const block = guide.match(/```sh title="Install and check"\n([\s\S]*?)```/)?.[1];
     assert.ok(block, "the executable install-and-check block is required");
@@ -72,16 +79,16 @@ test("the copied quickstart passes its documented checks", { timeout: 180_000 },
     delete env.NODE_TEST_CONTEXT;
     for (const command of commands) {
       const [binary, ...args] = command.split(" ");
-      await exec(binary, args, { cwd: directory, env, timeout: 120_000, maxBuffer: 1024 * 1024 });
+      await exec(binary, args, { cwd: project, env, timeout: 120_000, maxBuffer: 1024 * 1024 });
     }
     for (const name of ["@emseepea/server", "@emseepea/testing"]) {
-      const installed = JSON.parse(await readFile(path.join(directory, "node_modules", name, "package.json"), "utf8"));
+      const installed = JSON.parse(await readFile(path.join(project, "node_modules", name, "package.json"), "utf8"));
       assert.equal(installed.version, manifest.dependencies?.[name] ?? manifest.devDependencies?.[name]);
     }
 
     // Exercise the documented command, not a direct launch that bypasses its script.
     const child = spawn("npm", ["start"], {
-      cwd: directory, env: { ...env, PORT: "0" }, detached: true,
+      cwd: project, env: { ...env, PORT: "0" }, detached: true,
       stdio: ["ignore", "pipe", "pipe"],
     });
     let output = "";
@@ -104,7 +111,7 @@ test("the copied quickstart passes its documented checks", { timeout: 180_000 },
         closed.then(() => reject(launchError ?? new Error(`npm start exited before readiness: ${errors}`)));
       }).finally(() => clearTimeout(startupTimer));
       assert.notEqual(url.port, "0", "the example must print its listening port");
-      const { Client, StreamableHTTPClientTransport } = createRequire(path.join(directory, "package.json"))("@modelcontextprotocol/client");
+      const { Client, StreamableHTTPClientTransport } = createRequire(path.join(project, "package.json"))("@modelcontextprotocol/client");
       client = new Client({ name: "website-quickstart", version: "0.0.0" }, {
         versionNegotiation: { mode: { pin: "2026-07-28" } },
       });

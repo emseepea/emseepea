@@ -15,12 +15,12 @@ retry changes an external service only once.
 
 ## Run Both Servers
 
-From the repository root:
+From this directory:
 
 ```sh
 npm install
 npm run build
-npm run start:multi-instance
+npm start
 ```
 
 The command prints two MCP addresses. Stop it with Control-C.
@@ -52,14 +52,13 @@ The commands below run each suite independently.
 Run its build and two-server MCP checks:
 
 ```sh
-npm test -w @emseepea/example-multi-instance
+npm test
 ```
 
 Check that Claude understands report replay correctly:
 
 ```sh
-npm run test:llm -w @emseepea/example-multi-instance
+npm run test:llm
 ```
 
-If Claude is not already signed in, run `npm run claude:login` from the
-repository root first.
+If Claude is not already signed in, run `claude auth login` first.

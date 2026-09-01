@@ -8,6 +8,8 @@ import { promisify } from "node:util";
 import test from "node:test";
 
 import { assertPackedTargets } from "../../scripts/verify-packed-package.mjs";
+import { extractReleaseNotes } from "../../scripts/prepare-release-artifacts.mjs";
+import { publicPackages } from "../../scripts/public-packages.mjs";
 import {
   assertProvenance,
   assertRegistryState,
@@ -81,39 +83,37 @@ test("versioning refreshes the lockfile", () => {
   );
 });
 
-test("publication evidence covers both public packages", () => {
-  assert.match(workflow, /npm pack --workspace @emseepea\/server/);
-  assert.match(workflow, /npm pack --workspace @emseepea\/testing/);
-  assert.match(workflow, /npm sbom --workspace @emseepea\/server/);
-  assert.match(workflow, /npm sbom --workspace @emseepea\/testing/);
-  assert.match(workflow, /@emseepea\/testing@\$testing_version/);
+test("publication evidence uses the canonical public package list", () => {
+  assert.match(workflow, /prepare-release-artifacts\.mjs release-artifacts/);
+  assert.match(workflow, /public-packages\.mjs --publishable --tsv/);
+  assert.match(workflow, /release-artifacts\/packages\.json/);
+  assert.match(workflow, /item\.notesFile/);
   assert.match(workflow, /verify-registry-release\.mjs capture/);
   assert.match(workflow, /verify-registry-release\.mjs verify/);
-  assert.match(workflow, /verify-packed-package\.mjs packages\/framework\/package\.json/);
-  assert.match(workflow, /verify-packed-package\.mjs packages\/testing\/package\.json/);
-  assert.match(workflow, /@emseepea\/testing registry integrity/);
-  assert.match(workflow, /@emseepea\/server@\$server_version/);
-  assert.match(workflow, /release-artifacts\/server-sbom\.cdx\.json/);
-  assert.match(workflow, /release-artifacts\/testing-sbom\.cdx\.json/);
-  assert.doesNotMatch(workflow, /@emseepea\/server@\$version/);
-  assert.doesNotMatch(workflow, /release-artifacts\/sbom\.cdx\.json/);
+  assert.match(workflow, /npm init "\$init@next" -- my-server/);
+  assert.match(workflow, /npm audit signatures/);
+  assert.match(workflow, /registry integrity/);
+  assert.match(workflow, /provenance/);
+  assert.doesNotMatch(workflow, /SERVER_RELEASE_SHA|TESTING_RELEASE_SHA/);
+});
+
+test("release notes must exist before publication", () => {
+  assert.equal(extractReleaseNotes("# Changes\n\n## 0.0.1\n\nFirst release.\n", "0.0.1"), "## 0.0.1\n\nFirst release.\n");
+  assert.throws(() => extractReleaseNotes("# Changes\n", "0.0.1", "package/CHANGELOG.md"), /package\/CHANGELOG\.md has no 0\.0\.1 release notes/);
 });
 
 test("publication builds and verifies packages before creating public releases", () => {
   const job = workflow.match(/  changesets:[\s\S]*/)?.[0] ?? "";
   assert.match(job, /actions\/checkout@[a-f0-9]+[\s\S]*?with:\n\s+fetch-depth: 0/);
   assert.ok(job.indexOf("npm ci --ignore-scripts") < job.indexOf("Build packages for publication"));
-  assert.ok(job.indexOf("Build packages for publication") < job.indexOf("npm pack --workspace @emseepea/server"));
-  assert.ok(job.indexOf("npm pack --workspace @emseepea/server") < job.indexOf("changesets/action@"));
+  assert.ok(job.indexOf("Build packages for publication") < job.indexOf("prepare-release-artifacts.mjs"));
+  assert.ok(job.indexOf("prepare-release-artifacts.mjs") < job.indexOf("changesets/action@"));
   assert.ok(job.indexOf("verify-registry-release.mjs verify") < job.indexOf("npm audit signatures"));
   assert.ok(job.indexOf("npm audit --audit-level=high --userconfig /dev/null") < job.indexOf("npm audit signatures"));
   assert.ok(job.indexOf("npm audit signatures") < job.indexOf("gh release create"));
   assert.match(job, /createGithubReleases: false/);
   assert.match(job, /if: steps\.registry-verify\.outputs\.ready == 'true'/);
-  assert.match(job, /SERVER_RELEASE_SHA: \$\{\{ steps\.registry-verify\.outputs\.server_sha \}\}/);
-  assert.match(job, /TESTING_RELEASE_SHA: \$\{\{ steps\.registry-verify\.outputs\.testing_sha \}\}/);
-  assert.match(job, /ensure_tag "\$server_tag" "\$SERVER_RELEASE_SHA"/);
-  assert.match(job, /ensure_tag "\$testing_tag" "\$TESTING_RELEASE_SHA"/);
+  assert.match(job, /ensure_tag "\$tag" "\$release_sha"/);
   assert.match(job, /EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry node --test tests\/docs\/getting-started-references\.test\.mjs/);
   assert.ok(job.indexOf("verify-registry-release.mjs verify") < job.indexOf("EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry"));
   assert.match(job, /remote_tag_target\(\)/);
@@ -160,9 +160,13 @@ test("packed-package inspection rejects a missing public target", () => {
 test("registry capture keeps each package's own release version", async (t) => {
   const cwd = await mkdtemp(join(tmpdir(), "emseepea-registry-capture-"));
   t.after(() => rm(cwd, { recursive: true, force: true }));
-  for (const [directory, version] of [["framework", "0.0.3"], ["testing", "0.1.0"]]) {
-    await mkdir(join(cwd, "packages", directory), { recursive: true });
-    await writeFile(join(cwd, "packages", directory, "package.json"), JSON.stringify({ version }));
+  for (const item of publicPackages) {
+    const version = item.name === "@emseepea/server" ? "0.0.3" : item.name === "@emseepea/testing" ? "0.1.0" : "0.0.0";
+    await mkdir(join(cwd, item.path), { recursive: true });
+    await writeFile(join(cwd, item.path, "package.json"), JSON.stringify({
+      version,
+      private: !["@emseepea/server", "@emseepea/testing"].includes(item.name),
+    }));
   }
   const mockRegistry = `
     import assert from 'node:assert/strict';

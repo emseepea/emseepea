@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
-import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+
+import { initializerPackages } from "../../scripts/public-packages.mjs";
 
 const root = new URL("../../", import.meta.url);
 
@@ -102,7 +104,7 @@ test("the packed public packages pass a fresh-install audit and getting-started 
   }
 });
 
-test("every copied example runs against packed packages", { timeout: 900_000 }, async () => {
+test("every packed initializer creates a standalone checked project", { timeout: 900_000 }, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-example-"));
   try {
     const tarballs = new Map(await Promise.all([
@@ -110,10 +112,10 @@ test("every copied example runs against packed packages", { timeout: 900_000 }, 
       ["@emseepea/testing", "./packages/testing"],
       ["@emseepea/react", "./packages/react"],
       ["@emseepea/tailwind", "./packages/tailwind"],
-      ["@emseepea/example-ui-shared", "./examples/ui-shared"],
+      ...initializerPackages.map(({ name, path: packagePath }) => [name, `./${packagePath}`]),
     ].map(async ([name, packagePath]) => [name, await packPackage(packagePath, directory)])));
     const fakeModel = path.join(directory, "fake-model.mjs");
-    await writeFile(fakeModel, fakeModelSource, { mode: 0o700 });
+    await cp(new URL("../fixtures/fake-semantic-model.mjs", import.meta.url), fakeModel);
     const expectedTools = {
       "backend-no-ui": ["search-coffee-catalog"],
       "basic-no-ui": ["get-bean-details"],
@@ -124,28 +126,35 @@ test("every copied example runs against packed packages", { timeout: 900_000 }, 
       "streaming-progress": ["roast-sample-batch"],
     };
 
-    for (const name of [
-      "basic-no-ui",
-      "backend-no-ui",
-      "protected-no-ui",
-      "resources-prompts",
-      "streaming-progress",
-      "multi-instance",
-      "native-ui",
-      "react-tailwind-ui",
-    ]) {
-      const example = path.join(directory, name);
-      await cp(new URL(`../../examples/${name}/`, import.meta.url), example, {
-        recursive: true,
-        filter: (source) => !/(^|\/)(dist|node_modules|artifacts|.* 2\.[^/]+)$/.test(source),
-      });
+    for (const initializer of initializerPackages) {
+      const parent = path.join(directory, initializer.key);
+      await mkdir(parent);
+      run("npm", [
+        "exec",
+        "--yes",
+        "--userconfig", "/dev/null",
+        "--package", tarballs.get(initializer.name),
+        "--",
+        initializer.key,
+        "my-server",
+      ], parent);
+      const example = path.join(parent, "my-server");
       const manifest = JSON.parse(await readFile(path.join(example, "package.json"), "utf8"));
+      assert.equal(manifest.name, "my-server");
+      assert.equal(manifest.private, true);
       const internalPackages = Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })
         .filter((dependency) => tarballs.has(dependency))
         .map((dependency) => tarballs.get(dependency));
+      assert.equal(
+        Object.entries({ ...manifest.dependencies, ...manifest.devDependencies }).some(([name, version]) => (
+          name.startsWith("@emseepea/example-") || /^(?:file:|workspace:|\.\.?[\\/])/.test(version)
+        )),
+        false,
+      );
 
       run("npm", [
         "install",
+        "--no-save",
         "--ignore-scripts",
         "--prefer-offline",
         "--no-audit",
@@ -167,16 +176,16 @@ test("every copied example runs against packed packages", { timeout: 900_000 }, 
 
       const evidence = JSON.parse(await readFile(path.join(example, "artifacts/smoke.json"), "utf8"));
       const result = Object.values(evidence.cases)[0];
-      assert.equal(evidence.status, "passed", `${name} semantic smoke failed`);
+      assert.equal(evidence.status, "passed", `${initializer.example} semantic smoke failed`);
       assert.equal(result.answerTrials.length, 3);
       assert.equal(result.judgeVerdicts.length, 9);
-      if (name === "resources-prompts") {
+      if (initializer.example === "resources-prompts") {
         assert.equal(result.mode, "prepared");
       } else {
         assert.equal(result.mode, "tool-selection");
         for (const trial of result.answerTrials) {
-          assert.deepEqual(trial.expectedTools, expectedTools[name]);
-          assert.deepEqual(trial.selectedTools, expectedTools[name]);
+          assert.deepEqual(trial.expectedTools, expectedTools[initializer.example]);
+          assert.deepEqual(trial.selectedTools, expectedTools[initializer.example]);
         }
       }
     }
@@ -184,38 +193,6 @@ test("every copied example runs against packed packages", { timeout: 900_000 }, 
     await rm(directory, { recursive: true, force: true });
   }
 });
-
-const fakeModelSource = `#!/usr/bin/env node
-const prompt = process.argv[process.argv.indexOf("--print") + 1] ?? "";
-const plans = [
-  ["create-shared-bean-report", [{ name: "create-shared-bean-report", arguments: { requestId: "daily-roast-report" } },
-    { name: "create-shared-bean-report", arguments: { requestId: "daily-roast-report" } }]],
-  ["get-bean-details", [{ name: "get-bean-details", arguments: { name: "Highland Bloom" } }]],
-  ["search-coffee-catalog", [{ name: "search-coffee-catalog", arguments: { query: "natural process coffee" } }]],
-  ["get-private-inventory-report", [{ name: "get-private-inventory-report", arguments: {} }]],
-  ["preview-bean-report", [{ name: "preview-bean-report",
-    arguments: { title: "Dark roast preview", roast: "dark", includeNotes: true } }]],
-  ["roast-sample-batch", [{ name: "roast-sample-batch", arguments: { batch: "sample-batch" } }]],
-];
-const selected = plans.find(([name]) => prompt.includes(name));
-const answer = prompt.includes("JSON tool plan")
-  ? JSON.stringify({ calls: selected?.[1] ?? [] })
-  : prompt.includes("Return only JSON with this exact shape")
-    ? '{"pass":true,"score":1,"reason":"The answer preserves every required meaning."}'
-    : prompt.includes("reusesOriginalReport (boolean)")
-    ? JSON.stringify({ createdByInstance: "eval-instance", totalBeans: 4,
-        roastCounts: { light: 1, medium: 2, dark: 1 },
-        reusesOriginalReport: true, createsAnotherReport: false })
-    : prompt;
-process.stdout.write(JSON.stringify({
-  type: "result",
-  is_error: false,
-  num_turns: 1,
-  permission_denials: [],
-  result: answer,
-  modelUsage: { "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" } },
-}) + "\\n");
-`;
 
 async function packPackage(packagePath, directory) {
   const packed = JSON.parse(run("npm", [

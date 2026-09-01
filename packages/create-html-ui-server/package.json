@@ -1,0 +1,23 @@
+{
+  "name": "@emseepea/create-html-ui-server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Create an Em See Pea server with an accessible HTML form.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emseepea/emseepea.git",
+    "directory": "packages/create-html-ui-server"
+  },
+  "homepage": "https://emseepea.github.io/emseepea/examples/",
+  "bugs": "https://github.com/emseepea/emseepea/issues",
+  "publishConfig": { "access": "public", "provenance": true, "tag": "next" },
+  "type": "module",
+  "bin": { "create-html-ui-server": "./dist/create.mjs" },
+  "files": ["dist"],
+  "scripts": {
+    "build": "node ../../scripts/build-initializer.mjs",
+    "prepack": "npm run build"
+  },
+  "engines": { "node": ">=22" }
+}

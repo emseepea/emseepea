@@ -37,6 +37,20 @@ export function testUiExample(example) {
           assert.equal(await page.locator("html[lang='en']").count(), 1);
           assert.equal(await page.locator("main#main-content").count(), 1);
           assert.equal(await page.locator("h1").count(), 1);
+          assert.equal(await page.title(), "Bean report preview - Em See Pea");
+          assert.equal(await page.locator("h1").innerText(), example.h1);
+          assert.deepEqual(
+            await page.locator("h1,h2,h3,h4,h5,h6").evaluateAll((headings) => headings.map((heading) => ({
+              level: Number(heading.tagName.slice(1)),
+              text: heading.textContent.trim().replace(/\s+/g, " "),
+            }))),
+            [
+              { level: 1, text: example.h1 },
+              { level: 2, text: "Preview a bean report" },
+              ...(state === "invalid" ? [{ level: 3, text: "Fix the report options" }] : []),
+              ...(state === "terminal" ? [{ level: 3, text: "Preview ready" }] : []),
+            ],
+          );
           assert.equal(await page.locator("[role='status'][aria-live='polite']").count(), 1);
           assert.equal(
             await page.locator("[data-emseepea-part='view']").getAttribute("data-emseepea-state"),

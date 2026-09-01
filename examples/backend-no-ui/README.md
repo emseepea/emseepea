@@ -7,8 +7,8 @@ This example exposes one read-only `search-coffee-catalog` tool. A normal run
 searches [BrewMark's public coffee catalogue](https://brewmark.io/developers/api-docs)
 and returns at most five coffees.
 
-Unlike the [basic no-UI example](../basic-no-ui/README.md), this tool adapts a
-separate service. The public input and result use the Model Context Protocol
+Unlike the [first public tool example](https://github.com/emseepea/emseepea/tree/main/examples/basic-no-ui),
+this tool adapts a separate service. The public input and result use the Model Context Protocol
 (MCP). BrewMark's query and response are checked before the result is returned.
 
 The caller can choose a search term and roast filter. The caller cannot change
@@ -23,12 +23,12 @@ claim for BrewMark. Normal runs use BrewMark's fair-use public web service.
 
 ## Run
 
-From the repository root:
+From this directory:
 
 ```sh
 npm install
 npm run build
-npm run start:backend
+npm start
 ```
 
 The endpoint is `http://127.0.0.1:3000/mcp`.
@@ -42,14 +42,13 @@ The commands below run each suite independently.
 Run its build, mapping, validation, and MCP checks:
 
 ```sh
-npm test -w @emseepea/example-backend-no-ui
+npm test
 ```
 
 Check that Claude chooses catalogue search and understands the rating scales:
 
 ```sh
-npm run test:llm -w @emseepea/example-backend-no-ui
+npm run test:llm
 ```
 
-If Claude is not already signed in, run `npm run claude:login` from the
-repository root first.
+If Claude is not already signed in, run `claude auth login` first.

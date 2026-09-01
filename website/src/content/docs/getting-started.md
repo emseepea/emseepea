@@ -1,6 +1,6 @@
 ---
 title: Run your first server
-description: Copy a tested MCP example into your own project and make it yours.
+description: Create a tested MCP server project and make it yours.
 example: basic-no-ui
 ---
 
@@ -11,19 +11,22 @@ ordinary tests and tests of AI tool choice and explanations.
 You need Git, Node.js 22 or 24, and npm. This is a local development quickstart,
 not production deployment guidance.
 
-## Copy the example
+The initializer command is queued for the next pre-alpha release. It will work
+after that release publishes the package to npm. Until then, use the
+[public-tool example source](https://github.com/emseepea/emseepea/tree/main/examples/basic-no-ui).
 
-Run these commands from a directory where you keep projects. Choose another
-name if `my-mcp` or `emseepea` already exists.
+## Create the project
 
-```sh title="Copy the example"
-git clone https://github.com/emseepea/emseepea.git
-cp -R emseepea/examples/basic-no-ui my-mcp
+Run this command from a directory where you keep projects. Choose another name
+if `my-mcp` already exists. The `next` tag identifies the pre-alpha release.
+
+```sh title="Create the project"
+npm init @emseepea/tool-server@next -- my-mcp
 cd my-mcp
 ```
 
-Your project is now separate from the monorepo. Its `package.json` pins exact
-pre-alpha versions of `@emseepea/server` and `@emseepea/testing`.
+The initializer creates a private standalone project. Its `package.json` uses
+the pre-alpha versions of `@emseepea/server` and `@emseepea/testing`.
 
 ## Install and check it
 

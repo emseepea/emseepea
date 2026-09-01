@@ -14,7 +14,7 @@ language model chooses the right tool and explains the result correctly.
 
 ### Build a new MCP server
 
-Copy a small, tested example and make it yours. Start with one useful tool,
+Create a small, tested starter and make it yours. Start with one useful tool,
 then add the capabilities you need.
 
 [Get your first server running](./getting-started/).
@@ -61,6 +61,6 @@ Keep these tests in `eval/`, separate from ordinary tests in `test/`.
 Em See Pea is pre-alpha. It uses Fastify and Node.js 22 or 24, and supports
 part of MCP `2026-07-28`, not the entire protocol.
 
-The guides distinguish packages you can install from examples that currently
-need this repository's source. The framework and examples are open source
-under the [MIT licence](https://github.com/emseepea/emseepea/blob/main/LICENSE).
+The starter commands use the pre-alpha `next` tag. The framework and examples
+are open source under the
+[MIT licence](https://github.com/emseepea/emseepea/blob/main/LICENSE).

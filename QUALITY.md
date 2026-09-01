@@ -112,11 +112,11 @@ Accessibility Guidelines (WCAG) conformance.
 - Keep the required language-model understanding check in a separate job with
   only `contents: read`. Never run it with credentials against untrusted fork
   code.
-- Changesets creates or updates the release pull request. Only
-  `@emseepea/server` and `@emseepea/testing` may publish under `next`.
-  Required pull-request and language-model checks must pass for the merged
-  commit. The root, examples, React package, and Tailwind package remain
-  private.
+- Changesets creates or updates the release pull request. One canonical package
+  list controls packing, publication evidence, registry readback, and GitHub
+  releases. Required pull-request and language-model checks must pass for the
+  merged commit. The root and examples remain private. React, Tailwind, and any
+  dependent initializer remain private until their separate release gates pass.
 - The release job must depend on passing language-model checks for the publishing
   SHA through pinned Claude CLI and `claude-sonnet-4-6`. It uses the Claude
   subscription OAuth secret, and redacted evidence is retained for exactly 14
@@ -124,6 +124,10 @@ Accessibility Guidelines (WCAG) conformance.
 - Routine publication uses npm trusted publishing without a long-lived npm
   write token. It records the source and build, a checksum, and a list of the
   package's included software dependencies.
+- Every initializer is packed before publication and run outside the monorepo.
+  The release check uses the exact documented `npm init` command, then installs,
+  lints, runs ordinary tests, and runs a semantic smoke test. UI initializers
+  also run their browser accessibility tests.
 - The documentation website may deploy to GitHub Pages after its guide,
   accessibility, and performance checks pass. Do not add framework-service
   deployment, production attestation, signing, or environment-verification

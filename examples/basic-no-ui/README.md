@@ -19,12 +19,12 @@ production network setup.
 
 ## Run
 
-From the repository root:
+From this directory:
 
 ```sh
 npm install
 npm run build
-npm run start:basic
+npm start
 ```
 
 The endpoint is `http://127.0.0.1:3000/mcp` and the health check is
@@ -39,14 +39,13 @@ The commands below run each suite independently.
 Run its build and MCP checks:
 
 ```sh
-npm test -w @emseepea/example-basic-no-ui
+npm test
 ```
 
 Check that Claude chooses the details tool and understands its result:
 
 ```sh
-npm run test:llm -w @emseepea/example-basic-no-ui
+npm run test:llm
 ```
 
-If Claude is not already signed in, run `npm run claude:login` from the
-repository root first.
+If Claude is not already signed in, run `claude auth login` first.

@@ -12,12 +12,12 @@ It provides:
 
 ## Run
 
-From the repository root:
+From this directory:
 
 ```sh
 npm install
 npm run build
-npm run start -w @emseepea/example-resources-prompts
+npm start
 ```
 
 The server listens on `http://127.0.0.1:3000/mcp` by default. Set `PORT` to
@@ -32,14 +32,13 @@ The commands below run each suite independently.
 Run its build and MCP resource and prompt checks:
 
 ```sh
-npm test -w @emseepea/example-resources-prompts
+npm test
 ```
 
 Check that Claude keeps coffee strength and extraction distinct:
 
 ```sh
-npm run test:llm -w @emseepea/example-resources-prompts
+npm run test:llm
 ```
 
-If Claude is not already signed in, run `npm run claude:login` from the
-repository root first.
+If Claude is not already signed in, run `claude auth login` first.

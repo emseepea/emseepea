@@ -119,7 +119,7 @@ jobs:
     needs: [exact-sha-quality, semantic-eval]
     if: ${{ always() && needs.exact-sha-quality.result == 'success' && (needs.semantic-eval.outputs.has_changesets == 'true' || (needs.semantic-eval.outputs.has_changesets == 'false' && needs.semantic-eval.result == 'success')) }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 45
     permissions:
       contents: write
       id-token: write
@@ -163,15 +163,9 @@ jobs:
           SEMANTIC_EVAL_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           mkdir -p release-artifacts
-          npm pack --workspace @emseepea/server --pack-destination release-artifacts --ignore-scripts --json > release-artifacts/server-pack.json
-          npm pack --workspace @emseepea/testing --pack-destination release-artifacts --ignore-scripts --json > release-artifacts/testing-pack.json
-          node scripts/verify-packed-package.mjs packages/framework/package.json release-artifacts/server-pack.json
-          node scripts/verify-packed-package.mjs packages/testing/package.json release-artifacts/testing-pack.json
-          npm sbom --workspace @emseepea/server --omit=dev --package-lock-only --sbom-format cyclonedx --sbom-type framework > release-artifacts/server-sbom.cdx.json
-          npm sbom --workspace @emseepea/testing --omit=dev --package-lock-only --sbom-format cyclonedx --sbom-type framework > release-artifacts/testing-sbom.cdx.json
-          sha256sum release-artifacts/*.tgz > release-artifacts/SHA256SUMS
+          node scripts/prepare-release-artifacts.mjs release-artifacts
           server_version="$(node -p "require('./packages/framework/package.json').version")"
-          testing_version="$(node -p "require('./packages/testing/package.json').version")"
+          package_summary="$(node -e "const p=require('./release-artifacts/packages.json'); process.stdout.write(p.map(x => x.name + ' ' + x.version).join('; '))")"
           review_record="docs/reviews/$server_version-release-readiness.md"
           test -s "$review_record"
           grep -Fqx -- '- Result: PASS' "$review_record"
@@ -183,11 +177,11 @@ jobs:
           - Commit: $RELEASE_SHA
           - Workflow: $RELEASE_RUN_URL
           - Lockfile SHA-256: $lock_sha
-          - Packages: @emseepea/server $server_version; @emseepea/testing $testing_version
+          - Packages: $package_summary
           - Node.js: $(node --version)
           - npm: $(npm --version)
           - GitHub CLI: $(gh --version | head -1)
-          - Qualification: npm test; npm run benchmark; npm run test:load:streaming; npm audit --audit-level=high; npm pack
+          - Qualification: npm test; npm run benchmark; npm run test:load:streaming; npm audit --audit-level=high; npm pack; standalone initializer checks
           - Semantic qualification: $SEMANTIC_EVAL_RUN_URL, artifact $SEMANTIC_EVAL_ARTIFACT
           - Reviews: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/$review_record
           - Coverage and limits: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/docs/protocol-coverage.md
@@ -217,7 +211,7 @@ jobs:
             - deployed streaming tools requiring sign-in
             - transport backpressure and queue overflow
             - resynchronisation, subscriptions, replay, sessions, and framework-managed shared state
-            - publication of React and Tailwind packages, or website deployment
+            - publication of React, Tailwind, and UI initializer packages, or website deployment
             - resource, prompt, template, completion, or streaming performance
             - full-profile conformance
           EOF
@@ -237,55 +231,64 @@ jobs:
         if: steps.registry-verify.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SERVER_RELEASE_SHA: ${{ steps.registry-verify.outputs.server_sha }}
-          TESTING_RELEASE_SHA: ${{ steps.registry-verify.outputs.testing_sha }}
         run: |
-          server_version="$(node -p "require('./packages/framework/package.json').version")"
-          testing_version="$(node -p "require('./packages/testing/package.json').version")"
           mkdir -p registry-artifacts
-          npm pack "@emseepea/server@$server_version" --pack-destination registry-artifacts --ignore-scripts --userconfig /dev/null
-          npm pack "@emseepea/testing@$testing_version" --pack-destination registry-artifacts --ignore-scripts --userconfig /dev/null
-          test "$(sha256sum release-artifacts/*.tgz | cut -d' ' -f1 | sort | tr '\n' ' ')" = "$(sha256sum registry-artifacts/*.tgz | cut -d' ' -f1 | sort | tr '\n' ' ')"
-          server_integrity="$(npm view "@emseepea/server@$server_version" dist.integrity --userconfig /dev/null)"
-          testing_integrity="$(npm view "@emseepea/testing@$testing_version" dist.integrity --userconfig /dev/null)"
-          server_attestations_url="$(npm view "@emseepea/server@$server_version" dist.attestations.url --userconfig /dev/null)"
-          testing_attestations_url="$(npm view "@emseepea/testing@$testing_version" dist.attestations.url --userconfig /dev/null)"
-          test -n "$server_integrity"
-          test -n "$testing_integrity"
-          test -n "$server_attestations_url"
-          test -n "$testing_attestations_url"
-          cat >> release-artifacts/RELEASE-EVIDENCE.md <<EOF
+          package_specs=()
+          while IFS=$'\t' read -r name path key version init example; do
+            spec="$name@$version"
+            package_specs+=("$spec")
+            npm pack "$spec" --pack-destination registry-artifacts --ignore-scripts --userconfig /dev/null
+            integrity="$(npm view "$spec" dist.integrity --userconfig /dev/null)"
+            attestations_url="$(npm view "$spec" dist.attestations.url --userconfig /dev/null)"
+            test -n "$integrity"
+            test -n "$attestations_url"
+            cat >> release-artifacts/RELEASE-EVIDENCE.md <<EOF
 
-          - @emseepea/server registry integrity: $server_integrity
-          - @emseepea/server provenance: $server_attestations_url
-          - @emseepea/testing registry integrity: $testing_integrity
-          - @emseepea/testing provenance: $testing_attestations_url
+          - $name registry integrity: $integrity
+          - $name provenance: $attestations_url
           EOF
+          done < <(node scripts/public-packages.mjs --publishable --tsv)
+          test "$(sha256sum release-artifacts/*.tgz | cut -d' ' -f1 | sort | tr '\n' ' ')" = "$(sha256sum registry-artifacts/*.tgz | cut -d' ' -f1 | sort | tr '\n' ' ')"
           smoke_dir="$(mktemp -d)"
           trap 'rm -rf "$smoke_dir"' EXIT
           cd "$smoke_dir"
           npm init --yes >/dev/null
-          npm install --ignore-scripts --userconfig /dev/null "@emseepea/server@$server_version" "@emseepea/testing@$testing_version"
+          npm install --ignore-scripts --userconfig /dev/null "${package_specs[@]}"
           npm audit --audit-level=high --userconfig /dev/null
           npm audit signatures --userconfig /dev/null
           node --input-type=module < "$GITHUB_WORKSPACE/scripts/verify-installed-package.mjs"
           cd "$GITHUB_WORKSPACE"
           EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry node --test tests/docs/getting-started-references.test.mjs
-          SERVER_VERSION="$server_version" TESTING_VERSION="$testing_version" node --input-type=module <<'NODE'
+          while IFS=$'\t' read -r name path key version init example; do
+            test -z "$init" && continue
+            parent="$(mktemp -d)"
+            (cd "$parent" && npm init "$init@next" -- my-server)
+            project="$parent/my-server"
+            npm install --prefix "$project" --ignore-scripts --userconfig /dev/null
+            npm run --prefix "$project" lint
+            if [[ "$example" == *-ui ]]; then
+              (cd "$project" && npx playwright install --with-deps chromium)
+            fi
+            npm test --prefix "$project"
+            (cd "$project" && npx --no-install emseepea-test --smoke \
+              --model-command "$GITHUB_WORKSPACE/tests/fixtures/fake-semantic-model.mjs" \
+              --output artifacts/smoke.json eval)
+            rm -rf "$parent"
+          done < <(node scripts/public-packages.mjs --publishable --tsv)
+          node --input-type=module <<'NODE'
           import { readFile, writeFile } from "node:fs/promises";
-          for (const [key, version, path] of [
-            ["server", process.env.SERVER_VERSION, "packages/framework/CHANGELOG.md"],
-            ["testing", process.env.TESTING_VERSION, "packages/testing/CHANGELOG.md"],
-          ]) {
-            const changelog = await readFile(path, "utf8");
-            const start = changelog.indexOf(`## ${version}`);
-            if (start < 0) throw new Error(`${path} has no ${version} release notes`);
-            const next = changelog.indexOf("\n## ", start + 4);
-            await writeFile(`release-artifacts/${key}-release-notes.md`, `${changelog.slice(start, next < 0 ? undefined : next).trim()}\n`);
+          const packages = JSON.parse(await readFile("release-artifacts/packages.json", "utf8"));
+          const registry = JSON.parse(await readFile("release-artifacts/registry-after.json", "utf8"));
+          const targets = [];
+          for (const item of packages) {
+            const releaseSha = registry.packages.find(({ name }) => name === item.name)?.releaseSha;
+            if (!releaseSha) throw new Error(`${item.name} release commit is missing`);
+            targets.push([
+              item.name, item.version, item.key, item.filename, item.sbomFile, item.notesFile, releaseSha,
+            ].join("\t"));
           }
+          await writeFile("release-artifacts/release-targets.tsv", `${targets.join("\n")}\n`);
           NODE
-          server_tag="@emseepea/server@$server_version"
-          testing_tag="@emseepea/testing@$testing_version"
           remote_tag_target() {
             peeled="$(git ls-remote --tags origin "refs/tags/$1^{}" | cut -f1)"
             direct="$(git ls-remote --tags origin "refs/tags/$1" | cut -f1)"
@@ -332,15 +335,12 @@ jobs:
             test "$(gh release view "$tag" --json isPrerelease --jq .isPrerelease)" = "true"
             test "$(gh release view "$tag" --json assets --jq '.assets[].name' | sort)" = "$expected_assets"
           }
-          ensure_tag "$server_tag" "$SERVER_RELEASE_SHA"
-          ensure_tag "$testing_tag" "$TESTING_RELEASE_SHA"
-          ensure_release "$server_tag" "$server_tag" release-artifacts/server-release-notes.md \
-            release-artifacts/emseepea-server-"$server_version".tgz \
-            release-artifacts/server-sbom.cdx.json \
-            release-artifacts/RELEASE-EVIDENCE.md \
-            release-artifacts/SHA256SUMS
-          ensure_release "$testing_tag" "$testing_tag" release-artifacts/testing-release-notes.md \
-            release-artifacts/emseepea-testing-"$testing_version".tgz \
-            release-artifacts/testing-sbom.cdx.json \
-            release-artifacts/RELEASE-EVIDENCE.md \
-            release-artifacts/SHA256SUMS
+          while IFS=$'\t' read -r name version key filename sbom_file notes_file release_sha; do
+            tag="$name@$version"
+            ensure_tag "$tag" "$release_sha"
+            ensure_release "$tag" "$tag" "release-artifacts/$notes_file" \
+              "release-artifacts/$filename" \
+              "release-artifacts/$sbom_file" \
+              release-artifacts/RELEASE-EVIDENCE.md \
+              release-artifacts/SHA256SUMS
+          done < release-artifacts/release-targets.tsv

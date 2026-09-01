@@ -9,12 +9,12 @@ the same sample states as the native example.
 
 ## Run
 
-From the repository root:
+From this directory:
 
 ```sh
 npm install
 npm run build
-npm run start:react-ui
+npm start
 ```
 
 Open
@@ -32,14 +32,13 @@ The commands below run each suite independently.
 Run its build, browser, keyboard, React, and accessibility checks:
 
 ```sh
-npm test -w @emseepea/example-react-tailwind-ui
+npm test
 ```
 
 Check that Claude chooses the preview tool and understands that it changes nothing:
 
 ```sh
-npm run test:llm -w @emseepea/example-react-tailwind-ui
+npm run test:llm
 ```
 
-If Claude is not already signed in, run `npm run claude:login` from the
-repository root first.
+If Claude is not already signed in, run `claude auth login` first.

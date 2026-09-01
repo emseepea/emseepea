@@ -1,4 +1,4 @@
-# Sign-In No-UI Example
+# Sign-In Tool Example
 
 Choose this example when people should be able to discover your server and its
 tools without signing in, but must sign in before a particular tool runs.
@@ -15,12 +15,12 @@ sign-in.
 
 ## Run
 
-From the repository root:
+From this directory:
 
 ```sh
 npm install
 npm run build
-npm run start:protected
+npm start
 ```
 
 The endpoint is `http://127.0.0.1:3000/mcp`. Clients may discover and list
@@ -35,14 +35,13 @@ The commands below run each suite independently.
 Run its build, public discovery, and signed-in tool checks:
 
 ```sh
-npm test -w @emseepea/example-protected-no-ui
+npm test
 ```
 
 Check that Claude chooses the inventory report and calculates available stock:
 
 ```sh
-npm run test:llm -w @emseepea/example-protected-no-ui
+npm run test:llm
 ```
 
-If Claude is not already signed in, run `npm run claude:login` from the
-repository root first.
+If Claude is not already signed in, run `claude auth login` first.

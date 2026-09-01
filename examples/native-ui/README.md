@@ -10,12 +10,12 @@ already uses React and needs client-side updates.
 
 ## Run
 
-From the repository root:
+From this directory:
 
 ```sh
 npm install
 npm run build
-npm run start:native-ui
+npm start
 ```
 
 Open
@@ -33,14 +33,13 @@ The commands below run each suite independently.
 Run its build, browser, keyboard, and accessibility checks:
 
 ```sh
-npm test -w @emseepea/example-native-ui
+npm test
 ```
 
 Check that Claude chooses the preview tool and understands that it changes nothing:
 
 ```sh
-npm run test:llm -w @emseepea/example-native-ui
+npm run test:llm
 ```
 
-If Claude is not already signed in, run `npm run claude:login` from the
-repository root first.
+If Claude is not already signed in, run `claude auth login` first.

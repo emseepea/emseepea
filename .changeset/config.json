@@ -21,6 +21,8 @@
     "@emseepea/example-resources-prompts",
     "@emseepea/example-streaming-progress",
     "@emseepea/example-ui-shared",
+    "@emseepea/create-html-ui-server",
+    "@emseepea/create-react-ui-server",
     "@emseepea/react",
     "@emseepea/tailwind"
   ],

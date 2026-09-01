@@ -5,11 +5,10 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { publishablePackages } from "./public-packages.mjs";
+
 const registry = "https://registry.npmjs.org";
-const packageFiles = [
-  ["@emseepea/server", "packages/framework/package.json"],
-  ["@emseepea/testing", "packages/testing/package.json"],
-];
+const packageFiles = (await publishablePackages()).map(({ name, path }) => [name, `${path}/package.json`]);
 
 export function classifyPublication(before, after) {
   const pending = before.packages.filter(({ present }) => !present);
@@ -95,7 +94,8 @@ async function verify(beforePath, afterPath) {
     const statements = await Promise.all(after.packages.map(readProvenance));
     const commits = statements.map(provenanceCommit);
     assertStatements(after, statements, commits);
-    await writeReleaseOutputs(after, commits);
+    after.packages.forEach((item, index) => { item.releaseSha = commits[index]; });
+    await writeReleaseOutputs();
     await writeJson(afterPath, after);
     return;
   }
@@ -117,8 +117,9 @@ async function verify(beforePath, afterPath) {
     if (!item.present) assert.equal(commits[index], process.env.GITHUB_SHA, `${item.name} provenance does not bind this release commit`);
   }
   assertStatements(after, statements, commits);
+  after.packages.forEach((item, index) => { item.releaseSha = commits[index]; });
   await writeJson(afterPath, after);
-  await writeReleaseOutputs(after, commits);
+  await writeReleaseOutputs();
 }
 
 function assertStatements(after, statements, commits) {
@@ -139,12 +140,8 @@ function assertStatements(after, statements, commits) {
   }
 }
 
-async function writeReleaseOutputs(after, commits) {
+async function writeReleaseOutputs() {
   await writeOutput("ready", "true");
-  for (const [index, item] of after.packages.entries()) {
-    const key = item.name === "@emseepea/server" ? "server_sha" : "testing_sha";
-    await writeOutput(key, commits[index]);
-  }
 }
 
 async function readProvenance(item) {
