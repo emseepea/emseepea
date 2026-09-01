@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 39 decisions: 24 current and 15 historical.
+This project has 40 decisions: 24 current and 16 historical.
 
 ## Quick Index
 
@@ -19,7 +19,6 @@ This project has 39 decisions: 24 current and 15 historical.
 - [ADR-0011: Framework-Neutral Accessible Elicitation and Approval UI](0011-framework-neutral-accessible-elicitation-and-approval-ui.proposed.md) — Proposed; human review confirmed.
 - [ADR-0012: Typed Operations and OpenTelemetry Boundary](0012-typed-operations-and-opentelemetry-boundary.proposed.md) — Proposed; human review confirmed.
 - [ADR-0014: Performance Budget for the Initial JSON HTTP Boundary](0014-performance-budget-initial-json-http-boundary.proposed.md) — Proposed; human review confirmed.
-- [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.proposed.md) — Proposed; human review confirmed.
 - [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md) — Proposed; human review confirmed.
 - [ADR-0023: Mandatory Cognitive-Accessibility Review for Published Content](0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md) — Proposed; human review confirmed.
 - [ADR-0025: Astro Starlight Documentation Generator](0025-static-documentation-website-with-astro-starlight.proposed.md) — Proposed; human review confirmed.
@@ -35,6 +34,7 @@ This project has 39 decisions: 24 current and 15 historical.
 - [ADR-0038: Measured Website Performance Before Publication](0038-measured-website-performance-before-publication.proposed.md) — Proposed; human review confirmed.
 - [ADR-0039: Website Performance Budget](0039-website-performance-budget.proposed.md) — Proposed; human review confirmed.
 - [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.proposed.md) — Proposed; human review confirmed.
+- [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md) — Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -44,6 +44,7 @@ This project has 39 decisions: 24 current and 15 historical.
 - [ADR-0004: Fastify-First TypeScript Framework Foundation](0004-fastify-first-typescript-foundation.superseded.md) — Superseded; human review confirmed.
 - [ADR-0008: Public and OAuth Protected Resource Security](0008-public-and-oauth-protected-resource-security.superseded.md) — Superseded; human review confirmed.
 - [ADR-0015: Ordinary Evidence and Exact Release Claims](0015-ordinary-evidence-and-exact-release-claims.superseded.md) — Superseded; human review confirmed.
+- [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.superseded.md) — Superseded; human review confirmed.
 - [ADR-0017: Public Discovery with Protected Tool Invocation](0017-public-discovery-with-protected-tool-invocation.superseded.md) — Superseded; human review confirmed.
 - [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md) — Superseded; human review confirmed.
 - [ADR-0020: Mandatory Semantic LLM Qualification for Examples and Releases](0020-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md) — Superseded; human review confirmed.
@@ -122,7 +123,7 @@ Chosen option: **"Public repository with private packages and gated Changesets r
 - Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0001: Public-Specification-First TypeScript Framework Foundation](0001-foundation.superseded.md)
-- Replaced by: [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.proposed.md)
+- Replaced by: [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.superseded.md)
 
 #### Decision
 
@@ -319,11 +320,12 @@ Chosen option: **"Ordinary reproducible evidence and exact claims"**.
 - Checksums, SBOMs, locked dependencies, and independent reviews accompany release evidence.
 - No custom certification key, challenge, trust-root, attestation, or report-validation subsystem exists.
 
-### [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.proposed.md)
+### [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0004: Fastify-First TypeScript Framework Foundation](0004-fastify-first-typescript-foundation.superseded.md)
+- Replaced by: [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md)
 
 #### Decision
 
@@ -828,3 +830,23 @@ Chosen option: **"Validated model-selected call plans"**, because it tests the m
 - Every tool-based example uses `toolSelectionTest`; the resource/prompt example retains `semanticTest`.
 - Copied examples pass lint, ordinary tests, and semantic smoke checks using packed public packages.
 - The exact publishing revision passes all real-model semantic cases before npm publication.
+
+### [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.superseded.md)
+
+#### Decision
+
+Chosen option: **"Em See Pea organisation ownership"**, because the product now has a dedicated public organisation and the owner has completed the transfer.
+
+#### How We Check It
+
+- GitHub identifies `emseepea/emseepea` as the public authoritative repository.
+- The organisation and repository use the approved name, mark, description, and website.
+- GitHub Pages serves the website from `https://emseepea.github.io/emseepea/`.
+- Active source, documentation, tests, package manifests, and Changesets use the new repository.
+- Both public packages trust `.github/workflows/release.yml` in `emseepea/emseepea`.
+- A release from the transferred repository passes exact-revision checks and npm provenance verification.
+- Existing releases and historical records are not rewritten.

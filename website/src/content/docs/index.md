@@ -63,4 +63,4 @@ part of MCP `2026-07-28`, not the entire protocol.
 
 The guides distinguish packages you can install from examples that currently
 need this repository's source. The framework and examples are open source
-under the [MIT licence](https://github.com/windyroad/emseepea/blob/main/LICENSE).
+under the [MIT licence](https://github.com/emseepea/emseepea/blob/main/LICENSE).

@@ -25,7 +25,7 @@ test("the quickstart references the copied example's scripts, packages and guide
   assert.ok(commands.length > 0);
 
   for (const command of commands) {
-    if (["git clone https://github.com/windyroad/emseepea.git", `cp -R emseepea/examples/${example} my-mcp`, "cd my-mcp", "npm install --ignore-scripts"].includes(command)) continue;
+    if (["git clone https://github.com/emseepea/emseepea.git", `cp -R emseepea/examples/${example} my-mcp`, "cd my-mcp", "npm install --ignore-scripts"].includes(command)) continue;
     if (command === "npm test" || command === "npm start") {
       assert.ok(manifest.scripts[command.split(" ")[1]], `missing example script: ${command}`);
       continue;

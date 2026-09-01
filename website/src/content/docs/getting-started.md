@@ -17,7 +17,7 @@ Run these commands from a directory where you keep projects. Choose another
 name if `my-mcp` or `emseepea` already exists.
 
 ```sh title="Copy the example"
-git clone https://github.com/windyroad/emseepea.git
+git clone https://github.com/emseepea/emseepea.git
 cp -R emseepea/examples/basic-no-ui my-mcp
 cd my-mcp
 ```

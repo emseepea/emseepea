@@ -32,3 +32,31 @@ behaviour of every model, client, prompt, or permission configuration.
 | `website/src/content/docs/getting-started.md` | `ab74e082193305e45814f7ff4c56406e4ab1a424856a2783934e9e83157b965f` |
 | `website/src/content/docs/index.md` | `1ce4e77273318228fc24fba31bf0dc3eb7e2261a6c936aece49d47110113b65c` |
 | `website/src/content/docs/less-server-code.md` | `9257638e3727121394c23532959ebe51e3fd9078a81a56640a3c937703aa2a48` |
+
+## GitHub Organisation Transfer
+
+Result: PASS. A cognitive-accessibility specialist reviewed the current public
+documentation after its repository and website links moved to the Em See Pea
+GitHub organisation.
+
+The updated material uses plain language, descriptive links, logical headings,
+and readable grouping. It clearly identifies `emseepea/emseepea` as the current
+source without rewriting historical release records.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `.changeset/bright-peas-move.md` | `786e31584738cb82622fbac755763ba16895e425a2da5e26b346384f994320c9` |
+| `BATTLE-PLAN.md` | `5e9ba0f9b8002347e64efdf3c72dc7cdf44d446f5e5de7a069f9c374a4f8117b` |
+| `SECURITY.md` | `56a34f4f2b7f1fa89489a534580fb64dc298a3f73a29f81f0d8353daa72a3d3d` |
+| `SUPPORT.md` | `4096381bc793a164cb84e09df885e7bb79de4b365ee2a131db9535ec36376b9f` |
+| `docs/decisions/0016-em-see-pea-product-npm-scope-and-server-package.superseded.md` | `8c28ef041dd2fa6f7c32b86f758d2585c1b28f9113d135b9c553ff5916160119` |
+| `docs/decisions/0041-em-see-pea-github-organisation-ownership.proposed.md` | `8f55ced4cd3af8304e9965953075cc4f7aef8f95eb7e483faa6813fc45d5b81b` |
+| `docs/decisions/README.md` | `92d106213e40ee840bea279efee5cf616c6519b2c511b55f05d3b4164a75acd4` |
+| `docs/protocol-coverage.md` | `5420d7a1a767f8f7487c6d5a37566240cd0eb35d84857bdbc9e95777165f0798` |
+| `packages/framework/README.md` | `4a61ff7d138bfa052e02155ce8b9c30ab1a0a4bf5162685619f228446a3129a4` |
+| `packages/testing/README.md` | `c90587c3e937cced8d083adf0c5f3bfc2587ed1a17cb1c647580a849fa371350` |
+| `website/src/content/docs/ai-tests.md` | `84c667aa5713174459c4ba864514d14ecda108b693f08d6b9d61a730083599de` |
+| `website/src/content/docs/examples.md` | `e29fde05ce9f875c36ca30868a62b9b4530fcfdd166a88f8c88da87102f1b7de` |
+| `website/src/content/docs/getting-started.md` | `8af8a34ba1cb2589a960092e09bc6563739fccf9157e4b9f78a14158e2f3acaf` |
+| `website/src/content/docs/index.md` | `270e8e72f9458733b60a42bf97ff366205dcc06d30787209ad7fa5876e9baf90` |
+| `website/src/content/docs/less-server-code.md` | `649b7bb589012197113d11b67965329e1ad20c6c11cd404827742265a7bbc30d` |

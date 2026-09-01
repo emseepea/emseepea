@@ -3,7 +3,7 @@
 Em See Pea is pre-alpha and does not yet provide production support.
 
 For reproducible bugs and narrowly scoped feature requests, open a
-[GitHub issue](https://github.com/windyroad/emseepea/issues). Include the package
+[GitHub issue](https://github.com/emseepea/emseepea/issues). Include the package
 version, Node.js version, minimal synthetic reproduction, expected behavior, and
 actual behavior.
 

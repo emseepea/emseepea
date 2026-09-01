@@ -230,14 +230,14 @@ progress work. See the
 proxy on the same POST response. Independent requests can reach different
 server processes without requiring the client to stay with one process.
 This capability is published in `@emseepea/server` 0.0.3 under the `next` tag.
-See the [release evidence](https://github.com/windyroad/emseepea/releases/tag/%40emseepea/server%400.0.3).
+See the [release evidence](https://github.com/emseepea/emseepea/releases/tag/%40emseepea/server%400.0.3).
 
 The [proxy tests](../tests/black-box/proxy-progress.test.mjs) check incremental
 delivery, final responses, request isolation, cancellation, and configured
 limits. The [CI load test](../tests/load/proxy-progress.test.mjs) adds concurrent
 calls and paused readers, with fixed memory limits.
 
-[Node.js 22 and 24 passed](https://github.com/windyroad/emseepea/actions/runs/33341972321)
+[Node.js 22 and 24 passed](https://github.com/emseepea/emseepea/actions/runs/33341972321)
 at revision `0178dc802c52e395f4907b90b2fbd2bfc324cb9c`. The tested setup uses
 two independent processes behind an HTTP proxy that supplies forwarded HTTPS
 metadata. It does not test a real TLS terminator or every proxy product.

@@ -2,7 +2,7 @@
   "changelog": [
     "@changesets/changelog-github",
     {
-      "repo": "windyroad/emseepea"
+      "repo": "emseepea/emseepea"
     }
   ],
   "commit": false,
