@@ -109,6 +109,8 @@ test("publication builds and verifies packages before creating public releases",
   assert.ok(job.indexOf("npm audit signatures") < job.indexOf("gh release create"));
   assert.match(job, /createGithubReleases: false/);
   assert.match(job, /if: steps\.registry-verify\.outputs\.published == 'true'/);
+  assert.match(job, /EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry node --test tests\/docs\/getting-started-references\.test\.mjs/);
+  assert.ok(job.indexOf("verify-registry-release.mjs verify") < job.indexOf("EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry"));
   assert.match(job, /remote_tag_target\(\)/);
   assert.match(job, /gh release edit/);
   assert.match(job, /gh release create "\$tag" --draft/);

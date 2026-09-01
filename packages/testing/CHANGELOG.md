@@ -1,5 +1,12 @@
 # @emseepea/testing
 
+## 0.2.0
+
+### Minor Changes
+
+- [#19](https://github.com/windyroad/emseepea/pull/19) [`f614fb6`](https://github.com/windyroad/emseepea/commit/f614fb6304b670a2b792c71169fabba1a982ace1) Thanks [@tompahoward](https://github.com/tompahoward)! - Add `toolSelectionTest` so semantic checks can verify that a model selects the
+  expected advertised MCP tools before it interprets their results.
+
 ## 0.1.0
 
 ### Minor Changes

@@ -29,6 +29,6 @@ behaviour of every model, client, prompt, or permission configuration.
 | `examples/streaming-progress/README.md` | `812b521801d09a66ac5aa695ae42f074991c5a8b53e985da6c1cffa756f6686f` |
 | `packages/testing/README.md` | `5af52b7273936a2016afbc71fe6aa8341b177b2f75eb8030486091e68ef8b72a` |
 | `website/src/content/docs/ai-tests.md` | `3ce68eeba178301f1ceeeaf6a06805cb558fcc3e63998e8a8ce7c141cca0b35f` |
-| `website/src/content/docs/getting-started.md` | `4399e7853b148f3609eff2a3ca7a17c77d6ab802a4a7aadf9e7b3da01f50229b` |
+| `website/src/content/docs/getting-started.md` | `ab74e082193305e45814f7ff4c56406e4ab1a424856a2783934e9e83157b965f` |
 | `website/src/content/docs/index.md` | `1ce4e77273318228fc24fba31bf0dc3eb7e2261a6c936aece49d47110113b65c` |
 | `website/src/content/docs/less-server-code.md` | `9257638e3727121394c23532959ebe51e3fd9078a81a56640a3c937703aa2a48` |
