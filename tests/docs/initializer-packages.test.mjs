@@ -25,11 +25,15 @@ test("the public package list and built initializers are complete", async () => 
   assert.deepEqual((await publishablePackages()).map(({ name }) => name), [
     "@emseepea/server",
     "@emseepea/testing",
+    "@emseepea/react",
+    "@emseepea/tailwind",
     "@emseepea/create-tool-server",
     "@emseepea/create-api-backed-server",
     "@emseepea/create-sign-in-tool-server",
     "@emseepea/create-resources-and-prompts-server",
     "@emseepea/create-progress-streaming-server",
+    "@emseepea/create-html-ui-server",
+    "@emseepea/create-react-ui-server",
     "@emseepea/create-multi-instance-sqlite-server",
   ]);
   for (const initializer of initializerPackages) {

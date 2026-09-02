@@ -1,8 +1,16 @@
 {
   "name": "@emseepea/tailwind",
   "version": "0.0.0",
-  "private": true,
+  "private": false,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emseepea/emseepea.git",
+    "directory": "packages/tailwind"
+  },
+  "homepage": "https://emseepea.github.io/emseepea/examples/",
+  "bugs": "https://github.com/emseepea/emseepea/issues",
+  "publishConfig": { "access": "public", "provenance": true, "tag": "next" },
   "exports": {
     "./styles.css": "./dist/emseepea.css"
   },
@@ -12,7 +20,10 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tailwindcss -i src/emseepea.css -o dist/emseepea.css --minify"
+    "build": "tailwindcss -i src/emseepea.css -o dist/emseepea.css --minify",
+    "prepack": "npm run build",
+    "test": "npm run build && npm run test:built",
+    "test:built": "node --test test/*.test.mjs"
   },
   "devDependencies": {
     "@tailwindcss/cli": "4.3.3",

@@ -8,9 +8,8 @@ ordinary tests in `test/`, and language-model tests in `eval/`. Replace
 `my-server` with an unused directory name. The [first-server guide](../getting-started/)
 continues from the public-tool starter.
 
-The six non-UI commands are queued for the next pre-alpha release and will work
-after npm publication. The two UI commands remain unavailable until their
-separate release checks also pass. Until then, use the linked example source.
+All eight commands are queued for the next pre-alpha release and will work
+after npm publication. Until then, use the linked example source.
 
 ## Answer questions about your data
 
@@ -73,8 +72,6 @@ npm init @emseepea/progress-streaming-server@next -- my-server
 
 The native HTML and React examples show the same coffee form. Choose native
 HTML for fewer dependencies, or React to fit an existing React application.
-Their initializer packages remain unavailable until the separate UI release
-checks pass.
 
 For native HTML:
 

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { gzipSync } from "node:zlib";
 
 import { elicitationFixtures } from "@emseepea/example-ui-shared";
 import { ElicitationForm } from "@emseepea/react";
@@ -106,8 +107,8 @@ test("UI package boundaries keep frontend and Tailwind dependencies out of core"
   const exampleSource = await readFile(new URL("../../examples/react-tailwind-ui/src/client.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../../packages/tailwind/dist/emseepea.css", import.meta.url), "utf8");
 
-  assert.equal(react.private, true);
-  assert.equal(tailwind.private, true);
+  assert.equal(react.private, false);
+  assert.equal(tailwind.private, false);
   assert.equal(server.dependencies.react, undefined);
   assert.equal(server.dependencies["react-dom"], undefined);
   assert.equal(server.dependencies.tailwindcss, undefined);
@@ -127,4 +128,6 @@ test("UI package boundaries keep frontend and Tailwind dependencies out of core"
   assert.match(css, /\[aria-busy/);
   assert.match(css, /forced-colors:\s*active/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
+  assert.ok(Buffer.byteLength(css) <= 10 * 1024);
+  assert.ok(gzipSync(css).byteLength <= 3 * 1024);
 });

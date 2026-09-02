@@ -3,7 +3,8 @@ status: proposed
 job-id: publish-installable-packages-safely
 persona: framework-maintainer
 date-created: 2026-08-29
-human-oversight: unconfirmed
+human-oversight: confirmed
+oversight-date: 2026-09-02
 screens:
   - .github/workflows/release.yml
 ---
@@ -20,7 +21,8 @@ announcing them, so adopters receive working code with trustworthy evidence.
 - Inspect the files each package will contain before publication.
 - Confirm the downloaded packages match and can be installed and imported.
 - Bind proof of where the package came from, tags, and release evidence to the exact commit.
-- Stop when either public package is missing or incomplete.
+- Stop when any package in the canonical public package list is missing or
+  incomplete.
 
 ## Persona Constraints
 

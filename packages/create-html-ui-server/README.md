@@ -6,7 +6,8 @@ server-rendered HTML form. The package builds its starter from the maintained
 
 ## Create the Project
 
-This initializer remains unavailable until its separate UI release checks pass.
+This initializer is queued for the next pre-alpha release and will work after
+npm publication.
 
 ```sh
 npm init @emseepea/html-ui-server@next -- my-server

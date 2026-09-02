@@ -18,5 +18,5 @@ or give the browser permission to perform an action.
 See the [React and Tailwind UI example](../../examples/react-tailwind-ui/README.md)
 for the checked import path in a working server.
 
-This package is open source under MIT. It is private in the workspace and is
-not published to npm yet.
+This package is open source under MIT and is queued for the next pre-alpha npm
+release.

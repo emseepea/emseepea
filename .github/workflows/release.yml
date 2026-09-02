@@ -211,7 +211,7 @@ jobs:
             - deployed streaming tools requiring sign-in
             - transport backpressure and queue overflow
             - resynchronisation, subscriptions, replay, sessions, and framework-managed shared state
-            - publication of React, Tailwind, and UI initializer packages, or website deployment
+            - website deployment
             - resource, prompt, template, completion, or streaming performance
             - full-profile conformance
           EOF

@@ -67,8 +67,8 @@ directory name:
 - A sign-in protected tool: `npm init @emseepea/sign-in-tool-server@next -- my-server`
 - Resources and prompts: `npm init @emseepea/resources-and-prompts-server@next -- my-server`
 - Progress streaming: `npm init @emseepea/progress-streaming-server@next -- my-server`
-- An HTML form, after its release checks pass: `npm init @emseepea/html-ui-server@next -- my-server`
-- A React form, after its release checks pass: `npm init @emseepea/react-ui-server@next -- my-server`
+- An HTML form: `npm init @emseepea/html-ui-server@next -- my-server`
+- A React form: `npm init @emseepea/react-ui-server@next -- my-server`
 - Two processes sharing SQLite: `npm init @emseepea/multi-instance-sqlite-server@next -- my-server`
 
 Each command creates a private standalone project with its lint, ordinary tests,
@@ -144,9 +144,8 @@ Publication does not expand these claims.
 - [Brand style guide](docs/brand/STYLE-GUIDE.md)
 
 The source and examples are public under MIT. The root and examples remain
-private npm workspaces. The server, testing helpers, and six non-UI initializer
-packages are eligible for publication. React, Tailwind, and the two UI
-initializer packages remain gated until their independent release checks pass.
+private npm workspaces. The server, testing helpers, React renderer, Tailwind
+stylesheet, and all eight initializer packages are eligible for publication.
 
 [cognitive-publication]: docs/decisions/0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md

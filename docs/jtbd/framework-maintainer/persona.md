@@ -1,7 +1,8 @@
 ---
 name: framework-maintainer
 description: A maintainer who extends, verifies, and publishes Em See Pea.
-human-oversight: unconfirmed
+human-oversight: confirmed
+oversight-date: 2026-09-02
 ---
 
 # Framework Maintainer

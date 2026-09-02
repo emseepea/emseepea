@@ -104,6 +104,90 @@ test("the packed public packages pass a fresh-install audit and getting-started 
   }
 });
 
+test("the packed React renderer installs and preserves embedded form semantics", { timeout: 180_000 }, async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "emseepea-packed-react-"));
+  try {
+    const server = await packPackage("./packages/framework", directory);
+    const react = await packPackage("./packages/react", directory);
+    run("npm", ["init", "--yes"], directory);
+    run("npm", [
+      "install",
+      "--ignore-scripts",
+      "--prefer-offline",
+      "--no-audit",
+      "--no-fund",
+      "--userconfig", "/dev/null",
+      server,
+      react,
+      "react@19.2.8",
+      "react-dom@19.2.8",
+    ], directory);
+    await writeFile(path.join(directory, "check.mjs"), `
+      import { createElement } from "react";
+      import { renderToStaticMarkup } from "react-dom/server";
+      import { ElicitationForm } from "@emseepea/react";
+
+      const view = {
+        id: "packed-react",
+        heading: "Preview a report",
+        legend: "Report options",
+        submitLabel: "Create preview",
+        fields: [{
+          kind: "text",
+          id: "title",
+          name: "title",
+          label: "Report title",
+          description: "Name this preview.",
+          required: true,
+        }],
+        state: { kind: "ready", focusTarget: "none" },
+      };
+      const html = renderToStaticMarkup(createElement(ElicitationForm, { view, headingLevel: 2 }));
+      if (!html.includes('<h2 id="packed-react--heading">Preview a report</h2>')) throw new Error("missing heading");
+      if (!html.includes('<label for="packed-react--field--title">Report title')) throw new Error("missing label");
+      if (!html.includes('required=""') || !html.includes('aria-describedby="packed-react--field--title--description"')) {
+        throw new Error("missing required-field semantics");
+      }
+      if (!html.includes('role="status"') || !html.includes('aria-live="polite"')) throw new Error("missing status semantics");
+      if (/<(?:html|title|main|h1)\\b/.test(html)) throw new Error("renderer owns the page shell");
+    `);
+    run(process.execPath, ["check.mjs"], directory);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("the packed Tailwind stylesheet installs with its accessibility states and limits", { timeout: 180_000 }, async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "emseepea-packed-tailwind-"));
+  try {
+    const tailwind = await packPackage("./packages/tailwind", directory);
+    run("npm", ["init", "--yes"], directory);
+    run("npm", [
+      "install",
+      "--ignore-scripts",
+      "--prefer-offline",
+      "--no-audit",
+      "--no-fund",
+      "--userconfig", "/dev/null",
+      tailwind,
+    ], directory);
+    await writeFile(path.join(directory, "check.mjs"), `
+      import { readFile } from "node:fs/promises";
+      import { gzipSync } from "node:zlib";
+
+      const css = await readFile(new URL(import.meta.resolve("@emseepea/tailwind/styles.css")), "utf8");
+      for (const pattern of [":focus-visible", ":required", "[aria-invalid=true]", "[aria-busy=true]", "forced-colors:active", "prefers-reduced-motion:reduce"]) {
+        if (!css.includes(pattern)) throw new Error(\`missing stylesheet state: \${pattern}\`);
+      }
+      if (Buffer.byteLength(css) > 10 * 1024) throw new Error("raw stylesheet limit exceeded");
+      if (gzipSync(css).byteLength > 3 * 1024) throw new Error("gzip stylesheet limit exceeded");
+    `);
+    run(process.execPath, ["check.mjs"], directory);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("every packed initializer creates a standalone checked project", { timeout: 900_000 }, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-example-"));
   try {
