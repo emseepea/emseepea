@@ -15,16 +15,16 @@
   },
   "dependencies": {
     "@emseepea/example-ui-shared": "0.0.0",
-    "@emseepea/react": "0.0.0",
-    "@emseepea/server": "0.0.3",
-    "@emseepea/tailwind": "0.0.0",
+    "@emseepea/react": "0.0.1",
+    "@emseepea/server": "0.0.4",
+    "@emseepea/tailwind": "0.0.1",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "playwright": "1.62.1",
     "axe-core": "4.13.0",
-    "@emseepea/testing": "0.2.0",
+    "@emseepea/testing": "0.2.1",
     "@types/node": "24.13.3",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",

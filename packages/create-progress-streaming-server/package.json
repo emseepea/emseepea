@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-progress-streaming-server",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Create an Em See Pea server that streams tool progress.",
   "license": "MIT",
   "repository": {
