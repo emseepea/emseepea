@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-tool-server",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Create an Em See Pea server with one public tool.",
   "license": "MIT",
   "repository": {

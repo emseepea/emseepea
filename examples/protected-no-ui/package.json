@@ -14,12 +14,12 @@
     "lint": "oxlint src test eval"
   },
   "dependencies": {
-    "@emseepea/server": "0.0.3",
+    "@emseepea/server": "0.0.4",
     "@modelcontextprotocol/server": "2.0.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@emseepea/testing": "0.2.0",
+    "@emseepea/testing": "0.2.1",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",
     "oxlint": "1.80.0"
