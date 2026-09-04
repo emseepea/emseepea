@@ -8,7 +8,9 @@ import test from "node:test";
 import { initializerPackages } from "../../scripts/public-packages.mjs";
 
 const root = new URL("../../", import.meta.url);
+const skipPackedAudit = process.env.EMSEEPEA_SKIP_PACKED_AUDIT;
 const skipInitializers = process.env.EMSEEPEA_SKIP_PACKED_INITIALIZERS;
+assert.ok(skipPackedAudit === undefined || skipPackedAudit === "true", "invalid packed audit skip value");
 assert.ok(skipInitializers === undefined || skipInitializers === "true", "invalid initializer skip value");
 
 function run(command, args, cwd) {
@@ -20,7 +22,7 @@ function run(command, args, cwd) {
   return result.stdout;
 }
 
-test("the packed public packages pass a fresh-install audit and getting-started checks", { timeout: 900_000 }, async () => {
+test("the packed public packages pass fresh-install and getting-started checks", { timeout: 900_000 }, async (t) => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-packed-"));
   try {
     const tarballs = await Promise.all([
@@ -39,7 +41,9 @@ test("the packed public packages pass a fresh-install audit and getting-started 
       ...tarballs,
       "zod@4.4.3",
     ], directory);
-    run("npm", ["audit", "--audit-level=high", "--userconfig", "/dev/null"], directory);
+    await t.test("the fresh install passes audit", { skip: skipPackedAudit === "true" }, () => {
+      run("npm", ["audit", "--audit-level=high", "--userconfig", "/dev/null"], directory);
+    });
 
     await writeFile(path.join(directory, "check.mjs"), `
       import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
