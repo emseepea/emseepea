@@ -11,16 +11,19 @@ green proxy check is not evidence for an untested claim.
 4. Run raw HTTP and independent-client tests against the real endpoint.
 5. Check any published schema or generated public artifact against its declared
    contract.
-6. Run `npm audit --audit-level=high`.
+6. Scan the committed root `package-lock.json` for known vulnerabilities with
+   the pinned Open Source Vulnerabilities (OSV) Scanner actions.
 
 Steps 1 through 5 run on Node.js 22 and 24 from a GitHub-hosted clean checkout.
-The dependency audit and full standalone qualification of all eight
-initializers run separately once on Node.js 24. A failure stops the job; later
-steps are not evidence for earlier ones. A successful Quality run for a push to
+Step 6 runs once in a separate job with a time limit. Full standalone
+qualification of all eight initializers runs separately once on Node.js 24
+after that scan passes. A failure stops the job; later steps are not evidence
+for earlier ones. A successful Quality run for a push to
 `main` is the prepublication trust gate for that exact commit. Release starts
 from that completed run and does not repeat its compatibility or initializer
 checks. Every fresh packed install must resolve only third-party package
-versions already present in the audited repository lockfile.
+versions already present in the scanned repository lockfile. Release also
+checks registry integrity, provenance, package signatures, and clean installs.
 
 ## Published Content Gate
 

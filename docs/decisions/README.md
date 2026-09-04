@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 44 decisions: 26 current and 18 historical.
+This project has 46 decisions: 26 current and 20 historical.
 
 ## Quick Index
 
@@ -36,7 +36,7 @@ This project has 44 decisions: 26 current and 18 historical.
 - [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md): Proposed; human review confirmed.
 - [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.proposed.md): Proposed; human review confirmed.
 - [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
-- [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.proposed.md): Proposed; human review confirmed.
+- [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -58,6 +58,8 @@ This project has 44 decisions: 26 current and 18 historical.
 - [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.superseded.md): Superseded; human review confirmed.
 - [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.superseded.md): Superseded; human review confirmed.
+- [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.superseded.md): Superseded; human review confirmed.
+- [ADR-0046: Lockfile-Constrained Dependency Verification](0046-lockfile-constrained-dependency-verification.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -917,10 +919,11 @@ Chosen option: **"Exact-commit push and watch command"**, because the push and i
 - Missing, timed-out, cancelled, or failed runs return a nonzero status.
 - Behavioral tests prove exact-SHA selection, rerun handling, and failure propagation.
 
-### [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.proposed.md)
+### [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0046: Lockfile-Constrained Dependency Verification](0046-lockfile-constrained-dependency-verification.superseded.md)
 
 #### Decision
 
@@ -939,3 +942,42 @@ Chosen option: **"Quality-gated release continuation"**, because Quality can rem
 - `benchmark:built` runs only after the same job successfully builds and tests the revision.
 - Publication still requires exact-SHA provenance, registry readback, SBOMs, signatures, clean installation, semantic checks, and tag equality.
 - `npm run push:watch` waits for Quality before discovering Release and fails promptly when Quality fails.
+
+### [ADR-0046: Lockfile-Constrained Dependency Verification](0046-lockfile-constrained-dependency-verification.superseded.md)
+
+- Status: Superseded
+- Human review: Confirmed
+- Replaces: [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.superseded.md)
+- Replaced by: [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md)
+
+#### Decision
+
+Chosen option: **"Lockfile-constrained verification"**, because the committed lockfile and existing packed-consumer checks provide deterministic dependency evidence without depending on the unavailable advisory service. Published packages still require registry integrity, signatures, provenance, and clean installation verification.
+
+#### How We Check It
+
+- Quality contains no npm vulnerability advisory call.
+- Release contains no npm vulnerability advisory call.
+- Packed consumers must use third-party versions present in the committed root lockfile.
+- Registry verification retains integrity, provenance, signature, and clean-install checks.
+- Quality and Release remain bound to the same exact commit.
+
+### [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0046: Lockfile-Constrained Dependency Verification](0046-lockfile-constrained-dependency-verification.superseded.md)
+
+#### Decision
+
+Chosen option: **"Pinned OSV lockfile scan"**, because it stops publication when a known vulnerability is found without using npm's advisory endpoint or creating a custom scanner. Both official actions are fixed to one specific commit, and the job scans only `package-lock.json`.
+
+#### How We Check It
+
+- Quality scans only the root `package-lock.json` with OSV Scanner.
+- Scanner and reporter actions are fixed to specific commits.
+- The reporter fails the job when the scan reports a vulnerability.
+- The scan job has a ten-minute timeout.
+- Standalone initializer qualification requires the scan to pass.
+- Release retains package signature, integrity, provenance, and clean-install checks.
+- Quality and Release remain bound to the same exact commit.

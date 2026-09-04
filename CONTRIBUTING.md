@@ -9,7 +9,7 @@ boundary are welcome.
    secrets, customer data, confidential information, or incompatible third-party
    material.
 2. Install from the committed lockfile with `npm ci --ignore-scripts`.
-3. Run `npm test`, `npm run benchmark`, and `npm audit --audit-level=high`.
+3. Run `npm test` and `npm run benchmark`.
 4. Add a Changeset for any user-visible change to `@emseepea/server`.
 5. Update the exact capability claim when behavior changes and keep dependency
    licences valid.

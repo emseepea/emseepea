@@ -171,7 +171,7 @@ jobs:
           - Node.js: $(node --version)
           - npm: $(npm --version)
           - GitHub CLI: $(gh --version | head -1)
-          - Qualification: npm test; npm run benchmark; npm run test:load:streaming; npm audit --audit-level=high; npm pack; standalone initializer checks
+          - Qualification: OSV lockfile scan; npm test; npm run benchmark; npm run test:load:streaming; npm pack; standalone initializer checks
           - Semantic qualification: $SEMANTIC_EVAL_RUN_URL, artifact $SEMANTIC_EVAL_ARTIFACT
           - Reviews: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/$review_record
           - Coverage and limits: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/docs/protocol-coverage.md
@@ -244,7 +244,6 @@ jobs:
           cd "$smoke_dir"
           npm init --yes >/dev/null
           npm install --ignore-scripts --userconfig /dev/null "${package_specs[@]}"
-          npm audit --audit-level=high --userconfig /dev/null
           npm audit signatures --userconfig /dev/null
           node --input-type=module < "$GITHUB_WORKSPACE/scripts/verify-installed-package.mjs"
           cd "$GITHUB_WORKSPACE"

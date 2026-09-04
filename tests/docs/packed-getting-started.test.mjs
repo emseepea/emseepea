@@ -23,24 +23,24 @@ function registryDependencyVersions(lockfile) {
   return versions;
 }
 
-function unauditedRegistryDependencies(consumerLockfile, auditedLockfile) {
-  const auditedVersions = registryDependencyVersions(auditedLockfile);
-  return [...registryDependencyVersions(consumerLockfile)].filter((dependency) => !auditedVersions.has(dependency));
+function unrecordedRegistryDependencies(consumerLockfile, recordedLockfile) {
+  const recordedVersions = registryDependencyVersions(recordedLockfile);
+  return [...registryDependencyVersions(consumerLockfile)].filter((dependency) => !recordedVersions.has(dependency));
 }
 
-test("dependency graph comparison rejects unaudited versions", () => {
-  const audited = { packages: { "node_modules/zod": { version: "4.4.3" } } };
+test("dependency graph comparison rejects unrecorded versions", () => {
+  const recorded = { packages: { "node_modules/zod": { version: "4.4.3" } } };
   const consumer = { packages: {
     "node_modules/@emseepea/server": { version: "0.0.4" },
     "node_modules/zod": { version: "4.4.4" },
   } };
-  assert.deepEqual(unauditedRegistryDependencies(consumer, audited), ["zod@4.4.4"]);
+  assert.deepEqual(unrecordedRegistryDependencies(consumer, recorded), ["zod@4.4.4"]);
 });
 
 function run(command, args, cwd) {
   const environment = { ...process.env };
   delete environment.NODE_TEST_CONTEXT;
-  const timeout = command === "npm" && ["audit", "exec", "install"].includes(args[0]) ? 600_000 : 120_000;
+  const timeout = command === "npm" && ["exec", "install"].includes(args[0]) ? 600_000 : 120_000;
   const result = spawnSync(command, args, { cwd, encoding: "utf8", timeout, env: environment });
   assert.equal(result.status, 0, [command, String(cwd), result.error?.code, result.signal, result.stdout, result.stderr].filter(Boolean).join("\n"));
   return result.stdout;
@@ -49,7 +49,7 @@ function run(command, args, cwd) {
 function runAsync(command, args, cwd) {
   const environment = { ...process.env };
   delete environment.NODE_TEST_CONTEXT;
-  const timeout = command === "npm" && ["audit", "exec", "install"].includes(args[0]) ? 600_000 : 120_000;
+  const timeout = command === "npm" && ["exec", "install"].includes(args[0]) ? 600_000 : 120_000;
   return new Promise((resolve, reject) => {
     execFile(command, args, { cwd, encoding: "utf8", timeout, env: environment }, (error, stdout, stderr) => {
       if (error) {
@@ -80,14 +80,14 @@ test("the packed public packages pass fresh-install and getting-started checks",
       ...tarballs,
       "zod@4.4.3",
     ], directory);
-    const [consumerLockfile, auditedLockfile] = await Promise.all([
+    const [consumerLockfile, recordedLockfile] = await Promise.all([
       readFile(path.join(directory, "package-lock.json"), "utf8").then(JSON.parse),
       readFile(new URL("package-lock.json", root), "utf8").then(JSON.parse),
     ]);
     assert.deepEqual(
-      unauditedRegistryDependencies(consumerLockfile, auditedLockfile),
+      unrecordedRegistryDependencies(consumerLockfile, recordedLockfile),
       [],
-      "fresh install resolved a third-party dependency outside the audited repository lockfile",
+      "fresh install resolved a third-party dependency outside the committed repository lockfile",
     );
 
     await writeFile(path.join(directory, "check.mjs"), `

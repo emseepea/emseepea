@@ -4,7 +4,7 @@
 **Category**: information security
 **Identified**: 2026-08-27
 **Owner**: Release maintainer
-**Last reviewed**: 2026-08-31
+**Last reviewed**: 2026-09-04
 **Next review**: 2027-02-28
 
 ## Description
@@ -32,21 +32,22 @@ Impact × Likelihood *before* controls.
   workflow gets short-lived permission only when it runs. Implemented in
   `.github/workflows/release.yml`.
 - **Test the exact code being published** - Publication depends on tests,
-  audit, performance checks, package contents, and AI-understanding evidence for
-  the same commit that will be published. Implemented in
-  `.github/workflows/release.yml`.
+  a pinned Open Source Vulnerabilities (OSV) lockfile scan, performance checks,
+  package contents, and AI-understanding evidence for the same commit that will
+  be published. Quality runs the scan in `.github/workflows/quality.yml`, and
+  Release consumes that exact-commit evidence in `.github/workflows/release.yml`.
 - **Use reviewed workflow versions** - Third-party GitHub Actions and the npm
   client use fixed versions. Implemented in `.github/workflows/quality.yml` and
   `.github/workflows/release.yml`.
 - **Check a fresh install before publishing** - Install both packed public
-  packages outside the monorepo, audit their resolved dependencies, load the
-  testing helpers, and run the installed-package checks. This catches problems
-  that the repository's lockfile might hide. Implemented in
+  packages outside the monorepo, require their third-party versions to exist in
+  the committed repository lockfile, load the testing helpers, and run the
+  installed-package checks. Implemented in
   `tests/docs/packed-getting-started.test.mjs`, run by release CI before npm
-  publication. A failed audit or package check stops publication.
+  publication. A failed dependency graph or package check stops publication.
 - **Check the package after npm receives it** - Anonymous npm checks verify the
-  version, `next` tag, source evidence, clean installation, dependency audit,
-  registry signatures, public import, and a basic run before the GitHub release
+  version, `next` tag, source evidence, clean installation, registry signatures,
+  public import, and a basic run before the GitHub release
   is created. Implemented in
   `.github/workflows/release.yml`.
 - **Check every public file before publishing** - The release job builds before
@@ -127,3 +128,7 @@ evidence, or risk policy change.
 - 2026-08-31: Clarified that 0.0.2 reached npm before verification failed.
   Added a prepublication fresh-install check for both public packages; retained
   the existing post-publication checks.
+- 2026-09-04: Replaced npm vulnerability advisory checks with committed-lockfile
+  dependency graph checks and a pinned OSV lockfile scan after repeated advisory
+  endpoint timeouts. Retained registry integrity, provenance, signature, and
+  clean-install controls.

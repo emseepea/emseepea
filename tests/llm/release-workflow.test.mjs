@@ -37,6 +37,20 @@ test("every GitHub job uses the recorded npm version", () => {
   }
 });
 
+test("workflows do not use the npm vulnerability advisory", () => {
+  for (const source of [quality, workflow]) assert.doesNotMatch(source, /npm audit --audit-level/);
+});
+
+test("Quality scans the committed lockfile before initializer qualification", () => {
+  const pin = "06b2ab4348248b456ee06c9e953637f55e03504f";
+  assert.match(quality, new RegExp(`google/osv-scanner-action/osv-scanner-action@${pin}`));
+  assert.match(quality, new RegExp(`google/osv-scanner-action/osv-reporter-action@${pin}`));
+  assert.match(quality, /--lockfile=package-lock\.json/);
+  assert.match(quality, /--fail-on-vuln=true/);
+  assert.match(quality, /vulnerability-scan:[\s\S]*?timeout-minutes: 10/);
+  assert.match(quality, /initializer-qualification:[\s\S]*?needs: vulnerability-scan/);
+});
+
 test("the Claude subscription check runs only for the publication revision", () => {
   assert.match(
     workflow,
@@ -108,7 +122,6 @@ test("publication builds and verifies packages before creating public releases",
   assert.ok(job.indexOf("Build packages for publication") < job.indexOf("prepare-release-artifacts.mjs"));
   assert.ok(job.indexOf("prepare-release-artifacts.mjs") < job.indexOf("changesets/action@"));
   assert.ok(job.indexOf("verify-registry-release.mjs verify") < job.indexOf("npm audit signatures"));
-  assert.ok(job.indexOf("npm audit --audit-level=high --userconfig /dev/null") < job.indexOf("npm audit signatures"));
   assert.ok(job.indexOf("npm audit signatures") < job.indexOf("gh release create"));
   assert.match(job, /createGithubReleases: false/);
   assert.match(job, /if: steps\.registry-verify\.outputs\.ready == 'true'/);

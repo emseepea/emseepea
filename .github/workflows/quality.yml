@@ -20,6 +20,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  vulnerability-scan:
+    name: Known dependency vulnerabilities
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - name: Scan the committed lockfile
+        id: osv-scan
+        continue-on-error: true
+        uses: google/osv-scanner-action/osv-scanner-action@06b2ab4348248b456ee06c9e953637f55e03504f # v2.5.0
+        with:
+          scan-args: |-
+            --output=results.json
+            --format=json
+            --lockfile=package-lock.json
+      - name: Fail on known vulnerabilities
+        uses: google/osv-scanner-action/osv-reporter-action@06b2ab4348248b456ee06c9e953637f55e03504f # v2.5.0
+        with:
+          scan-args: |-
+            --new=results.json
+            --fail-on-vuln=true
+            --gh-annotations=false
+
   test:
     name: Node.js ${{ matrix.node-version }}
     runs-on: ubuntu-24.04
@@ -63,6 +89,7 @@ jobs:
         run: node --expose-gc --test tests/load/subscription-sdk.test.mjs
   initializer-qualification:
     name: Standalone initializers / Node.js 24.20.0
+    needs: vulnerability-scan
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -83,8 +110,6 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Install the browser used by UI checks
         run: npx playwright install --with-deps chromium
-      - name: Audit dependencies
-        run: npm audit --audit-level=high
       - name: Verify every standalone initializer
         run: npm run test:initializers:packed
 
