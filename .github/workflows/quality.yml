@@ -56,9 +56,6 @@ jobs:
         run: npm run test:load:streaming
       - name: Check subscription SDK memory with paused readers
         run: node --expose-gc --test tests/load/subscription-sdk.test.mjs
-      - name: Audit dependencies
-        run: npm audit --audit-level=high
-
   initializer-qualification:
     name: Standalone initializers / Node.js 24.20.0
     runs-on: ubuntu-24.04
@@ -81,6 +78,8 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Install the browser used by UI checks
         run: npx playwright install --with-deps chromium
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
       - name: Verify every standalone initializer
         run: npm run test:initializers:packed
 
