@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-react-ui-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": false,
   "description": "Create an Em See Pea server with an accessible React form.",
   "license": "MIT",

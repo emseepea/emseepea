@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-multi-instance-sqlite-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Create a two-instance Em See Pea server backed by SQLite.",
   "license": "MIT",
   "repository": {

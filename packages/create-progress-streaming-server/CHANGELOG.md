@@ -1,5 +1,11 @@
 # @emseepea/create-progress-streaming-server
 
+## 0.0.2
+
+### Patch Changes
+
+- [`cff3470`](https://github.com/emseepea/emseepea/commit/cff347076c81ebdc74c5b6ee5d436dbd99134e77) Thanks [@tompahoward](https://github.com/tompahoward)! - Add opt-in deterministic startup discovery for capability modules, reject undeclared mapped output properties at compile time, and update the starters to use discovery.
+
 ## 0.0.1
 
 ### Patch Changes

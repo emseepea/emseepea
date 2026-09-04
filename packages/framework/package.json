@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/server",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Fastify-first framework for Model Context Protocol 2026-07-28 servers over Streamable HTTP",
   "license": "MIT",
   "repository": {

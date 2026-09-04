@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-html-ui-server",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": false,
   "description": "Create an Em See Pea server with an accessible HTML form.",
   "license": "MIT",
