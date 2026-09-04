@@ -54,6 +54,8 @@ jobs:
           EMSEEPEA_BENCHMARK_PROFILE: github-ubuntu-24.04-standard
       - name: Check proxy progress under concurrent load and paused readers
         run: npm run test:load:streaming
+      - name: Check subscription SDK memory with paused readers
+        run: node --expose-gc --test tests/load/subscription-sdk.test.mjs
   initializer-qualification:
     name: Standalone initializers / Node.js 24.20.0
     runs-on: ubuntu-24.04
@@ -318,21 +320,6 @@ jobs:
           }
           await writeFile("release-artifacts/release-targets.tsv", `${targets.join("\n")}\n`);
           NODE
-          remote_tag_target() {
-            peeled="$(git ls-remote --tags origin "refs/tags/$1^{}" | cut -f1)"
-            direct="$(git ls-remote --tags origin "refs/tags/$1" | cut -f1)"
-            printf '%s' "${peeled:-$direct}"
-          }
-          ensure_tag() {
-            target="$(remote_tag_target "$1")"
-            if [ -z "$target" ]; then
-              git tag --annotate "$1" "$2" --message "$1"
-              git push origin "$1"
-            else
-              test "$target" = "$2"
-            fi
-            test "$(remote_tag_target "$1")" = "$2"
-          }
           ensure_release() {
             tag="$1"
             title="$2"
@@ -366,7 +353,7 @@ jobs:
           }
           while IFS=$'\t' read -r name version key filename sbom_file notes_file release_sha; do
             tag="$name@$version"
-            ensure_tag "$tag" "$release_sha"
+            node scripts/ensure-release-tag.mjs "$tag" "$release_sha"
             ensure_release "$tag" "$tag" "release-artifacts/$notes_file" \
               "release-artifacts/$filename" \
               "release-artifacts/$sbom_file" \

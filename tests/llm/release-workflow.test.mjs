@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import test from "node:test";
 
+import { ensureReleaseTag } from "../../scripts/ensure-release-tag.mjs";
 import { assertPackedTargets } from "../../scripts/verify-packed-package.mjs";
 import { extractReleaseNotes } from "../../scripts/prepare-release-artifacts.mjs";
 import { publicPackages } from "../../scripts/public-packages.mjs";
@@ -113,10 +114,8 @@ test("publication builds and verifies packages before creating public releases",
   assert.ok(job.indexOf("npm audit signatures") < job.indexOf("gh release create"));
   assert.match(job, /createGithubReleases: false/);
   assert.match(job, /if: steps\.registry-verify\.outputs\.ready == 'true'/);
-  assert.match(job, /ensure_tag "\$tag" "\$release_sha"/);
   assert.match(job, /EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry node --test tests\/docs\/getting-started-references\.test\.mjs/);
   assert.ok(job.indexOf("verify-registry-release.mjs verify") < job.indexOf("EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry"));
-  assert.match(job, /remote_tag_target\(\)/);
   assert.match(job, /gh release edit/);
   assert.match(job, /gh release create "\$tag" --draft/);
   assert.match(job, /gh release edit "\$tag" --draft=false/);
@@ -125,6 +124,32 @@ test("publication builds and verifies packages before creating public releases",
   assert.match(job, /gh release upload "\$tag" "\$@" --clobber/);
   assert.match(job, /--latest=false/);
   assert.doesNotMatch(job, /steps\.changesets\.outputs\.published/);
+});
+
+test("release tags are created at the provenance commit and then verified", () => {
+  const tag = "@emseepea/server@0.0.4";
+  const sha = "a".repeat(40);
+  let target = "";
+  const calls = [];
+  const run = (command, args) => {
+    calls.push([command, ...args]);
+    if (command === "git") return target ? `${target}\trefs/tags/${tag}\n` : "";
+    assert.equal(command, "gh");
+    target = sha;
+    return "";
+  };
+
+  ensureReleaseTag(tag, sha, { repository: "emseepea/emseepea", run });
+  assert.deepEqual(calls[1], [
+    "gh", "api", "--method", "POST", "repos/emseepea/emseepea/git/refs",
+    "-f", `ref=refs/tags/${tag}`, "-f", `sha=${sha}`,
+  ]);
+  assert.equal(calls.length, 3);
+  assert.deepEqual(calls[2], calls[0]);
+  assert.throws(
+    () => ensureReleaseTag(tag, "b".repeat(40), { repository: "emseepea/emseepea", run }),
+    /Expected values to be strictly equal/,
+  );
 });
 
 test("the installed-package smoke uses distinct fixed and template resource routes", async () => {

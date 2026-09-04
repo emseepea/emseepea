@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
+import { execFile, spawnSync } from "node:child_process";
 import test from "node:test";
 
 import { initializerPackages } from "../../scripts/public-packages.mjs";
@@ -20,6 +20,21 @@ function run(command, args, cwd) {
   const result = spawnSync(command, args, { cwd, encoding: "utf8", timeout, env: environment });
   assert.equal(result.status, 0, [command, String(cwd), result.error?.code, result.signal, result.stdout, result.stderr].filter(Boolean).join("\n"));
   return result.stdout;
+}
+
+function runAsync(command, args, cwd) {
+  const environment = { ...process.env };
+  delete environment.NODE_TEST_CONTEXT;
+  const timeout = command === "npm" && ["audit", "exec", "install"].includes(args[0]) ? 600_000 : 120_000;
+  return new Promise((resolve, reject) => {
+    execFile(command, args, { cwd, encoding: "utf8", timeout, env: environment }, (error, stdout, stderr) => {
+      if (error) {
+        reject(new Error([command, String(cwd), error.code, error.signal, stdout, stderr].filter(Boolean).join("\n"), { cause: error }));
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
 }
 
 test("the packed public packages pass fresh-install and getting-started checks", { timeout: 900_000 }, async (t) => {
@@ -220,12 +235,15 @@ test("every packed initializer creates a standalone checked project", {
       "streaming-progress": ["roast-sample-batch"],
     };
 
-    for (const initializer of initializerPackages) {
+    const queue = [...initializerPackages];
+    const failures = [];
+    const verify = async (initializer) => {
       const parent = path.join(directory, initializer.key);
       await mkdir(parent);
-      run("npm", [
+      await runAsync("npm", [
         "exec",
         "--yes",
+        "--offline",
         "--userconfig", "/dev/null",
         "--package", tarballs.get(initializer.name),
         "--",
@@ -246,7 +264,7 @@ test("every packed initializer creates a standalone checked project", {
         false,
       );
 
-      run("npm", [
+      await runAsync("npm", [
         "install",
         "--no-save",
         "--ignore-scripts",
@@ -255,9 +273,9 @@ test("every packed initializer creates a standalone checked project", {
         "--no-fund",
         ...internalPackages,
       ], example);
-      run("npm", ["run", "lint"], example);
-      run("npm", ["test"], example);
-      run("npx", [
+      await runAsync("npm", ["run", "lint"], example);
+      await runAsync("npm", ["test"], example);
+      await runAsync("npx", [
         "--no-install",
         "emseepea-test",
         "--smoke",
@@ -282,7 +300,21 @@ test("every packed initializer creates a standalone checked project", {
           assert.deepEqual(trial.selectedTools, expectedTools[initializer.example]);
         }
       }
-    }
+    };
+
+    // Four workers keep the GitHub runner busy without running all browser and install checks at once.
+    await Promise.all(Array.from({ length: 4 }, async () => {
+      while (queue.length > 0) {
+        const initializer = queue.shift();
+        try {
+          await verify(initializer);
+        } catch (error) {
+          failures.push(error);
+          return;
+        }
+      }
+    }));
+    if (failures.length > 0) throw failures[0];
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

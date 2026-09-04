@@ -56,7 +56,7 @@ test("the initialized quickstart passes its documented checks", { timeout: 900_0
     assert.ok(["packed", "registry"].includes(packageSource), `unknown package source: ${packageSource}`);
     if (packageSource === "packed") {
       const initializer = await packPackage("packages/create-tool-server", directory);
-      await exec("npm", ["exec", "--yes", "--userconfig", "/dev/null", "--package", initializer, "--", "create-tool-server", "my-mcp"], {
+      await exec("npm", ["exec", "--yes", "--offline", "--userconfig", "/dev/null", "--package", initializer, "--", "create-tool-server", "my-mcp"], {
         cwd: directory, timeout: 600_000, maxBuffer: 1024 * 1024,
       });
     } else {
@@ -75,7 +75,14 @@ test("the initialized quickstart passes its documented checks", { timeout: 900_0
     assert.ok(block, "the executable install-and-check block is required");
     const commands = block.trim().split("\n");
     assert.deepEqual(commands, ["npm install --ignore-scripts", "npm test", "npm run lint"]);
-    const env = { ...process.env, npm_config_userconfig: "/dev/null", npm_config_registry: "https://registry.npmjs.org" };
+    const env = {
+      ...process.env,
+      npm_config_audit: "false",
+      npm_config_fund: "false",
+      npm_config_prefer_offline: "true",
+      npm_config_registry: "https://registry.npmjs.org",
+      npm_config_userconfig: "/dev/null",
+    };
     delete env.NODE_TEST_CONTEXT;
     for (const command of commands) {
       const [binary, ...args] = command.split(" ");
