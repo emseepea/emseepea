@@ -15,6 +15,7 @@ import { z } from "zod";
 
 const schema = z.object({ value: z.string() });
 const strictSchema = z.strictObject({ value: z.string() });
+const dataWithExtraProperty = { value: "value", extra: true };
 type MappedDefinition = MappedToolDefinition<typeof schema, typeof schema, typeof schema, typeof schema>;
 const inputMapperArity: 1 = null as unknown as Parameters<MappedDefinition["mapInput"]>["length"];
 const outputMapperArity: 1 = null as unknown as Parameters<MappedDefinition["mapOutput"]>["length"];
@@ -68,6 +69,26 @@ defineStreamingTool({
     void publicPrincipal;
     return { text: value, data: { value } };
   },
+});
+
+// @ts-expect-error Tool handlers reject data properties absent from the public output schema.
+defineTool({
+  name: "invalid-variable-output-type-check",
+  access: "public",
+  description: "Compile-time variable output rejection check.",
+  inputSchema: schema,
+  outputSchema: schema,
+  handler: ({ value }) => ({ text: value, data: dataWithExtraProperty }),
+});
+
+// @ts-expect-error Streaming tool handlers reject spread properties absent from the public output schema.
+defineStreamingTool({
+  name: "invalid-spread-output-type-check",
+  access: "public",
+  description: "Compile-time spread output rejection check.",
+  inputSchema: schema,
+  outputSchema: schema,
+  handler: ({ value }) => ({ text: value, data: { ...dataWithExtraProperty } }),
 });
 
 defineResource({
@@ -230,6 +251,32 @@ defineMappedTool({
   mapInput: ({ value }) => ({ value }),
   adapter: ({ value }) => ({ value }),
   mapOutput: ({ value }) => ({ text: value, data: { value, extra: true } }),
+});
+
+defineMappedTool({
+  name: "mapped-transformed-type-check",
+  access: "public",
+  description: "Compile-time transformed mapper boundary check.",
+  inputSchema: z.object({ value: z.string().transform(Number) }),
+  outputSchema: z.object({ summary: z.string().transform((value) => value.length) }),
+  backendInputSchema: z.object({ count: z.coerce.number() }),
+  backendOutputSchema: z.object({ count: z.string().transform(Number), label: z.string().default("ready") }),
+  mapInput: ({ value }) => {
+    const decodedPublicInput: number = value;
+    return { count: String(decodedPublicInput) };
+  },
+  adapter: ({ count }) => {
+    const decodedBackendInput: number = count;
+    return { count: String(decodedBackendInput) };
+  },
+  mapOutput: ({ count, label }) => {
+    const decodedBackendOutput: number = count;
+    const defaultedBackendOutput: string = label;
+    return {
+      text: defaultedBackendOutput,
+      data: { summary: String(decodedBackendOutput) },
+    };
+  },
 });
 
 defineMappedTool({

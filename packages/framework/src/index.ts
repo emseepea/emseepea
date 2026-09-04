@@ -196,36 +196,49 @@ interface ToolDefinitionBase<Input extends z.ZodObject, Output extends z.ZodObje
   readonly inputSchema: Input;
   readonly outputSchema: Output;
 }
-export type ToolDefinition<Input extends z.ZodObject, Output extends z.ZodObject> =
+type ToolHandlerResult<Output extends z.ZodObject> = ToolResult<z.input<Output>> | InputRequiredResult;
+type ResultDataKeys<Result> = Result extends ToolResult<infer Data> ? keyof Data : never;
+type ExactToolResult<
+  Result,
+  Output extends z.ZodObject,
+  ErrorMessage extends string,
+> = [Exclude<ResultDataKeys<Awaited<Result>>, keyof z.input<Output>>] extends [never]
+  ? object
+  : { readonly [Key in ErrorMessage]: never };
+export type ToolDefinition<
+  Input extends z.ZodObject,
+  Output extends z.ZodObject,
+  Result extends ToolHandlerResult<Output> | Promise<ToolHandlerResult<Output>> =
+    ToolHandlerResult<Output> | Promise<ToolHandlerResult<Output>>,
+> =
   ToolDefinitionBase<Input, Output> & (
     | {
         readonly access: "public";
         readonly requiredScopes?: never;
-        readonly handler: (input: z.output<Input>, context: ToolContext<"public">) =>
-          ToolResult<z.input<Output>> | InputRequiredResult |
-          Promise<ToolResult<z.input<Output>> | InputRequiredResult>;
+        readonly handler: (input: z.output<Input>, context: ToolContext<"public">) => Result;
       }
     | {
         readonly access: "protected";
         readonly requiredScopes: readonly string[];
-        readonly handler: (input: z.output<Input>, context: ToolContext<"protected">) =>
-          ToolResult<z.input<Output>> | InputRequiredResult |
-          Promise<ToolResult<z.input<Output>> | InputRequiredResult>;
+        readonly handler: (input: z.output<Input>, context: ToolContext<"protected">) => Result;
       }
   );
-export type StreamingToolDefinition<Input extends z.ZodObject, Output extends z.ZodObject> =
+export type StreamingToolDefinition<
+  Input extends z.ZodObject,
+  Output extends z.ZodObject,
+  Result extends ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>> =
+    ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>,
+> =
   ToolDefinitionBase<Input, Output> & (
     | {
         readonly access: "public";
         readonly requiredScopes?: never;
-        readonly handler: (input: z.output<Input>, context: StreamingToolContext<"public">) =>
-          ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
+        readonly handler: (input: z.output<Input>, context: StreamingToolContext<"public">) => Result;
       }
     | {
         readonly access: "protected";
         readonly requiredScopes: readonly string[];
-        readonly handler: (input: z.output<Input>, context: StreamingToolContext<"protected">) =>
-          ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>;
+        readonly handler: (input: z.output<Input>, context: StreamingToolContext<"protected">) => Result;
       }
   );
 interface MappedToolDefinitionBase<
@@ -444,8 +457,15 @@ interface NormalizedOAuth {
   readonly verificationTimeoutMs: number;
 }
 
-export function defineTool<Input extends z.ZodObject, Output extends z.ZodObject>(
-  definition: ToolDefinition<Input, Output>,
+export function defineTool<
+  Input extends z.ZodObject,
+  Output extends z.ZodObject,
+  Result extends ToolHandlerResult<Output> | Promise<ToolHandlerResult<Output>>,
+>(definition: ToolDefinition<Input, Output, Result> & ExactToolResult<
+  Result,
+  Output,
+  "ERROR: handler data contains keys absent from outputSchema"
+>,
 ): EmseepeaTool {
   const handler = definition.handler as unknown as (
     input: z.output<Input>,
@@ -455,8 +475,15 @@ export function defineTool<Input extends z.ZodObject, Output extends z.ZodObject
   return createCheckedTool(definition, handler as CheckedToolExecutor, false, true);
 }
 
-export function defineStreamingTool<Input extends z.ZodObject, Output extends z.ZodObject>(
-  definition: StreamingToolDefinition<Input, Output>,
+export function defineStreamingTool<
+  Input extends z.ZodObject,
+  Output extends z.ZodObject,
+  Result extends ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>,
+>(definition: StreamingToolDefinition<Input, Output, Result> & ExactToolResult<
+  Result,
+  Output,
+  "ERROR: handler data contains keys absent from outputSchema"
+>,
 ): EmseepeaTool {
   const handler = definition.handler as unknown as CheckedToolExecutor;
   return createCheckedTool(definition, handler, true, false);
@@ -468,11 +495,11 @@ export function defineMappedTool<
   BackendInput extends z.ZodObject,
   BackendOutput extends z.ZodObject,
   Result extends ToolResult<z.input<Output>>,
->(definition: MappedToolDefinition<Input, Output, BackendInput, BackendOutput, Result> & (
-  Exclude<keyof Result["data"], keyof z.input<Output>> extends never
-    ? object
-    : { readonly mappedOutputHasUndeclaredProperties: never }
-)): EmseepeaTool {
+>(definition: MappedToolDefinition<Input, Output, BackendInput, BackendOutput, Result> & ExactToolResult<
+  Result,
+  Output,
+  "ERROR: mapOutput data contains keys absent from outputSchema"
+>): EmseepeaTool {
   const { backendInputSchema, backendOutputSchema, isAvailable, adapter } = definition;
   const mapInput = definition.mapInput as unknown as (
     input: z.output<Input>,
