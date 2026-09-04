@@ -1,6 +1,6 @@
 # Cognitive-Accessibility Review 2026-09-04
 
-## Continuous Integration Qualification Split
+## Continuous Integration Qualification and Release Continuation
 
 Result: PASS. An independent cognitive-accessibility specialist reviewed the
 changed public documentation after the final wording and generated-content
@@ -16,8 +16,10 @@ publication results.
 
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
-| `QUALITY.md` | `acabcacd3c00cdd00debae8ff56558fa720c371ec731f7a1762ce0bffefe5c49` |
+| `QUALITY.md` | `b624825a9737e1ba5d0bfc80ca5e8ef079b54fce87312a206808fa08cabe0ac1` |
 | `docs/decisions/0035-verified-guides-before-website-publication.proposed.md` | `1cb589433384ee2b02ba388030f0bc4fa01c493c283ad3289682d118d1e5c56a` |
 | `docs/decisions/0035-verified-guides-before-website-publication.superseded.md` | `1cb589433384ee2b02ba388030f0bc4fa01c493c283ad3289682d118d1e5c56a` |
-| `docs/decisions/0043-single-full-initializer-qualification-per-ci-event.proposed.md` | `213c3da718dc987db6d2edcd317bdab7d9a75b390b0e4e287cbb04cb1280ab96` |
-| `docs/decisions/README.md` | `c2e3ef239f87bffe1f42532784f81c91a17cd204ff903aabc6cb05c5c48cfc07` |
+| `docs/decisions/0043-single-full-initializer-qualification-per-ci-event.superseded.md` | `213c3da718dc987db6d2edcd317bdab7d9a75b390b0e4e287cbb04cb1280ab96` |
+| `docs/decisions/0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md` | `3c329dd1dddfcfecf6eda6fa56f3275616b399ac0ab9f69b88c4629ccf6021d0` |
+| `docs/decisions/0045-quality-gated-exact-commit-release-continuation.proposed.md` | `5e9577ae5bcbe0c19093f7ffcfc3d576a8b3a335600bc693f9dbe510d5ae8cc2` |
+| `docs/decisions/README.md` | `0ff297fcbc181118e66bfdcf1407e6995faa2b7d0d3b0c8383559a5fea79ac1c` |

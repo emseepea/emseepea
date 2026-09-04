@@ -16,7 +16,10 @@ green proxy check is not evidence for an untested claim.
 Steps 1 through 5 run on Node.js 22 and 24 from a GitHub-hosted clean checkout.
 The dependency audit and full standalone qualification of all eight
 initializers run separately once on Node.js 24. A failure stops the job; later
-steps are not evidence for earlier ones.
+steps are not evidence for earlier ones. A successful Quality run for a push to
+`main` is the prepublication trust gate for that exact commit. Release starts
+from that completed run and does not repeat its compatibility or initializer
+checks.
 
 ## Published Content Gate
 
@@ -107,7 +110,9 @@ Accessibility Guidelines (WCAG) conformance.
 
 ## Automation Rules
 
-- Keep quality and release workflows separate.
+- Keep the unprivileged Quality trust gate separate from the privileged Release
+  workflow. Release must use the exact SHA from a successful Quality push run
+  on `main` and record that upstream run in its evidence.
 - Pin third-party GitHub Actions to immutable commit SHAs and document the
   corresponding release tag in a comment.
 - Use least-privilege workflow permissions, timeouts, and concurrency controls.
@@ -129,7 +134,8 @@ Accessibility Guidelines (WCAG) conformance.
 - Every initializer is packed before publication and run outside the monorepo.
   The release check uses the exact documented `npm init` command, then installs,
   lints, runs ordinary tests, and runs a semantic smoke test. UI initializers
-  also run their browser accessibility tests.
+  also run their browser accessibility tests. Registry initializer checks may
+  use four isolated workers, but every failure must still stop publication.
 - The documentation website may deploy to GitHub Pages after its guide,
   accessibility, and performance checks pass. Do not add framework-service
   deployment, production attestation, signing, or environment-verification

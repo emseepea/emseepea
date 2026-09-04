@@ -16,7 +16,8 @@
   "scripts": {
     "website:dev": "npm run dev -w @emseepea/website",
     "website:build": "npm run build -w @emseepea/website",
-    "benchmark": "npm run build && node --expose-gc benchmarks/json-boundary.mjs && node --expose-gc benchmarks/json-boundary.mjs --telemetry",
+    "benchmark": "npm run build && npm run benchmark:built",
+    "benchmark:built": "node --expose-gc benchmarks/json-boundary.mjs && node --expose-gc benchmarks/json-boundary.mjs --telemetry",
     "test:load:streaming": "node --expose-gc --test tests/load/proxy-progress.test.mjs",
     "build": "npm run build -w @emseepea/server -w @emseepea/example-ui-shared && npm run build --workspaces --if-present",
     "claude:login": "claude auth login",

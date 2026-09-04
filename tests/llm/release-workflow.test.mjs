@@ -91,7 +91,6 @@ test("publication evidence uses the canonical public package list", () => {
   assert.match(workflow, /item\.notesFile/);
   assert.match(workflow, /verify-registry-release\.mjs capture/);
   assert.match(workflow, /verify-registry-release\.mjs verify/);
-  assert.match(workflow, /npm init "\$init@next" -- my-server/);
   assert.match(workflow, /npm audit signatures/);
   assert.match(workflow, /registry integrity/);
   assert.match(workflow, /provenance/);
@@ -105,7 +104,6 @@ test("release notes must exist before publication", () => {
 
 test("publication builds and verifies packages before creating public releases", () => {
   const job = workflow.match(/  changesets:[\s\S]*/)?.[0] ?? "";
-  assert.match(job, /actions\/checkout@[a-f0-9]+[\s\S]*?with:\n\s+fetch-depth: 0/);
   assert.ok(job.indexOf("npm ci --ignore-scripts") < job.indexOf("Build packages for publication"));
   assert.ok(job.indexOf("Build packages for publication") < job.indexOf("prepare-release-artifacts.mjs"));
   assert.ok(job.indexOf("prepare-release-artifacts.mjs") < job.indexOf("changesets/action@"));

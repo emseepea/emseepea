@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+env:
+  NPM_CONFIG_FETCH_RETRIES: "1"
+  NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: "5000"
+  NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "10000"
+  NPM_CONFIG_FETCH_TIMEOUT: "60000"
+
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -49,7 +55,7 @@ jobs:
           EMSEEPEA_SKIP_PACKED_AUDIT: "true"
           EMSEEPEA_SKIP_PACKED_INITIALIZERS: "true"
       - name: Check the JSON-boundary performance budget
-        run: npm run benchmark
+        run: npm run benchmark:built
         env:
           EMSEEPEA_BENCHMARK_PROFILE: github-ubuntu-24.04-standard
       - name: Check proxy progress under concurrent load and paused readers

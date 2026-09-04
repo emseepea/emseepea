@@ -1,92 +1,47 @@
 name: Release pull request or package
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows:
+      - Quality
+    types:
+      - completed
 
 permissions: {}
 
+env:
+  NPM_CONFIG_FETCH_RETRIES: "1"
+  NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: "5000"
+  NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "10000"
+  NPM_CONFIG_FETCH_TIMEOUT: "60000"
+
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-main
   cancel-in-progress: false
 
 jobs:
-  exact-sha-quality:
-    name: Exact commit / Node.js ${{ matrix.node-version }}
+  quality-gate:
+    name: Accept the successful main Quality run
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository && github.event.workflow_run.head_sha != '' && github.sha == github.event.workflow_run.head_sha }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version:
-          - 22.23.2
-          - 24.20.0
+    timeout-minutes: 5
+    outputs:
+      sha: ${{ steps.quality.outputs.sha }}
+      url: ${{ steps.quality.outputs.url }}
     steps:
-      - name: Check out repository
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-      - name: Set up Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: npm
-      - name: Use the recorded npm version
-        run: |
-          corepack enable npm
-          test "$(npm --version)" = "$(node -p 'require("./package.json").packageManager.slice(4)')"
-      - name: Install locked dependencies
-        run: npm ci --ignore-scripts
-      - name: Install the browser used by UI checks
-        run: npx playwright install --with-deps chromium
-      - name: Test the public boundary
-        run: npm test
+      - name: Record the qualified revision
+        id: quality
         env:
-          EMSEEPEA_SKIP_PACKED_AUDIT: "true"
-          EMSEEPEA_SKIP_PACKED_INITIALIZERS: "true"
-      - name: Check the JSON-boundary performance budget
-        run: npm run benchmark
-        env:
-          EMSEEPEA_BENCHMARK_PROFILE: github-ubuntu-24.04-standard
-      - name: Check proxy progress under concurrent load and paused readers
-        run: npm run test:load:streaming
-      - name: Check subscription SDK memory with paused readers
-        run: node --expose-gc --test tests/load/subscription-sdk.test.mjs
-  initializer-qualification:
-    name: Standalone initializers / Node.js 24.20.0
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    permissions:
-      contents: read
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-        with:
-          persist-credentials: false
-      - name: Set up Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: 24.20.0
-          cache: npm
-      - name: Use the recorded npm version
+          QUALITY_RUN_URL: ${{ github.event.workflow_run.html_url }}
+          QUALITY_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          corepack enable npm
-          test "$(npm --version)" = "$(node -p 'require("./package.json").packageManager.slice(4)')"
-      - name: Install locked dependencies
-        run: npm ci --ignore-scripts
-      - name: Install the browser used by UI checks
-        run: npx playwright install --with-deps chromium
-      - name: Audit dependencies
-        run: npm audit --audit-level=high
-      - name: Verify every standalone initializer
-        run: npm run test:initializers:packed
+          [[ "$QUALITY_SHA" =~ ^[a-f0-9]{40}$ ]]
+          echo "sha=$QUALITY_SHA" >> "$GITHUB_OUTPUT"
+          echo "url=$QUALITY_RUN_URL" >> "$GITHUB_OUTPUT"
 
   semantic-eval:
     name: Check whether examples are understood
+    needs: quality-gate
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
@@ -97,6 +52,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
+          ref: ${{ needs.quality-gate.outputs.sha }}
           persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
@@ -140,15 +96,15 @@ jobs:
         if: ${{ always() && steps.release-state.outputs.has_changesets == 'false' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: semantic-eval-${{ github.sha }}
+          name: semantic-eval-${{ needs.quality-gate.outputs.sha }}
           path: examples/*/artifacts/llm-eval/evidence.json
           if-no-files-found: error
           retention-days: 14
 
   changesets:
     name: Update release pull request or publish
-    needs: [exact-sha-quality, initializer-qualification, semantic-eval]
-    if: ${{ always() && needs.exact-sha-quality.result == 'success' && needs.initializer-qualification.result == 'success' && (needs.semantic-eval.outputs.has_changesets == 'true' || (needs.semantic-eval.outputs.has_changesets == 'false' && needs.semantic-eval.result == 'success')) }}
+    needs: [quality-gate, semantic-eval]
+    if: ${{ always() && needs.quality-gate.result == 'success' && (needs.semantic-eval.outputs.has_changesets == 'true' || (needs.semantic-eval.outputs.has_changesets == 'false' && needs.semantic-eval.result == 'success')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 75
     permissions:
@@ -159,6 +115,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
+          ref: ${{ needs.quality-gate.outputs.sha }}
           fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
@@ -189,8 +146,9 @@ jobs:
         if: steps.release-state.outputs.has_changesets == 'false'
         env:
           RELEASE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          RELEASE_SHA: ${{ github.sha }}
-          SEMANTIC_EVAL_ARTIFACT: semantic-eval-${{ github.sha }}
+          RELEASE_SHA: ${{ needs.quality-gate.outputs.sha }}
+          QUALITY_RUN_URL: ${{ needs.quality-gate.outputs.url }}
+          SEMANTIC_EVAL_ARTIFACT: semantic-eval-${{ needs.quality-gate.outputs.sha }}
           SEMANTIC_EVAL_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           mkdir -p release-artifacts
@@ -207,6 +165,7 @@ jobs:
 
           - Commit: $RELEASE_SHA
           - Workflow: $RELEASE_RUN_URL
+          - Qualification workflow: $QUALITY_RUN_URL
           - Lockfile SHA-256: $lock_sha
           - Packages: $package_summary
           - Node.js: $(node --version)
@@ -290,22 +249,7 @@ jobs:
           node --input-type=module < "$GITHUB_WORKSPACE/scripts/verify-installed-package.mjs"
           cd "$GITHUB_WORKSPACE"
           EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry node --test tests/docs/getting-started-references.test.mjs
-          while IFS=$'\t' read -r name path key version init example; do
-            test -z "$init" && continue
-            parent="$(mktemp -d)"
-            (cd "$parent" && npm_config_yes=true npm init "$init@next" -- my-server)
-            project="$parent/my-server"
-            npm install --prefix "$project" --ignore-scripts --userconfig /dev/null
-            npm run --prefix "$project" lint
-            if [[ "$example" == *-ui ]]; then
-              (cd "$project" && npx playwright install --with-deps chromium)
-            fi
-            npm test --prefix "$project"
-            (cd "$project" && npx --no-install emseepea-test --smoke \
-              --model-command "$GITHUB_WORKSPACE/tests/fixtures/fake-semantic-model.mjs" \
-              --output artifacts/smoke.json eval)
-            rm -rf "$parent"
-          done < <(node scripts/public-packages.mjs --publishable --tsv)
+          node scripts/verify-registry-initializers.mjs
           node --input-type=module <<'NODE'
           import { readFile, writeFile } from "node:fs/promises";
           const packages = JSON.parse(await readFile("release-artifacts/packages.json", "utf8"));
