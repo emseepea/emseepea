@@ -4,7 +4,8 @@ description: Find a starting point for tools, APIs, sign-in, progress, forms, or
 ---
 
 Each initializer creates a private standalone project with application code,
-ordinary tests in `test/`, and language-model tests in `eval/`. Replace
+ordinary tests in `test/`, and language-model tests in `eval/`. Capability
+modules live in `src/capabilities/` and are discovered once at startup. Replace
 `my-server` with an unused directory name. The [first-server guide](../getting-started/)
 continues from the public-tool starter.
 

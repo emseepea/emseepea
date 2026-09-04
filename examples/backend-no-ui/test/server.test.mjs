@@ -8,7 +8,7 @@ import { brewmarkFixture } from "../test-support/brewmark-fixture.mjs";
 test("the backend example maps, checks, and explains BrewMark data", async () => {
   const requests = [];
   let response = brewmarkFixture;
-  const app = createBackendExample({
+  const app = await createBackendExample({
     async get(options) {
       requests.push(options);
       if (response instanceof Error) throw response;

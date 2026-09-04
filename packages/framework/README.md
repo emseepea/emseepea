@@ -51,6 +51,62 @@ const app = createEmseepea({ name: "coffee-guide", version: "1.0.0", tools: [get
 await serveEmseepea(app);
 ```
 
+## Discover Capability Modules at Startup
+
+Available in this checkout; not yet published to npm.
+
+Explicit registration still works. If you prefer one file per capability, put
+modules in a directory and discover them before `createEmseepea`:
+
+```ts
+import { createEmseepea, discoverCapabilities, serveEmseepea } from "@emseepea/server";
+
+const capabilities = await discoverCapabilities(new URL("./capabilities/", import.meta.url));
+const app = createEmseepea({
+  name: "coffee-guide",
+  version: "1.0.0",
+  ...capabilities,
+});
+
+await serveEmseepea(app);
+```
+
+Capability files must be named for their public MCP kind and name:
+
+- `tool.get-bean-details.ts`
+- `resource.getting-started.ts`
+- `prompt.brew-guide.ts`
+
+Each file exports only a default factory. The factory returns a value from
+`defineTool`, `defineStreamingTool`, `defineMappedTool`, `defineResource`,
+`defineResourceTemplate`, or `definePrompt`. The declared capability name must
+match the filename.
+
+```ts
+import { defineTool, type CapabilityModuleFactory } from "@emseepea/server";
+import { z } from "zod";
+
+export default (() => defineTool({
+  name: "get-bean-details",
+  access: "public",
+  description: "Get one coffee bean.",
+  inputSchema: z.object({ name: z.string() }),
+  outputSchema: z.object({ name: z.string() }),
+  handler: ({ name }) => ({ text: name, data: { name } }),
+})) satisfies CapabilityModuleFactory;
+```
+
+Discovery reads one local file URL, ignores unrelated files, sorts matching
+files deterministically, rejects malformed names and duplicates, and builds the
+same immutable registries as explicit arrays. It runs once before serving; it
+does not watch files or change the server catalogue at runtime.
+
+Keep TypeScript source and emitted JavaScript in separate directories, as the
+starters do with `src/` and `dist/`. Using a URL relative to the running server
+module discovers source in a source runner or JavaScript in a built project.
+If both forms for one capability are in the same directory, discovery rejects
+the duplicate instead of choosing one.
+
 ## Measure Requests
 
 Available in this checkout; not yet published to npm.

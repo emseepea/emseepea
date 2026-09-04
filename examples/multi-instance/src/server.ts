@@ -6,7 +6,7 @@ import { createMultiInstanceExample } from "./app.js";
 const instanceName = process.env.EMSEEPEA_INSTANCE ?? `instance-${process.pid}`;
 const databasePath = process.env.EMSEEPEA_DATABASE ??
   join(tmpdir(), `emseepea-multi-instance-${process.pid}.sqlite`);
-const { app, closeProvider } = createMultiInstanceExample({ databasePath, instanceName });
+const { app, closeProvider } = await createMultiInstanceExample({ databasePath, instanceName });
 const running = await serveEmseepea(app, {
   port: Number.parseInt(process.env.PORT ?? "3000", 10),
 });

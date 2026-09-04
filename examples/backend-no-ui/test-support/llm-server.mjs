@@ -3,7 +3,7 @@ import { serveEmseepea } from "@emseepea/server";
 import { createBackendExample } from "../dist/app.js";
 import { brewmarkFixture } from "./brewmark-fixture.mjs";
 
-const app = createBackendExample({
+const app = await createBackendExample({
   async get({ pathname, searchParams }) {
     assert.equal(pathname, "/api/coffees");
     const { q, ...options } = searchParams;

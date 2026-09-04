@@ -59,6 +59,11 @@ async function addUiSupport(example, destination, generatedManifest) {
   );
   await replace(join(destination, `src/server.${sourceExtension}`), "@emseepea/example-ui-shared", "./ui-shared.js");
   await replace(
+    join(destination, "src/capabilities/tool.preview-bean-report.ts"),
+    "@emseepea/example-ui-shared",
+    "../ui-shared.js",
+  );
+  await replace(
     join(destination, "test/accessibility.test.mjs"),
     "@emseepea/example-ui-shared/testing",
     "../test-support/browser-contract.mjs",

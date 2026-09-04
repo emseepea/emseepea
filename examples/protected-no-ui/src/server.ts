@@ -1,51 +1,14 @@
-import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
+import { createEmseepea, discoverCapabilities, serveEmseepea } from "@emseepea/server";
 import { OAuthError, OAuthErrorCode } from "@modelcontextprotocol/server";
-import { z } from "zod";
 
 const resourceServerUrl = new URL("https://inventory.example/mcp");
 const demoToken = "example-access-token";
-
-const inventoryReport = {
-  item: "Green coffee bags",
-  onHandBags: 120,
-  reservedBags: 35,
-  availableToPromiseBags: 85,
-  inboundBags: 40,
-  inboundAvailableToPromise: false,
-} as const;
-
-const getPrivateInventoryReport = defineTool({
-  name: "get-private-inventory-report",
-  access: "protected",
-  requiredScopes: ["inventory:read"],
-  title: "Private Inventory Report",
-  description: "Report private on-hand, reserved, available-to-promise, and inbound inventory.",
-  inputSchema: z.object({}),
-  outputSchema: z.object({
-    item: z.string(),
-    onHandBags: z.number().int().nonnegative(),
-    reservedBags: z.number().int().nonnegative(),
-    availableToPromiseBags: z.number().int().nonnegative(),
-    inboundBags: z.number().int().nonnegative(),
-    inboundAvailableToPromise: z.boolean(),
-  }),
-  handler: () => ({
-    text: [
-      "Green coffee bags inventory:",
-      "- 120 on hand",
-      "- 35 reserved",
-      "- 85 available to promise (120 on hand minus 35 reserved)",
-      "- 40 inbound, not yet available to promise",
-    ].join("\n"),
-    data: inventoryReport,
-  }),
-});
 
 const app = createEmseepea({
   name: "emseepea-protected-no-ui",
   version: "0.0.0",
   instructions: "Use get-private-inventory-report for private inventory availability.",
-  tools: [getPrivateInventoryReport],
+  ...await discoverCapabilities(new URL("./capabilities/", import.meta.url)),
   oauth: {
     verifier: {
       async verifyAccessToken(token) {

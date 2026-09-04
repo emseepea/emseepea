@@ -2,18 +2,17 @@ import { readFile } from "node:fs/promises";
 import { parse } from "node:querystring";
 
 import {
-  createPreviewBeanReportTool,
   fixtureForState,
   viewFromSubmission,
 } from "@emseepea/example-ui-shared";
-import { createEmseepea, renderElicitationForm, serveEmseepea } from "@emseepea/server";
+import { createEmseepea, discoverCapabilities, renderElicitationForm, serveEmseepea } from "@emseepea/server";
 
 const stylesheet = await readFile(new URL(import.meta.resolve("@emseepea/tailwind/styles.css")), "utf8");
 const app = createEmseepea({
   name: "emseepea-native-ui",
   version: "0.0.0",
   instructions: "Use preview-bean-report to preview sample report content. It sends and stores nothing.",
-  tools: [createPreviewBeanReportTool()],
+  ...await discoverCapabilities(new URL("./capabilities/", import.meta.url)),
 });
 
 app.addContentTypeParser(

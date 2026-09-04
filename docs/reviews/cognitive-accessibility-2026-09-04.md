@@ -29,3 +29,23 @@ publication results.
 | `docs/decisions/0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md` | `1f64ae9fad165f2fee11bc2a41044b392360cf7099063218edace26d9d237c4e` |
 | `docs/decisions/README.md` | `3c8c8ee32266c351c12a8bf00930612201349ac8fab6954cdc5795e44257ba65` |
 | `docs/risks/R007-release-pipeline-publishes-the-wrong-or-compromised-package.active.md` | `d219fb25f6761b056bf25a5c08be83c07323230c4932a95437197fa40c517f8b` |
+
+## Filesystem Discovery Documentation
+
+Result: PASS. Codex using the Markdown accessibility workflow reviewed the
+changed public documentation for optional startup capability discovery.
+
+The root README, package README, website getting-started guide, website example
+index, and Changeset use descriptive headings and links, short task-oriented
+paragraphs, and plain code examples. The content distinguishes checkout source
+from npm publication and keeps explicit registration available.
+
+This review covers source prose. It does not establish npm publication.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `.changeset/tidy-bags-discover.md` | `13ced278ee04b8c0c02a8d62ac05578c1915ae04164535d6d0fbb21bbeac50dc` |
+| `README.md` | `0f7e7f17f35187a6aef5487484886339518cc817129ee4f4f95cf9831b542966` |
+| `packages/framework/README.md` | `88bac4a1538e1815d9505fa23cc1a363c55954a3e3e25b1c4e4c91f1a5333fef` |
+| `website/src/content/docs/examples.md` | `6c65ad6d3280a2c7b3e654de09452ddd245869a1c8254ae31c16c728c9030e5d` |
+| `website/src/content/docs/getting-started.md` | `2530b7e9e69ba58e5eeec2baa5e41a87e704c48f4e8cd2b330c82b698c3d95c3` |

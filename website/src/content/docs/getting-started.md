@@ -61,7 +61,7 @@ The example's tests use the matching official MCP client.
 
 ## Make it yours
 
-Open `src/server.ts` in your project:
+Open `src/capabilities/tool.get-bean-details.ts` in your project:
 
 - `beans` contains the sample data. Replace it with your own data.
 - `inputSchema` describes the names the tool accepts.
@@ -70,6 +70,10 @@ Open `src/server.ts` in your project:
 
 Em See Pea checks the input and output. Your handler supplies the behaviour.
 Update `test/server.test.mjs` for your data, then run `npm test` again.
+
+`src/server.ts` calls `discoverCapabilities(new URL("./capabilities/", import.meta.url))`
+once during startup. Explicit `tools`, `resources`, and `prompts` arrays still
+work when you need them.
 
 ## Check the AI's tool choice and explanation
 

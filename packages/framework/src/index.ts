@@ -54,7 +54,10 @@ import {
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
+import { readdir, realpath } from "node:fs/promises";
 import { isIP } from "node:net";
+import { join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { z } from "zod";
 import { installRequestTelemetry } from "./telemetry.js";
 
@@ -230,6 +233,7 @@ interface MappedToolDefinitionBase<
   Output extends z.ZodObject,
   BackendInput extends z.ZodObject,
   BackendOutput extends z.ZodObject,
+  Result extends ToolResult<z.input<Output>> = ToolResult<z.input<Output>>,
 > extends ToolDefinitionBase<Input, Output> {
   readonly backendInputSchema: BackendInput;
   readonly backendOutputSchema: BackendOutput;
@@ -242,19 +246,20 @@ interface MappedToolDefinitionBase<
     input: z.output<BackendInput>,
     context: BackendAdapterContext,
   ) => unknown | Promise<unknown>;
-  readonly mapOutput: (output: z.output<BackendOutput>) => ToolResult<z.input<Output>>;
+  readonly mapOutput: (output: z.output<BackendOutput>) => Result;
 }
 export type MappedToolDefinition<
   Input extends z.ZodObject,
   Output extends z.ZodObject,
   BackendInput extends z.ZodObject,
   BackendOutput extends z.ZodObject,
+  Result extends ToolResult<z.input<Output>> = ToolResult<z.input<Output>>,
 > =
-  | MappedToolDefinitionBase<Input, Output, BackendInput, BackendOutput> & {
+  | MappedToolDefinitionBase<Input, Output, BackendInput, BackendOutput, Result> & {
       readonly access: "public";
       readonly requiredScopes?: never;
     }
-  | MappedToolDefinitionBase<Input, Output, BackendInput, BackendOutput> & {
+  | MappedToolDefinitionBase<Input, Output, BackendInput, BackendOutput, Result> & {
       readonly access: "protected";
       readonly requiredScopes: readonly string[];
     };
@@ -350,6 +355,15 @@ export interface EmseepeaPrompt {
   readonly [HAS_COMPLETION]: boolean;
   readonly [PROMPT_LISTING]: Readonly<Record<string, unknown>>;
   readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
+}
+export type EmseepeaCapability = EmseepeaTool | EmseepeaResource | EmseepeaPrompt;
+export type CapabilityModuleFactory<Context = undefined> = (
+  context: Context,
+) => EmseepeaCapability | Promise<EmseepeaCapability>;
+export interface DiscoveredCapabilities {
+  readonly tools: readonly EmseepeaTool[];
+  readonly resources: readonly EmseepeaResource[];
+  readonly prompts: readonly EmseepeaPrompt[];
 }
 export interface OAuthResourceServerOptions {
   readonly verifier: OAuthTokenVerifier;
@@ -453,7 +467,12 @@ export function defineMappedTool<
   Output extends z.ZodObject,
   BackendInput extends z.ZodObject,
   BackendOutput extends z.ZodObject,
->(definition: MappedToolDefinition<Input, Output, BackendInput, BackendOutput>): EmseepeaTool {
+  Result extends ToolResult<z.input<Output>>,
+>(definition: MappedToolDefinition<Input, Output, BackendInput, BackendOutput, Result> & (
+  Exclude<keyof Result["data"], keyof z.input<Output>> extends never
+    ? object
+    : { readonly mappedOutputHasUndeclaredProperties: never }
+)): EmseepeaTool {
   const { backendInputSchema, backendOutputSchema, isAvailable, adapter } = definition;
   const mapInput = definition.mapInput as unknown as (
     input: z.output<Input>,
@@ -730,6 +749,69 @@ export function definePrompt<Args extends z.ZodObject>(
     },
   };
   return Object.freeze(registration);
+}
+
+const capabilityFilename = /^(tool|resource|prompt)\.([A-Za-z0-9_.-]{1,128})\.(?:js|mjs|ts|mts)$/;
+const ignoredCapabilityArtifact = /(?:\.d\.[cm]?ts|\.(?:test|spec|bench|benchmark|fixture)\.[cm]?[jt]s|\.map)$/;
+
+export async function discoverCapabilities<Context = undefined>(
+  root: URL,
+  context?: Context,
+): Promise<DiscoveredCapabilities> {
+  if (!(root instanceof URL) || root.protocol !== "file:" || root.search || root.hash) {
+    throw new TypeError("Capability root must be a local file URL without a query or fragment");
+  }
+  const directory = await realpath(fileURLToPath(root));
+  const entries = (await readdir(directory, { withFileTypes: true }))
+    .sort((left, right) => left.name < right.name ? -1 : left.name > right.name ? 1 : 0);
+  const tools: EmseepeaTool[] = [];
+  const resources: EmseepeaResource[] = [];
+  const prompts: EmseepeaPrompt[] = [];
+
+  for (const entry of entries) {
+    if (ignoredCapabilityArtifact.test(entry.name)) continue;
+    const match = entry.name.match(capabilityFilename);
+    if (!match) {
+      if (/^(?:tool|resource|prompt)\./.test(entry.name)) {
+        throw new TypeError(`Malformed capability filename: ${entry.name}`);
+      }
+      continue;
+    }
+    if (!entry.isFile()) throw new TypeError(`Capability module must be a regular file: ${entry.name}`);
+    const module = await import(pathToFileURL(join(directory, entry.name)).href) as Record<string, unknown>;
+    if (Object.keys(module).length !== 1 || typeof module.default !== "function") {
+      throw new TypeError(`Capability module must export only a default factory: ${entry.name}`);
+    }
+    const capability = await (module.default as CapabilityModuleFactory<Context>)(context as Context);
+    const expectedKind = match[1]!;
+    const expectedName = match[2]!;
+    const actual = discoveredCapabilityIdentity(capability);
+    if (!actual || actual.kind !== expectedKind || actual.name !== expectedName) {
+      throw new TypeError(`Capability module does not match its filename: ${entry.name}`);
+    }
+    if (actual.kind === "tool") tools.push(capability as EmseepeaTool);
+    else if (actual.kind === "resource") resources.push(capability as EmseepeaResource);
+    else prompts.push(capability as EmseepeaPrompt);
+  }
+
+  assertUniqueToolNames(tools);
+  assertUniqueResources(resources);
+  assertUniquePromptNames(prompts);
+  return Object.freeze({
+    tools: Object.freeze(tools),
+    resources: Object.freeze(resources),
+    prompts: Object.freeze(prompts),
+  });
+}
+
+function discoveredCapabilityIdentity(
+  capability: EmseepeaCapability,
+): { readonly kind: "tool" | "resource" | "prompt"; readonly name: string } | undefined {
+  if (!capability || typeof capability !== "object" || !(REGISTER in capability)) return undefined;
+  if (TOOL_NAME in capability) return { kind: "tool", name: capability[TOOL_NAME] };
+  if (RESOURCE_NAME in capability) return { kind: "resource", name: capability[RESOURCE_NAME] };
+  if (PROMPT_NAME in capability) return { kind: "prompt", name: capability[PROMPT_NAME] };
+  return undefined;
 }
 
 interface CheckedToolDefinition {

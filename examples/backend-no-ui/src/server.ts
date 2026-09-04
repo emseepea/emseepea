@@ -7,7 +7,7 @@ const client = createJsonHttpClient({
   maxResponseBytes: 128 * 1024,
 });
 const running = await serveEmseepea(
-  createBackendExample(client),
+  await createBackendExample(client),
   { port: Number.parseInt(process.env.PORT ?? "3000", 10) },
 );
 

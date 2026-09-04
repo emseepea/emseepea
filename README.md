@@ -25,6 +25,7 @@ Use the current framework to create:
 - clear names, descriptions, icons, and usage hints for clients to display
 - a server that tells clients when a list or resource is safe to reuse
 - public tools that report live progress while work is running
+- capability modules discovered once at startup from an opt-in directory
 - two local server processes that share one SQLite report store
 - a server with a native HTML form, or the same form rendered with React and
   the Em See Pea stylesheet
@@ -33,6 +34,10 @@ The current source also lets public tools report progress behind a trusted
 proxy. This addition is not yet published to npm. See
 [how to configure proxy progress](packages/framework/README.md#use-progress-behind-a-proxy)
 and its [tested limits](docs/protocol-coverage.md#progress-updates).
+
+The current source also supports startup capability discovery. This addition
+is not yet published to npm. See
+[how startup discovery works](packages/framework/README.md#discover-capability-modules-at-startup).
 
 ## Verify It Locally
 

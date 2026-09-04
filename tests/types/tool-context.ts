@@ -7,17 +7,29 @@ import {
   defineStreamingTool,
   defineTool,
   inputRequired,
+  type CapabilityModuleFactory,
   type MappedToolDefinition,
   type ToolPrincipal,
 } from "../../packages/framework/src/index.js";
 import { z } from "zod";
 
 const schema = z.object({ value: z.string() });
+const strictSchema = z.strictObject({ value: z.string() });
 type MappedDefinition = MappedToolDefinition<typeof schema, typeof schema, typeof schema, typeof schema>;
 const inputMapperArity: 1 = null as unknown as Parameters<MappedDefinition["mapInput"]>["length"];
 const outputMapperArity: 1 = null as unknown as Parameters<MappedDefinition["mapOutput"]>["length"];
 void inputMapperArity;
 void outputMapperArity;
+
+const discoveredFactory = ((context) => defineTool({
+  name: "discovered-type-check",
+  access: "public",
+  description: "Compile-time discovered module context check.",
+  inputSchema: schema,
+  outputSchema: schema,
+  handler: ({ value }) => ({ text: value, data: { value: context.prefix + value } }),
+})) satisfies CapabilityModuleFactory<{ readonly prefix: string }>;
+void discoveredFactory;
 
 defineTool({
   name: "public-type-check",
@@ -174,6 +186,50 @@ defineMappedTool({
     return { record: key };
   },
   mapOutput: ({ record }) => ({ text: record, data: { value: record } }),
+});
+
+defineMappedTool({
+  name: "invalid-mapped-input-type-check",
+  access: "public",
+  description: "Compile-time mapped input rejection check.",
+  inputSchema: schema,
+  outputSchema: schema,
+  backendInputSchema: schema,
+  backendOutputSchema: schema,
+  mapInput: (input) => ({
+    // @ts-expect-error Mapping cannot read a property absent from the public input schema.
+    value: input.missing,
+  }),
+  adapter: ({ value }) => ({ value }),
+  mapOutput: ({ value }) => ({ text: value, data: { value } }),
+});
+
+defineMappedTool({
+  name: "invalid-mapped-output-type-check",
+  access: "public",
+  description: "Compile-time mapped output rejection check.",
+  inputSchema: schema,
+  outputSchema: schema,
+  backendInputSchema: schema,
+  backendOutputSchema: schema,
+  mapInput: ({ value }) => ({ value }),
+  adapter: ({ value }) => ({ value }),
+  // @ts-expect-error Mapping must return data accepted by the public output schema.
+  mapOutput: ({ value }) => ({ text: value, data: { missing: value } }),
+});
+
+// @ts-expect-error Strict public output schemas reject undeclared object-literal properties.
+defineMappedTool({
+  name: "invalid-extra-mapped-output-type-check",
+  access: "public",
+  description: "Compile-time strict mapped output rejection check.",
+  inputSchema: schema,
+  outputSchema: strictSchema,
+  backendInputSchema: schema,
+  backendOutputSchema: schema,
+  mapInput: ({ value }) => ({ value }),
+  adapter: ({ value }) => ({ value }),
+  mapOutput: ({ value }) => ({ text: value, data: { value, extra: true } }),
 });
 
 defineMappedTool({
