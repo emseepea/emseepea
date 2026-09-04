@@ -64,11 +64,11 @@ remaining limits and pending evidence directly.
 ## Release Pull Request Merge Decision
 
 Result: PASS. ADR-0049 and the regenerated decision compendium use plain,
-scannable language and identify human oversight as pending. The proposed
-command is described as an exact-commit merge and watch operation, not as
-publication proof or a workflow bypass.
+scannable language and record Tom Howard's ratification on 2026-09-05. The
+proposed command is described as an exact-commit merge and watch operation,
+not as publication proof or a workflow bypass.
 
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
-| `docs/decisions/0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md` | `2e6a2068d738618f9d5c45ab55bee723c207e5e37f3055ae9fac1a260f5ee51f` |
-| `docs/decisions/README.md` | `69ab93fdb78a8071999d4001fd6aeb47f0e22bbebedc77a36aeb306e3a4b6bd9` |
+| `docs/decisions/0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md` | `b1a3a02c26d7fabd68b7b01f590ede9d7b5c193d3cb899bb570c7eb32a53b560` |
+| `docs/decisions/README.md` | `060d69488bd936f094dc073a88ab4d5c7751e646ca8d61ef050327a7bfe341c4` |

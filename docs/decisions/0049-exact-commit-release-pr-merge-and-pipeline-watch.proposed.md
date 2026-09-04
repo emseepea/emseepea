@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-09-04
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-09-05
 decision-makers: ["Tom Howard"]
 consulted: []
 informed: []
@@ -11,8 +12,8 @@ reassessment-date: 2026-12-04
 # Exact-Commit Release PR Merge and Pipeline Watch
 
 > Captured via /wr-architect:capture-adr. Section content was derived from the
-> release-control decision in this task. Human oversight remains pending
-> until the decision-maker ratifies the substance.
+> release-control decision in this task. Tom Howard ratified the substance on
+> 2026-09-05.
 
 ## Context and Problem Statement
 
