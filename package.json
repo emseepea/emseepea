@@ -25,6 +25,7 @@
     "changeset": "changeset",
     "check": "npm test",
     "push:watch": "node scripts/push-and-watch.mjs",
+    "release:watch": "node scripts/release-and-watch.mjs",
     "decisions:check": "node scripts/generate-decisions-compendium.mjs --check",
     "decisions:generate": "node scripts/generate-decisions-compendium.mjs",
     "release": "changeset publish --tag next",

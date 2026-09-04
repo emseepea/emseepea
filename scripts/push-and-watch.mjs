@@ -8,15 +8,15 @@ import { promisify } from "node:util";
 const exec = promisify(execFile);
 const repository = "emseepea/emseepea";
 
-async function execute(command, args) {
-  const { stdout } = await exec(command, args, { encoding: "utf8" });
+async function execute(command, args, { timeoutMs } = {}) {
+  const { stdout } = await exec(command, args, { encoding: "utf8", timeout: timeoutMs });
   return stdout.trim();
 }
 
 export async function pushAndWatch({
   run = execute,
   pause = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
-  timeoutMs = 300_000,
+  timeoutMs = 3_600_000,
 } = {}) {
   assert.match(
     await run("git", ["remote", "get-url", "origin"]),
@@ -29,6 +29,16 @@ export async function pushAndWatch({
   const remote = await run("git", ["ls-remote", "origin", "refs/heads/main"]);
   assert.equal(remote.split("\t")[0], sha, "origin/main does not match the pushed commit");
 
+  return { sha, urls: await watchWorkflowRuns({ sha, run, pause, timeoutMs }) };
+}
+
+export async function watchWorkflowRuns({
+  sha,
+  run = execute,
+  pause = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+  timeoutMs = 3_600_000,
+}) {
+  assert.match(sha, /^[a-f0-9]{40}$/);
   const urls = [];
   for (const workflow of ["quality.yml", "release.yml"]) {
     const deadline = Date.now() + timeoutMs;
@@ -50,13 +60,19 @@ export async function pushAndWatch({
         .sort((left, right) => left.databaseId - right.databaseId || left.attempt - right.attempt);
       if (unseen.length === 0) break;
       for (const item of unseen) {
-        await run("gh", ["run", "watch", String(item.databaseId), "--repo", repository, "--exit-status"]);
+        const remainingMs = deadline - Date.now();
+        assert.ok(remainingMs > 0, `${workflow} did not finish within the timeout`);
+        await run(
+          "gh",
+          ["run", "watch", String(item.databaseId), "--repo", repository, "--exit-status"],
+          { timeoutMs: remainingMs },
+        );
         watched.add(`${item.databaseId}:${item.attempt}`);
         urls.push(item.url);
       }
     }
   }
-  return { sha, urls };
+  return urls;
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
