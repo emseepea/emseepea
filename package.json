@@ -23,6 +23,7 @@
     "claude:prepare": "node node_modules/@anthropic-ai/claude-code/install.cjs",
     "changeset": "changeset",
     "check": "npm test",
+    "push:watch": "node scripts/push-and-watch.mjs",
     "decisions:check": "node scripts/generate-decisions-compendium.mjs --check",
     "decisions:generate": "node scripts/generate-decisions-compendium.mjs",
     "release": "changeset publish --tag next",
