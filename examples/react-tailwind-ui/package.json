@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@emseepea/example-ui-shared": "0.0.0",
-    "@emseepea/react": "0.0.2",
-    "@emseepea/server": "0.1.0",
+    "@emseepea/react": "0.0.3",
+    "@emseepea/server": "0.2.0",
     "@emseepea/tailwind": "0.0.1",
     "react": "19.2.8",
     "react-dom": "19.2.8"
