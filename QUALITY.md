@@ -13,8 +13,10 @@ green proxy check is not evidence for an untested claim.
    contract.
 6. Run `npm audit --audit-level=high`.
 
-Every step runs on Node.js 22 and 24 from a GitHub-hosted clean checkout. A
-failure stops the job; later steps are not evidence for earlier ones.
+Every step above runs on Node.js 22 and 24 from a GitHub-hosted clean checkout.
+The full standalone qualification of all eight initializers runs separately
+once on Node.js 24. A failure stops the job; later steps are not evidence for
+earlier ones.
 
 ## Published Content Gate
 

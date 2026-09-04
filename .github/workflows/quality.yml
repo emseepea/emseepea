@@ -45,6 +45,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Test the public boundary
         run: npm test
+        env:
+          EMSEEPEA_SKIP_PACKED_INITIALIZERS: "true"
       - name: Check the JSON-boundary performance budget
         run: npm run benchmark
         env:
@@ -55,6 +57,31 @@ jobs:
         run: node --expose-gc --test tests/load/subscription-sdk.test.mjs
       - name: Audit dependencies
         run: npm audit --audit-level=high
+
+  initializer-qualification:
+    name: Standalone initializers / Node.js 24.20.0
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24.20.0
+          cache: npm
+      - name: Use the recorded npm version
+        run: |
+          corepack enable npm
+          test "$(npm --version)" = "$(node -p 'require("./package.json").packageManager.slice(4)')"
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Install the browser used by UI checks
+        run: npx playwright install --with-deps chromium
+      - name: Verify every standalone initializer
+        run: npm run test:initializers:packed
 
   website-performance:
     name: Website publication checks
@@ -101,7 +128,7 @@ jobs:
   deploy-website:
     name: Publish website
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    needs: [test, website-performance]
+    needs: [initializer-qualification, test, website-performance]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:

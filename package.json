@@ -36,6 +36,7 @@
     "start:streaming": "npm run start -w @emseepea/example-streaming-progress",
     "test": "npm run decisions:check && npm run lint && npm run build && npm run typecheck && npm run test:examples && node --experimental-test-module-mocks --test --test-concurrency=1 tests/black-box/*.test.mjs tests/docs/*.test.mjs tests/llm/*.test.mjs",
     "test:examples": "npm run test:built --workspaces --if-present",
+    "test:initializers:packed": "npm run build && node --test --test-name-pattern=\"every packed initializer creates a standalone checked project\" tests/docs/packed-getting-started.test.mjs",
     "test:eval": "npm run build && npm run test:llm:built --workspaces --if-present",
     "test:eval:ci": "npm run test:llm:built --workspaces --if-present -- --provider claude-ci",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p website/tsconfig.json --noEmit",

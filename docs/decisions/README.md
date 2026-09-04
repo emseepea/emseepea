@@ -5,56 +5,57 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 41 decisions: 25 current and 16 historical.
+This project has 42 decisions: 25 current and 17 historical.
 
 ## Quick Index
 
 ### Current decisions
 
-- [ADR-0005: Active Streamable HTTP Scope and Adaptive Delivery](0005-active-streamable-http-scope-and-adaptive-delivery.proposed.md) — Proposed; human review confirmed.
-- [ADR-0006: Canonical Public Contract and Private Manifest Compilation](0006-canonical-public-contract-and-private-manifest-compilation.proposed.md) — Proposed; human review confirmed.
-- [ADR-0007: Deterministic Execution Kernel and Checked Boundaries](0007-deterministic-execution-kernel-and-checked-boundaries.proposed.md) — Proposed; human review confirmed.
-- [ADR-0009: Capability-Scoped Reliability, Effects, and State](0009-capability-scoped-reliability-effects-and-state.proposed.md) — Proposed; human review confirmed.
-- [ADR-0010: POST-Scoped Streaming, Progress, and Subscriptions](0010-post-scoped-streaming-progress-and-subscriptions.proposed.md) — Proposed; human review confirmed.
-- [ADR-0011: Framework-Neutral Accessible Elicitation and Approval UI](0011-framework-neutral-accessible-elicitation-and-approval-ui.proposed.md) — Proposed; human review confirmed.
-- [ADR-0012: Typed Operations and OpenTelemetry Boundary](0012-typed-operations-and-opentelemetry-boundary.proposed.md) — Proposed; human review confirmed.
-- [ADR-0014: Performance Budget for the Initial JSON HTTP Boundary](0014-performance-budget-initial-json-http-boundary.proposed.md) — Proposed; human review confirmed.
-- [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md) — Proposed; human review confirmed.
-- [ADR-0023: Mandatory Cognitive-Accessibility Review for Published Content](0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md) — Proposed; human review confirmed.
-- [ADR-0025: Astro Starlight Documentation Generator](0025-static-documentation-website-with-astro-starlight.proposed.md) — Proposed; human review confirmed.
-- [ADR-0028: Example-Owned Oxlint with Root Orchestration](0028-example-owned-oxlint-with-root-orchestration.proposed.md) — Proposed; human review confirmed.
-- [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.proposed.md) — Proposed; human review confirmed.
-- [ADR-0031: Website Workspace in the Existing Monorepo](0031-website-workspace-in-the-existing-monorepo.proposed.md) — Proposed; human review confirmed.
-- [ADR-0032: Static-Only Website Runtime](0032-static-only-website-runtime.proposed.md) — Proposed; human review confirmed.
-- [ADR-0033: GitHub Pages Website Hosting](0033-github-pages-website-hosting.proposed.md) — Proposed; human review confirmed.
-- [ADR-0034: One Source for Reader Guides](0034-one-source-for-reader-guides.proposed.md) — Proposed; human review confirmed.
-- [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.proposed.md) — Proposed; human review confirmed.
-- [ADR-0036: One Current Documentation Set](0036-one-current-documentation-set.proposed.md) — Proposed; human review confirmed.
-- [ADR-0037: Local Website Search](0037-local-website-search.proposed.md) — Proposed; human review confirmed.
-- [ADR-0038: Measured Website Performance Before Publication](0038-measured-website-performance-before-publication.proposed.md) — Proposed; human review confirmed.
-- [ADR-0039: Website Performance Budget](0039-website-performance-budget.proposed.md) — Proposed; human review confirmed.
-- [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.proposed.md) — Proposed; human review confirmed.
-- [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md) — Proposed; human review confirmed.
-- [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.proposed.md) — Proposed; human review confirmed.
+- [ADR-0005: Active Streamable HTTP Scope and Adaptive Delivery](0005-active-streamable-http-scope-and-adaptive-delivery.proposed.md): Proposed; human review confirmed.
+- [ADR-0006: Canonical Public Contract and Private Manifest Compilation](0006-canonical-public-contract-and-private-manifest-compilation.proposed.md): Proposed; human review confirmed.
+- [ADR-0007: Deterministic Execution Kernel and Checked Boundaries](0007-deterministic-execution-kernel-and-checked-boundaries.proposed.md): Proposed; human review confirmed.
+- [ADR-0009: Capability-Scoped Reliability, Effects, and State](0009-capability-scoped-reliability-effects-and-state.proposed.md): Proposed; human review confirmed.
+- [ADR-0010: POST-Scoped Streaming, Progress, and Subscriptions](0010-post-scoped-streaming-progress-and-subscriptions.proposed.md): Proposed; human review confirmed.
+- [ADR-0011: Framework-Neutral Accessible Elicitation and Approval UI](0011-framework-neutral-accessible-elicitation-and-approval-ui.proposed.md): Proposed; human review confirmed.
+- [ADR-0012: Typed Operations and OpenTelemetry Boundary](0012-typed-operations-and-opentelemetry-boundary.proposed.md): Proposed; human review confirmed.
+- [ADR-0014: Performance Budget for the Initial JSON HTTP Boundary](0014-performance-budget-initial-json-http-boundary.proposed.md): Proposed; human review confirmed.
+- [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md): Proposed; human review confirmed.
+- [ADR-0023: Mandatory Cognitive-Accessibility Review for Published Content](0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md): Proposed; human review confirmed.
+- [ADR-0025: Astro Starlight Documentation Generator](0025-static-documentation-website-with-astro-starlight.proposed.md): Proposed; human review confirmed.
+- [ADR-0028: Example-Owned Oxlint with Root Orchestration](0028-example-owned-oxlint-with-root-orchestration.proposed.md): Proposed; human review confirmed.
+- [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.proposed.md): Proposed; human review confirmed.
+- [ADR-0031: Website Workspace in the Existing Monorepo](0031-website-workspace-in-the-existing-monorepo.proposed.md): Proposed; human review confirmed.
+- [ADR-0032: Static-Only Website Runtime](0032-static-only-website-runtime.proposed.md): Proposed; human review confirmed.
+- [ADR-0033: GitHub Pages Website Hosting](0033-github-pages-website-hosting.proposed.md): Proposed; human review confirmed.
+- [ADR-0034: One Source for Reader Guides](0034-one-source-for-reader-guides.proposed.md): Proposed; human review confirmed.
+- [ADR-0036: One Current Documentation Set](0036-one-current-documentation-set.proposed.md): Proposed; human review confirmed.
+- [ADR-0037: Local Website Search](0037-local-website-search.proposed.md): Proposed; human review confirmed.
+- [ADR-0038: Measured Website Performance Before Publication](0038-measured-website-performance-before-publication.proposed.md): Proposed; human review confirmed.
+- [ADR-0039: Website Performance Budget](0039-website-performance-budget.proposed.md): Proposed; human review confirmed.
+- [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.proposed.md): Proposed; human review confirmed.
+- [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md): Proposed; human review confirmed.
+- [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.proposed.md): Proposed; human review confirmed.
+- [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
-- [ADR-0001: Public-Specification-First TypeScript Framework Foundation](0001-foundation.superseded.md) — Superseded; human review confirmed.
-- [ADR-0002: Explicit Anonymous Production Boundary Behind a Trusted Proxy](0002-anonymous-production-boundary.superseded.md) — Superseded; human review confirmed.
-- [ADR-0003: Public Windy Road Repository with Gated Changesets Releases](0003-public-repository-and-release-governance.superseded.md) — Superseded; human review confirmed.
-- [ADR-0004: Fastify-First TypeScript Framework Foundation](0004-fastify-first-typescript-foundation.superseded.md) — Superseded; human review confirmed.
-- [ADR-0008: Public and OAuth Protected Resource Security](0008-public-and-oauth-protected-resource-security.superseded.md) — Superseded; human review confirmed.
-- [ADR-0015: Ordinary Evidence and Exact Release Claims](0015-ordinary-evidence-and-exact-release-claims.superseded.md) — Superseded; human review confirmed.
-- [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.superseded.md) — Superseded; human review confirmed.
-- [ADR-0017: Public Discovery with Protected Tool Invocation](0017-public-discovery-with-protected-tool-invocation.superseded.md) — Superseded; human review confirmed.
-- [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md) — Superseded; human review confirmed.
-- [ADR-0020: Mandatory Semantic LLM Qualification for Examples and Releases](0020-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md) — Superseded; human review confirmed.
-- [ADR-0021: Mandatory Semantic LLM Qualification for Examples and Releases](0021-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md) — Superseded; human review confirmed.
-- [ADR-0022: Harness-Mediated Semantic LLM Qualification for Examples and Releases](0022-harness-mediated-semantic-llm-qualification-for-examples-and-releases.superseded.md) — Superseded; human review confirmed.
-- [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.superseded.md) — Superseded; human review confirmed.
-- [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.superseded.md) — Superseded; human review confirmed.
-- [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md) — Superseded; human review confirmed.
-- [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md) — Superseded; human review confirmed.
+- [ADR-0001: Public-Specification-First TypeScript Framework Foundation](0001-foundation.superseded.md): Superseded; human review confirmed.
+- [ADR-0002: Explicit Anonymous Production Boundary Behind a Trusted Proxy](0002-anonymous-production-boundary.superseded.md): Superseded; human review confirmed.
+- [ADR-0003: Public Windy Road Repository with Gated Changesets Releases](0003-public-repository-and-release-governance.superseded.md): Superseded; human review confirmed.
+- [ADR-0004: Fastify-First TypeScript Framework Foundation](0004-fastify-first-typescript-foundation.superseded.md): Superseded; human review confirmed.
+- [ADR-0008: Public and OAuth Protected Resource Security](0008-public-and-oauth-protected-resource-security.superseded.md): Superseded; human review confirmed.
+- [ADR-0015: Ordinary Evidence and Exact Release Claims](0015-ordinary-evidence-and-exact-release-claims.superseded.md): Superseded; human review confirmed.
+- [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.superseded.md): Superseded; human review confirmed.
+- [ADR-0017: Public Discovery with Protected Tool Invocation](0017-public-discovery-with-protected-tool-invocation.superseded.md): Superseded; human review confirmed.
+- [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md): Superseded; human review confirmed.
+- [ADR-0020: Mandatory Semantic LLM Qualification for Examples and Releases](0020-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md): Superseded; human review confirmed.
+- [ADR-0021: Mandatory Semantic LLM Qualification for Examples and Releases](0021-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md): Superseded; human review confirmed.
+- [ADR-0022: Harness-Mediated Semantic LLM Qualification for Examples and Releases](0022-harness-mediated-semantic-llm-qualification-for-examples-and-releases.superseded.md): Superseded; human review confirmed.
+- [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.superseded.md): Superseded; human review confirmed.
+- [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.superseded.md): Superseded; human review confirmed.
+- [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md): Superseded; human review confirmed.
+- [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md): Superseded; human review confirmed.
+- [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -726,9 +727,9 @@ Chosen option: **"One guide source"**, because it avoids inconsistent copies.
 - Runnable snippets have one source rather than separately edited copies.
 - Governance records do not displace getting-started guidance.
 
-### [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.proposed.md)
+### [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 
 #### Decision
@@ -872,3 +873,25 @@ Chosen option: **"One initializer package per example"**, because each command s
 - Changesets and the release workflow verify each initializer's package contents, provenance, SBOM, registry metadata, clean installation, and exact documented command.
 - The repository uses one canonical list of public release packages.
 - Public guides and package READMEs explain the commands in plain language and pass the required cognitive-accessibility review.
+
+### [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"Fast Node matrix plus one full Node 24 initializer job"**, because supported-runtime compatibility and standalone package qualification are different evidence and do not need the same matrix.
+
+#### How We Check It
+
+- Pull-request and main-branch Node.js matrix jobs run on Node.js 22 and 24 without the full eight-initializer test.
+- One Node.js 24 job per CI event runs the unchanged full initializer test against the canonical package list.
+- Website and package publication explicitly depend on their dedicated initializer jobs succeeding.
+- The full initializer test still checks generation, standalone dependencies, installation, lint, ordinary tests, semantic smoke tests, and expected tool selection.
+- Live Claude semantic evaluation runs once per publication revision.
+- Post-publication verification still checks the actual registry packages and documented npm initializer commands.
+- Routes, links, fragments, assets, canonical URLs, and sitemap checks pass.
+- Every runnable snippet is tested or links to tested source.
+- Automated accessibility checks pass in light and dark themes.
+- Named manual accessibility evidence and cognitive-accessibility review remain required.

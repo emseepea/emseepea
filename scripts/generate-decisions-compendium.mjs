@@ -169,7 +169,7 @@ function renderIndex(title, decisions) {
       ? ["No decisions in this group."]
       : decisions.map(
           (decision) =>
-            `- [${decision.id}: ${decision.title}](${decision.entry}) — ${label(decision.status)}; human review ${label(decision.oversight).toLowerCase()}.`,
+            `- [${decision.id}: ${decision.title}](${decision.entry}): ${label(decision.status)}; human review ${label(decision.oversight).toLowerCase()}.`,
         )),
   ];
 }

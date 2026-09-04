@@ -45,6 +45,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Test the public boundary
         run: npm test
+        env:
+          EMSEEPEA_SKIP_PACKED_INITIALIZERS: "true"
       - name: Check the JSON-boundary performance budget
         run: npm run benchmark
         env:
@@ -53,6 +55,33 @@ jobs:
         run: npm run test:load:streaming
       - name: Audit dependencies
         run: npm audit --audit-level=high
+
+  initializer-qualification:
+    name: Standalone initializers / Node.js 24.20.0
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24.20.0
+          cache: npm
+      - name: Use the recorded npm version
+        run: |
+          corepack enable npm
+          test "$(npm --version)" = "$(node -p 'require("./package.json").packageManager.slice(4)')"
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Install the browser used by UI checks
+        run: npx playwright install --with-deps chromium
+      - name: Verify every standalone initializer
+        run: npm run test:initializers:packed
 
   semantic-eval:
     name: Check whether examples are understood
@@ -116,10 +145,10 @@ jobs:
 
   changesets:
     name: Update release pull request or publish
-    needs: [exact-sha-quality, semantic-eval]
-    if: ${{ always() && needs.exact-sha-quality.result == 'success' && (needs.semantic-eval.outputs.has_changesets == 'true' || (needs.semantic-eval.outputs.has_changesets == 'false' && needs.semantic-eval.result == 'success')) }}
+    needs: [exact-sha-quality, initializer-qualification, semantic-eval]
+    if: ${{ always() && needs.exact-sha-quality.result == 'success' && needs.initializer-qualification.result == 'success' && (needs.semantic-eval.outputs.has_changesets == 'true' || (needs.semantic-eval.outputs.has_changesets == 'false' && needs.semantic-eval.result == 'success')) }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 75
     permissions:
       contents: write
       id-token: write

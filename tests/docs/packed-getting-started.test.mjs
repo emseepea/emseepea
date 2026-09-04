@@ -8,6 +8,8 @@ import test from "node:test";
 import { initializerPackages } from "../../scripts/public-packages.mjs";
 
 const root = new URL("../../", import.meta.url);
+const skipInitializers = process.env.EMSEEPEA_SKIP_PACKED_INITIALIZERS;
+assert.ok(skipInitializers === undefined || skipInitializers === "true", "invalid initializer skip value");
 
 function run(command, args, cwd) {
   const environment = { ...process.env };
@@ -189,7 +191,10 @@ test("the packed Tailwind stylesheet installs with its accessibility states and 
   }
 });
 
-test("every packed initializer creates a standalone checked project", { timeout: 2_700_000 }, async () => {
+test("every packed initializer creates a standalone checked project", {
+  skip: skipInitializers === "true",
+  timeout: 2_700_000,
+}, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-example-"));
   try {
     const tarballs = new Map(await Promise.all([
