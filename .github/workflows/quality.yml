@@ -52,7 +52,6 @@ jobs:
       - name: Test the public boundary
         run: npm test
         env:
-          EMSEEPEA_SKIP_PACKED_AUDIT: "true"
           EMSEEPEA_SKIP_PACKED_INITIALIZERS: "true"
       - name: Check the JSON-boundary performance budget
         run: npm run benchmark:built

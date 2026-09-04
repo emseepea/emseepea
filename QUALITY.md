@@ -19,7 +19,8 @@ initializers run separately once on Node.js 24. A failure stops the job; later
 steps are not evidence for earlier ones. A successful Quality run for a push to
 `main` is the prepublication trust gate for that exact commit. Release starts
 from that completed run and does not repeat its compatibility or initializer
-checks.
+checks. Every fresh packed install must resolve only third-party package
+versions already present in the audited repository lockfile.
 
 ## Published Content Gate
 

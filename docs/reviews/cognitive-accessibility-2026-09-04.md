@@ -16,7 +16,7 @@ publication results.
 
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
-| `QUALITY.md` | `b624825a9737e1ba5d0bfc80ca5e8ef079b54fce87312a206808fa08cabe0ac1` |
+| `QUALITY.md` | `317a738305731690737c35311c5c321fd495cf477c0742163f129c5b6f3cfe3e` |
 | `docs/decisions/0035-verified-guides-before-website-publication.proposed.md` | `1cb589433384ee2b02ba388030f0bc4fa01c493c283ad3289682d118d1e5c56a` |
 | `docs/decisions/0035-verified-guides-before-website-publication.superseded.md` | `1cb589433384ee2b02ba388030f0bc4fa01c493c283ad3289682d118d1e5c56a` |
 | `docs/decisions/0043-single-full-initializer-qualification-per-ci-event.superseded.md` | `213c3da718dc987db6d2edcd317bdab7d9a75b390b0e4e287cbb04cb1280ab96` |

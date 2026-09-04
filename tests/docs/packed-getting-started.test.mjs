@@ -8,10 +8,34 @@ import test from "node:test";
 import { initializerPackages } from "../../scripts/public-packages.mjs";
 
 const root = new URL("../../", import.meta.url);
-const skipPackedAudit = process.env.EMSEEPEA_SKIP_PACKED_AUDIT;
 const skipInitializers = process.env.EMSEEPEA_SKIP_PACKED_INITIALIZERS;
-assert.ok(skipPackedAudit === undefined || skipPackedAudit === "true", "invalid packed audit skip value");
 assert.ok(skipInitializers === undefined || skipInitializers === "true", "invalid initializer skip value");
+
+function registryDependencyVersions(lockfile) {
+  const versions = new Set();
+  for (const [location, dependency] of Object.entries(lockfile.packages)) {
+    if (!location || !dependency.version) continue;
+    const marker = "node_modules/";
+    const markerIndex = location.lastIndexOf(marker);
+    const name = markerIndex === -1 ? dependency.name : location.slice(markerIndex + marker.length);
+    if (name && !name.startsWith("@emseepea/")) versions.add(`${name}@${dependency.version}`);
+  }
+  return versions;
+}
+
+function unauditedRegistryDependencies(consumerLockfile, auditedLockfile) {
+  const auditedVersions = registryDependencyVersions(auditedLockfile);
+  return [...registryDependencyVersions(consumerLockfile)].filter((dependency) => !auditedVersions.has(dependency));
+}
+
+test("dependency graph comparison rejects unaudited versions", () => {
+  const audited = { packages: { "node_modules/zod": { version: "4.4.3" } } };
+  const consumer = { packages: {
+    "node_modules/@emseepea/server": { version: "0.0.4" },
+    "node_modules/zod": { version: "4.4.4" },
+  } };
+  assert.deepEqual(unauditedRegistryDependencies(consumer, audited), ["zod@4.4.4"]);
+});
 
 function run(command, args, cwd) {
   const environment = { ...process.env };
@@ -37,7 +61,7 @@ function runAsync(command, args, cwd) {
   });
 }
 
-test("the packed public packages pass fresh-install and getting-started checks", { timeout: 900_000 }, async (t) => {
+test("the packed public packages pass fresh-install and getting-started checks", { timeout: 900_000 }, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-packed-"));
   try {
     const tarballs = await Promise.all([
@@ -56,9 +80,15 @@ test("the packed public packages pass fresh-install and getting-started checks",
       ...tarballs,
       "zod@4.4.3",
     ], directory);
-    await t.test("the fresh install passes audit", { skip: skipPackedAudit === "true" }, () => {
-      run("npm", ["audit", "--audit-level=high", "--userconfig", "/dev/null"], directory);
-    });
+    const [consumerLockfile, auditedLockfile] = await Promise.all([
+      readFile(path.join(directory, "package-lock.json"), "utf8").then(JSON.parse),
+      readFile(new URL("package-lock.json", root), "utf8").then(JSON.parse),
+    ]);
+    assert.deepEqual(
+      unauditedRegistryDependencies(consumerLockfile, auditedLockfile),
+      [],
+      "fresh install resolved a third-party dependency outside the audited repository lockfile",
+    );
 
     await writeFile(path.join(directory, "check.mjs"), `
       import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
