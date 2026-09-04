@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 42 decisions: 25 current and 17 historical.
+This project has 43 decisions: 26 current and 17 historical.
 
 ## Quick Index
 
@@ -36,6 +36,7 @@ This project has 42 decisions: 25 current and 17 historical.
 - [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md): Proposed; human review confirmed.
 - [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.proposed.md): Proposed; human review confirmed.
 - [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.proposed.md): Proposed; human review confirmed.
+- [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -895,3 +896,22 @@ Chosen option: **"Fast Node matrix plus one full Node 24 initializer job"**, bec
 - Every runnable snippet is tested or links to tested source.
 - Automated accessibility checks pass in light and dark themes.
 - Named manual accessibility evidence and cognitive-accessibility review remain required.
+
+### [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"Exact-commit push and watch command"**, because the push and its evidence must be one fail-closed operation. The command non-force pushes the current committed `HEAD` to `emseepea/emseepea` `main`, checks that remote `main` equals the captured local SHA, discovers Quality and Release by workflow identity and exact SHA, and watches every matching run to completion.
+
+#### How We Check It
+
+- `npm run push:watch` performs a non-force push of committed `HEAD` to `origin/main`.
+- The command rejects a repository other than `emseepea/emseepea`.
+- The remote `main` SHA must equal the captured local SHA after the push.
+- Quality and Release runs are selected by workflow identity and exact SHA.
+- Every matching rerun is watched and must succeed.
+- Missing, timed-out, cancelled, or failed runs return a nonzero status.
+- Behavioral tests prove exact-SHA selection, rerun handling, and failure propagation.
