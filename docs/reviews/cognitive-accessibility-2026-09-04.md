@@ -17,6 +17,7 @@ publication results.
 
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
+| `.changeset/fair-dots-listen.md` | `130e36d9d6c9b258bcb69dbb5b09093f6f85514bb0563bbe46e38a624f465e45` |
 | `CONTRIBUTING.md` | `4f25caa601a597ed8553d456fbea15f81ccc68cda2230ad862e1c8f198437710` |
 | `QUALITY.md` | `b045613f12510cae23f448f319cfaf1923b41100c7b06d60056c5d7478bd71ed` |
 | `docs/decisions/0035-verified-guides-before-website-publication.proposed.md` | `1cb589433384ee2b02ba388030f0bc4fa01c493c283ad3289682d118d1e5c56a` |
