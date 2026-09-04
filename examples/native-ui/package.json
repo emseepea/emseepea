@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@emseepea/example-ui-shared": "0.0.0",
-    "@emseepea/server": "0.1.0",
+    "@emseepea/server": "0.2.0",
     "@emseepea/tailwind": "0.0.1"
   },
   "devDependencies": {

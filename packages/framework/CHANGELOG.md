@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.2.0
+
+### Minor Changes
+
+- [`9bba0da`](https://github.com/emseepea/emseepea/commit/9bba0da8aed032957730b8443847579524a3cdc4) Thanks [@tompahoward](https://github.com/tompahoward)! - Reject undeclared public output properties at compile time for regular and streaming tools, matching mapped tools.
+
 ## 0.1.0
 
 ### Minor Changes
