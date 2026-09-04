@@ -49,3 +49,14 @@ This review covers source prose. It does not establish npm publication.
 | `packages/framework/README.md` | `88bac4a1538e1815d9505fa23cc1a363c55954a3e3e25b1c4e4c91f1a5333fef` |
 | `website/src/content/docs/examples.md` | `6c65ad6d3280a2c7b3e654de09452ddd245869a1c8254ae31c16c728c9030e5d` |
 | `website/src/content/docs/getting-started.md` | `2530b7e9e69ba58e5eeec2baa5e41a87e704c48f4e8cd2b330c82b698c3d95c3` |
+
+## Server 0.1.0 Release Readiness
+
+Result: PASS. The version-matched prepublication record separates reviewed
+source, publishing-commit checks, npm publication, and post-publication
+verification. Its discovery and mapping claims are narrow, and it states the
+remaining limits and pending evidence directly.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `docs/reviews/0.1.0-release-readiness.md` | `c929feca4b301a7cc5300ab4ac69ec789e675ddf20a0c183fab5071ea1aefd9a` |
