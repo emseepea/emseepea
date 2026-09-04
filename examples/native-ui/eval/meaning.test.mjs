@@ -10,7 +10,8 @@ toolSelectionTest("Native UI preview is not mistaken for a completed effect", {
     "Sample Range",
     "preview-only",
     "false",
-    "No report was sent or stored"
+    /\b(?:no|not|nothing|neither|never|wasn't|weren't|didn't)\b[^.!?\n]{0,80}\b(?:sent|delivered)\b/i,
+    /\b(?:no|not|nothing|neither|never|wasn't|weren't|didn't)\b[^.!?\n]{0,80}\b(?:stored|saved|persisted)\b/i
   ],
   criteria:
     "The answer identifies Forest Ember from Sample Range as the one dark-roast " +
