@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 46 decisions: 26 current and 20 historical.
+This project has 47 decisions: 27 current and 20 historical.
 
 ## Quick Index
 
@@ -37,6 +37,7 @@ This project has 46 decisions: 26 current and 20 historical.
 - [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.proposed.md): Proposed; human review confirmed.
 - [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md): Proposed; human review confirmed.
+- [ADR-0048: Optional Deterministic Filesystem Discovery](0048-optional-deterministic-filesystem-discovery.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -981,3 +982,23 @@ Chosen option: **"Pinned OSV lockfile scan"**, because it stops publication when
 - Standalone initializer qualification requires the scan to pass.
 - Release retains package signature, integrity, provenance, and clean-install checks.
 - Quality and Release remain bound to the same exact commit.
+
+### [ADR-0048: Optional Deterministic Filesystem Discovery](0048-optional-deterministic-filesystem-discovery.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### Decision
+
+Chosen option: **"Optional deterministic startup discovery"**, because it removes repetitive registration and catalogue drift while preserving explicit registration and the existing execution and validation boundaries.
+
+#### How We Check It
+
+- Repeated discovery returns capabilities in the same order and produces byte-identical public contract output.
+- Effective MCP discovery exactly matches the compiled registry.
+- Duplicate normalized identities, malformed names, missing declarations, unsupported exports, out-of-root paths, and source plus build collisions fail deterministically without first-match selection.
+- Development source and built output each work without double registration.
+- Discovered calls use the existing checked kernel, so invalid external input never reaches application code and invalid backend or public output is never emitted.
+- Compile-time checks prove that undeclared input access and schema-invalid mapped output do not type-check, while valid mapping code does.
+- Every maintained example and generated initializer uses the convention and retains its existing lint, ordinary, semantic, and accessibility tests.
+- Explicit registration remains supported and filesystem discovery remains opt-in.
