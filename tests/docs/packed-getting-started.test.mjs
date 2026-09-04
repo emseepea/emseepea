@@ -12,7 +12,7 @@ const root = new URL("../../", import.meta.url);
 function run(command, args, cwd) {
   const environment = { ...process.env };
   delete environment.NODE_TEST_CONTEXT;
-  const timeout = command === "npm" && ["exec", "install"].includes(args[0]) ? 600_000 : 120_000;
+  const timeout = command === "npm" && ["audit", "exec", "install"].includes(args[0]) ? 600_000 : 120_000;
   const result = spawnSync(command, args, { cwd, encoding: "utf8", timeout, env: environment });
   assert.equal(result.status, 0, [command, String(cwd), result.error?.code, result.signal, result.stdout, result.stderr].filter(Boolean).join("\n"));
   return result.stdout;

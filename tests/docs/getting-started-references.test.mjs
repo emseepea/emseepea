@@ -79,7 +79,7 @@ test("the initialized quickstart passes its documented checks", { timeout: 900_0
     delete env.NODE_TEST_CONTEXT;
     for (const command of commands) {
       const [binary, ...args] = command.split(" ");
-      const timeout = packageSource === "registry" && command === "npm install --ignore-scripts" ? 600_000 : 120_000;
+      const timeout = command === "npm install --ignore-scripts" ? 600_000 : 120_000;
       await exec(binary, args, { cwd: project, env, timeout, maxBuffer: 1024 * 1024 });
     }
     for (const name of ["@emseepea/server", "@emseepea/testing"]) {
