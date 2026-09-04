@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 47 decisions: 27 current and 20 historical.
+This project has 48 decisions: 28 current and 20 historical.
 
 ## Quick Index
 
@@ -38,6 +38,7 @@ This project has 47 decisions: 27 current and 20 historical.
 - [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md): Proposed; human review confirmed.
 - [ADR-0048: Optional Deterministic Filesystem Discovery](0048-optional-deterministic-filesystem-discovery.proposed.md): Proposed; human review confirmed.
+- [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -1002,3 +1003,22 @@ Chosen option: **"Optional deterministic startup discovery"**, because it remove
 - Compile-time checks prove that undeclared input access and schema-invalid mapped output do not type-check, while valid mapping code does.
 - Every maintained example and generated initializer uses the convention and retains its existing lint, ordinary, semantic, and accessibility tests.
 - Explicit registration remains supported and filesystem discovery remains opt-in.
+
+### [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### Decision
+
+Chosen option: **"Exact-commit release pull request merge and watch"**, because the release state change and its fail-closed evidence must be one reproducible operation.
+
+#### How We Check It
+
+- `npm run release:watch` rejects a repository other than `emseepea/emseepea`, a dirty checkout, or a branch other than `main`.
+- It requires exactly one open `changeset-release/main` pull request targeting `main`, with a base revision equal to local `HEAD`.
+- The merge command includes the captured pull request head revision and uses merge-commit semantics.
+- The merged pull request supplies one exact merge commit revision.
+- Quality and Release runs are selected by workflow identity and that exact merge commit, and every matching attempt must succeed.
+- Missing, timed-out, cancelled, or failed workflows produce a nonzero exit.
+- Behavioral tests cover identity validation, exact pull request selection, exact-head merge binding, exact-SHA workflow selection, and failure propagation.
