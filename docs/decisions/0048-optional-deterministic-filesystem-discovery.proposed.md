@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-09-04
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-09-04
 decision-makers: ["Tom Howard"]
 consulted: []
 informed: []
@@ -9,10 +10,6 @@ reassessment-date: 2026-12-04
 ---
 
 # Optional Deterministic Filesystem Discovery
-
-> Captured through the lightweight architecture decision workflow. Section
-> content was derived from the current design discussion and requires human
-> ratification before implementation.
 
 ## Context and Problem Statement
 

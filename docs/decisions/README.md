@@ -37,7 +37,7 @@ This project has 47 decisions: 27 current and 20 historical.
 - [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.proposed.md): Proposed; human review confirmed.
 - [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md): Proposed; human review confirmed.
-- [ADR-0048: Optional Deterministic Filesystem Discovery](0048-optional-deterministic-filesystem-discovery.proposed.md): Proposed; human review pending.
+- [ADR-0048: Optional Deterministic Filesystem Discovery](0048-optional-deterministic-filesystem-discovery.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -986,7 +986,7 @@ Chosen option: **"Pinned OSV lockfile scan"**, because it stops publication when
 ### [ADR-0048: Optional Deterministic Filesystem Discovery](0048-optional-deterministic-filesystem-discovery.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
+- Human review: Confirmed
 
 #### Decision
 
