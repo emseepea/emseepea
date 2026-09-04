@@ -262,7 +262,7 @@ jobs:
           while IFS=$'\t' read -r name path key version init example; do
             test -z "$init" && continue
             parent="$(mktemp -d)"
-            (cd "$parent" && npm init "$init@next" -- my-server)
+            (cd "$parent" && npm_config_yes=true npm init "$init@next" -- my-server)
             project="$parent/my-server"
             npm install --prefix "$project" --ignore-scripts --userconfig /dev/null
             npm run --prefix "$project" lint

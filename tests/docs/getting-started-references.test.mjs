@@ -49,7 +49,7 @@ test("the quickstart references the initializer's scripts, packages and guide li
   }
 });
 
-test("the initialized quickstart passes its documented checks", { timeout: 180_000 }, async () => {
+test("the initialized quickstart passes its documented checks", { timeout: 900_000 }, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-website-guide-"));
   try {
     const packageSource = process.env.EMSEEPEA_GUIDE_PACKAGE_SOURCE ?? "packed";
@@ -57,11 +57,11 @@ test("the initialized quickstart passes its documented checks", { timeout: 180_0
     if (packageSource === "packed") {
       const initializer = await packPackage("packages/create-tool-server", directory);
       await exec("npm", ["exec", "--yes", "--userconfig", "/dev/null", "--package", initializer, "--", "create-tool-server", "my-mcp"], {
-        cwd: directory, timeout: 120_000, maxBuffer: 1024 * 1024,
+        cwd: directory, timeout: 600_000, maxBuffer: 1024 * 1024,
       });
     } else {
       await exec("npm", ["init", "@emseepea/tool-server@next", "--", "my-mcp"], {
-        cwd: directory, timeout: 120_000, maxBuffer: 1024 * 1024,
+        cwd: directory, env: { ...process.env, npm_config_yes: "true" }, timeout: 600_000, maxBuffer: 1024 * 1024,
       });
     }
     const project = path.join(directory, "my-mcp");
@@ -79,7 +79,8 @@ test("the initialized quickstart passes its documented checks", { timeout: 180_0
     delete env.NODE_TEST_CONTEXT;
     for (const command of commands) {
       const [binary, ...args] = command.split(" ");
-      await exec(binary, args, { cwd: project, env, timeout: 120_000, maxBuffer: 1024 * 1024 });
+      const timeout = packageSource === "registry" && command === "npm install --ignore-scripts" ? 600_000 : 120_000;
+      await exec(binary, args, { cwd: project, env, timeout, maxBuffer: 1024 * 1024 });
     }
     for (const name of ["@emseepea/server", "@emseepea/testing"]) {
       const installed = JSON.parse(await readFile(path.join(project, "node_modules", name, "package.json"), "utf8"));
