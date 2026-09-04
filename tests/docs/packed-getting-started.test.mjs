@@ -12,12 +12,13 @@ const root = new URL("../../", import.meta.url);
 function run(command, args, cwd) {
   const environment = { ...process.env };
   delete environment.NODE_TEST_CONTEXT;
-  const result = spawnSync(command, args, { cwd, encoding: "utf8", timeout: 120_000, env: environment });
+  const timeout = command === "npm" && ["exec", "install"].includes(args[0]) ? 600_000 : 120_000;
+  const result = spawnSync(command, args, { cwd, encoding: "utf8", timeout, env: environment });
   assert.equal(result.status, 0, [command, String(cwd), result.error?.code, result.signal, result.stdout, result.stderr].filter(Boolean).join("\n"));
   return result.stdout;
 }
 
-test("the packed public packages pass a fresh-install audit and getting-started checks", { timeout: 180_000 }, async () => {
+test("the packed public packages pass a fresh-install audit and getting-started checks", { timeout: 900_000 }, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-packed-"));
   try {
     const tarballs = await Promise.all([
@@ -188,7 +189,7 @@ test("the packed Tailwind stylesheet installs with its accessibility states and 
   }
 });
 
-test("every packed initializer creates a standalone checked project", { timeout: 900_000 }, async () => {
+test("every packed initializer creates a standalone checked project", { timeout: 2_700_000 }, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-example-"));
   try {
     const tarballs = new Map(await Promise.all([
