@@ -17,6 +17,7 @@ import {
   classifyPublication,
   provenanceCommit,
   provenanceIncludesCommit,
+  waitForPublication,
 } from "../../scripts/verify-registry-release.mjs";
 
 const workflow = await readFile(new URL("../../.github/workflows/release.yml", import.meta.url), "utf8");
@@ -261,6 +262,20 @@ test("registry publication detection supports independently versioned packages",
     () => classifyPublication(before, { packages: [{ ...before.packages[0], present: true }, before.packages[1]] }),
     /only some pending packages were published/,
   );
+});
+
+test("registry publication verification waits for partial registry propagation", async () => {
+  const before = { packages: [
+    { name: "server", present: false },
+    { name: "testing", present: false },
+  ] };
+  const snapshots = [
+    { packages: [{ name: "server", present: true }, { name: "testing", present: false }] },
+    { packages: [{ name: "server", present: true }, { name: "testing", present: true }] },
+  ];
+  assert.deepEqual(await waitForPublication(before, async () => snapshots.shift(), async () => {}), {
+    packages: [{ name: "server", present: true }, { name: "testing", present: true }],
+  });
 });
 
 test("registry checks preserve tags and exact provenance", () => {

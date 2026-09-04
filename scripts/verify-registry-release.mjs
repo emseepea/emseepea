@@ -19,6 +19,20 @@ export function classifyPublication(before, after) {
   return "missing";
 }
 
+export async function waitForPublication(before, read, wait = () => new Promise((resolveDelay) => setTimeout(resolveDelay, 3_000))) {
+  let after;
+  for (let attempt = 1; attempt <= 10; attempt += 1) {
+    after = await read();
+    try {
+      if (classifyPublication(before, after) === "published") return after;
+    } catch (error) {
+      if (error?.message !== "only some pending packages were published" || attempt === 10) throw error;
+    }
+    if (attempt < 10) await wait();
+  }
+  assert.equal(classifyPublication(before, after), "published", "neither package appeared after publication");
+}
+
 export function assertRegistryState(before, after) {
   assert.equal(after.packages.length, before.packages.length);
   for (const expected of before.packages) {
@@ -100,15 +114,10 @@ async function verify(beforePath, afterPath) {
     return;
   }
 
-  let after;
-  for (let attempt = 1; attempt <= 10; attempt += 1) {
-    after = { packages: await Promise.all(before.packages.map(readCurrent)) };
-    const result = classifyPublication(before, after);
-    if (result === "published") break;
-    if (attempt < 10) await new Promise((resolveDelay) => setTimeout(resolveDelay, 3_000));
-  }
-  const result = classifyPublication(before, after);
-  assert.equal(result, "published", "neither package appeared after publication");
+  const after = await waitForPublication(
+    before,
+    async () => ({ packages: await Promise.all(before.packages.map(readCurrent)) }),
+  );
   assertRegistryState(before, after);
 
   const statements = await Promise.all(after.packages.map(readProvenance));
