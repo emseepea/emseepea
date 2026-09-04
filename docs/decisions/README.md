@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 43 decisions: 26 current and 17 historical.
+This project has 44 decisions: 26 current and 18 historical.
 
 ## Quick Index
 
@@ -35,8 +35,8 @@ This project has 43 decisions: 26 current and 17 historical.
 - [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.proposed.md): Proposed; human review confirmed.
 - [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md): Proposed; human review confirmed.
 - [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.proposed.md): Proposed; human review confirmed.
-- [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.proposed.md): Proposed; human review confirmed.
 - [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
+- [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -57,6 +57,7 @@ This project has 43 decisions: 26 current and 17 historical.
 - [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md): Superseded; human review confirmed.
 - [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.superseded.md): Superseded; human review confirmed.
+- [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -875,9 +876,9 @@ Chosen option: **"One initializer package per example"**, because each command s
 - The repository uses one canonical list of public release packages.
 - Public guides and package READMEs explain the commands in plain language and pass the required cognitive-accessibility review.
 
-### [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.proposed.md)
+### [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 
 #### Decision
@@ -915,3 +916,26 @@ Chosen option: **"Exact-commit push and watch command"**, because the push and i
 - Every matching rerun is watched and must succeed.
 - Missing, timed-out, cancelled, or failed runs return a nonzero status.
 - Behavioral tests prove exact-SHA selection, rerun handling, and failure propagation.
+
+### [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"Quality-gated release continuation"**, because Quality can remain the unprivileged trust gate for untrusted `main`, while Release can reuse its exact-SHA evidence and retain only checks that must occur at release time.
+
+#### How We Check It
+
+- Quality runs on pushes to `main` and retains Node.js 22 and 24, audit, performance, load, accessibility, website, and initializer checks.
+- Release triggers only from a successful Quality `workflow_run` whose event is `push`, branch is `main`, repository is `emseepea/emseepea`, and head SHA is present.
+- Every Release checkout and evidence-producing command uses the upstream Quality head SHA.
+- Release evidence records the upstream Quality run URL and exact SHA.
+- Live Claude evaluation runs once in Release before publication.
+- Release does not repeat the Node compatibility matrix or prepublication initializer qualification.
+- Eight registry initializer journeys run with four bounded workers and propagate every failure.
+- Audit retry and timeout bounds remain fail closed.
+- `benchmark:built` runs only after the same job successfully builds and tests the revision.
+- Publication still requires exact-SHA provenance, registry readback, SBOMs, signatures, clean installation, semantic checks, and tag equality.
+- `npm run push:watch` waits for Quality before discovering Release and fails promptly when Quality fails.
