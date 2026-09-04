@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 48 decisions: 28 current and 20 historical.
+This project has 49 decisions: 29 current and 20 historical.
 
 ## Quick Index
 
@@ -39,6 +39,7 @@ This project has 48 decisions: 28 current and 20 historical.
 - [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md): Proposed; human review confirmed.
 - [ADR-0048: Optional Deterministic Filesystem Discovery](0048-optional-deterministic-filesystem-discovery.proposed.md): Proposed; human review confirmed.
 - [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
+- [ADR-0050: Schema-Declared Pass-Through by Default](0050-schema-declared-pass-through-by-default.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -1022,3 +1023,20 @@ Chosen option: **"Exact-commit release pull request merge and watch"**, because 
 - Quality and Release runs are selected by workflow identity and that exact merge commit, and every matching attempt must succeed.
 - Missing, timed-out, cancelled, or failed workflows produce a nonzero exit.
 - Behavioral tests cover identity validation, exact pull request selection, exact-head merge binding, exact-SHA workflow selection, and failure propagation.
+
+### [ADR-0050: Schema-Declared Pass-Through by Default](0050-schema-declared-pass-through-by-default.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### Decision
+
+Chosen option: **"Schema-declared pass-through by default with explicit exceptions"**, because it lets compatible backend values evolve without duplicating their catalogue while keeping the public contract deliberate and safe.
+
+#### How We Check It
+
+- A test proves that a previously unseen but structurally valid value in an approved backend field reaches public structured output unchanged.
+- Malformed backend values and undeclared backend fields cannot reach public output.
+- Translation in maintained examples is limited to transport compatibility, security, redaction, aggregation, or genuine model comprehension.
+- Public and backend schemas remain separately declared and checked.
+- Framework guidance tells adopters to use direct tools for identity mappings and pass-through mapping for selected compatible values.

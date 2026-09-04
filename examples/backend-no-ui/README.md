@@ -1,7 +1,7 @@
 # Public Web Service Backend Example
 
 Choose this example when your MCP tool needs to read a public web service and
-translate its data into a clear result for an assistant.
+return selected, checked data in a clear result for an assistant.
 
 This example exposes one read-only `search-coffee-catalog` tool. A normal run
 searches [BrewMark's public coffee catalogue](https://brewmark.io/developers/api-docs)
@@ -10,6 +10,11 @@ and returns at most five coffees.
 Unlike the [first public tool example](https://github.com/emseepea/emseepea/tree/main/examples/basic-no-ui),
 this tool adapts a separate service. The public input and result use the Model Context Protocol
 (MCP). BrewMark's query and response are checked before the result is returned.
+
+The tool preserves BrewMark's useful field names and values. It does not keep a
+second list of roast levels, so BrewMark can add a valid level without requiring
+an MCP release. Separate public and backend schemas still select and check every
+field that can reach the caller.
 
 The caller can choose a search term and roast filter. The caller cannot change
 the website, path, result limit, sort order, credentials, or HTTP rules. Search

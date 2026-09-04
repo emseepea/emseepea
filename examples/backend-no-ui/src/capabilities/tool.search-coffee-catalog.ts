@@ -4,25 +4,19 @@ import { z } from "zod";
 
 export interface BackendExampleContext { readonly client: JsonHttpClient }
 
-const publicRoast = z.enum(["light", "medium-light", "medium", "medium-dark", "dark"]);
-const brewmarkRoast = z.enum(["LIGHT", "MEDIUM_LIGHT", "MEDIUM", "MEDIUM_DARK", "DARK"]);
-const publicToBrewmarkRoast = {
-  light: "LIGHT", "medium-light": "MEDIUM_LIGHT", medium: "MEDIUM",
-  "medium-dark": "MEDIUM_DARK", dark: "DARK",
-} as const;
-const brewmarkToPublicRoast = {
-  LIGHT: "light", MEDIUM_LIGHT: "medium-light", MEDIUM: "medium",
-  MEDIUM_DARK: "medium-dark", DARK: "dark",
-} as const;
-const searchInput = z.object({ query: z.string().trim().min(2).max(80), roast: publicRoast.optional() });
+const roastLevel = z.string().trim().min(1).max(40);
+const searchInput = z.object({
+  query: z.string().trim().min(2).max(80),
+  roastLevel: roastLevel.describe("Optional BrewMark roast level, such as LIGHT or MEDIUM_LIGHT.").optional(),
+});
 const coffee = z.object({
-  name: z.string().max(200), roaster: z.string().max(200), origin: z.string().max(200).nullable(),
-  roast: publicRoast, processingMethod: z.string().max(100).nullable(),
-  flavourNotes: z.string().max(500).nullable(), acidityLevel: z.number().int().min(1).max(5).nullable(),
+  name: z.string().max(200), roasterName: z.string().max(200), roastLevel,
+  origin: z.string().max(200).nullable(), processingMethod: z.string().max(100).nullable(),
+  flavorProfile: z.string().max(500).nullable(), acidityLevel: z.number().int().min(1).max(5).nullable(),
   bodyLevel: z.number().int().min(1).max(5).nullable(),
 });
 const searchReport = z.object({
-  query: z.string().max(80), roastFilter: publicRoast.nullable(), returnedCount: z.number().int().min(0).max(5),
+  query: z.string().max(80), roastLevelFilter: roastLevel.nullable(), returnedCount: z.number().int().min(0).max(5),
   moreMatchesAvailable: z.boolean(),
   ratingScale: z.object({
     acidity: z.literal("1 = low acidity; 5 = high acidity"),
@@ -33,12 +27,12 @@ const searchReport = z.object({
 const backendCommand = z.object({
   pathname: z.literal("/api/coffees"),
   searchParams: z.object({
-    q: z.string().min(2).max(80), roastLevel: brewmarkRoast.optional(),
+    q: z.string().min(2).max(80), roastLevel: roastLevel.optional(),
     sort: z.literal("alpha"), limit: z.literal("5"),
   }),
 });
 const backendCoffee = z.object({
-  name: z.string().max(200), roasterName: z.string().max(200), roastLevel: brewmarkRoast,
+  name: z.string().max(200), roasterName: z.string().max(200), roastLevel,
   origin: z.string().max(200).nullable(), processingMethod: z.string().max(100).nullable(),
   flavorProfile: z.string().max(500).nullable(), acidityLevel: z.number().int().min(1).max(5).nullable(),
   bodyLevel: z.number().int().min(1).max(5).nullable(),
@@ -56,11 +50,11 @@ export default (({ client }) => defineMappedTool({
   outputSchema: searchReport,
   backendInputSchema: backendCommand,
   backendOutputSchema: backendResult,
-  mapInput: ({ query, roast }) => ({
+  mapInput: ({ query, roastLevel }) => ({
     pathname: "/api/coffees" as const,
     searchParams: {
       q: query,
-      ...(roast ? { roastLevel: publicToBrewmarkRoast[roast] } : {}),
+      ...(roastLevel ? { roastLevel } : {}),
       sort: "alpha" as const,
       limit: "5" as const,
     },
@@ -70,16 +64,13 @@ export default (({ client }) => defineMappedTool({
   },
   mapOutput: ({ request, payload }) => {
     const coffees = payload.data.map((record) => ({
-      name: record.name, roaster: record.roasterName, origin: record.origin,
-      roast: brewmarkToPublicRoast[record.roastLevel], processingMethod: record.processingMethod,
-      flavourNotes: record.flavorProfile, acidityLevel: record.acidityLevel, bodyLevel: record.bodyLevel,
+      name: record.name, roasterName: record.roasterName, roastLevel: record.roastLevel,
+      origin: record.origin, processingMethod: record.processingMethod,
+      flavorProfile: record.flavorProfile, acidityLevel: record.acidityLevel, bodyLevel: record.bodyLevel,
     }));
-    const roastFilter = request.searchParams.roastLevel
-      ? brewmarkToPublicRoast[request.searchParams.roastLevel]
-      : null;
     const data = {
       query: request.searchParams.q,
-      roastFilter,
+      roastLevelFilter: request.searchParams.roastLevel ?? null,
       returnedCount: coffees.length,
       moreMatchesAvailable: payload.hasMore,
       ratingScale: {
@@ -91,9 +82,9 @@ export default (({ client }) => defineMappedTool({
       sourceUrl: "https://brewmark.io" as const,
     };
     const lines = coffees.map((record) => [
-      `${record.name} by ${record.roaster}`,
+      `${record.name} by ${record.roasterName}`,
       `origin: ${record.origin ?? "not provided"}`,
-      `roast: ${record.roast}`,
+      `roast level: ${record.roastLevel}`,
       `acidity: ${record.acidityLevel ?? "not provided"}`,
       `body: ${record.bodyLevel ?? "not provided"}`,
     ].join("; "));

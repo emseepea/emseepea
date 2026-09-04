@@ -332,16 +332,33 @@ Use `defineTool` instead when the backend already accepts the public input and
 returns the public output. `defineMappedTool` is for a real contract boundary,
 not an identity mapping.
 
+Preserve useful backend concepts and values by default. Select public-safe
+fields explicitly and validate the public and backend boundaries separately,
+but do not maintain a second list of values just to rename it. Map values only
+for transport compatibility, security, redaction, aggregation, or genuine model
+comprehension.
+
+Prefer an open, bounded schema when the backend can add valid values
+independently.
+
 ```ts
-const backendCommand = z.object({ search: z.string() });
+const backendCommand = z.object({ search: z.string().max(200) });
+const catalogueBean = z.object({
+  name: z.string().max(200),
+  country: z.string().max(100),
+  variety: z.string().max(100),
+  process: z.string().max(100),
+  roast: z.string().max(40),
+  tastingNotes: z.array(z.string().max(100)).max(20),
+});
 const backendResult = z.object({
   record: z.object({
-    name: z.string(),
-    country: z.string(),
-    variety: z.string(),
-    processCode: z.enum(["W", "N"]),
-    roastLevel: z.enum(["light", "medium", "dark"]),
-    flavourNotes: z.array(z.string()),
+    name: z.string().max(200),
+    country: z.string().max(100),
+    variety: z.string().max(100),
+    process: z.string().max(100),
+    roast: z.string().max(40),
+    tastingNotes: z.array(z.string().max(100)).max(20),
   }),
 });
 
@@ -349,8 +366,8 @@ const getBeanDetails = defineMappedTool({
   name: "get-bean-details",
   access: "public",
   description: "Get clear coffee details from the catalogue service.",
-  inputSchema: z.object({ name: z.string() }),
-  outputSchema: beanDetails,
+  inputSchema: z.object({ name: z.string().max(200) }),
+  outputSchema: catalogueBean,
   backendInputSchema: backendCommand,
   backendOutputSchema: backendResult,
   mapInput: ({ name }) => ({ search: name }),
@@ -358,13 +375,13 @@ const getBeanDetails = defineMappedTool({
   mapOutput: ({ record }) => {
     const data = {
       name: record.name,
-      origin: record.country,
+      country: record.country,
       variety: record.variety,
-      process: record.processCode === "W" ? "washed" as const : "natural" as const,
-      roast: record.roastLevel,
-      tastingNotes: record.flavourNotes,
+      process: record.process,
+      roast: record.roast,
+      tastingNotes: record.tastingNotes,
     };
-    return { text: `${data.name} is a ${data.roast}-roast ${data.process} coffee from ${data.origin}.`, data };
+    return { text: `${data.name} is a ${data.roast}-roast ${data.process} coffee from ${data.country}.`, data };
   },
 });
 ```

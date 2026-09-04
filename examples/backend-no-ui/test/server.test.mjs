@@ -5,7 +5,7 @@ import { serveEmseepea } from "@emseepea/server";
 import { createBackendExample } from "../dist/app.js";
 import { brewmarkFixture } from "../test-support/brewmark-fixture.mjs";
 
-test("the backend example maps, checks, and explains BrewMark data", async () => {
+test("the backend example checks and passes through selected BrewMark values", async () => {
   const requests = [];
   let response = brewmarkFixture;
   const app = await createBackendExample({
@@ -38,12 +38,12 @@ test("the backend example maps, checks, and explains BrewMark data", async () =>
 
     const result = await client.callTool({
       name: "search-coffee-catalog",
-      arguments: { query: " natural ", roast: "light" },
+      arguments: { query: " natural ", roastLevel: "LIGHT" },
     });
     assert.equal(result.isError, false);
     assert.deepEqual(result.structuredContent, {
       query: "natural",
-      roastFilter: "light",
+      roastLevelFilter: "LIGHT",
       returnedCount: 1,
       moreMatchesAvailable: true,
       ratingScale: {
@@ -53,11 +53,11 @@ test("the backend example maps, checks, and explains BrewMark data", async () =>
       coffees: [
         {
           name: "Riverlight Natural",
-          roaster: "North Star Sample Roasters",
+          roasterName: "North Star Sample Roasters",
+          roastLevel: "LIGHT",
           origin: "Burundi",
-          roast: "light",
           processingMethod: "Natural",
-          flavourNotes: "Blackberry, hibiscus",
+          flavorProfile: "Blackberry, hibiscus",
           acidityLevel: 5,
           bodyLevel: 2,
         },
@@ -81,12 +81,13 @@ test("the backend example maps, checks, and explains BrewMark data", async () =>
       data: [{
         name: "Details Pending",
         roasterName: "Sample Coffee",
-        roastLevel: "LIGHT",
+        roastLevel: "OMNI_ROAST",
         origin: null,
         processingMethod: null,
         flavorProfile: null,
         acidityLevel: null,
         bodyLevel: null,
+        privateNote: "do not expose",
       }],
       cursor: null,
       hasMore: false,
@@ -98,14 +99,15 @@ test("the backend example maps, checks, and explains BrewMark data", async () =>
     assert.equal(missingDetails.isError, false);
     assert.deepEqual(missingDetails.structuredContent.coffees[0], {
       name: "Details Pending",
-      roaster: "Sample Coffee",
+      roasterName: "Sample Coffee",
+      roastLevel: "OMNI_ROAST",
       origin: null,
-      roast: "light",
       processingMethod: null,
-      flavourNotes: null,
+      flavorProfile: null,
       acidityLevel: null,
       bodyLevel: null,
     });
+    assert.equal("privateNote" in missingDetails.structuredContent.coffees[0], false);
     assert.match(missingDetails.content[0].text, /origin: not provided/);
     assert.match(missingDetails.content[0].text, /acidity: not provided/);
     assert.match(missingDetails.content[0].text, /body: not provided/);
