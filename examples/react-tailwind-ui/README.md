@@ -1,4 +1,14 @@
-# React and Tailwind UI Example
+# `@emseepea/create-react-ui-server`
+
+This directory is both the maintained example and its public npm initializer.
+
+```sh
+npm init @emseepea/react-ui-server@next -- my-server
+```
+
+<!-- generated-project-readme -->
+
+## React and Tailwind UI Example
 
 Choose this example when your application already uses React and you want an
 accessible form without writing Tailwind configuration or component styles.

@@ -62,10 +62,8 @@ For detailed gates and evidence, see the [quality policy][quality-policy] and
 
 ## Create a Project
 
-These commands are queued for the next pre-alpha release. They will work after
-that release publishes the initializer packages to npm. Until then, run the
-matching example from this repository. Replace `my-server` with an unused
-directory name:
+These commands use the pre-alpha initializer packages published on npm.
+Replace `my-server` with an unused directory name:
 
 - One public tool: `npm init @emseepea/tool-server@next -- my-server`
 - A public web API: `npm init @emseepea/api-backed-server@next -- my-server`
@@ -78,7 +76,9 @@ directory name:
 
 Each command creates a private standalone project with its lint, ordinary tests,
 and semantic tests. The two form starters also include browser accessibility
-tests. The `next` tag identifies the pre-alpha release.
+tests. The `next` tag identifies the pre-alpha release. Each initializer package,
+README, changelog, and maintained source live together in the matching
+[`examples/` directory](https://github.com/emseepea/emseepea/tree/main/examples).
 
 The sign-in example uses the made-up token `example-access-token`. It shows
 where token checking fits. It is not a production sign-in system.
@@ -148,9 +148,9 @@ Publication does not expand these claims.
 - [Cognitive-accessibility publication rule][cognitive-publication]
 - [Brand style guide](docs/brand/STYLE-GUIDE.md)
 
-The source and examples are public under MIT. The root and examples remain
-private npm workspaces. The server, testing helpers, React renderer, Tailwind
-stylesheet, and all eight initializer packages are eligible for publication.
+The source and examples are public under MIT. The root remains private. The
+server, testing helpers, React renderer, Tailwind stylesheet, and all eight
+example-backed initializer packages are eligible for publication.
 
 [cognitive-publication]: docs/decisions/0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md

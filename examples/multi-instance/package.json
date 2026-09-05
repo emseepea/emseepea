@@ -1,17 +1,20 @@
 {
-  "name": "@emseepea/example-multi-instance",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@emseepea/create-multi-instance-sqlite-server",
+  "version": "0.0.2",
+  "description": "Create a two-instance Em See Pea server backed by SQLite.",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "npm run build:example && npm run build:initializer",
+    "build:example": "tsc -p tsconfig.json",
+    "build:initializer": "node ../../scripts/build-initializer.mjs",
     "start": "node dist/start-two.js",
     "test": "npm run build && npm run test:built",
     "test:built": "node --test test/*.test.mjs",
     "test:llm": "npm run build && npm run test:llm:built",
     "test:llm:built": "emseepea-test eval",
-    "lint": "oxlint src test eval"
+    "lint": "oxlint src test eval",
+    "prepack": "npm run build:initializer"
   },
   "dependencies": {
     "@emseepea/server": "0.2.0",
@@ -26,5 +29,11 @@
   },
   "engines": {
     "node": ">=22.13.0"
-  }
+  },
+  "repository": { "type": "git", "url": "git+https://github.com/emseepea/emseepea.git", "directory": "examples/multi-instance" },
+  "homepage": "https://emseepea.github.io/emseepea/examples/",
+  "bugs": "https://github.com/emseepea/emseepea/issues",
+  "publishConfig": { "access": "public", "provenance": true, "tag": "next" },
+  "bin": { "create-multi-instance-sqlite-server": "./initializer-dist/create.mjs" },
+  "files": ["initializer-dist"]
 }

@@ -1,4 +1,14 @@
-# Sign-In Tool Example
+# `@emseepea/create-sign-in-tool-server`
+
+This directory is both the maintained example and its public npm initializer.
+
+```sh
+npm init @emseepea/sign-in-tool-server@next -- my-server
+```
+
+<!-- generated-project-readme -->
+
+## Sign-In Tool Example
 
 Choose this example when people should be able to discover your server and its
 tools without signing in, but must sign in before a particular tool runs.

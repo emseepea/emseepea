@@ -11,9 +11,8 @@ ordinary tests and tests of AI tool choice and explanations.
 You need Git, Node.js 22 or 24, and npm. This is a local development quickstart,
 not production deployment guidance.
 
-The initializer command is queued for the next pre-alpha release. It will work
-after that release publishes the package to npm. Until then, use the
-[public-tool example source](https://github.com/emseepea/emseepea/tree/main/examples/basic-no-ui).
+The [public-tool example directory](https://github.com/emseepea/emseepea/tree/main/examples/basic-no-ui)
+contains the maintained source and the public initializer package used below.
 
 ## Create the project
 

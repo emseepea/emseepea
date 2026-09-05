@@ -1,4 +1,14 @@
-# Streaming Progress Example
+# `@emseepea/create-progress-streaming-server`
+
+This directory is both the maintained example and its public npm initializer.
+
+```sh
+npm init @emseepea/progress-streaming-server@next -- my-server
+```
+
+<!-- generated-project-readme -->
+
+## Streaming Progress Example
 
 Choose this example when a tool takes long enough that people benefit from
 seeing progress before the final answer.

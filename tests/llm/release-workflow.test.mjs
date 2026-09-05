@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -19,6 +20,7 @@ import {
   provenanceIncludesCommit,
   waitForPublication,
 } from "../../scripts/verify-registry-release.mjs";
+import { useRegistryTarballs } from "../../scripts/use-registry-tarballs.mjs";
 
 const workflow = await readFile(new URL("../../.github/workflows/release.yml", import.meta.url), "utf8");
 const quality = await readFile(new URL("../../.github/workflows/quality.yml", import.meta.url), "utf8");
@@ -128,6 +130,7 @@ test("publication builds and verifies packages before creating public releases",
   assert.match(job, /if: steps\.registry-verify\.outputs\.ready == 'true'/);
   assert.match(job, /EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry node --test tests\/docs\/getting-started-references\.test\.mjs/);
   assert.ok(job.indexOf("verify-registry-release.mjs verify") < job.indexOf("EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry"));
+  assert.match(job, /use-registry-tarballs\.mjs release-artifacts registry-artifacts/);
   assert.match(job, /gh release edit/);
   assert.match(job, /gh release create "\$tag" --draft/);
   assert.match(job, /gh release edit "\$tag" --draft=false/);
@@ -136,6 +139,24 @@ test("publication builds and verifies packages before creating public releases",
   assert.match(job, /gh release upload "\$tag" "\$@" --clobber/);
   assert.match(job, /--latest=false/);
   assert.doesNotMatch(job, /steps\.changesets\.outputs\.published/);
+});
+
+test("release assets use the exact registry tarballs and matching checksums", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "emseepea-registry-tarballs-"));
+  const releaseDirectory = join(directory, "release");
+  const registryDirectory = join(directory, "registry");
+  try {
+    await mkdir(releaseDirectory);
+    await mkdir(registryDirectory);
+    await writeFile(join(releaseDirectory, "package.tgz"), "local prepack");
+    await writeFile(join(registryDirectory, "package.tgz"), "published bytes");
+    await useRegistryTarballs(releaseDirectory, registryDirectory);
+    assert.equal(await readFile(join(releaseDirectory, "package.tgz"), "utf8"), "published bytes");
+    const digest = createHash("sha256").update("published bytes").digest("hex");
+    assert.equal(await readFile(join(releaseDirectory, "SHA256SUMS"), "utf8"), `${digest}  package.tgz\n`);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("release tags are created at the provenance commit and then verified", () => {

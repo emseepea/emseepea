@@ -1,4 +1,14 @@
-# Native UI Example
+# `@emseepea/create-html-ui-server`
+
+This directory is both the maintained example and its public npm initializer.
+
+```sh
+npm init @emseepea/html-ui-server@next -- my-server
+```
+
+<!-- generated-project-readme -->
+
+## Native UI Example
 
 Choose this example when you need an accessible form but do not want React or
 another browser UI framework.

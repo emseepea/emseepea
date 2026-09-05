@@ -1,4 +1,14 @@
-# Multi-Instance Example
+# `@emseepea/create-multi-instance-sqlite-server`
+
+This directory is both the maintained example and its public npm initializer.
+
+```sh
+npm init @emseepea/multi-instance-sqlite-server@next -- my-server
+```
+
+<!-- generated-project-readme -->
+
+## Multi-Instance Example
 
 Choose this example when two local server processes may receive the same retry
 and must avoid creating the same stored report twice.

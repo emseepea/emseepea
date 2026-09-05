@@ -1,4 +1,14 @@
-# Public Web Service Backend Example
+# `@emseepea/create-api-backed-server`
+
+This directory is both the maintained example and its public npm initializer.
+
+```sh
+npm init @emseepea/api-backed-server@next -- my-server
+```
+
+<!-- generated-project-readme -->
+
+## Public Web Service Backend Example
 
 Choose this example when your MCP tool needs to read a public web service and
 return selected, checked data in a clear result for an assistant.

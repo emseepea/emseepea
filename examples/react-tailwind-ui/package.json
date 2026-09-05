@@ -1,20 +1,22 @@
 {
-  "name": "@emseepea/example-react-tailwind-ui",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@emseepea/create-react-ui-server",
+  "version": "0.0.2",
+  "description": "Create an Em See Pea server with an accessible React form.",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json && esbuild src/client.tsx --bundle --minify --format=esm --platform=browser --outfile=dist/client.js",
+    "build": "npm run build:example && npm run build:initializer",
+    "build:example": "tsc -p tsconfig.json && esbuild src/client.tsx --bundle --minify --format=esm --platform=browser --outfile=dist/client.js",
+    "build:initializer": "node ../../scripts/build-initializer.mjs",
     "start": "node dist/server.js",
     "test": "npm run build && npm run test:built",
     "test:built": "node --test test/*.test.mjs",
     "test:llm": "npm run build && npm run test:llm:built",
     "test:llm:built": "emseepea-test eval",
-    "lint": "oxlint src test eval"
+    "lint": "oxlint src test eval",
+    "prepack": "npm run build:initializer"
   },
   "dependencies": {
-    "@emseepea/example-ui-shared": "0.0.0",
     "@emseepea/react": "0.0.3",
     "@emseepea/server": "0.2.0",
     "@emseepea/tailwind": "0.0.1",
@@ -22,6 +24,7 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@emseepea/example-ui-shared": "0.0.0",
     "playwright": "1.62.1",
     "axe-core": "4.13.0",
     "@emseepea/testing": "0.2.1",
@@ -34,5 +37,11 @@
   },
   "engines": {
     "node": ">=22"
-  }
+  },
+  "repository": { "type": "git", "url": "git+https://github.com/emseepea/emseepea.git", "directory": "examples/react-tailwind-ui" },
+  "homepage": "https://emseepea.github.io/emseepea/examples/",
+  "bugs": "https://github.com/emseepea/emseepea/issues",
+  "publishConfig": { "access": "public", "provenance": true, "tag": "next" },
+  "bin": { "create-react-ui-server": "./initializer-dist/create.mjs" },
+  "files": ["initializer-dist"]
 }

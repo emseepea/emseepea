@@ -9,8 +9,9 @@ modules live in `src/capabilities/` and are discovered once at startup. Replace
 `my-server` with an unused directory name. The [first-server guide](../getting-started/)
 continues from the public-tool starter.
 
-All eight commands are queued for the next pre-alpha release and will work
-after npm publication. Until then, use the linked example source.
+For each starter, the linked GitHub example directory contains the public
+initializer package, README, changelog, and maintained example source. The
+`next` tag selects the pre-alpha release on npm.
 
 ## Answer questions about your data
 
@@ -25,9 +26,10 @@ npm init @emseepea/tool-server@next -- my-server
 
 ## Connect a public API
 
-**Public web service.** Call an external JSON API and turn its response into
-an MCP result. Unlike the basic example, this demonstrates checks and mapping
-between your tool's contract and a service's different contract.
+**Public web service.** Call an external JSON API and return selected, checked
+fields as an MCP result. The example preserves useful service values instead of
+maintaining a second closed list that needs another release when the service adds
+a valid value.
 
 ```sh
 npm init @emseepea/api-backed-server@next -- my-server

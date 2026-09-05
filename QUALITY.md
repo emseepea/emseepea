@@ -126,8 +126,10 @@ Accessibility Guidelines (WCAG) conformance.
 - Changesets creates or updates the release pull request. One canonical package
   list controls packing, publication evidence, registry readback, and GitHub
   releases. Required pull-request and language-model checks must pass for the
-  merged commit. The root and examples remain private. React, Tailwind, and all
-  eight initializer packages are eligible for publication.
+  merged commit. The root remains private. Each initializer's public package
+  identity, README, changelog, and maintained source live together in its
+  `examples/*` directory. Packaging-only wrapper workspaces are not allowed.
+  React, Tailwind, and all eight initializer packages are eligible for publication.
 - The release job must depend on passing language-model checks for the publishing
   SHA through pinned Claude CLI and `claude-sonnet-4-6`. It uses the Claude
   subscription OAuth secret, and redacted evidence is retained for exactly 14

@@ -55,7 +55,7 @@ test("the initialized quickstart passes its documented checks", { timeout: 900_0
     const packageSource = process.env.EMSEEPEA_GUIDE_PACKAGE_SOURCE ?? "packed";
     assert.ok(["packed", "registry"].includes(packageSource), `unknown package source: ${packageSource}`);
     if (packageSource === "packed") {
-      const initializer = await packPackage("packages/create-tool-server", directory);
+      const initializer = await packPackage("examples/basic-no-ui", directory);
       await exec("npm", ["exec", "--yes", "--offline", "--userconfig", "/dev/null", "--package", initializer, "--", "create-tool-server", "my-mcp"], {
         cwd: directory, timeout: 600_000, maxBuffer: 1024 * 1024,
       });

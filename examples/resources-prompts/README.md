@@ -1,4 +1,14 @@
-# Resources and Prompts Example
+# `@emseepea/create-resources-and-prompts-server`
+
+This directory is both the maintained example and its public npm initializer.
+
+```sh
+npm init @emseepea/resources-and-prompts-server@next -- my-server
+```
+
+<!-- generated-project-readme -->
+
+## Resources and Prompts Example
 
 Choose this example when you want to give an assistant reusable reference
 content and guided starting questions, without adding another tool.

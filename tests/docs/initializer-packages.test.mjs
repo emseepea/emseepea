@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -38,9 +38,12 @@ test("the public package list and built initializers are complete", async () => 
   ]);
   for (const initializer of initializerPackages) {
     const manifest = JSON.parse(await readFile(new URL(`${initializer.path}/package.json`, root), "utf8"));
-    const template = JSON.parse(await readFile(new URL(`${initializer.path}/dist/template/package.json`, root), "utf8"));
+    const template = JSON.parse(await readFile(new URL(`${initializer.path}/initializer-dist/template/package.json`, root), "utf8"));
+    assert.match(initializer.path, /^examples\//, `${initializer.name} is not colocated with its example`);
     assert.equal(manifest.name, initializer.name);
-    assert.equal(manifest.bin[initializer.key], "./dist/create.mjs");
+    assert.equal(manifest.repository.directory, initializer.path);
+    assert.equal(manifest.bin[initializer.key], "./initializer-dist/create.mjs");
+    await assert.rejects(access(new URL(`../../packages/${initializer.key}/package.json`, import.meta.url)));
     assert.equal(template.private, true);
     for (const [name, version] of Object.entries({ ...template.dependencies, ...template.devDependencies })) {
       assert.ok(!name.startsWith("@emseepea/example-"), `${initializer.name} retains ${name}`);
@@ -51,7 +54,7 @@ test("the public package list and built initializers are complete", async () => 
 
 test("an initializer rejects traversal and existing destinations without overwriting", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-initializer-safety-"));
-  const executable = new URL("../../packages/create-tool-server/dist/create.mjs", import.meta.url);
+  const executable = new URL("../../examples/basic-no-ui/initializer-dist/create.mjs", import.meta.url);
   try {
     for (const destination of ["../escape", "nested/server", ".", "..", "/tmp/escape"]) {
       assert.notEqual(run(executable, destination, directory).status, 0, destination);

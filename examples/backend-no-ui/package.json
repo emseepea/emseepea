@@ -1,17 +1,20 @@
 {
-  "name": "@emseepea/example-backend-no-ui",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@emseepea/create-api-backed-server",
+  "version": "0.0.2",
+  "description": "Create an Em See Pea server backed by a public web API.",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "npm run build:example && npm run build:initializer",
+    "build:example": "tsc -p tsconfig.json",
+    "build:initializer": "node ../../scripts/build-initializer.mjs",
     "start": "node dist/server.js",
     "test": "npm run build && npm run test:built",
     "test:built": "node --test test/*.test.mjs",
     "test:llm": "npm run build && npm run test:llm:built",
     "test:llm:built": "emseepea-test eval",
-    "lint": "oxlint src test eval test-support"
+    "lint": "oxlint src test eval test-support",
+    "prepack": "npm run build:initializer"
   },
   "dependencies": {
     "@emseepea/server": "0.2.0",
@@ -26,5 +29,11 @@
   },
   "engines": {
     "node": ">=22"
-  }
+  },
+  "repository": { "type": "git", "url": "git+https://github.com/emseepea/emseepea.git", "directory": "examples/backend-no-ui" },
+  "homepage": "https://emseepea.github.io/emseepea/examples/",
+  "bugs": "https://github.com/emseepea/emseepea/issues",
+  "publishConfig": { "access": "public", "provenance": true, "tag": "next" },
+  "bin": { "create-api-backed-server": "./initializer-dist/create.mjs" },
+  "files": ["initializer-dist"]
 }

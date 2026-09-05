@@ -1,4 +1,14 @@
-# Your First Public Tool
+# `@emseepea/create-tool-server`
+
+This directory is both the maintained example and its public npm initializer.
+
+```sh
+npm init @emseepea/tool-server@next -- my-server
+```
+
+<!-- generated-project-readme -->
+
+## Your First Public Tool
 
 Choose this example when you want the smallest working server with one public,
 read-only tool and no web page.

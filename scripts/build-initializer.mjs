@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { chmod, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { chmod, cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,26 +12,42 @@ const matches = initializerPackages.filter(({ path }) => path === packagePath);
 assert.equal(matches.length, 1, `Expected one initializer for ${packagePath}, found ${matches.length}`);
 const [initializer] = matches;
 
-const output = join(packageDirectory, "dist");
+const output = join(packageDirectory, "initializer-dist");
 const template = join(output, "template");
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 await cp(new URL("./initializer-runtime.mjs", import.meta.url), join(output, "create.mjs"));
 await cp(join(root, "LICENSE"), join(output, "LICENSE"));
 await chmod(join(output, "create.mjs"), 0o755);
-await cp(join(root, "examples", initializer.example), template, {
-  recursive: true,
-  filter: (source) => !source.split(sep).some((part) => (
-    ["artifacts", "dist", "node_modules"].includes(part) || / 2\.[^/]+$/.test(part)
-  )),
-});
+await mkdir(template, { recursive: true });
+for (const entry of await readdir(packageDirectory)) {
+  if (["CHANGELOG.md", "artifacts", "dist", "initializer-dist", "node_modules"].includes(entry) || / 2\.[^/]+$/.test(entry)) continue;
+  await cp(join(packageDirectory, entry), join(template, entry), { recursive: true });
+}
 
 const manifestPath = join(template, "package.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+const readmePath = join(template, "README.md");
+const readme = await readFile(readmePath, "utf8");
+const readmeMarker = "<!-- generated-project-readme -->";
+assert.ok(readme.includes(readmeMarker), `${initializer.path}/README.md is missing ${readmeMarker}`);
+const generatedReadme = readme.split(readmeMarker)[1].trim();
+assert.ok(generatedReadme.startsWith("## "), `${initializer.path}/README.md needs a project heading after the marker`);
+await writeFile(readmePath, `#${generatedReadme.slice(2)}\n`);
 manifest.name = "emseepea-starter";
 manifest.version = "0.0.0";
 manifest.private = true;
+delete manifest.bin;
+delete manifest.bugs;
+delete manifest.files;
+delete manifest.homepage;
+delete manifest.publishConfig;
+delete manifest.repository;
 delete manifest.workspaces;
+manifest.scripts.build = manifest.scripts["build:example"];
+delete manifest.scripts["build:example"];
+delete manifest.scripts["build:initializer"];
+delete manifest.scripts.prepack;
 for (const section of ["dependencies", "devDependencies", "optionalDependencies"]) {
   if (!manifest[section]) continue;
   for (const [name, version] of Object.entries(manifest[section])) {

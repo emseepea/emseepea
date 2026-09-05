@@ -238,7 +238,7 @@ jobs:
           - $name provenance: $attestations_url
           EOF
           done < <(node scripts/public-packages.mjs --publishable --tsv)
-          test "$(sha256sum release-artifacts/*.tgz | cut -d' ' -f1 | sort | tr '\n' ' ')" = "$(sha256sum registry-artifacts/*.tgz | cut -d' ' -f1 | sort | tr '\n' ' ')"
+          node scripts/use-registry-tarballs.mjs release-artifacts registry-artifacts
           smoke_dir="$(mktemp -d)"
           trap 'rm -rf "$smoke_dir"' EXIT
           cd "$smoke_dir"
