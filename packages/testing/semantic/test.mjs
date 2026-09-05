@@ -184,6 +184,7 @@ function toolSelectionPrompt(question, advertisedTools) {
     "Return only one JSON tool plan matching this shape:",
     '{"calls":[{"name":"advertised-tool-name","arguments":{}}]}',
     "Use the fewest calls that can fully answer the question. If the user explicitly requests a number of calls, make exactly that many.",
+    "Requesting several facts does not by itself require repeating the same search call.",
     "Choose between one and three calls. Never repeat a call unless the user requests it. Use only advertised tool names and object arguments.",
     `Available tools:\n${JSON.stringify(advertisedTools)}`,
     `User question:\n${question}`,

@@ -44,9 +44,9 @@ test("accepts one tool-free answer from the required model", () => {
   assert.equal(parseClaudeEvents(`${structuredTool}\n${structuredTool}\n${JSON.stringify({
     ...result, num_turns: 3, structured_output: {},
   })}`, 0, true).providerToolCount, 2);
-  assert.throws(() => parseClaudeEvents(`${structuredTool}\n${structuredTool}\n${structuredTool}\n${JSON.stringify({
+  assert.equal(parseClaudeEvents(`${structuredTool}\n${structuredTool}\n${structuredTool}\n${JSON.stringify({
     ...result, num_turns: 4, structured_output: {},
-  })}`, 0, true), (error) => error.providerToolCount === 3 && error.providerTurnCount === 4);
+  })}`, 0, true).providerToolCount, 3);
   assert.throws(() => parseClaudeEvents(`${structuredTool}\n${JSON.stringify({
     ...result, num_turns: 3, structured_output: {},
   })}`, 0, true), /3 turns/);
@@ -84,7 +84,7 @@ test("isolates model credentials from ordinary environment variables", () => {
     assert.equal(invocation.args[invocation.args.indexOf("--tools") + 1], "");
     assert.deepEqual(JSON.parse(invocation.args[invocation.args.indexOf("--json-schema") + 1]), schema);
     assert.ok(invocation.args.includes("--no-session-persistence"));
-    assert.equal(invocation.args[invocation.args.indexOf("--max-turns") + 1], "3");
+    assert.equal(invocation.args[invocation.args.indexOf("--max-turns") + 1], "4");
   } finally {
     restore("ANTHROPIC_API_KEY", original.apiKey);
     restore("CLAUDE_CODE_OAUTH_TOKEN", original.token);

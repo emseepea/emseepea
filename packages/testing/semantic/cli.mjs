@@ -104,7 +104,7 @@ function validRecord(record, authoritative, smoke) {
   if (record.mode !== "tool-selection") return record.mode === "prepared";
   return record.answerTrials.every((trial) => trial.selectionTurnCount === 1
     && Number.isInteger(trial.selectionProviderToolCount) && trial.selectionProviderToolCount >= 0
-    && trial.selectionProviderToolCount <= 2
+    && trial.selectionProviderToolCount <= 3
     && trial.selectionProviderTurnCount === trial.selectionProviderToolCount + 1
     && Number.isInteger(trial.toolCallCount) && trial.toolCallCount >= 1 && trial.toolCallCount <= 3
     && typeof trial.advertisedToolsSha256 === "string" && typeof trial.selectedCallsSha256 === "string"

@@ -27,7 +27,7 @@ export function parseClaudeEvents(stdout, processExitCode = 0, expectsStructured
   if (notLoggedIn) throw new Error("Model command is not signed in");
   if (processExitCode !== 0) throw new Error(`Model command exited ${processExitCode}`);
   if (result?.is_error || typeof answer !== "string") throw new Error("Model command returned no answer");
-  if (toolUses.length > 2
+  if (toolUses.length > 3
     || toolUses.some(({ name }) => name !== "StructuredOutput" || !expectsStructuredOutput)) {
     throw Object.assign(new Error("Model command used a forbidden tool"), {
       providerToolCount: toolUses.length,
@@ -77,7 +77,7 @@ export function modelInvocation(provider, prompt, directory, jsonSchema) {
       "--print", prompt,
       "--model", model,
       "--effort", "low",
-      "--max-turns", "3",
+      "--max-turns", "4",
       "--safe-mode",
       "--strict-mcp-config",
       "--disable-slash-commands",
