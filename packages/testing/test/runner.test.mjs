@@ -201,6 +201,7 @@ const prompt = process.argv[process.argv.indexOf("--print") + 1];
 appendFileSync(${JSON.stringify(modelLog)}, JSON.stringify({
   hasServerToken: Object.values(process.env).includes("example-access-token"),
   selection: prompt.includes("JSON tool plan"),
+  avoidsToolInvocation: prompt.includes("Do not invoke tools in this model session"),
   cwd: process.cwd(),
 }) + "\\n");
 const answer = prompt.includes("JSON tool plan")
@@ -234,6 +235,7 @@ process.stdout.write(JSON.stringify(result) + "\\n");
   assert.ok(record.answerTrials.every((trial) => trial.pathEvidence[0].target === "get-private-inventory-report"));
   const modelCalls = (await readFile(modelLog, "utf8")).trim().split("\n").map(JSON.parse);
   assert.ok(modelCalls.every(({ hasServerToken }) => hasServerToken === false));
+  assert.ok(modelCalls.filter(({ selection }) => selection).every(({ avoidsToolInvocation }) => avoidsToolInvocation));
   assert.equal(modelCalls.filter(({ selection }) => selection).length, 3);
   assert.equal(new Set(modelCalls.map(({ cwd }) => cwd)).size, 15);
 
