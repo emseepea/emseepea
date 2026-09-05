@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 50 decisions: 29 current and 21 historical.
+This project has 51 decisions: 30 current and 21 historical.
 
 ## Quick Index
 
@@ -40,6 +40,7 @@ This project has 50 decisions: 29 current and 21 historical.
 - [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0050: Schema-Declared Pass-Through by Default](0050-schema-declared-pass-through-by-default.proposed.md): Proposed; human review confirmed.
 - [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.proposed.md): Proposed; human review confirmed.
+- [ADR-0052: Optional Deterministic HTTP Route Discovery](0052-optional-deterministic-http-route-discovery.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -1062,3 +1063,20 @@ Chosen option: **"Publish all public packages to `latest`"**, because the qualif
 - All public packages are versioned and pass the existing exact-commit release qualification and post-publication checks.
 - Every example directory name matches its `@emseepea/create-*` package suffix.
 - Each example remains the single maintained source for its initializer.
+
+### [ADR-0052: Optional Deterministic HTTP Route Discovery](0052-optional-deterministic-http-route-discovery.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### Decision
+
+Chosen option: **"Framework-owned optional HTTP route discovery"**, because it removes repeated route catalogues without copying infrastructure or adding a dependency.
+
+#### How We Check It
+
+- Both UI examples and their generated projects register file and page routes through the public discovery API.
+- Existing direct Fastify registration continues to work.
+- Repeated discovery registers routes in the same order.
+- Tests reject malformed names, non-files, duplicate method and path pairs, source plus build collisions, unsupported exports, and non-file roots.
+- UI browser accessibility, lint, ordinary tests, semantic tests, and packed standalone initializer qualification pass unchanged.
