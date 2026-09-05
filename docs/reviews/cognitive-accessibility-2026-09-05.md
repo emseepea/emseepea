@@ -141,3 +141,18 @@ This review covers source prose. It does not establish package publication.
 | `website/src/content/docs/getting-started.md` | `43039b3301709652da4baee2912a4b39e94dc71632682cb79924a89341a1580b` |
 | `website/src/content/docs/index.md` | `fd35dfd2ce87625e3de93953bb011c81c3c365606a4190a2a388c7f68fcfdc6b` |
 | `website/src/content/docs/less-server-code.md` | `ab75380f88102746fe8a088ffb5f9083847ed3833805330bf8a0c4f8be51beca` |
+
+## Server 0.2.2 Prepublication Review
+
+Result: PASS after correcting the root README's visible version label.
+Independent cognitive-accessibility and Markdown accessibility reviews covered
+the final prepublication record and its root link. The record keeps source,
+publishing-commit, npm, provenance, registry, Git tag, and GitHub release
+evidence separate. It contains no emoji or em dashes.
+
+This review covers source prose. It does not establish package publication.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `README.md` | `4efc793bce09b55d4eb1445aae18f0239e11c7a45c5aba16a5e5fe49bec7fcd2` |
+| `docs/reviews/0.2.2-release-readiness.md` | `d158eac4cc1ea978930638243aad888a7d017e25ce199035391432959fbb06b6` |

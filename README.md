@@ -56,7 +56,7 @@ It covers:
 - creating one stored report when two local server processes share a request ID
 
 For detailed gates and evidence, see the [quality policy][quality-policy] and
-[0.2.1 release-readiness review][release-readiness].
+[0.2.2 release-readiness review][release-readiness].
 
 ## Create a Project
 
@@ -153,5 +153,5 @@ example-backed initializer packages are eligible for publication.
 [cognitive-publication]: docs/decisions/0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md
 [quality-policy]: QUALITY.md
-[release-readiness]: docs/reviews/0.2.1-release-readiness.md
+[release-readiness]: docs/reviews/0.2.2-release-readiness.md
 [semantic-qualification]: docs/decisions/0040-model-selected-tool-semantic-tests.proposed.md
