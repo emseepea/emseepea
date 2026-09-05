@@ -1,5 +1,13 @@
 # @emseepea/create-html-ui-server
 
+## 0.0.4
+
+### Patch Changes
+
+- [`1888482`](https://github.com/emseepea/emseepea/commit/188848205e0f488e7cd5700dd7a15b28a915ae43) Thanks [@tompahoward](https://github.com/tompahoward)! - Document schema-declared pass-through mapping and update the API-backed starter
+  to preserve new valid provider values without a release. Colocate every public
+  initializer package with its maintained example source.
+
 ## 0.0.3
 
 ### Patch Changes

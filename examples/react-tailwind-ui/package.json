@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-react-ui-server",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Create an Em See Pea server with an accessible React form.",
   "license": "MIT",
   "type": "module",
@@ -18,8 +18,8 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/react": "0.0.3",
-    "@emseepea/server": "0.2.0",
+    "@emseepea/react": "0.0.4",
+    "@emseepea/server": "0.2.1",
     "@emseepea/tailwind": "0.0.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
