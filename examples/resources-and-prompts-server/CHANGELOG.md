@@ -1,5 +1,14 @@
 # @emseepea/create-resources-and-prompts-server
 
+## 0.0.6
+
+### Patch Changes
+
+- [`aa69cba`](https://github.com/emseepea/emseepea/commit/aa69cbaacbeaa9f7cf92b1f2b4d9bbb63b68f8df) Thanks [@tompahoward](https://github.com/tompahoward)! - Replace configuration-object semantic tests with readable, multi-turn
+  conversation tests. Assert exact tool calls, literal response content, and
+  model-judged response meaning with focused helpers built on Node assertions and
+  the existing isolated Em See Pea judge.
+
 ## 0.0.5
 
 ### Patch Changes
