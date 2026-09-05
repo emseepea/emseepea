@@ -228,6 +228,7 @@ process.stdout.write(JSON.stringify(result) + "\\n");
   assert.equal(record.answerTrials.length, 3);
   assert.ok(record.answerTrials.every((trial) => trial.toolCallCount === 1));
   assert.ok(record.answerTrials.every((trial) => trial.selectionTurnCount === 1));
+  assert.ok(record.answerTrials.every((trial) => trial.selectionProviderTurnCount === 1));
   assert.ok(record.answerTrials.every((trial) => trial.selectedTools[0] === "get-private-inventory-report"));
   assert.ok(record.answerTrials.every((trial) => trial.pathEvidence[0].target === "get-private-inventory-report"));
   const modelCalls = (await readFile(modelLog, "utf8")).trim().split("\n").map(JSON.parse);

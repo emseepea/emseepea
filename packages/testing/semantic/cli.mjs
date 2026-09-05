@@ -103,6 +103,7 @@ function validRecord(record, authoritative, smoke) {
     || record.answerTrials?.length !== 3 || record.judgeVerdicts?.length !== 9) return false;
   if (record.mode !== "tool-selection") return record.mode === "prepared";
   return record.answerTrials.every((trial) => trial.selectionTurnCount === 1
+    && (trial.selectionProviderTurnCount === 1 || trial.selectionProviderTurnCount === 2)
     && Number.isInteger(trial.toolCallCount) && trial.toolCallCount >= 1 && trial.toolCallCount <= 3
     && typeof trial.advertisedToolsSha256 === "string" && typeof trial.selectedCallsSha256 === "string"
     && JSON.stringify(trial.selectedTools) === JSON.stringify(trial.expectedTools));

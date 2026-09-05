@@ -38,7 +38,12 @@ export function parseClaudeEvents(stdout, processExitCode = 0, expectsStructured
   if (usage?.canonicalModel !== model || usage.provider !== "firstParty") {
     throw new Error("Model command did not use the required model");
   }
-  return { answer, models: Object.keys(result.modelUsage), turnCount: result.num_turns };
+  return {
+    answer,
+    models: Object.keys(result.modelUsage),
+    turnCount: result.num_turns - toolUses.length,
+    providerTurnCount: result.num_turns,
+  };
 }
 
 export function parseJudgeVerdict(output) {

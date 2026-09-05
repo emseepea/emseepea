@@ -31,10 +31,12 @@ test("accepts one tool-free answer from the required model", () => {
     type: "assistant",
     message: { content: [{ type: "tool_use", name: "StructuredOutput" }] },
   });
-  assert.equal(
-    parseClaudeEvents(`${structuredTool}\n${structured}`, 0, true).answer,
-    '{"calls":[{"name":"get-bean","arguments":{}}]}',
-  );
+  assert.deepEqual(parseClaudeEvents(`${structuredTool}\n${structured}`, 0, true), {
+    answer: '{"calls":[{"name":"get-bean","arguments":{}}]}',
+    models: ["claude-sonnet-4-6"],
+    turnCount: 1,
+    providerTurnCount: 2,
+  });
   assert.equal(parseClaudeEvents(constrained, 0, true).answer, '{"calls":[{"name":"get-bean","arguments":{}}]}');
   assert.throws(() => parseClaudeEvents(`${structuredTool}\n${JSON.stringify(result)}`, 0, true), /no answer/);
   assert.throws(() => parseClaudeEvents(`${structuredTool}\n${structured}`), /forbidden tool/);

@@ -94,6 +94,7 @@ function registerTest(name, options, mode) {
             Object.assign(selectionEvidence, {
               selectionModels: selection.models,
               selectionTurnCount: selection.turnCount,
+              selectionProviderTurnCount: selection.providerTurnCount,
               advertisedToolsSha256: hash(JSON.stringify(advertisedTools)),
               selectedCallsSha256: hash(JSON.stringify(calls)),
               selectedTools: calls.map(({ name: toolName }) => toolName),
@@ -119,6 +120,7 @@ function registerTest(name, options, mode) {
             trial,
             models: answer.models,
             turnCount: answer.turnCount,
+            providerTurnCount: answer.providerTurnCount,
             materialSha256: hash(material.text),
             pathEvidence: material.pathEvidence,
             ...selectionEvidence,
@@ -135,7 +137,8 @@ function registerTest(name, options, mode) {
               ].join("\n\n"), judgeDirectory, signal);
               const verdict = parseJudgeVerdict(response.answer.trim());
               evidence.judgeVerdicts.push({ trial, judgment, models: response.models,
-                turnCount: response.turnCount, verdict: { pass: verdict.pass, score: verdict.score } });
+                turnCount: response.turnCount, providerTurnCount: response.providerTurnCount,
+                verdict: { pass: verdict.pass, score: verdict.score } });
               if (!verdict.pass) throw new Error("A meaning judgment failed");
             } finally { await rm(judgeDirectory, { recursive: true, force: true }); }
           }
@@ -174,6 +177,7 @@ function toolSelectionPrompt(question, advertisedTools) {
     "Return only one JSON tool plan matching this shape:",
     '{"calls":[{"name":"advertised-tool-name","arguments":{}}]}',
     "Choose between one and three calls. Use only advertised tool names and object arguments.",
+    "Preserve any explicitly requested repeated calls in the plan.",
     `Available tools:\n${JSON.stringify(advertisedTools)}`,
     `User question:\n${question}`,
   ].join("\n\n");
