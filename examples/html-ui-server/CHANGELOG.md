@@ -1,5 +1,11 @@
 # @emseepea/create-html-ui-server
 
+## 0.0.6
+
+### Patch Changes
+
+- [`f673477`](https://github.com/emseepea/emseepea/commit/f6734775b5b7b5160312a394d16954d9959637ea) Thanks [@tompahoward](https://github.com/tompahoward)! - Add optional deterministic HTTP route discovery and use it in both UI server templates.
+
 ## 0.0.5
 
 ### Patch Changes
