@@ -80,3 +80,16 @@ This review covers source prose. It does not establish package publication.
 | `examples/streaming-progress/README.md` | `0ed5f2170c5c040eaf329840b23528675ffb444465291ca37a16f2dd2c43d8d9` |
 | `website/src/content/docs/examples.md` | `f10ab664010fd35a1886fc17ecfd114cdce16fc9338455cef4ebe6b998be12f6` |
 | `website/src/content/docs/getting-started.md` | `dfe60fdca008a01b774bc302015b7aa6cb725c3e95abd5d290e6f2349e2a89ee` |
+
+## Server 0.2.1 Prepublication Review
+
+Result: PASS. Independent cognitive-accessibility and Markdown accessibility
+reviews covered the final prepublication record. It clearly separates reviewed
+source, publishing-commit qualification, npm publication, and GitHub release
+evidence. It contains no emoji or em dashes.
+
+This review covers source prose. It does not establish package publication.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `docs/reviews/0.2.1-release-readiness.md` | `039f2dc3423a21cc2bd6f6b4468a3f60aece4db1c4b625bda0dca021b31c9c51` |
