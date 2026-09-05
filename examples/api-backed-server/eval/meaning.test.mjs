@@ -11,8 +11,8 @@ toolSelectionTest("Taxon fields retain their documented meaning", {
     "Common Pea",
     "Lathyrus odoratus",
     "Sweet Pea",
-    "8720",
-    "6240"
+    /8,?720/,
+    /6,?240/
   ],
   criteria:
     "The answer reports Pisum sativum as Common Pea and Lathyrus odoratus as Sweet " +

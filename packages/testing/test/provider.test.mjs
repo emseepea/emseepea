@@ -36,12 +36,14 @@ test("isolates model credentials from ordinary environment variables", () => {
   process.env.EMSEEPEA_MODEL_COMMAND = "/opt/claude";
   process.env.HOME = "/tmp/signed-in-home";
   try {
-    const invocation = modelInvocation("claude-ci", "question", "/tmp/neutral");
+    const schema = { type: "object", required: ["calls"] };
+    const invocation = modelInvocation("claude-ci", "question", "/tmp/neutral", schema);
     assert.equal(invocation.command, "/opt/claude");
     assert.equal(invocation.env.CLAUDE_CODE_OAUTH_TOKEN, "subscription-token");
     assert.equal(invocation.env.ANTHROPIC_API_KEY, undefined);
     assert.equal(invocation.env.HOME, "/tmp/neutral");
     assert.equal(invocation.args[invocation.args.indexOf("--tools") + 1], "");
+    assert.deepEqual(JSON.parse(invocation.args[invocation.args.indexOf("--json-schema") + 1]), schema);
     assert.ok(invocation.args.includes("--no-session-persistence"));
   } finally {
     restore("ANTHROPIC_API_KEY", original.apiKey);

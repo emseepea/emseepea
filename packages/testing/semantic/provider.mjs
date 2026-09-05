@@ -48,7 +48,7 @@ export function parseJudgeVerdict(output) {
   return verdict;
 }
 
-export function modelInvocation(provider, prompt, directory) {
+export function modelInvocation(provider, prompt, directory, jsonSchema) {
   const token = provider === "claude-ci" ? process.env.CLAUDE_CODE_OAUTH_TOKEN?.trim() : undefined;
   if (provider === "claude-ci" && !token) throw new Error("Claude subscription authentication is unavailable");
   const localHome = provider === "claude-local" ? process.env.HOME : undefined;
@@ -70,6 +70,7 @@ export function modelInvocation(provider, prompt, directory) {
       "--tools", "",
       "--no-chrome",
       "--prompt-suggestions", "false",
+      ...(jsonSchema ? ["--json-schema", JSON.stringify(jsonSchema)] : []),
       "--output-format", "stream-json",
       "--verbose",
     ],
@@ -80,9 +81,9 @@ export function modelInvocation(provider, prompt, directory) {
   };
 }
 
-export async function runModel(provider, prompt, directory, signal) {
+export async function runModel(provider, prompt, directory, signal, jsonSchema) {
   signal?.throwIfAborted();
-  const invocation = modelInvocation(provider, prompt, directory);
+  const invocation = modelInvocation(provider, prompt, directory, jsonSchema);
   const execution = await runProcess(invocation.command, invocation.args, {
     cwd: invocation.cwd,
     env: invocation.env,

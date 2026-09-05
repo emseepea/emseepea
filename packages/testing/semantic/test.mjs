@@ -77,6 +77,7 @@ function registerTest(name, options, mode) {
               toolSelectionPrompt(specification.question, advertisedTools),
               selectionDirectory,
               signal,
+              toolSelectionSchema(advertisedTools),
             );
             phase = "tool selection validation";
             const calls = parseToolSelection(selection.answer.trim(), advertisedTools, specification.expectedTools);
@@ -161,4 +162,28 @@ function toolSelectionPrompt(question, advertisedTools) {
     `Available tools:\n${JSON.stringify(advertisedTools)}`,
     `User question:\n${question}`,
   ].join("\n\n");
+}
+
+function toolSelectionSchema(advertisedTools) {
+  return {
+    type: "object",
+    properties: {
+      calls: {
+        type: "array",
+        minItems: 1,
+        maxItems: 3,
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string", enum: advertisedTools.map(({ name }) => name) },
+            arguments: { type: "object" },
+          },
+          required: ["name", "arguments"],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["calls"],
+    additionalProperties: false,
+  };
 }
