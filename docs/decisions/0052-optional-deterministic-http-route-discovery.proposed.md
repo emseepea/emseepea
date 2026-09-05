@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-09-05
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-09-06
 decision-makers: ["Tom Howard"]
 consulted: []
 informed: []
