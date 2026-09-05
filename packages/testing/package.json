@@ -12,8 +12,7 @@
   "bugs": "https://github.com/emseepea/emseepea/issues",
   "publishConfig": {
     "access": "public",
-    "provenance": true,
-    "tag": "next"
+    "provenance": true
   },
   "type": "module",
   "exports": {

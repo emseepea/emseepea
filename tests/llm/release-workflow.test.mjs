@@ -299,14 +299,13 @@ test("registry publication verification waits for partial registry propagation",
   });
 });
 
-test("registry checks preserve tags and exact provenance", () => {
+test("registry checks require latest and exact provenance", () => {
   const before = { packages: [{ name: "@emseepea/server", version: "0.0.2", present: false, latest: "0.0.0" }] };
   const after = { packages: [{
     name: "@emseepea/server",
     version: "0.0.2",
     present: true,
-    latest: "0.0.0",
-    next: "0.0.2",
+    latest: "0.0.2",
     integrity: "sha512-AA==",
     tarball: "https://registry.example/server.tgz",
     attestationsUrl: "https://registry.example/attestations",
@@ -318,15 +317,8 @@ test("registry checks preserve tags and exact provenance", () => {
     /server@0\.0\.2 is missing/,
   );
   assert.throws(
-    () => assertRegistryState(before, { packages: [{ ...after.packages[0], latest: "0.0.2" }] }),
-    /latest tag changed/,
-  );
-  assert.throws(
-    () => assertRegistryState(
-      { packages: [{ ...before.packages[0], latest: "0.0.2" }] },
-      { packages: [{ ...after.packages[0], latest: "0.0.2" }] },
-    ),
-    /latest tag points to the pre-alpha release/,
+    () => assertRegistryState(before, { packages: [{ ...after.packages[0], latest: "0.0.0" }] }),
+    /latest tag is wrong/,
   );
 
   const expected = {

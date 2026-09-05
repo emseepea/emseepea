@@ -10,7 +10,7 @@
   },
   "homepage": "https://emseepea.github.io/emseepea/examples/",
   "bugs": "https://github.com/emseepea/emseepea/issues",
-  "publishConfig": { "access": "public", "provenance": true, "tag": "next" },
+  "publishConfig": { "access": "public", "provenance": true },
   "exports": {
     "./styles.css": "./dist/emseepea.css"
   },

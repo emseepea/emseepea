@@ -1,0 +1,40 @@
+{
+  "name": "@emseepea/create-html-ui-server",
+  "version": "0.0.4",
+  "description": "Create an Em See Pea server with an accessible HTML form.",
+  "license": "MIT",
+  "type": "module",
+  "starterDependencies": ["@emseepea/server", "@emseepea/tailwind"],
+  "scripts": {
+    "build": "npm run build:example && npm run build:initializer",
+    "build:example": "tsc -p tsconfig.json",
+    "build:initializer": "node ../../scripts/build-initializer.mjs",
+    "start": "node dist/server.js",
+    "test": "npm run build && npm run test:built",
+    "test:built": "node --test test/*.test.mjs",
+    "test:llm": "npm run build && npm run test:llm:built",
+    "test:llm:built": "emseepea-test eval",
+    "lint": "oxlint src test eval",
+    "prepack": "npm run build:initializer"
+  },
+  "devDependencies": {
+    "@emseepea/server": "0.2.1",
+    "@emseepea/tailwind": "0.0.1",
+    "@emseepea/example-ui-shared": "0.0.0",
+    "playwright": "1.62.1",
+    "axe-core": "4.13.0",
+    "@emseepea/testing": "0.2.1",
+    "@types/node": "24.13.3",
+    "typescript": "6.0.3",
+    "oxlint": "1.80.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": { "type": "git", "url": "git+https://github.com/emseepea/emseepea.git", "directory": "examples/html-ui-server" },
+  "homepage": "https://emseepea.github.io/emseepea/examples/",
+  "bugs": "https://github.com/emseepea/emseepea/issues",
+  "publishConfig": { "access": "public", "provenance": true },
+  "bin": { "create-html-ui-server": "./initializer-dist/create.mjs" },
+  "files": ["initializer-dist"]
+}

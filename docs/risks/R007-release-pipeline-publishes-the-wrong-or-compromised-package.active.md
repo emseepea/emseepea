@@ -46,7 +46,7 @@ Impact × Likelihood *before* controls.
   `tests/docs/packed-getting-started.test.mjs`, run by release CI before npm
   publication. A failed dependency graph or package check stops publication.
 - **Check the package after npm receives it** - Anonymous npm checks verify the
-  version, `next` tag, source evidence, clean installation, registry signatures,
+  version, `latest` tag, source evidence, clean installation, registry signatures,
   public import, and a basic run before the GitHub release
   is created. Implemented in
   `.github/workflows/release.yml`.

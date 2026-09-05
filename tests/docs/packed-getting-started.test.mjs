@@ -256,13 +256,13 @@ test("every packed initializer creates a standalone checked project", {
     const fakeModel = path.join(directory, "fake-model.mjs");
     await cp(new URL("../fixtures/fake-semantic-model.mjs", import.meta.url), fakeModel);
     const expectedTools = {
-      "backend-no-ui": ["search-coffee-catalog"],
-      "basic-no-ui": ["get-bean-details"],
-      "multi-instance": ["create-shared-bean-report", "create-shared-bean-report"],
-      "native-ui": ["preview-bean-report"],
-      "protected-no-ui": ["get-private-inventory-report"],
-      "react-tailwind-ui": ["preview-bean-report"],
-      "streaming-progress": ["roast-sample-batch"],
+      "api-backed-server": ["search-pea-taxa"],
+      "tool-server": ["get-pea-variety"],
+      "multi-instance-sqlite-server": ["create-shared-harvest-report", "create-shared-harvest-report"],
+      "html-ui-server": ["preview-planting-plan"],
+      "sign-in-tool-server": ["get-private-inventory-report"],
+      "react-ui-server": ["preview-planting-plan"],
+      "progress-streaming-server": ["run-germination-trial"],
     };
 
     const queue = [...initializerPackages];
@@ -321,7 +321,7 @@ test("every packed initializer creates a standalone checked project", {
       assert.equal(evidence.status, "passed", `${initializer.example} semantic smoke failed`);
       assert.equal(result.answerTrials.length, 3);
       assert.equal(result.judgeVerdicts.length, 9);
-      if (initializer.example === "resources-prompts") {
+      if (initializer.example === "resources-and-prompts-server") {
         assert.equal(result.mode, "prepared");
       } else {
         assert.equal(result.mode, "tool-selection");

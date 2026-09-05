@@ -42,9 +42,9 @@ the response means.
 4. Run the same checks against both implementations.
 5. Compare the code you can remove with the code and dependencies you would add.
 
-Use [the basic example](https://github.com/emseepea/emseepea/tree/main/examples/basic-no-ui)
+Use [the tool server example](https://github.com/emseepea/emseepea/tree/main/examples/tool-server)
 when your handler can return the public result directly. Use
-[the backend example](https://github.com/emseepea/emseepea/tree/main/examples/backend-no-ui)
+[the API-backed server example](https://github.com/emseepea/emseepea/tree/main/examples/api-backed-server)
 when the connected service uses a different input or output format.
 
 ## Check compatibility before switching

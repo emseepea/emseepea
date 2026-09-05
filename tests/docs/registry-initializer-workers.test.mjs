@@ -24,7 +24,7 @@ test("registry initializer verification uses four workers and preserves every ch
   const initializations = calls.filter(({ command, args }) => command === "npm" && args[0] === "init");
   assert.deepEqual(
     initializations.map(({ args }) => args[1]).sort(),
-    initializerPackages.map(({ name }) => `@emseepea/${name.split("/create-")[1]}@next`).sort(),
+    initializerPackages.map(({ name }) => `@emseepea/${name.split("/create-")[1]}`).sort(),
   );
   for (const { cwd: parent } of initializations) {
     const project = join(parent, "my-server");

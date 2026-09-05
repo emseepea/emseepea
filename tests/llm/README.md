@@ -8,7 +8,7 @@ and organizing cases.
 ## Run One Example
 
 ```sh
-cd examples/basic-no-ui
+cd examples/tool-server
 npm run test:llm
 ```
 

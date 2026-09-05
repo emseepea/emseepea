@@ -2,8 +2,8 @@
 
 ## Supported Versions
 
-Em See Pea is pre-alpha. Only the most recent `0.0.x` version published under
-the npm `next` tag is eligible for security fixes. No production-support or
+Em See Pea is pre-alpha. Only the most recent `0.x` version published under
+the npm `latest` tag is eligible for security fixes. No production-support or
 backport commitment is made yet.
 
 ## Report a Vulnerability

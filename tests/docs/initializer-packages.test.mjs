@@ -10,6 +10,7 @@ import { initializerPackages, publicPackages, publishablePackages } from "../../
 const root = new URL("../../", import.meta.url);
 
 test("the public package list and built initializers are complete", async () => {
+  const rootReadme = await readFile(new URL("../../README.md", import.meta.url), "utf8");
   assert.equal(new Set(publicPackages.map(({ name }) => name)).size, publicPackages.length);
   assert.equal(new Set(publicPackages.map(({ path: packagePath }) => packagePath)).size, publicPackages.length);
   assert.deepEqual(initializerPackages.map(({ name }) => name), [
@@ -39,7 +40,12 @@ test("the public package list and built initializers are complete", async () => 
   for (const initializer of initializerPackages) {
     const manifest = JSON.parse(await readFile(new URL(`${initializer.path}/package.json`, root), "utf8"));
     const template = JSON.parse(await readFile(new URL(`${initializer.path}/initializer-dist/template/package.json`, root), "utf8"));
+    const readme = await readFile(new URL(`${initializer.path}/README.md`, root), "utf8");
     assert.match(initializer.path, /^examples\//, `${initializer.name} is not colocated with its example`);
+    assert.equal(path.basename(initializer.path), initializer.name.split("/create-")[1]);
+    assert.ok(rootReadme.includes(`](${initializer.path}/README.md)`));
+    assert.match(readme, /^## Use This Template$/m);
+    assert.match(readme, /^## Create a Project$/m);
     assert.equal(manifest.name, initializer.name);
     assert.equal(manifest.repository.directory, initializer.path);
     assert.equal(manifest.bin[initializer.key], "./initializer-dist/create.mjs");
@@ -57,7 +63,7 @@ test("the public package list and built initializers are complete", async () => 
 
 test("an initializer rejects traversal and existing destinations without overwriting", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-initializer-safety-"));
-  const executable = new URL("../../examples/basic-no-ui/initializer-dist/create.mjs", import.meta.url);
+  const executable = new URL("../../examples/tool-server/initializer-dist/create.mjs", import.meta.url);
   try {
     for (const destination of ["../escape", "nested/server", ".", "..", "/tmp/escape"]) {
       assert.notEqual(run(executable, destination, directory).status, 0, destination);

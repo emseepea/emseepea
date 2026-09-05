@@ -40,9 +40,7 @@ export function assertRegistryState(before, after) {
     assert.ok(actual, `${expected.name} registry metadata is missing`);
     assert.equal(actual.version, expected.version);
     assert.equal(actual.present, true, `${expected.name}@${expected.version} is missing`);
-    assert.equal(actual.next, expected.version, `${expected.name} next tag is wrong`);
-    assert.equal(actual.latest, expected.latest, `${expected.name} latest tag changed`);
-    assert.notEqual(actual.latest, expected.version, `${expected.name} latest tag points to the pre-alpha release`);
+    assert.equal(actual.latest, expected.version, `${expected.name} latest tag is wrong`);
     assert.match(actual.integrity, /^sha512-/, `${expected.name} integrity is missing`);
     assert.ok(actual.tarball, `${expected.name} tarball is missing`);
     assert.ok(actual.attestationsUrl, `${expected.name} attestations are missing`);
@@ -172,7 +170,6 @@ async function readCurrent(expected) {
     version: expected.version,
     present: Boolean(version),
     latest: metadata?.["dist-tags"]?.latest ?? "",
-    next: metadata?.["dist-tags"]?.next ?? "",
     integrity: version?.dist?.integrity ?? "",
     tarball: version?.dist?.tarball ?? "",
     attestationsUrl: version?.dist?.attestations?.url ?? "",

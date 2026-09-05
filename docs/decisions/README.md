@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 49 decisions: 29 current and 20 historical.
+This project has 50 decisions: 29 current and 21 historical.
 
 ## Quick Index
 
@@ -34,12 +34,12 @@ This project has 49 decisions: 29 current and 20 historical.
 - [ADR-0039: Website Performance Budget](0039-website-performance-budget.proposed.md): Proposed; human review confirmed.
 - [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.proposed.md): Proposed; human review confirmed.
 - [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md): Proposed; human review confirmed.
-- [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.proposed.md): Proposed; human review confirmed.
 - [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md): Proposed; human review confirmed.
 - [ADR-0048: Optional Deterministic Filesystem Discovery](0048-optional-deterministic-filesystem-discovery.proposed.md): Proposed; human review confirmed.
 - [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0050: Schema-Declared Pass-Through by Default](0050-schema-declared-pass-through-by-default.proposed.md): Proposed; human review confirmed.
+- [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -60,6 +60,7 @@ This project has 49 decisions: 29 current and 20 historical.
 - [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md): Superseded; human review confirmed.
 - [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.superseded.md): Superseded; human review confirmed.
+- [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.superseded.md): Superseded; human review confirmed.
 - [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.superseded.md): Superseded; human review confirmed.
 - [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.superseded.md): Superseded; human review confirmed.
 - [ADR-0046: Lockfile-Constrained Dependency Verification](0046-lockfile-constrained-dependency-verification.superseded.md): Superseded; human review confirmed.
@@ -860,10 +861,11 @@ Chosen option: **"Em See Pea organisation ownership"**, because the product now 
 - A release from the transferred repository passes exact-revision checks and npm provenance verification.
 - Existing releases and historical records are not rewritten.
 
-### [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.proposed.md)
+### [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.proposed.md)
 
 #### Decision
 
@@ -1040,3 +1042,23 @@ Chosen option: **"Schema-declared pass-through by default with explicit exceptio
 - Translation in maintained examples is limited to transport compatibility, security, redaction, aggregation, or genuine model comprehension.
 - Public and backend schemas remain separately declared and checked.
 - Framework guidance tells adopters to use direct tools for identity mappings and pass-through mapping for selected compatible values.
+
+### [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.superseded.md)
+
+#### Decision
+
+Chosen option: **"Publish all public packages to `latest`"**, because the qualified public releases are the versions Em See Pea recommends people use. Package maturity is communicated by `0.x` versions and clear pre-alpha wording, not by requiring an extra npm tag in every command.
+
+#### How We Check It
+
+- The root release command publishes without a non-default tag override.
+- Public package manifests do not set `publishConfig.tag` to `next`.
+- Current README and website initializer commands omit `@next`.
+- Registry verification requires each released version to be the `latest` tag and verifies that all public packages use the same channel.
+- All public packages are versioned and pass the existing exact-commit release qualification and post-publication checks.
+- Every example directory name matches its `@emseepea/create-*` package suffix.
+- Each example remains the single maintained source for its initializer.

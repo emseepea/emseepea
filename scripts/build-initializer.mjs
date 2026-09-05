@@ -64,13 +64,13 @@ for (const section of ["dependencies", "devDependencies", "optionalDependencies"
   }
 }
 
-if (["native-ui", "react-tailwind-ui"].includes(initializer.example)) {
+if (["html-ui-server", "react-ui-server"].includes(initializer.example)) {
   await addUiSupport(initializer.example, template, manifest);
 }
 await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 
 async function addUiSupport(example, destination, generatedManifest) {
-  const sourceExtension = example === "react-tailwind-ui" ? "tsx" : "ts";
+  const sourceExtension = example === "react-ui-server" ? "tsx" : "ts";
   await mkdir(join(destination, "test-support"), { recursive: true });
   await cp(join(root, "examples/ui-shared/src/index.ts"), join(destination, `src/ui-shared.${sourceExtension}`));
   await cp(
@@ -83,7 +83,7 @@ async function addUiSupport(example, destination, generatedManifest) {
   );
   await replace(join(destination, `src/server.${sourceExtension}`), "@emseepea/example-ui-shared", "./ui-shared.js");
   await replace(
-    join(destination, "src/capabilities/tool.preview-bean-report.ts"),
+    join(destination, "src/capabilities/tool.preview-planting-plan.ts"),
     "@emseepea/example-ui-shared",
     "../ui-shared.js",
   );

@@ -25,7 +25,7 @@ export async function verifyRegistryInitializers({ run = execute, root = process
   const verify = async (initializer) => {
     const parent = await mkdtemp(join(tmpdir(), "emseepea-registry-initializer-"));
     const project = join(parent, "my-server");
-    const init = `@emseepea/${initializer.name.split("/create-")[1]}@next`;
+    const init = `@emseepea/${initializer.name.split("/create-")[1]}`;
     try {
       await run("npm", ["init", init, "--", "my-server"], parent);
       await run("npm", ["install", "--ignore-scripts", "--userconfig", "/dev/null"], project);

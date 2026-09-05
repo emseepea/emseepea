@@ -10,8 +10,8 @@ import { collectMcpMaterial, startSemanticServer, stopSemanticServer } from "../
 
 const cli = fileURLToPath(new URL("../semantic/cli.mjs", import.meta.url));
 const helper = new URL("../semantic/test.mjs", import.meta.url).href;
-const server = new URL("../../../examples/basic-no-ui/dist/server.js", import.meta.url).href;
-const protectedServer = new URL("../../../examples/protected-no-ui/dist/server.js", import.meta.url).href;
+const server = new URL("../../../examples/tool-server/dist/server.js", import.meta.url).href;
+const protectedServer = new URL("../../../examples/sign-in-tool-server/dist/server.js", import.meta.url).href;
 
 test("cancellation stops MCP collection and the server receives no model token", { timeout: 15_000 }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "semantic-cancel-"));
@@ -32,7 +32,7 @@ await import(${JSON.stringify(server)});
   const running = await startSemanticServer({ server: entry, directory }, controller.signal);
   t.after(() => stopSemanticServer(running.child));
   const material = collectMcpMaterial(running.url, { async exercise(client) {
-    await client.callTool({ name: "get-bean-details", arguments: { name: "Highland Bloom" } });
+    await client.callTool({ name: "get-pea-variety", arguments: { name: "Highland Snap" } });
     controller.abort();
     await new Promise(() => {});
   } }, controller.signal);
@@ -88,7 +88,7 @@ setInterval(() => {}, 1000);
 test("executable cases keep fresh trials, custom assertions, and failure gates", { timeout: 90_000 }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "semantic-runner-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
-  await mkdir(join(directory, "eval", "coffee"), { recursive: true });
+  await mkdir(join(directory, "eval", "peas"), { recursive: true });
   const model = join(directory, "model.mjs");
   const calls = join(directory, "calls.jsonl");
   await writeFile(model, `#!/usr/bin/env node
@@ -97,13 +97,13 @@ const prompt = process.argv[process.argv.indexOf("--print") + 1];
 const judge = prompt.includes("Return only JSON with this exact shape");
 appendFileSync(${JSON.stringify(calls)}, JSON.stringify({ judge, cwd: process.cwd() }) + "\\n");
 const pass = !prompt.includes("REJECT_THIS_ANSWER");
-const answer = judge ? JSON.stringify({ pass, score: pass ? 1 : 0, reason: "PRIVATE_JUDGE_DETAIL" }) : "Bourbon";
+const answer = judge ? JSON.stringify({ pass, score: pass ? 1 : 0, reason: "PRIVATE_JUDGE_DETAIL" }) : "climbing";
 process.stdout.write(JSON.stringify({ type: "result", is_error: false, num_turns: 1,
   permission_denials: [], result: answer, modelUsage: {
     "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" }
   } }) + "\\n");
 `, { mode: 0o700 });
-  const file = join(directory, "eval", "coffee", "meaning.test.mjs");
+  const file = join(directory, "eval", "peas", "meaning.test.mjs");
   const output = join(directory, "evidence.json");
   const source = (overrides = "", suffix = "") => `
 import assert from "node:assert/strict";
@@ -114,17 +114,17 @@ before(() => { ready = true; });
 after(() => { ready = false; });
 const options = {
   server: new URL(${JSON.stringify(server)}), question: "Which variety?",
-  criticalFacts: ["Bourbon"], criteria: "Correctly identify the variety.",
-  requiredPaths: ["tools/call:get-bean-details"],
+  criticalFacts: ["climbing"], criteria: "Correctly identify the growth habit.",
+  requiredPaths: ["tools/call:get-pea-variety"],
   async exercise(client) {
     assert.equal(ready, true);
-    for (const name of ["Highland Bloom", "Highland Bloom"]) {
-      const result = await client.callTool({ name: "get-bean-details", arguments: { name } });
+    for (const name of ["Highland Snap", "Highland Snap"]) {
+      const result = await client.callTool({ name: "get-pea-variety", arguments: { name } });
       assert.notEqual(result.isError, true);
       assert.ok(result.content.length > 0);
     }
   },
-  assertAnswer(answer) { assert.equal(answer, "Bourbon"); },
+  assertAnswer(answer) { assert.equal(answer, "climbing"); },
   ${overrides}
 };
 semanticTest("variety", options);

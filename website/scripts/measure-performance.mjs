@@ -114,7 +114,7 @@ async function measure() {
       memory: "JSHeapUsedSize after forced GC, in bytes. Retained main-renderer JavaScript heap only, not peak, WASM, browser RSS or process memory.",
       processMemory: "Sum of smaps_rollup Rss for all CDP-listed browser processes before forced GC, in bytes. Includes resident worker/WASM allocations and browser baseline; counts shared pages more than once. Snapshot, not peak or unique physical memory. Excludes unlisted OS helpers and Node test server.",
       processCpu: "Observed all-thread CPU seconds delta across CDP-listed browser processes, converted to ms. Includes browser background/instrumentation work; forced GC excluded. Rejects disappeared PIDs or reversed counters, but two snapshots cannot detect processes born and exited between them.",
-      phases: "Initial: before navigation to network idle. Search: before opening dialog through coffee results and network idle. No-results: input fill through announcement and network idle. Automation turnaround includes driver and idle waits.",
+      phases: "Initial: before navigation to network idle. Search: before opening dialog through pea results and network idle. No-results: input fill through announcement and network idle. Automation turnaround includes driver and idle waits.",
     }, files: [], totals: {}, samples: [], summaries: [],
   };
   let site;
@@ -162,7 +162,7 @@ async function measure() {
               initial: async () => { assert.equal((await page.goto(site.origin + route)).status(), 200); },
               search: async () => {
                 await page.getByRole("button", { name: /^Search/ }).first().click();
-                await page.getByRole("textbox", { name: /Search/ }).fill("coffee");
+                await page.getByRole("textbox", { name: /Search/ }).fill("pea");
                 await page.locator("dialog").getByRole("link", { name: /Run your first server/ }).first().waitFor();
               },
               noResults: async () => {

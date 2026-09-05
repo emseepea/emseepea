@@ -37,7 +37,7 @@ export function testUiExample(example) {
           assert.equal(await page.locator("html[lang='en']").count(), 1);
           assert.equal(await page.locator("main#main-content").count(), 1);
           assert.equal(await page.locator("h1").count(), 1);
-          assert.equal(await page.title(), "Bean report preview - Em See Pea");
+          assert.equal(await page.title(), "Pea planting plan preview - Em See Pea");
           assert.equal(await page.locator("h1").innerText(), example.h1);
           assert.deepEqual(
             await page.locator("h1,h2,h3,h4,h5,h6").evaluateAll((headings) => headings.map((heading) => ({
@@ -46,8 +46,8 @@ export function testUiExample(example) {
             }))),
             [
               { level: 1, text: example.h1 },
-              { level: 2, text: "Preview a bean report" },
-              ...(state === "invalid" ? [{ level: 3, text: "Fix the report options" }] : []),
+              { level: 2, text: "Preview a pea planting plan" },
+              ...(state === "invalid" ? [{ level: 3, text: "Fix the planting plan options" }] : []),
               ...(state === "terminal" ? [{ level: 3, text: "Preview ready" }] : []),
             ],
           );
@@ -66,29 +66,29 @@ export function testUiExample(example) {
       assert.equal(await page.evaluate(() => document.activeElement?.id), "main-content");
 
       await page.goto(`${running.origin}/?state=invalid`);
-      await page.waitForFunction(() => document.activeElement?.id === "bean-report-preview--error-summary");
+      await page.waitForFunction(() => document.activeElement?.id === "pea-planting-plan-preview--error-summary");
       assert.equal(await page.locator("[data-emseepea-part='error-summary']").getAttribute("role"), "alert");
       assert.equal(
         await page.locator("[data-emseepea-part='error-summary'] a").innerText(),
-        "Report title: Enter a report title.",
+        "Plan title: Enter a plan title.",
       );
       assert.equal(
         await page.locator("[aria-invalid='true']").getAttribute("aria-describedby"),
-        "bean-report-preview--field--report-title--description bean-report-preview--field--report-title--error",
+        "pea-planting-plan-preview--field--report-title--description pea-planting-plan-preview--field--report-title--error",
       );
 
       await page.goto(`${running.origin}/?state=busy`);
-      await page.waitForFunction(() => document.activeElement?.id === "bean-report-preview--status");
+      await page.waitForFunction(() => document.activeElement?.id === "pea-planting-plan-preview--status");
       assert.equal(await page.locator("form").getAttribute("aria-busy"), "true");
       assert.equal(await page.locator("button[type='submit']").isDisabled(), true);
 
       await page.goto(`${running.origin}/?state=terminal`);
-      await page.waitForFunction(() => document.activeElement?.id === "bean-report-preview--terminal");
+      await page.waitForFunction(() => document.activeElement?.id === "pea-planting-plan-preview--terminal");
       await assertNoEffectClaim(page);
 
       await page.goto(`${running.origin}/?style=off&state=ready`);
       assert.equal(await page.locator("link[rel='stylesheet']").count(), 0);
-      assert.equal(await page.locator("label[for='bean-report-preview--field--report-title']").count(), 1);
+      assert.equal(await page.locator("label[for='pea-planting-plan-preview--field--report-title']").count(), 1);
       assert.equal(await page.locator("form").count(), 1);
 
       await page.goto(`${running.origin}/?state=ready`);

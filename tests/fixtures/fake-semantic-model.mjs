@@ -2,18 +2,18 @@
 
 const prompt = process.argv[process.argv.indexOf("--print") + 1] ?? "";
 const plans = [
-  ["create-shared-bean-report", [
-    { name: "create-shared-bean-report", arguments: { requestId: "daily-roast-report" } },
-    { name: "create-shared-bean-report", arguments: { requestId: "daily-roast-report" } },
+  ["create-shared-harvest-report", [
+    { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
+    { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
   ]],
-  ["get-bean-details", [{ name: "get-bean-details", arguments: { name: "Highland Bloom" } }]],
-  ["search-coffee-catalog", [{ name: "search-coffee-catalog", arguments: { query: "natural process coffee" } }]],
+  ["get-pea-variety", [{ name: "get-pea-variety", arguments: { name: "Highland Snap" } }]],
+  ["search-pea-taxa", [{ name: "search-pea-taxa", arguments: { query: "pea" } }]],
   ["get-private-inventory-report", [{ name: "get-private-inventory-report", arguments: {} }]],
-  ["preview-bean-report", [{
-    name: "preview-bean-report",
-    arguments: { title: "Dark roast preview", roast: "dark", includeNotes: true },
+  ["preview-planting-plan", [{
+    name: "preview-planting-plan",
+    arguments: { title: "Snap pea plan", peaType: "snap", includeTips: true },
   }]],
-  ["roast-sample-batch", [{ name: "roast-sample-batch", arguments: { batch: "sample-batch" } }]],
+  ["run-germination-trial", [{ name: "run-germination-trial", arguments: { tray: "sample-tray" } }]],
 ];
 const selected = plans.find(([name]) => prompt.includes(name));
 const answer = prompt.includes("JSON tool plan")
@@ -23,8 +23,8 @@ const answer = prompt.includes("JSON tool plan")
     : prompt.includes("reusesOriginalReport (boolean)")
       ? JSON.stringify({
         createdByInstance: "eval-instance",
-        totalBeans: 4,
-        roastCounts: { light: 1, medium: 2, dark: 1 },
+        totalPlants: 4,
+        peaTypeCounts: { shelling: 2, snap: 2 },
         reusesOriginalReport: true,
         createsAnotherReport: false,
       })

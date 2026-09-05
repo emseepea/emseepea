@@ -292,11 +292,11 @@ test("protected example lists anonymously and requires the synthetic bearer toke
     const valid = await rpc(running.url, "tools/call", params, "example-access-token");
     assert.equal(valid.response.status, 200);
     assert.deepEqual(valid.body.result.structuredContent, {
-      item: "Green coffee bags",
-      onHandBags: 120,
-      reservedBags: 35,
-      availableToPromiseBags: 85,
-      inboundBags: 40,
+      item: "Pea seed packets",
+      onHandPackets: 120,
+      reservedPackets: 35,
+      availableToPromisePackets: 85,
+      inboundPackets: 40,
       inboundAvailableToPromise: false,
     });
     assert.doesNotMatch(JSON.stringify(valid.body), /example-access-token/);
@@ -356,7 +356,7 @@ async function rpc(url, method, params = {}, token, extraHeaders = {}, meta = re
 }
 
 async function startProtectedExample() {
-  const child = spawn(process.execPath, ["examples/protected-no-ui/dist/server.js"], {
+  const child = spawn(process.execPath, ["examples/sign-in-tool-server/dist/server.js"], {
     env: { ...process.env, PORT: "0" },
     stdio: ["ignore", "pipe", "pipe"],
   });

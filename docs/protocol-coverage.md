@@ -229,7 +229,7 @@ progress work. See the
 **Status: Partial.** Public tools can send bounded progress through a trusted
 proxy on the same POST response. Independent requests can reach different
 server processes without requiring the client to stay with one process.
-This capability is published in `@emseepea/server` 0.0.3 under the `next` tag.
+This capability was first published in `@emseepea/server` 0.0.3.
 See the [release evidence](https://github.com/emseepea/emseepea/releases/tag/%40emseepea/server%400.0.3).
 
 The [proxy tests](../tests/black-box/proxy-progress.test.mjs) check incremental
@@ -300,7 +300,7 @@ input/output transport.
 ### Request Traces and Metrics
 
 **Status: Partial.** `@emseepea/server` 0.0.3 supports opt-in OpenTelemetry
-traces, request counts, and response times. It is published under the `next` tag.
+traces, request counts, and response times. These were first published in version 0.0.3.
 They cover `/mcp` responses, including progress, until completion or
 disconnection. SDK host and origin rejections happen before measurement starts.
 
@@ -317,7 +317,7 @@ provider; it does not measure the cost of an adopter's exporter.
 
 **Status: Partial.** `@emseepea/server` 0.0.3 includes an optional
 dependency-readiness callback and an optional shutdown-flush callback.
-It is published under the `next` tag.
+These callbacks were first published in version 0.0.3.
 
 Readiness uses fixed responses without dependency details. Tests cover failure,
 recovery, timeouts, late callback results, cancellation, and one unfinished

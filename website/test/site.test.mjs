@@ -130,7 +130,7 @@ test("keyboard users can skip navigation and search the local index", async () =
     await search.focus();
     await page.keyboard.press("Enter");
     const input = page.getByRole("textbox", { name: /Search/ });
-    await input.fill("coffee");
+    await input.fill("pea");
     try {
       await page.locator("dialog").getByRole("link", { name: /Run your first server/ }).first().waitFor();
     } catch (error) {

@@ -1,26 +1,26 @@
 ---
 title: Run your first server
 description: Create a tested MCP server project and make it yours.
-example: basic-no-ui
+example: tool-server
 ---
 
-Start with the coffee example. It answers questions about the origin, roast,
-processing method, and tasting notes of two made-up coffees. It includes both
+Start with the tool server example. It answers questions about the type, growth
+habit, maturity time, and traits of two made-up pea varieties. It includes both
 ordinary tests and tests of AI tool choice and explanations.
 
 You need Git, Node.js 22 or 24, and npm. This is a local development quickstart,
 not production deployment guidance.
 
-The [public-tool example directory](https://github.com/emseepea/emseepea/tree/main/examples/basic-no-ui)
+The [tool server example directory](https://github.com/emseepea/emseepea/tree/main/examples/tool-server)
 contains the maintained source and the public initializer package used below.
 
 ## Create the project
 
 Run this command from a directory where you keep projects. Choose another name
-if `my-mcp` already exists. The `next` tag identifies the pre-alpha release.
+if `my-mcp` already exists.
 
 ```sh title="Create the project"
-npm init @emseepea/tool-server@next -- my-mcp
+npm init @emseepea/tool-server -- my-mcp
 cd my-mcp
 ```
 
@@ -53,19 +53,19 @@ Stop it with Control-C. If port 3000 is in use, stop the other local example fir
 Connect using an MCP client that supports MCP `2026-07-28` and Streamable HTTP.
 Add the printed address to that client's server connections, then try asking:
 
-> What are the origin, processing method, roast, and tasting notes of Highland Bloom?
+> What are the pea type, growth habit, days to maturity, and traits of Highland Snap?
 
 Client setup varies. Older clients may not support this protocol version.
 The example's tests use the matching official MCP client.
 
 ## Make it yours
 
-Open `src/capabilities/tool.get-bean-details.ts` in your project:
+Open `src/capabilities/tool.get-pea-variety.ts` in your project:
 
-- `beans` contains the sample data. Replace it with your own data.
+- `varieties` contains the sample data. Replace it with your own data.
 - `inputSchema` describes the names the tool accepts.
 - `outputSchema` describes the details it returns.
-- `handler` looks up the coffee and returns text plus structured data.
+- `handler` looks up the pea variety and returns text plus structured data.
 
 Em See Pea checks the input and output. Your handler supplies the behaviour.
 Update `test/server.test.mjs` for your data, then run `npm test` again.
@@ -76,8 +76,8 @@ work when you need them.
 
 ## Check the AI's tool choice and explanation
 
-The example's `eval/meaning.test.mjs` checks that a model does not confuse
-origin, variety, processing, and roast. Adapt its question and expected facts
+The example's `eval/meaning.test.mjs` checks that a model does not confuse pea
+type, growth habit, maturity time, and traits. Adapt its question and expected facts
 when you change the tool.
 
 This check requires a signed-in Claude CLI and uses model allowance. See
@@ -87,9 +87,9 @@ This check requires a signed-in Claude CLI and uses model allowance. See
 npm run test:llm
 ```
 
-The model sees the advertised tools and must select `get-bean-details` with
+The model sees the advertised tools and must select `get-pea-variety` with
 arguments that the real server accepts. The test then checks whether the model
-understands the returned coffee details.
+understands the returned pea variety details.
 
 ## Add another capability
 

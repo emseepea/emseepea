@@ -32,7 +32,7 @@ test("the elicitation contract is strict, bounded, and internally consistent", (
         ...elicitationFixtures.invalid.state,
         summary: {
           ...elicitationFixtures.invalid.state.summary,
-          items: [{ fieldId: "missing", message: "Enter a report title." }],
+          items: [{ fieldId: "missing", message: "Enter a plan title." }],
         },
       },
     }),
@@ -86,14 +86,14 @@ test("native and React renderers preserve the same semantic fixture contract", (
         assert.match(html, /data-emseepea-part="status"[^>]*>Preview ready\.<\/div>/);
         assert.match(html, /No report was sent or stored/);
       } else {
-        assert.match(html, /Report title[^<]*<span data-emseepea-part="required">\(required\)<\/span>/);
+        assert.match(html, /Plan title[^<]*<span data-emseepea-part="required">\(required\)<\/span>/);
         assert.equal((html.match(/<form/g) ?? []).length, 1);
         assert.equal((html.match(/<input/g) ?? []).length, 2);
         assert.equal((html.match(/<select/g) ?? []).length, 1);
       }
       if (state === "invalid") {
         assert.match(html, /data-emseepea-part="error-summary"[^>]*role="alert"/);
-        assert.match(html, />Report title: Enter a report title\.<\/a>/);
+        assert.match(html, />Plan title: Enter a plan title\.<\/a>/);
       }
     }
   }
@@ -104,7 +104,7 @@ test("UI package boundaries keep frontend and Tailwind dependencies out of core"
   const react = JSON.parse(await readFile(new URL("../../packages/react/package.json", import.meta.url), "utf8"));
   const tailwind = JSON.parse(await readFile(new URL("../../packages/tailwind/package.json", import.meta.url), "utf8"));
   const reactSource = await readFile(new URL("../../packages/react/src/index.tsx", import.meta.url), "utf8");
-  const exampleSource = await readFile(new URL("../../examples/react-tailwind-ui/src/client.tsx", import.meta.url), "utf8");
+  const exampleSource = await readFile(new URL("../../examples/react-ui-server/src/client.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../../packages/tailwind/dist/emseepea.css", import.meta.url), "utf8");
 
   assert.equal(react.private, false);

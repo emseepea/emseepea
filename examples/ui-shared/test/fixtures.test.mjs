@@ -5,7 +5,7 @@ import { fixtureForState, viewFromSubmission } from "../dist/index.js";
 
 test("shared UI fixtures preserve preview-only semantics", () => {
   assert.equal(fixtureForState("ready").state.kind, "ready");
-  const result = viewFromSubmission({ title: "Daily roast", roast: "dark", includeNotes: "on" });
+  const result = viewFromSubmission({ title: "Autumn peas", peaType: "snap", includeTips: "true" });
   assert.equal(result.state.kind, "terminal");
   assert.match(result.state.message, /No report was sent or stored/);
 });

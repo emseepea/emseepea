@@ -19,41 +19,35 @@ package supports and what it does not support.
 import { createEmseepea, defineMappedTool, defineTool, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
-const beanDetails = z.object({
+const peaVariety = z.object({
   name: z.string(),
-  origin: z.string(),
-  variety: z.string(),
-  process: z.enum(["washed", "natural"]),
-  roast: z.enum(["light", "medium", "dark"]),
-  tastingNotes: z.array(z.string()),
+  peaType: z.enum(["shelling", "snap"]),
+  growthHabit: z.enum(["bush", "climbing"]),
+  daysToMaturity: z.number().int().positive(),
 });
 
-const getBeanDetails = defineTool({
-  name: "get-bean-details",
+const getPeaVariety = defineTool({
+  name: "get-pea-variety",
   access: "public",
-  description: "Get the origin, variety, process, roast, and tasting notes for one coffee.",
+  description: "Get the type, growth habit, and maturity time for one pea variety.",
   inputSchema: z.object({ name: z.string() }),
-  outputSchema: beanDetails,
+  outputSchema: peaVariety,
   handler: ({ name }) => {
     const data = {
       name,
-      origin: "Sample Highlands",
-      variety: "Bourbon",
-      process: "natural" as const,
-      roast: "medium" as const,
-      tastingNotes: ["berry", "cocoa"],
+      peaType: "snap" as const,
+      growthHabit: "climbing" as const,
+      daysToMaturity: 70,
     };
-    return { text: `${name} is a medium-roast natural Bourbon from Sample Highlands.`, data };
+    return { text: `${name} is a climbing snap pea that matures in 70 days.`, data };
   },
 });
 
-const app = createEmseepea({ name: "coffee-guide", version: "1.0.0", tools: [getBeanDetails] });
+const app = createEmseepea({ name: "pea-guide", version: "1.0.0", tools: [getPeaVariety] });
 await serveEmseepea(app);
 ```
 
 ## Discover Capability Modules at Startup
-
-Available in this checkout; not yet published to npm.
 
 Explicit registration still works. If you prefer one file per capability, put
 modules in a directory and discover them before `createEmseepea`:
@@ -63,7 +57,7 @@ import { createEmseepea, discoverCapabilities, serveEmseepea } from "@emseepea/s
 
 const capabilities = await discoverCapabilities(new URL("./capabilities/", import.meta.url));
 const app = createEmseepea({
-  name: "coffee-guide",
+  name: "pea-guide",
   version: "1.0.0",
   ...capabilities,
 });
@@ -73,9 +67,9 @@ await serveEmseepea(app);
 
 Capability files must be named for their public MCP kind and name:
 
-- `tool.get-bean-details.ts`
+- `tool.get-pea-variety.ts`
 - `resource.getting-started.ts`
-- `prompt.brew-guide.ts`
+- `prompt.growing-guide.ts`
 
 Each file exports only a default factory. The factory returns a value from
 `defineTool`, `defineStreamingTool`, `defineMappedTool`, `defineResource`,
@@ -87,9 +81,9 @@ import { defineTool, type CapabilityModuleFactory } from "@emseepea/server";
 import { z } from "zod";
 
 export default (() => defineTool({
-  name: "get-bean-details",
+  name: "get-pea-variety",
   access: "public",
-  description: "Get one coffee bean.",
+  description: "Get one pea variety.",
   inputSchema: z.object({ name: z.string() }),
   outputSchema: z.object({ name: z.string() }),
   handler: ({ name }) => ({ text: name, data: { name } }),
@@ -108,8 +102,6 @@ If both forms for one capability are in the same directory, discovery rejects
 the duplicate instead of choosing one.
 
 ## Measure Requests
-
-Available in this checkout; not yet published to npm.
 
 Set `telemetry: true` in `createEmseepea` to record request traces, counts, and
 response times through OpenTelemetry. Leave it out to disable these measurements.
@@ -146,8 +138,6 @@ Structured logs are not included yet.
 
 ## Report Dependency Readiness
 
-Available in this checkout; not yet published to npm.
-
 Pass a `readiness` callback to `createEmseepea` to check the dependencies your
 server needs. The callback receives `{ signal }` and must return `true` only
 when those dependencies are ready. It may return a promise.
@@ -170,8 +160,6 @@ Readiness reports health for a load balancer or monitoring system. It does not
 block MCP calls itself. Tool handlers must still handle an unavailable backend.
 
 ## Flush Measurements on Shutdown
-
-Available in this checkout; not yet published to npm.
 
 Pass `flushTelemetry` to `serveEmseepea` to flush your OpenTelemetry providers
 when the returned server's `close()` method runs. The callback receives
@@ -201,15 +189,15 @@ provide its website address. Tools can say whether they only read data and
 whether they contact services outside the application:
 
 ```ts
-const getBeanDetails = defineTool({
-  name: "get-bean-details",
-  title: "Get bean details",
+const getPeaVariety = defineTool({
+  name: "get-pea-variety",
+  title: "Get pea variety",
   access: "public",
-  description: "Get the recorded details for one coffee.",
-  icons: [{ src: "https://coffee.example/icons/bean.png", mimeType: "image/png" }],
+  description: "Get the recorded details for one pea variety.",
+  icons: [{ src: "https://garden.example/icons/pea.png", mimeType: "image/png" }],
   annotations: { readOnlyHint: true, openWorldHint: false },
   inputSchema: z.object({ name: z.string() }),
-  outputSchema: beanDetails,
+  outputSchema: peaVariety,
   handler,
 });
 ```
@@ -247,7 +235,7 @@ adding one option to the server:
 
 ```ts
 const app = createEmseepea({
-  name: "coffee-guide",
+  name: "pea-guide",
   version: "1.0.0",
   tools,
   listPagination: { pageSize: 50, maxPageBytes: 256 * 1024 },
@@ -270,35 +258,35 @@ pattern, or prompt that pauses and asks a capable client for more information.
 The client answers by making a fresh request, and the handler runs again with
 those answers in its context.
 
-This example asks the person for a coffee preference:
+This example asks the person for a pea-growing preference:
 
 ```ts
 import { acceptedContent, defineTool, inputRequired } from "@emseepea/server";
 import { z } from "zod";
 
-const preference = z.object({ roast: z.enum(["light", "medium", "dark"]) });
+const preference = z.object({ support: z.enum(["stakes", "trellis"]) });
 
-const chooseRoast = defineTool({
-  name: "choose-roast",
+const chooseSupport = defineTool({
+  name: "choose-support",
   access: "public",
-  description: "Ask which roast a person prefers for one coffee.",
-  inputSchema: z.object({ coffee: z.string() }),
-  outputSchema: z.object({ coffee: z.string(), roast: z.string() }),
-  handler: ({ coffee }, context) => {
+  description: "Ask which support a person prefers for one climbing pea.",
+  inputSchema: z.object({ variety: z.string() }),
+  outputSchema: z.object({ variety: z.string(), support: z.string() }),
+  handler: ({ variety }, context) => {
     const answer = acceptedContent(context.inputResponses, "preference", preference);
     if (!answer) {
       return inputRequired({
         inputRequests: {
           preference: inputRequired.elicit({
-            message: `Which roast do you prefer for ${coffee}?`,
+            message: `Which support do you prefer for ${variety}?`,
             requestedSchema: preference,
           }),
         },
       });
     }
     return {
-      text: `${answer.roast} roast selected for ${coffee}`,
-      data: { coffee, roast: answer.roast },
+      text: `${answer.support} selected for ${variety}`,
+      data: { variety, support: answer.support },
     };
   },
 });
@@ -343,45 +331,39 @@ independently.
 
 ```ts
 const backendCommand = z.object({ search: z.string().max(200) });
-const catalogueBean = z.object({
+const catalogueTaxon = z.object({
+  id: z.number().int().positive(),
   name: z.string().max(200),
-  country: z.string().max(100),
-  variety: z.string().max(100),
-  process: z.string().max(100),
-  roast: z.string().max(40),
-  tastingNotes: z.array(z.string().max(100)).max(20),
+  rank: z.string().max(40),
+  observations_count: z.number().int().nonnegative(),
 });
 const backendResult = z.object({
   record: z.object({
+    id: z.number().int().positive(),
     name: z.string().max(200),
-    country: z.string().max(100),
-    variety: z.string().max(100),
-    process: z.string().max(100),
-    roast: z.string().max(40),
-    tastingNotes: z.array(z.string().max(100)).max(20),
+    rank: z.string().max(40),
+    observations_count: z.number().int().nonnegative(),
   }),
 });
 
-const getBeanDetails = defineMappedTool({
-  name: "get-bean-details",
+const getPeaTaxon = defineMappedTool({
+  name: "get-pea-taxon",
   access: "public",
-  description: "Get clear coffee details from the catalogue service.",
+  description: "Get a pea taxon from the catalogue service.",
   inputSchema: z.object({ name: z.string().max(200) }),
-  outputSchema: catalogueBean,
+  outputSchema: catalogueTaxon,
   backendInputSchema: backendCommand,
   backendOutputSchema: backendResult,
   mapInput: ({ name }) => ({ search: name }),
-  adapter: async (command, { signal }) => backend.findCoffee(command, { signal }),
+  adapter: async (command, { signal }) => backend.findTaxon(command, { signal }),
   mapOutput: ({ record }) => {
     const data = {
+      id: record.id,
       name: record.name,
-      country: record.country,
-      variety: record.variety,
-      process: record.process,
-      roast: record.roast,
-      tastingNotes: record.tastingNotes,
+      rank: record.rank,
+      observations_count: record.observations_count,
     };
-    return { text: `${data.name} is a ${data.roast}-roast ${data.process} coffee from ${data.country}.`, data };
+    return { text: `${data.name} has rank ${data.rank} and ${data.observations_count} recorded observations.`, data };
   },
 });
 ```
@@ -392,10 +374,10 @@ client from `@emseepea/server/http`:
 ```ts
 import { createJsonHttpClient } from "@emseepea/server/http";
 
-const coffeeApi = createJsonHttpClient({ origin: "https://coffee.example" });
-const result = await coffeeApi.get({
-  pathname: "/api/coffees",
-  searchParams: { q: "ethiopia", limit: "5" },
+const plantApi = createJsonHttpClient({ origin: "https://plants.example" });
+const result = await plantApi.get({
+  pathname: "/api/taxa",
+  searchParams: { q: "pea", limit: "5" },
   signal,
   deadlineMs,
 });
@@ -426,15 +408,15 @@ still owns its page, request handling, authorization, and effects.
 import { defineElicitationView, renderElicitationForm } from "@emseepea/server";
 
 const view = defineElicitationView({
-  id: "bean-report",
-  heading: "Preview a bean report",
-  legend: "Report options",
-  submitLabel: "Preview report",
+  id: "pea-planting-plan",
+  heading: "Preview a pea planting plan",
+  legend: "Planting plan options",
+  submitLabel: "Preview plan",
   fields: [{
     kind: "text",
     id: "title",
     name: "title",
-    label: "Report title",
+    label: "Plan title",
     required: true,
   }],
   state: { kind: "ready", focusTarget: "none" },
@@ -458,15 +440,15 @@ request. Otherwise the call returns one JSON response.
 import { createEmseepea, defineStreamingTool } from "@emseepea/server";
 import { z } from "zod";
 
-const roast = defineStreamingTool({
-  name: "roast-batch",
+const germination = defineStreamingTool({
+  name: "run-germination-trial",
   access: "public",
-  description: "Run one sample roast batch.",
-  inputSchema: z.object({ batch: z.string() }),
+  description: "Run one sample pea germination trial.",
+  inputSchema: z.object({ tray: z.string() }),
   outputSchema: z.object({ status: z.literal("complete") }),
   async handler(_input, { reportProgress, signal }) {
     signal.throwIfAborted();
-    await reportProgress({ progress: 1, total: 1, message: "cool" });
+    await reportProgress({ progress: 1, total: 1, message: "sprout" });
     return { text: "complete", data: { status: "complete" } };
   },
 });
@@ -482,17 +464,16 @@ rejected.
 
 ### Use Progress Behind a Proxy
 
-In the current source, public tools can also report progress behind a trusted
-HTTPS proxy. This addition is not yet in a published npm release.
+Public tools can also report progress behind a trusted HTTPS proxy.
 
-Using the `roast` tool above, configure the proxy's exact address and the public
+Using the `germination` tool above, configure the proxy's exact address and the public
 host and origin your clients use:
 
 ```ts
 const app = createEmseepea({
-  name: "coffee-guide",
+  name: "pea-guide",
   version: "1.0.0",
-  tools: [roast],
+  tools: [germination],
   deployment: {
     mode: "production-behind-proxy",
     trustedProxyAddresses: ["10.0.0.10"],
@@ -561,33 +542,33 @@ import {
 } from "@emseepea/server";
 import { z } from "zod";
 
-const guideUri = "guide://coffee/getting-started";
+const guideUri = "guide://peas/getting-started";
 
 const guide = defineResource({
   name: "getting-started",
   uri: guideUri,
   mimeType: "text/markdown",
   cacheHint: { ttlMs: 30_000 },
-  handler: () => ({ contents: [{ uri: guideUri, text: "# Brew safely" }] }),
+  handler: () => ({ contents: [{ uri: guideUri, text: "# Grow peas safely" }] }),
 });
 
 const methodGuide = defineResourceTemplate({
   name: "method-guide",
-  uriTemplate: "guide://coffee/method/{method}",
+  uriTemplate: "guide://peas/planting/{method}",
   mimeType: "text/markdown",
   complete: {
-    method: (value) => ["espresso", "pour-over"].filter((method) => method.startsWith(value)),
+    method: (value) => ["container", "raised-bed"].filter((method) => method.startsWith(value)),
   },
   handler: ({ uri, variables }) => ({
     contents: [{ uri, text: `# ${String(variables.method)}` }],
   }),
 });
 
-const brew = definePrompt({
-  name: "brew-guide",
+const growing = definePrompt({
+  name: "growing-guide",
   argsSchema: z.object({ topic: z.string().min(1) }),
   complete: {
-    topic: (value) => ["grind-size", "water-temperature"].filter((topic) => topic.startsWith(value)),
+    topic: (value) => ["sowing-depth", "plant-spacing"].filter((topic) => topic.startsWith(value)),
   },
   handler: ({ topic }) => ({
     messages: [{ role: "user", content: { type: "text", text: `Explain ${topic}.` } }],
@@ -595,10 +576,10 @@ const brew = definePrompt({
 });
 
 const app = createEmseepea({
-  name: "coffee",
+  name: "peas",
   version: "1.0.0",
   resources: [guide, methodGuide],
-  prompts: [brew],
+  prompts: [growing],
   cacheHints: {
     "resources/list": { ttlMs: 60_000, cacheScope: "public" },
     "resources/read": { ttlMs: 5_000, cacheScope: "private" },
@@ -649,10 +630,10 @@ the token itself.
 
 ```ts
 const lookup = defineTool({
-  name: "lookup-private-bean",
+  name: "lookup-private-seed-lot",
   access: "protected",
-  requiredScopes: ["beans:read"],
-  description: "Look up a private bean.",
+  requiredScopes: ["seeds:read"],
+  description: "Look up a private pea seed lot.",
   inputSchema: z.object({ id: z.string() }),
   outputSchema: z.object({ id: z.string(), clientId: z.string() }),
   handler: ({ id }, { principal }) => ({
@@ -662,14 +643,14 @@ const lookup = defineTool({
 });
 
 const app = createEmseepea({
-  name: "beans",
+  name: "seed-inventory",
   version: "1.0.0",
   tools: [lookup],
   oauth: {
     verifier,
     metadata: {
       resourceServerUrl: new URL("https://api.example/mcp"),
-      scopesSupported: ["beans:read"],
+      scopesSupported: ["seeds:read"],
       oauthMetadata,
     },
   },

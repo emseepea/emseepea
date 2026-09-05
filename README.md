@@ -30,13 +30,11 @@ Use the current framework to create:
 - a server with a native HTML form, or the same form rendered with React and
   the Em See Pea stylesheet
 
-The current source also lets public tools report progress behind a trusted
-proxy. This addition is not yet published to npm. See
+Public tools can also report progress behind a trusted proxy. See
 [how to configure proxy progress](packages/framework/README.md#use-progress-behind-a-proxy)
 and its [tested limits](docs/protocol-coverage.md#progress-updates).
 
-The current source also supports startup capability discovery. This addition
-is not yet published to npm. See
+Startup capability discovery is also supported. See
 [how startup discovery works](packages/framework/README.md#discover-capability-modules-at-startup).
 
 ## Verify It Locally
@@ -58,25 +56,25 @@ It covers:
 - creating one stored report when two local server processes share a request ID
 
 For detailed gates and evidence, see the [quality policy][quality-policy] and
-[0.0.2 release-readiness review][release-readiness].
+[0.2.1 release-readiness review][release-readiness].
 
 ## Create a Project
 
 These commands use the pre-alpha initializer packages published on npm.
 Replace `my-server` with an unused directory name:
 
-- One public tool: `npm init @emseepea/tool-server@next -- my-server`
-- A public web API: `npm init @emseepea/api-backed-server@next -- my-server`
-- A sign-in protected tool: `npm init @emseepea/sign-in-tool-server@next -- my-server`
-- Resources and prompts: `npm init @emseepea/resources-and-prompts-server@next -- my-server`
-- Progress streaming: `npm init @emseepea/progress-streaming-server@next -- my-server`
-- An HTML form: `npm init @emseepea/html-ui-server@next -- my-server`
-- A React form: `npm init @emseepea/react-ui-server@next -- my-server`
-- Two processes sharing SQLite: `npm init @emseepea/multi-instance-sqlite-server@next -- my-server`
+- [One public tool](examples/tool-server/README.md): `npm init @emseepea/tool-server -- my-server`
+- [A public web API](examples/api-backed-server/README.md): `npm init @emseepea/api-backed-server -- my-server`
+- [A sign-in protected tool](examples/sign-in-tool-server/README.md): `npm init @emseepea/sign-in-tool-server -- my-server`
+- [Resources and prompts](examples/resources-and-prompts-server/README.md): `npm init @emseepea/resources-and-prompts-server -- my-server`
+- [Progress streaming](examples/progress-streaming-server/README.md): `npm init @emseepea/progress-streaming-server -- my-server`
+- [An HTML form](examples/html-ui-server/README.md): `npm init @emseepea/html-ui-server -- my-server`
+- [A React form](examples/react-ui-server/README.md): `npm init @emseepea/react-ui-server -- my-server`
+- [Two processes sharing SQLite](examples/multi-instance-sqlite-server/README.md): `npm init @emseepea/multi-instance-sqlite-server -- my-server`
 
 Each command creates a private standalone project with its lint, ordinary tests,
 and semantic tests. The two form starters also include browser accessibility
-tests. The `next` tag identifies the pre-alpha release. Each initializer package,
+tests. Each initializer package,
 README, changelog, and maintained source live together in the matching
 [`examples/` directory](https://github.com/emseepea/emseepea/tree/main/examples).
 
@@ -155,5 +153,5 @@ example-backed initializer packages are eligible for publication.
 [cognitive-publication]: docs/decisions/0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md
 [quality-policy]: QUALITY.md
-[release-readiness]: docs/reviews/0.0.2-release-readiness.md
+[release-readiness]: docs/reviews/0.2.1-release-readiness.md
 [semantic-qualification]: docs/decisions/0040-model-selected-tool-semantic-tests.proposed.md

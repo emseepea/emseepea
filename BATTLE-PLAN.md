@@ -39,17 +39,18 @@ Already implemented and checked in earlier revisions:
 - a two-process SQLite example for one-computer deployments
 - deterministic tests and lint commands owned by every runnable example
 
-`@emseepea/server` 0.0.3 and `@emseepea/testing` 0.1.0 are published on npm
-under the `next` tag. The release includes public progress through a trusted
-proxy, optional request telemetry, readiness and shutdown hooks, and code-first
+The most recent checked release evidence is linked below. Current release work
+moves every public package to npm's default `latest` tag after exact-commit
+qualification. The release includes public progress through a trusted proxy,
+optional request telemetry, readiness and shutdown hooks, and code-first
 language-model tests. See the
 [release evidence](https://github.com/emseepea/emseepea/releases/tag/%40emseepea/server%400.0.3)
 and [coverage limits](docs/protocol-coverage.md).
 
 All eight example cases passed the release's language-model checks: 24 answers
 and 72 judgments. This does not prove independent tool selection or complete
-protocol coverage. The React and Tailwind packages and website are not yet
-published.
+protocol coverage. The React and Tailwind packages and website still require
+their own publication evidence.
 
 Current next action:
 

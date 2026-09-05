@@ -93,3 +93,51 @@ This review covers source prose. It does not establish package publication.
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
 | `docs/reviews/0.2.1-release-readiness.md` | `039f2dc3423a21cc2bd6f6b4468a3f60aece4db1c4b625bda0dca021b31c9c51` |
+
+## Pea-Themed Colocated Initializers and Latest Channel
+
+Result: PASS after plain-language, cognitive-accessibility, and Markdown
+accessibility review. The final content gives every initializer a clear example
+home, explains when to choose each template, uses garden peas consistently, and
+uses the default npm channel in current commands. It contains no emoji or em
+dashes.
+
+This review covers source prose. It does not establish package publication.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `.changeset/clear-examples-match.md` | `0ece660637e6555f5bea0322f055c26efa9a5a36be83dcc4872dee307a6733f9` |
+| `BATTLE-PLAN.md` | `99be463a190d3fb0330c6bd6d9d412abd5c818cc30e5daa012a94a6ac22a9df6` |
+| `README.md` | `66984c900d7fb95a8cd489dbc82039afac0d2411ee1a366d8723779e1724c642` |
+| `SECURITY.md` | `e9ea8f0ddfb450aa5c61034272a2e76f1d8c3b9afc08616e19cc7ade79227eec` |
+| `docs/decisions/0042-separate-example-initializer-packages.superseded.md` | `f071f33ecc0a54778bca9730131c45c35c4b75b34be25017a803645b1b7d77fe` |
+| `docs/decisions/0051-latest-as-default-public-npm-channel.proposed.md` | `6f69ceb140cb3d5eea00c2e5f904ee46b933ab4e59359e391e5ae52c5f4b07dc` |
+| `docs/decisions/README.md` | `98918a2d16c182397207e482791fcc2d575efaf63f193ca5952b30c24679cdcb` |
+| `docs/protocol-coverage.md` | `2c0edd682c61ad633e65c69173b54a4dc54503792133e2957e9d3a936235a23f` |
+| `docs/risks/R007-release-pipeline-publishes-the-wrong-or-compromised-package.active.md` | `3d2a86217292295c53111e45e1e152433de7d2b30a8abcc8ad579ee039cb2584` |
+| `examples/api-backed-server/CHANGELOG.md` | `0f35ccedb45cda07f824ea209c5ff07f5104bb17464a6bf4811e4f6c5179cb5e` |
+| `examples/api-backed-server/README.md` | `e646862f8e2cd09cab3d82f59253e8841c4c6e21db502739ca151ad919a80e24` |
+| `examples/html-ui-server/CHANGELOG.md` | `d36b4ee718ae779952281ed2991fbf235681ef4ec36235c815334d830209b3fe` |
+| `examples/html-ui-server/README.md` | `166d0fe7bd3bbbef7c1174d8597cd6911994403faac2c65a9ce30839a02ad69f` |
+| `examples/multi-instance-sqlite-server/CHANGELOG.md` | `1f980288dae13d8fac362e4e44b91e345b15fac8b42bd935c8e4fd5134f396e6` |
+| `examples/multi-instance-sqlite-server/README.md` | `6ee48b206735ed3773c15d80fd4c1657135c2b66026c5bdb17ec53b9965edfbc` |
+| `examples/progress-streaming-server/CHANGELOG.md` | `170005cef0e2b2449a860ad30010585d3957a392c5517ce473279bad01911b92` |
+| `examples/progress-streaming-server/README.md` | `290717a62481ece5262fb515b6f767a28cdfa9217dbbc74a4edf7c385b94480b` |
+| `examples/react-ui-server/CHANGELOG.md` | `3f3fd2f88e7bac2abda361c5ec4c35f3646e6556bb51eb3163cc62787ad50790` |
+| `examples/react-ui-server/README.md` | `0e7903ecdbf094dba194dfa51008f1aa3c1086204df1181d6950c1066c9354ba` |
+| `examples/resources-and-prompts-server/CHANGELOG.md` | `55e037a110c6f5239586501d7a28982a78b963a0d5062d89888dd218a812b6a0` |
+| `examples/resources-and-prompts-server/README.md` | `4dcd12d43a94dc7f1baf13fe1a5adda3516ce23534c5e23991d6487f4de92f87` |
+| `examples/sign-in-tool-server/CHANGELOG.md` | `5d96bcc5ae10fb3a05c004d376d8c1eed47f595c341c1222de1d0b4d3c1929f9` |
+| `examples/sign-in-tool-server/README.md` | `ab2a2d55bb087cd223a9580ff4b953551c58920890a327ad0168df7eb01d639b` |
+| `examples/tool-server/CHANGELOG.md` | `654d346e27b4b31bbfc0dbf323fd53f41b5da0e1b8b6b7bfff6fe720b93d9f7d` |
+| `examples/tool-server/README.md` | `6bb5c283f4a9a08cada3185eb0b0b8683f7a3dda269bf56842e59f800f39712e` |
+| `packages/framework/README.md` | `a2dcd76c5401b158b6a7b8f30bd44b387eb7baf5ac88cd2064a63e8b02e9713c` |
+| `packages/react/README.md` | `8a12f6eef0f138e5af63aab1db4c206d97c48279611fd114348a7e1b13571b1d` |
+| `packages/tailwind/README.md` | `4ece12e4393f3b34e7307e09e6ed90daa04e48241686d9ecdec756002527f23a` |
+| `packages/testing/README.md` | `fd2c597a37c212840141d0b9d254981d058b4900765b8c367cada398b1ea774a` |
+| `tests/llm/README.md` | `c036babc555ac613583592822cfa12642c112d64253942f5c2dcd273554724cc` |
+| `website/src/content/docs/ai-tests.md` | `065853e178284ec234c287c36a42ddf3c19c11e15aa87c240b4cf2f703d07c12` |
+| `website/src/content/docs/examples.md` | `319ff5c2db83b2ac1b0b7b858d43c0ff320aed68a9c996eec5da099d8e9c3296` |
+| `website/src/content/docs/getting-started.md` | `43039b3301709652da4baee2912a4b39e94dc71632682cb79924a89341a1580b` |
+| `website/src/content/docs/index.md` | `fd35dfd2ce87625e3de93953bb011c81c3c365606a4190a2a388c7f68fcfdc6b` |
+| `website/src/content/docs/less-server-code.md` | `ab75380f88102746fe8a088ffb5f9083847ed3833805330bf8a0c4f8be51beca` |

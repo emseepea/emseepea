@@ -13,8 +13,7 @@ import { ElicitationForm } from "@emseepea/react";
 <ElicitationForm view={view} headingLevel={2} onSubmit={submit} />;
 ```
 
-See the [React and Tailwind UI example](../../examples/react-tailwind-ui/README.md)
+See the [React UI server example](../../examples/react-ui-server/README.md)
 for the checked renderer in a working server.
 
-This package is open source under MIT and is queued for the next pre-alpha npm
-release.
+This package is open source under MIT and remains pre-alpha while its version is below 1.0.

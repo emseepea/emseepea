@@ -11,7 +11,7 @@ import test from "node:test";
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const guidePath = path.join(root, "website/src/content/docs/getting-started.md");
 const guide = await readFile(guidePath, "utf8");
-const example = "basic-no-ui";
+const example = "tool-server";
 const manifest = JSON.parse(await readFile(path.join(root, `examples/${example}/package.json`), "utf8"));
 const exec = promisify(execFile);
 
@@ -25,7 +25,7 @@ test("the quickstart references the initializer's scripts, packages and guide li
   assert.ok(commands.length > 0);
 
   for (const command of commands) {
-    if (["npm init @emseepea/tool-server@next -- my-mcp", "cd my-mcp", "npm install --ignore-scripts"].includes(command)) continue;
+    if (["npm init @emseepea/tool-server -- my-mcp", "cd my-mcp", "npm install --ignore-scripts"].includes(command)) continue;
     if (command === "npm test" || command === "npm start") {
       assert.ok(manifest.scripts[command.split(" ")[1]], `missing example script: ${command}`);
       continue;
@@ -55,12 +55,12 @@ test("the initialized quickstart passes its documented checks", { timeout: 900_0
     const packageSource = process.env.EMSEEPEA_GUIDE_PACKAGE_SOURCE ?? "packed";
     assert.ok(["packed", "registry"].includes(packageSource), `unknown package source: ${packageSource}`);
     if (packageSource === "packed") {
-      const initializer = await packPackage("examples/basic-no-ui", directory);
+      const initializer = await packPackage("examples/tool-server", directory);
       await exec("npm", ["exec", "--yes", "--offline", "--userconfig", "/dev/null", "--package", initializer, "--", "create-tool-server", "my-mcp"], {
         cwd: directory, timeout: 600_000, maxBuffer: 1024 * 1024,
       });
     } else {
-      await exec("npm", ["init", "@emseepea/tool-server@next", "--", "my-mcp"], {
+      await exec("npm", ["init", "@emseepea/tool-server", "--", "my-mcp"], {
         cwd: directory, env: { ...process.env, npm_config_yes: "true" }, timeout: 600_000, maxBuffer: 1024 * 1024,
       });
     }
@@ -125,12 +125,12 @@ test("the initialized quickstart passes its documented checks", { timeout: 900_0
       });
       await client.connect(new StreamableHTTPClientTransport(url), { timeout: 5_000 });
       const result = await client.callTool({
-        name: "get-bean-details", arguments: { name: "Highland Bloom" },
+        name: "get-pea-variety", arguments: { name: "Highland Snap" },
       }, { timeout: 5_000 });
       assert.equal(result.isError, false);
       assert.deepEqual(result.structuredContent, {
-        name: "Highland Bloom", origin: "Sample Highlands", variety: "Bourbon",
-        process: "natural", roast: "medium", tastingNotes: ["berry", "cocoa"],
+        name: "Highland Snap", peaType: "snap", growthHabit: "climbing",
+        daysToMaturity: 70, traits: ["edible pods", "needs support"],
       });
       await client.close();
       client = undefined;
