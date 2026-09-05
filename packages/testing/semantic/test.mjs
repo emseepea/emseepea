@@ -95,6 +95,7 @@ function registerTest(name, options, mode) {
               selectionModels: selection.models,
               selectionTurnCount: selection.turnCount,
               selectionProviderTurnCount: selection.providerTurnCount,
+              selectionProviderToolCount: selection.providerToolCount,
               advertisedToolsSha256: hash(JSON.stringify(advertisedTools)),
               selectedCallsSha256: hash(JSON.stringify(calls)),
               selectedTools: calls.map(({ name: toolName }) => toolName),
@@ -121,6 +122,7 @@ function registerTest(name, options, mode) {
             models: answer.models,
             turnCount: answer.turnCount,
             providerTurnCount: answer.providerTurnCount,
+            providerToolCount: answer.providerToolCount,
             materialSha256: hash(material.text),
             pathEvidence: material.pathEvidence,
             ...selectionEvidence,
@@ -138,6 +140,7 @@ function registerTest(name, options, mode) {
               const verdict = parseJudgeVerdict(response.answer.trim());
               evidence.judgeVerdicts.push({ trial, judgment, models: response.models,
                 turnCount: response.turnCount, providerTurnCount: response.providerTurnCount,
+                providerToolCount: response.providerToolCount,
                 verdict: { pass: verdict.pass, score: verdict.score } });
               if (!verdict.pass) throw new Error("A meaning judgment failed");
             } finally { await rm(judgeDirectory, { recursive: true, force: true }); }

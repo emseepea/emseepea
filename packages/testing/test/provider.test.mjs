@@ -36,11 +36,17 @@ test("accepts one tool-free answer from the required model", () => {
     models: ["claude-sonnet-4-6"],
     turnCount: 1,
     providerTurnCount: 2,
+    providerToolCount: 1,
   });
   assert.equal(parseClaudeEvents(constrained, 0, true).answer, '{"calls":[{"name":"get-bean","arguments":{}}]}');
   assert.throws(() => parseClaudeEvents(`${structuredTool}\n${JSON.stringify(result)}`, 0, true), /no answer/);
   assert.throws(() => parseClaudeEvents(`${structuredTool}\n${structured}`), /forbidden tool/);
-  assert.throws(() => parseClaudeEvents(`${structuredTool}\n${structuredTool}\n${structured}`, 0, true), /forbidden tool/);
+  assert.equal(parseClaudeEvents(`${structuredTool}\n${structuredTool}\n${JSON.stringify({
+    ...result, num_turns: 3, structured_output: {},
+  })}`, 0, true).providerToolCount, 2);
+  assert.throws(() => parseClaudeEvents(`${structuredTool}\n${structuredTool}\n${structuredTool}\n${JSON.stringify({
+    ...result, num_turns: 4, structured_output: {},
+  })}`, 0, true), /forbidden tool/);
   assert.throws(() => parseClaudeEvents(`${structuredTool}\n${JSON.stringify({
     ...result, num_turns: 3, structured_output: {},
   })}`, 0, true), /3 turns/);
@@ -78,6 +84,7 @@ test("isolates model credentials from ordinary environment variables", () => {
     assert.equal(invocation.args[invocation.args.indexOf("--tools") + 1], "");
     assert.deepEqual(JSON.parse(invocation.args[invocation.args.indexOf("--json-schema") + 1]), schema);
     assert.ok(invocation.args.includes("--no-session-persistence"));
+    assert.equal(invocation.args[invocation.args.indexOf("--max-turns") + 1], "3");
   } finally {
     restore("ANTHROPIC_API_KEY", original.apiKey);
     restore("CLAUDE_CODE_OAUTH_TOKEN", original.token);

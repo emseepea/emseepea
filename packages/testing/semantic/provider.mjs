@@ -27,11 +27,11 @@ export function parseClaudeEvents(stdout, processExitCode = 0, expectsStructured
   if (notLoggedIn) throw new Error("Model command is not signed in");
   if (processExitCode !== 0) throw new Error(`Model command exited ${processExitCode}`);
   if (result?.is_error || typeof answer !== "string") throw new Error("Model command returned no answer");
-  if (toolUses.length > 1
+  if (toolUses.length > 2
     || toolUses.some(({ name }) => name !== "StructuredOutput" || !expectsStructuredOutput)) {
     throw new Error("Model command used a forbidden tool");
   }
-  const expectedTurns = toolUses.length === 1 ? 2 : 1;
+  const expectedTurns = toolUses.length + 1;
   if (result.num_turns !== expectedTurns) throw new Error(`Model command used ${String(result.num_turns)} turns`);
   if ((result.permission_denials?.length ?? 0) > 0) throw new Error("Model command attempted a forbidden action");
   const usage = result.modelUsage?.[model];
@@ -43,6 +43,7 @@ export function parseClaudeEvents(stdout, processExitCode = 0, expectsStructured
     models: Object.keys(result.modelUsage),
     turnCount: result.num_turns - toolUses.length,
     providerTurnCount: result.num_turns,
+    providerToolCount: toolUses.length,
   };
 }
 
@@ -73,6 +74,7 @@ export function modelInvocation(provider, prompt, directory, jsonSchema) {
       "--print", prompt,
       "--model", model,
       "--effort", "low",
+      "--max-turns", "3",
       "--safe-mode",
       "--strict-mcp-config",
       "--disable-slash-commands",
