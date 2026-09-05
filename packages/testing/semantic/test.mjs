@@ -159,6 +159,10 @@ function registerTest(name, options, mode) {
         evidence.failureReason = safeToolSelectionFailures.has(error?.message)
           ? error.message
           : "Unclassified tool-selection failure";
+        if (Number.isInteger(error?.providerToolCount) && Number.isInteger(error?.providerTurnCount)) {
+          evidence.failureProviderToolCount = error.providerToolCount;
+          evidence.failureProviderTurnCount = error.providerTurnCount;
+        }
       }
       if (error?.code === "missing-critical-facts" && Array.isArray(error.missingFactIndices)
         && error.missingFactIndices.every((index) => Number.isInteger(index)

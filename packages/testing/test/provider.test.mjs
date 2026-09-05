@@ -46,7 +46,7 @@ test("accepts one tool-free answer from the required model", () => {
   })}`, 0, true).providerToolCount, 2);
   assert.throws(() => parseClaudeEvents(`${structuredTool}\n${structuredTool}\n${structuredTool}\n${JSON.stringify({
     ...result, num_turns: 4, structured_output: {},
-  })}`, 0, true), /forbidden tool/);
+  })}`, 0, true), (error) => error.providerToolCount === 3 && error.providerTurnCount === 4);
   assert.throws(() => parseClaudeEvents(`${structuredTool}\n${JSON.stringify({
     ...result, num_turns: 3, structured_output: {},
   })}`, 0, true), /3 turns/);

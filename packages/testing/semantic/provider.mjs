@@ -29,7 +29,10 @@ export function parseClaudeEvents(stdout, processExitCode = 0, expectsStructured
   if (result?.is_error || typeof answer !== "string") throw new Error("Model command returned no answer");
   if (toolUses.length > 2
     || toolUses.some(({ name }) => name !== "StructuredOutput" || !expectsStructuredOutput)) {
-    throw new Error("Model command used a forbidden tool");
+    throw Object.assign(new Error("Model command used a forbidden tool"), {
+      providerToolCount: toolUses.length,
+      providerTurnCount: result.num_turns,
+    });
   }
   const expectedTurns = toolUses.length + 1;
   if (result.num_turns !== expectedTurns) throw new Error(`Model command used ${String(result.num_turns)} turns`);
