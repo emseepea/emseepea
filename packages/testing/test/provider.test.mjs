@@ -18,6 +18,12 @@ test("accepts one tool-free answer from the required model", () => {
   assert.equal(parseClaudeEvents(JSON.stringify(result)).answer, "One matching bean");
   const structured = JSON.stringify({
     ...result,
+    num_turns: 2,
+    result: "",
+    structured_output: { calls: [{ name: "get-bean", arguments: {} }] },
+  });
+  const constrained = JSON.stringify({
+    ...result,
     result: "",
     structured_output: { calls: [{ name: "get-bean", arguments: {} }] },
   });
@@ -29,8 +35,13 @@ test("accepts one tool-free answer from the required model", () => {
     parseClaudeEvents(`${structuredTool}\n${structured}`, 0, true).answer,
     '{"calls":[{"name":"get-bean","arguments":{}}]}',
   );
+  assert.equal(parseClaudeEvents(constrained, 0, true).answer, '{"calls":[{"name":"get-bean","arguments":{}}]}');
   assert.throws(() => parseClaudeEvents(`${structuredTool}\n${JSON.stringify(result)}`, 0, true), /no answer/);
   assert.throws(() => parseClaudeEvents(`${structuredTool}\n${structured}`), /forbidden tool/);
+  assert.throws(() => parseClaudeEvents(`${structuredTool}\n${structuredTool}\n${structured}`, 0, true), /forbidden tool/);
+  assert.throws(() => parseClaudeEvents(`${structuredTool}\n${JSON.stringify({
+    ...result, num_turns: 3, structured_output: {},
+  })}`, 0, true), /3 turns/);
   assert.throws(() => parseClaudeEvents([
     structuredTool,
     JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read" }] } }),

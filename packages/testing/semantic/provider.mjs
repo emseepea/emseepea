@@ -27,10 +27,12 @@ export function parseClaudeEvents(stdout, processExitCode = 0, expectsStructured
   if (notLoggedIn) throw new Error("Model command is not signed in");
   if (processExitCode !== 0) throw new Error(`Model command exited ${processExitCode}`);
   if (result?.is_error || typeof answer !== "string") throw new Error("Model command returned no answer");
-  if (toolUses.some(({ name }) => name !== "StructuredOutput" || !expectsStructuredOutput)) {
+  if (toolUses.length > 1
+    || toolUses.some(({ name }) => name !== "StructuredOutput" || !expectsStructuredOutput)) {
     throw new Error("Model command used a forbidden tool");
   }
-  if (result.num_turns !== 1) throw new Error(`Model command used ${String(result.num_turns)} turns`);
+  const expectedTurns = toolUses.length === 1 ? 2 : 1;
+  if (result.num_turns !== expectedTurns) throw new Error(`Model command used ${String(result.num_turns)} turns`);
   if ((result.permission_denials?.length ?? 0) > 0) throw new Error("Model command attempted a forbidden action");
   const usage = result.modelUsage?.[model];
   if (usage?.canonicalModel !== model || usage.provider !== "firstParty") {
