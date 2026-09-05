@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-resources-and-prompts-server",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Create an Em See Pea server with resources and prompts.",
   "license": "MIT",
   "type": "module",

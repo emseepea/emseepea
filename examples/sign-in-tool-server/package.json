@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-sign-in-tool-server",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Create an Em See Pea server with a sign-in protected tool.",
   "license": "MIT",
   "type": "module",

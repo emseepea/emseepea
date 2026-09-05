@@ -1,5 +1,11 @@
 # @emseepea/create-api-backed-server
 
+## 0.0.5
+
+### Patch Changes
+
+- [`e1b4aba`](https://github.com/emseepea/emseepea/commit/e1b4aba3d829c931c892a79915d0c5eb7a54789a) Thanks [@tompahoward](https://github.com/tompahoward)! - Generate projects with the released Em See Pea server version.
+
 ## 0.0.4
 
 ### Patch Changes
