@@ -20,6 +20,16 @@ import { parseJudgeVerdict, runModel } from "./provider.mjs";
 
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const names = new Set();
+const safeToolSelectionFailures = new Set([
+  "Model command returned no answer",
+  "Model command used a forbidden tool",
+  "Model command attempted a forbidden action",
+  "Model command did not use the required model",
+  "Tool selection must be valid JSON",
+  "Tool selection must contain between one and three calls",
+  "Tool selection contains an invalid or unadvertised call",
+  "Model selected the wrong tool sequence",
+]);
 
 export function semanticTest(name, options) {
   return registerTest(name, options, "prepared");
@@ -139,6 +149,11 @@ function registerTest(name, options, mode) {
       evidence.status = "passed";
     } catch (error) {
       evidence.failedPhase = phase;
+      if (phase === "tool selection" || phase === "tool selection validation") {
+        evidence.failureReason = safeToolSelectionFailures.has(error?.message)
+          ? error.message
+          : "Unclassified tool-selection failure";
+      }
       if (error?.code === "missing-critical-facts" && Array.isArray(error.missingFactIndices)
         && error.missingFactIndices.every((index) => Number.isInteger(index)
           && index >= 0 && index < specification.criticalFacts.length)) {

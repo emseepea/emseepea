@@ -245,5 +245,16 @@ process.stdout.write(JSON.stringify(result) + "\\n");
     assert.equal(failed.status, 1, failed.stdout + failed.stderr);
     const failure = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
     assert.equal(failure.failedPhase, "tool selection validation");
+    assert.match(failure.failureReason, /^Tool selection |^Model selected /);
   }
+
+  await writeFile(model, '#!/usr/bin/env node\nprocess.stdout.write("PRIVATE_MODEL_TEXT{");\n', { mode: 0o700 });
+  const malformed = run();
+  assert.equal(malformed.status, 1, malformed.stdout + malformed.stderr);
+  const malformedText = await readFile(output, "utf8");
+  assert.doesNotMatch(malformedText, /PRIVATE_MODEL_TEXT/);
+  assert.equal(
+    Object.values(JSON.parse(malformedText).cases)[0].failureReason,
+    "Unclassified tool-selection failure",
+  );
 });
