@@ -1,5 +1,14 @@
 # @emseepea/create-sign-in-tool-server
 
+## 0.0.4
+
+### Patch Changes
+
+- [`8ed59f9`](https://github.com/emseepea/emseepea/commit/8ed59f945e62544a034b8a88b88f8ceed08cb234) Thanks [@tompahoward](https://github.com/tompahoward)! - Rename each example directory to match its initializer command and package name,
+  use one garden pea theme throughout, and publish every public package on npm's
+  default `latest` channel. Update links, documentation, tests, scripts, and
+  generated projects to match.
+
 ## 0.0.3
 
 ### Patch Changes

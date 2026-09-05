@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-multi-instance-sqlite-server",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Create a two-instance Em See Pea server backed by SQLite.",
   "license": "MIT",
   "type": "module",
@@ -18,9 +18,9 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/server": "0.2.1",
+    "@emseepea/server": "0.2.2",
     "zod": "4.4.3",
-    "@emseepea/testing": "0.2.1",
+    "@emseepea/testing": "0.2.2",
     "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",
