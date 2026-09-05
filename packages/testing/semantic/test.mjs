@@ -162,6 +162,9 @@ function registerTest(name, options, mode) {
         if (Number.isInteger(error?.providerToolCount) && Number.isInteger(error?.providerTurnCount)) {
           evidence.failureProviderToolCount = error.providerToolCount;
           evidence.failureProviderTurnCount = error.providerTurnCount;
+          evidence.failureStructuredOutputToolCount = error.structuredOutputToolCount;
+          evidence.failureToolSearchToolCount = error.toolSearchToolCount;
+          evidence.failureUnknownToolCount = error.unknownToolCount;
         }
       }
       if (error?.code === "missing-critical-facts" && Array.isArray(error.missingFactIndices)

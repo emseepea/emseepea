@@ -47,6 +47,16 @@ test("accepts one tool-free answer from the required model", () => {
   assert.equal(parseClaudeEvents(`${structuredTool}\n${structuredTool}\n${structuredTool}\n${JSON.stringify({
     ...result, num_turns: 4, structured_output: {},
   })}`, 0, true).providerToolCount, 3);
+  assert.throws(() => parseClaudeEvents([
+    structuredTool,
+    JSON.stringify({ type: "assistant", message: { content: [
+      { type: "tool_use", name: "ToolSearch" },
+      { type: "tool_use", name: "PRIVATE_MODEL_TEXT" },
+    ] } }),
+    JSON.stringify({ ...result, num_turns: 4, structured_output: {} }),
+  ].join("\n"), 0, true), (error) => error.structuredOutputToolCount === 1
+    && error.toolSearchToolCount === 1 && error.unknownToolCount === 1
+    && !JSON.stringify(error).includes("PRIVATE_MODEL_TEXT"));
   assert.throws(() => parseClaudeEvents(`${structuredTool}\n${JSON.stringify({
     ...result, num_turns: 3, structured_output: {},
   })}`, 0, true), /3 turns/);
@@ -80,6 +90,7 @@ test("isolates model credentials from ordinary environment variables", () => {
     assert.equal(invocation.command, "/opt/claude");
     assert.equal(invocation.env.CLAUDE_CODE_OAUTH_TOKEN, "subscription-token");
     assert.equal(invocation.env.ANTHROPIC_API_KEY, undefined);
+    assert.equal(invocation.env.ENABLE_TOOL_SEARCH, "false");
     assert.equal(invocation.env.HOME, "/tmp/neutral");
     assert.equal(invocation.args[invocation.args.indexOf("--tools") + 1], "");
     assert.deepEqual(JSON.parse(invocation.args[invocation.args.indexOf("--json-schema") + 1]), schema);

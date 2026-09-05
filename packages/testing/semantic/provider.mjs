@@ -32,6 +32,9 @@ export function parseClaudeEvents(stdout, processExitCode = 0, expectsStructured
     throw Object.assign(new Error("Model command used a forbidden tool"), {
       providerToolCount: toolUses.length,
       providerTurnCount: result.num_turns,
+      structuredOutputToolCount: toolUses.filter(({ name }) => name === "StructuredOutput").length,
+      toolSearchToolCount: toolUses.filter(({ name }) => name === "ToolSearch").length,
+      unknownToolCount: toolUses.filter(({ name }) => !["StructuredOutput", "ToolSearch"].includes(name)).length,
     });
   }
   const expectedTurns = toolUses.length + 1;
@@ -136,6 +139,7 @@ function runProcess(command, args, options) {
 function modelEnvironment(extra) {
   return Object.fromEntries(Object.entries({
     CI: "true",
+    ENABLE_TOOL_SEARCH: "false",
     LANG: process.env.LANG ?? "C.UTF-8",
     LOGNAME: process.env.LOGNAME,
     NO_COLOR: "1",
