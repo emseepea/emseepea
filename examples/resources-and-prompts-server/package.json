@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-resources-and-prompts-server",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Create an Em See Pea server with resources and prompts.",
   "license": "MIT",
   "type": "module",
@@ -20,7 +20,7 @@
   "devDependencies": {
     "@emseepea/server": "0.3.0",
     "zod": "4.4.3",
-    "@emseepea/testing": "0.2.2",
+    "@emseepea/testing": "0.3.0",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",
     "oxlint": "1.80.0"
