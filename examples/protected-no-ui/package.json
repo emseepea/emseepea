@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-sign-in-tool-server",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Create an Em See Pea server with a sign-in protected tool.",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,7 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/server": "0.2.0",
+    "@emseepea/server": "0.2.1",
     "@modelcontextprotocol/server": "2.0.0",
     "zod": "4.4.3",
     "@emseepea/testing": "0.2.1",

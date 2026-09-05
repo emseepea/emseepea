@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/react",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": false,
   "license": "MIT",
   "repository": {
@@ -30,7 +30,7 @@
     "test:built": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@emseepea/server": "0.2.0"
+    "@emseepea/server": "0.2.1"
   },
   "peerDependencies": {
     "react": "^19.0.0",

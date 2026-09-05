@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-progress-streaming-server",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Create an Em See Pea server that streams tool progress.",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,7 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/server": "0.2.0",
+    "@emseepea/server": "0.2.1",
     "zod": "4.4.3",
     "@emseepea/testing": "0.2.1",
     "@types/node": "24.13.3",
