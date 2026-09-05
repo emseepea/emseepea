@@ -208,10 +208,13 @@ const answer = prompt.includes("JSON tool plan")
   : prompt.includes("Return only JSON with this exact shape")
     ? '{"pass":true,"score":1,"reason":"Every criterion passed."}'
     : "120 on hand minus 35 reserved leaves 85 available; the 40 inbound bags do not count yet.";
-process.stdout.write(JSON.stringify({ type: "result", is_error: false, num_turns: 1,
-  permission_denials: [], result: answer, modelUsage: {
+const result = { type: "result", is_error: false, num_turns: 1,
+  permission_denials: [], modelUsage: {
     "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" }
-  } }) + "\\n");
+  } };
+if (process.argv.includes("--json-schema")) result.structured_output = JSON.parse(answer);
+else result.result = answer;
+process.stdout.write(JSON.stringify(result) + "\\n");
 `;
   const run = () => spawnSync(process.execPath, [cli, "--smoke", "--model-command", model, "--output", output], {
     cwd: directory, encoding: "utf8", timeout: 30_000,

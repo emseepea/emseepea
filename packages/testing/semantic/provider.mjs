@@ -14,6 +14,9 @@ export async function modelVersion() {
 export function parseClaudeEvents(stdout, processExitCode = 0) {
   const events = stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
   const result = events.findLast(({ type }) => type === "result");
+  const answer = result?.structured_output === undefined
+    ? result?.result
+    : JSON.stringify(result.structured_output);
   const notLoggedIn = events.some(({ message }) => (
     Array.isArray(message?.content)
     && message.content.some(({ type, text }) => type === "text" && /not logged in/i.test(text ?? ""))
@@ -23,7 +26,7 @@ export function parseClaudeEvents(stdout, processExitCode = 0) {
   ));
   if (notLoggedIn) throw new Error("Model command is not signed in");
   if (processExitCode !== 0) throw new Error(`Model command exited ${processExitCode}`);
-  if (result?.is_error || typeof result?.result !== "string") throw new Error("Model command returned no answer");
+  if (result?.is_error || typeof answer !== "string") throw new Error("Model command returned no answer");
   if (toolUses.length > 0) throw new Error("Model command used a forbidden tool");
   if (result.num_turns !== 1) throw new Error(`Model command used ${String(result.num_turns)} turns`);
   if ((result.permission_denials?.length ?? 0) > 0) throw new Error("Model command attempted a forbidden action");
@@ -31,7 +34,7 @@ export function parseClaudeEvents(stdout, processExitCode = 0) {
   if (usage?.canonicalModel !== model || usage.provider !== "firstParty") {
     throw new Error("Model command did not use the required model");
   }
-  return { answer: result.result, models: Object.keys(result.modelUsage), turnCount: result.num_turns };
+  return { answer, models: Object.keys(result.modelUsage), turnCount: result.num_turns };
 }
 
 export function parseJudgeVerdict(output) {

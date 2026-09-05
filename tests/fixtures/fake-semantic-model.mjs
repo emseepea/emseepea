@@ -29,11 +29,13 @@ const answer = prompt.includes("JSON tool plan")
         createsAnotherReport: false,
       })
       : prompt;
-process.stdout.write(`${JSON.stringify({
+const result = {
   type: "result",
   is_error: false,
   num_turns: 1,
   permission_denials: [],
-  result: answer,
   modelUsage: { "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" } },
-})}\n`);
+};
+if (process.argv.includes("--json-schema")) result.structured_output = JSON.parse(answer);
+else result.result = answer;
+process.stdout.write(`${JSON.stringify(result)}\n`);

@@ -16,6 +16,11 @@ const result = {
 
 test("accepts one tool-free answer from the required model", () => {
   assert.equal(parseClaudeEvents(JSON.stringify(result)).answer, "One matching bean");
+  assert.equal(parseClaudeEvents(JSON.stringify({
+    ...result,
+    result: "",
+    structured_output: { calls: [{ name: "get-bean", arguments: {} }] },
+  })).answer, '{"calls":[{"name":"get-bean","arguments":{}}]}');
   assert.throws(() => parseClaudeEvents([
     JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read" }] } }),
     JSON.stringify(result),
