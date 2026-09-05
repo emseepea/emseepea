@@ -51,7 +51,13 @@ import {
   type ToolAnnotations,
   type Tool,
 } from "@modelcontextprotocol/server";
-import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import type {
+  FastifyError,
+  FastifyInstance,
+  FastifyReply,
+  FastifyRequest,
+  RouteHandlerMethod,
+} from "fastify";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
 import { readdir, realpath } from "node:fs/promises";
@@ -378,6 +384,7 @@ export interface DiscoveredCapabilities {
   readonly resources: readonly EmseepeaResource[];
   readonly prompts: readonly EmseepeaPrompt[];
 }
+export type HttpRouteHandler = RouteHandlerMethod;
 export interface OAuthResourceServerOptions {
   readonly verifier: OAuthTokenVerifier;
   readonly metadata: Omit<AuthMetadataOptions, "dangerouslyAllowInsecureIssuerUrl"> & {
@@ -779,7 +786,56 @@ export function definePrompt<Args extends z.ZodObject>(
 }
 
 const capabilityFilename = /^(tool|resource|prompt)\.([A-Za-z0-9_.-]{1,128})\.(?:js|mjs|ts|mts)$/;
-const ignoredCapabilityArtifact = /(?:\.d\.[cm]?ts|\.(?:test|spec|bench|benchmark|fixture)\.[cm]?[jt]s|\.map)$/;
+const ignoredDiscoveryArtifact = /(?:\.d\.[cm]?ts|\.(?:test|spec|bench|benchmark|fixture)\.[cm]?[jt]s|\.map)$/;
+const routeFilename = /^(get|post|put|patch|delete|options)\.([A-Za-z0-9_.-]{1,128})\.(?:js|mjs|ts|mts)$/;
+const routeMethods = {
+  get: "GET",
+  post: "POST",
+  put: "PUT",
+  patch: "PATCH",
+  delete: "DELETE",
+  options: "OPTIONS",
+} as const;
+
+export async function registerRoutes(app: FastifyInstance, root: URL): Promise<void> {
+  if (!app || typeof app !== "object" || typeof app.route !== "function") {
+    throw new TypeError("A Fastify application is required");
+  }
+  if (!(root instanceof URL) || root.protocol !== "file:" || root.search || root.hash) {
+    throw new TypeError("Route root must be a local file URL without a query or fragment");
+  }
+  const directory = await realpath(fileURLToPath(root));
+  const entries = (await readdir(directory, { withFileTypes: true }))
+    .sort((left, right) => left.name < right.name ? -1 : left.name > right.name ? 1 : 0);
+  const routes: { method: (typeof routeMethods)[keyof typeof routeMethods]; url: string; handler: RouteHandlerMethod }[] = [];
+  const identities = new Set<string>();
+
+  for (const entry of entries) {
+    if (ignoredDiscoveryArtifact.test(entry.name)) continue;
+    const match = entry.name.match(routeFilename);
+    if (!match) {
+      if (/^(?:get|post|put|patch|delete|options)\./.test(entry.name)) {
+        throw new TypeError(`Malformed route filename: ${entry.name}`);
+      }
+      continue;
+    }
+    if (!entry.isFile()) throw new TypeError(`Route module must be a regular file: ${entry.name}`);
+    const method = routeMethods[match[1] as keyof typeof routeMethods];
+    const segment = match[2]!;
+    if (segment === "." || segment === "..") throw new TypeError(`Malformed route filename: ${entry.name}`);
+    const url = segment === "index" ? "/" : `/${segment}`;
+    const identity = `${method} ${url}`;
+    if (identities.has(identity)) throw new TypeError(`Duplicate route: ${identity}`);
+    identities.add(identity);
+    const module = await import(pathToFileURL(join(directory, entry.name)).href) as Record<string, unknown>;
+    if (Object.keys(module).length !== 1 || typeof module.default !== "function") {
+      throw new TypeError(`Route module must export only a default handler: ${entry.name}`);
+    }
+    routes.push({ method, url, handler: module.default as RouteHandlerMethod });
+  }
+
+  for (const route of routes) app.route(route);
+}
 
 export async function discoverCapabilities<Context = undefined>(
   root: URL,
@@ -796,7 +852,7 @@ export async function discoverCapabilities<Context = undefined>(
   const prompts: EmseepeaPrompt[] = [];
 
   for (const entry of entries) {
-    if (ignoredCapabilityArtifact.test(entry.name)) continue;
+    if (ignoredDiscoveryArtifact.test(entry.name)) continue;
     const match = entry.name.match(capabilityFilename);
     if (!match) {
       if (/^(?:tool|resource|prompt)\./.test(entry.name)) {

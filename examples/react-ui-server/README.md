@@ -25,6 +25,11 @@ This example makes the server-rendered form interactive with React and imports
 one compiled Em See Pea stylesheet. It needs no Tailwind configuration and uses
 the same sample states as the native example.
 
+`src/server.tsx` assembles the server. HTTP handlers live in `src/routes/`,
+where the filename supplies the method and path. The route files serve the page,
+form response, stylesheet, and browser script. Add a direct Fastify route only
+when a handler does not fit this simple file convention.
+
 ## Run
 
 From this directory:

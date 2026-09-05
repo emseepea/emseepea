@@ -11,7 +11,7 @@ continues from the tool server starter.
 
 For each starter, the linked GitHub example directory contains the public
 initializer package, README, changelog, and maintained example source. The
-The commands use the default npm release channel.
+commands use the default npm release channel.
 
 ## Answer questions about your data
 
@@ -75,6 +75,9 @@ npm init @emseepea/progress-streaming-server -- my-server
 
 The native HTML and React examples show the same pea planting-plan form. Choose native
 HTML for fewer dependencies, or React to fit an existing React application.
+The HTML example keeps page, form, and stylesheet handlers in `src/routes/`.
+The React example also keeps its browser-script handler there. Both register
+the routes once during startup.
 
 For native HTML:
 

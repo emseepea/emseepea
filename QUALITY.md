@@ -94,6 +94,9 @@ Accessibility Guidelines (WCAG) conformance.
   TypeScript in runnable or static quality checks.
 - Add a contract check only when a public artifact exists; do not create a
   baseline for a future surface.
+- Filesystem discovery must sort matching modules and reject malformed names,
+  non-files, unsupported exports, and duplicate public identities before the
+  server listens.
 - User interface examples must test both light and dark color pairs, keyboard
   operation, accessible names, focus visibility, status announcements, and
   Web Content Accessibility Guidelines (WCAG) 2.2 AA.

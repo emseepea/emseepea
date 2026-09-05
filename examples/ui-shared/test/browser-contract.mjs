@@ -23,6 +23,7 @@ export function testUiExample(example) {
         if (message.type() === "error") errors.push(message.text());
       });
       page.on("pageerror", (error) => errors.push(error.message));
+      await assertRouteResponses(page.request, running.origin, example.react === true);
 
       for (const theme of ["light", "dark"]) {
         for (const state of ["ready", "invalid", "busy", "terminal"]) {
@@ -35,6 +36,8 @@ export function testUiExample(example) {
             `${example.name} ${theme} ${state} has axe violations`,
           );
           assert.equal(await page.locator("html[lang='en']").count(), 1);
+          assert.equal(await page.locator("meta[name='viewport'][content='width=device-width, initial-scale=1']").count(), 1);
+          assert.equal(await page.locator("a[href='#main-content']").innerText(), "Skip to main content");
           assert.equal(await page.locator("main#main-content").count(), 1);
           assert.equal(await page.locator("h1").count(), 1);
           assert.equal(await page.title(), "Pea planting plan preview - Em See Pea");
@@ -128,6 +131,32 @@ export function testUiExample(example) {
       await stopExample(running.child);
     }
   });
+}
+
+async function assertRouteResponses(request, origin, react) {
+  const document = await request.get(`${origin}/`);
+  assert.equal(document.status(), 200);
+  assert.match(document.headers()["content-type"], /^text\/html; charset=utf-8$/);
+
+  const stylesheet = await request.get(`${origin}/emseepea.css`);
+  assert.equal(stylesheet.status(), 200);
+  assert.match(stylesheet.headers()["content-type"], /^text\/css; charset=utf-8$/);
+  assert.equal(stylesheet.headers()["cache-control"], "no-store");
+
+  const submission = await request.post(`${origin}/`, { form: { title: "Route contract" } });
+  assert.equal(submission.status(), 200);
+  assert.match(
+    submission.headers()["content-type"],
+    react ? /^application\/json; charset=utf-8$/ : /^text\/html; charset=utf-8$/,
+  );
+
+  if (react) {
+    const client = await request.get(`${origin}/client.js`);
+    assert.equal(client.status(), 200);
+    assert.match(client.headers()["content-type"], /^text\/javascript; charset=utf-8$/);
+    assert.equal(client.headers()["cache-control"], "no-store");
+    assert.ok((await client.body()).byteLength > 0);
+  }
 }
 
 async function assertNoEffectClaim(page) {

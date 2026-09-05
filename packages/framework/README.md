@@ -101,6 +101,50 @@ module discovers source in a source runner or JavaScript in a built project.
 If both forms for one capability are in the same directory, discovery rejects
 the duplicate instead of choosing one.
 
+## Register HTTP Route Modules at Startup
+
+Keep page and asset handlers out of the server entrypoint by putting each route
+in its own file:
+
+```ts
+import { createEmseepea, registerRoutes, serveEmseepea } from "@emseepea/server";
+
+const app = createEmseepea({ name: "pea-guide", version: "1.0.0" });
+await registerRoutes(app, new URL("./routes/", import.meta.url));
+await serveEmseepea(app);
+```
+
+The filename supplies the HTTP method and one root-level path:
+
+- `get.index.ts` registers `GET /`.
+- `post.index.ts` registers `POST /`.
+- `get.emseepea.css.ts` registers `GET /emseepea.css`.
+
+Supported filename methods are `get`, `post`, `put`, `patch`, `delete`, and
+`options`.
+
+Each route file exports only one default Fastify-compatible handler. Import the
+handler type from Em See Pea so a generated project does not need a direct
+Fastify dependency:
+
+```ts
+import type { HttpRouteHandler } from "@emseepea/server";
+
+export default (async (_request, reply) => {
+  await reply.type("text/plain; charset=utf-8").send("Peas are ready.\n");
+}) satisfies HttpRouteHandler;
+```
+
+`registerRoutes` reads one local directory once, sorts matching files, and
+rejects malformed names, duplicate method and path pairs, non-files, and route
+modules with unsupported exports. Unrelated helper files are ignored. Keep
+source and emitted files in separate directories so the same route is not
+discovered twice.
+
+This is optional. Direct `app.get()`, `app.post()`, and other Fastify route
+registration continue to work. Use direct registration for routes that do not
+fit the file convention.
+
 ## Measure Requests
 
 Set `telemetry: true` in `createEmseepea` to record request traces, counts, and

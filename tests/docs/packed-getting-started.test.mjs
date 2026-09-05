@@ -90,8 +90,13 @@ test("the packed public packages pass fresh-install and getting-started checks",
       "fresh install resolved a third-party dependency outside the committed repository lockfile",
     );
 
+    await mkdir(path.join(directory, "routes"));
+    await writeFile(
+      path.join(directory, "routes/get.index.mjs"),
+      'export default async (_request, reply) => { await reply.send("file route works"); };\n',
+    );
     await writeFile(path.join(directory, "check.mjs"), `
-      import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
+      import { createEmseepea, defineTool, registerRoutes, serveEmseepea } from "@emseepea/server";
       import { startMcpServer } from "@emseepea/testing";
       import { semanticTest, toolSelectionTest } from "@emseepea/testing/semantic";
       import { z } from "zod";
@@ -110,8 +115,11 @@ test("the packed public packages pass fresh-install and getting-started checks",
         handler: ({ value }) => ({ text: value, data: { value } }),
       });
       const app = createEmseepea({ name: "packed-check", version: "0.0.0", tools: [tool] });
+      await registerRoutes(app, new URL("./routes/", import.meta.url));
       const running = await serveEmseepea(app, { port: 0 });
       try {
+        const page = await fetch(new URL("/", running.url));
+        if (!page.ok || await page.text() !== "file route works") throw new Error("packed route discovery failed");
         const response = await fetch(running.url, {
           method: "POST",
           headers: {

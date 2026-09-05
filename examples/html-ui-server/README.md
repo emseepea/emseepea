@@ -26,6 +26,12 @@ Protocol (MCP) server. It uses the native renderer and the same sample states as
 the React example. Choose the React example instead when your application
 already uses React and needs client-side updates.
 
+`src/server.ts` assembles the server. HTTP handlers live in `src/routes/`, where
+the filename supplies the method and path. `get.index.ts` serves the page,
+`post.index.ts` handles the form, and `get.emseepea.css.ts` serves the
+stylesheet. Add a direct Fastify route only when a handler does not fit this
+simple file convention.
+
 ## Run
 
 From this directory:

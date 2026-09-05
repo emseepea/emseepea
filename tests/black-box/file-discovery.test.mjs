@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
-import { createEmseepea, discoverCapabilities, serveEmseepea } from "@emseepea/server";
+import { createEmseepea, discoverCapabilities, registerRoutes, serveEmseepea } from "@emseepea/server";
 
 const serverUrl = pathToFileURL(resolve("packages/framework/dist/index.js")).href;
 const zodUrl = pathToFileURL(resolve("node_modules/zod/index.js")).href;
@@ -122,6 +122,89 @@ test("filesystem discovery rejects malformed, conflicting, and unsafe modules", 
   });
 });
 
+test("HTTP route discovery is deterministic and preserves explicit registration", async () => {
+  const directory = await temporaryDirectory();
+  await Promise.all([
+    writeFile(join(directory.path, "get.zeta.mjs"), routeModule("zeta")),
+    writeFile(join(directory.path, "get.alpha.mjs"), routeModule("alpha")),
+    writeFile(join(directory.path, "post.index.mjs"), routeModule("root post")),
+    writeFile(join(directory.path, "get.ignored.test.mjs"), "throw new Error('must not load');\n"),
+    writeFile(join(directory.path, "page.mjs"), "throw new Error('must not load');\n"),
+  ]);
+
+  try {
+    const first = createEmseepea({ name: "route-server", version: "0.0.0" });
+    const second = createEmseepea({ name: "route-server", version: "0.0.0" });
+    const firstOrder = routeOrder(first);
+    const secondOrder = routeOrder(second);
+    await registerRoutes(first, pathToFileURL(`${directory.path}/`));
+    await registerRoutes(second, pathToFileURL(`${directory.path}/`));
+    first.get("/explicit", async (_request, reply) => reply.send("explicit"));
+    assert.deepEqual(firstOrder.slice(0, 3), ["GET /alpha", "GET /zeta", "POST /"]);
+    assert.deepEqual(secondOrder, firstOrder.slice(0, 3));
+
+    const running = await serveEmseepea(first, { port: 0 });
+    try {
+      assert.equal(await fetch(new URL("/alpha", running.url)).then((response) => response.text()), "alpha");
+      assert.equal(await fetch(new URL("/zeta", running.url)).then((response) => response.text()), "zeta");
+      assert.equal(await fetch(new URL("/", running.url), { method: "POST" }).then((response) => response.text()), "root post");
+      assert.equal(await fetch(new URL("/explicit", running.url)).then((response) => response.text()), "explicit");
+    } finally {
+      await running.close();
+    }
+  } finally {
+    await directory.remove();
+  }
+});
+
+test("HTTP route discovery rejects malformed, conflicting, and unsafe modules", async (t) => {
+  await t.test("malformed route filename", async () => {
+    await rejectsRouteDirectory([["get.bad name.mjs", routeModule("bad")]], /Malformed route filename/);
+  });
+  await t.test("reserved dot segments", async () => {
+    await rejectsRouteDirectory([["get...mjs", routeModule("dot")]], /Malformed route filename/);
+    await rejectsRouteDirectory([["get....mjs", routeModule("dot dot")]], /Malformed route filename/);
+  });
+  await t.test("source and built output collision", async () => {
+    await rejectsRouteDirectory([
+      ["get.same.js", routeModule("first")],
+      ["get.same.ts", routeModule("second")],
+    ], /Duplicate route: GET \/same/);
+  });
+  await t.test("additional module export", async () => {
+    await rejectsRouteDirectory([
+      ["get.extra.mjs", `${routeModule("extra")}\nexport const extra = true;\n`],
+    ], /export only a default handler/);
+  });
+  await t.test("missing handler", async () => {
+    await rejectsRouteDirectory([["get.missing.mjs", "export default true;\n"]], /export only a default handler/);
+  });
+  await t.test("module symlink", async () => {
+    const directory = await temporaryDirectory();
+    const outside = await temporaryDirectory();
+    try {
+      const target = join(outside.path, "get.linked.mjs");
+      await writeFile(target, routeModule("linked"));
+      await symlink(target, join(directory.path, "get.linked.mjs"));
+      await assert.rejects(
+        registerRoutes(createEmseepea({ name: "route-server", version: "0.0.0" }), pathToFileURL(`${directory.path}/`)),
+        /regular file/,
+      );
+    } finally {
+      await Promise.all([directory.remove(), outside.remove()]);
+    }
+  });
+  await t.test("non-file URL", async () => {
+    await assert.rejects(
+      registerRoutes(createEmseepea({ name: "route-server", version: "0.0.0" }), new URL("https://example.com/routes/")),
+      /local file URL/,
+    );
+  });
+  await t.test("missing Fastify application", async () => {
+    await assert.rejects(registerRoutes({}, new URL("file:///routes/")), /Fastify application/);
+  });
+});
+
 function toolModule(name) {
   return `
 import { defineTool } from ${JSON.stringify(serverUrl)};
@@ -142,12 +225,37 @@ export default ({ calls }) => defineTool({
 `;
 }
 
+function routeModule(body) {
+  return `export default async (_request, reply) => { await reply.send(${JSON.stringify(body)}); };\n`;
+}
+
+function routeOrder(app) {
+  const routes = [];
+  app.addHook("onRoute", ({ method, url }) => {
+    if (method !== "HEAD") routes.push(`${method} ${url}`);
+  });
+  return routes;
+}
+
 async function rejectsDirectory(files, pattern) {
   const directory = await temporaryDirectory();
   try {
     await Promise.all(files.map(([name, source]) => writeFile(join(directory.path, name), source)));
     await assert.rejects(
       discoverCapabilities(pathToFileURL(`${directory.path}/`), { calls: [] }),
+      pattern,
+    );
+  } finally {
+    await directory.remove();
+  }
+}
+
+async function rejectsRouteDirectory(files, pattern) {
+  const directory = await temporaryDirectory();
+  try {
+    await Promise.all(files.map(([name, source]) => writeFile(join(directory.path, name), source)));
+    await assert.rejects(
+      registerRoutes(createEmseepea({ name: "route-server", version: "0.0.0" }), pathToFileURL(`${directory.path}/`)),
       pattern,
     );
   } finally {
