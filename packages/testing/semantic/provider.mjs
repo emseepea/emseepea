@@ -11,12 +11,12 @@ export async function modelVersion() {
   return version;
 }
 
-export function parseClaudeEvents(stdout, processExitCode = 0) {
+export function parseClaudeEvents(stdout, processExitCode = 0, expectsStructuredOutput = false) {
   const events = stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
   const result = events.findLast(({ type }) => type === "result");
-  const answer = result?.structured_output === undefined
-    ? result?.result
-    : JSON.stringify(result.structured_output);
+  const answer = expectsStructuredOutput
+    ? result?.structured_output === undefined ? undefined : JSON.stringify(result.structured_output)
+    : result?.result;
   const notLoggedIn = events.some(({ message }) => (
     Array.isArray(message?.content)
     && message.content.some(({ type, text }) => type === "text" && /not logged in/i.test(text ?? ""))
@@ -27,7 +27,9 @@ export function parseClaudeEvents(stdout, processExitCode = 0) {
   if (notLoggedIn) throw new Error("Model command is not signed in");
   if (processExitCode !== 0) throw new Error(`Model command exited ${processExitCode}`);
   if (result?.is_error || typeof answer !== "string") throw new Error("Model command returned no answer");
-  if (toolUses.length > 0) throw new Error("Model command used a forbidden tool");
+  if (toolUses.some(({ name }) => name !== "StructuredOutput" || !expectsStructuredOutput)) {
+    throw new Error("Model command used a forbidden tool");
+  }
   if (result.num_turns !== 1) throw new Error(`Model command used ${String(result.num_turns)} turns`);
   if ((result.permission_denials?.length ?? 0) > 0) throw new Error("Model command attempted a forbidden action");
   const usage = result.modelUsage?.[model];
@@ -95,7 +97,7 @@ export async function runModel(provider, prompt, directory, signal, jsonSchema) 
   });
   if (execution.timedOut) throw new Error("Model command timed out");
   if (execution.code !== 0 && !execution.stdout) throw new Error(`Model command exited ${execution.code}`);
-  return parseClaudeEvents(execution.stdout, execution.code);
+  return parseClaudeEvents(execution.stdout, execution.code, jsonSchema !== undefined);
 }
 
 function runProcess(command, args, options) {
