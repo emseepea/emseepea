@@ -33,10 +33,12 @@ This review covers source prose. It does not establish package publication.
 
 ## Server 0.3.0 Prepublication Review
 
-Result: PASS. The release-readiness record clearly separates prepublication
-evidence from publishing-commit, npm, registry, tag, and GitHub release
-evidence. The corrected UI route wording accurately separates the HTML routes
-from the React browser-script route.
+Result: PASS. The release-readiness record clearly separates published
+framework and UI evidence from pending corrective initializer releases,
+publishing-commit checks, npm registry readback, tags, and GitHub releases. The
+corrected UI route wording accurately separates the HTML routes from the React
+browser-script route. The corrective Changeset is short, specific, and names the
+user-visible outcome.
 
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
@@ -46,4 +48,5 @@ from the React browser-script route.
 | `packages/framework/README.md` | `43a98139b2eb43de438d2c73f548d0d8f1a85e1c99d9f73800c446196a82c512` |
 | `website/src/content/docs/examples.md` | `2196bee33c2eacab520837d31d8ec0450799beba4944e99c637a66728bbe8380` |
 | `QUALITY.md` | `6414620becc890a94da50b56b327f3ce982ba0a0f723892db517e76750fecc4f` |
-| `docs/reviews/0.3.0-release-readiness.md` | `3859426b1a860526dc7b0fa5c347fd0f0343100745183c61c19757eabb23dc5d` |
+| `.changeset/fresh-pea-initializers.md` | `a1395700d67d2106997b406965d75131c8ea1375d96563174038cbc287458144` |
+| `docs/reviews/0.3.0-release-readiness.md` | `cca3769852feaf9d3662498e36dd24f29287df5f5d1bf2805d3d359079dae525` |
