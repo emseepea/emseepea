@@ -98,11 +98,19 @@ test("the packed public packages pass fresh-install and getting-started checks",
     await writeFile(path.join(directory, "check.mjs"), `
       import { createEmseepea, defineTool, registerRoutes, serveEmseepea } from "@emseepea/server";
       import { startMcpServer } from "@emseepea/testing";
-      import { semanticTest, toolSelectionTest } from "@emseepea/testing/semantic";
+      import {
+        assertNoToolCalls,
+        assertResponseContains,
+        assertResponseMeaning,
+        assertToolCalls,
+        createConversation,
+      } from "@emseepea/testing/semantic";
       import { z } from "zod";
 
-      if (typeof startMcpServer !== "function" || typeof semanticTest !== "function"
-          || typeof toolSelectionTest !== "function") {
+      if (typeof startMcpServer !== "function" || typeof createConversation !== "function"
+          || typeof assertToolCalls !== "function" || typeof assertNoToolCalls !== "function"
+          || typeof assertResponseContains !== "function"
+          || typeof assertResponseMeaning !== "function") {
         throw new Error("packed testing package is missing its public helpers");
       }
       const value = z.object({ value: z.string() });
@@ -329,13 +337,21 @@ test("every packed initializer creates a standalone checked project", {
       assert.equal(evidence.status, "passed", `${initializer.example} semantic smoke failed`);
       assert.equal(result.answerTrials.length, 3);
       assert.equal(result.judgeVerdicts.length, 9);
+      assert.equal(result.mode, "conversation");
       if (initializer.example === "resources-and-prompts-server") {
-        assert.equal(result.mode, "prepared");
-      } else {
-        assert.equal(result.mode, "tool-selection");
         for (const trial of result.answerTrials) {
-          assert.deepEqual(trial.expectedTools, expectedTools[initializer.example]);
-          assert.deepEqual(trial.selectedTools, expectedTools[initializer.example]);
+          assert.deepEqual(trial.turns[0].expectedTools, []);
+          assert.deepEqual(trial.turns[0].selectedTools, []);
+          assert.equal(trial.turns[0].pathEvidence.length, 2);
+        }
+      } else {
+        for (const trial of result.answerTrials) {
+          assert.deepEqual(trial.turns[0].expectedTools, expectedTools[initializer.example]);
+          assert.deepEqual(trial.turns[0].selectedTools, expectedTools[initializer.example]);
+          if (initializer.example === "api-backed-server") {
+            assert.deepEqual(trial.turns[1].expectedTools, []);
+            assert.deepEqual(trial.turns[1].selectedTools, []);
+          }
         }
       }
     };

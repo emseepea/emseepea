@@ -1,20 +1,28 @@
-import { toolSelectionTest } from "@emseepea/testing/semantic";
+import test from "node:test";
+import {
+  assertResponseContains,
+  assertResponseMeaning,
+  assertToolCalls,
+  createConversation,
+} from "@emseepea/testing/semantic";
 
-toolSelectionTest("Inventory availability excludes reserved and inbound seed packets", {
-  server: new URL("../dist/server.js", import.meta.url),
-  authToken: "example-access-token",
-  question:
-    "How many pea seed packets can we promise to customers now? Show the " +
-    "calculation and explain whether the inbound packets count yet.",
-  criticalFacts: [
-    "120",
-    "35",
-    "85",
-    "40"
-  ],
-  criteria:
-    "The answer calculates 85 packets available to promise as 120 on hand minus 35 " +
-    "reserved. It says the 40 inbound packets are not yet available to promise and " +
-    "does not add them to the current 85.",
-  expectedTools: ["get-private-inventory-report"],
+test("excludes reserved and inbound packets from current availability", async (t) => {
+  const chat = await createConversation(t, {
+    server: new URL("../dist/server.js", import.meta.url),
+    authToken: "example-access-token",
+  });
+  const response = await chat.send(
+    "How many pea seed packets can we promise now, and do inbound packets count?",
+  );
+
+  assertToolCalls(response, [{
+    name: "get-private-inventory-report",
+    arguments: {},
+  }]);
+  assertResponseContains(response, "85");
+  await assertResponseMeaning(response, {
+    expected:
+      "There are 85 packets available to promise because 35 reserved packets " +
+      "are excluded from the 120 on hand. The 40 inbound packets do not count yet.",
+  });
 });

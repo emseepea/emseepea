@@ -99,14 +99,22 @@ if (evidence.status !== "passed") process.exitCode = 1;
 console.log(`Semantic checks ${evidence.status}; evidence: ${output}`);
 
 function validRecord(record, authoritative, smoke) {
+  const isHash = (value) => typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
   if (record.status !== "passed" || record.authoritative !== authoritative || record.smoke !== smoke
-    || record.answerTrials?.length !== 3 || record.judgeVerdicts?.length !== 9) return false;
-  if (record.mode !== "tool-selection") return record.mode === "prepared";
-  return record.answerTrials.every((trial) => trial.selectionTurnCount === 1
-    && Number.isInteger(trial.selectionProviderToolCount) && trial.selectionProviderToolCount >= 0
-    && trial.selectionProviderToolCount <= 3
-    && trial.selectionProviderTurnCount === trial.selectionProviderToolCount + 1
-    && Number.isInteger(trial.toolCallCount) && trial.toolCallCount >= 1 && trial.toolCallCount <= 3
-    && typeof trial.advertisedToolsSha256 === "string" && typeof trial.selectedCallsSha256 === "string"
-    && JSON.stringify(trial.selectedTools) === JSON.stringify(trial.expectedTools));
+    || record.mode !== "conversation" || record.answerTrials?.length !== 3
+    || !Number.isInteger(record.judgeVerdicts?.length) || record.judgeVerdicts.length < 9
+    || record.judgeVerdicts.length % 9 !== 0
+    || !record.judgeVerdicts.every((judgment) => isHash(judgment.expectationSha256)
+      && isHash(judgment.requestSha256) && isHash(judgment.responseSha256))) return false;
+  return record.answerTrials.every((trial) => Array.isArray(trial.turns) && trial.turns.length > 0
+    && trial.turns.every((turn) => turn.selectionTurnCount === 1
+      && Number.isInteger(turn.selectionProviderToolCount) && turn.selectionProviderToolCount >= 0
+      && turn.selectionProviderToolCount <= 3
+      && turn.selectionProviderTurnCount === turn.selectionProviderToolCount + 1
+      && Number.isInteger(turn.toolCallCount) && turn.toolCallCount >= 0 && turn.toolCallCount <= 3
+      && isHash(turn.promptSha256) && isHash(turn.answerSha256)
+      && isHash(turn.advertisedToolsSha256) && isHash(turn.selectedCallsSha256)
+      && isHash(turn.expectedCallsSha256)
+      && JSON.stringify(turn.selectedTools) === JSON.stringify(turn.expectedTools)
+      && turn.literalAssertionCount + turn.meaningAssertionCount > 0));
 }

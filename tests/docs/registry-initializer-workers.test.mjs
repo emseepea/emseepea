@@ -10,11 +10,18 @@ test("registry initializer verification uses four workers and preserves every ch
   const calls = [];
   let active = 0;
   let maximum = 0;
+  let releaseInitializers;
+  const initializersReady = new Promise((resolve) => { releaseInitializers = resolve; });
   const run = async (command, args, cwd) => {
     active += 1;
     maximum = Math.max(maximum, active);
     calls.push({ command, args, cwd });
-    await new Promise((resolve) => setImmediate(resolve));
+    if (command === "npm" && args[0] === "init") {
+      if (active === 4) releaseInitializers();
+      await initializersReady;
+    } else {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
     active -= 1;
   };
 

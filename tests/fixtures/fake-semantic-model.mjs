@@ -16,8 +16,9 @@ const plans = [
   ["run-germination-trial", [{ name: "run-germination-trial", arguments: { tray: "sample-tray" } }]],
 ];
 const selected = plans.find(([name]) => prompt.includes(name));
+const followUpWithoutTool = prompt.includes("Current user message:\nWhat was its common name?");
 const answer = prompt.includes("JSON tool plan")
-  ? JSON.stringify({ calls: selected?.[1] ?? [] })
+  ? JSON.stringify({ calls: followUpWithoutTool ? [] : selected?.[1] ?? [] })
   : prompt.includes("Return only JSON with this exact shape")
     ? '{"pass":true,"score":1,"reason":"The answer preserves every required meaning."}'
     : prompt.includes("reusesOriginalReport (boolean)")

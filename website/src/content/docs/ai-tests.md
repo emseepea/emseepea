@@ -42,38 +42,63 @@ The LLM runner finds every `*.test.mjs` file inside `eval/`.
 
 ## Write an LLM Test
 
-Import `toolSelectionTest` from `@emseepea/testing/semantic` in a file such as
-`eval/pea-variety.test.mjs`. Start with the
-[pea-variety test](https://github.com/emseepea/emseepea/blob/main/examples/tool-server/eval/meaning.test.mjs)
+Use Node's test runner and import the conversation helpers from
+`@emseepea/testing/semantic`. Start with the
+[pea catalogue conversation](https://github.com/emseepea/emseepea/blob/main/examples/api-backed-server/eval/meaning.test.mjs)
 or the
 [report test with repeated calls](https://github.com/emseepea/emseepea/blob/main/examples/multi-instance-sqlite-server/eval/meaning.test.mjs).
 
-Each test describes:
+```js
+import test from "node:test";
+import {
+  assertNoToolCalls,
+  assertResponseContains,
+  assertResponseMeaning,
+  assertToolCalls,
+  createConversation,
+} from "@emseepea/testing/semantic";
 
-- `server`: the file URL of your built server entry point. It must print its
-  local `http://127.0.0.1:PORT/mcp` address when ready.
-- `question`: what to ask the model about those results.
-- `expectedTools`: the exact tool sequence the model must select. Use the same
-  name twice when the question requires two calls to one tool.
-- `criticalFacts`: text or regular expressions that every answer must match.
-  Text checks ignore letter case; patterns use their own flags.
-- `criteria`: what a correct answer must mean, including mistakes to avoid.
+test("searches once and remembers the result", async (t) => {
+  const chat = await createConversation(t, {
+    server: new URL("../dist/server.js", import.meta.url),
+  });
 
-Use the optional `assertAnswer(answer)` callback for your own exact checks on
-the model's answer. Each test needs a unique name within its file.
+  const search = await chat.send('Search the catalogue for "pea".');
+  assertToolCalls(search, [{
+    name: "search-pea-taxa",
+    arguments: { query: "pea" },
+  }]);
+  assertResponseContains(search, "Pisum sativum");
+  await assertResponseMeaning(search, {
+    expected: "Pisum sativum has the most recorded observations.",
+  });
 
-The repeated-report example asks for JSON and checks every field; it does not
-test free-form prose.
+  const followUp = await chat.send("What was its common name?");
+  assertNoToolCalls(followUp);
+  assertResponseContains(followUp, "Common Pea");
+});
+```
 
-The model receives the advertised tool names, descriptions, and input schemas.
-It chooses one to three calls as strict JSON. The harness rejects missing,
-unknown, extra, or malformed selections, then executes accepted calls through
-the official MCP client. The model sees the returned material in a separate
-answer step.
+`assertToolCalls` checks the complete ordered call list, including arguments and
+call count. `assertNoToolCalls` checks that a turn used the existing conversation
+without making another call. `assertResponseContains` accepts literal strings
+only. Put alternative wording and numerical meaning in `assertResponseMeaning`.
 
-Use `semanticTest` when test code must prepare resources, prompts, or a custom
-set of results. Its `exercise` callback supports `callTool`, `readResource`, and
-`getPrompt`; `requiredPaths` states which operations must supply the evidence.
+The optional `context` setting represents real application context. It is absent
+by default so test guidance cannot bias the model. For resources and prompts,
+use `chat.prepare` with `readResource` or `getPrompt` before sending the user
+message.
+
+The model receives the advertised tool names, descriptions, input schemas, and
+the actual history from its own trial. It chooses zero to three calls as strict
+JSON. The harness rejects unknown, over-limit, or malformed selections, then
+executes accepted calls through the official MCP client.
+
+Those calls run before the assertions. Use only an isolated, effect-safe test
+server with test data. Do not point semantic tests at production.
+
+A zero-call plan is valid when the expected answer comes from established
+conversation history or prepared MCP material.
 
 ## Run the Checks
 
@@ -99,14 +124,16 @@ settings to the server; model-provider credentials are not passed through.
 
 ## What a Passing Check Means
 
-For each test, the runner makes three fresh attempts. In a tool-selection test,
-each attempt first checks the model's selected tool names and arguments, then
-runs those calls through the real MCP server.
+For each test, the runner makes three fresh attempts. Each attempt checks the
+model's selected tool names and arguments, then runs accepted calls through the
+real MCP server. Follow-up turns retain only the actual history from the same
+attempt.
 
-Each answer gets three independent model judgments, for nine judgments in total.
-A wrong selection, rejected call, missing fact, failed assertion, rejected answer,
-or missing MCP call fails the test. Failed attempts are not retried or taken from
-a cache.
+Each `assertResponseMeaning` call gets three independent model judgments. With
+three fresh attempts, that is nine judgments for each meaning assertion.
+A wrong selection, rejected call, failed literal assertion, rejected meaning, or
+missing MCP operation fails the test. Failed attempts are not retried or taken
+from a cache.
 
 The selection model has no shell, files, browser, arbitrary network access, or
 native MCP connection. It chooses from the server's advertised public tool
@@ -115,7 +142,8 @@ for the configured model and question, not identical behaviour in every client
 or deployment.
 
 Results are saved to `artifacts/llm-eval/evidence.json`. The report contains
-outcomes and operation hashes, not raw MCP results or model answers.
+outcomes and hashes for prompts, calls, material, answers, and judgments, not
+their raw private content.
 
 Repository tests also use a simulated model to check the runner without spending
 model credits. Those `--smoke` checks test the wiring only. They do not prove

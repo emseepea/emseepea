@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 51 decisions: 30 current and 21 historical.
+This project has 52 decisions: 30 current and 22 historical.
 
 ## Quick Index
 
@@ -32,7 +32,6 @@ This project has 51 decisions: 30 current and 21 historical.
 - [ADR-0037: Local Website Search](0037-local-website-search.proposed.md): Proposed; human review confirmed.
 - [ADR-0038: Measured Website Performance Before Publication](0038-measured-website-performance-before-publication.proposed.md): Proposed; human review confirmed.
 - [ADR-0039: Website Performance Budget](0039-website-performance-budget.proposed.md): Proposed; human review confirmed.
-- [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.proposed.md): Proposed; human review confirmed.
 - [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md): Proposed; human review confirmed.
 - [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md): Proposed; human review confirmed.
@@ -41,6 +40,7 @@ This project has 51 decisions: 30 current and 21 historical.
 - [ADR-0050: Schema-Declared Pass-Through by Default](0050-schema-declared-pass-through-by-default.proposed.md): Proposed; human review confirmed.
 - [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.proposed.md): Proposed; human review confirmed.
 - [ADR-0052: Optional Deterministic HTTP Route Discovery](0052-optional-deterministic-http-route-discovery.proposed.md): Proposed; human review confirmed.
+- [ADR-0053: Conversation-Style Semantic Tests](0053-conversation-style-semantic-tests.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -61,6 +61,7 @@ This project has 51 decisions: 30 current and 21 historical.
 - [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md): Superseded; human review confirmed.
 - [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.superseded.md): Superseded; human review confirmed.
+- [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.superseded.md): Superseded; human review confirmed.
 - [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.superseded.md): Superseded; human review confirmed.
 - [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.superseded.md): Superseded; human review confirmed.
@@ -628,7 +629,7 @@ Chosen option: **"Example-owned Oxlint dependency with root orchestration"**, be
 - Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.superseded.md), [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.superseded.md), [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md)
-- Replaced by: [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.proposed.md)
+- Replaced by: [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.superseded.md)
 
 #### Decision
 
@@ -820,11 +821,12 @@ Chosen option: **"Adopt the measured-build limits"**, because the first build pa
 - Require all numerical limits to pass; preserve failed results for diagnosis.
 - Keep guide and accessibility checks required by the other website decisions.
 
-### [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.proposed.md)
+### [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md)
+- Replaced by: [ADR-0053: Conversation-Style Semantic Tests](0053-conversation-style-semantic-tests.proposed.md)
 
 #### Decision
 
@@ -1080,3 +1082,25 @@ Chosen option: **"Framework-owned optional HTTP route discovery"**, because it r
 - Repeated discovery registers routes in the same order.
 - Tests reject malformed names, non-files, duplicate method and path pairs, source plus build collisions, unsupported exports, and non-file roots.
 - UI browser accessibility, lint, ordinary tests, semantic tests, and packed standalone initializer qualification pass unchanged.
+
+### [ADR-0053: Conversation-Style Semantic Tests](0053-conversation-style-semantic-tests.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.superseded.md)
+
+#### Decision
+
+Chosen option: **"Conversation-style JavaScript tests"**, because it makes the test's behaviour readable while reusing the qualified implementation already in `@emseepea/testing`.
+
+#### How We Check It
+
+- Public types and deterministic tests cover context omission, sequential prompts, isolated histories, exact calls, arguments, order, count, and no-call turns.
+- Tool calls execute only through the instrumented official MCP client after validation against advertised contracts.
+- Literal containment tests reject non-string expectations and do not normalize numbers.
+- Meaning assertions use the existing strict judge verdict and retain three independent judgments per answer.
+- Provider processes receive no server URL, server credential, or extra tool access, and cancellation stops every stage.
+- Evidence binds each prompt, selection, MCP operation, answer, and judgment to its trial without retaining raw private content.
+- Every maintained example has readable conversation-style semantic tests.
+- Every packed initializer passes its semantic smoke check outside the monorepo.
+- The exact publishing commit passes the live semantic job and all existing release gates before registry publication.

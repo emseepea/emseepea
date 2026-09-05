@@ -1,5 +1,30 @@
 # Cognitive-Accessibility Review 2026-09-06
 
+## Conversation-Style Semantic Tests
+
+Result: PASS after three terminology corrections. Independent cognitive-
+accessibility and Markdown accessibility review covered the new decision,
+quality policy, package guide, website guide, and Changeset.
+
+The final wording presents tests in conversation order, names each assertion's
+purpose, explains that nine judgments apply to each meaning assertion, and
+warns readers to use isolated test servers because selected calls execute
+before assertions. It uses consistent conversation-test terminology and
+contains no emoji or em dashes.
+
+This review covers source prose. It does not establish package publication.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `.changeset/bright-peas-converse.md` | `672fe3aaec9136e01642f1ae76ee605e2dcc09564f2cc68d9c3819a717b27fbe` |
+| `QUALITY.md` | `a4cd9638b37576de30b96c2310dc9272054c4082636e4740b3653361050cee7c` |
+| `docs/decisions/0040-model-selected-tool-semantic-tests.superseded.md` | `d4df8e8df96c79140a1a0606b7ec4b0251df7a695ebf639fec9adb886696d424` |
+| `docs/decisions/0053-conversation-style-semantic-tests.proposed.md` | `4be08cee07e47cfbbc28ed4869761fa2b76e482d36202277cfaa858f2f49be0e` |
+| `docs/decisions/README.md` | `9527bc9aaa837f21249959b308287c2942d5ce76a5a477fdad284ba762138004` |
+| `packages/testing/README.md` | `6a06966f312c96432dad60ee6f681c6a7c7fffe82e02a96815e693578a8af4e4` |
+| `website/src/content/docs/ai-tests.md` | `ccf56c9f832f430f851f66254c80917bac428ad063e4908e1509df2c8996fe73` |
+| `docs/reviews/0.3.0-release-readiness.md` | `f696a200866293fd332ef1ff3256d71feaf685fa40c77640aa59c0a1ce71624a` |
+
 ## File Route Modules in UI Examples
 
 Result: PASS. The reviewed prose is clear, scannable, and accurate for readers
@@ -31,14 +56,12 @@ No em dashes or emoji were found in the scoped reviewed public Markdown files.
 
 This review covers source prose. It does not establish package publication.
 
-## Server 0.3.0 Prepublication Review
+## Server 0.3.0 Publication Review
 
-Result: PASS. The release-readiness record clearly separates published
-framework and UI evidence from pending corrective initializer releases,
-publishing-commit checks, npm registry readback, tags, and GitHub releases. The
-corrected UI route wording accurately separates the HTML routes from the React
-browser-script route. The corrective Changeset is short, specific, and names the
-user-visible outcome.
+Result: PASS. This historical review covered the server 0.3.0 route-discovery
+release and its corrective initializer Changeset. The corrected UI route
+wording accurately separates the HTML routes from the React browser-script
+route. The Changeset is short, specific, and names the user-visible outcome.
 
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
@@ -47,6 +70,5 @@ user-visible outcome.
 | `examples/react-ui-server/README.md` | `998402c867ba47196a5616662e321dc41b93b841beb25cbf4847ad02637f8b75` |
 | `packages/framework/README.md` | `43a98139b2eb43de438d2c73f548d0d8f1a85e1c99d9f73800c446196a82c512` |
 | `website/src/content/docs/examples.md` | `2196bee33c2eacab520837d31d8ec0450799beba4944e99c637a66728bbe8380` |
-| `QUALITY.md` | `6414620becc890a94da50b56b327f3ce982ba0a0f723892db517e76750fecc4f` |
+| `QUALITY.md` | `a4cd9638b37576de30b96c2310dc9272054c4082636e4740b3653361050cee7c` |
 | `.changeset/fresh-pea-initializers.md` | `a1395700d67d2106997b406965d75131c8ea1375d96563174038cbc287458144` |
-| `docs/reviews/0.3.0-release-readiness.md` | `cca3769852feaf9d3662498e36dd24f29287df5f5d1bf2805d3d359079dae525` |

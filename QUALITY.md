@@ -100,15 +100,18 @@ Accessibility Guidelines (WCAG) conformance.
 - User interface examples must test both light and dark color pairs, keyboard
   operation, accessible names, focus visibility, status announcements, and
   Web Content Accessibility Guidelines (WCAG) 2.2 AA.
-- Every example must have an executable language-model understanding case in
-  `eval/`, separate from ordinary tests in `test/`. It requires three fresh
-  answers and three independent judgments per answer, made without MCP
-  tools, fixed critical facts, and evidence of the exact MCP operation. All
-  three answers must pass.
-- For every trial, the harness must execute the exact tool call, resource read,
-  or prompt get through the official client and bind the operation and returned
-  material to evidence. Model processes receive no MCP tools; the check measures
-  whether the model understands returned data, not whether it chooses a tool.
+- Every example must have an executable conversation-style language-model case
+  in `eval/`, separate from ordinary tests in `test/`. It requires three fresh
+  conversations, exact assertions for each turn's selected calls, and three
+  independent judgments for each meaning assertion. All three conversations
+  must pass.
+- For every trial, the harness must execute accepted calls, resource reads, and
+  prompt gets through the official client and bind the operations and returned
+  material to evidence. Model processes receive no MCP tools. The check measures
+  selection through a validated provider-neutral call plan and understanding of
+  the returned data, not provider-native autonomous MCP execution.
+- Semantic cases must use isolated, effect-safe test servers and fixtures.
+  Selected calls execute before assertions and must never target production.
 - The understanding check never retries a wrong answer. An unknown provider,
   model, credential, path, judgment, timeout, configuration, or evidence result
   stops publication.

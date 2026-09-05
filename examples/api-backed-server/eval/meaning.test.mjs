@@ -1,23 +1,36 @@
-import { toolSelectionTest } from "@emseepea/testing/semantic";
+import test from "node:test";
+import {
+  assertNoToolCalls,
+  assertResponseContains,
+  assertResponseMeaning,
+  assertToolCalls,
+  createConversation,
+} from "@emseepea/testing/semantic";
 
-toolSelectionTest("Taxon fields retain their documented meaning", {
-  server: new URL("../test-support/llm-server.mjs", import.meta.url),
-  question:
-    "Search the public taxon catalogue for pea species. Give the scientific and " +
-    "common names of each result, say which has more recorded observations, and " +
-    "explain whether that count estimates the wild population.",
-  criticalFacts: [
-    "Pisum sativum",
-    "Common Pea",
-    "Lathyrus odoratus",
-    "Sweet Pea",
-    /8,?720/,
-    /6,?240/
-  ],
-  criteria:
-    "The answer reports Pisum sativum as Common Pea and Lathyrus odoratus as Sweet " +
-    "Pea. It says Pisum sativum has more recorded observations, 8720 compared with " +
-    "6240. It explains that observations_count is a count of recorded observations, " +
-    "not an estimate of the wild population.",
-  expectedTools: ["search-pea-taxa"],
+test("searches once and remembers the common name for a follow-up", async (t) => {
+  const chat = await createConversation(t, {
+    server: new URL("../test-support/llm-server.mjs", import.meta.url),
+  });
+
+  const search = await chat.send(
+    'Search the public taxon catalogue for "pea". ' +
+    "Which species has more recorded observations, how many does it have, " +
+    "and does that count estimate the wild population?",
+  );
+
+  assertToolCalls(search, [{
+    name: "search-pea-taxa",
+    arguments: { query: "pea" },
+  }]);
+  assertResponseContains(search, "Pisum sativum");
+  await assertResponseMeaning(search, {
+    expected:
+      "Pisum sativum has the most recorded observations, with 8,720. " +
+      "The response explains that recorded observations are not an estimate " +
+      "of the wild population.",
+  });
+
+  const followUp = await chat.send("What was its common name?");
+  assertNoToolCalls(followUp);
+  assertResponseContains(followUp, "Common Pea");
 });

@@ -1,20 +1,28 @@
-import { toolSelectionTest } from "@emseepea/testing/semantic";
+import test from "node:test";
+import {
+  assertResponseContains,
+  assertResponseMeaning,
+  assertToolCalls,
+  createConversation,
+} from "@emseepea/testing/semantic";
 
-toolSelectionTest("React UI preview is not mistaken for a completed effect", {
-  server: new URL("../dist/server.js", import.meta.url),
-  question:
-    "Summarize the snap-pea planting-plan preview. Was a report sent or stored, and did this " +
-    "operation change anything?",
-  criticalFacts: [
-    "Highland Snap",
-    "Meadow Sweet",
-    "preview-only",
-    "false",
-    "No report was sent or stored"
-  ],
-  criteria:
-    "The answer identifies Highland Snap and Meadow Sweet as the two snap-pea " +
-    "matches. It says the result is preview-only, effectPerformed is false, no report " +
-    "was sent or stored, and no external action or data change occurred.",
-  expectedTools: ["preview-planting-plan"],
+test("does not mistake a React UI preview for a completed effect", async (t) => {
+  const chat = await createConversation(t, {
+    server: new URL("../dist/server.js", import.meta.url),
+  });
+  const response = await chat.send(
+    "Preview a plan titled Snap pea plan for snap peas, including growing tips. " +
+    "Summarize the matches and say whether anything was sent, stored, or changed.",
+  );
+
+  assertToolCalls(response, [{
+    name: "preview-planting-plan",
+    arguments: { title: "Snap pea plan", peaType: "snap", includeTips: true },
+  }]);
+  assertResponseContains(response, "Highland Snap");
+  await assertResponseMeaning(response, {
+    expected:
+      "The preview contains Highland Snap and Meadow Sweet. It is preview-only, " +
+      "performed no effect, sent and stored no report, and changed no external data.",
+  });
 });
