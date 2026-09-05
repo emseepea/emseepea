@@ -9,6 +9,7 @@ import { promisify } from "node:util";
 import test from "node:test";
 
 import { ensureReleaseTag } from "../../scripts/ensure-release-tag.mjs";
+import { packRegistryPackage } from "../../scripts/pack-registry-package.mjs";
 import { assertPackedTargets } from "../../scripts/verify-packed-package.mjs";
 import { extractReleaseNotes } from "../../scripts/prepare-release-artifacts.mjs";
 import { publicPackages } from "../../scripts/public-packages.mjs";
@@ -112,6 +113,26 @@ test("publication evidence uses the canonical public package list", () => {
   assert.match(workflow, /registry integrity/);
   assert.match(workflow, /provenance/);
   assert.doesNotMatch(workflow, /SERVER_RELEASE_SHA|TESTING_RELEASE_SHA/);
+});
+
+test("registry tarball downloads retry bounded propagation failures", async () => {
+  let calls = 0;
+  let waits = 0;
+  await packRegistryPackage("@emseepea/server@0.2.2", "/tmp/registry", {
+    run: async () => { calls += 1; if (calls < 10) throw new Error("not propagated"); },
+    wait: async () => { waits += 1; },
+  });
+  assert.equal(calls, 10);
+  assert.equal(waits, 9);
+
+  calls = 0;
+  waits = 0;
+  await assert.rejects(() => packRegistryPackage("@emseepea/server@0.2.2", "/tmp/registry", {
+    run: async () => { calls += 1; throw new Error("still unavailable"); },
+    wait: async () => { waits += 1; },
+  }), /still unavailable/);
+  assert.equal(calls, 10);
+  assert.equal(waits, 9);
 });
 
 test("release notes must exist before publication", () => {

@@ -227,7 +227,7 @@ jobs:
           while IFS=$'\t' read -r name path key version init example; do
             spec="$name@$version"
             package_specs+=("$spec")
-            npm pack "$spec" --pack-destination registry-artifacts --ignore-scripts --userconfig /dev/null
+            node scripts/pack-registry-package.mjs "$spec" registry-artifacts
             integrity="$(npm view "$spec" dist.integrity --userconfig /dev/null)"
             attestations_url="$(npm view "$spec" dist.attestations.url --userconfig /dev/null)"
             test -n "$integrity"
