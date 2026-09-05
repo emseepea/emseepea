@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-html-ui-server",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Create an Em See Pea server with an accessible HTML form.",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,7 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/server": "0.2.2",
+    "@emseepea/server": "0.3.0",
     "@emseepea/tailwind": "0.0.2",
     "@emseepea/example-ui-shared": "0.0.0",
     "playwright": "1.62.1",

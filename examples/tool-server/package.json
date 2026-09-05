@@ -18,7 +18,7 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/server": "0.2.2",
+    "@emseepea/server": "0.3.0",
     "zod": "4.4.3",
     "@emseepea/testing": "0.2.2",
     "@types/node": "24.13.3",

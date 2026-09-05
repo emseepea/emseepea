@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.3.0
+
+### Minor Changes
+
+- [`f673477`](https://github.com/emseepea/emseepea/commit/f6734775b5b7b5160312a394d16954d9959637ea) Thanks [@tompahoward](https://github.com/tompahoward)! - Add optional deterministic HTTP route discovery and use it in both UI server templates.
+
 ## 0.2.2
 
 ### Patch Changes
