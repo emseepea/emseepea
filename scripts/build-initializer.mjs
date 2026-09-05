@@ -37,6 +37,14 @@ await writeFile(readmePath, `#${generatedReadme.slice(2)}\n`);
 manifest.name = "emseepea-starter";
 manifest.version = "0.0.0";
 manifest.private = true;
+assert.ok(Array.isArray(manifest.starterDependencies), `${initializer.path} needs starterDependencies`);
+manifest.dependencies = Object.fromEntries(manifest.starterDependencies.map((name) => {
+  const version = manifest.devDependencies?.[name];
+  assert.ok(version, `${initializer.path} is missing ${name} from devDependencies`);
+  delete manifest.devDependencies[name];
+  return [name, version];
+}));
+delete manifest.starterDependencies;
 delete manifest.bin;
 delete manifest.bugs;
 delete manifest.files;

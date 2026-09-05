@@ -43,8 +43,11 @@ test("the public package list and built initializers are complete", async () => 
     assert.equal(manifest.name, initializer.name);
     assert.equal(manifest.repository.directory, initializer.path);
     assert.equal(manifest.bin[initializer.key], "./initializer-dist/create.mjs");
+    assert.equal(manifest.dependencies, undefined, `${initializer.name} installs unused generator dependencies`);
+    assert.ok(manifest.starterDependencies.length > 0);
     await assert.rejects(access(new URL(`../../packages/${initializer.key}/package.json`, import.meta.url)));
     assert.equal(template.private, true);
+    assert.equal(template.starterDependencies, undefined);
     for (const [name, version] of Object.entries({ ...template.dependencies, ...template.devDependencies })) {
       assert.ok(!name.startsWith("@emseepea/example-"), `${initializer.name} retains ${name}`);
       assert.doesNotMatch(version, /^(?:file:|workspace:|\.\.?[\\/])/);

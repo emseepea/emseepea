@@ -4,6 +4,7 @@
   "description": "Create an Em See Pea server with an accessible React form.",
   "license": "MIT",
   "type": "module",
+  "starterDependencies": ["@emseepea/react", "@emseepea/server", "@emseepea/tailwind", "react", "react-dom"],
   "scripts": {
     "build": "npm run build:example && npm run build:initializer",
     "build:example": "tsc -p tsconfig.json && esbuild src/client.tsx --bundle --minify --format=esm --platform=browser --outfile=dist/client.js",
@@ -16,14 +17,12 @@
     "lint": "oxlint src test eval",
     "prepack": "npm run build:initializer"
   },
-  "dependencies": {
+  "devDependencies": {
     "@emseepea/react": "0.0.3",
     "@emseepea/server": "0.2.0",
     "@emseepea/tailwind": "0.0.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
-  },
-  "devDependencies": {
+    "react-dom": "19.2.8",
     "@emseepea/example-ui-shared": "0.0.0",
     "playwright": "1.62.1",
     "axe-core": "4.13.0",
