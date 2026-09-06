@@ -1,5 +1,11 @@
 # @emseepea/create-api-backed-server
 
+## 0.0.8
+
+### Patch Changes
+
+- [`7053c47`](https://github.com/emseepea/emseepea/commit/7053c4719a6ec55ce8d09c3381e040c503118749) Thanks [@tompahoward](https://github.com/tompahoward)! - Remove repeated schema declarations and use matching schema variable names in maintained starter code and framework guidance.
+
 ## 0.0.7
 
 ### Patch Changes
