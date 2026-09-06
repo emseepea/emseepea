@@ -1,5 +1,18 @@
 # Cognitive-Accessibility Review 2026-09-06
 
+## Server 0.3.1 Prepublication Readiness
+
+Result: PASS. The release-readiness record is clear about what is planned,
+which evidence already exists, and what remains pending before and after npm
+publication. It separates exact-commit qualification from publication evidence,
+uses scannable headings and bullets, and contains no emoji or em dashes.
+
+This review covers source prose. It does not establish package publication.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `docs/reviews/0.3.1-release-readiness.md` | `add6e2a19de6a8ef642bf8b9b9bec7c3ea67faeef0c02f04c1851306b46cba8a` |
+
 ## Schema Pass-Through and Shorthand
 
 Result: PASS. Independent cognitive-accessibility and Markdown accessibility
