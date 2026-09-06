@@ -9,4 +9,4 @@
 "@emseepea/create-multi-instance-sqlite-server": patch
 ---
 
-Expand each starter's semantic example with focused multi-turn coverage while keeping model judgments bounded.
+Add clearer semantic tests for each starter, including short follow-up prompts, while limiting the number of AI-judged assertions.

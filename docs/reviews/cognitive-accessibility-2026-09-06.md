@@ -72,3 +72,19 @@ route. The Changeset is short, specific, and names the user-visible outcome.
 | `website/src/content/docs/examples.md` | `2196bee33c2eacab520837d31d8ec0450799beba4944e99c637a66728bbe8380` |
 | `QUALITY.md` | `a4cd9638b37576de30b96c2310dc9272054c4082636e4740b3653361050cee7c` |
 | `.changeset/fresh-pea-initializers.md` | `a1395700d67d2106997b406965d75131c8ea1375d96563174038cbc287458144` |
+
+## Initializer Semantic Coverage Release Note
+
+Result: PASS after replacing testing jargon with plain language. Independent
+cognitive-accessibility and Markdown accessibility reviews covered the final
+Changeset sentence and this evidence wording.
+
+The release note says what improved, identifies short follow-up prompts, and
+explains that AI-judged assertions remain limited. It contains no emoji or em
+dashes.
+
+This review covers source prose. It does not establish package publication.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `.changeset/wise-peas-compare.md` | `4cda5f348a716918e8dda8c4087d32181a693fafc22f10270fafbf24767fb06b` |
