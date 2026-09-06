@@ -32,4 +32,5 @@ test("keeps discovery public and requires authorization for inventory", async (t
     inboundPackets: 40,
     inboundAvailableToPromise: false,
   });
+  assert.equal(result.content[0].text, JSON.stringify(result.structuredContent));
 });

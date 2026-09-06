@@ -27,4 +27,5 @@ test("reports bounded progress before returning the final germination result", a
     totalSeeds: 10,
     stages: ["soak", "sow", "sprout"],
   });
+  assert.equal(result.content[0].text, JSON.stringify(result.structuredContent));
 });

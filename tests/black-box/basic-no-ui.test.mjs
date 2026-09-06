@@ -58,7 +58,10 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
       if (id === "oversized-output") {
         return { text: "x".repeat(1_000), data: { id, roast: "medium" } };
       }
-      return { text: `${id}: medium`, data: { id, roast: "medium" } };
+      if (id === "invalid-text") return { text: 42, data: { id, roast: "medium" } };
+      if (id === "undefined-text") return { text: undefined, data: { id, roast: "medium" } };
+      if (id === "bean-client") return { text: `${id}: medium`, data: { id, roast: "medium" } };
+      return { data: { id, roast: "medium" } };
     },
   });
 
@@ -108,7 +111,7 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     });
     assert.equal(call.response.status, 200);
     assert.equal(call.body.result.resultType, "complete");
-    assert.equal(call.body.result.content[0].text, "bean-1: medium");
+    assert.equal(call.body.result.content[0].text, JSON.stringify({ id: "bean-1", roast: "medium" }));
     assert.deepEqual(call.body.result.structuredContent, {
       id: "bean-1",
       roast: "medium",
@@ -262,6 +265,14 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     assert.equal(oversizedOutput.body.result.structuredContent, undefined);
     assert.equal(oversizedOutput.body.result.isError, true);
 
+    const invalidText = await rpc(running.url, "tools/call", {
+      name: "lookup-bean",
+      arguments: { id: "invalid-text" },
+    });
+    assert.equal(invalidText.body.result.isError, true);
+    assert.equal(invalidText.body.result.content[0].text, "Tool execution failed");
+    assert.equal(invalidText.body.result.structuredContent, undefined);
+
     const timedOut = await rpc(running.url, "tools/call", {
       name: "lookup-bean",
       arguments: { id: "slow", delayMs: 200 },
@@ -317,6 +328,15 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     } finally {
       await client.close();
     }
+
+    const undefinedText = await rpc(running.url, "tools/call", {
+      name: "lookup-bean",
+      arguments: { id: "undefined-text" },
+    });
+    assert.equal(
+      undefinedText.body.result.content[0].text,
+      JSON.stringify(undefinedText.body.result.structuredContent),
+    );
   } finally {
     await running.close();
   }

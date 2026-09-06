@@ -27,14 +27,5 @@ export default (() => defineTool({
     inboundAvailableToPromise: z.boolean()
       .describe("Whether inbound packets are included in available-to-promise inventory."),
   }),
-  handler: () => ({
-    text: [
-      "Pea seed packet inventory:",
-      "- 120 on hand",
-      "- 35 reserved",
-      "- 85 available to promise (120 on hand minus 35 reserved)",
-      "- 40 inbound, not yet available to promise",
-    ].join("\n"),
-    data: inventoryReport,
-  }),
+  handler: () => ({ data: inventoryReport }),
 })) satisfies CapabilityModuleFactory;

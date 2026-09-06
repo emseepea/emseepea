@@ -134,3 +134,21 @@ This review covers source prose. It does not establish package publication.
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
 | `.changeset/wise-peas-compare.md` | `4cda5f348a716918e8dda8c4087d32181a693fafc22f10270fafbf24767fb06b` |
+
+## Structured JSON Tool Results
+
+Result: PASS after clarifying which clients use the JSON text fallback.
+Independent cognitive-accessibility and Markdown accessibility reviews covered
+the framework guide, website guide, and Changeset.
+
+The guidance presents structured data as the default tool result, explains
+validation and protocol output in execution order, and keeps custom text as an
+explicit exception. It contains no emoji or em dashes.
+
+This review covers source prose. It does not establish package publication.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `.changeset/structured-json-tool-results.md` | `6f501a7cfb2b58039086ad85161c7330a5f4a2c046322c3ac4f4bc61ac3d1b43` |
+| `packages/framework/README.md` | `0b30f95f07909ec7bc1de0ad82e26dad12e0bd161026da145ba9d6ef96ea7b9c` |
+| `website/src/content/docs/getting-started.md` | `aaa288398bb8849e734969870d0d6385c8c99fd8d0a1d22458bd1804dcd3b77e` |

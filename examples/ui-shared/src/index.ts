@@ -48,13 +48,7 @@ export function createPreviewPlantingPlanTool() {
     description: "Preview a sample pea planting plan without sending, storing, or changing anything.",
     inputSchema,
     outputSchema,
-    handler(input) {
-      const data = previewPlantingPlan(input);
-      return {
-        text: `${data.title} contains ${data.matchingCount} matching pea varieties. ${data.notice}`,
-        data,
-      };
-    },
+    handler: (input) => ({ data: previewPlantingPlan(input) }),
   });
 }
 

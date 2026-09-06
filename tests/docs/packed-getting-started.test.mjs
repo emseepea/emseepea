@@ -120,7 +120,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
         description: "Return one value.",
         inputSchema: value,
         outputSchema: value,
-        handler: ({ value }) => ({ text: value, data: { value } }),
+        handler: ({ value }) => ({ data: { value } }),
       });
       const app = createEmseepea({ name: "packed-check", version: "0.0.0", tools: [tool] });
       await registerRoutes(app, new URL("./routes/", import.meta.url));
@@ -156,6 +156,9 @@ test("the packed public packages pass fresh-install and getting-started checks",
         const body = await response.json();
         if (body.result?.structuredContent?.value !== "installed package works") {
           throw new Error("packed package returned the wrong value");
+        }
+        if (body.result?.content?.[0]?.text !== JSON.stringify(body.result.structuredContent)) {
+          throw new Error("packed package did not return the structured result as JSON text");
         }
       } finally {
         await running.close();

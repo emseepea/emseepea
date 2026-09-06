@@ -44,7 +44,7 @@ test("direct handlers can request client input through every supported method", 
           },
         });
       }
-      return { text: `Hello, ${answer.answer}.`, data: { greeting: `Hello, ${answer.answer}.` } };
+      return { data: { greeting: `Hello, ${answer.answer}.` } };
     },
   });
   const resource = defineResource({
@@ -143,7 +143,7 @@ test("direct handlers can request client input through every supported method", 
   try {
     await client.connect(new StreamableHTTPClientTransport(running.url));
     const greeting = await client.callTool({ name: "greet-person", arguments: {} });
-    assert.equal(greeting.content[0].text, "Hello, Ada.");
+    assert.equal(greeting.content[0].text, JSON.stringify({ greeting: "Hello, Ada." }));
     const summary = await client.readResource({ uri: "coffee://summary" });
     assert.equal(summary.contents[0].text, "Ada");
     const personal = await client.readResource({ uri: "coffee://summary/Ada" });

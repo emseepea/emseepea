@@ -23,4 +23,9 @@ test("describes every planting-plan tool property", async (t) => {
   assert.equal(output.varieties.items.properties.peaType.description, "Whether the variety is grown for shelled peas or edible pods.");
   assert.equal(output.varieties.items.properties.tips.description, "Sample growing tips when requested.");
   assert.equal(output.notice.description, "Reminder that the preview caused no external effect.");
+  const result = await client.callTool({
+    name: "preview-planting-plan",
+    arguments: { title: "Spring peas", peaType: "snap", includeTips: false },
+  });
+  assert.equal(result.content[0].text, JSON.stringify(result.structuredContent));
 });

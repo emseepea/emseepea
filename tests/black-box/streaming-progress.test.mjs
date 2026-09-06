@@ -119,7 +119,7 @@ test("POST-scoped progress stays checked, bounded, and terminal", async () => {
       if (mode === "timeout") await delay(5_000, undefined, { signal });
       await reportProgress({ progress: 2, total: 3, message: message("pour") });
       await reportProgress({ progress: 3, total: 3, message: message("draw down") });
-      return { text: "Brew plan complete", data: { status: "complete", steps: 3 } };
+      return { data: { status: "complete", steps: 3 } };
     },
   });
   const ordinary = defineTool({
@@ -161,6 +161,7 @@ test("POST-scoped progress stays checked, bounded, and terminal", async () => {
     );
     assert.match(json.response.headers.get("content-type"), /^application\/json/);
     assert.deepEqual(json.body.result.structuredContent, { status: "complete", steps: 3 });
+    assert.equal(json.body.result.content[0].text, JSON.stringify(json.body.result.structuredContent));
 
     const streamed = await rpc(
       running.url,

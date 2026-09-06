@@ -10,5 +10,5 @@ export default (({ instanceName }) => defineTool({
   outputSchema: z.object({
     instanceName: z.string().describe("Server instance that handled this request."),
   }),
-  handler: () => ({ text: instanceName, data: { instanceName } }),
+  handler: () => ({ data: { instanceName } }),
 })) satisfies CapabilityModuleFactory<MultiInstanceContext>;

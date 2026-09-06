@@ -65,6 +65,7 @@ test("two server processes share one atomic report store", async (t) => {
   assert.equal(raw.response.status, 200);
   assert.equal(raw.body.result.isError, false);
   assert.equal(raw.body.result.structuredContent.requestId, "raw-http-report");
+  assert.equal(raw.body.result.content[0].text, JSON.stringify(raw.body.result.structuredContent));
   assert.equal(totalReportCount(databasePath), 5);
 
   await closeProvider(first.child);
@@ -76,6 +77,7 @@ test("two server processes share one atomic report store", async (t) => {
 
   const independent = await firstClient.callTool({ name: "describe-instance", arguments: {} });
   assert.deepEqual(independent.structuredContent, { instanceName: "instance-a" });
+  assert.equal(independent.content[0].text, JSON.stringify(independent.structuredContent));
   const readiness = await fetch(new URL("/readyz", first.url));
   assert.equal(readiness.status, 200);
   assert.equal(await readiness.text(), "ready\n");

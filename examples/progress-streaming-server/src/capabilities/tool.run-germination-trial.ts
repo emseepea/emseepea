@@ -24,6 +24,6 @@ export default (() => defineStreamingTool({
       await delay(150, undefined, { signal });
     }
     const data = { tray, status: "complete" as const, germinatedSeeds: 8 as const, totalSeeds: 10 as const, stages };
-    return { text: `${tray} completed with 8 of 10 pea seeds germinated`, data };
+    return { data };
   },
 })) satisfies CapabilityModuleFactory;

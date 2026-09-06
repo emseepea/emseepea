@@ -57,7 +57,7 @@ test("the API-backed example checks and passes through selected iNaturalist valu
       source: "iNaturalist",
       source_url: "https://www.inaturalist.org",
     });
-    assert.match(result.content[0].text, /not a population estimate/);
+    assert.equal(result.content[0].text, JSON.stringify(result.structuredContent));
     assert.equal(requests[0].pathname, "/v1/taxa");
     assert.deepEqual(requests[0].searchParams, {
       q: "pea",
@@ -91,6 +91,7 @@ test("the API-backed example checks and passes through selected iNaturalist valu
       observations_count: 0,
     });
     assert.equal("private_note" in newProviderValue.structuredContent.results[0], false);
+    assert.equal(newProviderValue.content[0].text, JSON.stringify(newProviderValue.structuredContent));
 
     response = { total_results: 1, results: [{ id: "bad provider row" }] };
     const invalidProviderData = await client.callTool({

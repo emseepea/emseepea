@@ -253,7 +253,7 @@ test("discovery stays public while protected invocation is fail-closed", async (
 
     const valid = await protectedCall(running.url, "valid");
     assert.equal(valid.response.status, 200);
-    assert.equal(valid.body.result.content[0].text, "protected");
+    assert.equal(valid.body.result.content[0].text, JSON.stringify({ id: "protected-request" }));
     assert.equal(protectedCalls, 1);
     assert.doesNotMatch(JSON.stringify(valid.body), /valid/);
     assert.deepEqual(observedPrincipal, {
@@ -315,7 +315,7 @@ function protectedTool(onCall) {
     outputSchema: z.object({ id: z.string() }),
     handler: ({ id }, { principal }) => {
       onCall(principal);
-      return { text: "protected", data: { id } };
+      return { data: { id } };
     },
   });
 }

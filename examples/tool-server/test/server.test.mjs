@@ -29,4 +29,5 @@ test("advertises and returns understandable pea variety details", async (t) => {
     daysToMaturity: 70,
     traits: ["edible pods", "needs support"],
   });
+  assert.equal(result.content[0].text, JSON.stringify(result.structuredContent));
 });

@@ -65,9 +65,11 @@ Open `src/capabilities/tool.get-pea-variety.ts` in your project:
 - `varieties` contains the sample data. Replace it with your own data.
 - `inputSchema` describes the names the tool accepts.
 - `outputSchema` describes the details it returns.
-- `handler` looks up the pea variety and returns text plus structured data.
+- `handler` looks up the pea variety and returns structured data.
 
-Em See Pea checks the input and output. Your handler supplies the behaviour.
+Em See Pea checks the input and output, returns the data as MCP
+`structuredContent`, and serializes the same data as JSON text for clients that
+do not consume structured content. Your handler supplies the behaviour.
 Update `test/server.test.mjs` for your data, then run `npm test` again.
 
 `src/server.ts` calls `discoverCapabilities(new URL("./capabilities/", import.meta.url))`

@@ -36,12 +36,5 @@ export default (() => defineTool({
   description: "Get the type, growth habit, maturity time, and traits of a sample pea variety.",
   inputSchema,
   outputSchema,
-  handler: ({ name }) => {
-    const data = varieties[name];
-    return {
-      text: `${data.name} is a ${data.peaType} pea with a ${data.growthHabit} habit. ` +
-        `It matures in ${data.daysToMaturity} days and is known for ${data.traits.join(" and ")}.`,
-      data,
-    };
-  },
+  handler: ({ name }) => ({ data: varieties[name] }),
 })) satisfies CapabilityModuleFactory;

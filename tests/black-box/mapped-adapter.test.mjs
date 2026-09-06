@@ -61,7 +61,7 @@ test("mapped adapters share the checked tool lifecycle", async () => {
       if (record.id === "invalid-final") {
         return { text: "invalid", data: { ...record, roast: 42 } };
       }
-      return { text: `${record.id}: ${record.roast}`, data: record };
+      return { data: record };
     },
   });
   const fileTool = defineMappedTool({
@@ -140,6 +140,7 @@ test("mapped adapters share the checked tool lifecycle", async () => {
 
     const valid = await rpc(running.url, "lookup-memory-bean", { id: "map-bean" });
     assert.deepEqual(valid.body.result.structuredContent, { id: "map-bean", roast: "medium" });
+    assert.equal(valid.body.result.content[0].text, JSON.stringify(valid.body.result.structuredContent));
     assert.equal(memoryCalls, 1);
     assert.equal(outputMaps, 1);
     assert.ok(adapterDeadline > Date.now() - 1_000);

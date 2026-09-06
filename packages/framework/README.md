@@ -37,15 +37,14 @@ const getPeaVariety = defineTool({
     name: z.string().describe("Pea variety to look up."),
   }),
   outputSchema,
-  handler: ({ name }) => {
-    const data = {
+  handler: ({ name }) => ({
+    data: {
       name,
       peaType: "snap" as const,
       growthHabit: "climbing" as const,
       daysToMaturity: 70,
-    };
-    return { text: `${name} is a climbing snap pea that matures in 70 days.`, data };
-  },
+    },
+  }),
 });
 
 const app = createEmseepea({ name: "pea-guide", version: "1.0.0", tools: [getPeaVariety] });
@@ -54,6 +53,11 @@ await serveEmseepea(app);
 
 Describe each public input and output property in terms useful to a model. Em
 See Pea includes Zod `.describe()` text in the MCP tool schema sent to clients.
+
+The handler returns structured data. Em See Pea validates it, sends it as MCP
+`structuredContent`, and serializes the same data as JSON text for clients that
+do not consume structured content. Add `text` only when a client genuinely
+needs a separate human-readable representation.
 
 ## Discover Capability Modules at Startup
 
@@ -98,7 +102,7 @@ export default (() => defineTool({
   outputSchema: z.object({
     name: z.string().describe("Name of the pea variety."),
   }),
-  handler: ({ name }) => ({ text: name, data: { name } }),
+  handler: ({ name }) => ({ data: { name } }),
 })) satisfies CapabilityModuleFactory;
 ```
 
@@ -340,10 +344,7 @@ const chooseSupport = defineTool({
         },
       });
     }
-    return {
-      text: `${answer.support} selected for ${variety}`,
-      data: { variety, support: answer.support },
-    };
+    return { data: { variety, support: answer.support } };
   },
 });
 ```
@@ -414,10 +415,9 @@ const getPeaTaxon = defineMappedTool({
   backendOutputSchema,
   mapInput: ({ name }) => ({ search: name }),
   adapter: async (command, { signal }) => backend.findTaxon(command, { signal }),
-  mapOutput: ({ record }) => {
-    const data = { ...record, source: "catalogue-service" as const };
-    return { text: `${data.name} has rank ${data.rank} and ${data.observations_count} recorded observations.`, data };
-  },
+  mapOutput: ({ record }) => ({
+    data: { ...record, source: "catalogue-service" as const },
+  }),
 });
 ```
 
@@ -502,7 +502,7 @@ const germination = defineStreamingTool({
   async handler(_input, { reportProgress, signal }) {
     signal.throwIfAborted();
     await reportProgress({ progress: 1, total: 1, message: "sprout" });
-    return { text: "complete", data: { status: "complete" } };
+    return { data: { status: "complete" } };
   },
 });
 ```

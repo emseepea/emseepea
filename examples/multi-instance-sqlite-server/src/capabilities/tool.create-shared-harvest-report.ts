@@ -104,13 +104,6 @@ export default ((context) => defineMappedTool({
         snap: report.snap_count,
       },
     };
-    return {
-      text: [
-        `Report ${data.reportId} for request ${data.requestId} was originally created by ${data.createdByInstance}.`,
-        `${data.totalPlants} pea plants: ${data.peaTypeCounts.shelling} shelling and ${data.peaTypeCounts.snap} snap.`,
-        "Any server instance that reuses this request ID receives this same stored report; it does not create another.",
-      ].join("\n"),
-      data,
-    };
+    return { data };
   },
 })) satisfies CapabilityModuleFactory<MultiInstanceContext>;

@@ -170,7 +170,11 @@ export interface StreamingToolContext<Access extends ToolAccess = ToolAccess>
   readonly principal: Access extends "public" ? undefined : ToolPrincipal;
   readonly reportProgress: (update: ProgressUpdate) => Promise<void>;
 }
-export interface ToolResult<Output> { readonly text: string; readonly data: Output }
+export interface ToolResult<Output> {
+  /** Optional custom text for clients that do not consume structured content. Omit it to serialize the validated data as JSON. */
+  readonly text?: string;
+  readonly data: Output;
+}
 export interface BackendAdapterContext {
   readonly signal: AbortSignal;
   readonly deadlineMs: number;
@@ -1009,7 +1013,9 @@ function createCheckedTool(
                   assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
                   return result as InputRequiredResult;
                 }
-                if (!isRecord(result) || typeof result.text !== "string" || !("data" in result)) {
+                if (!isRecord(result) ||
+                    (result.text !== undefined && typeof result.text !== "string") ||
+                    !("data" in result)) {
                   throw new Error("Tool returned an invalid result");
                 }
                 signal.throwIfAborted();
@@ -1018,7 +1024,7 @@ function createCheckedTool(
                   throw new Error("Tool returned output that does not match its schema");
                 }
                 const publicResult = {
-                  content: [{ type: "text" as const, text: result.text }],
+                  content: [{ type: "text" as const, text: result.text ?? JSON.stringify(parsedOutput.data) }],
                   structuredContent: parsedOutput.data as Record<string, unknown>,
                   isError: false,
                 };

@@ -57,20 +57,6 @@ export default (({ client }) => defineMappedTool({
       source: "iNaturalist" as const,
       source_url: "https://www.inaturalist.org" as const,
     };
-    const lines = data.results.map((record) => [
-      record.preferred_common_name ?? "Common name not provided",
-      record.name,
-      `rank: ${record.rank}`,
-      `recorded observations: ${record.observations_count}`,
-    ].join("; "));
-    return {
-      text: [
-        `iNaturalist returned ${data.results.length} of ${data.total_results} matching taxa for “${data.query}”.`,
-        "observations_count is the number of recorded observations, not a population estimate.",
-        ...lines,
-        "Source: https://www.inaturalist.org",
-      ].join("\n"),
-      data,
-    };
+    return { data };
   },
 })) satisfies CapabilityModuleFactory<BackendExampleContext>;

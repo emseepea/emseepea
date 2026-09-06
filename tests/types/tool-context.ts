@@ -28,7 +28,7 @@ const discoveredFactory = ((context) => defineTool({
   description: "Compile-time discovered module context check.",
   inputSchema: schema,
   outputSchema: schema,
-  handler: ({ value }) => ({ text: value, data: { value: context.prefix + value } }),
+  handler: ({ value }) => ({ data: { value: context.prefix + value } }),
 })) satisfies CapabilityModuleFactory<{ readonly prefix: string }>;
 void discoveredFactory;
 
@@ -206,7 +206,7 @@ defineMappedTool({
     void signal;
     return { record: key };
   },
-  mapOutput: ({ record }) => ({ text: record, data: { value: record } }),
+  mapOutput: ({ record }) => ({ data: { value: record } }),
 });
 
 defineMappedTool({
@@ -307,6 +307,16 @@ defineTool({
     const protectedPrincipal: ToolPrincipal = principal;
     return { text: value, data: { value: protectedPrincipal.clientId } };
   },
+});
+
+defineTool({
+  name: "invalid-tool-text-type-check",
+  access: "public",
+  description: "Compile-time invalid tool text check.",
+  inputSchema: schema,
+  outputSchema: schema,
+  // @ts-expect-error Tool result text must be a string when supplied.
+  handler: ({ value }) => ({ text: 42, data: { value } }),
 });
 
 defineStreamingTool({
