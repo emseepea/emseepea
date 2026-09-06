@@ -1,5 +1,11 @@
 # @emseepea/create-api-backed-server
 
+## 0.0.7
+
+### Patch Changes
+
+- [`37f35ef`](https://github.com/emseepea/emseepea/commit/37f35ef84484edbd1fe5d07a192f49fb7379ee3a) Thanks [@tompahoward](https://github.com/tompahoward)! - Add clearer semantic tests for each starter, including short follow-up prompts, while limiting the number of AI-judged assertions.
+
 ## 0.0.6
 
 ### Patch Changes
