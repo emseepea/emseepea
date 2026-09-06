@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.3.2
+
+### Patch Changes
+
+- [`cec4ca3`](https://github.com/emseepea/emseepea/commit/cec4ca372b27978041668223ed76a368dd012d56) Thanks [@tompahoward](https://github.com/tompahoward)! - Describe every public example input and output property in the MCP schemas sent to clients.
+
 ## 0.3.1
 
 ### Patch Changes

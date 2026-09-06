@@ -1,5 +1,11 @@
 # @emseepea/create-tool-server
 
+## 0.0.9
+
+### Patch Changes
+
+- [`cec4ca3`](https://github.com/emseepea/emseepea/commit/cec4ca372b27978041668223ed76a368dd012d56) Thanks [@tompahoward](https://github.com/tompahoward)! - Describe every public example input and output property in the MCP schemas sent to clients.
+
 ## 0.0.8
 
 ### Patch Changes
