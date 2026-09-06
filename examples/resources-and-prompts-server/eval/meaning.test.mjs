@@ -25,7 +25,9 @@ test("keeps sowing depth and plant spacing separate", async (t) => {
   );
 
   assertNoToolCalls(response);
-  assertResponseContains(response, ["container", "Sowing depth", "plant spacing"]);
+  // Keep the stable method name exact. The distinction itself may be
+  // paraphrased, so one semantic assertion covers it without brittle wording.
+  assertResponseContains(response, "container");
   await assertResponseMeaning(response, {
     expected:
       "The selected method guide is for containers. Sowing peas deeper does not " +
