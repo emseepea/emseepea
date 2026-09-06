@@ -34,7 +34,7 @@ test("keeps sowing depth and plant spacing separate", async (t) => {
   });
 
   const followUp = await chat.send(
-    "Which term means the gap between plants? Reply with that term only.",
+    "Which term means the gap between plants? Reply with the lowercase term only.",
   );
   assertNoToolCalls(followUp);
   assertResponseContains(followUp, "plant spacing");
