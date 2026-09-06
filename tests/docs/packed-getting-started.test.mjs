@@ -340,6 +340,9 @@ test("every packed initializer creates a standalone checked project", {
       assert.equal(result.mode, "conversation");
       if (initializer.example === "resources-and-prompts-server") {
         for (const trial of result.answerTrials) {
+          assert.equal(trial.turns[0].advertisedToolCount, 0);
+          assert.equal(trial.turns[0].selectionTurnCount, 0);
+          assert.equal(trial.turns[0].selectionProviderTurnCount, 0);
           assert.deepEqual(trial.turns[0].expectedTools, []);
           assert.deepEqual(trial.turns[0].selectedTools, []);
           assert.equal(trial.turns[0].pathEvidence.length, 2);

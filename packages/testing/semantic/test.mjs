@@ -103,13 +103,15 @@ export async function createConversation(testContext, options) {
       const trials = [];
       try {
         for (const trial of state.trials) {
-          const selection = await isolatedModel(
-            provider,
-            selectionPrompt(specification.context, trial.history, prompt, trial.tools, trial.prepared),
-            "emseepea-selection-",
-            testContext.signal,
-            toolSelectionSchema(trial.tools),
-          );
+          const selection = trial.tools.length
+            ? await isolatedModel(
+              provider,
+              selectionPrompt(specification.context, trial.history, prompt, trial.tools, trial.prepared),
+              "emseepea-selection-",
+              testContext.signal,
+              toolSelectionSchema(trial.tools),
+            )
+            : { answer: '{"calls":[]}', models: [], turnCount: 0, providerTurnCount: 0, providerToolCount: 0 };
           const calls = parseToolSelection(selection.answer.trim(), trial.tools);
           const selected = calls.length
             ? await collectSelectedToolMaterial(trial.running.url, specification, calls, testContext.signal)
@@ -134,6 +136,7 @@ export async function createConversation(testContext, options) {
             answerTurnCount: answer.turnCount,
             answerProviderTurnCount: answer.providerTurnCount,
             answerProviderToolCount: answer.providerToolCount,
+            advertisedToolCount: trial.tools.length,
             advertisedToolsSha256: hash(JSON.stringify(trial.tools)),
             selectedCallsSha256: hash(JSON.stringify(calls)),
             selectedTools: calls.map(({ name: toolName }) => toolName),

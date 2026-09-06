@@ -107,10 +107,15 @@ function validRecord(record, authoritative, smoke) {
     || !record.judgeVerdicts.every((judgment) => isHash(judgment.expectationSha256)
       && isHash(judgment.requestSha256) && isHash(judgment.responseSha256))) return false;
   return record.answerTrials.every((trial) => Array.isArray(trial.turns) && trial.turns.length > 0
-    && trial.turns.every((turn) => turn.selectionTurnCount === 1
-      && Number.isInteger(turn.selectionProviderToolCount) && turn.selectionProviderToolCount >= 0
-      && turn.selectionProviderToolCount <= 3
-      && turn.selectionProviderTurnCount === turn.selectionProviderToolCount + 1
+    && trial.turns.every((turn) => Number.isInteger(turn.advertisedToolCount)
+      && turn.advertisedToolCount >= 0
+      && (turn.advertisedToolCount === 0
+        ? turn.selectionTurnCount === 0 && turn.selectionProviderToolCount === 0
+          && turn.selectionProviderTurnCount === 0
+        : turn.selectionTurnCount === 1
+          && Number.isInteger(turn.selectionProviderToolCount) && turn.selectionProviderToolCount >= 0
+          && turn.selectionProviderToolCount <= 3
+          && turn.selectionProviderTurnCount === turn.selectionProviderToolCount + 1)
       && Number.isInteger(turn.toolCallCount) && turn.toolCallCount >= 0 && turn.toolCallCount <= 3
       && isHash(turn.promptSha256) && isHash(turn.answerSha256)
       && isHash(turn.advertisedToolsSha256) && isHash(turn.selectedCallsSha256)
