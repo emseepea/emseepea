@@ -1,5 +1,14 @@
 # @emseepea/server
 
+## 0.3.3
+
+### Patch Changes
+
+- [`6c6d544`](https://github.com/emseepea/emseepea/commit/6c6d544ed45b8b4bb7b1f83a8f4e9efcea171f9a) Thanks [@tompahoward](https://github.com/tompahoward)! - Make validated structured tool data the default result. Tool handlers can omit
+  custom text, and Em See Pea will return the same data as `structuredContent`
+  and serialized JSON text for compatibility. The maintained tool examples now
+  demonstrate this smaller pattern.
+
 ## 0.3.2
 
 ### Patch Changes
