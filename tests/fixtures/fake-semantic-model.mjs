@@ -1,24 +1,30 @@
 #!/usr/bin/env node
 
 const prompt = process.argv[process.argv.indexOf("--print") + 1] ?? "";
+const currentMessage = prompt.split("Current user message:\n").at(-1) ?? "";
 const plans = [
-  ["create-shared-harvest-report", [
+  ["Call the shared harvest report twice", [
     { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
     { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
   ]],
-  ["get-pea-variety", [{ name: "get-pea-variety", arguments: { name: "Highland Snap" } }]],
-  ["search-pea-taxa", [{ name: "search-pea-taxa", arguments: { query: "pea" } }]],
-  ["get-private-inventory-report", [{ name: "get-private-inventory-report", arguments: {} }]],
-  ["preview-planting-plan", [{
+  ["Which server instance is handling", [{ name: "describe-instance", arguments: {} }]],
+  ["Compare that with Harbour Gem", [{ name: "get-pea-variety", arguments: { name: "Harbour Gem" } }]],
+  ["Describe the pea type", [{ name: "get-pea-variety", arguments: { name: "Highland Snap" } }]],
+  ["Search the public taxon catalogue", [{ name: "search-pea-taxa", arguments: { query: "pea" } }]],
+  ["How many pea seed packets", [{ name: "get-private-inventory-report", arguments: {} }]],
+  ["Preview a plan titled Snap pea plan", [{
     name: "preview-planting-plan",
     arguments: { title: "Snap pea plan", peaType: "snap", includeTips: true },
   }]],
-  ["run-germination-trial", [{ name: "run-germination-trial", arguments: { tray: "sample-tray" } }]],
+  ["Preview a plan titled All pea plan", [{
+    name: "preview-planting-plan",
+    arguments: { title: "All pea plan", peaType: "all", includeTips: false },
+  }]],
+  ["Run the sample-tray", [{ name: "run-germination-trial", arguments: { tray: "sample-tray" } }]],
 ];
-const selected = plans.find(([name]) => prompt.includes(name));
-const followUpWithoutTool = prompt.includes("Current user message:\nWhat was its common name?");
+const selected = plans.find(([message]) => currentMessage.includes(message));
 const answer = prompt.includes("JSON tool plan")
-  ? JSON.stringify({ calls: followUpWithoutTool ? [] : selected?.[1] ?? [] })
+  ? JSON.stringify({ calls: selected?.[1] ?? [] })
   : prompt.includes("Return only JSON with this exact shape")
     ? '{"pass":true,"score":1,"reason":"The answer preserves every required meaning."}'
     : prompt.includes("reusesOriginalReport (boolean)")

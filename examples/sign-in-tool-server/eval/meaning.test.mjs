@@ -1,5 +1,6 @@
 import test from "node:test";
 import {
+  assertNoToolCalls,
   assertResponseContains,
   assertResponseMeaning,
   assertToolCalls,
@@ -11,6 +12,9 @@ test("excludes reserved and inbound packets from current availability", async (t
     server: new URL("../dist/server.js", import.meta.url),
     authToken: "example-access-token",
   });
+
+  // One judged turn proves the inventory calculation. The literal follow-up
+  // proves authenticated result memory without repeating the protected call.
   const response = await chat.send(
     "How many pea seed packets can we promise now, and do inbound packets count?",
   );
@@ -25,4 +29,10 @@ test("excludes reserved and inbound packets from current availability", async (t
       "There are 85 packets available to promise because 35 reserved packets " +
       "are excluded from the 120 on hand. The 40 inbound packets do not count yet.",
   });
+
+  const followUp = await chat.send(
+    "How many packets were inbound? Reply with the numeral only.",
+  );
+  assertNoToolCalls(followUp);
+  assertResponseContains(followUp, "40");
 });

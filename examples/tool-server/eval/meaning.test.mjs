@@ -6,23 +6,39 @@ import {
   createConversation,
 } from "@emseepea/testing/semantic";
 
-test("keeps pea variety details distinct", async (t) => {
+test("looks up pea varieties and compares a follow-up", async (t) => {
   const chat = await createConversation(t, {
     server: new URL("../dist/server.js", import.meta.url),
   });
-  const response = await chat.send(
+
+  // Two turns cover exact lookup and context-aware follow-up selection. Only
+  // the comparison needs a model judge; fixed fields are cheaper as literals.
+  const highland = await chat.send(
     "Describe the pea type, growth habit, maturity time, and traits of Highland Snap.",
   );
 
-  assertToolCalls(response, [{
+  assertToolCalls(highland, [{
     name: "get-pea-variety",
     arguments: { name: "Highland Snap" },
   }]);
-  assertResponseContains(response, "Highland Snap");
-  await assertResponseMeaning(response, {
+  assertResponseContains(highland, [
+    "Highland Snap",
+    "70",
+    "edible pods",
+    "needs support",
+  ]);
+
+  const comparison = await chat.send(
+    "Compare that with Harbour Gem. Include its pea type, growth habit, and maturity time.",
+  );
+  assertToolCalls(comparison, [{
+    name: "get-pea-variety",
+    arguments: { name: "Harbour Gem" },
+  }]);
+  assertResponseContains(comparison, ["Harbour Gem", "62"]);
+  await assertResponseMeaning(comparison, {
     expected:
-      "Highland Snap is a climbing snap pea that matures in 70 days, has edible " +
-      "pods, and needs support. Pea type, growth habit, maturity time, and traits " +
-      "remain distinct.",
+      "Harbour Gem is a bush shelling pea that matures in 62 days, while Highland " +
+      "Snap is a climbing snap pea that matures in 70 days.",
   });
 });

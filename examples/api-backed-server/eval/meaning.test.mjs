@@ -12,6 +12,8 @@ test("searches once and remembers the common name for a follow-up", async (t) =>
     server: new URL("../test-support/llm-server.mjs", import.meta.url),
   });
 
+  // The judged search covers the backend result's domain meaning. The exact
+  // no-call follow-up adds memory coverage without paying for a second judge.
   const search = await chat.send(
     'Search the public taxon catalogue for "pea". ' +
     "Which species has more recorded observations, how many does it have, " +
