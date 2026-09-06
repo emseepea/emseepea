@@ -18,12 +18,14 @@ export default (() => defineTool({
   description: "Report private on-hand, reserved, available-to-promise, and inbound inventory.",
   inputSchema: z.object({}),
   outputSchema: z.object({
-    item: z.string(),
-    onHandPackets: z.number().int().nonnegative(),
-    reservedPackets: z.number().int().nonnegative(),
-    availableToPromisePackets: z.number().int().nonnegative(),
-    inboundPackets: z.number().int().nonnegative(),
-    inboundAvailableToPromise: z.boolean(),
+    item: z.string().describe("Inventory item counted by this report."),
+    onHandPackets: z.number().int().nonnegative().describe("Packets currently held in inventory."),
+    reservedPackets: z.number().int().nonnegative().describe("On-hand packets already reserved for orders."),
+    availableToPromisePackets: z.number().int().nonnegative()
+      .describe("On-hand packets available for new orders after reservations."),
+    inboundPackets: z.number().int().nonnegative().describe("Packets expected but not yet received."),
+    inboundAvailableToPromise: z.boolean()
+      .describe("Whether inbound packets are included in available-to-promise inventory."),
   }),
   handler: () => ({
     text: [

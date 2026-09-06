@@ -25,6 +25,19 @@ test("the API-backed example checks and passes through selected iNaturalist valu
   try {
     const listed = await client.listTools();
     assert.deepEqual(listed.tools.map(({ name }) => name), ["search-pea-taxa"]);
+    const tool = listed.tools[0];
+    assert.equal(tool.inputSchema.properties.query.description, "Pea name or other taxon search terms.");
+    assert.equal(tool.outputSchema.properties.total_results.description, "Total matching taxa reported by iNaturalist.");
+    assert.equal(tool.outputSchema.properties.results.description, "Up to five matching taxa.");
+    const taxon = tool.outputSchema.properties.results.items.properties;
+    assert.equal(taxon.id.description, "iNaturalist identifier for the taxon.");
+    assert.equal(taxon.name.description, "Scientific name of the taxon.");
+    assert.equal(taxon.preferred_common_name.description, "Preferred common name when iNaturalist provides one.");
+    assert.equal(taxon.rank.description, "Taxonomic rank reported by iNaturalist.");
+    assert.equal(taxon.observations_count.description, "Recorded iNaturalist observations, not an estimate of the wild population.");
+    assert.equal(tool.outputSchema.properties.query.description, "Trimmed search terms sent to iNaturalist.");
+    assert.equal(tool.outputSchema.properties.source.description, "Data provider for these results.");
+    assert.equal(tool.outputSchema.properties.source_url.description, "Website of the data provider.");
 
     const invalidInput = await client.callTool({
       name: "search-pea-taxa",

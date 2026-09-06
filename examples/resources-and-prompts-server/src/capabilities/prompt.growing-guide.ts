@@ -7,7 +7,9 @@ export default (() => definePrompt({
   name: "growing-guide",
   title: "Pea growing guide",
   description: "Create a prompt for a sample pea-growing topic.",
-  argsSchema: z.object({ topic: z.string().min(1) }),
+  argsSchema: z.object({
+    topic: z.string().min(1).describe("Pea-growing topic to explain."),
+  }),
   complete: {
     topic: (value) => topics.filter((topic) => topic.startsWith(value)),
   },

@@ -20,17 +20,22 @@ import { createEmseepea, defineMappedTool, defineTool, serveEmseepea } from "@em
 import { z } from "zod";
 
 const outputSchema = z.object({
-  name: z.string(),
-  peaType: z.enum(["shelling", "snap"]),
-  growthHabit: z.enum(["bush", "climbing"]),
-  daysToMaturity: z.number().int().positive(),
+  name: z.string().describe("Name of the pea variety."),
+  peaType: z.enum(["shelling", "snap"])
+    .describe("Whether the variety is grown for shelled peas or edible pods."),
+  growthHabit: z.enum(["bush", "climbing"])
+    .describe("Whether the plant grows as a bush or climbing vine."),
+  daysToMaturity: z.number().int().positive()
+    .describe("Approximate days from sowing until the first harvest."),
 });
 
 const getPeaVariety = defineTool({
   name: "get-pea-variety",
   access: "public",
   description: "Get the type, growth habit, and maturity time for one pea variety.",
-  inputSchema: z.object({ name: z.string() }),
+  inputSchema: z.object({
+    name: z.string().describe("Pea variety to look up."),
+  }),
   outputSchema,
   handler: ({ name }) => {
     const data = {
@@ -46,6 +51,9 @@ const getPeaVariety = defineTool({
 const app = createEmseepea({ name: "pea-guide", version: "1.0.0", tools: [getPeaVariety] });
 await serveEmseepea(app);
 ```
+
+Describe each public input and output property in terms useful to a model. Em
+See Pea includes Zod `.describe()` text in the MCP tool schema sent to clients.
 
 ## Discover Capability Modules at Startup
 
@@ -84,8 +92,12 @@ export default (() => defineTool({
   name: "get-pea-variety",
   access: "public",
   description: "Get one pea variety.",
-  inputSchema: z.object({ name: z.string() }),
-  outputSchema: z.object({ name: z.string() }),
+  inputSchema: z.object({
+    name: z.string().describe("Pea variety to look up."),
+  }),
+  outputSchema: z.object({
+    name: z.string().describe("Name of the pea variety."),
+  }),
   handler: ({ name }) => ({ text: name, data: { name } }),
 })) satisfies CapabilityModuleFactory;
 ```
@@ -374,16 +386,19 @@ Prefer an open, bounded schema when the backend can add valid values
 independently.
 
 ```ts
-const inputSchema = z.object({ name: z.string().max(200) });
+const inputSchema = z.object({
+  name: z.string().max(200).describe("Pea taxon to look up."),
+});
 const backendInputSchema = z.object({ search: z.string().max(200) });
 const backendTaxon = z.object({
-  id: z.number().int().positive(),
-  name: z.string().max(200),
-  rank: z.string().max(40),
-  observations_count: z.number().int().nonnegative(),
+  id: z.number().int().positive().describe("Provider identifier for the taxon."),
+  name: z.string().max(200).describe("Scientific name of the taxon."),
+  rank: z.string().max(40).describe("Taxonomic rank reported by the provider."),
+  observations_count: z.number().int().nonnegative()
+    .describe("Recorded observations, not an estimate of the wild population."),
 });
 const outputSchema = backendTaxon.extend({
-  source: z.literal("catalogue-service"),
+  source: z.literal("catalogue-service").describe("Data provider for this result."),
 });
 const backendOutputSchema = z.object({
   record: backendTaxon,
@@ -604,7 +619,9 @@ const methodGuide = defineResourceTemplate({
 
 const growing = definePrompt({
   name: "growing-guide",
-  argsSchema: z.object({ topic: z.string().min(1) }),
+  argsSchema: z.object({
+    topic: z.string().min(1).describe("Pea-growing topic to explain."),
+  }),
   complete: {
     topic: (value) => ["sowing-depth", "plant-spacing"].filter((topic) => topic.startsWith(value)),
   },

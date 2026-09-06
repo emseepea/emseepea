@@ -14,7 +14,13 @@ test("lists and reads the advertised resource and prompt", async (t) => {
   assert.match(resource.contents[0].text, /Sowing depth is how deep a seed goes/);
   assert.match(resource.contents[0].text, /plant spacing is the gap between plants/);
 
-  assert.deepEqual((await client.listPrompts()).prompts.map(({ name }) => name), ["growing-guide"]);
+  const listedPrompts = await client.listPrompts();
+  assert.deepEqual(listedPrompts.prompts.map(({ name }) => name), ["growing-guide"]);
+  assert.deepEqual(listedPrompts.prompts[0].arguments, [{
+    name: "topic",
+    description: "Pea-growing topic to explain.",
+    required: true,
+  }]);
   const prompt = await client.getPrompt({
     name: "growing-guide",
     arguments: { topic: "sowing-depth" },

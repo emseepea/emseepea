@@ -1,5 +1,20 @@
 # Cognitive-Accessibility Review 2026-09-06
 
+## Public Schema Descriptions
+
+Result: PASS. Independent cognitive-accessibility and Markdown accessibility
+review covered the framework guidance and Changeset. The guidance explains why
+public schema properties need descriptions and shows the descriptions beside
+their Zod constraints. The release note is short and specific. Neither file
+contains emoji or em dashes.
+
+This review covers source prose. It does not establish package publication.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `.changeset/clear-schema-descriptions.md` | `f7da5d3d050934bc8ce6443a51b582645a80515e1347a4d03fb7d619ea746837` |
+| `packages/framework/README.md` | `25c9b46c5fb1d2f3e703ec414776020d0015ee2c5b46d53f41dbb8b3d9340a5e` |
+
 ## Server 0.3.1 Prepublication Readiness
 
 Result: PASS. The release-readiness record is clear about what is planned,

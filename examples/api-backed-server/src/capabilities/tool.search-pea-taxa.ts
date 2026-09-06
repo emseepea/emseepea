@@ -5,21 +5,25 @@ import { z } from "zod";
 export interface BackendExampleContext { readonly client: JsonHttpClient }
 
 const backendTaxon = z.object({
-  id: z.number().int().positive(),
-  name: z.string().min(1).max(200),
-  preferred_common_name: z.string().min(1).max(200).nullable().optional(),
-  rank: z.string().min(1).max(40),
-  observations_count: z.number().int().nonnegative(),
+  id: z.number().int().positive().describe("iNaturalist identifier for the taxon."),
+  name: z.string().min(1).max(200).describe("Scientific name of the taxon."),
+  preferred_common_name: z.string().min(1).max(200).nullable().optional()
+    .describe("Preferred common name when iNaturalist provides one."),
+  rank: z.string().min(1).max(40).describe("Taxonomic rank reported by iNaturalist."),
+  observations_count: z.number().int().nonnegative()
+    .describe("Recorded iNaturalist observations, not an estimate of the wild population."),
 });
-const inputSchema = z.object({ query: z.string().trim().min(2).max(80) });
+const inputSchema = z.object({
+  query: z.string().trim().min(2).max(80).describe("Pea name or other taxon search terms."),
+});
 const backendPayload = z.object({
-  total_results: z.number().int().nonnegative(),
-  results: z.array(backendTaxon).max(5),
+  total_results: z.number().int().nonnegative().describe("Total matching taxa reported by iNaturalist."),
+  results: z.array(backendTaxon).max(5).describe("Up to five matching taxa."),
 });
 const outputSchema = backendPayload.extend({
-  query: z.string().max(80),
-  source: z.literal("iNaturalist"),
-  source_url: z.literal("https://www.inaturalist.org"),
+  query: z.string().max(80).describe("Trimmed search terms sent to iNaturalist."),
+  source: z.literal("iNaturalist").describe("Data provider for these results."),
+  source_url: z.literal("https://www.inaturalist.org").describe("Website of the data provider."),
 });
 const backendInputSchema = z.object({
   pathname: z.literal("/v1/taxa"),

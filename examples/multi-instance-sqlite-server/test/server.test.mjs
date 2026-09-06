@@ -84,6 +84,35 @@ test("two server processes share one atomic report store", async (t) => {
   assert.equal(secondStillWorks.requestId, "provider-b-still-works");
 });
 
+test("describes every multi-instance tool property", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "emseepea-multi-instance-schema-"));
+  const instance = await startInstance("schema-instance", join(directory, "reports.sqlite"));
+  const client = await connect(instance.url);
+  t.after(async () => {
+    await client.close();
+    await stopInstance(instance.child);
+    await rm(directory, { recursive: true, force: true });
+  });
+
+  const listed = await client.listTools();
+  assert.deepEqual(listed.tools.map(({ name }) => name), [
+    "create-shared-harvest-report",
+    "describe-instance",
+  ]);
+  const createReportTool = listed.tools[0];
+  const reportInput = createReportTool.inputSchema.properties;
+  const reportOutput = createReportTool.outputSchema.properties;
+  assert.equal(reportInput.requestId.description, "Idempotency key. Reusing it returns the existing report instead of creating another.");
+  assert.equal(reportOutput.reportId.description, "Stored report identifier.");
+  assert.equal(reportOutput.requestId.description, reportInput.requestId.description);
+  assert.equal(reportOutput.createdByInstance.description, "Server instance that originally created the report.");
+  assert.equal(reportOutput.totalPlants.description, "Total pea plants counted in the report.");
+  assert.equal(reportOutput.peaTypeCounts.description, "Plant counts grouped by pea type.");
+  assert.equal(reportOutput.peaTypeCounts.properties.shelling.description, "Shelling pea plants counted in the report.");
+  assert.equal(reportOutput.peaTypeCounts.properties.snap.description, "Snap pea plants counted in the report.");
+  assert.equal(listed.tools[1].outputSchema.properties.instanceName.description, "Server instance that handled this request.");
+});
+
 test("an unavailable SQLite provider does not stop independent server features", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "emseepea-multi-instance-missing-"));
   const instance = await startInstance(

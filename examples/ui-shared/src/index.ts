@@ -1,24 +1,25 @@
 import { defineElicitationView, defineTool, type ElicitationView } from "@emseepea/server";
 import { z } from "zod";
 
-const peaTypeSchema = z.enum(["all", "shelling", "snap"]);
+const peaTypeSchema = z.enum(["all", "shelling", "snap"])
+  .describe("Pea type to include, or all pea types.");
 const inputSchema = z.strictObject({
-  title: z.string().trim().min(1).max(80),
+  title: z.string().trim().min(1).max(80).describe("Title for the planting-plan preview."),
   peaType: peaTypeSchema,
-  includeTips: z.boolean(),
+  includeTips: z.boolean().describe("Whether to include sample growing tips."),
 });
 const outputSchema = z.strictObject({
-  status: z.literal("preview-only"),
-  effectPerformed: z.literal(false),
-  title: z.string(),
-  matchingCount: z.number().int().nonnegative(),
+  status: z.literal("preview-only").describe("Confirms that this result is only a preview."),
+  effectPerformed: z.literal(false).describe("Confirms that nothing was sent, stored, or changed."),
+  title: z.string().describe("Title of the planting-plan preview."),
+  matchingCount: z.number().int().nonnegative().describe("Number of sample varieties matching the selected pea type."),
   varieties: z.array(z.strictObject({
-    name: z.string(),
-    growthHabit: z.enum(["bush", "climbing"]),
-    peaType: z.enum(["shelling", "snap"]),
-    tips: z.array(z.string()).optional(),
-  })),
-  notice: z.literal("No report was sent or stored."),
+    name: z.string().describe("Name of the sample pea variety."),
+    growthHabit: z.enum(["bush", "climbing"]).describe("Whether the variety grows as a bush or climbing vine."),
+    peaType: z.enum(["shelling", "snap"]).describe("Whether the variety is grown for shelled peas or edible pods."),
+    tips: z.array(z.string()).optional().describe("Sample growing tips when requested."),
+  })).describe("Sample pea varieties matching the selected pea type."),
+  notice: z.literal("No report was sent or stored.").describe("Reminder that the preview caused no external effect."),
 });
 
 const varieties = [

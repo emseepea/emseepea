@@ -7,6 +7,8 @@ export default (({ instanceName }) => defineTool({
   access: "public",
   description: "Return the server instance handling this request, not the instance that created a stored report.",
   inputSchema: z.object({}),
-  outputSchema: z.object({ instanceName: z.string() }),
+  outputSchema: z.object({
+    instanceName: z.string().describe("Server instance that handled this request."),
+  }),
   handler: () => ({ text: instanceName, data: { instanceName } }),
 })) satisfies CapabilityModuleFactory<MultiInstanceContext>;
