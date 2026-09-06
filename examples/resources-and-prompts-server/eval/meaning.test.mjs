@@ -35,9 +35,10 @@ test("keeps sowing depth and plant spacing separate", async (t) => {
   });
 
   const followUp = await chat.send(
-    "Which planting method was the selected guide for? Reply with the method name.",
+    "What is the exact URI of the selected planting method guide?",
   );
+  // The URI is a stable identifier, so exact matching proves conversational
+  // recall without paying for a second semantic judgment.
   assertNoToolCalls(followUp);
-  // Conversational recall of a stable resource value needs no second judge.
-  assertResponseContains(followUp, "container");
+  assertResponseContains(followUp, "guide://peas/planting/container");
 });
