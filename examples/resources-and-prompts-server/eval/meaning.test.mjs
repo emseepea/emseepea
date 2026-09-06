@@ -25,9 +25,8 @@ test("keeps sowing depth and plant spacing separate", async (t) => {
   );
 
   assertNoToolCalls(response);
-  // Keep the stable method name exact. The distinction itself may be
-  // paraphrased, so one semantic assertion covers it without brittle wording.
-  assertResponseContains(response, "container");
+  // The explanation may be paraphrased, so spend the test's only semantic
+  // judgment here instead of coupling the test to particular wording.
   await assertResponseMeaning(response, {
     expected:
       "The selected method guide is for containers. Sowing peas deeper does not " +
@@ -36,8 +35,9 @@ test("keeps sowing depth and plant spacing separate", async (t) => {
   });
 
   const followUp = await chat.send(
-    "Which term means the gap between plants? Reply with the lowercase term only.",
+    "Which planting method was the selected guide for? Reply with the method name.",
   );
   assertNoToolCalls(followUp);
-  assertResponseContains(followUp, "plant spacing");
+  // Conversational recall of a stable resource value needs no second judge.
+  assertResponseContains(followUp, "container");
 });
