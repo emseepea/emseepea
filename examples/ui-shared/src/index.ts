@@ -2,12 +2,12 @@ import { defineElicitationView, defineTool, type ElicitationView } from "@emseep
 import { z } from "zod";
 
 const peaTypeSchema = z.enum(["all", "shelling", "snap"]);
-const previewInputSchema = z.strictObject({
+const inputSchema = z.strictObject({
   title: z.string().trim().min(1).max(80),
   peaType: peaTypeSchema,
   includeTips: z.boolean(),
 });
-const previewOutputSchema = z.strictObject({
+const outputSchema = z.strictObject({
   status: z.literal("preview-only"),
   effectPerformed: z.literal(false),
   title: z.string(),
@@ -27,7 +27,7 @@ const varieties = [
   { name: "Meadow Sweet", growthHabit: "bush" as const, peaType: "snap" as const, tips: ["suits containers", "keep soil moist"] },
 ];
 
-export function previewPlantingPlan(input: z.output<typeof previewInputSchema>) {
+export function previewPlantingPlan(input: z.output<typeof inputSchema>) {
   const matching = varieties.filter((variety) => input.peaType === "all" || variety.peaType === input.peaType);
   return {
     status: "preview-only" as const,
@@ -45,8 +45,8 @@ export function createPreviewPlantingPlanTool() {
     access: "public",
     title: "Preview a Pea Planting Plan",
     description: "Preview a sample pea planting plan without sending, storing, or changing anything.",
-    inputSchema: previewInputSchema,
-    outputSchema: previewOutputSchema,
+    inputSchema,
+    outputSchema,
     handler(input) {
       const data = previewPlantingPlan(input);
       return {

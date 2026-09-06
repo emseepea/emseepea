@@ -3,8 +3,8 @@ import { z } from "zod";
 import type { MultiInstanceContext } from "./context.js";
 
 const requestIdSchema = z.string().min(3).max(64).regex(/^[a-z0-9][a-z0-9-]*$/);
-const reportInputSchema = z.object({ requestId: requestIdSchema });
-const reportOutputSchema = z.object({
+const inputSchema = z.object({ requestId: requestIdSchema });
+const outputSchema = z.object({
   reportId: z.number().int().positive(),
   requestId: requestIdSchema,
   createdByInstance: z.string().min(1).max(64),
@@ -14,8 +14,8 @@ const reportOutputSchema = z.object({
     snap: z.number().int().nonnegative(),
   }),
 });
-const backendCommandSchema = z.object({ idempotency_key: requestIdSchema });
-const backendResultSchema = z.object({
+const backendInputSchema = z.object({ idempotency_key: requestIdSchema });
+const backendOutputSchema = z.object({
   report_id: z.number().int().positive(),
   idempotency_key: requestIdSchema,
   created_by_instance: z.string().min(1).max(64),
@@ -28,10 +28,10 @@ export default ((context) => defineMappedTool({
   name: "create-shared-harvest-report",
   access: "public",
   description: "Create or return one stored pea harvest report per request ID. The result identifies its original server instance.",
-  inputSchema: reportInputSchema,
-  outputSchema: reportOutputSchema,
-  backendInputSchema: backendCommandSchema,
-  backendOutputSchema: backendResultSchema,
+  inputSchema,
+  outputSchema,
+  backendInputSchema,
+  backendOutputSchema,
   isAvailable: () => {
     const database = context.database();
     if (!database) return false;
@@ -82,7 +82,7 @@ export default ((context) => defineMappedTool({
       `).get(idempotency_key);
       database.exec("COMMIT");
       signal.throwIfAborted();
-      return report as z.input<typeof backendResultSchema>;
+      return report as z.input<typeof backendOutputSchema>;
     } catch (error) {
       try {
         database.exec("ROLLBACK");

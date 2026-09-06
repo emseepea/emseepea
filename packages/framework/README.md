@@ -19,7 +19,7 @@ package supports and what it does not support.
 import { createEmseepea, defineMappedTool, defineTool, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
-const peaVariety = z.object({
+const outputSchema = z.object({
   name: z.string(),
   peaType: z.enum(["shelling", "snap"]),
   growthHabit: z.enum(["bush", "climbing"]),
@@ -31,7 +31,7 @@ const getPeaVariety = defineTool({
   access: "public",
   description: "Get the type, growth habit, and maturity time for one pea variety.",
   inputSchema: z.object({ name: z.string() }),
-  outputSchema: peaVariety,
+  outputSchema,
   handler: ({ name }) => {
     const data = {
       name,
@@ -241,7 +241,7 @@ const getPeaVariety = defineTool({
   icons: [{ src: "https://garden.example/icons/pea.png", mimeType: "image/png" }],
   annotations: { readOnlyHint: true, openWorldHint: false },
   inputSchema: z.object({ name: z.string() }),
-  outputSchema: peaVariety,
+  outputSchema,
   handler,
 });
 ```
@@ -374,39 +374,33 @@ Prefer an open, bounded schema when the backend can add valid values
 independently.
 
 ```ts
-const backendCommand = z.object({ search: z.string().max(200) });
-const catalogueTaxon = z.object({
+const inputSchema = z.object({ name: z.string().max(200) });
+const backendInputSchema = z.object({ search: z.string().max(200) });
+const backendTaxon = z.object({
   id: z.number().int().positive(),
   name: z.string().max(200),
   rank: z.string().max(40),
   observations_count: z.number().int().nonnegative(),
 });
-const backendResult = z.object({
-  record: z.object({
-    id: z.number().int().positive(),
-    name: z.string().max(200),
-    rank: z.string().max(40),
-    observations_count: z.number().int().nonnegative(),
-  }),
+const outputSchema = backendTaxon.extend({
+  source: z.literal("catalogue-service"),
+});
+const backendOutputSchema = z.object({
+  record: backendTaxon,
 });
 
 const getPeaTaxon = defineMappedTool({
   name: "get-pea-taxon",
   access: "public",
   description: "Get a pea taxon from the catalogue service.",
-  inputSchema: z.object({ name: z.string().max(200) }),
-  outputSchema: catalogueTaxon,
-  backendInputSchema: backendCommand,
-  backendOutputSchema: backendResult,
+  inputSchema,
+  outputSchema,
+  backendInputSchema,
+  backendOutputSchema,
   mapInput: ({ name }) => ({ search: name }),
   adapter: async (command, { signal }) => backend.findTaxon(command, { signal }),
   mapOutput: ({ record }) => {
-    const data = {
-      id: record.id,
-      name: record.name,
-      rank: record.rank,
-      observations_count: record.observations_count,
-    };
+    const data = { ...record, source: "catalogue-service" as const };
     return { text: `${data.name} has rank ${data.rank} and ${data.observations_count} recorded observations.`, data };
   },
 });

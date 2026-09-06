@@ -2,14 +2,15 @@ import { defineTool, type CapabilityModuleFactory } from "@emseepea/server";
 import { z } from "zod";
 
 const varietyNames = ["Harbour Gem", "Highland Snap"] as const;
-const peaVarietySchema = z.object({
+const inputSchema = z.object({ name: z.enum(varietyNames) });
+const outputSchema = z.object({
   name: z.enum(varietyNames),
   peaType: z.enum(["shelling", "snap"]),
   growthHabit: z.enum(["bush", "climbing"]),
   daysToMaturity: z.number().int().positive(),
   traits: z.array(z.string()),
 });
-const varieties: Record<(typeof varietyNames)[number], z.input<typeof peaVarietySchema>> = {
+const varieties: Record<(typeof varietyNames)[number], z.input<typeof outputSchema>> = {
   "Harbour Gem": {
     name: "Harbour Gem",
     peaType: "shelling",
@@ -31,8 +32,8 @@ export default (() => defineTool({
   access: "public",
   title: "Pea Variety Details",
   description: "Get the type, growth habit, maturity time, and traits of a sample pea variety.",
-  inputSchema: z.object({ name: z.enum(varietyNames) }),
-  outputSchema: peaVarietySchema,
+  inputSchema,
+  outputSchema,
   handler: ({ name }) => {
     const data = varieties[name];
     return {

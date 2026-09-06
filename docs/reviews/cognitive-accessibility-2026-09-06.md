@@ -1,5 +1,20 @@
 # Cognitive-Accessibility Review 2026-09-06
 
+## Schema Pass-Through and Shorthand
+
+Result: PASS. Independent cognitive-accessibility and Markdown accessibility
+review covered the framework guidance and release note. The mapped-tool example
+names each schema by its definition property, derives the public response from
+the checked backend response, and shows the added source field directly. The
+release note is short and specific. Neither file contains emoji or em dashes.
+
+This review covers source prose. It does not establish package publication.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `.changeset/clear-schema-shorthand.md` | `aecf6adff20edbc79b3bd0be1c27ecb30aca16710ae039e6b2030f9962f2a164` |
+| `packages/framework/README.md` | `0ae00fc61cac481e8cff254051c767425d44835230f35d70fad6ac3a13e4a7a8` |
+
 ## Conversation-Style Semantic Tests
 
 Result: PASS after three terminology corrections. Independent cognitive-
