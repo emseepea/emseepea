@@ -15,7 +15,7 @@ This review covers source prose. It does not establish package publication.
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
 | `.changeset/clear-schema-descriptions.md` | `f7da5d3d050934bc8ce6443a51b582645a80515e1347a4d03fb7d619ea746837` |
-| `docs/reviews/0.3.2-release-readiness.md` | `609c86f58b88a5de1814cc7b0291f1eaf4cd47c9cbe107a2c0ef7c38ae7306d1` |
+| `docs/reviews/0.3.2-release-readiness.md` | `2765f48e2b56ac65b0420ef665a85d4fad252e85d1768380b483f4d169327fe6` |
 | `packages/framework/README.md` | `25c9b46c5fb1d2f3e703ec414776020d0015ee2c5b46d53f41dbb8b3d9340a5e` |
 
 ## Server 0.3.1 Prepublication Readiness
