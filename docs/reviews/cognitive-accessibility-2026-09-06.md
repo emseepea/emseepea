@@ -152,3 +152,17 @@ This review covers source prose. It does not establish package publication.
 | `.changeset/structured-json-tool-results.md` | `6f501a7cfb2b58039086ad85161c7330a5f4a2c046322c3ac4f4bc61ac3d1b43` |
 | `packages/framework/README.md` | `0b30f95f07909ec7bc1de0ad82e26dad12e0bd161026da145ba9d6ef96ea7b9c` |
 | `website/src/content/docs/getting-started.md` | `aaa288398bb8849e734969870d0d6385c8c99fd8d0a1d22458bd1804dcd3b77e` |
+
+## Server 0.3.3 Readiness Review
+
+Result: PASS after naming the accessibility-lead review precisely. Independent
+cognitive-accessibility and Markdown accessibility reviews covered the final
+readiness record.
+
+The record clearly separates completed source, Quality, and semantic evidence
+from the exact-commit and registry evidence still required. It contains no
+emoji or em dashes.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `docs/reviews/0.3.3-release-readiness.md` | `0280c99f005718b84fcdb2ab4710243f0b09e55956864f139537aae69e930d36` |
