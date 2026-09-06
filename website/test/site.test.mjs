@@ -123,6 +123,7 @@ test("keyboard users can skip navigation and search the local index", async () =
     await page.keyboard.press("Tab");
     assert.match(await page.locator(":focus").innerText(), /skip to content/i);
     await page.keyboard.press("Enter");
+    await page.waitForURL((url) => url.hash === "#_top");
     assert.equal(new URL(page.url()).hash, "#_top");
     await page.keyboard.press("Tab");
     assert.ok(await page.locator(":focus").evaluate((element) => Boolean(element.closest("main"))), "skip link must move the keyboard starting point into the content");
