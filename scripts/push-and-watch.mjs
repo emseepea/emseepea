@@ -64,7 +64,7 @@ export async function watchWorkflowRuns({
         assert.ok(remainingMs > 0, `${workflow} did not finish within the timeout`);
         await run(
           "gh",
-          ["run", "watch", String(item.databaseId), "--repo", repository, "--exit-status"],
+          ["run", "watch", String(item.databaseId), "--repo", repository, "--exit-status", "--interval", "30"],
           { timeoutMs: remainingMs },
         );
         watched.add(`${item.databaseId}:${item.attempt}`);

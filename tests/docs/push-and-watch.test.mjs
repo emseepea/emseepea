@@ -42,10 +42,10 @@ test("push and watch binds both pipelines to the pushed commit", async () => {
     ["git", "push", "origin", `${sha}:refs/heads/main`],
   ]);
   assert.deepEqual(calls.filter(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), [
-    ["gh", "run", "watch", "1", "--repo", "emseepea/emseepea", "--exit-status"],
-    ["gh", "run", "watch", "2", "--repo", "emseepea/emseepea", "--exit-status"],
-    ["gh", "run", "watch", "2", "--repo", "emseepea/emseepea", "--exit-status"],
-    ["gh", "run", "watch", "3", "--repo", "emseepea/emseepea", "--exit-status"],
+    ["gh", "run", "watch", "1", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
+    ["gh", "run", "watch", "2", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
+    ["gh", "run", "watch", "2", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
+    ["gh", "run", "watch", "3", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
   ]);
 });
 

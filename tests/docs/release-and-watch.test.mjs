@@ -52,8 +52,8 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
     "gh", "pr", "merge", "25", "--repo", "emseepea/emseepea", "--merge", "--match-head-commit", headSha,
   ]);
   assert.deepEqual(calls.filter(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), [
-    ["gh", "run", "watch", "10", "--repo", "emseepea/emseepea", "--exit-status"],
-    ["gh", "run", "watch", "11", "--repo", "emseepea/emseepea", "--exit-status"],
+    ["gh", "run", "watch", "10", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
+    ["gh", "run", "watch", "11", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
   ]);
 });
 
