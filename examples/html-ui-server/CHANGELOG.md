@@ -1,5 +1,11 @@
 # @emseepea/create-html-ui-server
 
+## 0.0.14
+
+### Patch Changes
+
+- [`b4104e8`](https://github.com/emseepea/emseepea/commit/b4104e80ca75bd851641a146695c501f0f9865bd) Thanks [@tompahoward](https://github.com/tompahoward)! - Identify the failed answer trial and retain its safe provider failure category.
+
 ## 0.0.13
 
 ### Patch Changes
