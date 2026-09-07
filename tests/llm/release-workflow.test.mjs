@@ -300,9 +300,9 @@ test("registry publication detection supports independently versioned packages",
     ),
     "published",
   );
-  assert.throws(
-    () => classifyPublication(before, { packages: [{ ...before.packages[0], present: true }, before.packages[1]] }),
-    /only some pending packages were published/,
+  assert.equal(
+    classifyPublication(before, { packages: [{ ...before.packages[0], present: true }, before.packages[1]] }),
+    "partial",
   );
 });
 

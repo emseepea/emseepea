@@ -15,22 +15,18 @@ export function classifyPublication(before, after) {
   if (pending.length === 0) return "unchanged";
   const current = pending.map(({ name }) => after.packages.find((item) => item.name === name)?.present);
   if (current.every(Boolean)) return "published";
-  if (current.some(Boolean)) throw new Error("only some pending packages were published");
+  if (current.some(Boolean)) return "partial";
   return "missing";
 }
 
 export async function waitForPublication(before, read, wait = () => new Promise((resolveDelay) => setTimeout(resolveDelay, 3_000))) {
   let after;
-  for (let attempt = 1; attempt <= 10; attempt += 1) {
+  for (let attempt = 1; attempt <= 20; attempt += 1) {
     after = await read();
-    try {
-      if (classifyPublication(before, after) === "published") return after;
-    } catch (error) {
-      if (error?.message !== "only some pending packages were published" || attempt === 10) throw error;
-    }
-    if (attempt < 10) await wait();
+    if (classifyPublication(before, after) === "published") return after;
+    if (attempt < 20) await wait();
   }
-  assert.equal(classifyPublication(before, after), "published", "neither package appeared after publication");
+  assert.equal(classifyPublication(before, after), "published", "not all packages appeared after publication");
 }
 
 export function assertRegistryState(before, after) {
