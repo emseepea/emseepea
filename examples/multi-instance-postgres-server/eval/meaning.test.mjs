@@ -18,7 +18,8 @@ test("reuses the original shared report across server instances", async (t) => {
   // other advertised tool without adding another judge.
   const response = await chat.send(
     "Create a shared harvest report with request ID daily-harvest-report. Then " +
-    "repeat the same request ID. Who created the stored report, what are the pea " +
+    "repeat the same request ID. Include the exact name of the server instance " +
+    "that created the stored report, what are the pea " +
     "type counts, and did the retry create another report?",
   );
 
