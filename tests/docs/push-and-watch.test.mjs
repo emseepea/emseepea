@@ -26,7 +26,9 @@ test("push and watch binds both pipelines to the pushed commit", async () => {
     }
     if (joined.includes("--workflow release.yml")) {
       releasePolls += 1;
-      return releasePolls === 1 ? "[]" : JSON.stringify([
+      return releasePolls === 1 ? JSON.stringify([
+        { attempt: 1, conclusion: "skipped", databaseId: 4, headSha: sha, url: "https://example.test/skipped" },
+      ]) : JSON.stringify([
         { attempt: 1, databaseId: 3, headSha: sha, url: "https://example.test/release" },
       ]);
     }

@@ -46,10 +46,11 @@ export async function watchWorkflowRuns({
     while (true) {
       const listed = JSON.parse(await run("gh", [
         "run", "list", "--repo", repository, "--workflow", workflow,
-        "--commit", sha, "--limit", "100", "--json", "attempt,databaseId,headSha,url",
+        "--commit", sha, "--limit", "100", "--json", "attempt,conclusion,databaseId,headSha,url",
       ]) || "[]");
       assert.notEqual(listed.length, 100, `${workflow} run list reached its safety limit`);
-      const runs = listed.filter(({ headSha }) => headSha === sha);
+      const runs = listed.filter(({ conclusion, headSha }) => headSha === sha
+        && (workflow !== "release.yml" || conclusion !== "skipped"));
       if (runs.length === 0) {
         assert.ok(Date.now() < deadline, `${workflow} did not start for ${sha}`);
         await pause(3_000);
