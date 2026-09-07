@@ -156,9 +156,9 @@ Accessibility Guidelines (WCAG) conformance.
   against the pinned Docker Compose database. Its ordinary tests include two
   server processes, concurrent idempotent writes, provider failure, and a
   blocked query that must finish at the database timeout.
-- A replaced initializer is deprecated only after its replacement is published
-  and verified. The release watcher reads every old package version back from
-  npm and requires the exact replacement message.
+- The release watcher deprecates a replaced initializer only after its
+  replacement is published and verified, then requires the exact message on
+  every old version. Removal, when npm permits it, is an explicit release action.
 - The documentation website may deploy to GitHub Pages after its guide,
   accessibility, and performance checks pass. Do not add framework-service
   deployment, production attestation, signing, or environment-verification

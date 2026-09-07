@@ -54,9 +54,9 @@ different computers.
 
 The active package is `@emseepea/create-multi-instance-postgres-server`. Its
 maintained source lives in `examples/multi-instance-postgres-server`. The old
-SQLite package remains in npm history and is deprecated with a link to the new
-initializer. It is not unpublished and is not retained in the active package
-list.
+SQLite creator is deprecated after replacement verification, then the release
+operator removes it from npm when npm permits. It is not retained in the active
+package list.
 
 Each server process owns one bounded `pg` connection pool and connects through
 `DATABASE_URL`. PostgreSQL is a required readiness dependency. An unavailable
@@ -106,7 +106,8 @@ and one canonical package list for build, release, and registry verification.
   PostgreSQL service.
 - The replacement begins as a new npm package identity with new version
   history.
-- The old package needs an npm deprecation notice that points to its replacement.
+- The old creator must be deprecated after replacement verification, then
+  removed by an explicit release action when npm permits.
 
 ## Confirmation
 
@@ -122,7 +123,8 @@ and one canonical package list for build, release, and registry verification.
   failure, no connection-detail disclosure, and no duplicate effect.
 - The example does not claim exactly-once external side effects, latency, or
   throughput.
-- The old package is deprecated on npm and points to the PostgreSQL initializer.
+- The old creator is removed from npm, or deprecated with a pointer to the
+  PostgreSQL initializer when npm refuses removal.
 - Root guidance, example guidance, the documentation website, semantic tests,
   package metadata, and release checks use the new name and honest scope.
 - The new package passes pack, standalone install, lint, ordinary tests,

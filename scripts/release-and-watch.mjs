@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
-import { deprecateReplacedInitializers } from "./deprecate-replaced-initializers.mjs";
+import { retireReplacedInitializers } from "./retire-replaced-initializers.mjs";
 import { watchWorkflowRuns } from "./push-and-watch.mjs";
 
 const exec = promisify(execFile);
@@ -52,7 +52,7 @@ export async function releaseAndWatch({
   assert.match(sha, /^[a-f0-9]{40}$/);
 
   const urls = await watchWorkflowRuns({ sha, run, pause, timeoutMs });
-  await deprecateReplacedInitializers({ run, pause });
+  await retireReplacedInitializers({ run, pause });
   return { pullRequest: merged.url, sha, urls };
 }
 

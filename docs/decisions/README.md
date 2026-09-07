@@ -1171,6 +1171,6 @@ Chosen option: **"Replace SQLite with PostgreSQL"**, because a multi-instance ex
 - A test races the same request through both instances and proves one stored row, identical report results, and replay through the other instance.
 - Tests prove database unavailability produces `/readyz` 503, generic tool failure, no connection-detail disclosure, and no duplicate effect.
 - The example does not claim exactly-once external side effects, latency, or throughput.
-- The old package is deprecated on npm and points to the PostgreSQL initializer.
+- The old creator is removed from npm, or deprecated with a pointer to the PostgreSQL initializer when npm refuses removal.
 - Root guidance, example guidance, the documentation website, semantic tests, package metadata, and release checks use the new name and honest scope.
 - The new package passes pack, standalone install, lint, ordinary tests, semantic smoke tests, provenance, software-bill-of-materials, registry readback, and clean-install verification.

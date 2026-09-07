@@ -60,7 +60,9 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
     ["gh", "run", "watch", "10", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
     ["gh", "run", "watch", "11", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
   ]);
-  assert.equal(calls.some(([command, first]) => command === "npm" && first === "deprecate"), false);
+  assert.equal(calls.some(([command, first, spec]) => command === "npm" && first === "view"
+    && spec === "@emseepea/create-multi-instance-sqlite-server"), true);
+  assert.equal(calls.some(([command, first]) => command === "npm" && first === "unpublish"), false);
 });
 
 test("release and watch rejects unsafe checkout or pull request state before merging", async () => {

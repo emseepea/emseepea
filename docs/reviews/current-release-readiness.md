@@ -13,8 +13,9 @@ PostgreSQL initializer. Generated projects use one shared PostgreSQL database,
 an atomic upsert, a unique idempotency constraint, bounded database work, and a
 single local run command after installation.
 
-The historical SQLite package remains available. The release watcher
-deprecates it only after the PostgreSQL replacement is published and verified.
+The release watcher deprecates every historical SQLite creator version only
+after the PostgreSQL replacement is published and verified. The release
+operator then attempts to remove that exact creator when npm permits it.
 
 ## Evidence Before Publication
 
@@ -33,8 +34,8 @@ deprecates it only after the PostgreSQL replacement is published and verified.
   publication.
 - npm publication must use the approved release path and expose provenance,
   signatures, registry metadata, a clean install, and a working initializer.
-- The old SQLite package must show the exact replacement deprecation message
-  for every published version.
+- The old SQLite creator must be absent from npm, or every published version
+  must show the exact replacement deprecation message if npm refuses removal.
 
 ## Review Status
 

@@ -31,25 +31,32 @@ This review covers source prose. It does not establish package publication.
 ## PostgreSQL Multi-Instance Initializer
 
 Result: PASS after clarifying the deployment boundary, the local prerequisite
-and run command, the superseded decision status, and the current plan date.
+and run command, the superseded decision status, the current plan date, the
+pending-publication gate, and the two-step SQLite creator retirement policy.
 Independent cognitive-accessibility and Markdown accessibility reviews covered
 the replacement initializer, release guidance, decision records, and website
 guide.
 
 The reviewed content presents one local run command after installation, names
 PostgreSQL as required infrastructure, and avoids unsupported throughput or
-cross-computer test claims. This review covers source prose. It does not prove
-package publication or a deployed environment.
+cross-computer test claims. The current release-readiness text says publication
+is pending exact Quality and release-risk evidence. The retirement policy now
+says the reusable watcher deprecates exact old SQLite creator versions after
+replacement verification, and a one-time release operator attempts exact package
+removal when npm permits. The natural eval prompt clarification was considered;
+it is source-code test prose, not a changed public Markdown surface. This review
+covers source prose. It does not prove package publication or a deployed
+environment.
 
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
 | `BATTLE-PLAN.md` | `53134cd4f552d8e31eded0769c83bfdadb69d1353f45e2113502a278029a5d5b` |
-| `QUALITY.md` | `a567d4603bc42004b33e7294f08d1b6f0c4bf65d21b5c415a921e4912a720b2e` |
+| `QUALITY.md` | `e70db3486f239fa25ae2a14fd14e9ae37110df9ee755b2faae0e2905e944ef50` |
 | `README.md` | `8b09909abe59f125d42a534f1245071f5be59cfbe055ee92350e4c0356afa1c9` |
 | `docs/decisions/0051-latest-as-default-public-npm-channel.superseded.md` | `e8687880b435c01f20fc98e150f8d99068237735639edcd0b97afd40eda690f2` |
-| `docs/decisions/0056-postgresql-backed-multi-instance-initializer.proposed.md` | `0df6ca2375f1b36d52d47caaa7d19fc3f218a2053853168ac5b7ee9f4d116b97` |
-| `docs/decisions/README.md` | `88cebc19dd78a3e2ad0c6e7763cc2210795770a14534b212e60b0a0dead1dcbc` |
-| `docs/reviews/current-release-readiness.md` | `181f4eee276d18c822fb1a5ed9d38f6f74d1176bf6bf227491ebf677f60f1ea1` |
+| `docs/decisions/0056-postgresql-backed-multi-instance-initializer.proposed.md` | `ab2e5de268ab40586b7e2df1f325ba88639b9a0af612bf6acce519382dbf7cb0` |
+| `docs/decisions/README.md` | `5388379e08809c15a75a8c7e47751e55945d7ee68d1eea6f701d9c1d5bc69b72` |
+| `docs/reviews/current-release-readiness.md` | `f1fb8b289ff9c6f0f3d856b93e25266a6de1674dbf8b4c93e0caea221beaf316` |
 | `examples/multi-instance-postgres-server/CHANGELOG.md` | `687b0fc66c10a408e9623a922267860ab815c58137509318c696ae9f0935aa66` |
 | `examples/multi-instance-postgres-server/README.md` | `65ab1ad62a8945574cc5277a2199fa73b5b363f2c3fcb389ad371323d10c0d5c` |
 | `website/src/content/docs/ai-tests.md` | `21da294101e5433c3d45e7d7da0f73fc481f9861ccb7de8540e1f98075903377` |

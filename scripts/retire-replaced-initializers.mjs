@@ -14,15 +14,21 @@ async function execute(command, args) {
   return stdout.trim();
 }
 
-export async function deprecateReplacedInitializers({
+export async function retireReplacedInitializers({
   run = execute,
   pause = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
 } = {}) {
   for (const replacement of initializerPackages.filter(({ replaces }) => replaces)) {
     const { name, deprecation } = replacement.replaces;
     assert.equal(typeof JSON.parse(await view(run, replacement.name, "version")), "string",
-      `${replacement.name} must be published before ${name} is deprecated`);
-    const versions = JSON.parse(await view(run, name, "versions"));
+      `${replacement.name} must be published before ${name} is retired`);
+    let versions;
+    try {
+      versions = JSON.parse(await view(run, name, "versions"));
+    } catch (error) {
+      if (isNotFound(error)) continue;
+      throw error;
+    }
     const publishedVersions = Array.isArray(versions) ? versions : [versions];
     assert.ok(publishedVersions.length > 0, `${name} has no published versions`);
 
@@ -36,6 +42,10 @@ export async function deprecateReplacedInitializers({
       await waitForDeprecation(run, `${name}@${version}`, deprecation, pause);
     }
   }
+}
+
+function isNotFound(error) {
+  return /(?:E404|404 Not Found)/.test(`${error?.message ?? error}\n${error?.stderr ?? ""}`);
 }
 
 function view(run, spec, field) {
@@ -56,5 +66,5 @@ async function waitForDeprecation(run, spec, expected, pause) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  await deprecateReplacedInitializers();
+  await retireReplacedInitializers();
 }
