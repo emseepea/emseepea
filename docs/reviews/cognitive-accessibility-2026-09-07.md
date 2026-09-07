@@ -95,3 +95,28 @@ journey, or production behavior.
 | `packages/testing/README.md` | `f5508f1f349fe4acdbf835b8aee1b047cb898859622212f1e711183fad87de83` |
 | `tests/llm/README.md` | `4abc85d133c164909bcde42dd79250e5f473336931f2dc1ee2bea9161b777f8b` |
 | `website/src/content/docs/ai-tests.md` | `1dd748683cda217d6ac30149a2dff08473c6a9b57aad882470c73d0d1e2502f3` |
+
+## Clear Judge Failures
+
+Result: PASS for cognitive accessibility and plain-language clarity on the exact
+current changed public Markdown for clearer semantic judge failures. Independent
+cognitive-accessibility and Markdown accessibility review covered the testing
+package README, website AI testing guide, and Changeset.
+
+The reviewed content tells readers what failure evidence contains, states the
+safe failure causes that may be recorded, and keeps the warning about synthetic,
+non-sensitive fixtures visible before users inspect or publish evidence. It does
+not overclaim secret detection or redaction. No blocking cognitive-accessibility
+finding remains.
+
+Applied rule sources: cognitive-accessibility specialist reference and
+`accessibility-agents-markdown`.
+
+This review covers source prose. It does not prove package publication, release
+approval, provider behaviour, or production behaviour.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `.changeset/clear-judge-failures.md` | `1f05d43a7db50f1471eb2914c00d541796b04204f4bfc5c18e1530070a7dc3b5` |
+| `packages/testing/README.md` | `e26709eaa24ba289a73288089fb26ffb7add496847505a08c82db20fd0ccd864` |
+| `website/src/content/docs/ai-tests.md` | `9f6f628ffe242b9d960456d5180bcd1531f1e01e7e3d916d345be7744f9d723d` |

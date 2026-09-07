@@ -38,6 +38,9 @@ meanings, and judge reasons. It also keeps hashes for comparison. A failed
 meaning assertion runs and records all nine judgments, so disagreement is
 visible without a rerun.
 
+Failed judge invocations record a safe cause such as a
+timeout, process exit code, missing result event, or fixed provider error category.
+
 Treat test conversations as publishable artifact content. Use synthetic,
 non-sensitive fixtures and never put credentials or production data in prompts,
 tool arguments, tool results, assertions, or application context.

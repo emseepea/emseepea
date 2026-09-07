@@ -155,6 +155,10 @@ arguments, model-visible tool results, expected meanings, every judge reason,
 and hashes. A failed meaning assertion records all nine judgments before
 failing, so the artifact shows disagreement without a rerun.
 
+A failed judge
+invocation records a safe cause such as a timeout, process exit code, missing
+result event, or fixed provider error category.
+
 Treat test conversations as publishable artifact content. Use synthetic,
 non-sensitive fixtures and never put credentials or production data in prompts,
 tool arguments, tool results, assertions, or application context.

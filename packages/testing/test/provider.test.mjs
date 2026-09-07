@@ -35,8 +35,21 @@ test("accepts one tool-free answer from the required model", () => {
   ].join("\n")), (error) => error.toolSearchToolCount === 1 && error.unknownToolCount === 1
     && !JSON.stringify(error).includes("PRIVATE_MODEL_TEXT"));
   assert.throws(() => parseClaudeEvents(`${forbiddenTool}\n${JSON.stringify(result)}`), /forbidden tool/);
-  assert.throws(() => parseClaudeEvents(JSON.stringify({ ...result, num_turns: 2 })), /2 turns/);
+  assert.throws(() => parseClaudeEvents(JSON.stringify({ ...result, num_turns: 2 })), /unexpected number/);
+  assert.throws(
+    () => parseClaudeEvents(JSON.stringify({ ...result, num_turns: "sk-ant-private-secret" })),
+    (error) => error.message === "Model command returned an invalid turn count",
+  );
   assert.throws(() => parseClaudeEvents(JSON.stringify({ ...result, modelUsage: {} })), /required model/);
+  assert.throws(
+    () => parseClaudeEvents(JSON.stringify({ ...result, is_error: true, subtype: "error_max_turns" })),
+    /exceeded its turn limit/,
+  );
+  assert.throws(
+    () => parseClaudeEvents(JSON.stringify({ ...result, is_error: true, subtype: "sk-ant-private-secret" })),
+    (error) => error.message === "Model command reported an error",
+  );
+  assert.throws(() => parseClaudeEvents("not-json"), /invalid event data/);
 });
 
 test("isolates model credentials from ordinary environment variables", () => {

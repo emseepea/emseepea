@@ -235,7 +235,7 @@ export async function assertResponseMeaning(turn, expectation) {
       } catch (error) {
         record.error = error instanceof SyntaxError || error.message === "Judge returned an invalid verdict"
           ? "invalid judge verdict"
-          : "judge invocation failed";
+          : safeJudgeFailure(error);
         failed = true;
       }
       trial.evidence.judgeVerdicts.push(record);
@@ -247,6 +247,34 @@ export async function assertResponseMeaning(turn, expectation) {
     failAssertion(trials, "model judgment");
     throw new Error("Response did not have the expected meaning");
   }
+}
+
+function safeJudgeFailure(error) {
+  const message = error instanceof Error ? error.message : "";
+  const safeMessages = new Set([
+    "Claude subscription authentication is unavailable",
+    "Model command attempted a forbidden action",
+    "Model command could not start",
+    "Model command exceeded its budget",
+    "Model command exceeded its turn limit",
+    "Model command failed during execution",
+    "Model command is not signed in",
+    "Model command omitted its result event",
+    "Model command output exceeded its limit",
+    "Model command reported an error",
+    "Model command returned a non-text answer",
+    "Model command returned an invalid turn count",
+    "Model command returned invalid event data",
+    "Model command timed out",
+    "Model command used a forbidden tool",
+    "Model command used an unexpected number of turns",
+    "Model command was cancelled",
+    "Model command did not use the required model",
+  ]);
+  if (safeMessages.has(message) || /^Model command exited \d{1,3}$/.test(message)) {
+    return message.replace(/^./, (character) => character.toLowerCase());
+  }
+  return "judge invocation failed";
 }
 
 async function isolatedModel(provider, prompt, prefix, signal) {

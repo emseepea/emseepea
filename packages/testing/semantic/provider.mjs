@@ -5,6 +5,11 @@ import { join } from "node:path";
 const model = "claude-sonnet-4-6";
 const mcpServerName = "emseepea_eval";
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+const providerErrorMessages = new Map([
+  ["error_during_execution", "Model command failed during execution"],
+  ["error_max_budget_usd", "Model command exceeded its budget"],
+  ["error_max_turns", "Model command exceeded its turn limit"],
+]);
 
 export async function modelVersion() {
   const result = await runProcess("claude", ["--version"], { env: modelEnvironment({}) });
@@ -14,7 +19,12 @@ export async function modelVersion() {
 }
 
 export function parseClaudeEvents(stdout, processExitCode = 0) {
-  const events = stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+  let events;
+  try {
+    events = stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+  } catch {
+    throw new Error("Model command returned invalid event data");
+  }
   const result = events.findLast(({ type }) => type === "result");
   const answer = result?.result;
   const notLoggedIn = events.some(({ message }) => (
@@ -26,7 +36,11 @@ export function parseClaudeEvents(stdout, processExitCode = 0) {
   ));
   if (notLoggedIn) throw new Error("Model command is not signed in");
   if (processExitCode !== 0) throw new Error(`Model command exited ${processExitCode}`);
-  if (result?.is_error || typeof answer !== "string") throw new Error("Model command returned no answer");
+  if (!result) throw new Error("Model command omitted its result event");
+  if (result.is_error) {
+    throw new Error(providerErrorMessages.get(result.subtype) ?? "Model command reported an error");
+  }
+  if (typeof answer !== "string") throw new Error("Model command returned a non-text answer");
   if (toolUses.length > 0) {
     throw Object.assign(new Error("Model command used a forbidden tool"), {
       providerToolCount: toolUses.length,
@@ -36,7 +50,8 @@ export function parseClaudeEvents(stdout, processExitCode = 0) {
     });
   }
   const expectedTurns = toolUses.length + 1;
-  if (result.num_turns !== expectedTurns) throw new Error(`Model command used ${String(result.num_turns)} turns`);
+  if (!Number.isInteger(result.num_turns)) throw new Error("Model command returned an invalid turn count");
+  if (result.num_turns !== expectedTurns) throw new Error("Model command used an unexpected number of turns");
   if ((result.permission_denials?.length ?? 0) > 0) throw new Error("Model command attempted a forbidden action");
   const usage = result.modelUsage?.[model];
   if (usage?.canonicalModel !== model || usage.provider !== "firstParty") {
@@ -105,8 +120,9 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
   if ((result.permission_denials?.length ?? 0) > 0) {
     throw new Error("Model command attempted a forbidden action");
   }
+  if (!Number.isInteger(result.num_turns)) throw new Error("Model command returned an invalid turn count");
   if (result.num_turns !== toolUses.length + 1) {
-    throw new Error(`Model command used ${String(result.num_turns)} turns`);
+    throw new Error("Model command used an unexpected number of turns");
   }
   const usage = result.modelUsage?.[model];
   if (usage?.canonicalModel !== model || usage.provider !== "firstParty") {
@@ -312,6 +328,9 @@ export async function runModel(provider, prompt, directory, signal) {
     killSignal: "SIGKILL",
   });
   if (execution.timedOut) throw new Error("Model command timed out");
+  if (execution.outputLimitExceeded) throw new Error("Model command output exceeded its limit");
+  if (execution.errorCode === "ABORT_ERR") throw new Error("Model command was cancelled");
+  if (execution.errorCode) throw new Error("Model command could not start");
   if (execution.code !== 0 && !execution.stdout) throw new Error(`Model command exited ${execution.code}`);
   return parseClaudeEvents(execution.stdout, execution.code);
 }
@@ -320,19 +339,25 @@ function runProcess(command, args, options) {
   return new Promise((resolve) => {
     const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], ...options });
     let stdout = "";
-    const timer = setTimeout(() => child.kill("SIGKILL"), 120_000);
     let timedOut = false;
+    let outputLimitExceeded = false;
+    const timer = setTimeout(() => { timedOut = true; child.kill("SIGKILL"); }, 120_000);
     timer.unref();
-    child.stdout.on("data", (chunk) => { stdout += chunk; if (stdout.length > 1_048_576) child.kill("SIGKILL"); });
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+      if (stdout.length > 1_048_576) {
+        outputLimitExceeded = true;
+        child.kill("SIGKILL");
+      }
+    });
     child.stderr.resume();
     child.once("error", (error) => {
       clearTimeout(timer);
-      resolve({ code: 1, error: error.message, stdout, timedOut });
+      resolve({ code: 1, errorCode: error.code, outputLimitExceeded, stdout, timedOut });
     });
-    child.once("close", (code, signal) => {
-      if (signal === "SIGKILL") timedOut = true;
+    child.once("close", (code) => {
       clearTimeout(timer);
-      resolve({ code: code ?? 1, stdout, timedOut });
+      resolve({ code: code ?? 1, outputLimitExceeded, stdout, timedOut });
     });
   });
 }

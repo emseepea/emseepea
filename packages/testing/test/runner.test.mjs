@@ -116,6 +116,12 @@ const result = (answer, calls = 0) => ({
 });
 if (!process.argv.includes("--input-format")) {
   const prompt = process.argv[process.argv.indexOf("--print") + 1];
+  if (prompt.includes("JUDGE_EXIT_23")) process.exit(23);
+  if (prompt.includes("JUDGE_PROVIDER_SECRET")) {
+    process.stdout.write(JSON.stringify({ ...result("PRIVATE_PROVIDER_MESSAGE"), is_error: true,
+      subtype: "sk-ant-private-secret" }) + "\\n");
+    process.exit(0);
+  }
   const pass = !prompt.includes("REJECT_THIS_RESPONSE");
   log({ judge: true, prompt });
   const answer = prompt.includes("MALFORMED_JUDGE") ? "not-json" : JSON.stringify({
@@ -357,6 +363,21 @@ test("inventory conversation", async (t) => {
   const malformedEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
   assert.equal(malformedEvidence.judgeVerdicts.length, 9);
   assert.ok(malformedEvidence.judgeVerdicts.every(({ error }) => error === "invalid judge verdict"));
+
+  await writeFile(file, source({ meaning: "JUDGE_EXIT_23" }));
+  const unavailable = run();
+  assert.equal(unavailable.status, 1, "A failed judge invocation must fail");
+  const unavailableEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+  assert.equal(unavailableEvidence.judgeVerdicts.length, 9);
+  assert.ok(unavailableEvidence.judgeVerdicts.every(({ error }) => error === "model command exited 23"));
+
+  await writeFile(file, source({ meaning: "JUDGE_PROVIDER_SECRET" }));
+  const providerFailure = run();
+  assert.equal(providerFailure.status, 1, "A provider-reported judge failure must fail");
+  const providerEvidenceText = await readFile(output, "utf8");
+  assert.doesNotMatch(providerEvidenceText, /sk-ant-private-secret|PRIVATE_PROVIDER_MESSAGE/);
+  const providerEvidence = Object.values(JSON.parse(providerEvidenceText).cases)[0];
+  assert.ok(providerEvidence.judgeVerdicts.every(({ error }) => error === "model command reported an error"));
 });
 
 test("literal response assertions reject numerical expectations", { timeout: 120_000 }, async (t) => {
