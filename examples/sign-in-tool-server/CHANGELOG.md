@@ -1,5 +1,14 @@
 # @emseepea/create-sign-in-tool-server
 
+## 0.0.10
+
+### Patch Changes
+
+- [`6a0058f`](https://github.com/emseepea/emseepea/commit/6a0058f85746a4ee4cc5e7783da6b82cba2ea326) Thanks [@tompahoward](https://github.com/tompahoward)! - Run semantic conversations through the provider's native MCP client. User
+  messages now reach the model unchanged, tool assertions come from native tool
+  events, and the removed `prepare()` API can no longer inject harness-created
+  context. The testing API and guide explain the evidence boundary.
+
 ## 0.0.9
 
 ### Patch Changes
