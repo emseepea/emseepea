@@ -32,8 +32,7 @@ test("reuses the original shared report across server instances", async (t) => {
   ]);
   await assertResponseMeaning(repeated, {
     expected:
-      "Both calls returned the same stored report, so the repeated request did " +
-      "not create another report. It contains two shelling and two snap plants.",
+      "The repeated request returned the existing report with two shelling and two snap plants.",
   });
 
   const creator = await chat.send(
