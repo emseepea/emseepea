@@ -1,6 +1,10 @@
 import { pathToFileURL } from "node:url";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const exec = promisify(execFile);
 
 export const publicPackages = [
   { name: "@emseepea/server", path: "packages/framework", key: "server" },
@@ -79,19 +83,41 @@ export async function publishablePackages(directory = process.cwd()) {
   return packages.filter(({ manifest }) => manifest.private !== true);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  const packages = process.argv.includes("--publishable")
-    ? await publishablePackages()
-    : process.argv.includes("--initializers")
-      ? initializerPackages
-      : publicPackages;
-  if (process.argv.includes("--tsv")) {
-    for (const item of packages) {
-      const manifest = item.manifest ?? JSON.parse(await readFile(join(item.path, "package.json"), "utf8"));
-      const init = item.example ? `@emseepea/${item.name.split("/create-")[1]}` : "";
-      process.stdout.write([item.name, item.path, item.key, manifest.version, init, item.example ?? ""].join("\t") + "\n");
+export async function hasUntaggedPublishablePackage(
+  directory = process.cwd(),
+  tagExists = async (tag) => {
+    try {
+      await exec("git", ["show-ref", "--tags", "--verify", "--quiet", `refs/tags/${tag}`], { cwd: directory });
+      return true;
+    } catch (error) {
+      if (error.code === 1) return false;
+      throw error;
     }
+  },
+) {
+  for (const { name, manifest } of await publishablePackages(directory)) {
+    if (!await tagExists(`${name}@${manifest.version}`)) return true;
+  }
+  return false;
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  if (process.argv.includes("--has-untagged")) {
+    process.stdout.write(`${await hasUntaggedPublishablePackage()}\n`);
   } else {
-    process.stdout.write(`${JSON.stringify(packages)}\n`);
+    const packages = process.argv.includes("--publishable")
+      ? await publishablePackages()
+      : process.argv.includes("--initializers")
+        ? initializerPackages
+        : publicPackages;
+    if (process.argv.includes("--tsv")) {
+      for (const item of packages) {
+        const manifest = item.manifest ?? JSON.parse(await readFile(join(item.path, "package.json"), "utf8"));
+        const init = item.example ? `@emseepea/${item.name.split("/create-")[1]}` : "";
+        process.stdout.write([item.name, item.path, item.key, manifest.version, init, item.example ?? ""].join("\t") + "\n");
+      }
+    } else {
+      process.stdout.write(`${JSON.stringify(packages)}\n`);
+    }
   }
 }

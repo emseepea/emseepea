@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { pushAndWatch } from "../../scripts/push-and-watch.mjs";
+import { pushAndWatch, watchWorkflowRuns } from "../../scripts/push-and-watch.mjs";
 
 test("push and watch binds both pipelines to the pushed commit", async () => {
   const sha = "a".repeat(40);
@@ -32,6 +32,7 @@ test("push and watch binds both pipelines to the pushed commit", async () => {
         { attempt: 1, databaseId: 3, headSha: sha, url: "https://example.test/release" },
       ]);
     }
+    if (joined.startsWith("run view")) return JSON.stringify({ status: "completed", conclusion: "success" });
     return "";
   };
 
@@ -43,12 +44,8 @@ test("push and watch binds both pipelines to the pushed commit", async () => {
   assert.deepEqual(calls.filter(([command, subcommand]) => command === "git" && subcommand === "push"), [
     ["git", "push", "origin", `${sha}:refs/heads/main`],
   ]);
-  assert.deepEqual(calls.filter(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), [
-    ["gh", "run", "watch", "1", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
-    ["gh", "run", "watch", "2", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
-    ["gh", "run", "watch", "2", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
-    ["gh", "run", "watch", "3", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
-  ]);
+  assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), false);
+  assert.equal(calls.filter(([command, first, second]) => command === "gh" && first === "run" && second === "view").length, 4);
 });
 
 test("push and watch rejects the wrong remote revision", async () => {
@@ -95,19 +92,42 @@ test("push and watch fails when an exact workflow run does not appear", async ()
 });
 
 test("push and watch propagates a failed pipeline", async () => {
+  for (const conclusion of ["failure", "cancelled"]) {
+    const sha = "a".repeat(40);
+    const run = async (_command, args) => args[1] === "list"
+      ? JSON.stringify([{ attempt: 1, databaseId: 1, headSha: sha, url: "https://example.test/quality" }])
+      : JSON.stringify({ status: "completed", conclusion });
+    await assert.rejects(
+      () => watchWorkflowRuns({ sha, run }),
+      new RegExp(`quality\\.yml concluded ${conclusion}`),
+    );
+  }
+});
+
+test("push and watch survives transient GitHub read failures", async () => {
   const sha = "a".repeat(40);
-  const run = async (command, args) => {
+  const listAttempts = { "quality.yml": 0, "release.yml": 0 };
+  const viewAttempts = { 1: 0, 2: 0 };
+  const run = async (_command, args) => {
     const joined = args.join(" ");
-    if (joined === "remote get-url origin") return "git@github.com:emseepea/emseepea.git";
-    if (joined === "rev-parse HEAD") return sha;
-    if (joined === "ls-remote origin refs/heads/main") return `${sha}\trefs/heads/main`;
-    if (joined.startsWith("run list")) return JSON.stringify([
-      { attempt: 1, databaseId: 1, headSha: sha, url: "https://example.test/quality" },
-    ]);
-    if (command === "gh" && joined.startsWith("run watch")) throw new Error("workflow failed");
-    return "";
+    if (joined.startsWith("run list")) {
+      const workflow = args[args.indexOf("--workflow") + 1];
+      listAttempts[workflow] += 1;
+      if (listAttempts[workflow] === 1) throw new Error("connection reset");
+      const databaseId = workflow === "quality.yml" ? 1 : 2;
+      return JSON.stringify([{ attempt: 1, databaseId, headSha: sha, url: `https://example.test/${databaseId}` }]);
+    }
+    const databaseId = Number(args[2]);
+    viewAttempts[databaseId] += 1;
+    if (viewAttempts[databaseId] === 1) throw new Error("connection reset");
+    return JSON.stringify({ status: viewAttempts[databaseId] === 2 ? "in_progress" : "completed", conclusion: viewAttempts[databaseId] === 2 ? "" : "success" });
   };
-  await assert.rejects(() => pushAndWatch({ run }), /workflow failed/);
+  assert.deepEqual(
+    await watchWorkflowRuns({ sha, run, pause: async () => {}, timeoutMs: 10_000 }),
+    ["https://example.test/1", "https://example.test/2"],
+  );
+  assert.deepEqual(listAttempts, { "quality.yml": 3, "release.yml": 3 });
+  assert.deepEqual(viewAttempts, { 1: 3, 2: 3 });
 });
 
 test("push and watch rejects a truncated workflow result set", async () => {

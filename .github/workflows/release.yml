@@ -48,12 +48,14 @@ jobs:
       contents: read
     outputs:
       has_changesets: ${{ steps.release-state.outputs.has_changesets }}
+      has_publication: ${{ steps.release-state.outputs.has_publication }}
     steps:
       - name: Check out repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           ref: ${{ needs.quality-gate.outputs.sha }}
           persist-credentials: false
+          fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
@@ -63,23 +65,26 @@ jobs:
         run: |
           corepack enable npm
           test "$(npm --version)" = "$(node -p 'require("./package.json").packageManager.slice(4)')"
-      - name: Install locked dependencies
-        run: npm ci --ignore-scripts
-      - name: Build without model credentials
-        run: npm run build
-      - name: Detect a release pull request update
+      - name: Detect release work
         id: release-state
         run: |
           if find .changeset -maxdepth 1 -type f -name '*.md' ! -name README.md | grep -q .; then
             echo "has_changesets=true" >> "$GITHUB_OUTPUT"
+            echo "has_publication=false" >> "$GITHUB_OUTPUT"
           else
             echo "has_changesets=false" >> "$GITHUB_OUTPUT"
+            echo "has_publication=$(node scripts/public-packages.mjs --has-untagged)" >> "$GITHUB_OUTPUT"
           fi
+      - name: Install locked dependencies
+        if: steps.release-state.outputs.has_publication == 'true'
+        run: npm ci --ignore-scripts
+      - name: Build without model credentials
+        if: steps.release-state.outputs.has_publication == 'true'
+        run: npm run build
       - name: Prepare the pinned Claude CLI
-        if: steps.release-state.outputs.has_changesets == 'false'
+        if: steps.release-state.outputs.has_publication == 'true'
         run: |
           test "$(node -p 'require("./node_modules/@anthropic-ai/claude-code/package.json").version')" = "2.1.248"
-          npm run claude:prepare
           npm run claude:prepare
           test -x node_modules/.bin/claude
           target="$(realpath node_modules/.bin/claude)"
@@ -88,12 +93,12 @@ jobs:
             *) echo "Claude CLI resolved outside the locked package" >&2; exit 1 ;;
           esac
       - name: Check whether a language model understands every example
-        if: steps.release-state.outputs.has_changesets == 'false'
+        if: steps.release-state.outputs.has_publication == 'true'
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: npm run test:eval:ci
       - name: Upload inspectable language-model evidence
-        if: ${{ always() && steps.release-state.outputs.has_changesets == 'false' }}
+        if: ${{ always() && steps.release-state.outputs.has_publication == 'true' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: semantic-eval-${{ needs.quality-gate.outputs.sha }}
@@ -104,7 +109,7 @@ jobs:
   changesets:
     name: Update release pull request or publish
     needs: [quality-gate, semantic-eval]
-    if: ${{ always() && needs.quality-gate.result == 'success' && (needs.semantic-eval.outputs.has_changesets == 'true' || (needs.semantic-eval.outputs.has_changesets == 'false' && needs.semantic-eval.result == 'success')) }}
+    if: ${{ always() && needs.quality-gate.result == 'success' && (needs.semantic-eval.outputs.has_changesets == 'true' || (needs.semantic-eval.outputs.has_publication == 'true' && needs.semantic-eval.result == 'success')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 75
     permissions:

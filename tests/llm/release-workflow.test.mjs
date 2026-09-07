@@ -58,11 +58,11 @@ test("Quality scans the committed lockfile before initializer qualification", ()
 test("the Claude subscription check runs only for the publication revision", () => {
   assert.match(
     workflow,
-    /- name: Check whether a language model understands every example\n\s+if: steps\.release-state\.outputs\.has_changesets == 'false'\n\s+env:\n\s+CLAUDE_CODE_OAUTH_TOKEN: \$\{\{ secrets\.CLAUDE_CODE_OAUTH_TOKEN \}\}\n\s+run: npm run test:eval:ci/,
+    /- name: Check whether a language model understands every example\n\s+if: steps\.release-state\.outputs\.has_publication == 'true'\n\s+env:\n\s+CLAUDE_CODE_OAUTH_TOKEN: \$\{\{ secrets\.CLAUDE_CODE_OAUTH_TOKEN \}\}\n\s+run: npm run test:eval:ci/,
   );
   assert.match(
     workflow,
-    /- name: Upload inspectable language-model evidence\n\s+if: \$\{\{ always\(\) && steps\.release-state\.outputs\.has_changesets == 'false' \}\}[\s\S]*retention-days: 14/,
+    /- name: Upload inspectable language-model evidence\n\s+if: \$\{\{ always\(\) && steps\.release-state\.outputs\.has_publication == 'true' \}\}[\s\S]*retention-days: 14/,
   );
   assert.doesNotMatch(
     workflow,
@@ -74,9 +74,9 @@ test("the Claude subscription check runs only for the publication revision", () 
   assert.equal((job.match(/CLAUDE_CODE_OAUTH_TOKEN/g) ?? []).length, 2);
   assert.equal(manifest.scripts["claude:prepare"], "node node_modules/@anthropic-ai/claude-code/install.cjs");
   const prepare = job.match(/- name: Prepare the pinned Claude CLI[\s\S]*?(?=\n\s+- name:)/)?.[0] ?? "";
-  assert.match(prepare, /if: steps\.release-state\.outputs\.has_changesets == 'false'/);
+  assert.match(prepare, /if: steps\.release-state\.outputs\.has_publication == 'true'/);
   assert.match(prepare, /2\.1\.248/);
-  assert.equal((prepare.match(/npm run claude:prepare/g) ?? []).length, 2);
+  assert.equal((prepare.match(/npm run claude:prepare/g) ?? []).length, 1);
   assert.match(prepare, /test -x node_modules\/\.bin\/claude/);
   assert.match(prepare, /realpath node_modules\/\.bin\/claude/);
   assert.doesNotMatch(prepare, /CLAUDE_CODE_OAUTH_TOKEN|ANTHROPIC_API_KEY/);
@@ -87,12 +87,20 @@ test("the Claude subscription check runs only for the publication revision", () 
 test("release preparation and publication do not run when release state is unknown", () => {
   assert.match(
     workflow,
-    /needs\.semantic-eval\.outputs\.has_changesets == 'true' \|\| \(needs\.semantic-eval\.outputs\.has_changesets == 'false' && needs\.semantic-eval\.result == 'success'\)/,
+    /needs\.semantic-eval\.outputs\.has_changesets == 'true' \|\| \(needs\.semantic-eval\.outputs\.has_publication == 'true' && needs\.semantic-eval\.result == 'success'\)/,
   );
   assert.doesNotMatch(
     workflow,
     /needs\.semantic-eval\.outputs\.has_changesets == 'true' \|\| needs\.semantic-eval\.result == 'success'/,
   );
+});
+
+test("release work is derived from changesets and exact package version tags", async () => {
+  const { hasUntaggedPublishablePackage } = await import("../../scripts/public-packages.mjs");
+  assert.equal(await hasUntaggedPublishablePackage(undefined, async () => true), false);
+  assert.equal(await hasUntaggedPublishablePackage(undefined, async (tag) => !tag.startsWith("@emseepea/server@")), true);
+  assert.match(workflow, /echo "has_changesets=true"[\s\S]*echo "has_publication=false"/);
+  assert.match(workflow, /public-packages\.mjs --has-untagged/);
 });
 
 test("versioning refreshes the lockfile", () => {

@@ -44,10 +44,17 @@ export async function watchWorkflowRuns({
     const deadline = Date.now() + timeoutMs;
     const watched = new Set();
     while (true) {
-      const listed = JSON.parse(await run("gh", [
-        "run", "list", "--repo", repository, "--workflow", workflow,
-        "--commit", sha, "--limit", "100", "--json", "attempt,conclusion,databaseId,headSha,url",
-      ]) || "[]");
+      let listed;
+      try {
+        listed = JSON.parse(await run("gh", [
+          "run", "list", "--repo", repository, "--workflow", workflow,
+          "--commit", sha, "--limit", "100", "--json", "attempt,conclusion,databaseId,headSha,url",
+        ], { timeoutMs: Math.min(30_000, Math.max(1, deadline - Date.now())) }) || "[]");
+      } catch (error) {
+        if (Date.now() >= deadline) throw error;
+        await pause(3_000);
+        continue;
+      }
       assert.notEqual(listed.length, 100, `${workflow} run list reached its safety limit`);
       const runs = listed.filter(({ conclusion, headSha }) => headSha === sha
         && (workflow !== "release.yml" || conclusion !== "skipped"));
@@ -61,19 +68,33 @@ export async function watchWorkflowRuns({
         .sort((left, right) => left.databaseId - right.databaseId || left.attempt - right.attempt);
       if (unseen.length === 0) break;
       for (const item of unseen) {
-        const remainingMs = deadline - Date.now();
-        assert.ok(remainingMs > 0, `${workflow} did not finish within the timeout`);
-        await run(
-          "gh",
-          ["run", "watch", String(item.databaseId), "--repo", repository, "--exit-status", "--interval", "30"],
-          { timeoutMs: remainingMs },
-        );
+        await waitForWorkflowRun({ item, workflow, run, pause, deadline });
         watched.add(`${item.databaseId}:${item.attempt}`);
         urls.push(item.url);
       }
     }
   }
   return urls;
+}
+
+async function waitForWorkflowRun({ item, workflow, run, pause, deadline }) {
+  while (true) {
+    assert.ok(Date.now() < deadline, `${workflow} did not finish within the timeout`);
+    let state;
+    try {
+      state = JSON.parse(await run("gh", [
+        "run", "view", String(item.databaseId), "--repo", repository,
+        "--attempt", String(item.attempt), "--json", "status,conclusion",
+      ], { timeoutMs: Math.min(30_000, Math.max(1, deadline - Date.now())) }) || "{}");
+    } catch (error) {
+      if (Date.now() >= deadline) throw error;
+    }
+    if (state?.status === "completed") {
+      assert.equal(state.conclusion, "success", `${workflow} concluded ${state.conclusion || "without a result"}`);
+      return;
+    }
+    await pause(3_000);
+  }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
