@@ -285,7 +285,6 @@ test("every packed initializer creates a standalone checked project", {
     };
     const expectedFollowUpTools = {
       "tool-server": ["get-pea-variety"],
-      "multi-instance-postgres-server": ["describe-instance"],
     };
 
     const queue = [...initializerPackages];

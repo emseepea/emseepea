@@ -57,6 +57,7 @@ function responseFor(prompt) {
     ],
     answer: "eval-instance created four plants: two shelling and two snap. The request ID reuses the report and creates no other report.",
   };
+  if (prompt.includes("What exact createdByInstance value")) return { calls: [], answer: "eval-instance" };
   if (prompt.includes("Which server instance is handling")) return {
     calls: [{ name: "describe-instance", arguments: {} }], answer: "eval-instance",
   };

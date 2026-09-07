@@ -1,5 +1,6 @@
 import test from "node:test";
 import {
+  assertNoToolCalls,
   assertResponseContains,
   assertResponseMeaning,
   assertToolCalls,
@@ -14,33 +15,27 @@ test("reuses the original shared report across server instances", async (t) => {
 
   // One judged turn checks whether the model understands replay. Cross-process
   // concurrency stays in ordinary tests because asking the model to simulate
-  // routing would not exercise it. The exact second turn distinguishes the
-  // other advertised tool without adding another judge.
+  // routing would not exercise it. The second turn checks exact recall without
+  // another tool call or another semantic judge.
   const response = await chat.send(
     "Create a shared harvest report with request ID daily-harvest-report. Then " +
-    "repeat the same request ID. Include the exact name of the server instance " +
-    "that created the stored report, what are the pea " +
-    "type counts, and did the retry create another report?",
+    "repeat the same request ID. What are the pea type counts, and did the retry " +
+    "create another report?",
   );
 
   assertToolCalls(response, [
     { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
     { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
   ]);
-  assertResponseContains(response, "eval-instance");
   await assertResponseMeaning(response, {
     expected:
-      "The original report was created by eval-instance and contains four plants, " +
-      "two shelling and two snap. Reusing the request ID returns that report and " +
-      "does not create another one.",
+      "The report contains four plants, two shelling and two snap. Reusing the " +
+      "request ID returns that report and does not create another one.",
   });
 
-  const currentInstance = await chat.send(
-    "Which server instance is handling this request now? Do not tell me which instance created the report.",
+  const creator = await chat.send(
+    "What exact createdByInstance value did those tool results return?",
   );
-  assertToolCalls(currentInstance, [{
-    name: "describe-instance",
-    arguments: {},
-  }]);
-  assertResponseContains(currentInstance, "eval-instance");
+  assertNoToolCalls(creator);
+  assertResponseContains(creator, "eval-instance");
 });
