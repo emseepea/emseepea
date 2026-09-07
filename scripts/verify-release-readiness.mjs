@@ -12,10 +12,20 @@ export function assertReleaseReadiness(registryBefore, review) {
   if (pending.length === 0) return;
   assert.match(review, /^- Result: PASS$/m);
   assert.match(review, /^- Final result: within appetite\.$/m);
-  const reviewed = [...review.matchAll(/^- `([^`]+@[^`]+)`$/gm)]
-    .map(([, spec]) => spec)
+  const reviewed = [...new Set([...review.matchAll(/^- `([^`]+@[^`]+)`$/gm)]
+    .map(([, spec]) => spec))]
     .sort();
-  assert.deepEqual(reviewed, pending, "release-readiness package set does not match publication");
+  const targets = new Set(registryBefore.packages.map(({ name, version }) => `${name}@${version}`));
+  assert.deepEqual(
+    reviewed.filter((spec) => !targets.has(spec)),
+    [],
+    "release-readiness package set does not match publication",
+  );
+  assert.deepEqual(
+    pending.filter((spec) => !reviewed.includes(spec)),
+    [],
+    "release-readiness package set does not match publication",
+  );
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {

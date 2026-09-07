@@ -13,10 +13,29 @@ const review = `
 - Result: PASS
 - Final result: within appetite.
 `;
+const retryReview = `
+- \`@emseepea/server@1.0.0\`
+- \`@emseepea/create-example@0.0.1\`
 
-test("release readiness matches the exact unpublished package set", () => {
+- Result: PASS
+- Final result: within appetite.
+`;
+
+test("release readiness covers every unpublished package", () => {
   assert.doesNotThrow(() => assertReleaseReadiness(registry, review));
+  assert.doesNotThrow(() => assertReleaseReadiness(registry, retryReview));
   assert.doesNotThrow(() => assertReleaseReadiness({ packages: [] }, ""));
+  assert.throws(
+    () => assertReleaseReadiness(registry, retryReview.replace("- `@emseepea/create-example@0.0.1`\n", "")),
+    /package set/,
+  );
+  assert.throws(
+    () => assertReleaseReadiness(registry, retryReview.replace(
+      "- `@emseepea/server@1.0.0`",
+      "- `@emseepea/server@1.0.0`\n- `@emseepea/not-a-target@9.9.9`",
+    )),
+    /package set/,
+  );
   assert.throws(() => assertReleaseReadiness(registry, review.replace("0.0.1", "0.0.2")), /package set/);
   assert.throws(() => assertReleaseReadiness(registry, review.replace("PASS", "PENDING")), /Result: PASS/);
   assert.throws(() => assertReleaseReadiness(registry, review.replace("within appetite", "pending")), /within appetite/);
