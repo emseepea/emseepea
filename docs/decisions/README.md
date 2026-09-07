@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 55 decisions: 30 current and 25 historical.
+This project has 56 decisions: 30 current and 26 historical.
 
 ## Quick Index
 
@@ -39,8 +39,8 @@ This project has 55 decisions: 30 current and 25 historical.
 - [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0050: Schema-Declared Pass-Through by Default](0050-schema-declared-pass-through-by-default.proposed.md): Proposed; human review confirmed.
 - [ADR-0052: Optional Deterministic HTTP Route Discovery](0052-optional-deterministic-http-route-discovery.proposed.md): Proposed; human review confirmed.
-- [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.proposed.md): Proposed; human review confirmed.
 - [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.proposed.md): Proposed; human review confirmed.
+- [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -69,6 +69,7 @@ This project has 55 decisions: 30 current and 25 historical.
 - [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.superseded.md): Superseded; human review confirmed.
 - [ADR-0053: Conversation-Style Semantic Tests](0053-conversation-style-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0054: Provider-Native MCP Semantic Conversations](0054-provider-native-mcp-semantic-conversations.superseded.md): Superseded; human review confirmed.
+- [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -1115,7 +1116,7 @@ Chosen option: **"Conversation-style JavaScript tests"**, because it makes the t
 - Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0053: Conversation-Style Semantic Tests](0053-conversation-style-semantic-tests.superseded.md)
-- Replaced by: [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.proposed.md)
+- Replaced by: [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.superseded.md)
 
 #### Decision
 
@@ -1134,11 +1135,12 @@ Chosen option: **"Provider-native MCP conversations"**, because it tests the beh
 - Prepared interpretation tests are labelled as such and make no native selection claim.
 - Every maintained tool example passes live semantic qualification on the exact publishing commit before release.
 
-### [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.proposed.md)
+### [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0054: Provider-Native MCP Semantic Conversations](0054-provider-native-mcp-semantic-conversations.superseded.md)
+- Replaced by: [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.proposed.md)
 
 #### Decision
 
@@ -1174,3 +1176,22 @@ Chosen option: **"Replace SQLite with PostgreSQL"**, because a multi-instance ex
 - The old creator is removed from npm, or deprecated with a pointer to the PostgreSQL initializer when npm refuses removal.
 - Root guidance, example guidance, the documentation website, semantic tests, package metadata, and release checks use the new name and honest scope.
 - The new package passes pack, standalone install, lint, ordinary tests, semantic smoke tests, provenance, software-bill-of-materials, registry readback, and clean-install verification.
+
+### [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.superseded.md)
+
+#### Decision
+
+Chosen option: **"Inspectable evidence by default"**, because a semantic test report that hides the response and reason cannot reliably explain its own failure.
+
+#### How We Check It
+
+- Evidence contains readable prompts, assistant responses, public tool calls, model-visible tool results, expected meanings, and judge reasons.
+- A rejected meaning check records all nine configured verdicts before failing.
+- Tests prove provider and server credential sentinels do not appear anywhere in saved evidence.
+- Tests prove raw provider events, MCP configuration, headers, environment, stderr, and filesystem paths are absent.
+- Public API guidance warns that evidence contains raw test content and requires synthetic, non-sensitive fixtures before upload.
+- Exact-commit release CI uploads the readable evidence with 14-day retention.

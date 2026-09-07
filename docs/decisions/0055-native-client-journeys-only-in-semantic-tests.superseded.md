@@ -8,6 +8,7 @@ consulted: []
 informed: []
 reassessment-date: 2026-12-07
 supersedes: ["ADR-0054"]
+superseded-by: ["ADR-0057"]
 ---
 
 # Native Client Journeys Only in Semantic Tests
