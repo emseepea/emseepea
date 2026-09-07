@@ -103,7 +103,7 @@ test("conversation tests assert exact calls, meaning, and no-call follow-ups", {
   const output = join(directory, "evidence.json");
   const directoryPattern = new RegExp(directory.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   await writeFile(model, `#!/usr/bin/env node
-import { appendFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 const log = (value) => appendFileSync(${JSON.stringify(modelLog)}, JSON.stringify(value) + "\\n");
 process.stderr.write("MODEL_STDERR_SENTINEL\\n");
@@ -138,6 +138,8 @@ if (!process.argv.includes("--input-format")) {
   log({ native: true, tools, config, context,
     hasServerToken: process.env.EMSEEPEA_SEMANTIC_MCP_TOKEN !== undefined,
     hasJsonSchema: process.argv.includes("--json-schema") });
+  const answerTrial = readFileSync(${JSON.stringify(modelLog)}, "utf8").trim().split("\\n")
+    .map(JSON.parse).filter((entry) => entry.native && entry.context === "ANSWER_FAIL_THIRD").length;
   process.stdout.write(JSON.stringify({ type: "system", subtype: "init", tools,
     mcp_servers: [{ name: "emseepea_eval", status: "connected" }] }) + "\\n");
   let turn = 0;
@@ -145,6 +147,10 @@ if (!process.argv.includes("--input-format")) {
     turn += 1;
     const input = JSON.parse(line);
     const prompt = input.message.content[0].text;
+    if (context === "ANSWER_FAIL_THIRD" && answerTrial === 3) {
+      process.stderr.write("PRIVATE_ANSWER_PROVIDER_SECRET\\n");
+      process.exit(23);
+    }
     const followUp = prompt === "How many packets were inbound?";
     const forceTwoCalls = context === "TWO_ORDERED_CALLS";
     const forceFollowUpTool = context === "FORCE_TOOL_ON_FOLLOW_UP";
@@ -378,6 +384,19 @@ test("inventory conversation", async (t) => {
   assert.doesNotMatch(providerEvidenceText, /sk-ant-private-secret|PRIVATE_PROVIDER_MESSAGE/);
   const providerEvidence = Object.values(JSON.parse(providerEvidenceText).cases)[0];
   assert.ok(providerEvidence.judgeVerdicts.every(({ error }) => error === "model command reported an error"));
+
+  await writeFile(file, source({ context: "ANSWER_FAIL_THIRD" }));
+  const answerFailure = run();
+  assert.equal(answerFailure.status, 1, "A failed answer invocation must fail");
+  const answerEvidenceText = await readFile(output, "utf8");
+  assert.doesNotMatch(answerEvidenceText, /PRIVATE_ANSWER_PROVIDER_SECRET/);
+  const answerEvidence = Object.values(JSON.parse(answerEvidenceText).cases)[0];
+  assert.equal(answerEvidence.failedPhase, "conversation turn");
+  assert.ok(answerEvidence.answerTrials.slice(0, 2).every(({ turns, error }) => (
+    turns.length === 1 && error === undefined
+  )));
+  assert.equal(answerEvidence.answerTrials[2].turns.length, 0);
+  assert.equal(answerEvidence.answerTrials[2].error, "model conversation exited 23");
 });
 
 test("literal response assertions reject numerical expectations", { timeout: 120_000 }, async (t) => {

@@ -83,8 +83,10 @@ export async function createConversation(testContext, options) {
       if (typeof prompt !== "string" || !prompt.trim()) throw new Error("send needs a user prompt");
       ensureOpen(state);
       const trials = [];
+      let activeTrial;
       try {
         for (const trial of state.trials) {
+          activeTrial = trial;
           trial.model ??= startModelConversation(
             provider,
             trial.directory,
@@ -135,7 +137,8 @@ export async function createConversation(testContext, options) {
             history: Object.freeze([...trial.history]),
           });
         }
-      } catch {
+      } catch (error) {
+        if (activeTrial) activeTrial.record.error = safeModelFailure(error);
         state.failed = true;
         evidence.failedPhase = "conversation turn";
         throw new Error(`Semantic test failed during conversation turn: ${name}`);
@@ -235,7 +238,7 @@ export async function assertResponseMeaning(turn, expectation) {
       } catch (error) {
         record.error = error instanceof SyntaxError || error.message === "Judge returned an invalid verdict"
           ? "invalid judge verdict"
-          : safeJudgeFailure(error);
+          : safeModelFailure(error);
         failed = true;
       }
       trial.evidence.judgeVerdicts.push(record);
@@ -249,7 +252,7 @@ export async function assertResponseMeaning(turn, expectation) {
   }
 }
 
-function safeJudgeFailure(error) {
+function safeModelFailure(error) {
   const message = error instanceof Error ? error.message : "";
   const safeMessages = new Set([
     "Claude subscription authentication is unavailable",
@@ -270,11 +273,19 @@ function safeJudgeFailure(error) {
     "Model command used an unexpected number of turns",
     "Model command was cancelled",
     "Model command did not use the required model",
+    "Model command omitted MCP initialization evidence",
+    "Model command omitted an MCP tool result",
+    "Model command returned no answer",
+    "Model command used more than three tools",
+    "Model conversation already has a pending turn",
+    "Model conversation could not start",
+    "Model conversation is closed",
+    "Model conversation was cancelled",
   ]);
-  if (safeMessages.has(message) || /^Model command exited \d{1,3}$/.test(message)) {
+  if (safeMessages.has(message) || /^Model (?:command|conversation) exited \d{1,3}$/.test(message)) {
     return message.replace(/^./, (character) => character.toLowerCase());
   }
-  return "judge invocation failed";
+  return "model invocation failed";
 }
 
 async function isolatedModel(provider, prompt, prefix, signal) {
