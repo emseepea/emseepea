@@ -120,3 +120,23 @@ approval, provider behaviour, or production behaviour.
 | `.changeset/clear-judge-failures.md` | `1f05d43a7db50f1471eb2914c00d541796b04204f4bfc5c18e1530070a7dc3b5` |
 | `packages/testing/README.md` | `e26709eaa24ba289a73288089fb26ffb7add496847505a08c82db20fd0ccd864` |
 | `website/src/content/docs/ai-tests.md` | `9f6f628ffe242b9d960456d5180bcd1531f1e01e7e3d916d345be7744f9d723d` |
+
+## Testing 0.5.1 Release Readiness Correction
+
+Result: PASS for cognitive accessibility and evidence clarity on the exact
+current release-readiness note for `@emseepea/testing@0.5.1`.
+
+The reviewed content presents one release batch, explains the user-facing change
+in concrete terms, and separates observed evidence from required publication
+evidence. It corrects the stale release record without claiming npm publication.
+No blocking cognitive-accessibility finding remains.
+
+Applied rule sources: cognitive-accessibility specialist reference and
+`accessibility-agents-markdown`.
+
+This review covers source prose. It does not prove package publication,
+registry state, or production behaviour.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `5d6cf8fcbd95189db360a4c370253170c8ac67cddcf2c05429f8716464c2d057` |

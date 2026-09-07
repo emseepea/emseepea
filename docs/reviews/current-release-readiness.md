@@ -1,43 +1,37 @@
 # Current Release Readiness
 
-Date: 2026-09-07
+Date: 2026-09-08
 
 ## Release Batch
 
-- `@emseepea/create-multi-instance-postgres-server@0.0.1`
+- `@emseepea/testing@0.5.1`
 
 ## Change for Users
 
-This release replaces the maintained SQLite multi-instance initializer with a
-PostgreSQL initializer. Generated projects use one shared PostgreSQL database,
-an atomic upsert, a unique idempotency constraint, bounded database work, and a
-single local run command after installation.
-
-The release watcher deprecates every historical SQLite creator version only
-after the PostgreSQL replacement is published and verified. The release
-operator then attempts to remove that exact creator when npm permits it.
+Version 0.5.1 improves the inspectable semantic evidence introduced in 0.5.0.
+Failed judge invocations now report a fixed, credential-safe cause such as a
+timeout, process exit, missing result, or provider error category.
 
 ## Evidence Before Publication
 
+- Package tests passed 12 of 12, including failed-process and credential-shaped
+  provider-data regressions.
 - Architecture and Jobs To Be Done reviews passed.
 - Cognitive-accessibility and Markdown accessibility reviews passed.
-- Root lint, build, type checks, and focused release-automation tests passed.
-- Local Docker Desktop did not respond, so local PostgreSQL integration did not
-  complete. The exact-commit Quality workflow must run the database tests on a
-  fresh GitHub runner before publication.
+- The publishing commit passed exact-commit Quality and provider-native semantic
+  qualification before package evidence preparation found this stale record.
+- Release risk is 5 of 25 and within appetite.
 
 ## Required Publication Evidence
 
-- Exact-commit Quality must pass the PostgreSQL concurrency, readiness,
-  timeout, failure, packed initializer, Node.js 22 and 24, and OSV checks.
-- The later release job must pass the provider-native semantic test before
+- Exact-commit Quality must pass Node.js 22 and 24, OSV, website, package, and
+  standalone initializer checks.
+- The later release job must pass every provider-native semantic example before
   publication.
-- npm publication must use the approved release path and expose provenance,
-  signatures, registry metadata, a clean install, and a working initializer.
-- The old SQLite creator must be absent from npm, or every published version
-  must show the exact replacement deprecation message if npm refuses removal.
+- npm publication must use Trusted Publishing and expose provenance, registry
+  metadata, a clean install, and package evidence.
 
 ## Review Status
 
-- Result: PENDING
-- Final result: pending exact Quality and release-risk evidence.
+- Result: PASS
+- Final result: within appetite.
