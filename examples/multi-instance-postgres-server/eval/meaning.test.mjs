@@ -7,10 +7,13 @@ import {
   createConversation,
 } from "@emseepea/testing/semantic";
 
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error("DATABASE_URL is required for the PostgreSQL semantic test");
+
 test("reuses the original shared report across server instances", async (t) => {
   const chat = await createConversation(t, {
     server: new URL("../dist/server.js", import.meta.url),
-    environment: { EMSEEPEA_INSTANCE: "eval-instance" },
+    environment: { DATABASE_URL: databaseUrl, EMSEEPEA_INSTANCE: "eval-instance" },
   });
 
   // Cross-process concurrency stays in ordinary tests because asking the model
