@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.5.1
+
+### Patch Changes
+
+- [`eca6a29`](https://github.com/emseepea/emseepea/commit/eca6a29bb2c4b33ab8276c0ccdf64407ca1273b5) Thanks [@tompahoward](https://github.com/tompahoward)! - Record a useful, credential-safe cause when a semantic judge invocation fails.
+
 ## 0.5.0
 
 ### Minor Changes
