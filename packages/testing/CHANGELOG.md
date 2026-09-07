@@ -1,5 +1,15 @@
 # @emseepea/testing
 
+## 0.5.0
+
+### Minor Changes
+
+- [`0df0141`](https://github.com/emseepea/emseepea/commit/0df01416f3b16cf8d3aa7ce43f3cf1bc515ccaf8) Thanks [@tompahoward](https://github.com/tompahoward)! - Make semantic test failures directly diagnosable from their saved evidence.
+  Reports now retain synthetic test conversations, advertised MCP tool exchanges,
+  expectations, and every judge reason while continuing to exclude provider and
+  harness credentials, provider events, transport configuration, environment
+  values, and stderr. Secrets inside test content are not detected or redacted.
+
 ## 0.4.0
 
 ### Minor Changes
