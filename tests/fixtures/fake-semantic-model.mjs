@@ -50,7 +50,7 @@ if (!process.argv.includes("--input-format")) {
 }
 
 function responseFor(prompt) {
-  if (prompt.includes("Call the shared harvest report twice")) return {
+  if (prompt.includes("Create a shared harvest report with request ID daily-harvest-report")) return {
     calls: [
       { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
       { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },

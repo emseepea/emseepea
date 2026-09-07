@@ -23,7 +23,13 @@ test("every example ordinary-test command excludes the sibling eval directory", 
   for (const entry of await readdir(examples, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
     const manifest = JSON.parse(await readFile(new URL(`${entry.name}/package.json`, examples), "utf8"));
-    await writeFile(join(directory, "package.json"), JSON.stringify({ scripts: { "test:built": manifest.scripts["test:built"] } }));
+    const testScript = manifest.scripts["test:built"];
+    assert.doesNotMatch(testScript, /eval/, entry.name);
+    if (testScript.includes("with-postgres.mjs")) {
+      assert.match(testScript, /node --test test\/\*\.test\.mjs/, entry.name);
+      continue;
+    }
+    await writeFile(join(directory, "package.json"), JSON.stringify({ scripts: { "test:built": testScript } }));
     const result = spawnSync("npm", ["run", "test:built"], { cwd: directory, encoding: "utf8", env: environment });
     assert.equal(result.status, 0, `${entry.name}: ${result.stdout}${result.stderr}`);
     assert.match(result.stdout, /ordinary check/, entry.name);
