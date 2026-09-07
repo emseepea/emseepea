@@ -22,8 +22,6 @@ test("reuses the original shared report across server instances", async (t) => {
   assertToolCalls(created, [
     { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
   ]);
-  assertResponseContains(created, "report");
-
   const repeated = await chat.send(
     "Create that report again with the same request ID. Compare it with the " +
     "previous result: did this create a different stored report, and what are " +

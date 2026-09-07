@@ -166,6 +166,8 @@ if (!process.argv.includes("--input-format")) {
     meaning = "The response says 85 packets are available to promise.",
     context,
     expectedArguments = {},
+    firstResponseAssertions = true,
+    followUpMeaning,
     literal = "85 packets available to promise",
     serverUrl = protectedServer,
     expectedCalls,
@@ -190,12 +192,13 @@ test("inventory conversation", async (t) => {
     name: "get-private-inventory-report",
     arguments: expectedArguments,
   }])});
-  assertResponseContains(inventory, ${JSON.stringify(literal)});
-  await assertResponseMeaning(inventory, { expected: ${JSON.stringify(meaning)} });
+  ${firstResponseAssertions ? `assertResponseContains(inventory, ${JSON.stringify(literal)});
+  await assertResponseMeaning(inventory, { expected: ${JSON.stringify(meaning)} });` : ""}
 
   const followUp = await chat.send("How many packets were inbound?");
   assertNoToolCalls(followUp);
   assertResponseContains(followUp, "40 inbound packets");
+  ${followUpMeaning ? `await assertResponseMeaning(followUp, { expected: ${JSON.stringify(followUpMeaning)} });` : ""}
 });
 `;
   const run = () => spawnSync(process.execPath, [
@@ -251,6 +254,13 @@ test("inventory conversation", async (t) => {
   const contextInvocations = (await readFile(modelLog, "utf8")).trim().split("\n").map(JSON.parse)
     .slice(contextStart);
   assert.ok(contextInvocations.filter(({ native }) => native).every(({ context }) => context === "CONTEXT_MARKER"));
+
+  await writeFile(file, source({
+    firstResponseAssertions: false,
+    followUpMeaning: "The response says 40 packets were inbound.",
+  }));
+  const focusedFollowUp = run();
+  assert.equal(focusedFollowUp.status, 0, focusedFollowUp.stdout + focusedFollowUp.stderr);
 
   for (const [options, phase] of [
     [{ expectedArguments: { PRIVATE_ARGUMENT_SENTINEL: true } }, "tool-call assertion"],

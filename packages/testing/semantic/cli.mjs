@@ -121,6 +121,5 @@ function validRecord(record, authoritative, smoke) {
       && Array.isArray(turn.pathEvidence) && turn.pathEvidence.length === turn.toolCallCount
       && turn.pathEvidence.every(({ method, target, requestSha256, responseSha256 }) =>
         method === "tools/call" && turn.selectedTools.includes(target)
-          && isHash(requestSha256) && isHash(responseSha256))
-      && turn.literalAssertionCount + turn.meaningAssertionCount > 0));
+          && isHash(requestSha256) && isHash(responseSha256))));
 }

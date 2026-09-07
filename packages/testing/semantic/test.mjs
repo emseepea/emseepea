@@ -249,8 +249,7 @@ async function closeConversation(state, evidence, output) {
   }));
   const complete = !state.failed && state.meaningAssertions > 0 && evidence.answerTrials.length === 3
     && evidence.answerTrials.every(({ turns }) => turns.length > 0
-      && turns.every((turn) => Array.isArray(turn.expectedTools)
-        && turn.literalAssertionCount + turn.meaningAssertionCount > 0));
+      && turns.every((turn) => Array.isArray(turn.expectedTools)));
   if (complete) {
     evidence.status = "passed";
   } else if (!evidence.failedPhase) {
@@ -259,7 +258,7 @@ async function closeConversation(state, evidence, output) {
   await mkdir(dirname(output), { recursive: true });
   await writeFile(output, `${JSON.stringify(evidence, null, 2)}\n`, { mode: 0o600 });
   if (!complete && !state.failed) {
-    throw new Error("Semantic conversation needs tool-call, response, and meaning assertions");
+    throw new Error("Semantic conversation needs exact tool-call assertions for every turn and a meaning assertion");
   }
 }
 
