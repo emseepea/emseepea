@@ -105,13 +105,17 @@ Accessibility Guidelines (WCAG) conformance.
   conversations, exact assertions for each turn's selected calls, and three
   independent judgments for each meaning assertion. All three conversations
   must pass.
-- For every trial, the harness must execute accepted calls, resource reads, and
-  prompt gets through the official client and bind the operations and returned
-  material to evidence. Model processes receive no MCP tools. The check measures
-  selection through a validated provider-neutral call plan and understanding of
-  the returned data, not provider-native autonomous MCP execution.
+- For every trial, the harness must connect the model to exactly one loopback
+  MCP server and allow only that server's advertised tools. It must send each
+  user message unchanged and derive tool assertions from native provider tool
+  events. Selection instructions, JSON call plans, answer wrappers, prepared
+  MCP material, shell, filesystem, browser, tool search, plugins, ambient MCP
+  servers, and unrelated tools are forbidden.
+- Resources and prompts retain deterministic protocol tests. They must not be
+  described as semantically qualified until a supported provider offers an
+  automatable native journey that represents how users select and consume them.
 - Semantic cases must use isolated, effect-safe test servers and fixtures.
-  Selected calls execute before assertions and must never target production.
+  Native calls execute before assertions and must never target production.
 - The understanding check never retries a wrong answer. An unknown provider,
   model, credential, path, judgment, timeout, configuration, or evidence result
   stops publication.

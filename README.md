@@ -74,8 +74,12 @@ Replace `my-server` with an unused directory name:
 
 Each command creates a private standalone project with its lint, ordinary tests,
 and semantic tests. The two form starters also include browser accessibility
-tests. Each initializer package,
-README, changelog, and maintained source live together in the matching
+tests.
+
+The resources-and-prompts semantic test checks the honest unselected resource
+experience. Ordinary tests qualify those MCP contracts.
+
+Each initializer package, README, changelog, and maintained source live together in the matching
 [`examples/` directory](https://github.com/emseepea/emseepea/tree/main/examples).
 
 The sign-in example uses the made-up token `example-access-token`. It shows
@@ -154,4 +158,4 @@ example-backed initializer packages are eligible for publication.
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md
 [quality-policy]: QUALITY.md
 [release-readiness]: docs/reviews/0.2.2-release-readiness.md
-[semantic-qualification]: docs/decisions/0040-model-selected-tool-semantic-tests.proposed.md
+[semantic-qualification]: docs/decisions/0055-native-client-journeys-only-in-semantic-tests.proposed.md

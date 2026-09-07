@@ -4,14 +4,16 @@
 **Category**: delivery
 **Identified**: 2026-08-27
 **Owner**: Language-model-check maintainer
-**Last reviewed**: 2026-08-28
+**Last reviewed**: 2026-09-07
 **Next review**: 2027-02-28
 
 ## Description
 
 An example may return technically correct data while a language model draws the
-wrong conclusion from it. The understanding test may also pass without using
-the live Model Context Protocol (MCP) result.
+wrong conclusion from it. A semantic test may also pass without using the live
+Model Context Protocol (MCP) result, or because the harness taught the model how
+to choose and format a tool call. That false qualification can hide unclear
+tool descriptions and incorrect autonomous tool selection.
 
 This can teach adopters to publish tools whose data is correct but misleading
 in normal language-model use.
@@ -27,9 +29,16 @@ Impact × Likelihood *before* controls.
 
 ## Controls
 
-- **Live MCP material** - The harness performs the exact operation through the
-  official MCP client and binds the returned material to each trial. Implemented
-  in `packages/testing/semantic/material.mjs`.
+- **Provider-native MCP selection** - Tool-selection cases pass the user message
+  unchanged to a provider connected to exactly one loopback MCP server. Tool
+  assertions come from native tool-use events, not a coached plan. Implemented
+  in `packages/testing/semantic/provider.mjs` and regression-tested in
+  `packages/testing/test/runner.test.mjs`. Exact-commit live qualification is
+  still required under ADR-0055.
+- **No prepared semantic context** - The public semantic API has no path that
+  injects harness-collected MCP material. Resources and prompts retain
+  deterministic protocol coverage until a representative native client journey
+  exists. Defined by ADR-0055.
 - **Independent interpretation checks** - Every example requires three fresh
   answers, three independent judgments per answer, required facts,
   and exact MCP path evidence. Defined in `QUALITY.md` and
@@ -62,7 +71,7 @@ or a local model run does not make this risk acceptable for publication.
 ## Monitoring
 
 - **Trigger to re-assess**: Any example, understanding case, model, judge, provider,
-  or evaluation-harness change.
+  provider-native MCP interface, or evaluation-harness change.
 - **Metrics**: Checked examples versus total examples; passing trials and
   judge verdicts; missing or mismatched MCP evidence; provider and model
   failures; publishing commits without the required evidence.
@@ -72,7 +81,8 @@ or a local model run does not make this risk acceptable for publication.
 - Criteria: `RISK-POLICY.md`
 - Realised-as: none recorded
 - Treatment ADRs:
-  [ADR-0029: Code-First Semantic Tests](../decisions/0029-code-first-semantic-tests.proposed.md)
+  [ADR-0029: Code-First Semantic Tests](../decisions/0029-code-first-semantic-tests.proposed.md),
+  [ADR-0055: Native Client Journeys Only in Semantic Tests](../decisions/0055-native-client-journeys-only-in-semantic-tests.proposed.md)
 - Personas affected: adopters and end users of adopter-built servers
 
 ## Source Evidence (auto-scaffolded 2026-08-27)
@@ -94,3 +104,6 @@ evidence, or risk policy change.
 - 2026-08-27: Auto-scaffolded from recurring pipeline findings.
 - 2026-08-28: Replaced Copilot with subscription-backed Claude. Residual risk
   remains unacceptable for publication until the GitHub check passes for a publishing commit.
+- 2026-09-07: Recorded false qualification caused by coached tool-selection
+  prompts and the pending provider-native MCP treatment. Residual risk remains
+  unacceptable until the treatment passes exact-commit live qualification.

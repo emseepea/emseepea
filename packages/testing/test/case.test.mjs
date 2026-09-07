@@ -4,10 +4,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import {
-  parseToolSelection,
-  validateConversationOptions,
-} from "../semantic/case.mjs";
+import { validateConversationOptions } from "../semantic/case.mjs";
 import { discoverTests } from "../semantic/discover.mjs";
 
 const options = { server: new URL("./fake-model.mjs", import.meta.url) };
@@ -44,21 +41,6 @@ test("conversation options keep context optional and credentials exclusive", () 
     authToken: "token",
     authTokenEnvironment: "TOKEN",
   }), /Choose one/);
-});
-
-test("tool selections allow no call and reject unknown, malformed, and over-limit calls", () => {
-  const tools = [{ name: "balance", description: "Read the balance.", inputSchema: { type: "object" } }];
-  const valid = '{"calls":[{"name":"balance","arguments":{"account":"current"}}]}';
-  assert.deepEqual(parseToolSelection(valid, tools), [
-    { name: "balance", arguments: { account: "current" } },
-  ]);
-  assert.deepEqual(parseToolSelection('{"calls":[]}', tools), []);
-  for (const [output, expected] of [
-    ['{"calls":[{"name":"unknown","arguments":{}}]}', /invalid or unadvertised/],
-    ['{"calls":[{"name":"balance","arguments":[]}]}', /invalid or unadvertised/],
-    ['{"calls":[{"name":"balance","arguments":{}},{"name":"balance","arguments":{}},{"name":"balance","arguments":{}},{"name":"balance","arguments":{}}]}', /between zero and three/],
-    ["not JSON", /valid JSON/],
-  ]) assert.throws(() => parseToolSelection(output, tools), expected);
 });
 
 test("recursive discovery handles 100 nested cases without a central list", async (t) => {

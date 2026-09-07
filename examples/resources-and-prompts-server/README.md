@@ -45,8 +45,8 @@ choose another port.
 ## Check This Example
 
 [Ordinary tests](test/) live in `test/`.
-The [AI understanding test](eval/meaning.test.mjs) lives separately in `eval/`.
-The commands below run each suite independently.
+The [native AI behaviour test](eval/meaning.test.mjs) lives separately in
+`eval/`. The commands below run each suite independently.
 
 Run its build and MCP resource and prompt checks:
 
@@ -54,10 +54,15 @@ Run its build and MCP resource and prompt checks:
 npm test
 ```
 
-Check that Claude keeps sowing depth and plant spacing distinct:
+Check that Claude does not pretend an unselected resource was supplied:
 
 ```sh
 npm run test:llm
 ```
 
 If Claude is not already signed in, run `claude auth login` first.
+
+Resources and prompts are selected through client features, not autonomously
+called as tools. The ordinary tests qualify their MCP contracts. The AI test
+checks only the honest experience before a user selects or attaches a resource;
+it does not claim that the resource content was semantically qualified.

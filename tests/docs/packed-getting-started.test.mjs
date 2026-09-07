@@ -346,16 +346,18 @@ test("every packed initializer creates a standalone checked project", {
       assert.equal(result.judgeVerdicts.length, 9);
       assert.equal(result.mode, "conversation");
       for (const trial of result.answerTrials) {
-        assert.equal(trial.turns.length, 2);
+        assert.equal(trial.turns.length, initializer.example === "resources-and-prompts-server" ? 1 : 2);
+        assert.equal(trial.turns[0].interactionMode, "native-mcp");
         assert.deepEqual(trial.turns[0].expectedTools, expectedTools[initializer.example] ?? []);
         assert.deepEqual(trial.turns[0].selectedTools, expectedTools[initializer.example] ?? []);
-        assert.deepEqual(trial.turns[1].expectedTools, expectedFollowUpTools[initializer.example] ?? []);
-        assert.deepEqual(trial.turns[1].selectedTools, expectedFollowUpTools[initializer.example] ?? []);
+        if (trial.turns[1]) {
+          assert.deepEqual(trial.turns[1].expectedTools, expectedFollowUpTools[initializer.example] ?? []);
+          assert.deepEqual(trial.turns[1].selectedTools, expectedFollowUpTools[initializer.example] ?? []);
+        }
         if (initializer.example === "resources-and-prompts-server") {
           assert.equal(trial.turns[0].advertisedToolCount, 0);
-          assert.equal(trial.turns[0].selectionTurnCount, 0);
-          assert.equal(trial.turns[0].selectionProviderTurnCount, 0);
-          assert.equal(trial.turns[0].pathEvidence.length, 3);
+          assert.equal(trial.turns[0].toolCallCount, 0);
+          assert.equal(trial.turns[0].pathEvidence.length, 0);
         }
       }
     };

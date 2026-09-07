@@ -32,8 +32,9 @@ or Codex journeys, or checks of permissions and business rules.
 Each example has two directories:
 
 - `test/` holds ordinary tests. Run them with `npm test`.
-- `eval/` holds tests that ask a language model to select tools and interpret
-  MCP results.
+- `eval/` holds native language-model behaviour tests. Tool examples check
+  selection and result meaning. Resource and prompt examples can check only a
+  real native client journey.
   Run them with `npm run test:llm`.
 
 The commands do not run each other's tests. Both directories are linted.
@@ -85,20 +86,28 @@ without making another call. `assertResponseContains` accepts literal strings
 only. Put alternative wording and numerical meaning in `assertResponseMeaning`.
 
 The optional `context` setting represents real application context. It is absent
-by default so test guidance cannot bias the model. For resources and prompts,
-use `chat.prepare` with `readResource` or `getPrompt` before sending the user
-message.
+by default so test guidance cannot bias the model. Use it only when the deployed
+application supplies the same context.
 
-The model receives the advertised tool names, descriptions, input schemas, and
-the actual history from its own trial. It chooses zero to three calls as strict
-JSON. The harness rejects unknown, over-limit, or malformed selections, then
-executes accepted calls through the official MCP client.
+The runner sends each user message unchanged through one provider-native MCP
+conversation. It does not add selection instructions, a JSON call plan,
+advertised-tool text, an answer wrapper, or prepared MCP material. The native
+client discovers the server's advertised tool names, descriptions, and input
+schemas. Follow-up messages stay in the same conversation.
 
-Those calls run before the assertions. Use only an isolated, effect-safe test
-server with test data. Do not point semantic tests at production.
+The provider is connected to exactly one loopback MCP server and may use only
+that server's advertised tools. Shell, filesystem, browser, tool search,
+plugins, ambient MCP servers, and unrelated tools are unavailable. Native calls
+run before the assertions. Use only an isolated, effect-safe test server with
+test data. Do not point semantic tests at production.
 
-A zero-call plan is valid when the expected answer comes from established
-conversation history or prepared MCP material.
+A zero-call turn is valid when the answer comes from established conversation
+history or when no advertised tool is appropriate.
+
+Resources and prompts are selected by users through client features rather than
+autonomously called as tools. Give them deterministic protocol tests. Do not
+manually inject their content into a semantic test or claim that doing so proves
+a native user journey.
 
 ## Run the Checks
 
@@ -124,10 +133,9 @@ settings to the server; model-provider credentials are not passed through.
 
 ## What a Passing Check Means
 
-For each test, the runner makes three fresh attempts. Each attempt checks the
-model's selected tool names and arguments, then runs accepted calls through the
-real MCP server. Follow-up turns retain only the actual history from the same
-attempt.
+For each test, the runner makes three fresh attempts. Each attempt records the
+provider's native MCP tool names and arguments and the response from the real
+MCP server. Follow-up turns retain the actual history from the same attempt.
 
 Each `assertResponseMeaning` call gets three independent model judgments. With
 three fresh attempts, that is nine judgments for each meaning assertion.
@@ -135,10 +143,10 @@ A wrong selection, rejected call, failed literal assertion, rejected meaning, or
 missing MCP operation fails the test. Failed attempts are not retried or taken
 from a cache.
 
-The selection model has no shell, files, browser, arbitrary network access, or
-native MCP connection. It chooses from the server's advertised public tool
-contracts; the harness validates and executes that choice. This proves selection
-for the configured model and question, not identical behaviour in every client
+The conversation model has no shell, files, browser, tool search, plugins,
+ambient MCP servers, or unrelated tools. It has one native connection to the
+target loopback MCP server. This proves native selection for the configured
+provider, model, server, and question, not identical behaviour in every client
 or deployment.
 
 Results are saved to `artifacts/llm-eval/evidence.json`. The report contains

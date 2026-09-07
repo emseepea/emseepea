@@ -1,10 +1,4 @@
-import type { Client } from "@modelcontextprotocol/client";
 import type { TestContext } from "node:test";
-
-export type SemanticClient = {
-  readonly [Method in "callTool" | "readResource" | "getPrompt"]:
-    (params: Parameters<Client[Method]>[0]) => ReturnType<Client[Method]>;
-};
 
 export interface ToolCall {
   name: string;
@@ -13,6 +7,7 @@ export interface ToolCall {
 
 export interface ConversationOptions {
   server: URL;
+  /** Real application context supplied in production. Never use this as test guidance. */
   context?: string;
   environment?: Record<string, string>;
   authToken?: string;
@@ -25,7 +20,7 @@ export interface ConversationTurn {
 }
 
 export interface SemanticConversation {
-  prepare(exercise: (client: SemanticClient) => Promise<void>): Promise<void>;
+  /** Sends this exact user message through the same provider-native MCP conversation. */
   send(prompt: string): Promise<ConversationTurn>;
 }
 

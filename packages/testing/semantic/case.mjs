@@ -25,22 +25,3 @@ export function validateConversationOptions(value) {
   const server = fileURLToPath(value.server);
   return { ...value, server, directory: dirname(server) };
 }
-
-export function parseToolSelection(output, advertisedTools) {
-  let plan;
-  try { plan = JSON.parse(output); } catch { throw new Error("Tool selection must be valid JSON"); }
-  if (!plan || typeof plan !== "object" || Array.isArray(plan) || Object.keys(plan).join(",") !== "calls"
-    || !Array.isArray(plan.calls) || plan.calls.length > 3) {
-    throw new Error("Tool selection must contain between zero and three calls");
-  }
-  const advertised = new Set(advertisedTools.map(({ name }) => name));
-  return plan.calls.map((call) => {
-    if (!call || typeof call !== "object" || Array.isArray(call)
-      || Object.keys(call).sort().join(",") !== "arguments,name"
-      || typeof call.name !== "string" || !advertised.has(call.name)
-      || !call.arguments || typeof call.arguments !== "object" || Array.isArray(call.arguments)) {
-      throw new Error("Tool selection contains an invalid or unadvertised call");
-    }
-    return { name: call.name, arguments: call.arguments };
-  });
-}

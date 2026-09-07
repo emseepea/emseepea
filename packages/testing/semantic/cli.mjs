@@ -109,17 +109,18 @@ function validRecord(record, authoritative, smoke) {
   return record.answerTrials.every((trial) => Array.isArray(trial.turns) && trial.turns.length > 0
     && trial.turns.every((turn) => Number.isInteger(turn.advertisedToolCount)
       && turn.advertisedToolCount >= 0
-      && (turn.advertisedToolCount === 0
-        ? turn.selectionTurnCount === 0 && turn.selectionProviderToolCount === 0
-          && turn.selectionProviderTurnCount === 0
-        : turn.selectionTurnCount === 1
-          && Number.isInteger(turn.selectionProviderToolCount) && turn.selectionProviderToolCount >= 0
-          && turn.selectionProviderToolCount <= 3
-          && turn.selectionProviderTurnCount === turn.selectionProviderToolCount + 1)
+      && turn.interactionMode === "native-mcp"
+      && turn.answerTurnCount === 1
+      && turn.answerProviderToolCount === turn.toolCallCount
+      && turn.answerProviderTurnCount === turn.toolCallCount + 1
       && Number.isInteger(turn.toolCallCount) && turn.toolCallCount >= 0 && turn.toolCallCount <= 3
       && isHash(turn.promptSha256) && isHash(turn.answerSha256)
       && isHash(turn.advertisedToolsSha256) && isHash(turn.selectedCallsSha256)
       && isHash(turn.expectedCallsSha256)
       && JSON.stringify(turn.selectedTools) === JSON.stringify(turn.expectedTools)
+      && Array.isArray(turn.pathEvidence) && turn.pathEvidence.length === turn.toolCallCount
+      && turn.pathEvidence.every(({ method, target, requestSha256, responseSha256 }) =>
+        method === "tools/call" && turn.selectedTools.includes(target)
+          && isHash(requestSha256) && isHash(responseSha256))
       && turn.literalAssertionCount + turn.meaningAssertionCount > 0));
 }

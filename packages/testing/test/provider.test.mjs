@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { modelInvocation, parseClaudeEvents, parseJudgeVerdict } from "../semantic/provider.mjs";
+import {
+  conversationInvocation,
+  modelInvocation,
+  parseClaudeEvents,
+  parseJudgeVerdict,
+  parseNativeClaudeEvents,
+} from "../semantic/provider.mjs";
 
 const result = {
   type: "result",
@@ -16,59 +22,19 @@ const result = {
 
 test("accepts one tool-free answer from the required model", () => {
   assert.equal(parseClaudeEvents(JSON.stringify(result)).answer, "One matching bean");
-  const structured = JSON.stringify({
-    ...result,
-    num_turns: 2,
-    result: "",
-    structured_output: { calls: [{ name: "get-bean", arguments: {} }] },
-  });
-  const constrained = JSON.stringify({
-    ...result,
-    result: "",
-    structured_output: { calls: [{ name: "get-bean", arguments: {} }] },
-  });
-  const structuredTool = JSON.stringify({
+  const forbiddenTool = JSON.stringify({
     type: "assistant",
-    message: { content: [{ type: "tool_use", name: "StructuredOutput" }] },
+    message: { content: [{ type: "tool_use", name: "PRIVATE_MODEL_TEXT" }] },
   });
-  assert.deepEqual(parseClaudeEvents(`${structuredTool}\n${structured}`, 0, true), {
-    answer: '{"calls":[{"name":"get-bean","arguments":{}}]}',
-    models: ["claude-sonnet-4-6"],
-    turnCount: 1,
-    providerTurnCount: 2,
-    providerToolCount: 1,
-  });
-  assert.equal(parseClaudeEvents(constrained, 0, true).answer, '{"calls":[{"name":"get-bean","arguments":{}}]}');
-  assert.throws(() => parseClaudeEvents(`${structuredTool}\n${JSON.stringify(result)}`, 0, true), /no answer/);
-  assert.throws(() => parseClaudeEvents(`${structuredTool}\n${structured}`), /forbidden tool/);
-  assert.equal(parseClaudeEvents(`${structuredTool}\n${structuredTool}\n${JSON.stringify({
-    ...result, num_turns: 3, structured_output: {},
-  })}`, 0, true).providerToolCount, 2);
-  assert.equal(parseClaudeEvents(`${structuredTool}\n${structuredTool}\n${structuredTool}\n${JSON.stringify({
-    ...result, num_turns: 4, structured_output: {},
-  })}`, 0, true).providerToolCount, 3);
   assert.throws(() => parseClaudeEvents([
-    structuredTool,
     JSON.stringify({ type: "assistant", message: { content: [
       { type: "tool_use", name: "ToolSearch" },
       { type: "tool_use", name: "PRIVATE_MODEL_TEXT" },
     ] } }),
-    JSON.stringify({ ...result, num_turns: 4, structured_output: {} }),
-  ].join("\n"), 0, true), (error) => error.structuredOutputToolCount === 1
-    && error.toolSearchToolCount === 1 && error.unknownToolCount === 1
+    JSON.stringify({ ...result, num_turns: 3 }),
+  ].join("\n")), (error) => error.toolSearchToolCount === 1 && error.unknownToolCount === 1
     && !JSON.stringify(error).includes("PRIVATE_MODEL_TEXT"));
-  assert.throws(() => parseClaudeEvents(`${structuredTool}\n${JSON.stringify({
-    ...result, num_turns: 3, structured_output: {},
-  })}`, 0, true), /3 turns/);
-  assert.throws(() => parseClaudeEvents([
-    structuredTool,
-    JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read" }] } }),
-    structured,
-  ].join("\n"), 0, true), /forbidden tool/);
-  assert.throws(() => parseClaudeEvents([
-    JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read" }] } }),
-    JSON.stringify(result),
-  ].join("\n")), /forbidden tool/);
+  assert.throws(() => parseClaudeEvents(`${forbiddenTool}\n${JSON.stringify(result)}`), /forbidden tool/);
   assert.throws(() => parseClaudeEvents(JSON.stringify({ ...result, num_turns: 2 })), /2 turns/);
   assert.throws(() => parseClaudeEvents(JSON.stringify({ ...result, modelUsage: {} })), /required model/);
 });
@@ -85,15 +51,14 @@ test("isolates model credentials from ordinary environment variables", () => {
   process.env.EMSEEPEA_MODEL_COMMAND = "/opt/claude";
   process.env.HOME = "/tmp/signed-in-home";
   try {
-    const schema = { type: "object", required: ["calls"] };
-    const invocation = modelInvocation("claude-ci", "question", "/tmp/neutral", schema);
+    const invocation = modelInvocation("claude-ci", "question", "/tmp/neutral");
     assert.equal(invocation.command, "/opt/claude");
     assert.equal(invocation.env.CLAUDE_CODE_OAUTH_TOKEN, "subscription-token");
     assert.equal(invocation.env.ANTHROPIC_API_KEY, undefined);
     assert.equal(invocation.env.ENABLE_TOOL_SEARCH, "false");
     assert.equal(invocation.env.HOME, "/tmp/neutral");
     assert.equal(invocation.args[invocation.args.indexOf("--tools") + 1], "");
-    assert.deepEqual(JSON.parse(invocation.args[invocation.args.indexOf("--json-schema") + 1]), schema);
+    assert.equal(invocation.args.includes("--json-schema"), false);
     assert.ok(invocation.args.includes("--no-session-persistence"));
     assert.equal(invocation.args[invocation.args.indexOf("--max-turns") + 1], "4");
   } finally {
@@ -102,6 +67,54 @@ test("isolates model credentials from ordinary environment variables", () => {
     restore("EMSEEPEA_MODEL_COMMAND", original.command);
     restore("HOME", original.home);
   }
+});
+
+test("native conversations expose only the target MCP tools without coaching", () => {
+  const tools = [{ name: "get-pea", description: "Get a pea.", inputSchema: { type: "object" } }];
+  const invocation = conversationInvocation(
+    "claude-local",
+    "/tmp/neutral",
+    "http://127.0.0.1:4321/mcp",
+    tools,
+    "private-token",
+  );
+  assert.equal(invocation.args[invocation.args.indexOf("--input-format") + 1], "stream-json");
+  assert.equal(invocation.args[invocation.args.indexOf("--tools") + 1], "mcp__emseepea_eval__get-pea");
+  assert.equal(invocation.args.includes("--json-schema"), false);
+  assert.equal(invocation.args.includes("--safe-mode"), false);
+  assert.equal(invocation.args.includes("Choose the MCP tool calls"), false);
+  const config = JSON.parse(invocation.args[invocation.args.indexOf("--mcp-config") + 1]);
+  assert.deepEqual(config, { mcpServers: { emseepea_eval: {
+    type: "http",
+    url: "http://127.0.0.1:4321/mcp",
+    headers: { Authorization: "Bearer ${EMSEEPEA_SEMANTIC_MCP_TOKEN}" },
+  } } });
+  assert.equal(JSON.stringify(invocation.args).includes("private-token"), false);
+  assert.equal(invocation.env.EMSEEPEA_SEMANTIC_MCP_TOKEN, "private-token");
+});
+
+test("native tool assertions come from provider MCP events", () => {
+  const tools = [{ name: "get-pea" }];
+  const events = [
+    { type: "system", subtype: "init", tools: ["mcp__emseepea_eval__get-pea"],
+      mcp_servers: [{ name: "emseepea_eval", status: "connected" }] },
+    { type: "assistant", message: { content: [{
+      type: "tool_use", id: "call-1", name: "mcp__emseepea_eval__get-pea", input: { name: "Snap" },
+    }] } },
+    { type: "user", message: { role: "user", content: [{
+      type: "tool_result", tool_use_id: "call-1", content: '{"name":"Snap"}',
+    }] } },
+    { ...result, num_turns: 2, result: "Snap is a pea." },
+  ];
+  const parsed = parseNativeClaudeEvents(events, tools);
+  assert.deepEqual(parsed.calls, [{ name: "get-pea", arguments: { name: "Snap" } }]);
+  assert.equal(parsed.pathEvidence[0].target, "get-pea");
+  assert.throws(() => parseNativeClaudeEvents(events.map((event) => event.type === "assistant"
+    ? { ...event, message: { content: [{
+      type: "tool_use", id: "call-1", name: "Read", input: {},
+    }] } }
+    : event), tools), /forbidden tool/);
+  assert.throws(() => parseNativeClaudeEvents(events.slice(1), tools, true), /initialization evidence/);
 });
 
 test("requires exact judge JSON", () => {

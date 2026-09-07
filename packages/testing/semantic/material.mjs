@@ -128,15 +128,6 @@ export async function listMcpTools(url, testCase, signal) {
   }
 }
 
-export function collectSelectedToolMaterial(url, testCase, calls, signal) {
-  return collectMcpMaterial(url, {
-    ...testCase,
-    async exercise(client) {
-      for (const call of calls) await client.callTool(call);
-    },
-  }, signal);
-}
-
 function requestFor(operation) {
   if (operation.method === "tools/call") {
     return { method: operation.method, name: operation.name, arguments: operation.arguments ?? {} };
@@ -160,12 +151,7 @@ async function perform(client, operation) {
 }
 
 async function openClient(url, testCase) {
-  const token = testCase.authToken ?? (testCase.authTokenEnvironment
-    ? process.env[testCase.authTokenEnvironment]?.trim()
-    : undefined);
-  if (testCase.authTokenEnvironment && !token) {
-    throw new Error(`Required authentication is unavailable: ${testCase.authTokenEnvironment}`);
-  }
+  const token = semanticAuthToken(testCase);
   const client = new Client(
     { name: "emseepea-semantic-test", version: "0.0.0" },
     { versionNegotiation: { mode: { pin: "2026-07-28" } } },
@@ -175,6 +161,16 @@ async function openClient(url, testCase) {
     token ? { authProvider: { token: async () => token } } : undefined,
   ));
   return client;
+}
+
+export function semanticAuthToken(testCase) {
+  const token = testCase.authToken ?? (testCase.authTokenEnvironment
+    ? process.env[testCase.authTokenEnvironment]?.trim()
+    : undefined);
+  if (testCase.authTokenEnvironment && !token) {
+    throw new Error(`Required authentication is unavailable: ${testCase.authTokenEnvironment}`);
+  }
+  return token;
 }
 
 function serverEnvironment(extra = {}) {

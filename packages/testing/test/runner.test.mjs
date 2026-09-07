@@ -93,7 +93,7 @@ setInterval(() => {}, 1000);
   assert.fail("Semantic test descendant survived cancellation");
 });
 
-test("conversation tests assert exact calls, meaning, and no-call follow-ups", { timeout: 90_000 }, async (t) => {
+test("conversation tests assert exact calls, meaning, and no-call follow-ups", { timeout: 180_000 }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "semantic-conversation-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   await mkdir(join(directory, "eval"));
@@ -102,54 +102,65 @@ test("conversation tests assert exact calls, meaning, and no-call follow-ups", {
   const file = join(directory, "eval", "meaning.test.mjs");
   const output = join(directory, "evidence.json");
   await writeFile(model, `#!/usr/bin/env node
-import { appendFileSync, readFileSync } from "node:fs";
-const prompt = process.argv[process.argv.indexOf("--print") + 1];
-const selection = process.argv.includes("--json-schema");
-const judge = prompt.startsWith("Judge whether");
-const followUp = prompt.includes("How many packets were inbound?");
-const forceFollowUpTool = prompt.includes("FORCE_TOOL_ON_FOLLOW_UP");
-const forceTwoCalls = prompt.includes("TWO_ORDERED_CALLS");
-let prior = [];
-try { prior = readFileSync(${JSON.stringify(modelLog)}, "utf8").trim().split("\\n").filter(Boolean).map(JSON.parse); } catch {}
-const firstAnswerNumber = prior.filter((entry) => !entry.selection && !entry.judge && !entry.followUp).length + 1;
-const historyMarker = prompt.match(/TRIAL_MARKER_[123]/)?.[0];
-appendFileSync(${JSON.stringify(modelLog)}, JSON.stringify({
-  selection,
-  judge,
-  followUp,
-  hasHistory: prompt.includes("Conversation so far:"),
-  hasApplicationContext: prompt.includes("Application context:"),
-  historyMarker,
-  judgeGrounded: !judge || (prompt.includes("How many packets can we promise now?")
-    && prompt.includes("The response says 85 packets are available to promise.")),
-  hasServerToken: Object.values(process.env).includes("example-access-token"),
-  cwd: process.cwd(),
-}) + "\\n");
-let answer;
-if (selection) {
-  answer = forceTwoCalls && !followUp
-    ? { calls: [
-      { name: "get-pea-variety", arguments: { name: "Highland Snap" } },
-      { name: "get-pea-variety", arguments: { name: "Harbour Gem" } },
-    ] }
-    : followUp
-    ? { calls: forceFollowUpTool ? [{ name: "get-private-inventory-report", arguments: {} }] : [] }
-    : { calls: [{ name: "get-private-inventory-report", arguments: {} }] };
-} else if (judge) {
-  const pass = !prompt.includes("REJECT_THIS_RESPONSE");
-  answer = JSON.stringify({ pass, score: pass ? 1 : 0, reason: "PRIVATE_JUDGE_DETAIL" });
-} else {
-  answer = followUp
-    ? "There were 40 inbound packets, and they were not yet available to promise. " + (historyMarker ?? "NO_HISTORY_MARKER")
-    : "There are 85 packets available to promise from 120 on hand minus 35 reserved. TRIAL_MARKER_" + (((firstAnswerNumber - 1) % 3) + 1);
-}
-const result = { type: "result", is_error: false, num_turns: 1,
+import { appendFileSync } from "node:fs";
+import { createInterface } from "node:readline";
+const log = (value) => appendFileSync(${JSON.stringify(modelLog)}, JSON.stringify(value) + "\\n");
+const result = (answer, calls = 0) => ({
+  type: "result", is_error: false, num_turns: calls + 1, result: answer,
   permission_denials: [], modelUsage: {
-    "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" }
-  } };
-if (selection) result.structured_output = answer;
-else result.result = answer;
-process.stdout.write(JSON.stringify(result) + "\\n");
+    "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" },
+  },
+});
+if (!process.argv.includes("--input-format")) {
+  const prompt = process.argv[process.argv.indexOf("--print") + 1];
+  const pass = !prompt.includes("REJECT_THIS_RESPONSE");
+  log({ judge: true, prompt });
+  process.stdout.write(JSON.stringify(result(JSON.stringify({
+    pass, score: pass ? 1 : 0, reason: "PRIVATE_JUDGE_DETAIL",
+  }))) + "\\n");
+} else {
+  const tools = (process.argv[process.argv.indexOf("--tools") + 1] ?? "").split(",").filter(Boolean);
+  const config = JSON.parse(process.argv[process.argv.indexOf("--mcp-config") + 1]);
+  const context = process.argv.includes("--append-system-prompt")
+    ? process.argv[process.argv.indexOf("--append-system-prompt") + 1]
+    : undefined;
+  log({ native: true, tools, config, context,
+    hasServerToken: process.env.EMSEEPEA_SEMANTIC_MCP_TOKEN !== undefined,
+    hasJsonSchema: process.argv.includes("--json-schema") });
+  process.stdout.write(JSON.stringify({ type: "system", subtype: "init", tools,
+    mcp_servers: [{ name: "emseepea_eval", status: "connected" }] }) + "\\n");
+  let turn = 0;
+  createInterface({ input: process.stdin }).on("line", (line) => {
+    turn += 1;
+    const input = JSON.parse(line);
+    const prompt = input.message.content[0].text;
+    const followUp = prompt === "How many packets were inbound?";
+    const forceTwoCalls = context === "TWO_ORDERED_CALLS";
+    const forceFollowUpTool = context === "FORCE_TOOL_ON_FOLLOW_UP";
+    const calls = forceTwoCalls && !followUp
+      ? [
+        { name: "get-pea-variety", arguments: { name: "Highland Snap" } },
+        { name: "get-pea-variety", arguments: { name: "Harbour Gem" } },
+      ]
+      : followUp
+        ? (forceFollowUpTool ? [{ name: "get-private-inventory-report", arguments: {} }] : [])
+        : [{ name: "get-private-inventory-report", arguments: {} }];
+    log({ nativeTurn: true, prompt, turn });
+    calls.forEach((call, index) => {
+      const id = \`call-\${turn}-\${index}\`;
+      process.stdout.write(JSON.stringify({ type: "assistant", message: { content: [{
+        type: "tool_use", id, name: \`mcp__emseepea_eval__\${call.name}\`, input: call.arguments,
+      }] } }) + "\\n");
+      process.stdout.write(JSON.stringify({ type: "user", message: { role: "user", content: [{
+        type: "tool_result", tool_use_id: id, content: "{}",
+      }] } }) + "\\n");
+    });
+    const answer = followUp
+      ? "40 inbound packets"
+      : "There are 85 packets available to promise from 120 on hand minus 35 reserved; 40 inbound packets do not count.";
+    process.stdout.write(JSON.stringify(result(answer, calls.length)) + "\\n");
+  });
+}
 `, { mode: 0o700 });
   const source = ({
     meaning = "The response says 85 packets are available to promise.",
@@ -194,7 +205,7 @@ test("inventory conversation", async (t) => {
     model,
     "--output",
     output,
-  ], { cwd: directory, encoding: "utf8", timeout: 30_000 });
+  ], { cwd: directory, encoding: "utf8", timeout: 60_000 });
 
   await writeFile(file, source());
   const passed = run();
@@ -208,6 +219,7 @@ test("inventory conversation", async (t) => {
   assert.equal(record.answerTrials.length, 3);
   assert.equal(record.judgeVerdicts.length, 9);
   assert.ok(record.answerTrials.every(({ turns }) => turns.length === 2));
+  assert.ok(record.answerTrials.every(({ turns }) => turns[0].interactionMode === "native-mcp"));
   assert.ok(record.answerTrials.every(({ turns }) => turns[0].toolCallCount === 1));
   assert.ok(record.answerTrials.every(({ turns }) => turns[1].toolCallCount === 0));
   const isHash = (value) => typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
@@ -218,15 +230,19 @@ test("inventory conversation", async (t) => {
   assert.ok(record.answerTrials.every(({ turns }) => turns[0].pathEvidence[0].target
     === "get-private-inventory-report"));
   const invocations = (await readFile(modelLog, "utf8")).trim().split("\n").map(JSON.parse);
-  assert.equal(invocations.filter(({ selection }) => selection).length, 6);
+  assert.equal(invocations.filter(({ native }) => native).length, 3);
   assert.equal(invocations.filter(({ judge }) => judge).length, 9);
-  assert.ok(invocations.filter(({ followUp }) => followUp).every(({ hasHistory }) => hasHistory));
-  assert.deepEqual(invocations.filter(({ followUp, selection }) => followUp && selection)
-    .map(({ historyMarker }) => historyMarker), ["TRIAL_MARKER_1", "TRIAL_MARKER_2", "TRIAL_MARKER_3"]);
-  assert.ok(invocations.every(({ hasApplicationContext }) => hasApplicationContext === false));
-  assert.ok(invocations.filter(({ judge }) => judge).every(({ judgeGrounded }) => judgeGrounded));
-  assert.ok(invocations.every(({ hasServerToken }) => hasServerToken === false));
-  assert.equal(new Set(invocations.map(({ cwd }) => cwd)).size, 21);
+  assert.deepEqual(invocations.filter(({ nativeTurn }) => nativeTurn).map(({ prompt }) => prompt), [
+    "How many packets can we promise now?",
+    "How many packets can we promise now?",
+    "How many packets can we promise now?",
+    "How many packets were inbound?",
+    "How many packets were inbound?",
+    "How many packets were inbound?",
+  ]);
+  assert.ok(invocations.filter(({ native }) => native).every(({ tools, config, hasJsonSchema, hasServerToken }) =>
+    tools.length === 1 && Object.keys(config.mcpServers).join() === "emseepea_eval"
+      && hasJsonSchema === false && hasServerToken === true));
 
   const contextStart = invocations.length;
   await writeFile(file, source({ context: "CONTEXT_MARKER" }));
@@ -234,8 +250,7 @@ test("inventory conversation", async (t) => {
   assert.equal(contextual.status, 0, contextual.stdout + contextual.stderr);
   const contextInvocations = (await readFile(modelLog, "utf8")).trim().split("\n").map(JSON.parse)
     .slice(contextStart);
-  assert.ok(contextInvocations.filter(({ judge }) => !judge)
-    .every(({ hasApplicationContext }) => hasApplicationContext));
+  assert.ok(contextInvocations.filter(({ native }) => native).every(({ context }) => context === "CONTEXT_MARKER"));
 
   for (const [options, phase] of [
     [{ expectedArguments: { PRIVATE_ARGUMENT_SENTINEL: true } }, "tool-call assertion"],
@@ -276,7 +291,7 @@ test("inventory conversation", async (t) => {
   assert.equal(failure.failedPhase, "model judgment");
 });
 
-test("literal response assertions reject numerical expectations", { timeout: 90_000 }, async (t) => {
+test("literal response assertions reject numerical expectations", { timeout: 120_000 }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "semantic-literal-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   await mkdir(join(directory, "eval"));
@@ -284,13 +299,23 @@ test("literal response assertions reject numerical expectations", { timeout: 90_
   const file = join(directory, "eval", "meaning.test.mjs");
   const output = join(directory, "evidence.json");
   await writeFile(model, `#!/usr/bin/env node
-const selection = process.argv.includes("--json-schema");
-const result = { type: "result", is_error: false, num_turns: 1, permission_denials: [], modelUsage: {
-  "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" }
-} };
-if (selection) result.structured_output = { calls: [{ name: "get-pea-variety", arguments: { name: "Highland Snap" } }] };
-else result.result = "Highland Snap matures in 70 days.";
-process.stdout.write(JSON.stringify(result) + "\\n");
+import { createInterface } from "node:readline";
+const tools = process.argv[process.argv.indexOf("--tools") + 1].split(",");
+process.stdout.write(JSON.stringify({ type: "system", subtype: "init", tools,
+  mcp_servers: [{ name: "emseepea_eval", status: "connected" }] }) + "\\n");
+createInterface({ input: process.stdin }).on("line", () => {
+  process.stdout.write(JSON.stringify({ type: "assistant", message: { content: [{
+    type: "tool_use", id: "call-1", name: "mcp__emseepea_eval__get-pea-variety",
+    input: { name: "Highland Snap" },
+  }] } }) + "\\n");
+  process.stdout.write(JSON.stringify({ type: "user", message: { role: "user", content: [{
+    type: "tool_result", tool_use_id: "call-1", content: "{}",
+  }] } }) + "\\n");
+  process.stdout.write(JSON.stringify({ type: "result", is_error: false, num_turns: 2,
+    result: "Highland Snap matures in 70 days.", permission_denials: [], modelUsage: {
+      "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" },
+    } }) + "\\n");
+});
 `, { mode: 0o700 });
   await writeFile(file, `
 import test from "node:test";
@@ -309,7 +334,8 @@ test("numeric expectation", async (t) => {
     model,
     "--output",
     output,
-  ], { cwd: directory, encoding: "utf8", timeout: 30_000 });
+  ], { cwd: directory, encoding: "utf8", timeout: 60_000 });
   assert.equal(result.status, 1, result.stdout + result.stderr);
-  assert.match(result.stdout + result.stderr, /Expected response content must be/);
+  const evidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+  assert.equal(evidence.failedPhase, "literal response assertion");
 });
