@@ -39,8 +39,10 @@ answer. Failed answers are not retried. Missing facts, missing MCP calls, or a
 failed judgment block publication. Every model call has a time limit.
 
 Only checks on the revision being released approve publication. Local checks
-do not substitute for this release check. Each example writes a redacted report
-to `artifacts/llm-eval/evidence.json`; GitHub retains these reports for 14 days.
+do not substitute for this release check. Each example writes an inspectable
+report to `artifacts/llm-eval/evidence.json`; GitHub retains these reports for
+14 days. The report includes raw synthetic test conversations and judge reasons,
+so tests must never contain credentials or production data.
 
 Separate copied-example smoke tests use `--smoke --model-command` with a fake
 model to check installation and test wiring. Those smoke tests do not prove

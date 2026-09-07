@@ -150,8 +150,20 @@ provider, model, server, and question, not identical behaviour in every client
 or deployment.
 
 Results are saved to `artifacts/llm-eval/evidence.json`. The report contains
-outcomes and hashes for prompts, calls, material, answers, and judgments, not
-their raw private content.
+readable test prompts, assistant responses, advertised MCP tool calls and
+arguments, model-visible tool results, expected meanings, every judge reason,
+and hashes. A failed meaning assertion records all nine judgments before
+failing, so the artifact shows disagreement without a rerun.
+
+Treat test conversations as publishable artifact content. Use synthetic,
+non-sensitive fixtures and never put credentials or production data in prompts,
+tool arguments, tool results, assertions, or application context.
+
+Provider events, MCP addresses, configuration, headers, provider and harness
+credentials, environment values, stderr, and home-directory paths are not
+retained. Secrets placed inside test content are not detected or redacted.
+Local evidence is written with mode `0600`; repository CI retains it for 14
+days.
 
 Repository tests also use a simulated model to check the runner without spending
 model credits. Those `--smoke` checks test the wiring only. They do not prove

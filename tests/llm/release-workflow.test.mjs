@@ -62,7 +62,7 @@ test("the Claude subscription check runs only for the publication revision", () 
   );
   assert.match(
     workflow,
-    /- name: Upload redacted language-model evidence\n\s+if: \$\{\{ always\(\) && steps\.release-state\.outputs\.has_changesets == 'false' \}\}[\s\S]*retention-days: 14/,
+    /- name: Upload inspectable language-model evidence\n\s+if: \$\{\{ always\(\) && steps\.release-state\.outputs\.has_changesets == 'false' \}\}[\s\S]*retention-days: 14/,
   );
   assert.doesNotMatch(
     workflow,

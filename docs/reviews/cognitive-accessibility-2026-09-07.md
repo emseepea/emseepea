@@ -61,3 +61,37 @@ environment.
 | `examples/multi-instance-postgres-server/README.md` | `65ab1ad62a8945574cc5277a2199fa73b5b363f2c3fcb389ad371323d10c0d5c` |
 | `website/src/content/docs/ai-tests.md` | `21da294101e5433c3d45e7d7da0f73fc481f9861ccb7de8540e1f98075903377` |
 | `website/src/content/docs/examples.md` | `8451dbb98784f07fb02e32a925fc91c1792981717d63963e13bd16bf08f41bfe` |
+
+## Inspectable Semantic Evidence
+
+Result: PASS for cognitive accessibility and plain-language clarity on the exact
+current changed public Markdown for inspectable semantic evidence. Independent
+cognitive-accessibility and Markdown accessibility review covered the Quality
+policy, testing package README, release-check README, website AI testing guide,
+and Changeset.
+
+The reviewed content keeps ordinary tests, semantic tests, smoke checks, local
+checks, and release-approval evidence separate. It gives setup commands in task
+order, states the Claude CLI and sign-in prerequisites before model checks, and
+explains failure causes and recovery boundaries without blaming the reader. It
+also keeps evidence-retention claims honest: synthetic conversations, advertised
+MCP tool exchanges, and judge reasons are retained, while provider and harness
+credentials, provider events, transport details, environment values, stderr, and
+home-directory paths are excluded. It also says secrets placed inside test
+content are not detected or redacted. No blocking cognitive-accessibility
+finding remains.
+
+Applied rule sources: cognitive-accessibility specialist reference,
+`accessibility-agents-markdown`, and `accessibility-agents-web`.
+
+This review covers source prose. It does not prove package publication, release
+approval, real-model understanding outside the configured provider/model/server
+journey, or production behavior.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `.changeset/inspectable-semantic-evidence.md` | `9196dfa8df5f23313baeda02c1e7d98d9e46f0e97601e773a71a89f19d823c88` |
+| `QUALITY.md` | `e9820c20b433a06ddb67f45c8bc609c0c82b2208a84073412e33ac7d1f8cdbb0` |
+| `packages/testing/README.md` | `f5508f1f349fe4acdbf835b8aee1b047cb898859622212f1e711183fad87de83` |
+| `tests/llm/README.md` | `4abc85d133c164909bcde42dd79250e5f473336931f2dc1ee2bea9161b777f8b` |
+| `website/src/content/docs/ai-tests.md` | `1dd748683cda217d6ac30149a2dff08473c6a9b57aad882470c73d0d1e2502f3` |

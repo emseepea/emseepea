@@ -142,8 +142,11 @@ Accessibility Guidelines (WCAG) conformance.
   React, Tailwind, and all eight initializer packages are eligible for publication.
 - The release job must depend on passing language-model checks for the publishing
   SHA through pinned Claude CLI and `claude-sonnet-4-6`. It uses the Claude
-  subscription OAuth secret, and redacted evidence is retained for exactly 14
-  days.
+  subscription OAuth secret. Inspectable evidence uses only synthetic,
+  non-sensitive test content and is retained for exactly 14 days. Provider and
+  harness credentials, environment values, provider events, transport
+  configuration, and stderr are excluded. Secrets inside test content are not
+  detected or redacted.
 - Routine publication uses npm trusted publishing without a long-lived npm
   write token. It records the source and build, a checksum, and a list of the
   package's included software dependencies.

@@ -101,12 +101,15 @@ test("conversation tests assert exact calls, meaning, and no-call follow-ups", {
   const modelLog = join(directory, "model-log.jsonl");
   const file = join(directory, "eval", "meaning.test.mjs");
   const output = join(directory, "evidence.json");
+  const directoryPattern = new RegExp(directory.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   await writeFile(model, `#!/usr/bin/env node
 import { appendFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 const log = (value) => appendFileSync(${JSON.stringify(modelLog)}, JSON.stringify(value) + "\\n");
+process.stderr.write("MODEL_STDERR_SENTINEL\\n");
 const result = (answer, calls = 0) => ({
   type: "result", is_error: false, num_turns: calls + 1, result: answer,
+  raw_provider_event_sentinel: "RAW_PROVIDER_EVENT_SENTINEL",
   permission_denials: [], modelUsage: {
     "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" },
   },
@@ -115,9 +118,11 @@ if (!process.argv.includes("--input-format")) {
   const prompt = process.argv[process.argv.indexOf("--print") + 1];
   const pass = !prompt.includes("REJECT_THIS_RESPONSE");
   log({ judge: true, prompt });
-  process.stdout.write(JSON.stringify(result(JSON.stringify({
-    pass, score: pass ? 1 : 0, reason: "PRIVATE_JUDGE_DETAIL",
-  }))) + "\\n");
+  const answer = prompt.includes("MALFORMED_JUDGE") ? "not-json" : JSON.stringify({
+    pass, score: pass ? 1 : 0,
+    reason: pass ? "The response communicates the expected quantity." : "The response omits the expected meaning.",
+  });
+  process.stdout.write(JSON.stringify(result(answer)) + "\\n");
 } else {
   const tools = (process.argv[process.argv.indexOf("--tools") + 1] ?? "").split(",").filter(Boolean);
   const config = JSON.parse(process.argv[process.argv.indexOf("--mcp-config") + 1]);
@@ -152,7 +157,8 @@ if (!process.argv.includes("--input-format")) {
         type: "tool_use", id, name: \`mcp__emseepea_eval__\${call.name}\`, input: call.arguments,
       }] } }) + "\\n");
       process.stdout.write(JSON.stringify({ type: "user", message: { role: "user", content: [{
-        type: "tool_result", tool_use_id: id, content: "{}",
+        type: "tool_result", tool_use_id: id,
+        content: "{\\"onHand\\":120,\\"reserved\\":35,\\"inbound\\":40}",
       }] } }) + "\\n");
     });
     const answer = followUp
@@ -208,7 +214,16 @@ test("inventory conversation", async (t) => {
     model,
     "--output",
     output,
-  ], { cwd: directory, encoding: "utf8", timeout: 60_000 });
+  ], {
+    cwd: directory,
+    encoding: "utf8",
+    timeout: 60_000,
+    env: {
+      ...process.env,
+      CLAUDE_CODE_OAUTH_TOKEN: "PROVIDER_SECRET_SENTINEL",
+      UNRELATED_ENV_SENTINEL_KEY: "UNRELATED_ENV_SENTINEL_VALUE",
+    },
+  });
 
   await writeFile(file, source());
   const passed = run();
@@ -216,7 +231,10 @@ test("inventory conversation", async (t) => {
   const evidenceText = await readFile(output, "utf8");
   const evidence = JSON.parse(evidenceText);
   assert.equal(evidence.status, "passed");
-  assert.doesNotMatch(evidenceText, /PRIVATE_JUDGE_DETAIL|example-access-token/);
+  assert.doesNotMatch(evidenceText,
+    /PROVIDER_SECRET_SENTINEL|example-access-token|RAW_PROVIDER_EVENT_SENTINEL|MODEL_STDERR_SENTINEL|UNRELATED_ENV_SENTINEL/);
+  assert.doesNotMatch(evidenceText, /mcpServers|Authorization|EMSEEPEA_SEMANTIC_MCP_TOKEN|127\.0\.0\.1:\d+\/mcp/);
+  assert.doesNotMatch(evidenceText, directoryPattern);
   const record = Object.values(evidence.cases)[0];
   assert.equal(record.mode, "conversation");
   assert.equal(record.answerTrials.length, 3);
@@ -225,6 +243,17 @@ test("inventory conversation", async (t) => {
   assert.ok(record.answerTrials.every(({ turns }) => turns[0].interactionMode === "native-mcp"));
   assert.ok(record.answerTrials.every(({ turns }) => turns[0].toolCallCount === 1));
   assert.ok(record.answerTrials.every(({ turns }) => turns[1].toolCallCount === 0));
+  assert.ok(record.answerTrials.every(({ turns }) =>
+    turns[0].prompt === "How many packets can we promise now?"
+      && turns[0].response.includes("85 packets available to promise")
+      && turns[0].toolCalls[0].name === "get-private-inventory-report"
+      && turns[0].toolCalls[0].result.includes('"onHand":120')
+      && turns[0].expectedCalls[0].name === "get-private-inventory-report"
+      && turns[0].expectedResponseContent.includes("85 packets available to promise")
+      && turns[0].expectedMeaning === "The response says 85 packets are available to promise."));
+  assert.ok(record.judgeVerdicts.every(({ expectedMeaning, verdict }) =>
+    expectedMeaning === "The response says 85 packets are available to promise."
+      && verdict.reason === "The response communicates the expected quantity."));
   const isHash = (value) => typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
   assert.ok(record.answerTrials.every(({ turns }) => turns.every(({ promptSha256, answerSha256 }) =>
     isHash(promptSha256) && isHash(answerSha256))));
@@ -282,8 +311,16 @@ test("inventory conversation", async (t) => {
     const failed = run();
     assert.equal(failed.status, 1, `Expected ${phase} failure`);
     assert.doesNotMatch(failed.stdout + failed.stderr, /PRIVATE_ARGUMENT_SENTINEL/);
-    const record = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+    const failedEvidence = await readFile(output, "utf8");
+    assert.doesNotMatch(failedEvidence, directoryPattern);
+    const record = Object.values(JSON.parse(failedEvidence).cases)[0];
     assert.equal(record.failedPhase, phase);
+    const failedTurn = record.answerTrials[0].turns[0];
+    if (options.expectedArguments) {
+      assert.deepEqual(failedTurn.expectedCalls[0].arguments, options.expectedArguments);
+      assert.deepEqual(failedTurn.toolCalls[0].arguments, {});
+    }
+    if (options.literal) assert.deepEqual(failedTurn.expectedResponseContent, [options.literal]);
   }
 
   const orderedCalls = [
@@ -310,6 +347,16 @@ test("inventory conversation", async (t) => {
   assert.equal(rejected.status, 1, "A rejected meaning must fail");
   const failure = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
   assert.equal(failure.failedPhase, "model judgment");
+  assert.equal(failure.judgeVerdicts.length, 9);
+  assert.ok(failure.judgeVerdicts.every(({ verdict }) => verdict.reason
+    === "The response omits the expected meaning."));
+
+  await writeFile(file, source({ meaning: "MALFORMED_JUDGE" }));
+  const malformed = run();
+  assert.equal(malformed.status, 1, "A malformed judgment must fail");
+  const malformedEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+  assert.equal(malformedEvidence.judgeVerdicts.length, 9);
+  assert.ok(malformedEvidence.judgeVerdicts.every(({ error }) => error === "invalid judge verdict"));
 });
 
 test("literal response assertions reject numerical expectations", { timeout: 120_000 }, async (t) => {

@@ -100,6 +100,12 @@ export async function createConversation(testContext, options) {
           const record = {
             turn: trial.record.turns.length + 1,
             interactionMode: "native-mcp",
+            prompt,
+            response: answer.answer,
+            toolCalls: calls.map((call, index) => ({
+              ...call,
+              result: answer.toolResults[index],
+            })),
             promptSha256: hash(prompt),
             answerSha256: hash(answer.answer),
             answerModels: answer.models,
@@ -150,15 +156,16 @@ export function assertToolCalls(turn, expected) {
     || Array.isArray(call.arguments))) {
     throw new Error("Expected tool calls must have names and object arguments");
   }
+  for (const trial of trials) {
+    trial.record.expectedTools = expected.map(({ name }) => name);
+    trial.record.expectedCalls = expected;
+    trial.record.expectedCallsSha256 = hash(JSON.stringify(expected));
+  }
   try {
     for (const trial of trials) assert.deepStrictEqual(trial.calls, expected);
   } catch {
     failAssertion(trials, "tool-call assertion");
     throw new Error("Tool calls did not match the expected names, arguments, order, and count");
-  }
-  for (const trial of trials) {
-    trial.record.expectedTools = expected.map(({ name }) => name);
-    trial.record.expectedCallsSha256 = hash(JSON.stringify(expected));
   }
 }
 
@@ -174,6 +181,7 @@ export function assertResponseContains(turn, expected) {
     failAssertion(trials, "literal response assertion");
     throw new Error("Expected response content must be a non-empty string or string array");
   }
+  for (const trial of trials) trial.record.expectedResponseContent = values;
   try {
     for (const { answer } of trials) {
       for (const value of values) {
@@ -193,37 +201,49 @@ export async function assertResponseMeaning(turn, expectation) {
     || Object.keys(expectation).join(",") !== "expected") {
     throw new Error("Response meaning needs exactly one non-empty expected statement");
   }
-  try {
-    for (let trialIndex = 0; trialIndex < trials.length; trialIndex += 1) {
-      const trial = trials[trialIndex];
-      for (let judgment = 1; judgment <= 3; judgment += 1) {
-        const request = judgePrompt(trial.history, expectation.expected);
+  let failed = false;
+  for (let trialIndex = 0; trialIndex < trials.length; trialIndex += 1) {
+    const trial = trials[trialIndex];
+    trial.record.expectedMeaning = expectation.expected;
+    for (let judgment = 1; judgment <= 3; judgment += 1) {
+      const request = judgePrompt(trial.history, expectation.expected);
+      const record = {
+        trial: trialIndex + 1,
+        turn: trial.record.turn,
+        judgment,
+        expectedMeaning: expectation.expected,
+        expectationSha256: hash(expectation.expected),
+        requestSha256: hash(request),
+      };
+      try {
         const response = await isolatedModel(
           trial.provider,
           request,
           "emseepea-judge-",
           trial.signal,
         );
-        const verdict = parseJudgeVerdict(response.answer.trim());
-        trial.evidence.judgeVerdicts.push({
-          trial: trialIndex + 1,
-          turn: trial.record.turn,
-          judgment,
+        Object.assign(record, {
           models: response.models,
           turnCount: response.turnCount,
           providerTurnCount: response.providerTurnCount,
           providerToolCount: response.providerToolCount,
-          expectationSha256: hash(expectation.expected),
-          requestSha256: hash(request),
           responseSha256: hash(response.answer),
-          verdict: { pass: verdict.pass, score: verdict.score },
         });
-        if (!verdict.pass) throw new Error("A meaning judgment failed");
+        const verdict = parseJudgeVerdict(response.answer.trim());
+        record.verdict = verdict;
+        if (!verdict.pass) failed = true;
+      } catch (error) {
+        record.error = error instanceof SyntaxError || error.message === "Judge returned an invalid verdict"
+          ? "invalid judge verdict"
+          : "judge invocation failed";
+        failed = true;
       }
-      trial.record.meaningAssertionCount += 1;
+      trial.evidence.judgeVerdicts.push(record);
     }
-    trials[0].state.meaningAssertions += 1;
-  } catch {
+    trial.record.meaningAssertionCount += 1;
+  }
+  trials[0].state.meaningAssertions += 1;
+  if (failed) {
     failAssertion(trials, "model judgment");
     throw new Error("Response did not have the expected meaning");
   }

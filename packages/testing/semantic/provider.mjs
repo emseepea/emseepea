@@ -115,6 +115,7 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
   return {
     answer: result.result,
     calls,
+    toolResults: toolUses.map(({ id }) => toolResults.get(id).content),
     pathEvidence,
     models: Object.keys(result.modelUsage),
     turnCount: 1,

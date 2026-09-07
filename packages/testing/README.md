@@ -29,3 +29,21 @@ Point semantic tests only at isolated, effect-safe test servers and fixtures,
 never production. Resources and prompts need deterministic protocol tests;
 this library does not pretend that manually injecting their content proves a
 native user journey.
+
+## Diagnose Failures
+
+The evidence file contains readable test prompts, assistant responses,
+advertised MCP tool calls and arguments, model-visible tool results, expected
+meanings, and judge reasons. It also keeps hashes for comparison. A failed
+meaning assertion runs and records all nine judgments, so disagreement is
+visible without a rerun.
+
+Treat test conversations as publishable artifact content. Use synthetic,
+non-sensitive fixtures and never put credentials or production data in prompts,
+tool arguments, tool results, assertions, or application context.
+
+Provider events, MCP addresses, configuration, headers, provider and harness
+credentials, environment values, stderr, and home-directory paths are not
+retained. Secrets placed inside test content are not detected or redacted.
+Local evidence is written with mode `0600`; repository CI retains it for 14
+days.
