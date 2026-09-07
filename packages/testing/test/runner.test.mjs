@@ -192,13 +192,13 @@ test("inventory conversation", async (t) => {
     name: "get-private-inventory-report",
     arguments: expectedArguments,
   }])});
-  ${firstResponseAssertions ? `assertResponseContains(inventory, ${JSON.stringify(literal)});
-  await assertResponseMeaning(inventory, { expected: ${JSON.stringify(meaning)} });` : ""}
+  ${firstResponseAssertions ? `assertResponseContains(inventory, ${JSON.stringify(literal)});` : ""}
 
   const followUp = await chat.send("How many packets were inbound?");
   assertNoToolCalls(followUp);
   assertResponseContains(followUp, "40 inbound packets");
   ${followUpMeaning ? `await assertResponseMeaning(followUp, { expected: ${JSON.stringify(followUpMeaning)} });` : ""}
+  ${firstResponseAssertions ? `await assertResponseMeaning(inventory, { expected: ${JSON.stringify(meaning)} });` : ""}
 });
 `;
   const run = () => spawnSync(process.execPath, [
@@ -235,6 +235,9 @@ test("inventory conversation", async (t) => {
   const invocations = (await readFile(modelLog, "utf8")).trim().split("\n").map(JSON.parse);
   assert.equal(invocations.filter(({ native }) => native).length, 3);
   assert.equal(invocations.filter(({ judge }) => judge).length, 9);
+  assert.ok(invocations.filter(({ judge }) => judge).every(({ prompt }) =>
+    prompt.includes("How many packets can we promise now?")
+      && !prompt.includes("How many packets were inbound?")));
   assert.deepEqual(invocations.filter(({ nativeTurn }) => nativeTurn).map(({ prompt }) => prompt), [
     "How many packets can we promise now?",
     "How many packets can we promise now?",
@@ -259,8 +262,16 @@ test("inventory conversation", async (t) => {
     firstResponseAssertions: false,
     followUpMeaning: "The response says 40 packets were inbound.",
   }));
+  const focusedStart = (await readFile(modelLog, "utf8")).trim().split("\n").length;
   const focusedFollowUp = run();
   assert.equal(focusedFollowUp.status, 0, focusedFollowUp.stdout + focusedFollowUp.stderr);
+  const focusedInvocations = (await readFile(modelLog, "utf8")).trim().split("\n").map(JSON.parse)
+    .slice(focusedStart);
+  assert.ok(focusedInvocations.filter(({ judge }) => judge).every(({ prompt }) =>
+    prompt.includes("How many packets can we promise now?")
+      && prompt.includes("85 packets available to promise")
+      && prompt.includes("How many packets were inbound?")
+      && prompt.includes("40 inbound packets")));
 
   for (const [options, phase] of [
     [{ expectedArguments: { PRIVATE_ARGUMENT_SENTINEL: true } }, "tool-call assertion"],
