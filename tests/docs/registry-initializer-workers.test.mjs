@@ -34,7 +34,6 @@ test("registry initializer verification uses four workers and preserves every ch
     initializations.map(({ args }) => args[1]).sort(),
     initializers.map(({ name }) => `@emseepea/${name.split("/create-")[1]}`).sort(),
   );
-  assert.ok(initializations.every(({ args }) => !args.includes("@emseepea/multi-instance-postgres-server")));
   for (const { cwd: parent } of initializations) {
     const project = join(parent, "my-server");
     assert.deepEqual(calls.filter(({ cwd }) => cwd === project).map(({ command, args }) => [command, ...args]), [

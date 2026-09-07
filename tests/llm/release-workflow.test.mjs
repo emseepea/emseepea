@@ -322,6 +322,19 @@ test("registry publication verification waits for partial registry propagation",
   });
 });
 
+test("registry publication verification allows three minutes for propagation", async () => {
+  const before = { packages: [{ name: "testing", present: false }] };
+  let reads = 0;
+  await assert.rejects(
+    waitForPublication(before, async () => {
+      reads += 1;
+      return { packages: [{ name: "testing", present: false }] };
+    }, async () => {}),
+    /not all packages appeared after publication/,
+  );
+  assert.equal(reads, 60);
+});
+
 test("registry checks require latest and exact provenance", () => {
   const before = { packages: [{ name: "@emseepea/server", version: "0.0.2", present: false, latest: "0.0.0" }] };
   const after = { packages: [{

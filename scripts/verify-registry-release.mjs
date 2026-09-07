@@ -21,10 +21,10 @@ export function classifyPublication(before, after) {
 
 export async function waitForPublication(before, read, wait = () => new Promise((resolveDelay) => setTimeout(resolveDelay, 3_000))) {
   let after;
-  for (let attempt = 1; attempt <= 20; attempt += 1) {
+  for (let attempt = 1; attempt <= 60; attempt += 1) {
     after = await read();
     if (classifyPublication(before, after) === "published") return after;
-    if (attempt < 20) await wait();
+    if (attempt < 60) await wait();
   }
   assert.equal(classifyPublication(before, after), "published", "not all packages appeared after publication");
 }

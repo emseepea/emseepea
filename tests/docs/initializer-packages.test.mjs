@@ -35,6 +35,7 @@ test("the public package list and built initializers are complete", async () => 
     "@emseepea/create-progress-streaming-server",
     "@emseepea/create-html-ui-server",
     "@emseepea/create-react-ui-server",
+    "@emseepea/create-multi-instance-postgres-server",
   ]);
   for (const initializer of initializerPackages) {
     const manifest = JSON.parse(await readFile(new URL(`${initializer.path}/package.json`, root), "utf8"));
