@@ -34,64 +34,36 @@ export default ((context) => defineMappedTool({
   backendInputSchema,
   backendOutputSchema,
   isAvailable: () => {
-    const database = context.database();
-    if (!database) return false;
-    try {
-      database.prepare("SELECT 1").get();
-      return true;
-    } catch {
-      return false;
-    }
+    return context.database() !== undefined;
   },
   mapInput: ({ requestId }) => ({ idempotency_key: requestId }),
-  adapter({ idempotency_key }, { signal }) {
+  async adapter({ idempotency_key }, { signal }) {
     const database = context.database();
     if (!database) throw new Error("Report provider unavailable");
     signal.throwIfAborted();
-    database.exec("BEGIN IMMEDIATE");
-    try {
-      const counts = database.prepare(`
-        SELECT
-          COUNT(*) AS total_plants,
-          SUM(pea_type = 'shelling') AS shelling_count,
-          SUM(pea_type = 'snap') AS snap_count
-        FROM pea_plants
-      `).get() as {
-        total_plants: number;
-        shelling_count: number;
-        snap_count: number;
-      };
-      database.prepare(`
+    const result = await database.query({
+      text: `
         INSERT INTO reports (
           idempotency_key, created_by_instance, total_plants,
           shelling_count, snap_count
-        ) VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT(idempotency_key) DO NOTHING
-      `).run(
-        idempotency_key,
-        context.instanceName,
-        counts.total_plants,
-        counts.shelling_count,
-        counts.snap_count,
-      );
-      const report = database.prepare(`
+        )
         SELECT
+          $1,
+          $2,
+          COUNT(*)::integer,
+          COUNT(*) FILTER (WHERE pea_type = 'shelling')::integer,
+          COUNT(*) FILTER (WHERE pea_type = 'snap')::integer
+        FROM pea_plants
+        ON CONFLICT (idempotency_key) DO UPDATE
+          SET idempotency_key = EXCLUDED.idempotency_key
+        RETURNING
           report_id, idempotency_key, created_by_instance, total_plants,
           shelling_count, snap_count
-        FROM reports
-        WHERE idempotency_key = ?
-      `).get(idempotency_key);
-      database.exec("COMMIT");
-      signal.throwIfAborted();
-      return report as z.input<typeof backendOutputSchema>;
-    } catch (error) {
-      try {
-        database.exec("ROLLBACK");
-      } catch {
-        // The original provider error is the useful failure.
-      }
-      throw error;
-    }
+      `,
+      values: [idempotency_key, context.instanceName],
+    });
+    signal.throwIfAborted();
+    return result.rows[0] as z.input<typeof backendOutputSchema>;
   },
   mapOutput: (report) => {
     const data = {

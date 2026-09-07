@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
-import { initializerPackages } from "./public-packages.mjs";
+import { publishablePackages } from "./public-packages.mjs";
 
 const exec = promisify(execFile);
 
@@ -19,9 +19,13 @@ async function execute(command, args, cwd) {
   });
 }
 
-export async function verifyRegistryInitializers({ run = execute, root = process.cwd() } = {}) {
+export async function verifyRegistryInitializers({
+  run = execute,
+  root = process.cwd(),
+  packages,
+} = {}) {
   await run("npx", ["playwright", "install", "--with-deps", "chromium"], root);
-  const queue = [...initializerPackages];
+  const queue = (packages ?? await publishablePackages(root)).filter(({ example }) => example);
   const verify = async (initializer) => {
     const parent = await mkdtemp(join(tmpdir(), "emseepea-registry-initializer-"));
     const project = join(parent, "my-server");
@@ -31,10 +35,10 @@ export async function verifyRegistryInitializers({ run = execute, root = process
       await run("npm", ["install", "--ignore-scripts", "--userconfig", "/dev/null"], project);
       await run("npm", ["run", "lint"], project);
       await run("npm", ["test"], project);
-      await run("npx", [
-        "--no-install", "emseepea-test", "--smoke",
+      await run("npm", [
+        "run", "test:llm:built", "--", "--smoke",
         "--model-command", join(root, "tests/fixtures/fake-semantic-model.mjs"),
-        "--output", "artifacts/smoke.json", "eval",
+        "--output", "artifacts/smoke.json",
       ], project);
     } finally {
       await rm(parent, { recursive: true, force: true });

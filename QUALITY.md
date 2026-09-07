@@ -152,6 +152,13 @@ Accessibility Guidelines (WCAG) conformance.
   lints, runs ordinary tests, and runs a semantic smoke test. UI initializers
   also run their browser accessibility tests. Registry initializer checks may
   use four isolated workers, but every failure must still stop publication.
+- The multi-instance PostgreSQL initializer runs its ordinary and semantic tests
+  against the pinned Docker Compose database. Its ordinary tests include two
+  server processes, concurrent idempotent writes, provider failure, and a
+  blocked query that must finish at the database timeout.
+- A replaced initializer is deprecated only after its replacement is published
+  and verified. The release watcher reads every old package version back from
+  npm and requires the exact replacement message.
 - The documentation website may deploy to GitHub Pages after its guide,
   accessibility, and performance checks pass. Do not add framework-service
   deployment, production attestation, signing, or environment-verification

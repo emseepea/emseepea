@@ -153,12 +153,10 @@ jobs:
         run: |
           mkdir -p release-artifacts
           node scripts/prepare-release-artifacts.mjs release-artifacts
-          server_version="$(node -p "require('./packages/framework/package.json').version")"
           package_summary="$(node -e "const p=require('./release-artifacts/packages.json'); process.stdout.write(p.map(x => x.name + ' ' + x.version).join('; '))")"
-          review_record="docs/reviews/$server_version-release-readiness.md"
+          review_record="docs/reviews/current-release-readiness.md"
           test -s "$review_record"
-          grep -Fqx -- '- Result: PASS' "$review_record"
-          grep -Fqx -- '- Final result: within appetite.' "$review_record"
+          node scripts/verify-release-readiness.mjs release-artifacts/registry-before.json "$review_record"
           lock_sha="$(sha256sum package-lock.json | cut -d' ' -f1)"
           cat > release-artifacts/RELEASE-EVIDENCE.md <<EOF
           # Em See Pea release evidence

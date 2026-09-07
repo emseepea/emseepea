@@ -57,11 +57,15 @@ export const publicPackages = [
     description: "Create an Em See Pea server with an accessible React form.",
   },
   {
-    name: "@emseepea/create-multi-instance-sqlite-server",
-    path: "examples/multi-instance-sqlite-server",
-    key: "create-multi-instance-sqlite-server",
-    example: "multi-instance-sqlite-server",
-    description: "Create a two-instance Em See Pea server backed by SQLite.",
+    name: "@emseepea/create-multi-instance-postgres-server",
+    path: "examples/multi-instance-postgres-server",
+    key: "create-multi-instance-postgres-server",
+    example: "multi-instance-postgres-server",
+    description: "Create multiple Em See Pea server instances backed by PostgreSQL.",
+    replaces: {
+      name: "@emseepea/create-multi-instance-sqlite-server",
+      deprecation: "Deprecated: use @emseepea/create-multi-instance-postgres-server instead.",
+    },
   },
 ];
 

@@ -3,7 +3,7 @@ import { access } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
 
-import { initializerPackages } from "../../scripts/public-packages.mjs";
+import { publishablePackages } from "../../scripts/public-packages.mjs";
 import { verifyRegistryInitializers } from "../../scripts/verify-registry-initializers.mjs";
 
 test("registry initializer verification uses four workers and preserves every check", async () => {
@@ -25,21 +25,23 @@ test("registry initializer verification uses four workers and preserves every ch
     active -= 1;
   };
 
-  await verifyRegistryInitializers({ run, root: "/repo" });
+  const initializers = (await publishablePackages()).filter(({ example }) => example);
+  await verifyRegistryInitializers({ run, root: "/repo", packages: initializers });
   assert.equal(maximum, 4);
   assert.equal(calls.filter(({ command, args }) => command === "npx" && args[0] === "playwright").length, 1);
   const initializations = calls.filter(({ command, args }) => command === "npm" && args[0] === "init");
   assert.deepEqual(
     initializations.map(({ args }) => args[1]).sort(),
-    initializerPackages.map(({ name }) => `@emseepea/${name.split("/create-")[1]}`).sort(),
+    initializers.map(({ name }) => `@emseepea/${name.split("/create-")[1]}`).sort(),
   );
+  assert.ok(initializations.every(({ args }) => !args.includes("@emseepea/multi-instance-postgres-server")));
   for (const { cwd: parent } of initializations) {
     const project = join(parent, "my-server");
     assert.deepEqual(calls.filter(({ cwd }) => cwd === project).map(({ command, args }) => [command, ...args]), [
       ["npm", "install", "--ignore-scripts", "--userconfig", "/dev/null"],
       ["npm", "run", "lint"],
       ["npm", "test"],
-      ["npx", "--no-install", "emseepea-test", "--smoke", "--model-command", "/repo/tests/fixtures/fake-semantic-model.mjs", "--output", "artifacts/smoke.json", "eval"],
+      ["npm", "run", "test:llm:built", "--", "--smoke", "--model-command", "/repo/tests/fixtures/fake-semantic-model.mjs", "--output", "artifacts/smoke.json"],
     ]);
     await assert.rejects(() => access(parent));
   }

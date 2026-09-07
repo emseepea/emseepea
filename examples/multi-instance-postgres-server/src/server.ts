@@ -1,22 +1,18 @@
-import { join } from "node:path";
-import { tmpdir } from "node:os";
 import { serveEmseepea } from "@emseepea/server";
 import { createMultiInstanceExample } from "./app.js";
 
 const instanceName = process.env.EMSEEPEA_INSTANCE ?? `instance-${process.pid}`;
-const databasePath = process.env.EMSEEPEA_DATABASE ??
-  join(tmpdir(), `emseepea-multi-instance-${process.pid}.sqlite`);
-const { app, closeProvider } = await createMultiInstanceExample({ databasePath, instanceName });
+const databaseUrl = process.env.DATABASE_URL ?? "postgres://emseepea:emseepea@127.0.0.1:5432/emseepea";
+const { app, closeProvider } = await createMultiInstanceExample({ databaseUrl, instanceName });
 const running = await serveEmseepea(app, {
   port: Number.parseInt(process.env.PORT ?? "3000", 10),
 });
 
-console.log(`Em See Pea multi-instance-sqlite-server example ${instanceName} listening at ${running.url}`);
+console.log(`Em See Pea multi-instance-postgres-server example ${instanceName} listening at ${running.url}`);
 process.send?.({ type: "ready", instanceName, url: running.url.href });
 process.on("message", (message) => {
   if (message === "close-provider") {
-    closeProvider();
-    process.send?.({ type: "provider-closed", instanceName });
+    void closeProvider().then(() => process.send?.({ type: "provider-closed", instanceName }));
   }
 });
 

@@ -26,7 +26,7 @@ Use the current framework to create:
 - a server that tells clients when a list or resource is safe to reuse
 - public tools that report live progress while work is running
 - capability modules discovered once at startup from an opt-in directory
-- two local server processes that share one SQLite report store
+- independently deployable server instances that share one PostgreSQL report store
 - a server with a native HTML form, or the same form rendered with React and
   the Em See Pea stylesheet
 
@@ -53,10 +53,10 @@ It covers:
 - rejecting calls that need sign-in before their code runs
 - checking results from connected services without exposing private errors
 - reporting progress through raw HTTP and the official MCP client
-- creating one stored report when two local server processes share a request ID
+- creating one stored report when separate server instances share a request ID
 
 For detailed gates and evidence, see the [quality policy][quality-policy] and
-[0.2.2 release-readiness review][release-readiness].
+[current release-readiness review][release-readiness].
 
 ## Create a Project
 
@@ -70,7 +70,7 @@ Replace `my-server` with an unused directory name:
 - [Progress streaming](examples/progress-streaming-server/README.md): `npm init @emseepea/progress-streaming-server -- my-server`
 - [An HTML form](examples/html-ui-server/README.md): `npm init @emseepea/html-ui-server -- my-server`
 - [A React form](examples/react-ui-server/README.md): `npm init @emseepea/react-ui-server -- my-server`
-- [Two processes sharing SQLite](examples/multi-instance-sqlite-server/README.md): `npm init @emseepea/multi-instance-sqlite-server -- my-server`
+- [Multiple instances sharing PostgreSQL](examples/multi-instance-postgres-server/README.md): publication is pending exact Quality checks
 
 Each command creates a private standalone project with its lint, ordinary tests,
 and semantic tests. The two form starters also include browser accessibility
@@ -130,8 +130,8 @@ even when using a tool requires permission.
 - changing catalogues while a server runs
 - deployed progress streams from tools that require sign-in
 - saved sessions, subscriptions, replay, or reconnect recovery
-- shared operation across computers or a promise that retries change an
-  external service only once
+- shared operation across computers without a reachable PostgreSQL database
+- a promise that retries change an external service only once
 - full coverage of the active MCP server protocol
 
 Publication does not expand these claims.
@@ -151,11 +151,12 @@ Publication does not expand these claims.
 - [Brand style guide](docs/brand/STYLE-GUIDE.md)
 
 The source and examples are public under MIT. The root remains private. The
-server, testing helpers, React renderer, Tailwind stylesheet, and all eight
-example-backed initializer packages are eligible for publication.
+server, testing helpers, React renderer, Tailwind stylesheet, and seven released
+example-backed initializer packages are eligible for publication. The
+PostgreSQL initializer is pending exact Quality checks.
 
 [cognitive-publication]: docs/decisions/0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md
 [quality-policy]: QUALITY.md
-[release-readiness]: docs/reviews/0.2.2-release-readiness.md
+[release-readiness]: docs/reviews/current-release-readiness.md
 [semantic-qualification]: docs/decisions/0055-native-client-journeys-only-in-semantic-tests.proposed.md

@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 54 decisions: 30 current and 24 historical.
+This project has 55 decisions: 30 current and 25 historical.
 
 ## Quick Index
 
@@ -38,9 +38,9 @@ This project has 54 decisions: 30 current and 24 historical.
 - [ADR-0048: Optional Deterministic Filesystem Discovery](0048-optional-deterministic-filesystem-discovery.proposed.md): Proposed; human review confirmed.
 - [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0050: Schema-Declared Pass-Through by Default](0050-schema-declared-pass-through-by-default.proposed.md): Proposed; human review confirmed.
-- [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.proposed.md): Proposed; human review confirmed.
 - [ADR-0052: Optional Deterministic HTTP Route Discovery](0052-optional-deterministic-http-route-discovery.proposed.md): Proposed; human review confirmed.
 - [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.proposed.md): Proposed; human review confirmed.
+- [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -66,6 +66,7 @@ This project has 54 decisions: 30 current and 24 historical.
 - [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.superseded.md): Superseded; human review confirmed.
 - [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.superseded.md): Superseded; human review confirmed.
 - [ADR-0046: Lockfile-Constrained Dependency Verification](0046-lockfile-constrained-dependency-verification.superseded.md): Superseded; human review confirmed.
+- [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.superseded.md): Superseded; human review confirmed.
 - [ADR-0053: Conversation-Style Semantic Tests](0053-conversation-style-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0054: Provider-Native MCP Semantic Conversations](0054-provider-native-mcp-semantic-conversations.superseded.md): Superseded; human review confirmed.
 
@@ -870,7 +871,7 @@ Chosen option: **"Em See Pea organisation ownership"**, because the product now 
 
 - Status: Superseded
 - Human review: Confirmed
-- Replaced by: [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.proposed.md)
+- Replaced by: [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.superseded.md)
 
 #### Decision
 
@@ -1048,11 +1049,12 @@ Chosen option: **"Schema-declared pass-through by default with explicit exceptio
 - Public and backend schemas remain separately declared and checked.
 - Framework guidance tells adopters to use direct tools for identity mappings and pass-through mapping for selected compatible values.
 
-### [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.proposed.md)
+### [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.superseded.md)
+- Replaced by: [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.proposed.md)
 
 #### Decision
 
@@ -1150,3 +1152,25 @@ Chosen option: **"Native client journeys only"**, because semantic evidence must
 - Every semantic tool assertion comes from native provider tool-use events.
 - Documentation clearly says resources and prompts have deterministic protocol coverage only until a representative native client journey exists.
 - Tests fail if `prepare()` or synthetic selection guidance is reintroduced.
+
+### [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.superseded.md)
+
+#### Decision
+
+Chosen option: **"Replace SQLite with PostgreSQL"**, because a multi-instance example must preserve its coordination guarantees when instances run on different computers.
+
+#### How We Check It
+
+- The active package list contains exactly eight initializers and replaces the SQLite entry with `@emseepea/create-multi-instance-postgres-server`.
+- The new initializer creates a private standalone project from its maintained example directory and includes its Compose and SQL files.
+- Docker Compose starts PostgreSQL, and `npm start` starts two independent server processes that connect over TCP through `DATABASE_URL`.
+- A test races the same request through both instances and proves one stored row, identical report results, and replay through the other instance.
+- Tests prove database unavailability produces `/readyz` 503, generic tool failure, no connection-detail disclosure, and no duplicate effect.
+- The example does not claim exactly-once external side effects, latency, or throughput.
+- The old package is deprecated on npm and points to the PostgreSQL initializer.
+- Root guidance, example guidance, the documentation website, semantic tests, package metadata, and release checks use the new name and honest scope.
+- The new package passes pack, standalone install, lint, ordinary tests, semantic smoke tests, provenance, software-bill-of-materials, registry readback, and clean-install verification.

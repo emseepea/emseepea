@@ -21,7 +21,7 @@ test("the public package list and built initializers are complete", async () => 
     "@emseepea/create-progress-streaming-server",
     "@emseepea/create-html-ui-server",
     "@emseepea/create-react-ui-server",
-    "@emseepea/create-multi-instance-sqlite-server",
+    "@emseepea/create-multi-instance-postgres-server",
   ]);
   assert.deepEqual((await publishablePackages()).map(({ name }) => name), [
     "@emseepea/server",
@@ -35,7 +35,6 @@ test("the public package list and built initializers are complete", async () => 
     "@emseepea/create-progress-streaming-server",
     "@emseepea/create-html-ui-server",
     "@emseepea/create-react-ui-server",
-    "@emseepea/create-multi-instance-sqlite-server",
   ]);
   for (const initializer of initializerPackages) {
     const manifest = JSON.parse(await readFile(new URL(`${initializer.path}/package.json`, root), "utf8"));

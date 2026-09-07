@@ -32,7 +32,12 @@ test("every runnable example visibly owns deterministic and LLM checks", async (
     assert.doesNotMatch(manifest.scripts["test:llm"], /\.\.\/\.\.|--prefix|-w\s/, `${directory.name} LLM test depends on the monorepo`);
     const cases = await discoverTests([fileURLToPath(new URL(`${directory.name}/eval`, examplesRoot))]);
     assert.ok(cases.length > 0);
-    assert.equal(manifest.scripts["test:llm:built"], "emseepea-test eval");
+    assert.equal(
+      manifest.scripts["test:llm:built"],
+      directory.name === "multi-instance-postgres-server"
+        ? "node test/with-postgres.mjs emseepea-test eval"
+        : "emseepea-test eval",
+    );
     assert.match(manifest.scripts.lint, /\beval\b/);
     assert.ok(!(await readdir(new URL(directory.name + "/", examplesRoot))).some((name) => /eval.*\.ya?ml$/.test(name)));
   }

@@ -36,6 +36,11 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
         { attempt: 1, databaseId: 11, headSha: mergeSha, url: "https://example.test/release" },
       ]);
     }
+    if (command === "npm" && joined.includes("create-multi-instance-postgres-server version")) return '"0.0.1"';
+    if (command === "npm" && joined.includes("create-multi-instance-sqlite-server versions")) return '["0.0.11"]';
+    if (command === "npm" && joined.includes("create-multi-instance-sqlite-server@0.0.11 deprecated")) {
+      return '"Deprecated: use @emseepea/create-multi-instance-postgres-server instead."';
+    }
     return "";
   };
 
@@ -55,6 +60,7 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
     ["gh", "run", "watch", "10", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
     ["gh", "run", "watch", "11", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
   ]);
+  assert.equal(calls.some(([command, first]) => command === "npm" && first === "deprecate"), false);
 });
 
 test("release and watch rejects unsafe checkout or pull request state before merging", async () => {

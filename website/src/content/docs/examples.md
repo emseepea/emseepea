@@ -94,14 +94,18 @@ npm init @emseepea/react-ui-server -- my-server
 [Read the HTML UI server example](https://github.com/emseepea/emseepea/tree/main/examples/html-ui-server)
 or [the React UI server example](https://github.com/emseepea/emseepea/tree/main/examples/react-ui-server).
 
-## Share a report store between two processes
+## Share a report store between server instances
 
-Two local servers use the same SQLite store. Repeating a report request with
-the same request ID creates one stored report. This does not guarantee
-exactly-once changes to an external service or support multiple computers.
+Independent server instances use the same PostgreSQL store. Repeating a report
+request with the same request ID creates one stored report, even when the
+instances do not share a local filesystem. This does not guarantee exactly-once
+changes to an external service.
+
+Publication of this initializer is pending exact Quality checks. After
+publication, use:
 
 ```sh
-npm init @emseepea/multi-instance-sqlite-server -- my-server
+npm init @emseepea/multi-instance-postgres-server -- my-server
 ```
 
-[Read the multi-instance SQLite server example](https://github.com/emseepea/emseepea/tree/main/examples/multi-instance-sqlite-server).
+[Read the multi-instance PostgreSQL server example](https://github.com/emseepea/emseepea/tree/main/examples/multi-instance-postgres-server).

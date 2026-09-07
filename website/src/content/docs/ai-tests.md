@@ -47,7 +47,7 @@ Use Node's test runner and import the conversation helpers from
 `@emseepea/testing/semantic`. Start with the
 [pea catalogue conversation](https://github.com/emseepea/emseepea/blob/main/examples/api-backed-server/eval/meaning.test.mjs)
 or the
-[report test with repeated calls](https://github.com/emseepea/emseepea/blob/main/examples/multi-instance-sqlite-server/eval/meaning.test.mjs).
+[report test with repeated calls](https://github.com/emseepea/emseepea/blob/main/examples/multi-instance-postgres-server/eval/meaning.test.mjs).
 
 ```js
 import test from "node:test";

@@ -1,38 +1,44 @@
 {
-  "name": "@emseepea/create-multi-instance-sqlite-server",
-  "version": "0.0.11",
-  "description": "Create a two-instance Em See Pea server backed by SQLite.",
+  "name": "@emseepea/create-multi-instance-postgres-server",
+  "version": "0.0.0",
+  "description": "Create multiple Em See Pea server instances backed by PostgreSQL.",
+  "private": true,
   "license": "MIT",
   "type": "module",
-  "starterDependencies": ["@emseepea/server", "zod"],
+  "starterDependencies": ["@emseepea/server", "pg", "zod"],
   "scripts": {
     "build": "npm run build:example && npm run build:initializer",
     "build:example": "tsc -p tsconfig.json",
     "build:initializer": "node ../../scripts/build-initializer.mjs",
     "start": "node dist/start-two.js",
+    "dev": "docker compose up --detach --wait database && npm run build && npm run db:setup && npm start",
+    "start:instance": "node dist/server.js",
+    "db:setup": "node dist/setup-database.js",
     "test": "npm run build && npm run test:built",
-    "test:built": "node --test test/*.test.mjs",
+    "test:built": "node test/with-postgres.mjs node --test test/*.test.mjs",
     "test:llm": "npm run build && npm run test:llm:built",
-    "test:llm:built": "emseepea-test eval",
+    "test:llm:built": "node test/with-postgres.mjs emseepea-test eval",
     "lint": "oxlint src test eval",
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
     "@emseepea/server": "0.3.3",
+    "pg": "8.23.0",
     "zod": "4.4.3",
     "@emseepea/testing": "0.4.0",
     "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "24.13.3",
+    "@types/pg": "8.23.1",
     "typescript": "6.0.3",
     "oxlint": "1.80.0"
   },
   "engines": {
     "node": ">=22.13.0"
   },
-  "repository": { "type": "git", "url": "git+https://github.com/emseepea/emseepea.git", "directory": "examples/multi-instance-sqlite-server" },
+  "repository": { "type": "git", "url": "git+https://github.com/emseepea/emseepea.git", "directory": "examples/multi-instance-postgres-server" },
   "homepage": "https://emseepea.github.io/emseepea/examples/",
   "bugs": "https://github.com/emseepea/emseepea/issues",
   "publishConfig": { "access": "public", "provenance": true },
-  "bin": { "create-multi-instance-sqlite-server": "./initializer-dist/create.mjs" },
+  "bin": { "create-multi-instance-postgres-server": "./initializer-dist/create.mjs" },
   "files": ["initializer-dist"]
 }

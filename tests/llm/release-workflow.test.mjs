@@ -109,6 +109,8 @@ test("publication evidence uses the canonical public package list", () => {
   assert.match(workflow, /item\.notesFile/);
   assert.match(workflow, /verify-registry-release\.mjs capture/);
   assert.match(workflow, /verify-registry-release\.mjs verify/);
+  assert.match(workflow, /verify-release-readiness\.mjs release-artifacts\/registry-before\.json/);
+  assert.match(workflow, /docs\/reviews\/current-release-readiness\.md/);
   assert.match(workflow, /npm audit signatures/);
   assert.match(workflow, /registry integrity/);
   assert.match(workflow, /provenance/);

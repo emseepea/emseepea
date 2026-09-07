@@ -1,6 +1,6 @@
 # Battle Plan: Build Em See Pea
 
-Last updated: 2026-08-31
+Last updated: 2026-09-07
 
 This is an implementation plan designed to change when evidence shows a better
 route. It keeps the objective, boundaries, proof, and next decision clear.
@@ -36,7 +36,7 @@ Already implemented and checked in earlier revisions:
 - bounded progress updates for local POST requests
 - native and React form renderers with a separate Tailwind package
 - native and React UI examples using the same form contract
-- a two-process SQLite example for one-computer deployments
+- a PostgreSQL example for independently deployed server instances
 - deterministic tests and lint commands owned by every runnable example
 
 The most recent checked release evidence is linked below. Current release work

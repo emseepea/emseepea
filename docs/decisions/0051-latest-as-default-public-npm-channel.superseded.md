@@ -1,5 +1,5 @@
 ---
-status: "proposed"
+status: "superseded"
 date: 2026-09-05
 human-oversight: confirmed
 oversight-date: 2026-09-05
@@ -55,7 +55,7 @@ All public packages use the same default channel. Current documentation omits
 software bills of materials, clean installs, semantic tests, and registry
 readback remain mandatory.
 
-There is one public initializer per maintained example:
+At the time of this decision, there was one public initializer per maintained example:
 
 - `@emseepea/create-tool-server`
 - `@emseepea/create-api-backed-server`

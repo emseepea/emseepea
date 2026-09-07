@@ -277,7 +277,7 @@ test("every packed initializer creates a standalone checked project", {
     const expectedTools = {
       "api-backed-server": ["search-pea-taxa"],
       "tool-server": ["get-pea-variety"],
-      "multi-instance-sqlite-server": ["create-shared-harvest-report", "create-shared-harvest-report"],
+      "multi-instance-postgres-server": ["create-shared-harvest-report", "create-shared-harvest-report"],
       "html-ui-server": ["preview-planting-plan"],
       "sign-in-tool-server": ["get-private-inventory-report"],
       "react-ui-server": ["preview-planting-plan"],
@@ -285,7 +285,7 @@ test("every packed initializer creates a standalone checked project", {
     };
     const expectedFollowUpTools = {
       "tool-server": ["get-pea-variety"],
-      "multi-instance-sqlite-server": ["describe-instance"],
+      "multi-instance-postgres-server": ["describe-instance"],
     };
 
     const queue = [...initializerPackages];
@@ -328,15 +328,15 @@ test("every packed initializer creates a standalone checked project", {
       ], example);
       await runAsync("npm", ["run", "lint"], example);
       await runAsync("npm", ["test"], example);
-      await runAsync("npx", [
-        "--no-install",
-        "emseepea-test",
+      await runAsync("npm", [
+        "run",
+        "test:llm:built",
+        "--",
         "--smoke",
         "--model-command",
         fakeModel,
         "--output",
         "artifacts/smoke.json",
-        "eval",
       ], example);
 
       const evidence = JSON.parse(await readFile(path.join(example, "artifacts/smoke.json"), "utf8"));
