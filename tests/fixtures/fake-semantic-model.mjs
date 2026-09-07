@@ -51,11 +51,12 @@ if (!process.argv.includes("--input-format")) {
 
 function responseFor(prompt) {
   if (prompt.includes("Create a shared harvest report with request ID daily-harvest-report")) return {
-    calls: [
-      { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
-      { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
-    ],
-    answer: "eval-instance created four plants: two shelling and two snap. The request ID reuses the report and creates no other report.",
+    calls: [{ name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } }],
+    answer: "Created report 1 for four plants: two shelling and two snap.",
+  };
+  if (prompt.includes("Create that report again with the same request ID")) return {
+    calls: [{ name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } }],
+    answer: "It returned report 1 again, so no other report was created. It contains two shelling and two snap plants.",
   };
   if (prompt.includes("What exact createdByInstance value")) return { calls: [], answer: "eval-instance" };
   if (prompt.includes("Which server instance is handling")) return {

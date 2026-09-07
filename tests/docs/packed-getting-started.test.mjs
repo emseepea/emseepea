@@ -277,7 +277,7 @@ test("every packed initializer creates a standalone checked project", {
     const expectedTools = {
       "api-backed-server": ["search-pea-taxa"],
       "tool-server": ["get-pea-variety"],
-      "multi-instance-postgres-server": ["create-shared-harvest-report", "create-shared-harvest-report"],
+      "multi-instance-postgres-server": ["create-shared-harvest-report"],
       "html-ui-server": ["preview-planting-plan"],
       "sign-in-tool-server": ["get-private-inventory-report"],
       "react-ui-server": ["preview-planting-plan"],
@@ -285,6 +285,7 @@ test("every packed initializer creates a standalone checked project", {
     };
     const expectedFollowUpTools = {
       "tool-server": ["get-pea-variety"],
+      "multi-instance-postgres-server": ["create-shared-harvest-report"],
     };
 
     const queue = [...initializerPackages];
@@ -345,13 +346,19 @@ test("every packed initializer creates a standalone checked project", {
       assert.equal(result.judgeVerdicts.length, 9);
       assert.equal(result.mode, "conversation");
       for (const trial of result.answerTrials) {
-        assert.equal(trial.turns.length, initializer.example === "resources-and-prompts-server" ? 1 : 2);
+        assert.equal(trial.turns.length, initializer.example === "resources-and-prompts-server"
+          ? 1
+          : initializer.example === "multi-instance-postgres-server" ? 3 : 2);
         assert.equal(trial.turns[0].interactionMode, "native-mcp");
         assert.deepEqual(trial.turns[0].expectedTools, expectedTools[initializer.example] ?? []);
         assert.deepEqual(trial.turns[0].selectedTools, expectedTools[initializer.example] ?? []);
         if (trial.turns[1]) {
           assert.deepEqual(trial.turns[1].expectedTools, expectedFollowUpTools[initializer.example] ?? []);
           assert.deepEqual(trial.turns[1].selectedTools, expectedFollowUpTools[initializer.example] ?? []);
+        }
+        if (trial.turns[2]) {
+          assert.deepEqual(trial.turns[2].expectedTools, []);
+          assert.deepEqual(trial.turns[2].selectedTools, []);
         }
         if (initializer.example === "resources-and-prompts-server") {
           assert.equal(trial.turns[0].advertisedToolCount, 0);
