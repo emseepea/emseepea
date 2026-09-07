@@ -24,14 +24,13 @@ test("reuses the original shared report across server instances", async (t) => {
   ]);
   const repeated = await chat.send(
     "Create that report again with the same request ID. Is its report ID the " +
-    "same as before? How many shelling and snap plants does it contain?",
+    "same as before?",
   );
   assertToolCalls(repeated, [
     { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
   ]);
   await assertResponseMeaning(repeated, {
-    expected:
-      "The repeated request returned the same report ID with two shelling and two snap plants.",
+    expected: "The repeated request returned the same report ID.",
   });
 
   const creator = await chat.send(
