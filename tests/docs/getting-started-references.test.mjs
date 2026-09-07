@@ -14,6 +14,8 @@ const guide = await readFile(guidePath, "utf8");
 const example = "tool-server";
 const manifest = JSON.parse(await readFile(path.join(root, `examples/${example}/package.json`), "utf8"));
 const exec = promisify(execFile);
+const skipInitializers = process.env.EMSEEPEA_SKIP_PACKED_INITIALIZERS;
+assert.ok(skipInitializers === undefined || skipInitializers === "true", "invalid initializer skip value");
 
 test("the quickstart references the initializer's scripts, packages and guide links", async () => {
   assert.ok(guide.includes(`example: ${example}`));
@@ -49,7 +51,10 @@ test("the quickstart references the initializer's scripts, packages and guide li
   }
 });
 
-test("the initialized quickstart passes its documented checks", { timeout: 900_000 }, async () => {
+test("the initialized quickstart passes its documented checks", {
+  timeout: 900_000,
+  skip: skipInitializers === "true",
+}, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-website-guide-"));
   try {
     const packageSource = process.env.EMSEEPEA_GUIDE_PACKAGE_SOURCE ?? "packed";

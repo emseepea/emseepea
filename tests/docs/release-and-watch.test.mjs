@@ -36,6 +36,7 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
         { attempt: 1, databaseId: 11, headSha: mergeSha, url: "https://example.test/release" },
       ]);
     }
+    if (joined.startsWith("run view")) return JSON.stringify({ status: "completed", conclusion: "success" });
     if (command === "npm" && joined.includes("create-multi-instance-postgres-server version")) return '"0.0.1"';
     if (command === "npm" && joined.includes("create-multi-instance-sqlite-server versions")) return '["0.0.11"]';
     if (command === "npm" && joined.includes("create-multi-instance-sqlite-server@0.0.11 deprecated")) {
@@ -56,10 +57,8 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
   assert.deepEqual(calls.find(([command, first, second]) => command === "gh" && first === "pr" && second === "merge"), [
     "gh", "pr", "merge", "25", "--repo", "emseepea/emseepea", "--merge", "--match-head-commit", headSha,
   ]);
-  assert.deepEqual(calls.filter(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), [
-    ["gh", "run", "watch", "10", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
-    ["gh", "run", "watch", "11", "--repo", "emseepea/emseepea", "--exit-status", "--interval", "30"],
-  ]);
+  assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), false);
+  assert.equal(calls.filter(([command, first, second]) => command === "gh" && first === "run" && second === "view").length, 2);
   assert.equal(calls.some(([command, first, spec]) => command === "npm" && first === "view"
     && spec === "@emseepea/create-multi-instance-sqlite-server"), true);
   assert.equal(calls.some(([command, first]) => command === "npm" && first === "unpublish"), false);
@@ -94,9 +93,9 @@ test("release and watch propagates a failed exact-commit pipeline", async () => 
     workflowRuns: JSON.stringify([
       { attempt: 1, databaseId: 10, headSha: mergeSha, url: "https://example.test/quality" },
     ]),
-    watchError: new Error("workflow failed"),
+    conclusion: "failure",
   });
-  await assert.rejects(() => releaseAndWatch({ run }), /workflow failed/);
+  await assert.rejects(() => releaseAndWatch({ run }), /quality\.yml concluded failure/);
 });
 
 test("release and watch times out after an exact workflow run starts", async () => {
@@ -121,7 +120,12 @@ function checkoutRun(overrides = {}, calls = []) {
       return JSON.stringify({ state: "MERGED", mergeCommit: { oid: mergeSha }, url: pullRequest.url });
     }
     if (joined.startsWith("run list")) return overrides.workflowRuns ?? "[]";
-    if (joined.startsWith("run watch") && overrides.watchError) throw overrides.watchError;
+    if (joined.startsWith("run view")) {
+      return JSON.stringify({
+        status: overrides.conclusion ? "completed" : "in_progress",
+        conclusion: overrides.conclusion ?? "",
+      });
+    }
     return "";
   };
 }
