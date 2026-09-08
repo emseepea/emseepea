@@ -1,5 +1,11 @@
 # @emseepea/create-resources-and-prompts-server
 
+## 0.0.13
+
+### Patch Changes
+
+- [`0649825`](https://github.com/emseepea/emseepea/commit/064982503d6b86efbef42d1253bb944737163357) Thanks [@tompahoward](https://github.com/tompahoward)! - Publish the updated maintained initializers so generated projects use @emseepea/testing 0.5.3 and link to the expanded template comparison.
+
 ## 0.0.12
 
 ### Patch Changes
