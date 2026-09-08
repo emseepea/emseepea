@@ -1,9 +1,17 @@
 import assert from "node:assert/strict";
+import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { retireReplacedInitializers } from "../../scripts/retire-replaced-initializers.mjs";
 
 const message = "Deprecated: use @emseepea/create-multi-instance-postgres-server instead.";
+
+test("the package retirement command names an existing script", async () => {
+  const manifest = JSON.parse(await readFile(new URL("../../package.json", import.meta.url), "utf8"));
+  const [, script] = manifest.scripts["release:deprecate-replaced"].split(" ");
+
+  await access(new URL(`../../${script}`, import.meta.url));
+});
 
 test("accepts a replaced initializer that has already been removed", async () => {
   const calls = [];
