@@ -61,3 +61,26 @@ registry state, rendered-site behavior, PostgreSQL behavior, or model behavior.
 | `examples/multi-instance-postgres-server/README.md` | `d7511e82300133cd16b5cc8d39bcf44fb0fa42ab596b454828c91867a0cfb6b2` |
 | `website/src/content/docs/ai-tests.md` | `759dc99f83ca706b87a32f72cff865fc75bf7366eea0356673cdbd67084d3ec4` |
 | `website/src/content/docs/examples.md` | `bf9375845dda589edce423cbc6fe547045ac269b5105fda1fb68200c5ab5a617` |
+
+## Process CPU as the Website Work Budget
+
+Result: PASS. Independent cognitive-accessibility and Markdown accessibility
+review covered the changed performance-budget decision records and generated
+decision compendium.
+
+The content states the user-visible problem, explains which metric remains a
+publication gate, and identifies which metrics remain diagnostic. The wording
+keeps the tradeoff explicit without requiring readers to infer why an isolated
+renderer sample should not fail publication by itself.
+
+This review covers source Markdown. It does not prove CI status, website
+publication, or runtime performance.
+
+Applied rule sources: cognitive-accessibility specialist reference and
+accessibility-agents-markdown extension.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `docs/decisions/0039-website-performance-budget.superseded.md` | `fdc093579984883e711cd87e006f6ae45d67ba0410fcbefe944d6f5af72d4923` |
+| `docs/decisions/0059-process-cpu-as-the-website-work-budget.proposed.md` | `822a74af03f9a2772a2530c58f00973b768a3963b35db8c4e041997cc8559f63` |
+| `docs/decisions/README.md` | `cd5e79eeeb950f757c60a8bfb281cb062ebc282758563694ee2bf6002374ac43` |
