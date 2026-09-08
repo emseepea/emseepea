@@ -148,7 +148,7 @@ async function writeReleaseOutputs() {
   await writeOutput("ready", "true");
 }
 
-export async function readProvenance(item, request = fetch, wait = waitForPropagation) {
+export async function readProvenance(item, { request = fetch, wait = waitForPropagation } = {}) {
   for (let attempt = 1; attempt <= 60; attempt += 1) {
     const response = await request(item.attestationsUrl, { headers: { "cache-control": "no-cache" } });
     if (response.ok) {

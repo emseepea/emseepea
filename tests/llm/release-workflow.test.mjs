@@ -344,7 +344,7 @@ test("registry publication verification allows three minutes for propagation", a
   assert.equal(reads, 60);
 });
 
-test("provenance verification waits for attestation propagation", async () => {
+test("provenance verification waits for attestation propagation", async (t) => {
   const item = { name: "@emseepea/server", attestationsUrl: "https://registry.example/attestations" };
   const statement = { predicateType: "https://slsa.dev/provenance/v1" };
   const provenance = {
@@ -360,15 +360,27 @@ test("provenance verification waits for attestation propagation", async () => {
       : { ok: true, status: 200, json: async () => ({ attestations: [provenance] }) };
   };
 
-  assert.deepEqual(await readProvenance(item, request, async () => { waits += 1; }), statement);
+  assert.deepEqual(await readProvenance(item, { request, wait: async () => { waits += 1; } }), statement);
   assert.equal(calls, 2);
   assert.equal(waits, 1);
 
   await assert.rejects(
-    readProvenance(item, async () => ({ ok: false, status: 403 }), async () => { waits += 1; }),
+    readProvenance(item, {
+      request: async () => ({ ok: false, status: 403 }),
+      wait: async () => { waits += 1; },
+    }),
     /attestations returned 403/,
   );
   assert.equal(waits, 1);
+
+  const originalFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = originalFetch; });
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({ attestations: [provenance] }),
+  });
+  assert.deepEqual(await Promise.all([item].map(readProvenance)), [statement]);
 });
 
 test("registry checks require latest and exact provenance", () => {
