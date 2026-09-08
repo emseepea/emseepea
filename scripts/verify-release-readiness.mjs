@@ -11,7 +11,10 @@ export function assertReleaseReadiness(registryBefore, review) {
     .sort();
   if (pending.length === 0) return;
   assert.match(review, /^- Result: PASS$/m);
-  assert.match(review, /^- Final result: within appetite\.$/m);
+  assert.match(
+    review,
+    /^- Final result: within appetite(?:, subject to the required exact-commit gates)?\.$/m,
+  );
   const reviewed = [...new Set([...review.matchAll(/^- `([^`]+@[^`]+)`$/gm)]
     .map(([, spec]) => spec))]
     .sort();

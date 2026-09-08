@@ -23,6 +23,10 @@ const retryReview = `
 
 test("release readiness covers every unpublished package", () => {
   assert.doesNotThrow(() => assertReleaseReadiness(registry, review));
+  assert.doesNotThrow(() => assertReleaseReadiness(registry, review.replace(
+    "within appetite.",
+    "within appetite, subject to the required exact-commit gates.",
+  )));
   assert.doesNotThrow(() => assertReleaseReadiness(registry, retryReview));
   assert.doesNotThrow(() => assertReleaseReadiness({ packages: [] }, ""));
   assert.throws(
@@ -39,4 +43,8 @@ test("release readiness covers every unpublished package", () => {
   assert.throws(() => assertReleaseReadiness(registry, review.replace("0.0.1", "0.0.2")), /package set/);
   assert.throws(() => assertReleaseReadiness(registry, review.replace("PASS", "PENDING")), /Result: PASS/);
   assert.throws(() => assertReleaseReadiness(registry, review.replace("within appetite", "pending")), /within appetite/);
+  assert.throws(() => assertReleaseReadiness(registry, review.replace(
+    "within appetite.",
+    "within appetite, except for future checks.",
+  )), /within appetite/);
 });
