@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-mongodb-backed-server",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Create an Em See Pea server with schema-enforced and schemaless MongoDB collections.",
   "license": "MIT",
   "type": "module",
@@ -25,7 +25,7 @@
     "json-schema-to-ts": "3.1.1",
     "mongodb": "7.6.0",
     "zod": "4.4.3",
-    "@emseepea/testing": "0.5.2",
+    "@emseepea/testing": "0.5.3",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",
     "oxlint": "1.80.0"
