@@ -1,5 +1,11 @@
 # @emseepea/create-multi-instance-postgres-server
 
+## 0.0.3
+
+### Patch Changes
+
+- [`9a31473`](https://github.com/emseepea/emseepea/commit/9a31473257d46301a2c2445b26d4de3ee5af0882) Thanks [@tompahoward](https://github.com/tompahoward)! - Replace public server identity and generic idempotency fields with instance-agnostic save and get tools keyed by garden bed and harvest date.
+
 ## 0.0.2
 
 ### Patch Changes
