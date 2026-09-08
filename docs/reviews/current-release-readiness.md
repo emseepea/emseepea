@@ -1,27 +1,23 @@
 # Current Release Readiness
 
-Date: 2026-09-08
+Date: 2026-09-09
 
 ## Release Batch
 
-- `@emseepea/create-database-schema-server@0.0.1`
-- `@emseepea/create-mongodb-backed-server@0.0.1`
-- `@emseepea/create-soap-backed-server@0.0.1`
-- `@emseepea/testing@0.5.3`
+- `@emseepea/create-api-backed-server@0.0.14`
+- `@emseepea/create-html-ui-server@0.0.15`
+- `@emseepea/create-multi-instance-postgres-server@0.0.4`
+- `@emseepea/create-progress-streaming-server@0.0.13`
+- `@emseepea/create-react-ui-server@0.0.14`
+- `@emseepea/create-resources-and-prompts-server@0.0.13`
+- `@emseepea/create-sign-in-tool-server@0.0.13`
+- `@emseepea/create-tool-server@0.0.14`
 
 ## Change for Users
 
-The database-schema initializer generates checked-in TypeScript and runtime
-validation from PostgreSQL. It prefers reads and writes through a view and
-includes one stored procedure as a secondary pattern.
-
-The MongoDB initializer shows two collection choices in one project. Pea
-varieties use a MongoDB validator. Pea observations remain schemaless and are
-validated by the application before writes and after reads.
-
-The SOAP initializer keeps a local WSDL and XSD authoritative, generates
-TypeScript from the XSD, validates bounded raw XML before parsing, and returns
-small described JSON results.
+Each maintained initializer now generates projects using `@emseepea/testing`
+0.5.3 and includes links for comparing all templates. The generated runtime
+behavior is unchanged.
 
 ## Local Evidence Before Publication
 
@@ -63,4 +59,6 @@ small described JSON results.
 
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
-- Publication has not yet occurred.
+- The schema-driven database, MongoDB, and SOAP creators and
+  `@emseepea/testing@0.5.3` are published. The eight corrective initializer
+  versions in this batch have not yet been published.
