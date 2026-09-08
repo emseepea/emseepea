@@ -183,3 +183,15 @@ and keeps local results separate from publication proof. No em dashes remain.
   SHA-256: `068438cdffaa7b2acb60009d728006cd99c0c63e7fc6a298bd8a04efc599e8f0`
 - `packages/testing/README.md`
   SHA-256: `a7e2fd569a3b7e42b416ac89883a6595298a82126bf9b7e08db0256a3a62e729`
+
+## Initializer Artifact Version Recovery
+
+Result: PASS. Independent cognitive-accessibility and Markdown accessibility
+reviews covered the corrective Changeset.
+
+The release note is short, direct, and states exactly what generated projects
+receive. It has no hidden prerequisites, ambiguous labels, or blocking
+accessibility findings.
+
+- `.changeset/tidy-pea-initializers.md`
+  SHA-256: `a2ba1803cd2865cbb45a61a9bb00d25276cc7b94194e5ebc648f36434e23faa9`
