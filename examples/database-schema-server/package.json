@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-database-schema-server",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Create an Em See Pea server with internal validation generated from a PostgreSQL schema.",
   "license": "MIT",
   "type": "module",
@@ -26,7 +26,7 @@
     "zod": "4.4.3",
     "kanel": "4.0.4",
     "kanel-zod": "4.0.1",
-    "@emseepea/testing": "0.5.2",
+    "@emseepea/testing": "0.5.3",
     "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "24.13.3",
     "@types/pg": "8.23.1",
