@@ -9,6 +9,7 @@ import { publishablePackages } from "./public-packages.mjs";
 
 const registry = "https://registry.npmjs.org";
 const packageFiles = (await publishablePackages()).map(({ name, path }) => [name, `${path}/package.json`]);
+const waitForPropagation = () => new Promise((resolveDelay) => setTimeout(resolveDelay, 3_000));
 
 export function classifyPublication(before, after) {
   const pending = before.packages.filter(({ present }) => !present);
@@ -19,7 +20,7 @@ export function classifyPublication(before, after) {
   return "missing";
 }
 
-export async function waitForPublication(before, read, wait = () => new Promise((resolveDelay) => setTimeout(resolveDelay, 3_000))) {
+export async function waitForPublication(before, read, wait = waitForPropagation) {
   let after;
   for (let attempt = 1; attempt <= 60; attempt += 1) {
     after = await read();
@@ -147,15 +148,26 @@ async function writeReleaseOutputs() {
   await writeOutput("ready", "true");
 }
 
-async function readProvenance(item) {
-  const response = await fetch(item.attestationsUrl, { headers: { "cache-control": "no-cache" } });
-  assert.equal(response.ok, true, `${item.name} attestations returned ${response.status}`);
-  const attestations = await response.json();
-  const provenance = attestations.attestations?.find(
-    ({ predicateType }) => predicateType === "https://slsa.dev/provenance/v1",
-  );
-  assert.ok(provenance, `${item.name} SLSA provenance is missing`);
-  return JSON.parse(Buffer.from(provenance.bundle.dsseEnvelope.payload, "base64").toString());
+export async function readProvenance(item, request = fetch, wait = waitForPropagation) {
+  for (let attempt = 1; attempt <= 60; attempt += 1) {
+    const response = await request(item.attestationsUrl, { headers: { "cache-control": "no-cache" } });
+    if (response.ok) {
+      const attestations = await response.json();
+      const provenance = attestations.attestations?.find(
+        ({ predicateType }) => predicateType === "https://slsa.dev/provenance/v1",
+      );
+      if (provenance) {
+        return JSON.parse(Buffer.from(provenance.bundle.dsseEnvelope.payload, "base64").toString());
+      }
+      if (attempt === 60) assert.ok(provenance, `${item.name} SLSA provenance is missing`);
+    } else {
+      const retryable = response.status === 404 || response.status === 429 || response.status >= 500;
+      if (!retryable || attempt === 60) {
+        assert.equal(response.ok, true, `${item.name} attestations returned ${response.status}`);
+      }
+    }
+    await wait();
+  }
 }
 
 async function readCurrent(expected) {

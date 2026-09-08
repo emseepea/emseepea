@@ -19,6 +19,7 @@ import {
   classifyPublication,
   provenanceCommit,
   provenanceIncludesCommit,
+  readProvenance,
   waitForPublication,
 } from "../../scripts/verify-registry-release.mjs";
 import { useRegistryTarballs } from "../../scripts/use-registry-tarballs.mjs";
@@ -341,6 +342,33 @@ test("registry publication verification allows three minutes for propagation", a
     /not all packages appeared after publication/,
   );
   assert.equal(reads, 60);
+});
+
+test("provenance verification waits for attestation propagation", async () => {
+  const item = { name: "@emseepea/server", attestationsUrl: "https://registry.example/attestations" };
+  const statement = { predicateType: "https://slsa.dev/provenance/v1" };
+  const provenance = {
+    predicateType: statement.predicateType,
+    bundle: { dsseEnvelope: { payload: Buffer.from(JSON.stringify(statement)).toString("base64") } },
+  };
+  let calls = 0;
+  let waits = 0;
+  const request = async () => {
+    calls += 1;
+    return calls === 1
+      ? { ok: false, status: 404 }
+      : { ok: true, status: 200, json: async () => ({ attestations: [provenance] }) };
+  };
+
+  assert.deepEqual(await readProvenance(item, request, async () => { waits += 1; }), statement);
+  assert.equal(calls, 2);
+  assert.equal(waits, 1);
+
+  await assert.rejects(
+    readProvenance(item, async () => ({ ok: false, status: 403 }), async () => { waits += 1; }),
+    /attestations returned 403/,
+  );
+  assert.equal(waits, 1);
 });
 
 test("registry checks require latest and exact provenance", () => {
