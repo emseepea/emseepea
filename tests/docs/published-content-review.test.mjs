@@ -28,13 +28,14 @@ test("changed public Markdown has cognitive-accessibility review evidence", asyn
   assert.deepEqual(
     missing,
     [],
-    "changed public Markdown needs its path and current SHA-256 together in a cognitive-accessibility review table",
+    "changed public Markdown needs its path and current SHA-256 together in cognitive-accessibility review evidence",
   );
 });
 
 function hasCurrentReview(evidence, file, content) {
   const digest = createHash("sha256").update(content).digest("hex");
-  return evidence.includes(`| \`${file}\` | \`${digest}\` |`);
+  return evidence.includes(`| \`${file}\` | \`${digest}\` |`) ||
+    evidence.includes(`- \`${file}\`\n  SHA-256: \`${digest}\``);
 }
 
 test("review evidence is bound to the same file and unchanged content", () => {
@@ -43,6 +44,7 @@ test("review evidence is bound to the same file and unchanged content", () => {
   const digest = createHash("sha256").update(content).digest("hex");
   const evidence = `| \`${file}\` | \`${digest}\` |`;
   assert.equal(hasCurrentReview(evidence, file, content), true);
+  assert.equal(hasCurrentReview(`- \`${file}\`\n  SHA-256: \`${digest}\``, file, content), true);
   assert.equal(hasCurrentReview(evidence, file, `${content}Unreviewed wording`), false);
   assert.equal(hasCurrentReview(evidence, "README.md", content), false);
   assert.equal(hasCurrentReview(`${file}\n| \`README.md\` | \`${digest}\` |`, file, content), false);

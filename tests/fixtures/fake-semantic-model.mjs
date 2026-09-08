@@ -50,6 +50,42 @@ if (!process.argv.includes("--input-format")) {
 }
 
 function responseFor(prompt) {
+  if (prompt.includes("Among the saved snap pea varieties")) return {
+    calls: [{ name: "list-pea-varieties", arguments: { pea_type: "snap" } }],
+    answer: "Sugar Ann is the fastest listed snap pea variety and matures in 56 days.",
+  };
+  if (prompt.includes("Which snap pea variety matures fastest")) return {
+    calls: [{ name: "list-pea-varieties", arguments: { pea_type: "snap" } }],
+    answer: "Sugar Ann is the fastest listed snap pea variety and matures in 56 days.",
+  };
+  if (prompt.includes("Add Golden Sweet as a climbing mangetout")) return {
+    calls: [{ name: "add-pea-variety", arguments: {
+      name: "Golden Sweet",
+      pea_type: "mangetout",
+      growth_habit: "climbing",
+      days_to_maturity: 70,
+      notes: "Purple flowers and flat edible pods.",
+    } }],
+    answer: "Added Golden Sweet as a climbing mangetout pea that matures in 70 days.",
+  };
+  if (prompt.includes("Record that Golden Sweet was flowering")) return {
+    calls: [{ name: "record-pea-observation", arguments: {
+      variety_name: "Golden Sweet",
+      observed_on: "2026-09-08",
+      location: "west trellis",
+      growth_stage: "flowering",
+      notes: "First flower opened.",
+    } }],
+    answer: "Recorded Golden Sweet flowering in the west trellis on 8 September 2026.",
+  };
+  if (prompt.includes("What have I observed about Golden Sweet")) return {
+    calls: [{ name: "list-pea-observations", arguments: { variety_name: "Golden Sweet" } }],
+    answer: "Golden Sweet was flowering in the west trellis on 8 September 2026, and its first flower had opened.",
+  };
+  if (prompt.includes("Tell me about the Sugar Ann pea variety")) return {
+    calls: [{ name: "get-pea-variety", arguments: { name: "Sugar Ann" } }],
+    answer: "Sugar Ann is an early bush snap pea that matures in 56 days. Its compact plants have edible pods.",
+  };
   if (prompt.includes("Save a harvest report for North Bed")) return {
     calls: [{ name: "save-harvest-report", arguments: {
       gardenBed: "North Bed", harvestDate: "2026-09-08", shellingCount: 12, snapCount: 8,

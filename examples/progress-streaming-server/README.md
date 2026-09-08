@@ -7,7 +7,7 @@ This directory is both the maintained example and its public npm initializer.
 Use this template for a tool that reports bounded progress while its HTTP call
 remains open. Choose the [tool server](../tool-server/README.md) when the result
 can return promptly. This template does not add replay, reconnectable sessions,
-or subscriptions. [Compare all eight templates](https://emseepea.github.io/emseepea/examples/).
+or subscriptions. [Compare all templates](https://emseepea.github.io/emseepea/examples/).
 
 ## Create a Project
 

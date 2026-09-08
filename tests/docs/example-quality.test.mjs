@@ -34,9 +34,11 @@ test("every runnable example visibly owns deterministic and LLM checks", async (
     assert.ok(cases.length > 0);
     assert.equal(
       manifest.scripts["test:llm:built"],
-      directory.name === "multi-instance-postgres-server"
+      directory.name.includes("postgres") || directory.name === "database-schema-server"
         ? "node test/with-postgres.mjs emseepea-test eval"
-        : "emseepea-test eval",
+        : directory.name === "mongodb-backed-server"
+          ? "node test/with-mongodb.mjs emseepea-test eval"
+          : "emseepea-test eval",
     );
     assert.match(manifest.scripts.lint, /\beval\b/);
     assert.ok(!(await readdir(new URL(directory.name + "/", examplesRoot))).some((name) => /eval.*\.ya?ml$/.test(name)));

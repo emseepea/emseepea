@@ -71,6 +71,9 @@ Replace `my-server` with an unused directory name:
 - [An HTML form](examples/html-ui-server/README.md): `npm init @emseepea/html-ui-server -- my-server`
 - [A React form](examples/react-ui-server/README.md): `npm init @emseepea/react-ui-server -- my-server`
 - [Interchangeable instances sharing PostgreSQL](examples/multi-instance-postgres-server/README.md): `npm init @emseepea/multi-instance-postgres-server -- my-server`
+- [Types and validation generated from PostgreSQL](examples/database-schema-server/README.md): `npm init @emseepea/database-schema-server -- my-server`
+- [Schema-enforced and schemaless MongoDB collections](examples/mongodb-backed-server/README.md): `npm init @emseepea/mongodb-backed-server -- my-server`
+- [A contract-validated SOAP service](examples/soap-backed-server/README.md): `npm init @emseepea/soap-backed-server -- my-server`
 
 Each command creates a standalone app with `private: true` in `package.json`,
 plus its lint, ordinary tests, and semantic tests. The two form starters also
@@ -152,7 +155,7 @@ Publication does not expand these claims.
 
 The source and examples are public under MIT. The monorepo root has
 `private: true` in `package.json`. The published packages include the server,
-testing helpers, React renderer, Tailwind stylesheet, and eight example-backed
+testing helpers, React renderer, Tailwind stylesheet, and eleven example-backed
 initializer packages.
 
 [cognitive-publication]: docs/decisions/0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md

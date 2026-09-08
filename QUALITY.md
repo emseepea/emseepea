@@ -16,7 +16,7 @@ green proxy check is not evidence for an untested claim.
 
 Steps 1 through 5 run on Node.js 22 and 24 from a GitHub-hosted clean checkout.
 Step 6 runs once in a separate job with a time limit. Full standalone
-qualification of all eight initializers runs separately once on Node.js 24
+qualification of all initializer packages runs separately once on Node.js 24
 after that scan passes. A failure stops the job; later steps are not evidence
 for earlier ones. A successful Quality run for a push to
 `main` is the prepublication trust gate for that exact commit. Release starts
@@ -139,7 +139,7 @@ Accessibility Guidelines (WCAG) conformance.
   merged commit. The root remains private. Each initializer's public package
   identity, README, changelog, and maintained source live together in its
   `examples/*` directory. Packaging-only wrapper workspaces are not allowed.
-  React, Tailwind, and all eight initializer packages are eligible for publication.
+  React, Tailwind, and every initializer in the canonical public package list are eligible for publication.
 - The release job must depend on passing language-model checks for the publishing
   SHA through pinned Claude CLI and `claude-sonnet-4-6`. It uses the Claude
   subscription OAuth secret. Inspectable evidence uses only synthetic,

@@ -274,18 +274,23 @@ test("every packed initializer creates a standalone checked project", {
     ].map(async ([name, packagePath]) => [name, await packPackage(packagePath, directory)])));
     const fakeModel = path.join(directory, "fake-model.mjs");
     await cp(new URL("../fixtures/fake-semantic-model.mjs", import.meta.url), fakeModel);
-    const expectedTools = {
-      "api-backed-server": ["search-pea-taxa"],
-      "tool-server": ["get-pea-variety"],
-      "multi-instance-postgres-server": ["save-harvest-report"],
-      "html-ui-server": ["preview-planting-plan"],
-      "sign-in-tool-server": ["get-private-inventory-report"],
-      "react-ui-server": ["preview-planting-plan"],
-      "progress-streaming-server": ["run-germination-trial"],
-    };
-    const expectedFollowUpTools = {
-      "tool-server": ["get-pea-variety"],
-      "multi-instance-postgres-server": ["get-harvest-report"],
+    const expectedToolsByTurn = {
+      "api-backed-server": [["search-pea-taxa"], []],
+      "database-schema-server": [["list-pea-varieties"], ["add-pea-variety"]],
+      "html-ui-server": [["preview-planting-plan"], []],
+      "mongodb-backed-server": [
+        ["list-pea-varieties"],
+        ["add-pea-variety"],
+        ["record-pea-observation"],
+        ["list-pea-observations"],
+      ],
+      "multi-instance-postgres-server": [["save-harvest-report"], ["get-harvest-report"]],
+      "progress-streaming-server": [["run-germination-trial"], []],
+      "react-ui-server": [["preview-planting-plan"], []],
+      "resources-and-prompts-server": [[]],
+      "sign-in-tool-server": [["get-private-inventory-report"], []],
+      "soap-backed-server": [["get-pea-variety"]],
+      "tool-server": [["get-pea-variety"], ["get-pea-variety"]],
     };
 
     const queue = [...initializerPackages];
@@ -343,18 +348,16 @@ test("every packed initializer creates a standalone checked project", {
       const result = Object.values(evidence.cases)[0];
       assert.equal(evidence.status, "passed", `${initializer.example} semantic smoke failed`);
       assert.equal(result.answerTrials.length, 3);
-      assert.equal(result.judgeVerdicts.length, 9);
+      assert.equal(result.judgeVerdicts.length, initializer.example === "mongodb-backed-server" ? 18 : 9);
       assert.equal(result.mode, "conversation");
       for (const trial of result.answerTrials) {
-        assert.equal(trial.turns.length, initializer.example === "resources-and-prompts-server"
-          ? 1
-          : 2);
-        assert.equal(trial.turns[0].interactionMode, "native-mcp");
-        assert.deepEqual(trial.turns[0].expectedTools, expectedTools[initializer.example] ?? []);
-        assert.deepEqual(trial.turns[0].selectedTools, expectedTools[initializer.example] ?? []);
-        if (trial.turns[1]) {
-          assert.deepEqual(trial.turns[1].expectedTools, expectedFollowUpTools[initializer.example] ?? []);
-          assert.deepEqual(trial.turns[1].selectedTools, expectedFollowUpTools[initializer.example] ?? []);
+        const expectedTurns = expectedToolsByTurn[initializer.example];
+        assert.ok(expectedTurns, `missing smoke expectations for ${initializer.example}`);
+        assert.equal(trial.turns.length, expectedTurns.length);
+        for (const [index, expectedTools] of expectedTurns.entries()) {
+          assert.equal(trial.turns[index].interactionMode, "native-mcp");
+          assert.deepEqual(trial.turns[index].expectedTools, expectedTools);
+          assert.deepEqual(trial.turns[index].selectedTools, expectedTools);
         }
         if (initializer.example === "resources-and-prompts-server") {
           assert.equal(trial.turns[0].advertisedToolCount, 0);

@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { validateConversationOptions } from "./case.mjs";
+import { environmentForTrial, validateConversationOptions } from "./case.mjs";
 import {
   listMcpTools,
   semanticAuthToken,
@@ -60,7 +60,10 @@ export async function createConversation(testContext, options) {
 
   try {
     for (let trial = 1; trial <= 3; trial += 1) {
-      const running = await startSemanticServer(specification, testContext.signal);
+      const running = await startSemanticServer({
+        ...specification,
+        environment: environmentForTrial(specification.environment, trial),
+      }, testContext.signal);
       try {
         const tools = await listMcpTools(running.url, specification, testContext.signal);
         const record = { trial, turns: [] };

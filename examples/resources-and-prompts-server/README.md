@@ -7,7 +7,7 @@ This directory is both the maintained example and its public npm initializer.
 Use this template to publish readable resources, parameterized resource
 addresses, reusable prompts, and prompt-field suggestions. Choose the
 [tool server](../tool-server/README.md) when the model needs to call an
-operation instead of reading material or rendering a prompt. [Compare all eight templates](https://emseepea.github.io/emseepea/examples/).
+operation instead of reading material or rendering a prompt. [Compare all templates](https://emseepea.github.io/emseepea/examples/).
 
 ## Create a Project
 

@@ -1,0 +1,40 @@
+{
+  "name": "@emseepea/create-soap-backed-server",
+  "version": "0.0.0",
+  "description": "Create an Em See Pea server that validates a SOAP service from its XSD contract.",
+  "license": "MIT",
+  "type": "module",
+  "starterDependencies": ["@emseepea/server", "@types/sax", "soap", "xml-xsd-engine", "zod"],
+  "scripts": {
+    "build": "npm run build:example && npm run build:initializer",
+    "build:example": "tsc -p tsconfig.json && tsc -p tsconfig.type-tests.json",
+    "build:initializer": "node ../../scripts/build-initializer.mjs",
+    "generate": "node scripts/generate-types.mjs",
+    "generate:check": "node scripts/check-generated.mjs",
+    "start": "node dist/server.js",
+    "test": "npm run build && npm run test:built",
+    "test:built": "node --test test/*.test.mjs",
+    "test:llm": "npm run build && npm run test:llm:built",
+    "test:llm:built": "emseepea-test eval",
+    "lint": "oxlint src test test-types eval scripts test-support",
+    "prepack": "npm run build:initializer"
+  },
+  "devDependencies": {
+    "@emseepea/server": "0.3.3",
+    "soap": "1.11.0",
+    "xml-xsd-engine": "1.7.3",
+    "zod": "4.4.3",
+    "@emseepea/testing": "0.5.2",
+    "@types/node": "24.13.3",
+    "@types/sax": "1.2.7",
+    "typescript": "6.0.3",
+    "oxlint": "1.80.0"
+  },
+  "engines": { "node": ">=22.13.0" },
+  "repository": { "type": "git", "url": "git+https://github.com/emseepea/emseepea.git", "directory": "examples/soap-backed-server" },
+  "homepage": "https://emseepea.github.io/emseepea/examples/",
+  "bugs": "https://github.com/emseepea/emseepea/issues",
+  "publishConfig": { "access": "public", "provenance": true },
+  "bin": { "create-soap-backed-server": "./initializer-dist/create.mjs" },
+  "files": ["initializer-dist"]
+}

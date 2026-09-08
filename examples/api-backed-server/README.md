@@ -7,7 +7,7 @@ This directory is both the maintained example and its public npm initializer.
 Use this template when a tool calls a public JSON API and must validate and
 select the fields returned to the caller. Choose the [tool server](../tool-server/README.md)
 when all data is local, or the [sign-in tool server](../sign-in-tool-server/README.md)
-when calling the tool requires authentication. [Compare all eight templates](https://emseepea.github.io/emseepea/examples/).
+when calling the tool requires authentication. [Compare all templates](https://emseepea.github.io/emseepea/examples/).
 
 ## Create a Project
 

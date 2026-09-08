@@ -9,7 +9,8 @@ export interface ConversationOptions {
   server: URL;
   /** Real application context supplied in production. Never use this as test guidance. */
   context?: string;
-  environment?: Record<string, string>;
+  /** Server environment shared by all trials, or isolated values selected by trial number. */
+  environment?: Record<string, string> | ((trial: number) => Record<string, string>);
   authToken?: string;
   authTokenEnvironment?: string;
 }

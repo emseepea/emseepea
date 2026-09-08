@@ -7,7 +7,7 @@ This directory is both the maintained example and its public npm initializer.
 Use this template when anyone may discover a tool but only an authenticated
 caller may run it. Choose the [tool server](../tool-server/README.md) when the
 tool is public. This example uses a made-up token, so replace its token checker
-before real use. [Compare all eight templates](https://emseepea.github.io/emseepea/examples/).
+before real use. [Compare all templates](https://emseepea.github.io/emseepea/examples/).
 
 ## Create a Project
 

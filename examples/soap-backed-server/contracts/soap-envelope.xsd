@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:pea="urn:emseepea:pea-service"
+  targetNamespace="http://schemas.xmlsoap.org/soap/envelope/"
+  elementFormDefault="qualified">
+  <xs:import namespace="urn:emseepea:pea-service" schemaLocation="pea-service.xsd"/>
+  <xs:complexType name="SoapBody">
+    <xs:choice>
+      <xs:element ref="pea:GetPeaResponse"/>
+      <xs:element name="Fault" type="xs:anyType"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="SoapEnvelope">
+    <xs:sequence>
+      <xs:element name="Body" type="soap:SoapBody"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Envelope" type="soap:SoapEnvelope"/>
+</xs:schema>

@@ -7,7 +7,7 @@ This directory is both the maintained example and its public npm initializer.
 Use this template for the smallest server with one public, read-only tool and
 no external service, sign-in, web page, progress stream, or shared storage.
 Choose the [API-backed server](../api-backed-server/README.md) when the tool
-must call a public web service. [Compare all eight templates](https://emseepea.github.io/emseepea/examples/).
+must call a public web service. [Compare all templates](https://emseepea.github.io/emseepea/examples/).
 
 ## Create a Project
 

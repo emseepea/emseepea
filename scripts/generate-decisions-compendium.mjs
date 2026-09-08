@@ -158,7 +158,8 @@ function scalar(value = "") {
 }
 
 function references(value = "") {
-  return [...value.matchAll(/ADR-\d{4}/g)].map(([reference]) => reference);
+  return [...value.matchAll(/\b(?:ADR-)?(\d{4})(?=[^0-9]|$)/g)]
+    .map(([, number]) => `ADR-${number}`);
 }
 
 function renderIndex(title, decisions) {
@@ -189,7 +190,15 @@ function renderDecision(decision, byId) {
     lines.push(`- Replaced by: ${linkedReferences(decision.supersededBy, byId)}`);
   }
 
-  lines.push("", "#### Decision", "", decision.chosen, "", "#### How We Check It", "");
+  lines.push(
+    "",
+    `#### ${decision.id} Decision`,
+    "",
+    decision.chosen,
+    "",
+    `#### ${decision.id} Checks`,
+    "",
+  );
   lines.push(...decision.confirmation.map((check) => `- ${check}`));
   return lines;
 }

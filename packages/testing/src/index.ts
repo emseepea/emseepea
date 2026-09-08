@@ -16,6 +16,7 @@ export interface StartMcpServerOptions {
 
 export interface RunningMcpServer {
   connect(token?: string): Promise<Client>;
+  output(): Readonly<{ stdout: string; stderr: string }>;
   url: URL;
 }
 
@@ -74,6 +75,7 @@ export async function startMcpServer(
 
   return {
     url,
+    output: () => Object.freeze({ stdout: output, stderr: errors }),
     async connect(token = options.token) {
       const client = new Client(
         { name: options.clientName ?? "emseepea-test", version: "0.0.0" },

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:pea="urn:emseepea:pea-service"
+  targetNamespace="urn:emseepea:pea-service"
+  elementFormDefault="qualified">
+  <xs:simpleType name="PeaType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+      <xs:maxLength value="40"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="PeaVariety">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="peaType" type="pea:PeaType"/>
+      <xs:element name="daysToMaturity" type="xs:positiveInteger"/>
+      <xs:element name="note" type="xs:string" minOccurs="0"/>
+      <xs:element name="trait" type="xs:string" minOccurs="0" maxOccurs="5"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="GetPeaRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="name" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetPeaResponse" type="pea:PeaVariety"/>
+</xs:schema>

@@ -71,6 +71,27 @@ export const publicPackages = [
       deprecation: "Deprecated: use @emseepea/create-multi-instance-postgres-server instead.",
     },
   },
+  {
+    name: "@emseepea/create-database-schema-server",
+    path: "examples/database-schema-server",
+    key: "create-database-schema-server",
+    example: "database-schema-server",
+    description: "Create an Em See Pea server with internal validation generated from a PostgreSQL schema.",
+  },
+  {
+    name: "@emseepea/create-mongodb-backed-server",
+    path: "examples/mongodb-backed-server",
+    key: "create-mongodb-backed-server",
+    example: "mongodb-backed-server",
+    description: "Create an Em See Pea server with schema-enforced and schemaless MongoDB collections.",
+  },
+  {
+    name: "@emseepea/create-soap-backed-server",
+    path: "examples/soap-backed-server",
+    key: "create-soap-backed-server",
+    example: "soap-backed-server",
+    description: "Create an Em See Pea server that validates a SOAP service from its XSD contract.",
+  },
 ];
 
 export const initializerPackages = publicPackages.filter(({ example }) => example);

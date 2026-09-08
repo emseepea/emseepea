@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 58 decisions: 30 current and 28 historical.
+This project has 62 decisions: 33 current and 29 historical.
 
 ## Quick Index
 
@@ -41,6 +41,9 @@ This project has 58 decisions: 30 current and 28 historical.
 - [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.proposed.md): Proposed; human review confirmed.
 - [ADR-0058: Instance-Agnostic Shared PostgreSQL State](0058-instance-agnostic-shared-postgresql-state.proposed.md): Proposed; human review confirmed.
 - [ADR-0059: Process CPU as the Website Work Budget](0059-process-cpu-as-the-website-work-budget.proposed.md): Proposed; human review confirmed.
+- [ADR-0060: Database Schema Generated Internal Validation](0060-database-schema-generated-internal-validation.proposed.md): Proposed; human review confirmed.
+- [ADR-0062: XSD-Generated SOAP Structure and Runtime Validation](0062-wsdl-and-xsd-generated-soap-validation.proposed.md): Proposed; human review confirmed.
+- [ADR-0063: Two MongoDB Collection Validation Patterns](0063-two-mongodb-collection-validation-patterns.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -72,6 +75,7 @@ This project has 58 decisions: 30 current and 28 historical.
 - [ADR-0054: Provider-Native MCP Semantic Conversations](0054-provider-native-mcp-semantic-conversations.superseded.md): Superseded; human review confirmed.
 - [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.superseded.md): Superseded; human review confirmed.
+- [ADR-0061: MongoDB JSON Schema Generated Internal Validation](0061-mongodb-json-schema-generated-internal-validation.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -81,11 +85,11 @@ This project has 58 decisions: 30 current and 28 historical.
 - Human review: Confirmed
 - Replaced by: [ADR-0004: Fastify-First TypeScript Framework Foundation](0004-fastify-first-typescript-foundation.superseded.md)
 
-#### Decision
+#### ADR-0001 Decision
 
 Chosen option: **"Public-specification-first framework using the official SDK"**.
 
-#### How We Check It
+#### ADR-0001 Checks
 
 - Clean installs, builds, and tests pass on Node.js 22 and 24.
 - Raw HTTP tests cover discovery, listing, calling, malformed input, header mismatch, and disabled capabilities.
@@ -100,11 +104,11 @@ Chosen option: **"Public-specification-first framework using the official SDK"**
 - Human review: Confirmed
 - Replaced by: [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.proposed.md)
 
-#### Decision
+#### ADR-0002 Decision
 
 Chosen option: **"Explicit trusted-proxy production profile"**, because it is the smallest production boundary whose trust and resource assumptions can be stated and tested honestly.
 
-#### How We Check It
+#### ADR-0002 Checks
 
 - public binding is impossible in the loopback profile;
 - untrusted peers and IPv4-mapped comparison errors are rejected;
@@ -122,11 +126,11 @@ Chosen option: **"Explicit trusted-proxy production profile"**, because it is th
 - Human review: Confirmed
 - Replaced by: [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
 
-#### Decision
+#### ADR-0003 Decision
 
 Chosen option: **"Public repository with private packages and gated Changesets release PRs"**, because it makes development and quality evidence public while preserving an explicit later decision for registry identity and publication.
 
-#### How We Check It
+#### ADR-0003 Checks
 
 - GitHub identifies `windyroad/emseepea` as public with `main` as its default branch.
 - The repository includes the exact MIT licence text and public contribution, security, and support boundaries.
@@ -143,11 +147,11 @@ Chosen option: **"Public repository with private packages and gated Changesets r
 - Replaces: [ADR-0001: Public-Specification-First TypeScript Framework Foundation](0001-foundation.superseded.md)
 - Replaced by: [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.superseded.md)
 
-#### Decision
+#### ADR-0004 Decision
 
 Chosen option: **"Fastify-first official MCP integration"**.
 
-#### How We Check It
+#### ADR-0004 Checks
 
 - Clean installs, builds, and tests pass on Node.js 22 and 24.
 - Real Fastify HTTP tests cover discovery, listing, calling, malformed input, and disabled capabilities.
@@ -160,11 +164,11 @@ Chosen option: **"Fastify-first official MCP integration"**.
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0005 Decision
 
 Chosen option: **"Active surface with adaptive delivery"**.
 
-#### How We Check It
+#### ADR-0005 Checks
 
 - Every release names only its currently proven modules and deployment boundary.
 - The coverage ledger traces every shipped claim to public requirements and passing evidence.
@@ -177,11 +181,11 @@ Chosen option: **"Active surface with adaptive delivery"**.
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0006 Decision
 
 Chosen option: **"Compile public contracts and private manifests"**.
 
-#### How We Check It
+#### ADR-0006 Checks
 
 - Repeated clean builds produce byte-identical public contract artifacts.
 - Duplicate, invalid, unresolved, and dependency-incomplete registrations fail startup.
@@ -194,11 +198,11 @@ Chosen option: **"Compile public contracts and private manifests"**.
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0007 Decision
 
 Chosen option: **"One checked execution kernel"**.
 
-#### How We Check It
+#### ADR-0007 Checks
 
 - Malformed, unauthenticated, unauthorized, and invalid requests cause zero handler and adapter calls.
 - Backend contract failures cannot emit partial or unvalidated public results.
@@ -212,11 +216,11 @@ Chosen option: **"One checked execution kernel"**.
 - Human review: Confirmed
 - Replaced by: [ADR-0017: Public Discovery with Protected Tool Invocation](0017-public-discovery-with-protected-tool-invocation.superseded.md)
 
-#### Decision
+#### ADR-0008 Decision
 
 Chosen option: **"Explicit public or OAuth-protected operations"**.
 
-#### How We Check It
+#### ADR-0008 Checks
 
 - Missing access declarations fail startup.
 - Invalid issuer, audience, expiry, scope, object, or tenant authorization causes zero application calls.
@@ -229,11 +233,11 @@ Chosen option: **"Explicit public or OAuth-protected operations"**.
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0009 Decision
 
 Chosen option: **"Capability-scoped reliability and state"**.
 
-#### How We Check It
+#### ADR-0009 Checks
 
 - Deadline expiry and disconnect cancellation stop all cooperating downstream work.
 - Retry tests prove bounds, deadline adherence, and absence on unsafe effects.
@@ -246,11 +250,11 @@ Chosen option: **"Capability-scoped reliability and state"**.
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0010 Decision
 
 Chosen option: **"POST-scoped SSE with bounded state"**.
 
-#### How We Check It
+#### ADR-0010 Checks
 
 - JSON and SSE paths produce the same validated final domain result.
 - Slow-reader tests prove queue bounds and deterministic overflow termination.
@@ -263,11 +267,11 @@ Chosen option: **"POST-scoped SSE with bounded state"**.
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0011 Decision
 
 Chosen option: **"Optional React renderer and Tailwind style packages"**.
 
-#### How We Check It
+#### ADR-0011 Checks
 
 - Native and React/Tailwind examples render the same shared fixtures and states.
 - The React/Tailwind example imports `@emseepea/react`, not private source.
@@ -291,11 +295,11 @@ Chosen option: **"Optional React renderer and Tailwind style packages"**.
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0012 Decision
 
 Chosen option: **"Typed configuration and isolated OpenTelemetry boundary"**.
 
-#### How We Check It
+#### ADR-0012 Checks
 
 - Invalid, missing, and out-of-range safety configuration fails closed.
 - Liveness and readiness expose no application data and reflect dependency failure.
@@ -308,11 +312,11 @@ Chosen option: **"Typed configuration and isolated OpenTelemetry boundary"**.
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0014 Decision
 
 Chosen option: **"Adopt the guide's provisional JSON/tools budget"**.
 
-#### How We Check It
+#### ADR-0014 Checks
 
 - The benchmark command and environment are committed and reproducible from a clean checkout.
 - Results separately report throughput, framework CPU, transient allocation, and added bytes.
@@ -326,11 +330,11 @@ Chosen option: **"Adopt the guide's provisional JSON/tools budget"**.
 - Status: Superseded
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0015 Decision
 
 Chosen option: **"Ordinary reproducible evidence and exact claims"**.
 
-#### How We Check It
+#### ADR-0015 Checks
 
 - Every public claim maps to current tests and named clean-checkout artifacts.
 - Raw HTTP negative tests prove invalid and security failures cause zero application calls.
@@ -345,11 +349,11 @@ Chosen option: **"Ordinary reproducible evidence and exact claims"**.
 - Replaces: [ADR-0004: Fastify-First TypeScript Framework Foundation](0004-fastify-first-typescript-foundation.superseded.md)
 - Replaced by: [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md)
 
-#### Decision
+#### ADR-0016 Decision
 
 Chosen option: **"Product scope with role-specific package names"**, because `@emseepea/server` is concise, groups the product family under its own public npm identity, and accurately signals the ratified Fastify-first server foundation.
 
-#### How We Check It
+#### ADR-0016 Checks
 
 - Workspace manifests and imports use `@emseepea/server` and no longer use `@windyroad/emseepea`.
 - Optional UI documentation uses `@emseepea/react` and `@emseepea/tailwind`.
@@ -371,11 +375,11 @@ Chosen option: **"Product scope with role-specific package names"**, because `@e
 - Replaces: [ADR-0008: Public and OAuth Protected Resource Security](0008-public-and-oauth-protected-resource-security.superseded.md)
 - Replaced by: [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md)
 
-#### Decision
+#### ADR-0017 Decision
 
 Chosen option: **"Public discovery and listing, invocation-scoped protection"**.
 
-#### How We Check It
+#### ADR-0017 Checks
 
 - A client without a token can call `server/discover` and `tools/list`.
 - Protected tools are listed with only public contract and access metadata.
@@ -390,11 +394,11 @@ Chosen option: **"Public discovery and listing, invocation-scoped protection"**.
 - Human review: Confirmed
 - Replaces: [ADR-0017: Public Discovery with Protected Tool Invocation](0017-public-discovery-with-protected-tool-invocation.superseded.md)
 
-#### Decision
+#### ADR-0018 Decision
 
 Chosen option: **"Public discovery with invocation-scoped OAuth and retained outbound controls"**.
 
-#### How We Check It
+#### ADR-0018 Checks
 
 - A client without a token can call `server/discover` and `tools/list`.
 - Protected tools are listed with only public contract and access metadata.
@@ -412,11 +416,11 @@ Chosen option: **"Public discovery with invocation-scoped OAuth and retained out
 - Replaces: [ADR-0003: Public Windy Road Repository with Gated Changesets Releases](0003-public-repository-and-release-governance.superseded.md)
 - Replaced by: [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md)
 
-#### Decision
+#### ADR-0019 Decision
 
 Chosen option: **"Public pre-alpha releases through npm trusted publishing"**, because it proves the real adopter path while keeping release authority short lived, workflow-specific, and independently verifiable.
 
-#### How We Check It
+#### ADR-0019 Checks
 
 - `@emseepea/server` is public under MIT; the root and examples remain private.
 - The first publication is exactly `@emseepea/server@0.0.1` under `next`.
@@ -436,11 +440,11 @@ Chosen option: **"Public pre-alpha releases through npm trusted publishing"**, b
 - Human review: Confirmed
 - Replaced by: [ADR-0021: Mandatory Semantic LLM Qualification for Examples and Releases](0021-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md)
 
-#### Decision
+#### ADR-0020 Decision
 
 Chosen option: **"Mandatory Promptfoo qualification with GitHub Copilot CLI"**, because it tests the user-visible meaning of every example while retaining a bounded, auditable, exact-commit release gate.
 
-#### How We Check It
+#### ADR-0020 Checks
 
 - Every example has at least one Promptfoo case with deterministic critical facts, a semantic rubric, and explicit MCP path evidence.
 - Every case runs three uncached agent trials and three judge verdicts, and all three trials pass without semantic retries.
@@ -461,11 +465,11 @@ Chosen option: **"Mandatory Promptfoo qualification with GitHub Copilot CLI"**, 
 - Replaces: [ADR-0020: Mandatory Semantic LLM Qualification for Examples and Releases](0020-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md)
 - Replaced by: [ADR-0022: Harness-Mediated Semantic LLM Qualification for Examples and Releases](0022-harness-mediated-semantic-llm-qualification-for-examples-and-releases.superseded.md)
 
-#### Decision
+#### ADR-0021 Decision
 
 Chosen option: **"Mandatory Promptfoo qualification with GitHub Copilot CLI"**, because it tests the user-visible meaning of every example while retaining a bounded, auditable, exact-commit release gate.
 
-#### How We Check It
+#### ADR-0021 Checks
 
 - Every example has Promptfoo qualification with deterministic critical facts, a semantic rubric, and explicit MCP path evidence.
 - Every example runs three uncached agent trials and three judge verdicts, and all three trials pass without semantic retries.
@@ -487,11 +491,11 @@ Chosen option: **"Mandatory Promptfoo qualification with GitHub Copilot CLI"**, 
 - Replaces: [ADR-0021: Mandatory Semantic LLM Qualification for Examples and Releases](0021-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md)
 - Replaced by: [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.superseded.md)
 
-#### Decision
+#### ADR-0022 Decision
 
 Chosen option: **"Harness-mediated MCP material with GitHub Copilot CLI"**, because it tests the user-visible meaning of every example while retaining a bounded, auditable, exact-commit release gate and working within provider policy.
 
-#### How We Check It
+#### ADR-0022 Checks
 
 - Every example has Promptfoo qualification with deterministic critical facts, a semantic rubric, and explicit MCP path evidence.
 - Every example runs three uncached agent trials and three judge verdicts, and all three trials pass without semantic retries.
@@ -511,11 +515,11 @@ Chosen option: **"Harness-mediated MCP material with GitHub Copilot CLI"**, beca
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0023 Decision
 
 Chosen option: **"Mandatory specialist review plus a density guard"**, because the realised README failure passed structural checks and required human cognitive-accessibility judgement to identify. Automation remains a regression signal, not a comprehension claim.
 
-#### How We Check It
+#### ADR-0023 Checks
 
 - `QUALITY.md` defines the mandatory review, published-content scope, and fail-closed publication rule.
 - A standing register entry records incomprehensible public content as a risk.
@@ -532,11 +536,11 @@ Chosen option: **"Mandatory specialist review plus a density guard"**, because t
 - Replaces: [ADR-0022: Harness-Mediated Semantic LLM Qualification for Examples and Releases](0022-harness-mediated-semantic-llm-qualification-for-examples-and-releases.superseded.md)
 - Replaced by: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md)
 
-#### Decision
+#### ADR-0024 Decision
 
 Chosen option: **"Pinned Claude CLI with subscription OAuth"**, because it preserves the existing purpose-built Promptfoo harness, works in GitHub Actions with the existing Claude subscription, and needs no GitHub App or model API key.
 
-#### How We Check It
+#### ADR-0024 Checks
 
 - `@anthropic-ai/claude-code` and Promptfoo are exact development dependencies and are absent from the published server package.
 - The provider invokes the repository-local Claude binary with `claude-sonnet-4-6`, safe mode, no saved session, no inherited settings, no MCP configuration, and no tools.
@@ -552,11 +556,11 @@ Chosen option: **"Pinned Claude CLI with subscription OAuth"**, because it prese
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0025 Decision
 
 Chosen option: **"Astro Starlight"**, because it supplies documentation layouts with little custom code.
 
-#### How We Check It
+#### ADR-0025 Checks
 
 - A clean Node.js 22 and 24 checkout builds the site.
 - The site uses the existing brand and accessibility requirements.
@@ -568,11 +572,11 @@ Chosen option: **"Astro Starlight"**, because it supplies documentation layouts 
 - Human review: Confirmed
 - Replaced by: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md)
 
-#### Decision
+#### ADR-0026 Decision
 
 Chosen option: **"Example-owned quality commands with shared tooling"**, because it makes quality visible where adopters learn while keeping credentials, provider isolation, and exact-release evidence in one place.
 
-#### How We Check It
+#### ADR-0026 Checks
 
 - Every runnable `examples/*/package.json` exposes `test`, `test:built`, and `test:llm`.
 - Every runnable example contains at least one deterministic test and one `eval.yaml` file referenced by the Promptfoo configuration.
@@ -589,11 +593,11 @@ Chosen option: **"Example-owned quality commands with shared tooling"**, because
 - Replaces: [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
 - Replaced by: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md)
 
-#### Decision
+#### ADR-0027 Decision
 
 Chosen option: **"One public `@emseepea/testing` package"**, because semantic qualification is a product capability and its deterministic and model-backed checks share the same server lifecycle and official MCP client boundary.
 
-#### How We Check It
+#### ADR-0027 Checks
 
 - `@emseepea/testing` is public under MIT with no dependency on `@emseepea/server` or bundled proprietary model CLI.
 - Every runnable example imports the package as a development dependency and owns one deterministic test and one semantic case.
@@ -614,11 +618,11 @@ Chosen option: **"One public `@emseepea/testing` package"**, because semantic qu
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0028 Decision
 
 Chosen option: **"Example-owned Oxlint dependency with root orchestration"**, because an example must carry everything needed to lint itself after it leaves the monorepo.
 
-#### How We Check It
+#### ADR-0028 Checks
 
 - The root and every copyable example declare the same exact MIT-licensed Oxlint version compatible with supported Node 22 and 24 releases.
 - Every copyable example exposes a lint command that references only paths and dependencies contained in that example.
@@ -637,11 +641,11 @@ Chosen option: **"Example-owned Oxlint dependency with root orchestration"**, be
 - Replaces: [ADR-0024: Subscription-Backed Claude Semantic Release Checks](0024-subscription-backed-claude-semantic-release-checks.superseded.md), [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.superseded.md), [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md)
 - Replaced by: [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.superseded.md)
 
-#### Decision
+#### ADR-0029 Decision
 
 Chosen option: **"Direct code-first semantic tests"**, because normal code gives examples the needed flexibility. The existing runner already produces repeated answers and release evidence without Promptfoo.
 
-#### How We Check It
+#### ADR-0029 Checks
 
 - `@emseepea/testing` has no Promptfoo dependency and passes a clean high-severity dependency audit.
 - Every runnable example owns an executable semantic test and exposes `test:llm` from its package.
@@ -660,11 +664,11 @@ Chosen option: **"Direct code-first semantic tests"**, because normal code gives
 - Human review: Confirmed
 - Replaces: [ADR-0002: Explicit Anonymous Production Boundary Behind a Trusted Proxy](0002-anonymous-production-boundary.superseded.md)
 
-#### Decision
+#### ADR-0030 Decision
 
 Chosen option: **"Public POST progress through a trusted proxy"**, because a POST-scoped stream does not require shared state. A reverse proxy can select an instance and that instance can own the response until it ends.
 
-#### How We Check It
+#### ADR-0030 Checks
 
 - Configuration rejects production progress for tools that require sign-in.
 - Black-box tests start a real reverse proxy and two independent Em See Pea server processes.
@@ -687,11 +691,11 @@ Chosen option: **"Public POST progress through a trusted proxy"**, because a POS
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0031 Decision
 
 Chosen option: **"Website workspace in this monorepo"**, because it keeps website tooling separate from published packages.
 
-#### How We Check It
+#### ADR-0031 Checks
 
 - The website has its own package manifest with `private: true`.
 - No published package depends on the website workspace.
@@ -702,11 +706,11 @@ Chosen option: **"Website workspace in this monorepo"**, because it keeps websit
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0032 Decision
 
 Chosen option: **"Static files"**, because the initial website does not need application services.
 
-#### How We Check It
+#### ADR-0032 Checks
 
 - Build output can be served as static files without an application process.
 - The site has no server adapter, API route, runtime secret, analytics, or cookies.
@@ -717,11 +721,11 @@ Chosen option: **"Static files"**, because the initial website does not need app
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0033 Decision
 
 Chosen option: **"GitHub Pages"**, because it fits the existing repository workflow.
 
-#### How We Check It
+#### ADR-0033 Checks
 
 - Only checked static output is deployed from the selected revision.
 - Workflow actions are pinned and permissions are limited to their tasks.
@@ -733,11 +737,11 @@ Chosen option: **"GitHub Pages"**, because it fits the existing repository workf
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0034 Decision
 
 Chosen option: **"One guide source"**, because it avoids inconsistent copies.
 
-#### How We Check It
+#### ADR-0034 Checks
 
 - Each guide has one maintained source, with descriptive README links.
 - Runnable snippets have one source rather than separately edited copies.
@@ -747,12 +751,13 @@ Chosen option: **"One guide source"**, because it avoids inconsistent copies.
 
 - Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.superseded.md)
 
-#### Decision
+#### ADR-0035 Decision
 
 Chosen option: **"Executable guide checks"**, because readers need commands proven against installable packages.
 
-#### How We Check It
+#### ADR-0035 Checks
 
 - Build and guide checks pass on clean Node.js 22 and 24 checkouts.
 - Routes, links, fragments, assets, canonical URLs, and sitemap checks pass.
@@ -767,11 +772,11 @@ Chosen option: **"Executable guide checks"**, because readers need commands prov
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0036 Decision
 
 Chosen option: **"One current set"**, because multiple supported documentation versions are not yet needed.
 
-#### How We Check It
+#### ADR-0036 Checks
 
 - The initial site has one maintained current guide set.
 - Pages and runnable guides agree on the supported package versions.
@@ -782,11 +787,11 @@ Chosen option: **"One current set"**, because multiple supported documentation v
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0037 Decision
 
 Chosen option: **"Local search"**, because it avoids adding a hosted search service.
 
-#### How We Check It
+#### ADR-0037 Checks
 
 - Search uses the built site index without hosted search credentials.
 - Keyboard and screen-reader users can operate search.
@@ -798,11 +803,11 @@ Chosen option: **"Local search"**, because it avoids adding a hosted search serv
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0038 Decision
 
 Chosen option: **"Measure, then approve a budget"**, because website limits need website evidence.
 
-#### How We Check It
+#### ADR-0038 Checks
 
 - Measurements identify the tested website build and measurement conditions.
 - All named resource, processing, and memory measurements are recorded.
@@ -815,11 +820,11 @@ Chosen option: **"Measure, then approve a budget"**, because website limits need
 - Human review: Confirmed
 - Replaced by: [ADR-0059: Process CPU as the Website Work Budget](0059-process-cpu-as-the-website-work-budget.proposed.md)
 
-#### Decision
+#### ADR-0039 Decision
 
 Chosen option: **"Adopt the measured-build limits"**, because the first build passes them with room for variation.
 
-#### How We Check It
+#### ADR-0039 Checks
 
 - Preserve the approved limits when checking a build for publication.
 - Bind the report to the exact Git revision and built-file hashes being published.
@@ -835,11 +840,11 @@ Chosen option: **"Adopt the measured-build limits"**, because the first build pa
 - Replaces: [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md)
 - Replaced by: [ADR-0053: Conversation-Style Semantic Tests](0053-conversation-style-semantic-tests.superseded.md)
 
-#### Decision
+#### ADR-0040 Decision
 
 Chosen option: **"Validated model-selected call plans"**, because it tests the model's choice while keeping execution, validation, credentials, cancellation, and evidence under one deterministic harness.
 
-#### How We Check It
+#### ADR-0040 Checks
 
 - Deterministic tests accept correct advertised selections and reject missing, unknown, extra, malformed, and over-limit selections.
 - Arguments must be objects and are checked again by the real MCP server.
@@ -857,11 +862,11 @@ Chosen option: **"Validated model-selected call plans"**, because it tests the m
 - Human review: Confirmed
 - Replaces: [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.superseded.md)
 
-#### Decision
+#### ADR-0041 Decision
 
 Chosen option: **"Em See Pea organisation ownership"**, because the product now has a dedicated public organisation and the owner has completed the transfer.
 
-#### How We Check It
+#### ADR-0041 Checks
 
 - GitHub identifies `emseepea/emseepea` as the public authoritative repository.
 - The organisation and repository use the approved name, mark, description, and website.
@@ -877,11 +882,11 @@ Chosen option: **"Em See Pea organisation ownership"**, because the product now 
 - Human review: Confirmed
 - Replaced by: [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.superseded.md)
 
-#### Decision
+#### ADR-0042 Decision
 
 Chosen option: **"One initializer package per example"**, because each command states the project being created and maps directly to npm's scoped initializer convention.
 
-#### How We Check It
+#### ADR-0042 Checks
 
 - Each documented `npm init @emseepea/<name>@next -- <directory>` command creates the named starter in an empty destination.
 - Every command refuses path traversal, a non-empty destination, and overwriting.
@@ -897,12 +902,14 @@ Chosen option: **"One initializer package per example"**, because each command s
 
 - Status: Superseded
 - Human review: Confirmed
+- Replaces: [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.superseded.md)
+- Replaced by: [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.superseded.md)
 
-#### Decision
+#### ADR-0043 Decision
 
 Chosen option: **"Fast Node matrix plus one full Node 24 initializer job"**, because supported-runtime compatibility and standalone package qualification are different evidence and do not need the same matrix.
 
-#### How We Check It
+#### ADR-0043 Checks
 
 - Pull-request and main-branch Node.js matrix jobs run on Node.js 22 and 24 without the full eight-initializer test.
 - One Node.js 24 job per CI event runs the unchanged full initializer test against the canonical package list.
@@ -920,11 +927,11 @@ Chosen option: **"Fast Node matrix plus one full Node 24 initializer job"**, bec
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0044 Decision
 
 Chosen option: **"Exact-commit push and watch command"**, because the push and its evidence must be one fail-closed operation. The command non-force pushes the current committed `HEAD` to `emseepea/emseepea` `main`, checks that remote `main` equals the captured local SHA, discovers Quality and Release by workflow identity and exact SHA, and watches every matching run to completion.
 
-#### How We Check It
+#### ADR-0044 Checks
 
 - `npm run push:watch` performs a non-force push of committed `HEAD` to `origin/main`.
 - The command rejects a repository other than `emseepea/emseepea`.
@@ -938,13 +945,14 @@ Chosen option: **"Exact-commit push and watch command"**, because the push and i
 
 - Status: Superseded
 - Human review: Confirmed
+- Replaces: [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.superseded.md)
 - Replaced by: [ADR-0046: Lockfile-Constrained Dependency Verification](0046-lockfile-constrained-dependency-verification.superseded.md)
 
-#### Decision
+#### ADR-0045 Decision
 
 Chosen option: **"Quality-gated release continuation"**, because Quality can remain the unprivileged trust gate for untrusted `main`, while Release can reuse its exact-SHA evidence and retain only checks that must occur at release time.
 
-#### How We Check It
+#### ADR-0045 Checks
 
 - Quality runs on pushes to `main` and retains Node.js 22 and 24, audit, performance, load, accessibility, website, and initializer checks.
 - Release triggers only from a successful Quality `workflow_run` whose event is `push`, branch is `main`, repository is `emseepea/emseepea`, and head SHA is present.
@@ -965,11 +973,11 @@ Chosen option: **"Quality-gated release continuation"**, because Quality can rem
 - Replaces: [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.superseded.md)
 - Replaced by: [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md)
 
-#### Decision
+#### ADR-0046 Decision
 
 Chosen option: **"Lockfile-constrained verification"**, because the committed lockfile and existing packed-consumer checks provide deterministic dependency evidence without depending on the unavailable advisory service. Published packages still require registry integrity, signatures, provenance, and clean installation verification.
 
-#### How We Check It
+#### ADR-0046 Checks
 
 - Quality contains no npm vulnerability advisory call.
 - Release contains no npm vulnerability advisory call.
@@ -983,11 +991,11 @@ Chosen option: **"Lockfile-constrained verification"**, because the committed lo
 - Human review: Confirmed
 - Replaces: [ADR-0046: Lockfile-Constrained Dependency Verification](0046-lockfile-constrained-dependency-verification.superseded.md)
 
-#### Decision
+#### ADR-0047 Decision
 
 Chosen option: **"Pinned OSV lockfile scan"**, because it stops publication when a known vulnerability is found without using npm's advisory endpoint or creating a custom scanner. Both official actions are fixed to one specific commit, and the job scans only `package-lock.json`.
 
-#### How We Check It
+#### ADR-0047 Checks
 
 - Quality scans only the root `package-lock.json` with OSV Scanner.
 - Scanner and reporter actions are fixed to specific commits.
@@ -1002,11 +1010,11 @@ Chosen option: **"Pinned OSV lockfile scan"**, because it stops publication when
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0048 Decision
 
 Chosen option: **"Optional deterministic startup discovery"**, because it removes repetitive registration and catalogue drift while preserving explicit registration and the existing execution and validation boundaries.
 
-#### How We Check It
+#### ADR-0048 Checks
 
 - Repeated discovery returns capabilities in the same order and produces byte-identical public contract output.
 - Effective MCP discovery exactly matches the compiled registry.
@@ -1022,11 +1030,11 @@ Chosen option: **"Optional deterministic startup discovery"**, because it remove
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0049 Decision
 
 Chosen option: **"Exact-commit release pull request merge and watch"**, because the release state change and its fail-closed evidence must be one reproducible operation.
 
-#### How We Check It
+#### ADR-0049 Checks
 
 - `npm run release:watch` rejects a repository other than `emseepea/emseepea`, a dirty checkout, or a branch other than `main`.
 - It requires exactly one open `changeset-release/main` pull request targeting `main`, with a base revision equal to local `HEAD`.
@@ -1041,11 +1049,11 @@ Chosen option: **"Exact-commit release pull request merge and watch"**, because 
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0050 Decision
 
 Chosen option: **"Schema-declared pass-through by default with explicit exceptions"**, because it lets compatible backend values evolve without duplicating their catalogue while keeping the public contract deliberate and safe.
 
-#### How We Check It
+#### ADR-0050 Checks
 
 - A test proves that a previously unseen but structurally valid value in an approved backend field reaches public structured output unchanged.
 - Malformed backend values and undeclared backend fields cannot reach public output.
@@ -1060,11 +1068,11 @@ Chosen option: **"Schema-declared pass-through by default with explicit exceptio
 - Replaces: [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.superseded.md)
 - Replaced by: [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.superseded.md)
 
-#### Decision
+#### ADR-0051 Decision
 
 Chosen option: **"Publish all public packages to `latest`"**, because the qualified public releases are the versions Em See Pea recommends people use. Package maturity is communicated by `0.x` versions and clear pre-alpha wording, not by requiring an extra npm tag in every command.
 
-#### How We Check It
+#### ADR-0051 Checks
 
 - The root release command publishes without a non-default tag override.
 - Public package manifests do not set `publishConfig.tag` to `next`.
@@ -1079,11 +1087,11 @@ Chosen option: **"Publish all public packages to `latest`"**, because the qualif
 - Status: Proposed
 - Human review: Confirmed
 
-#### Decision
+#### ADR-0052 Decision
 
 Chosen option: **"Framework-owned optional HTTP route discovery"**, because it removes repeated route catalogues without copying infrastructure or adding a dependency.
 
-#### How We Check It
+#### ADR-0052 Checks
 
 - Both UI examples and their generated projects register file and page routes through the public discovery API.
 - Existing direct Fastify registration continues to work.
@@ -1098,11 +1106,11 @@ Chosen option: **"Framework-owned optional HTTP route discovery"**, because it r
 - Replaces: [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.superseded.md)
 - Replaced by: [ADR-0054: Provider-Native MCP Semantic Conversations](0054-provider-native-mcp-semantic-conversations.superseded.md)
 
-#### Decision
+#### ADR-0053 Decision
 
 Chosen option: **"Conversation-style JavaScript tests"**, because it makes the test's behaviour readable while reusing the qualified implementation already in `@emseepea/testing`.
 
-#### How We Check It
+#### ADR-0053 Checks
 
 - Public types and deterministic tests cover context omission, sequential prompts, isolated histories, exact calls, arguments, order, count, and no-call turns.
 - Tool calls execute only through the instrumented official MCP client after validation against advertised contracts.
@@ -1121,11 +1129,11 @@ Chosen option: **"Conversation-style JavaScript tests"**, because it makes the t
 - Replaces: [ADR-0053: Conversation-Style Semantic Tests](0053-conversation-style-semantic-tests.superseded.md)
 - Replaced by: [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.superseded.md)
 
-#### Decision
+#### ADR-0054 Decision
 
 Chosen option: **"Provider-native MCP conversations"**, because it tests the behaviour the framework claims to qualify without teaching the model how to select or format a call.
 
-#### How We Check It
+#### ADR-0054 Checks
 
 - A behavioural test proves the model input equals the user's message exactly.
 - No structured-output schema, selection instruction, call-plan shape, answer wrapper, or advertised-tool JSON is sent in a native selection turn.
@@ -1145,11 +1153,11 @@ Chosen option: **"Provider-native MCP conversations"**, because it tests the beh
 - Replaces: [ADR-0054: Provider-Native MCP Semantic Conversations](0054-provider-native-mcp-semantic-conversations.superseded.md)
 - Replaced by: [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.proposed.md)
 
-#### Decision
+#### ADR-0055 Decision
 
 Chosen option: **"Native client journeys only"**, because semantic evidence must represent what users of the MCP will actually experience.
 
-#### How We Check It
+#### ADR-0055 Checks
 
 - The public testing API has no `prepare()` method.
 - Semantic provider input contains only the exact user messages plus explicit application context supplied by the test author.
@@ -1165,11 +1173,11 @@ Chosen option: **"Native client journeys only"**, because semantic evidence must
 - Replaces: [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.superseded.md)
 - Replaced by: [ADR-0058: Instance-Agnostic Shared PostgreSQL State](0058-instance-agnostic-shared-postgresql-state.proposed.md)
 
-#### Decision
+#### ADR-0056 Decision
 
 Chosen option: **"Replace SQLite with PostgreSQL"**, because a multi-instance example must preserve its coordination guarantees when instances run on different computers.
 
-#### How We Check It
+#### ADR-0056 Checks
 
 - The active package list contains exactly eight initializers and replaces the SQLite entry with `@emseepea/create-multi-instance-postgres-server`.
 - The new initializer creates a private standalone project from its maintained example directory and includes its Compose and SQL files.
@@ -1187,11 +1195,11 @@ Chosen option: **"Replace SQLite with PostgreSQL"**, because a multi-instance ex
 - Human review: Confirmed
 - Replaces: [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.superseded.md)
 
-#### Decision
+#### ADR-0057 Decision
 
 Chosen option: **"Inspectable evidence by default"**, because a semantic test report that hides the response and reason cannot reliably explain its own failure.
 
-#### How We Check It
+#### ADR-0057 Checks
 
 - Evidence contains readable prompts, assistant responses, public tool calls, model-visible tool results, expected meanings, and judge reasons.
 - A rejected meaning check records all nine configured verdicts before failing.
@@ -1206,11 +1214,11 @@ Chosen option: **"Inspectable evidence by default"**, because a semantic test re
 - Human review: Confirmed
 - Replaces: [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.superseded.md)
 
-#### Decision
+#### ADR-0058 Decision
 
 Chosen option: **"Instance-agnostic shared state"**, because server identity and retry mechanics are implementation details, while garden bed and harvest date are stable concepts in the user's task.
 
-#### How We Check It
+#### ADR-0058 Checks
 
 - Tool discovery lists only `save-harvest-report` and `get-harvest-report`.
 - Public schemas and responses contain no instance, routing, request ID, idempotency, or storage ID fields.
@@ -1227,13 +1235,107 @@ Chosen option: **"Instance-agnostic shared state"**, because server identity and
 - Human review: Confirmed
 - Replaces: [ADR-0039: Website Performance Budget](0039-website-performance-budget.superseded.md)
 
-#### Decision
+#### ADR-0059 Decision
 
 Chosen option: **"Gate total Chromium process CPU"**, because it preserves the broad work limit while avoiding a second, narrower release gate whose isolated spikes cannot be attributed to the website.
 
-#### How We Check It
+#### ADR-0059 Checks
 
 - Every required trial and phase records finite, nonnegative task, script, and layout duration diagnostics.
 - A task-duration value above the former ceiling does not fail publication.
 - Observed process CPU above 800 milliseconds on desktop or 2,000 milliseconds on the slowed renderer profile fails publication.
 - Existing file-size, memory, completeness, error, environment, artifact, and exact-revision checks remain enforced.
+
+### [ADR-0060: Database Schema Generated Internal Validation](0060-database-schema-generated-internal-validation.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0060 Decision
+
+Chosen option: **"PostgreSQL catalog with Kanel and Kanel Zod"**, because it starts from the database contract the example is meant to integrate and uses an existing generator rather than adding project-owned code generation.
+
+#### ADR-0060 Checks
+
+- The initializer creates a private standalone project containing its SQL, generation configuration, generated types and validators, and documented regeneration command.
+- CI creates PostgreSQL from committed SQL, regenerates files, requires a clean diff, compiles the result, and runs database-boundary validation.
+- Changing a view shape changes generated TypeScript and Zod output.
+- Generated files contain no credentials, connection strings, or environment-specific catalog details.
+- Ordinary tests cover read-through-view, write-through-view, stored-procedure, bounded results, invalid database output, statement timeout, unavailable database, generic errors, and absence of `DATABASE_URL` from output and logs.
+- Semantic tests use the natural MCP journey and demonstrate the view-backed tools with the minimum model calls needed for useful coverage.
+- The package passes the existing standalone, release, provenance, registry, accessibility, and documentation gates.
+- The README and package description say PostgreSQL demonstrates a transferable pattern and do not claim multi-database runtime support.
+- Measured process CPU, memory, and network evidence is recorded before release.
+
+### [ADR-0061: MongoDB JSON Schema Generated Internal Validation](0061-mongodb-json-schema-generated-internal-validation.superseded.md)
+
+- Status: Superseded
+- Human review: Confirmed
+- Replaced by: [ADR-0063: Two MongoDB Collection Validation Patterns](0063-two-mongodb-collection-validation-patterns.proposed.md)
+
+#### ADR-0061 Decision
+
+Chosen option: **"MongoDB JSON Schema with Ajv and json-schema-to-ts"**, because MongoDB can enforce the schema and the application can reuse the same contract without introducing an object-document mapper.
+
+#### ADR-0061 Checks
+
+- Collection setup applies the identical `as const` schema object used by Ajv strict mode and `FromSchema` inference.
+- A compatibility test proves every schema keyword used is accepted by MongoDB, Ajv strict mode, and `FromSchema`.
+- Tests prove MongoDB rejects invalid writes, application validation rejects an invalid document inserted through test-only `bypassDocumentValidation`, and compatible new string values pass through.
+- The public MCP schemas contain descriptions and do not expose MongoDB IDs or routing details unless the user task requires them.
+- Tests prove fixed projections, bounded results and timeouts, generic errors, and rejection of caller-provided MongoDB operators, collection names, sorts, and destinations.
+- Measured process CPU, memory, and network evidence is recorded before release.
+- The initializer creates a private standalone project and passes ordinary, semantic, package, provenance, registry, accessibility, and documentation checks.
+
+### [ADR-0062: XSD-Generated SOAP Structure and Runtime Validation](0062-wsdl-and-xsd-generated-soap-validation.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0062 Decision
+
+Chosen option: **"SOAP client plus shared XSD generation and validation"**, because one XSD graph can precisely generate backend types and govern runtime acceptance without creating a generator inside Em See Pea.
+
+#### ADR-0062 Checks
+
+- The same committed local XSD graph drives TypeScript generation and runtime XML validation.
+- Compile-time fixtures using the generated request and response types prove required fields cannot be omitted, optional fields may be omitted, `trait` is an array, and `daysToMaturity` is a number rather than a string.
+- Namespace identity is preserved in the generated schema model and proven by runtime acceptance and rejection tests.
+- Runtime tests accept a positive integer, a 1-to-40-character pea type, zero to five traits, and an omitted optional note. They reject zero, a negative integer, a fractional number, a non-number, empty and over-40-character pea types, six traits, a missing required field, and a wrong namespace.
+- Mapper input and output compile against generated types without casts or hand-written duplicate interfaces.
+- A clean offline generation produces no diff.
+- Clean generation succeeds with network access disabled and remote WSDL or XSD resolution is impossible.
+- Changing an XSD primitive type changes generated TypeScript and runtime acceptance. Changing only a value facet changes runtime acceptance and the generated schema model but need not change the TypeScript interface.
+- A compatibility test proves the custom transport validates the raw response before parsing and never invokes the SOAP parser for an oversized, DTD-bearing, entity-bearing, malformed, or XSD-invalid response.
+- Tests cover a successful call, SOAP fault, invalid XML, XSD-invalid XML, DTD and entity rejection, oversized response before full buffering, timeout, cross-origin redirect, fixed destination, and blocked external schema resolution.
+- Invalid, malformed, oversized, timed-out, redirected, or externally resolving responses never reach the SOAP parser or mapper.
+- Tests independently prove the parser's external-entity and resource limits instead of accepting dependency claims as evidence.
+- OSV, licence, software-bill-of-materials, provenance, and packed standalone checks cover `soap` and `xml-xsd-engine`.
+- Semantic tests prove natural tool selection and answer meaning without adding MCP hints to model context.
+- The initializer creates a private standalone project and passes ordinary, semantic, package, provenance, registry, accessibility, and documentation gates.
+- Qualification measures process CPU and memory before release and records enforced limits.
+
+### [ADR-0063: Two MongoDB Collection Validation Patterns](0063-two-mongodb-collection-validation-patterns.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0061: MongoDB JSON Schema Generated Internal Validation](0061-mongodb-json-schema-generated-internal-validation.superseded.md)
+
+#### ADR-0063 Decision
+
+Chosen option: **"Two validation patterns in one initializer"**, because users can compare both boundaries in one small project and choose the approach that matches each existing collection.
+
+#### ADR-0063 Checks
+
+- `pea_varieties` retains a MongoDB validator equal to its application schema.
+- `pea_observations` has no MongoDB validator.
+- Each collection has exactly one `as const` standard JSON Schema object used by Ajv strict mode and `FromSchema`, with no copied interface or manual field validator.
+- An invalid variety write is rejected by MongoDB.
+- An invalid observation presented to the application causes zero MongoDB write calls, while a test-only direct invalid insert proves the collection itself is schemaless.
+- Invalid stored documents from either collection fail application validation and never reach public output.
+- Compatible unseen string values pass through both paths without translation maps or an application release.
+- Variety and observation tools have distinct task semantics and do not expose the validation policy, MongoDB IDs, collection selectors, operators, sorts, or destinations.
+- Fixed projections, limits, timeouts, generic failures, readiness, and clean shutdown are tested for both paths.
+- Semantic evaluation covers model-visible variety and observation behavior at the minimum useful model cost. It does not claim to test database enforcement.
+- The initializer creates a private standalone project and passes ordinary, semantic, pack, clean-install, OSV, licence, software-bill-of-materials, provenance, registry, accessibility, and documentation checks.
+- Measured process CPU, memory, and network evidence for both paths replaces the planning assumptions before release.

@@ -110,8 +110,20 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Install the browser used by UI checks
         run: npx playwright install --with-deps chromium
+      - name: Regenerate schema-derived code
+        run: |
+          npm run generate:check -w @emseepea/create-database-schema-server
+          npm run generate:check -w @emseepea/create-soap-backed-server
       - name: Verify every standalone initializer
         run: npm run test:initializers:packed
+      - name: Enforce integration example performance budgets
+        run: |
+          cd "$GITHUB_WORKSPACE/examples/database-schema-server"
+          node test/with-postgres.mjs node --expose-gc "$GITHUB_WORKSPACE/scripts/measure-integration-example.mjs" database
+          cd "$GITHUB_WORKSPACE/examples/mongodb-backed-server"
+          node test/with-mongodb.mjs node --expose-gc "$GITHUB_WORKSPACE/scripts/measure-integration-example.mjs" mongodb
+          cd "$GITHUB_WORKSPACE"
+          node --expose-gc scripts/measure-integration-example.mjs soap
 
   website-performance:
     name: Website publication checks

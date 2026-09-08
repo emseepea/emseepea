@@ -10,7 +10,7 @@ coherent PostgreSQL-backed application state. It demonstrates interchangeable,
 stateless MCP processes without exposing server identity or routing to users.
 
 Choose the [tool server](../tool-server/README.md) when one process and in-memory
-data are enough. [Compare all eight templates](https://emseepea.github.io/emseepea/examples/).
+data are enough. [Compare all templates](https://emseepea.github.io/emseepea/examples/).
 
 ## Create a Project
 

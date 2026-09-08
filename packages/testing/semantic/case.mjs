@@ -17,11 +17,23 @@ export function validateConversationOptions(value) {
   if (value.authToken !== undefined && value.authTokenEnvironment !== undefined) {
     throw new Error("Choose one authentication source");
   }
-  if (value.environment !== undefined && (!value.environment || typeof value.environment !== "object"
-    || Array.isArray(value.environment)
-    || Object.values(value.environment).some((item) => typeof item !== "string"))) {
-    throw new Error("environment must contain string values");
+  if (value.environment !== undefined && typeof value.environment !== "function") {
+    validateEnvironment(value.environment);
   }
   const server = fileURLToPath(value.server);
   return { ...value, server, directory: dirname(server) };
+}
+
+export function environmentForTrial(environment, trial) {
+  const resolved = typeof environment === "function" ? environment(trial) : environment;
+  if (resolved === undefined) return undefined;
+  validateEnvironment(resolved);
+  return resolved;
+}
+
+function validateEnvironment(environment) {
+  if (!environment || typeof environment !== "object" || Array.isArray(environment)
+    || Object.values(environment).some((item) => typeof item !== "string")) {
+    throw new Error("environment must contain string values");
+  }
 }

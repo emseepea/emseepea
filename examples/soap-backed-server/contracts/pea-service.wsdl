@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:pea="urn:emseepea:pea-service"
+  targetNamespace="urn:emseepea:pea-service">
+  <types>
+    <xs:schema>
+      <xs:import namespace="urn:emseepea:pea-service" schemaLocation="pea-service.xsd"/>
+    </xs:schema>
+  </types>
+  <message name="GetPeaInput"><part name="parameters" element="pea:GetPeaRequest"/></message>
+  <message name="GetPeaOutput"><part name="parameters" element="pea:GetPeaResponse"/></message>
+  <portType name="PeaServicePortType">
+    <operation name="GetPea"><input message="pea:GetPeaInput"/><output message="pea:GetPeaOutput"/></operation>
+  </portType>
+  <binding name="PeaServiceBinding" type="pea:PeaServicePortType">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+    <operation name="GetPea">
+      <soap:operation soapAction="GetPea"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+  </binding>
+  <service name="PeaService">
+    <port name="PeaServicePort" binding="pea:PeaServiceBinding">
+      <soap:address location="http://127.0.0.1:3999/soap"/>
+    </port>
+  </service>
+</definitions>

@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { validateConversationOptions } from "../semantic/case.mjs";
+import { environmentForTrial, validateConversationOptions } from "../semantic/case.mjs";
 import { discoverTests } from "../semantic/discover.mjs";
 
 const options = { server: new URL("./fake-model.mjs", import.meta.url) };
@@ -25,7 +25,7 @@ test("every example ordinary-test command excludes the sibling eval directory", 
     const manifest = JSON.parse(await readFile(new URL(`${entry.name}/package.json`, examples), "utf8"));
     const testScript = manifest.scripts["test:built"];
     assert.doesNotMatch(testScript, /eval/, entry.name);
-    if (testScript.includes("with-postgres.mjs")) {
+    if (/node test\/with-[a-z-]+\.mjs/.test(testScript)) {
       assert.match(testScript, /node --test test\/\*\.test\.mjs/, entry.name);
       continue;
     }
@@ -47,6 +47,12 @@ test("conversation options keep context optional and credentials exclusive", () 
     authToken: "token",
     authTokenEnvironment: "TOKEN",
   }), /Choose one/);
+  const environment = (trial) => ({ DATABASE_URL: `postgres://trial-${trial}` });
+  assert.equal(validateConversationOptions({ ...options, environment }).environment, environment);
+  assert.deepEqual(environmentForTrial(environment, 2), {
+    DATABASE_URL: "postgres://trial-2",
+  });
+  assert.throws(() => environmentForTrial(() => ({ PORT: 3000 }), 1), /string values/);
 });
 
 test("recursive discovery handles 100 nested cases without a central list", async (t) => {

@@ -1,0 +1,45 @@
+{
+  "name": "@emseepea/create-database-schema-server",
+  "version": "0.0.0",
+  "description": "Create an Em See Pea server with internal validation generated from a PostgreSQL schema.",
+  "license": "MIT",
+  "type": "module",
+  "starterDependencies": ["@emseepea/server", "pg", "zod"],
+  "scripts": {
+    "build": "npm run build:example && npm run build:initializer",
+    "build:example": "tsc -p tsconfig.json",
+    "build:initializer": "node ../../scripts/build-initializer.mjs",
+    "generate": "kanel --config kanel.config.cjs",
+    "generate:check": "node test/with-postgres.mjs node scripts/check-generated.mjs",
+    "start": "node dist/server.js",
+    "dev": "docker compose up --detach --wait database && npm run generate && npm run build && npm start",
+    "test": "npm run build && npm run test:built",
+    "test:built": "node test/with-postgres.mjs node --test test/*.test.mjs",
+    "test:llm": "npm run build && npm run test:llm:built",
+    "test:llm:built": "node test/with-postgres.mjs emseepea-test eval",
+    "lint": "oxlint src test eval scripts kanel.config.cjs",
+    "prepack": "npm run build:initializer"
+  },
+  "devDependencies": {
+    "@emseepea/server": "0.3.3",
+    "pg": "8.23.0",
+    "zod": "4.4.3",
+    "kanel": "4.0.4",
+    "kanel-zod": "4.0.1",
+    "@emseepea/testing": "0.5.2",
+    "@modelcontextprotocol/client": "2.0.0",
+    "@types/node": "24.13.3",
+    "@types/pg": "8.23.1",
+    "typescript": "6.0.3",
+    "oxlint": "1.80.0"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "repository": { "type": "git", "url": "git+https://github.com/emseepea/emseepea.git", "directory": "examples/database-schema-server" },
+  "homepage": "https://emseepea.github.io/emseepea/examples/",
+  "bugs": "https://github.com/emseepea/emseepea/issues",
+  "publishConfig": { "access": "public", "provenance": true },
+  "bin": { "create-database-schema-server": "./initializer-dist/create.mjs" },
+  "files": ["initializer-dist"]
+}

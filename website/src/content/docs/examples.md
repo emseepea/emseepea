@@ -1,6 +1,6 @@
 ---
 title: Choose an example
-description: Find a starting point for tools, APIs, sign-in, progress, forms, or shared reports.
+description: Find a starting point for tools, APIs, databases, SOAP, sign-in, progress, forms, or shared reports.
 ---
 
 Each initializer creates a standalone app with `private: true` in
@@ -109,3 +109,40 @@ npm init @emseepea/multi-instance-postgres-server -- my-server
 ```
 
 [Read the multi-instance PostgreSQL server example](https://github.com/emseepea/emseepea/tree/main/examples/multi-instance-postgres-server).
+
+## Generate validation from a PostgreSQL schema
+
+Use an existing PostgreSQL schema as the internal contract. The initializer
+generates checked-in TypeScript and runtime validation, prefers reads and writes
+through a view, and includes one stored procedure as a secondary pattern.
+
+```sh
+npm init @emseepea/database-schema-server -- my-server
+```
+
+[Read the database-schema server example](https://github.com/emseepea/emseepea/tree/main/examples/database-schema-server).
+
+## Connect MongoDB collections
+
+Compare two collection policies in one project. Pea varieties use a MongoDB
+validator. Pea observations remain schemaless and are validated by the
+application before writes and after reads. Tools follow the user's task rather
+than exposing either storage policy.
+
+```sh
+npm init @emseepea/mongodb-backed-server -- my-server
+```
+
+[Read the MongoDB-backed server example](https://github.com/emseepea/emseepea/tree/main/examples/mongodb-backed-server).
+
+## Connect a SOAP service
+
+Keep a local WSDL and XSD authoritative for a legacy SOAP service. Generate
+TypeScript from the contract, validate raw XML before parsing, and return small,
+described JSON to the model.
+
+```sh
+npm init @emseepea/soap-backed-server -- my-server
+```
+
+[Read the SOAP-backed server example](https://github.com/emseepea/emseepea/tree/main/examples/soap-backed-server).

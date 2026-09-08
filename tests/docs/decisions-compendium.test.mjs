@@ -14,7 +14,7 @@ test("the decision compendium keeps complete decisions and relationships", async
   await writeDecision(directory, "0002-new.proposed.md", {
     status: "proposed",
     title: "New Decision",
-    supersedes: '["ADR-0001"]',
+    supersedes: '["0001-old"]',
     chosen: [
       'Chosen option: **"Keep the full paragraph"**, because it includes',
       "wrapped `code` and a [useful link](https://example.com).",

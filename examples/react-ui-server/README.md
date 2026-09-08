@@ -6,7 +6,7 @@ This directory is both the maintained example and its public npm initializer.
 
 Use this template for an accessible form in an application that already uses
 React. Choose the [HTML UI server](../html-ui-server/README.md) when native HTML
-is enough and you want fewer front-end dependencies. [Compare all eight templates](https://emseepea.github.io/emseepea/examples/).
+is enough and you want fewer front-end dependencies. [Compare all templates](https://emseepea.github.io/emseepea/examples/).
 
 ## Create a Project
 

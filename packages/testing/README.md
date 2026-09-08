@@ -30,6 +30,15 @@ never production. Resources and prompts need deterministic protocol tests;
 this library does not pretend that manually injecting their content proves a
 native user journey.
 
+When a conversation writes to external state, pass an `environment` function
+that returns a separate test database connection for each trial. The trial
+number selects infrastructure only. It is never sent to the model or MCP
+server, and it does not prepare or coach the conversation.
+
+For ordinary integration tests, `startMcpServer(...).output()` returns the
+server's captured `stdout` and `stderr`. Use it to prove that logs do not expose
+credentials or provider details.
+
 ## Diagnose Failures
 
 The evidence file contains readable test prompts, assistant responses,

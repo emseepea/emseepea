@@ -1,0 +1,205 @@
+{
+  "targetNamespace": "http://schemas.xmlsoap.org/soap/envelope/",
+  "elementFormDefault": "qualified",
+  "attributeFormDefault": "unqualified",
+  "version": "",
+  "elements": {
+    "{http://schemas.xmlsoap.org/soap/envelope/}Envelope": {
+      "name": "Envelope",
+      "namespace": "http://schemas.xmlsoap.org/soap/envelope/",
+      "typeName": "{http://schemas.xmlsoap.org/soap/envelope/}SoapEnvelope",
+      "nillable": false,
+      "abstract": false,
+      "defaultValue": null,
+      "fixedValue": null,
+      "substitutionGroup": null,
+      "minOccurs": 1,
+      "maxOccurs": 1
+    },
+    "{urn:emseepea:pea-service}GetPeaRequest": {
+      "name": "GetPeaRequest",
+      "namespace": "urn:emseepea:pea-service",
+      "typeName": null,
+      "nillable": false,
+      "abstract": false,
+      "defaultValue": null,
+      "fixedValue": null,
+      "substitutionGroup": null,
+      "minOccurs": 1,
+      "maxOccurs": 1
+    },
+    "{urn:emseepea:pea-service}GetPeaResponse": {
+      "name": "GetPeaResponse",
+      "namespace": "urn:emseepea:pea-service",
+      "typeName": "{urn:emseepea:pea-service}PeaVariety",
+      "nillable": false,
+      "abstract": false,
+      "defaultValue": null,
+      "fixedValue": null,
+      "substitutionGroup": null,
+      "minOccurs": 1,
+      "maxOccurs": 1
+    }
+  },
+  "simpleTypes": {
+    "{urn:emseepea:pea-service}PeaType": {
+      "kind": "simple",
+      "name": "PeaType",
+      "namespace": "urn:emseepea:pea-service",
+      "baseTypeName": "xs:string",
+      "variety": "atomic",
+      "facets": [
+        {
+          "kind": "minLength",
+          "value": "1"
+        },
+        {
+          "kind": "maxLength",
+          "value": "40"
+        }
+      ],
+      "memberTypes": [],
+      "itemType": null
+    }
+  },
+  "complexTypes": {
+    "{http://schemas.xmlsoap.org/soap/envelope/}SoapBody": {
+      "kind": "complex",
+      "name": "SoapBody",
+      "namespace": "http://schemas.xmlsoap.org/soap/envelope/",
+      "abstract": false,
+      "mixed": false,
+      "contentType": "elementOnly",
+      "baseTypeName": null,
+      "derivationMethod": null,
+      "attributes": [],
+      "particle": {
+        "particleKind": "group",
+        "compositor": "choice",
+        "occurrence": {
+          "min": 1,
+          "max": 1
+        },
+        "particles": [
+          {
+            "particleKind": "element",
+            "occurrence": {
+              "min": 1,
+              "max": 1
+            },
+            "element": "GetPeaResponse"
+          },
+          {
+            "particleKind": "element",
+            "occurrence": {
+              "min": 1,
+              "max": 1
+            },
+            "element": "Fault"
+          }
+        ]
+      },
+      "simpleContent": null,
+      "final": [],
+      "block": []
+    },
+    "{http://schemas.xmlsoap.org/soap/envelope/}SoapEnvelope": {
+      "kind": "complex",
+      "name": "SoapEnvelope",
+      "namespace": "http://schemas.xmlsoap.org/soap/envelope/",
+      "abstract": false,
+      "mixed": false,
+      "contentType": "elementOnly",
+      "baseTypeName": null,
+      "derivationMethod": null,
+      "attributes": [],
+      "particle": {
+        "particleKind": "group",
+        "compositor": "sequence",
+        "occurrence": {
+          "min": 1,
+          "max": 1
+        },
+        "particles": [
+          {
+            "particleKind": "element",
+            "occurrence": {
+              "min": 1,
+              "max": 1
+            },
+            "element": "Body"
+          }
+        ]
+      },
+      "simpleContent": null,
+      "final": [],
+      "block": []
+    },
+    "{urn:emseepea:pea-service}PeaVariety": {
+      "kind": "complex",
+      "name": "PeaVariety",
+      "namespace": "urn:emseepea:pea-service",
+      "abstract": false,
+      "mixed": false,
+      "contentType": "elementOnly",
+      "baseTypeName": null,
+      "derivationMethod": null,
+      "attributes": [],
+      "particle": {
+        "particleKind": "group",
+        "compositor": "sequence",
+        "occurrence": {
+          "min": 1,
+          "max": 1
+        },
+        "particles": [
+          {
+            "particleKind": "element",
+            "occurrence": {
+              "min": 1,
+              "max": 1
+            },
+            "element": "name"
+          },
+          {
+            "particleKind": "element",
+            "occurrence": {
+              "min": 1,
+              "max": 1
+            },
+            "element": "peaType"
+          },
+          {
+            "particleKind": "element",
+            "occurrence": {
+              "min": 1,
+              "max": 1
+            },
+            "element": "daysToMaturity"
+          },
+          {
+            "particleKind": "element",
+            "occurrence": {
+              "min": 0,
+              "max": 1
+            },
+            "element": "note"
+          },
+          {
+            "particleKind": "element",
+            "occurrence": {
+              "min": 0,
+              "max": 5
+            },
+            "element": "trait"
+          }
+        ]
+      },
+      "simpleContent": null,
+      "final": [],
+      "block": []
+    }
+  },
+  "attributes": {},
+  "substitutionGroups": {}
+}
