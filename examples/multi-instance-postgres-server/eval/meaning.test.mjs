@@ -1,6 +1,5 @@
 import test from "node:test";
 import {
-  assertNoToolCalls,
   assertResponseContains,
   assertResponseMeaning,
   assertToolCalls,
@@ -10,35 +9,44 @@ import {
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required for the PostgreSQL semantic test");
 
-test("reuses the original shared report across server instances", async (t) => {
+test("saves and retrieves a harvest report without exposing server instances", async (t) => {
   const chat = await createConversation(t, {
     server: new URL("../dist/server.js", import.meta.url),
-    environment: { DATABASE_URL: databaseUrl, EMSEEPEA_INSTANCE: "eval-instance" },
+    environment: { DATABASE_URL: databaseUrl },
   });
 
-  // Cross-process concurrency stays in ordinary tests because asking the model
-  // to simulate routing would not exercise it. Only the comparison turn needs
-  // a semantic judge; the other turns use exact tool and literal assertions.
-  const created = await chat.send(
-    "Create a shared harvest report with request ID daily-harvest-report.",
+  // Two natural turns cover write and read tool selection at low model cost.
+  // Cross-process behavior stays in ordinary tests because a model cannot
+  // prove which process served a request.
+  const saved = await chat.send(
+    "Save a harvest report for North Bed on 2026-09-08 with 12 shelling pea " +
+    "plants and 8 snap pea plants.",
   );
-  assertToolCalls(created, [
-    { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
+  assertToolCalls(saved, [
+    {
+      name: "save-harvest-report",
+      arguments: {
+        gardenBed: "North Bed",
+        harvestDate: "2026-09-08",
+        shellingCount: 12,
+        snapCount: 8,
+      },
+    },
   ]);
-  const repeated = await chat.send(
-    "Create that report again with the same request ID. Is its report ID the " +
-    "same as before?",
-  );
-  assertToolCalls(repeated, [
-    { name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } },
-  ]);
-  await assertResponseMeaning(repeated, {
-    expected: "The repeated request returned the same report ID.",
-  });
+  assertResponseContains(saved, ["North Bed", "12", "8", "20"]);
 
-  const creator = await chat.send(
-    "What exact createdByInstance value did those tool results return?",
+  const retrieved = await chat.send(
+    "What harvest report do we have for that garden bed and date?",
   );
-  assertNoToolCalls(creator);
-  assertResponseContains(creator, "eval-instance");
+  assertToolCalls(retrieved, [
+    {
+      name: "get-harvest-report",
+      arguments: { gardenBed: "North Bed", harvestDate: "2026-09-08" },
+    },
+  ]);
+  await assertResponseMeaning(retrieved, {
+    expected:
+      "The saved report for North Bed on 2026-09-08 has 12 shelling pea plants, " +
+      "8 snap pea plants, and 20 plants in total.",
+  });
 });

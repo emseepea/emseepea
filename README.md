@@ -53,7 +53,7 @@ It covers:
 - rejecting calls that need sign-in before their code runs
 - checking results from connected services without exposing private errors
 - reporting progress through raw HTTP and the official MCP client
-- creating one stored report when separate server instances share a request ID
+- saving through one server process and reading the same state through another
 
 For detailed gates and evidence, see the [quality policy][quality-policy] and
 [current release-readiness review][release-readiness].
@@ -70,11 +70,11 @@ Replace `my-server` with an unused directory name:
 - [Progress streaming](examples/progress-streaming-server/README.md): `npm init @emseepea/progress-streaming-server -- my-server`
 - [An HTML form](examples/html-ui-server/README.md): `npm init @emseepea/html-ui-server -- my-server`
 - [A React form](examples/react-ui-server/README.md): `npm init @emseepea/react-ui-server -- my-server`
-- [Multiple instances sharing PostgreSQL](examples/multi-instance-postgres-server/README.md): publication is pending exact Quality checks
+- [Interchangeable instances sharing PostgreSQL](examples/multi-instance-postgres-server/README.md): `npm init @emseepea/multi-instance-postgres-server -- my-server`
 
-Each command creates a private standalone project with its lint, ordinary tests,
-and semantic tests. The two form starters also include browser accessibility
-tests.
+Each command creates a standalone app with `private: true` in `package.json`,
+plus its lint, ordinary tests, and semantic tests. The two form starters also
+include browser accessibility tests.
 
 The resources-and-prompts semantic test checks the honest unselected resource
 experience. Ordinary tests qualify those MCP contracts.
@@ -150,10 +150,10 @@ Publication does not expand these claims.
 - [Cognitive-accessibility publication rule][cognitive-publication]
 - [Brand style guide](docs/brand/STYLE-GUIDE.md)
 
-The source and examples are public under MIT. The root remains private. The
-server, testing helpers, React renderer, Tailwind stylesheet, and seven released
-example-backed initializer packages are eligible for publication. The
-PostgreSQL initializer is pending exact Quality checks.
+The source and examples are public under MIT. The monorepo root has
+`private: true` in `package.json`. The published packages include the server,
+testing helpers, React renderer, Tailwind stylesheet, and eight example-backed
+initializer packages.
 
 [cognitive-publication]: docs/decisions/0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md
 [public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md

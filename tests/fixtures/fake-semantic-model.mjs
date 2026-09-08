@@ -50,17 +50,17 @@ if (!process.argv.includes("--input-format")) {
 }
 
 function responseFor(prompt) {
-  if (prompt.includes("Create a shared harvest report with request ID daily-harvest-report")) return {
-    calls: [{ name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } }],
-    answer: "Created daily-harvest-report for four plants: two shelling and two snap.",
+  if (prompt.includes("Save a harvest report for North Bed")) return {
+    calls: [{ name: "save-harvest-report", arguments: {
+      gardenBed: "North Bed", harvestDate: "2026-09-08", shellingCount: 12, snapCount: 8,
+    } }],
+    answer: "Saved North Bed for 2026-09-08 with 12 shelling and 8 snap pea plants, 20 total.",
   };
-  if (prompt.includes("Create that report again with the same request ID")) return {
-    calls: [{ name: "create-shared-harvest-report", arguments: { requestId: "daily-harvest-report" } }],
-    answer: "It returned report 1 again, so no other report was created. It contains two shelling and two snap plants.",
-  };
-  if (prompt.includes("What exact createdByInstance value")) return { calls: [], answer: "eval-instance" };
-  if (prompt.includes("Which server instance is handling")) return {
-    calls: [{ name: "describe-instance", arguments: {} }], answer: "eval-instance",
+  if (prompt.includes("What harvest report do we have for that garden bed and date")) return {
+    calls: [{ name: "get-harvest-report", arguments: {
+      gardenBed: "North Bed", harvestDate: "2026-09-08",
+    } }],
+    answer: "North Bed on 2026-09-08 has 12 shelling and 8 snap pea plants, 20 total.",
   };
   if (prompt.includes("Compare that with Harbour Gem")) return {
     calls: [{ name: "get-pea-variety", arguments: { name: "Harbour Gem" } }],

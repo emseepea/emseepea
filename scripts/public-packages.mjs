@@ -65,7 +65,7 @@ export const publicPackages = [
     path: "examples/multi-instance-postgres-server",
     key: "create-multi-instance-postgres-server",
     example: "multi-instance-postgres-server",
-    description: "Create multiple Em See Pea server instances backed by PostgreSQL.",
+    description: "Create interchangeable Em See Pea server instances sharing PostgreSQL state.",
     replaces: {
       name: "@emseepea/create-multi-instance-sqlite-server",
       deprecation: "Deprecated: use @emseepea/create-multi-instance-postgres-server instead.",

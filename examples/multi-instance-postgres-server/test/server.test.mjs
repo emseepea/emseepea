@@ -16,9 +16,11 @@ const requestMeta = {
   "io.modelcontextprotocol/clientCapabilities": {},
 };
 
-test("two server processes share one atomic report store", async (t) => {
+test("two interchangeable server processes share one coherent report store", async (t) => {
   const first = await startInstance("instance-a", databaseUrl);
   const second = await startInstance("instance-b", databaseUrl);
+  assert.notEqual(first.child.pid, second.child.pid);
+  assert.notEqual(first.url.href, second.url.href);
   const firstClient = await connect(first.url);
   const secondClient = await connect(second.url);
   t.after(async () => {
@@ -26,56 +28,46 @@ test("two server processes share one atomic report store", async (t) => {
     await Promise.all([stopInstance(first.child), stopInstance(second.child)]);
   });
 
-  const localRace = await Promise.all(Array.from({ length: 6 }, () => (
-    createReport(firstClient, "single-instance-race")
-  )));
-  assert.equal(new Set(localRace.map(({ reportId }) => reportId)).size, 1);
-  assert.equal(await reportCount("single-instance-race"), 1);
+  const original = {
+    gardenBed: "North Bed",
+    harvestDate: "2026-09-08",
+    shellingCount: 12,
+    snapCount: 8,
+    totalPlants: 20,
+  };
+  assert.deepEqual(await saveReport(firstClient, original), original);
+  assert.deepEqual(await getReport(secondClient, original), { report: original });
 
-  const [fromFirst, fromSecond] = await Promise.all([
-    createReport(firstClient, "shared-instance-race"),
-    createReport(secondClient, "shared-instance-race"),
-  ]);
-  assert.deepEqual(fromFirst, fromSecond);
-  assert.match(fromFirst.createdByInstance, /^instance-[ab]$/);
-  assert.deepEqual(fromFirst.peaTypeCounts, { shelling: 2, snap: 2 });
-  assert.equal(fromFirst.totalPlants, 4);
-  assert.equal(await reportCount("shared-instance-race"), 1);
+  assert.deepEqual(await saveReport(secondClient, original), original);
+  assert.equal(await reportCount(original), 1);
 
-  const replay = await createReport(
-    fromFirst.createdByInstance === "instance-a" ? secondClient : firstClient,
-    "shared-instance-race",
-  );
-  assert.deepEqual(replay, fromFirst);
+  const updated = { ...original, shellingCount: 14, totalPlants: 22 };
+  assert.deepEqual(await saveReport(secondClient, updated), updated);
+  assert.deepEqual(await getReport(firstClient, updated), { report: updated });
+  assert.equal(await reportCount(updated), 1);
 
-  const raw = await rawCreateReport(first.url, "raw-http-report");
+  assert.deepEqual(await getReport(secondClient, {
+    gardenBed: "Missing Bed",
+    harvestDate: original.harvestDate,
+  }), { report: null });
+
+  const raw = await rawCall(first.url, "get-harvest-report", reportKey(updated));
   assert.equal(raw.response.status, 200);
   assert.equal(raw.body.result.isError, false);
-  assert.equal(raw.body.result.structuredContent.requestId, "raw-http-report");
-  assert.equal(raw.body.result.content[0].text, JSON.stringify(raw.body.result.structuredContent));
-  assert.equal(await reportCount("raw-http-report"), 1);
+  assert.deepEqual(raw.body.result.structuredContent, { report: updated });
+  assert.equal(raw.body.result.content[0].text, JSON.stringify({ report: updated }));
 
   await closeProvider(first.child);
-  const unavailable = await rawCreateReport(first.url, "must-not-be-created");
-  assert.equal(unavailable.response.status, 200);
-  assert.equal(unavailable.body.result.content[0].text, "Tool execution failed");
-  assert.doesNotMatch(
-    JSON.stringify({ ...unavailable.body.result, _meta: undefined }),
-    /postgres|database|connection|provider/i,
-  );
-  assert.equal(await reportCount("must-not-be-created"), 0);
+  const unavailable = await rawCall(first.url, "get-harvest-report", reportKey(updated));
+  assertGenericToolFailure(unavailable);
+  assert.deepEqual(await getReport(secondClient, updated), { report: updated });
 
-  const independent = await firstClient.callTool({ name: "describe-instance", arguments: {} });
-  assert.deepEqual(independent.structuredContent, { instanceName: "instance-a" });
   const readiness = await fetch(new URL("/readyz", first.url));
   assert.equal(readiness.status, 503);
   assert.equal(await readiness.text(), "not ready\n");
-
-  const secondStillWorks = await createReport(secondClient, "provider-b-still-works");
-  assert.equal(secondStillWorks.requestId, "provider-b-still-works");
 });
 
-test("describes every multi-instance tool property", async (t) => {
+test("describes every public harvest report property", async (t) => {
   const instance = await startInstance("schema-instance", databaseUrl);
   const client = await connect(instance.url);
   t.after(async () => {
@@ -85,43 +77,52 @@ test("describes every multi-instance tool property", async (t) => {
 
   const listed = await client.listTools();
   assert.deepEqual(listed.tools.map(({ name }) => name), [
-    "create-shared-harvest-report",
-    "describe-instance",
+    "get-harvest-report",
+    "save-harvest-report",
   ]);
-  const reportInput = listed.tools[0].inputSchema.properties;
-  const reportOutput = listed.tools[0].outputSchema.properties;
-  assert.equal(reportInput.requestId.description, "Idempotency key. Reusing it returns the existing report instead of creating another.");
-  assert.equal(reportOutput.reportId.description, "Stored report identifier.");
-  assert.equal(reportOutput.requestId.description, reportInput.requestId.description);
-  assert.equal(reportOutput.createdByInstance.description, "Server instance that originally created the report.");
-  assert.equal(reportOutput.totalPlants.description, "Total pea plants counted in the report.");
-  assert.equal(reportOutput.peaTypeCounts.description, "Plant counts grouped by pea type.");
-  assert.equal(reportOutput.peaTypeCounts.properties.shelling.description, "Shelling pea plants counted in the report.");
-  assert.equal(reportOutput.peaTypeCounts.properties.snap.description, "Snap pea plants counted in the report.");
-  assert.equal(listed.tools[1].outputSchema.properties.instanceName.description, "Server instance that handled this request.");
+
+  const get = listed.tools[0];
+  const save = listed.tools[1];
+  assert.equal(get.inputSchema.properties.gardenBed.description, "Garden bed that this harvest report describes.");
+  assert.equal(get.inputSchema.properties.harvestDate.description, "Harvest date in YYYY-MM-DD format.");
+  assert.equal(
+    get.outputSchema.properties.report.description,
+    "The saved harvest report, or null when no report exists for that garden bed and date.",
+  );
+  const retrievedReport = get.outputSchema.properties.report.anyOf[0].properties;
+  assert.equal(retrievedReport.gardenBed.description, "Garden bed that this harvest report describes.");
+  assert.equal(retrievedReport.harvestDate.description, "Harvest date in YYYY-MM-DD format.");
+  assert.equal(retrievedReport.shellingCount.description, "Shelling pea plants harvested.");
+  assert.equal(retrievedReport.snapCount.description, "Snap pea plants harvested.");
+  assert.equal(retrievedReport.totalPlants.description, "Total pea plants harvested.");
+  assert.equal(save.inputSchema.properties.gardenBed.description, "Garden bed that this harvest report describes.");
+  assert.equal(save.inputSchema.properties.harvestDate.description, "Harvest date in YYYY-MM-DD format.");
+  assert.equal(save.inputSchema.properties.shellingCount.description, "Shelling pea plants harvested.");
+  assert.equal(save.inputSchema.properties.snapCount.description, "Snap pea plants harvested.");
+  assert.equal(save.outputSchema.properties.gardenBed.description, "Garden bed that this harvest report describes.");
+  assert.equal(save.outputSchema.properties.harvestDate.description, "Harvest date in YYYY-MM-DD format.");
+  assert.equal(save.outputSchema.properties.shellingCount.description, "Shelling pea plants harvested.");
+  assert.equal(save.outputSchema.properties.snapCount.description, "Snap pea plants harvested.");
+  assert.equal(save.outputSchema.properties.totalPlants.description, "Total pea plants harvested.");
 });
 
-test("an unavailable PostgreSQL provider fails readiness but not independent tools", async (t) => {
+test("an unavailable PostgreSQL provider fails safely", async (t) => {
   const instance = await startInstance(
     "unavailable-before-start",
     "postgres://emseepea:emseepea@127.0.0.1:1/emseepea",
   );
-  const client = await connect(instance.url);
-  t.after(async () => {
-    await client.close();
-    await stopInstance(instance.child);
-  });
+  t.after(() => stopInstance(instance.child));
 
-  assert.deepEqual(
-    (await client.callTool({ name: "describe-instance", arguments: {} })).structuredContent,
-    { instanceName: "unavailable-before-start" },
-  );
-  const unavailable = await rawCreateReport(instance.url, "provider-never-connected");
-  assert.equal(unavailable.body.result.content[0].text, "Tool execution failed");
-  assert.doesNotMatch(
-    JSON.stringify({ ...unavailable.body.result, _meta: undefined }),
-    /postgres|database|connection|ECONNREFUSED|provider/i,
-  );
+  assertGenericToolFailure(await rawCall(instance.url, "get-harvest-report", {
+    gardenBed: "Unavailable Bed",
+    harvestDate: "2026-09-08",
+  }));
+  assertGenericToolFailure(await rawCall(instance.url, "save-harvest-report", {
+    gardenBed: "Unavailable Bed",
+    harvestDate: "2026-09-08",
+    shellingCount: 1,
+    snapCount: 1,
+  }));
   const readiness = await fetch(new URL("/readyz", instance.url));
   assert.equal(readiness.status, 503);
   assert.equal(await readiness.text(), "not ready\n");
@@ -136,19 +137,27 @@ test("blocked PostgreSQL work finishes at the database timeout", async (t) => {
     await stopInstance(instance.child);
   });
   await blocker.query("BEGIN");
-  await blocker.query("LOCK TABLE reports IN ACCESS EXCLUSIVE MODE");
+  await blocker.query("LOCK TABLE harvest_reports IN ACCESS EXCLUSIVE MODE");
 
+  const blockedReport = {
+    gardenBed: "Blocked Bed",
+    harvestDate: "2026-09-08",
+    shellingCount: 2,
+    snapCount: 3,
+  };
   const started = Date.now();
-  const [readiness, report] = await Promise.all([
+  const [readiness, save, get] = await Promise.all([
     fetch(new URL("/readyz", instance.url)),
-    rawCreateReport(instance.url, "blocked-report"),
+    rawCall(instance.url, "save-harvest-report", blockedReport),
+    rawCall(instance.url, "get-harvest-report", reportKey(blockedReport)),
   ]);
 
   assert.ok(Date.now() - started < 3_000, "blocked database work exceeded its bounded timeout");
   assert.equal(readiness.status, 503);
-  assert.equal(report.body.result.content[0].text, "Tool execution failed");
+  assertGenericToolFailure(save);
+  assertGenericToolFailure(get);
   await blocker.query("ROLLBACK");
-  assert.equal(await reportCount("blocked-report"), 0);
+  assert.equal(await reportCount(blockedReport), 0);
 });
 
 async function startInstance(instanceName, connectionString) {
@@ -172,13 +181,26 @@ async function connect(url) {
   return client;
 }
 
-async function createReport(client, requestId) {
-  const result = await client.callTool({ name: "create-shared-harvest-report", arguments: { requestId } });
+async function saveReport(client, report) {
+  const result = await client.callTool({
+    name: "save-harvest-report",
+    arguments: { ...reportKey(report), shellingCount: report.shellingCount, snapCount: report.snapCount },
+  });
   assert.equal(result.isError, false);
   return result.structuredContent;
 }
 
-async function rawCreateReport(url, requestId) {
+async function getReport(client, report) {
+  const result = await client.callTool({ name: "get-harvest-report", arguments: reportKey(report) });
+  assert.equal(result.isError, false);
+  return result.structuredContent;
+}
+
+function reportKey({ gardenBed, harvestDate }) {
+  return { gardenBed, harvestDate };
+}
+
+async function rawCall(url, name, arguments_) {
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -186,22 +208,31 @@ async function rawCreateReport(url, requestId) {
       "Content-Type": "application/json",
       "MCP-Protocol-Version": "2026-07-28",
       "Mcp-Method": "tools/call",
-      "Mcp-Name": "create-shared-harvest-report",
+      "Mcp-Name": name,
     },
     body: JSON.stringify({
       jsonrpc: "2.0",
       id: crypto.randomUUID(),
       method: "tools/call",
-      params: { name: "create-shared-harvest-report", arguments: { requestId }, _meta: requestMeta },
+      params: { name, arguments: arguments_, _meta: requestMeta },
     }),
   });
   return { response, body: await response.json() };
 }
 
-async function reportCount(requestId) {
+function assertGenericToolFailure(result) {
+  assert.equal(result.response.status, 200);
+  assert.equal(result.body.result.content[0].text, "Tool execution failed");
+  assert.doesNotMatch(
+    JSON.stringify({ ...result.body.result, _meta: undefined }),
+    /postgres|database|connection|ECONNREFUSED|provider/i,
+  );
+}
+
+async function reportCount({ gardenBed, harvestDate }) {
   const result = await database.query(
-    "SELECT COUNT(*)::integer AS count FROM reports WHERE idempotency_key = $1",
-    [requestId],
+    "SELECT COUNT(*)::integer AS count FROM harvest_reports WHERE garden_bed = $1 AND harvest_date = $2",
+    [gardenBed, harvestDate],
   );
   return result.rows[0].count;
 }

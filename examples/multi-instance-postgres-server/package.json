@@ -1,7 +1,7 @@
 {
   "name": "@emseepea/create-multi-instance-postgres-server",
   "version": "0.0.2",
-  "description": "Create multiple Em See Pea server instances backed by PostgreSQL.",
+  "description": "Create interchangeable Em See Pea server instances sharing PostgreSQL state.",
   "license": "MIT",
   "type": "module",
   "starterDependencies": ["@emseepea/server", "pg", "zod"],

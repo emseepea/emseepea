@@ -3,8 +3,9 @@ title: Choose an example
 description: Find a starting point for tools, APIs, sign-in, progress, forms, or shared reports.
 ---
 
-Each initializer creates a private standalone project with application code,
-ordinary tests in `test/`, and language-model tests in `eval/`. Capability
+Each initializer creates a standalone app with `private: true` in
+`package.json`, application code, ordinary tests in `test/`, and language-model
+tests in `eval/`. Capability
 modules live in `src/capabilities/` and are discovered once at startup. Replace
 `my-server` with an unused directory name. The [first-server guide](../getting-started/)
 continues from the tool server starter.
@@ -96,13 +97,12 @@ or [the React UI server example](https://github.com/emseepea/emseepea/tree/main/
 
 ## Share a report store between server instances
 
-Independent server instances use the same PostgreSQL store. Repeating a report
-request with the same request ID creates one stored report, even when the
-instances do not share a local filesystem. This does not guarantee exactly-once
-changes to an external service.
+Interchangeable server instances use the same PostgreSQL store. Save a complete
+harvest report through one process and retrieve or update it through another,
+without exposing server identity or routing to the user. The garden bed and
+harvest date identify one report.
 
-Publication of this initializer is pending exact Quality checks. After
-publication, use:
+Use:
 
 ```sh
 npm init @emseepea/multi-instance-postgres-server -- my-server

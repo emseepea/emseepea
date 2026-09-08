@@ -157,8 +157,8 @@ Accessibility Guidelines (WCAG) conformance.
   use four isolated workers, but every failure must still stop publication.
 - The multi-instance PostgreSQL initializer runs its ordinary and semantic tests
   against the pinned Docker Compose database. Its ordinary tests include two
-  server processes, concurrent idempotent writes, provider failure, and a
-  blocked query that must finish at the database timeout.
+  interchangeable server processes, shared complete-state saves and reads,
+  provider failure, and blocked queries that must finish at the database timeout.
 - The release watcher deprecates a replaced initializer only after its
   replacement is published and verified, then requires the exact message on
   every old version. Removal, when npm permits it, is an explicit release action.

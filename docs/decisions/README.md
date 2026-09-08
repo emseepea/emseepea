@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 56 decisions: 30 current and 26 historical.
+This project has 57 decisions: 30 current and 27 historical.
 
 ## Quick Index
 
@@ -39,8 +39,8 @@ This project has 56 decisions: 30 current and 26 historical.
 - [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0050: Schema-Declared Pass-Through by Default](0050-schema-declared-pass-through-by-default.proposed.md): Proposed; human review confirmed.
 - [ADR-0052: Optional Deterministic HTTP Route Discovery](0052-optional-deterministic-http-route-discovery.proposed.md): Proposed; human review confirmed.
-- [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.proposed.md): Proposed; human review confirmed.
 - [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.proposed.md): Proposed; human review confirmed.
+- [ADR-0058: Instance-Agnostic Shared PostgreSQL State](0058-instance-agnostic-shared-postgresql-state.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -70,6 +70,7 @@ This project has 56 decisions: 30 current and 26 historical.
 - [ADR-0053: Conversation-Style Semantic Tests](0053-conversation-style-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0054: Provider-Native MCP Semantic Conversations](0054-provider-native-mcp-semantic-conversations.superseded.md): Superseded; human review confirmed.
 - [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.superseded.md): Superseded; human review confirmed.
+- [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -1055,7 +1056,7 @@ Chosen option: **"Schema-declared pass-through by default with explicit exceptio
 - Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.superseded.md)
-- Replaced by: [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.proposed.md)
+- Replaced by: [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.superseded.md)
 
 #### Decision
 
@@ -1155,11 +1156,12 @@ Chosen option: **"Native client journeys only"**, because semantic evidence must
 - Documentation clearly says resources and prompts have deterministic protocol coverage only until a representative native client journey exists.
 - Tests fail if `prepare()` or synthetic selection guidance is reintroduced.
 
-### [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.proposed.md)
+### [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.superseded.md)
+- Replaced by: [ADR-0058: Instance-Agnostic Shared PostgreSQL State](0058-instance-agnostic-shared-postgresql-state.proposed.md)
 
 #### Decision
 
@@ -1195,3 +1197,24 @@ Chosen option: **"Inspectable evidence by default"**, because a semantic test re
 - Tests prove raw provider events, MCP configuration, headers, environment, stderr, and filesystem paths are absent.
 - Public API guidance warns that evidence contains raw test content and requires synthetic, non-sensitive fixtures before upload.
 - Exact-commit release CI uploads the readable evidence with 14-day retention.
+
+### [ADR-0058: Instance-Agnostic Shared PostgreSQL State](0058-instance-agnostic-shared-postgresql-state.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.superseded.md)
+
+#### Decision
+
+Chosen option: **"Instance-agnostic shared state"**, because server identity and retry mechanics are implementation details, while garden bed and harvest date are stable concepts in the user's task.
+
+#### How We Check It
+
+- Tool discovery lists only `save-harvest-report` and `get-harvest-report`.
+- Public schemas and responses contain no instance, routing, request ID, idempotency, or storage ID fields.
+- The table primary key is the garden bed and harvest date, with nonnegative count constraints.
+- Ordinary tests save through one process, read through another, repeat an identical save, replace the complete desired state, and prove one row remains.
+- Missing reports return an explicit null result rather than a provider failure.
+- Tests preserve generic failure redaction, 503 readiness, and bounded database timeouts.
+- Semantic tests use natural save and retrieve prompts with exact tool and argument assertions, without instance vocabulary or synthetic MCP hints.
+- The standalone initializer, documentation, package metadata, and release checks describe interchangeable processes sharing coherent state.

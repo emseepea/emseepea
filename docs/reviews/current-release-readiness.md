@@ -4,33 +4,28 @@ Date: 2026-09-08
 
 ## Release Batch
 
-- `@emseepea/testing@0.5.2`
-- `@emseepea/create-tool-server@0.0.13`
-- `@emseepea/create-api-backed-server@0.0.13`
-- `@emseepea/create-sign-in-tool-server@0.0.12`
-- `@emseepea/create-resources-and-prompts-server@0.0.12`
-- `@emseepea/create-progress-streaming-server@0.0.12`
-- `@emseepea/create-html-ui-server@0.0.14`
-- `@emseepea/create-react-ui-server@0.0.13`
-- `@emseepea/create-multi-instance-postgres-server@0.0.2`
+- `@emseepea/create-multi-instance-postgres-server@0.0.3`
 
 ## Change for Users
 
-Testing 0.5.2 identifies a failed answer trial and records its safe provider
-failure category. The initializer patches make this diagnostic available in
-newly generated projects. Registry verification allows three minutes for npm
-propagation.
+The multi-instance PostgreSQL initializer now presents interchangeable server
+processes instead of exposing routing details. Its save and get tools identify
+reports by garden bed and harvest date. Generic retry keys, server names, and
+storage identifiers have been removed from the public MCP contract.
 
 ## Evidence Before Publication
 
-- The testing package and focused release workflow tests passed locally.
-- Architecture and Jobs To Be Done reviews passed.
-- Cognitive-accessibility and Markdown accessibility reviews passed.
-- The preceding publishing commit passed exact-commit Quality. Seven semantic
-  examples passed, while the React example produced two correct conversations
-  before one answer provider invocation failed without a recorded cause. This
-  batch fixes that diagnostic gap and requires fresh exact-commit qualification.
-- Release risk is 5 of 25 and within appetite.
+- TypeScript compilation and lint passed locally.
+- Architecture review passed and the ratified design is recorded in ADR-0058.
+- Type checking, decision checks, the package-list check, and the executable
+  quickstart passed locally.
+- Jobs To Be Done, cognitive-accessibility, and Markdown accessibility reviews
+  passed.
+- Local PostgreSQL checks received no credit because Docker Desktop did not
+  respond. Exact-commit CI must supply the PostgreSQL, standalone initializer,
+  and semantic evidence before publication.
+- Commit, push, and release risk are each 5 of 25 and within appetite because
+  publication remains structurally blocked until those exact gates pass.
 
 ## Required Publication Evidence
 
@@ -44,4 +39,4 @@ propagation.
 ## Review Status
 
 - Result: PASS
-- Final result: within appetite.
+- Final result: within appetite, subject to the required exact-commit gates.
