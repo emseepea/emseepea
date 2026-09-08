@@ -74,7 +74,7 @@ export function checkBudget(report, routes) {
   ]) assert.ok(files.reduce((sum, file) => sum + file.gzipBytes, 0) <= limit, `${label} size budget`);
   assert.equal(report.samples.length, routes.length * 10, "incomplete trial count");
   for (const route of routes) {
-    for (const [width, slowdown, taskLimit, cpuLimit] of [[1280, 1, 150, 800], [320, 4, 500, 2000]]) {
+    for (const [width, slowdown, cpuLimit] of [[1280, 1, 800], [320, 4, 2000]]) {
       for (let trial = 1; trial <= 5; trial++) {
         const matches = report.samples.filter((sample) => sample.route === route && sample.width === width && sample.trial === trial);
         assert.equal(matches.length, 1, `missing or duplicate trial: ${route} ${width}px ${trial}`);
@@ -83,7 +83,11 @@ export function checkBudget(report, routes) {
         assert.deepEqual(sample.errors, [], "failed trial");
         for (const phase of ["initial", "search", "noResults"]) {
           const data = sample.phases[phase];
-          for (const [metric, limit] of [["TaskDurationMs", taskLimit], ["observedProcessCpuMs", cpuLimit], ["listedProcessRssBytes", 512 * 1024 * 1024]]) {
+          for (const metric of ["TaskDurationMs", "ScriptDurationMs", "LayoutDurationMs"]) {
+            const value = data?.[metric];
+            assert.ok(Number.isFinite(value) && value >= 0, `invalid ${metric}`);
+          }
+          for (const [metric, limit] of [["observedProcessCpuMs", cpuLimit], ["listedProcessRssBytes", 512 * 1024 * 1024]]) {
             const value = data?.[metric];
             assert.ok(Number.isFinite(value) && value >= 0 && (metric !== "listedProcessRssBytes" || value > 0), `invalid ${metric}`);
             assert.ok(value <= limit, `${route} ${width}px trial ${trial} ${phase}: ${metric} ${value} exceeds ${limit}`);

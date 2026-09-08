@@ -15,7 +15,9 @@ test("publication checks every trial and rejects missing, invalid or over-budget
     samples: routes.flatMap((route) => [1280, 320].flatMap((width) => Array.from({ length: 5 }, (_, i) => ({
       route, width, trial: i + 1, cpuSlowdown: width === 1280 ? 1 : 4, errors: [],
       phases: Object.fromEntries(["initial", "search", "noResults"].map((phase) => [phase, {
-        TaskDurationMs: width === 1280 ? 150 : 500,
+        TaskDurationMs: 150,
+        ScriptDurationMs: 100,
+        LayoutDurationMs: 50,
         observedProcessCpuMs: width === 1280 ? 800 : 2000,
         listedProcessRssBytes: 512 * 1024 * 1024,
       }])),
@@ -28,14 +30,17 @@ test("publication checks every trial and rejects missing, invalid or over-budget
   fails((value) => value.samples[0].errors.push("failed search"));
   fails((value) => { value.samples[0].cpuSlowdown = 4; });
   fails((value) => { delete value.samples[0].phases.search; });
-  for (const metric of ["TaskDurationMs", "observedProcessCpuMs", "listedProcessRssBytes"]) {
+  for (const metric of ["TaskDurationMs", "ScriptDurationMs", "LayoutDurationMs", "observedProcessCpuMs", "listedProcessRssBytes"]) {
     for (const invalid of [NaN, Infinity, -1, undefined]) {
       fails((value) => { value.samples[0].phases.initial[metric] = invalid; });
     }
-    for (const index of [0, 5, 19]) {
+    for (const index of metric === "observedProcessCpuMs" || metric === "listedProcessRssBytes" ? [0, 5, 19] : []) {
       fails((value) => { value.samples[index].phases.noResults[metric] += 1; });
     }
   }
+  const highTaskDuration = structuredClone(report);
+  highTaskDuration.samples[0].phases.search.TaskDurationMs = 10_000;
+  checkBudget(highTaskDuration, routes);
   for (const index of [0, 1, 2]) fails((value) => { value.files[index].gzipBytes += 1; });
   fails((value) => { value.files[0].gzipBytes = NaN; });
   fails((value) => { value.files = []; });

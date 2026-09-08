@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 57 decisions: 30 current and 27 historical.
+This project has 58 decisions: 30 current and 28 historical.
 
 ## Quick Index
 
@@ -31,7 +31,6 @@ This project has 57 decisions: 30 current and 27 historical.
 - [ADR-0036: One Current Documentation Set](0036-one-current-documentation-set.proposed.md): Proposed; human review confirmed.
 - [ADR-0037: Local Website Search](0037-local-website-search.proposed.md): Proposed; human review confirmed.
 - [ADR-0038: Measured Website Performance Before Publication](0038-measured-website-performance-before-publication.proposed.md): Proposed; human review confirmed.
-- [ADR-0039: Website Performance Budget](0039-website-performance-budget.proposed.md): Proposed; human review confirmed.
 - [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md): Proposed; human review confirmed.
 - [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md): Proposed; human review confirmed.
@@ -41,6 +40,7 @@ This project has 57 decisions: 30 current and 27 historical.
 - [ADR-0052: Optional Deterministic HTTP Route Discovery](0052-optional-deterministic-http-route-discovery.proposed.md): Proposed; human review confirmed.
 - [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.proposed.md): Proposed; human review confirmed.
 - [ADR-0058: Instance-Agnostic Shared PostgreSQL State](0058-instance-agnostic-shared-postgresql-state.proposed.md): Proposed; human review confirmed.
+- [ADR-0059: Process CPU as the Website Work Budget](0059-process-cpu-as-the-website-work-budget.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -61,6 +61,7 @@ This project has 57 decisions: 30 current and 27 historical.
 - [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md): Superseded; human review confirmed.
 - [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.superseded.md): Superseded; human review confirmed.
+- [ADR-0039: Website Performance Budget](0039-website-performance-budget.superseded.md): Superseded; human review confirmed.
 - [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.superseded.md): Superseded; human review confirmed.
 - [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.superseded.md): Superseded; human review confirmed.
@@ -808,10 +809,11 @@ Chosen option: **"Measure, then approve a budget"**, because website limits need
 - A separate numerical budget is ratified before public deployment.
 - The selected publication build passes that budget.
 
-### [ADR-0039: Website Performance Budget](0039-website-performance-budget.proposed.md)
+### [ADR-0039: Website Performance Budget](0039-website-performance-budget.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0059: Process CPU as the Website Work Budget](0059-process-cpu-as-the-website-work-budget.proposed.md)
 
 #### Decision
 
@@ -1218,3 +1220,20 @@ Chosen option: **"Instance-agnostic shared state"**, because server identity and
 - Tests preserve generic failure redaction, 503 readiness, and bounded database timeouts.
 - Semantic tests use natural save and retrieve prompts with exact tool and argument assertions, without instance vocabulary or synthetic MCP hints.
 - The standalone initializer, documentation, package metadata, and release checks describe interchangeable processes sharing coherent state.
+
+### [ADR-0059: Process CPU as the Website Work Budget](0059-process-cpu-as-the-website-work-budget.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0039: Website Performance Budget](0039-website-performance-budget.superseded.md)
+
+#### Decision
+
+Chosen option: **"Gate total Chromium process CPU"**, because it preserves the broad work limit while avoiding a second, narrower release gate whose isolated spikes cannot be attributed to the website.
+
+#### How We Check It
+
+- Every required trial and phase records finite, nonnegative task, script, and layout duration diagnostics.
+- A task-duration value above the former ceiling does not fail publication.
+- Observed process CPU above 800 milliseconds on desktop or 2,000 milliseconds on the slowed renderer profile fails publication.
+- Existing file-size, memory, completeness, error, environment, artifact, and exact-revision checks remain enforced.
