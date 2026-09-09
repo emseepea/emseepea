@@ -22,7 +22,7 @@ async function main() {
     const { stdout } = await run("npm", [
       "pack", "--workspace", item.name, "--pack-destination", destination, "--ignore-scripts", "--json",
     ], { maxBuffer: 16 * 1024 * 1024 });
-    const packed = JSON.parse(stdout);
+    const packed = Object.values(JSON.parse(stdout));
     assert.equal(packed.length, 1, `${item.name} produced more than one tarball`);
     assertPackedTargets(item.manifest, packed[0]);
     await writeFile(join(destination, `${item.key}-pack.json`), `${JSON.stringify(packed, null, 2)}\n`);

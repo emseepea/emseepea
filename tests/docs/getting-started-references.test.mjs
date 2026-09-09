@@ -170,5 +170,7 @@ async function packPackage(packagePath, directory) {
   const { stdout } = await exec("npm", [
     "pack", "--json", "--ignore-scripts", "--pack-destination", directory, path.join(root, packagePath),
   ], { cwd: root, timeout: 120_000, maxBuffer: 1024 * 1024 });
-  return path.join(directory, JSON.parse(stdout)[0].filename);
+  const packed = Object.values(JSON.parse(stdout));
+  assert.equal(packed.length, 1, `${packagePath} produced more than one tarball`);
+  return path.join(directory, packed[0].filename);
 }

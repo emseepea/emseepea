@@ -386,13 +386,14 @@ test("every packed initializer creates a standalone checked project", {
 });
 
 async function packPackage(packagePath, directory) {
-  const packed = JSON.parse(run("npm", [
+  const packed = Object.values(JSON.parse(run("npm", [
     "pack",
     "--json",
     "--ignore-scripts",
     "--pack-destination",
     directory,
     packagePath,
-  ], root));
+  ], root)));
+  assert.equal(packed.length, 1, `${packagePath} produced more than one tarball`);
   return path.join(directory, packed[0].filename);
 }
