@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.6.1
+
+### Patch Changes
+
+- [`9cde41d`](https://github.com/emseepea/emseepea/commit/9cde41d1fb5586ab98706b9c65c2dfc51cffd13f) Thanks [@tompahoward](https://github.com/tompahoward)! - Keep permission-hidden empty catalogues out of native model evaluation clients.
+
 ## 0.6.0
 
 ### Minor Changes
