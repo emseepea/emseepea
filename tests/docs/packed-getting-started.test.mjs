@@ -353,18 +353,26 @@ test("every packed initializer creates a standalone checked project", {
       const results = Object.values(evidence.cases);
       if (initializer.example === "tool-server") {
         assert.equal(results.length, 3);
-        const expectedCases = [
-          [["get-pea-variety"], ["get-pea-variety"]],
-          [["get-pea-variety"]],
-          [[]],
-        ];
-        for (const [caseIndex, result] of results.entries()) {
+        const expectedCases = new Map([
+          ["looks up pea varieties and compares a follow-up", {
+            judges: 9, tools: [["get-pea-variety"], ["get-pea-variety"]],
+          }],
+          ["protected discovery offers a permitted tool", {
+            judges: 9, tools: [["get-pea-variety"]],
+          }],
+          ["protected discovery does not offer a hidden tool", {
+            judges: 9, tools: [[]],
+          }],
+        ]);
+        for (const result of results) {
+          const expected = expectedCases.get(result.name);
+          assert.ok(expected, `unexpected tool-server case: ${result.name}`);
           assert.equal(result.answerTrials.length, 3);
-          assert.equal(result.judgeVerdicts.length, 9);
+          assert.equal(result.judgeVerdicts.length, expected.judges);
           for (const trial of result.answerTrials) {
             assert.deepEqual(
               trial.turns.map(({ selectedTools }) => selectedTools),
-              expectedCases[caseIndex],
+              expected.tools,
             );
           }
         }

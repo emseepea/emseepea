@@ -68,13 +68,14 @@ test("protected discovery does not offer a hidden tool", async (t) => {
     environment: { TEST_PERMISSIONS: "other:read" },
   });
 
-  // This tests one denied catalogue. More denial prompts would repeat the same
-  // permission boundary while multiplying model and judge cost.
-  const answer = await chat.send("What type of pea is Highland Snap?");
+  // Ask about the visible catalogue itself so the response tests discovery,
+  // rather than whether the model can guess an answer from general knowledge.
+  const answer = await chat.send(
+    "Do you have an available tool that can look up Highland Snap?",
+  );
   assertNoToolCalls(answer);
   await assertResponseMeaning(answer, {
     expected:
-      "The response does not invent Highland Snap details and explains that " +
-      "the available capabilities do not provide the answer.",
+      "The response explains that it has no available tool for looking up Highland Snap.",
   });
 });

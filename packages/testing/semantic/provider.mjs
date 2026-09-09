@@ -88,10 +88,13 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
   if (init) {
     const available = [...(init.tools ?? [])].sort();
     const expected = [...advertised.keys()].sort();
+    const expectedServer = advertised.size > 0
+      ? init.mcp_servers?.length === 1
+        && init.mcp_servers[0]?.name === mcpServerName
+        && init.mcp_servers[0]?.status === "connected"
+      : init.mcp_servers?.length === 0;
     if (JSON.stringify(available) !== JSON.stringify(expected)
-      || init.mcp_servers?.length !== 1
-      || init.mcp_servers[0]?.name !== mcpServerName
-      || init.mcp_servers[0]?.status !== "connected") {
+      || !expectedServer) {
       throw new Error("Model command did not expose exactly the target MCP tools");
     }
   }
@@ -189,7 +192,7 @@ export function modelInvocation(provider, prompt, directory) {
 
 export function conversationInvocation(provider, directory, url, tools, authToken, context) {
   const nativeTools = tools.map(({ name }) => nativeToolName(name));
-  const config = {
+  const config = nativeTools.length ? {
     mcpServers: {
       [mcpServerName]: {
         type: "http",
@@ -197,7 +200,7 @@ export function conversationInvocation(provider, directory, url, tools, authToke
         ...(authToken ? { headers: { Authorization: "Bearer ${EMSEEPEA_SEMANTIC_MCP_TOKEN}" } } : {}),
       },
     },
-  };
+  } : undefined;
   const base = modelInvocation(provider, "", directory);
   return {
     ...base,
@@ -210,7 +213,7 @@ export function conversationInvocation(provider, directory, url, tools, authToke
       "--effort", "low",
       "--max-turns", "4",
       "--strict-mcp-config",
-      "--mcp-config", JSON.stringify(config),
+      ...(config ? ["--mcp-config", JSON.stringify(config)] : []),
       "--disable-slash-commands",
       "--no-session-persistence",
       "--permission-mode", "dontAsk",
@@ -221,7 +224,7 @@ export function conversationInvocation(provider, directory, url, tools, authToke
       "--no-chrome",
       "--prompt-suggestions", "false",
     ],
-    env: { ...base.env, ...(authToken ? { EMSEEPEA_SEMANTIC_MCP_TOKEN: authToken } : {}) },
+    env: { ...base.env, ...(config && authToken ? { EMSEEPEA_SEMANTIC_MCP_TOKEN: authToken } : {}) },
   };
 }
 

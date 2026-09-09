@@ -83,3 +83,12 @@ accessibility finding remains.
   SHA-256: `a21c4c5446f90fb2cd341951cbfb5c689f3825f68fd8455014f862148ed099a3`
 - `website/src/content/docs/less-server-code.md`
   SHA-256: `f158b83933bce1bf97fba26ebbaea1795f345f80731dd20d796cce2293964fee`
+
+## Empty Catalogue Evaluation Recovery
+
+Result: PASS. An independent cognitive-accessibility review covered the exact
+corrective release note. It is short, direct, and adds no unnecessary memory
+load.
+
+- `.changeset/quiet-peas-hide.md`
+  SHA-256: `2103523ee0e472385e0f29c1d79c6e016d431df91e1f995102f44597c7e850d7`

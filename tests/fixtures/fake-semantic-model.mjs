@@ -22,11 +22,14 @@ if (!process.argv.includes("--input-format")) {
   process.stdout.write(`${JSON.stringify(result(answer))}\n`);
 } else {
   const tools = (process.argv[process.argv.indexOf("--tools") + 1] ?? "").split(",").filter(Boolean);
+  const mcpServers = process.argv.includes("--mcp-config")
+    ? [{ name: "emseepea_eval", status: "connected" }]
+    : [];
   process.stdout.write(`${JSON.stringify({
     type: "system",
     subtype: "init",
     tools,
-    mcp_servers: [{ name: "emseepea_eval", status: "connected" }],
+    mcp_servers: mcpServers,
   })}\n`);
   createInterface({ input: process.stdin }).on("line", (line) => {
     const prompt = JSON.parse(line).message.content[0].text;

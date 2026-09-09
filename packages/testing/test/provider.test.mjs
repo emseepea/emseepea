@@ -106,6 +106,25 @@ test("native conversations expose only the target MCP tools without coaching", (
   assert.equal(invocation.env.EMSEEPEA_SEMANTIC_MCP_TOKEN, "private-token");
 });
 
+test("native conversations do not expose a server with no advertised tools", () => {
+  const invocation = conversationInvocation(
+    "claude-local",
+    "/tmp/neutral",
+    "http://127.0.0.1:4321/mcp",
+    [],
+    "private-token",
+  );
+  assert.equal(invocation.args.includes("--mcp-config"), false);
+  assert.equal(invocation.args[invocation.args.indexOf("--tools") + 1], "");
+  assert.equal(invocation.env.EMSEEPEA_SEMANTIC_MCP_TOKEN, undefined);
+
+  const parsed = parseNativeClaudeEvents([
+    { type: "system", subtype: "init", tools: [], mcp_servers: [] },
+    { ...result, num_turns: 1, result: "No lookup tool is available." },
+  ], [], true);
+  assert.deepEqual(parsed.calls, []);
+});
+
 test("native tool assertions come from provider MCP events", () => {
   const tools = [{ name: "get-pea" }];
   const events = [
