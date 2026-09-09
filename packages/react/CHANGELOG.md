@@ -1,5 +1,15 @@
 # @emseepea/react
 
+## 0.0.10
+
+### Patch Changes
+
+- [`aad5a79`](https://github.com/emseepea/emseepea/commit/aad5a7963ae6108918f8b98742b882524a205d3a) Thanks [@tompahoward](https://github.com/tompahoward)! - Add typed authentication, permission-shaped discovery, and framework-redacted
+  observability adapters. Every initializer now demonstrates open and protected
+  composition from the same app factory. Retire the redundant sign-in initializer.
+- Updated dependencies [[`aad5a79`](https://github.com/emseepea/emseepea/commit/aad5a7963ae6108918f8b98742b882524a205d3a)]:
+  - @emseepea/server@0.4.0
+
 ## 0.0.9
 
 ### Patch Changes

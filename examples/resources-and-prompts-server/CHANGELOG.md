@@ -1,5 +1,13 @@
 # @emseepea/create-resources-and-prompts-server
 
+## 0.0.14
+
+### Patch Changes
+
+- [`aad5a79`](https://github.com/emseepea/emseepea/commit/aad5a7963ae6108918f8b98742b882524a205d3a) Thanks [@tompahoward](https://github.com/tompahoward)! - Add typed authentication, permission-shaped discovery, and framework-redacted
+  observability adapters. Every initializer now demonstrates open and protected
+  composition from the same app factory. Retire the redundant sign-in initializer.
+
 ## 0.0.13
 
 ### Patch Changes
