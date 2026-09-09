@@ -92,3 +92,12 @@ load.
 
 - `.changeset/quiet-peas-hide.md`
   SHA-256: `2103523ee0e472385e0f29c1d79c6e016d431df91e1f995102f44597c7e850d7`
+
+## Corrective Release Versions
+
+Result: PASS. An independent cognitive-accessibility review covered the two
+exact package version corrections. They do not change the document's meaning
+or add cognitive load.
+
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `e3d8f2effe2f7b5622b4748f04a0888e4e6084ac3ab8b3afe90521c7d6de1076`

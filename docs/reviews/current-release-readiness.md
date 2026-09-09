@@ -5,7 +5,7 @@ Date: 2026-09-09
 ## Release Batch
 
 - `@emseepea/server@0.4.0`
-- `@emseepea/testing@0.6.0`
+- `@emseepea/testing@0.6.1`
 - `@emseepea/react@0.0.10`
 - `@emseepea/create-api-backed-server@0.0.15`
 - `@emseepea/create-database-schema-server@0.0.2`
@@ -16,7 +16,7 @@ Date: 2026-09-09
 - `@emseepea/create-react-ui-server@0.0.15`
 - `@emseepea/create-resources-and-prompts-server@0.0.14`
 - `@emseepea/create-soap-backed-server@0.0.2`
-- `@emseepea/create-tool-server@0.0.15`
+- `@emseepea/create-tool-server@0.0.16`
 
 ## Change for Users
 
