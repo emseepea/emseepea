@@ -64,17 +64,20 @@ const streaming = defineStreamingTool({
 });
 const resourceUri = "smoke://static/value";
 const resource = defineResource({
+  access: "public",
   name: "smoke-resource",
   uri: resourceUri,
   handler: () => ({ contents: [{ uri: resourceUri, text: "value" }] }),
 });
 const resourceTemplate = defineResourceTemplate({
+  access: "public",
   name: "smoke-resource-template",
   uriTemplate: "smoke://resource/{value}",
   complete: { value: (partial) => ["checked"].filter((value) => value.startsWith(partial)) },
   handler: ({ uri }) => ({ contents: [{ uri, text: "value" }] }),
 });
 const prompt = definePrompt({
+  access: "public",
   name: "smoke-prompt",
   argsSchema: value,
   complete: { value: (partial) => ["checked"].filter((value) => value.startsWith(partial)) },

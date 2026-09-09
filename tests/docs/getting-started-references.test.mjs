@@ -154,10 +154,7 @@ test("the initialized quickstart passes its documented checks", {
       clearTimeout(startupTimer);
       clearTimeout(shutdownTimer);
       // Only this test's detached group; forced cleanup never turns a failure into a pass.
-      if (child.pid) {
-        try { process.kill(-child.pid, "SIGKILL"); }
-        catch (error) { if (error.code !== "ESRCH") throw error; }
-      }
+      if (child.pid) killProcessGroup(child.pid);
       await client?.close();
       await closed;
     }
@@ -165,6 +162,11 @@ test("the initialized quickstart passes its documented checks", {
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+function killProcessGroup(pid) {
+  try { process.kill(-pid, "SIGKILL"); }
+  catch (error) { if (error.code !== "ESRCH") throw error; }
+}
 
 async function packPackage(packagePath, directory) {
   const { stdout } = await exec("npm", [

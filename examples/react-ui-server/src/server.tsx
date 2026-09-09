@@ -1,22 +1,9 @@
-import { parse } from "node:querystring";
+import { serveEmseepea } from "@emseepea/server";
+import { createReactUiServer } from "./app.js";
 
-import { createEmseepea, discoverCapabilities, registerRoutes, serveEmseepea } from "@emseepea/server";
-
-const app = createEmseepea({
-  name: "emseepea-react-ui-server",
-  version: "0.0.0",
-  instructions: "Use preview-planting-plan to preview a sample pea planting plan. It sends and stores nothing.",
-  ...await discoverCapabilities(new URL("./capabilities/", import.meta.url)),
+const running = await serveEmseepea(await createReactUiServer(), {
+  port: Number.parseInt(process.env.PORT ?? "3001", 10),
 });
-
-app.addContentTypeParser(
-  "application/x-www-form-urlencoded",
-  { parseAs: "string" },
-  (_request, body, done) => done(null, parse(body.toString())),
-);
-await registerRoutes(app, new URL("./routes/", import.meta.url));
-
-const running = await serveEmseepea(app, { port: Number.parseInt(process.env.PORT ?? "3001", 10) });
 console.log(`Em See Pea React UI example listening at ${running.url}`);
 
 async function shutdown(): Promise<void> {

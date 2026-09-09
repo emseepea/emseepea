@@ -25,15 +25,16 @@ Evidence links point to executable tests in this repository.
 ### `server/discover`
 
 **Status: Checked.** Lists the pinned version and only the capabilities
-registered by the application. Discovery remains open when tools require
-sign-in. See the
+registered by the application. Discovery remains open by default when
+capabilities require authentication. Applications may explicitly protect
+discovery and filter it by principal permissions. See the
 [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs) and
-[sign-in tests](../tests/black-box/oauth-protected-tools.test.mjs).
+[authentication tests](../tests/black-box/oauth-protected-tools.test.mjs).
 
 ### `tools/list`
 
-**Status: Partial.** Lists registered tools with public input and output
-schemas, titles, icons, annotations, and public application metadata. Changing
+**Status: Partial.** Lists visible tools with public input and output schemas,
+titles, icons, annotations, access policy, and public application metadata. Changing
 the list while the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
@@ -41,7 +42,7 @@ Opt-in bounded pages are covered by the
 
 ### `tools/call`
 
-**Status: Partial.** Supports checked public, signed-in, mapped, and
+**Status: Partial.** Supports checked public, protected, mapped, and
 progress-reporting tools. A direct tool may ask a capable client for more input
 before returning its final result. Mapped and progress-reporting tools cannot.
 See the
@@ -52,7 +53,7 @@ See the
 
 ### `resources/list`
 
-**Status: Partial.** Lists registered public resources. Changing the list while
+**Status: Partial.** Lists visible public and protected resources. Changing the list while
 the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
@@ -60,7 +61,7 @@ Opt-in bounded pages are covered by the
 
 ### `resources/templates/list`
 
-**Status: Partial.** Lists registered public resource address patterns.
+**Status: Partial.** Lists visible public and protected resource address patterns.
 Changing the list while the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
@@ -68,16 +69,15 @@ Opt-in bounded pages are covered by the
 
 ### `resources/read`
 
-**Status: Partial.** Reads registered public resources and checks their result.
+**Status: Partial.** Reads registered public or protected resources and checks their result.
 A resource may ask a capable client for more input before returning its final
-result. Signed-in resources and resource update subscriptions are not
-supported. See the
+result. Resource update subscriptions are not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs) and
 [client-input tests](../tests/black-box/input-required.test.mjs).
 
 ### `prompts/list`
 
-**Status: Partial.** Lists registered public prompts. Changing the list while
+**Status: Partial.** Lists visible public and protected prompts. Changing the list while
 the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
@@ -85,16 +85,17 @@ Opt-in bounded pages are covered by the
 
 ### `prompts/get`
 
-**Status: Partial.** Gets a registered public prompt and checks its result. A
+**Status: Partial.** Gets a registered public or protected prompt and checks its result. A
 prompt may ask a capable client for more input before returning its final
-result. Signed-in prompts are not supported. See the
+result. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs) and
 [client-input tests](../tests/black-box/input-required.test.mjs).
 
 ### `completion/complete`
 
 **Status: Checked.** Suggests bounded, checked values for registered prompt
-arguments and resource fields. See the
+arguments and resource fields. Completion inherits the referenced prompt or
+resource-template access policy. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 
 ### `subscriptions/listen`
@@ -117,7 +118,7 @@ requests. Common non-POST methods are rejected. See the
 unsupported, and mismatched versions are rejected before authentication or
 application work. See the
 [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs) and
-[sign-in tests](../tests/black-box/oauth-protected-tools.test.mjs).
+[authentication tests](../tests/black-box/oauth-protected-tools.test.mjs).
 
 ### Result Envelopes
 
@@ -142,7 +143,7 @@ standard usage hints. Resources can provide audience, importance, and
 known-size details. Each item may also include public application metadata.
 
 Tool annotations are hints for clients. They do not prove that a tool is safe,
-grant permission, or replace sign-in and authorization checks.
+grant permission, or replace authentication and authorization checks.
 
 The framework checks and copies these details before startup. Tests prove that
 invalid details fail early, later changes to the application's objects have no
@@ -180,11 +181,11 @@ three pages. Catalogues remain fixed for the lifetime of the server. See the
 ### Accepted Response Types
 
 **Status: Checked.** Clients must offer both JSON and server-sent events.
-Tests reject missing, wildcard-only, and single-type `Accept` values before sign-in
+Tests reject missing, wildcard-only, and single-type `Accept` values before authentication
 or application work. They accept both tested orders and parameters. This is a
 narrow framework check, not a claim of complete HTTP content negotiation. See
 the [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
-[sign-in tests](../tests/black-box/oauth-protected-tools.test.mjs), and
+[authentication tests](../tests/black-box/oauth-protected-tools.test.mjs), and
 [progress tests](../tests/black-box/streaming-progress.test.mjs).
 
 ### Request Headers
@@ -194,7 +195,7 @@ values copied into custom HTTP headers. They cover string, integer, and boolean
 values, safe encoding, optional values, unknown headers, and rejection of
 invalid declarations or missing, different, and malformed values before the
 tool runs. See the [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
-[sign-in tests](../tests/black-box/oauth-protected-tools.test.mjs), and
+[authentication tests](../tests/black-box/oauth-protected-tools.test.mjs), and
 [custom request-header tests](../tests/black-box/request-headers.test.mjs).
 
 ### Notification `POST` Requests
@@ -245,7 +246,7 @@ metadata. It does not test a real TLS terminator or every proxy product.
 There is no throughput or load-balancing fairness guarantee. Rate limits remain
 per server, and application state is not shared. Paused-reader memory checks
 do not prove that a slow reader slows the producer. Recovery, replay,
-subscriptions, and deployed streaming tools requiring sign-in remain unsupported.
+subscriptions, and deployed protected streaming tools remain unsupported.
 
 ### Server-Sent Event Completion
 
@@ -297,42 +298,39 @@ input/output transport.
 
 ## Operations Support
 
-### Request Traces and Metrics
+### Observability Adapters
 
-**Status: Partial.** `@emseepea/server` 0.0.3 supports opt-in OpenTelemetry
-traces, request counts, and response times. These were first published in version 0.0.3.
-They cover `/mcp` responses, including progress, until completion or
-disconnection. SDK host and origin rejections happen before measurement starts.
+**Status: Partial.** Applications can opt into structured logging,
+OpenTelemetry, or both through the same framework-redacted event contract.
+Each `/mcp` request produces a bounded event containing only known protocol and
+capability names, HTTP method and status, completion outcome, and duration.
 
-The [telemetry HTTP tests](../tests/black-box/telemetry.test.mjs) check safe parent
-context, concurrent requests, sign-in rejection, tool errors, exporter failures,
-stream deadlines, disconnects, and shutdown. HTTP completion is not treated as
-tool success. Framework measurements exclude application data.
-
-Structured logs remain unfinished.
-The CI benchmark compares disabled telemetry with enabled telemetry without a
-provider; it does not measure the cost of an adopter's exporter.
+The [observability HTTP tests](../tests/black-box/telemetry.test.mjs) cover two
+adapters, stable order, redaction, unknown names, adapter failures, and bounded
+delivery and flush. HTTP completion is not treated as tool success. The CI
+benchmark compares disabled and enabled built-in OpenTelemetry adapters without
+an exporter; it does not measure an adopter's exporter or log destination.
 
 ### Dependency Readiness and Shutdown Flushing
 
-**Status: Partial.** `@emseepea/server` 0.0.3 includes an optional
-dependency-readiness callback and an optional shutdown-flush callback.
-These callbacks were first published in version 0.0.3.
+**Status: Partial.** The server includes an optional dependency-readiness
+callback. Configured observability adapters may provide a shutdown-flush
+callback.
 
 Readiness uses fixed responses without dependency details. Tests cover failure,
 recovery, timeouts, late callback results, cancellation, and one unfinished
 dependency check at a time. An unhealthy readiness response does not disable
 independent tool calls. Without a callback, readiness does not check dependencies.
 
-Shutdown stops admission and bounds request draining separately from telemetry
-flushing. The flush budget includes waiting for HTTP closure and final request
-measurements. Tests cover forced stream closure, stalled close hooks, flusher
-failures, expired budgets, and repeated close calls. See the
+Shutdown stops admission and bounds request draining separately from
+observability delivery and flushing. Every adapter receives an independent
+bounded flush opportunity. Tests cover forced stream closure, stalled close
+hooks, flusher failures, expired budgets, and repeated close calls. See the
 [operations HTTP tests](../tests/black-box/operations.test.mjs).
 
 An uncooperative callback can outlive the framework's wait. Successful shutdown
-does not prove delivery to an external telemetry service. Together with the
-missing structured logs, these limits keep the operations claim partial.
+does not prove delivery to an external observability service. This limit keeps
+the operations claim partial.
 
 ## Why Full Coverage Is Not Claimed
 

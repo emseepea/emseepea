@@ -288,9 +288,13 @@ test("every packed initializer creates a standalone checked project", {
       "progress-streaming-server": [["run-germination-trial"], []],
       "react-ui-server": [["preview-planting-plan"], []],
       "resources-and-prompts-server": [[]],
-      "sign-in-tool-server": [["get-private-inventory-report"], []],
       "soap-backed-server": [["get-pea-variety"]],
-      "tool-server": [["get-pea-variety"], ["get-pea-variety"]],
+      "tool-server": [
+        ["get-pea-variety"],
+        ["get-pea-variety"],
+        ["get-pea-variety"],
+        [],
+      ],
     };
 
     const queue = [...initializerPackages];
@@ -345,8 +349,28 @@ test("every packed initializer creates a standalone checked project", {
       ], example);
 
       const evidence = JSON.parse(await readFile(path.join(example, "artifacts/smoke.json"), "utf8"));
-      const result = Object.values(evidence.cases)[0];
       assert.equal(evidence.status, "passed", `${initializer.example} semantic smoke failed`);
+      const results = Object.values(evidence.cases);
+      if (initializer.example === "tool-server") {
+        assert.equal(results.length, 3);
+        const expectedCases = [
+          [["get-pea-variety"], ["get-pea-variety"]],
+          [["get-pea-variety"]],
+          [[]],
+        ];
+        for (const [caseIndex, result] of results.entries()) {
+          assert.equal(result.answerTrials.length, 3);
+          assert.equal(result.judgeVerdicts.length, 9);
+          for (const trial of result.answerTrials) {
+            assert.deepEqual(
+              trial.turns.map(({ selectedTools }) => selectedTools),
+              expectedCases[caseIndex],
+            );
+          }
+        }
+        return;
+      }
+      const [result] = results;
       assert.equal(result.answerTrials.length, 3);
       assert.equal(result.judgeVerdicts.length, initializer.example === "mongodb-backed-server" ? 18 : 9);
       assert.equal(result.mode, "conversation");

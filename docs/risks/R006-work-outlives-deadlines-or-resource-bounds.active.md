@@ -75,7 +75,7 @@ verifier or backend input/output that ignores the supplied abort signal.
   [ADR-0009: Capability-Scoped Reliability, Effects, and State](../decisions/0009-capability-scoped-reliability-effects-and-state.proposed.md),
   [ADR-0010: POST-Scoped Streaming, Progress, and Subscriptions](../decisions/0010-post-scoped-streaming-progress-and-subscriptions.proposed.md),
   and
-  [ADR-0012: Typed Operations and OpenTelemetry Boundary](../decisions/0012-typed-operations-and-opentelemetry-boundary.proposed.md)
+  [ADR-0012: Typed Operations and OpenTelemetry Boundary](../decisions/0012-typed-operations-and-opentelemetry-boundary.superseded.md)
 - Personas affected: framework adopters and their users
 
 ## Source Evidence (auto-scaffolded 2026-08-27)

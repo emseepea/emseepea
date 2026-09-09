@@ -95,5 +95,5 @@ understands the returned pea variety details.
 
 ## Add another capability
 
-[Browse the examples](../examples/) to connect a public API, add sign-in,
+[Browse the examples](../examples/) to connect a public API, add authentication,
 send progress updates, or add a web form.

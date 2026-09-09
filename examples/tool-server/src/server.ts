@@ -1,13 +1,7 @@
-import { createEmseepea, discoverCapabilities, serveEmseepea } from "@emseepea/server";
+import { serveEmseepea } from "@emseepea/server";
+import { createToolServer } from "./app.js";
 
-const handler = createEmseepea({
-  name: "emseepea-tool-server",
-  version: "0.0.0",
-  instructions: "Use get-pea-variety for information about a sample pea variety.",
-  ...await discoverCapabilities(new URL("./capabilities/", import.meta.url)),
-});
-
-const running = await serveEmseepea(handler, {
+const running = await serveEmseepea(await createToolServer(), {
   port: Number.parseInt(process.env.PORT ?? "3000", 10),
 });
 

@@ -25,6 +25,30 @@ ordinary tests, and semantic tests.
 
 <!-- generated-project-readme -->
 
+## Choose Open or Protected Access
+
+Start open when the catalogue and operations are public.
+
+To protect this template, pass both options to the app factory:
+
+- `access: { access: "protected", requiredScopes: ["peas:read"] }`
+- an `authentication` adapter
+
+Keep `authentication.discovery` as `"public"` unless capability names or
+schemas are sensitive. Use `"protected"` only when each principal should see a
+permission-filtered catalogue. OAuth metadata remains public in both modes.
+
+## Add Observability
+
+The same factory accepts `observability`.
+
+- Use `structuredLogging` for safe structured events.
+- Use `openTelemetry` for traces and metrics.
+
+Adapters receive only redacted framework events. They never receive request
+bodies, arguments, results, tokens, provider claims, or raw errors. See the
+[server API](https://github.com/emseepea/emseepea/tree/main/packages/framework#authentication-and-observability) for the complete configuration.
+
 ## Multi-Instance PostgreSQL Server
 
 Each server process owns its own Em See Pea app and bounded PostgreSQL

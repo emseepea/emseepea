@@ -1,4 +1,4 @@
-import { defineTool, type CapabilityModuleFactory } from "@emseepea/server";
+import { defineTool, type CapabilityModuleFactory, type ToolContext } from "@emseepea/server";
 import { z } from "zod";
 import type { MongoContext } from "../database.js";
 import { parsePeaObservationDocument } from "../pea-observation-document.js";
@@ -15,11 +15,11 @@ const outputSchema = z.object({
 
 export default ((context) => defineTool({
   name: "list-pea-observations",
-  access: "public",
+  ...context.access,
   description: "List up to 20 recent observations of pea plants.",
   inputSchema,
   outputSchema,
-  async handler({ variety_name }, { signal }) {
+  async handler({ variety_name }, { signal }: ToolContext) {
     const collection = context.observations();
     if (!collection) throw new Error("Observation provider unavailable");
     signal.throwIfAborted();

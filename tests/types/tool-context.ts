@@ -92,21 +92,35 @@ defineStreamingTool({
 });
 
 defineResource({
+  access: "public",
   name: "resource-type-check",
   uri: "type-check://resource/value",
   handler: (context) => {
     const deadline: number = context.deadlineMs;
     const signal: AbortSignal = context.signal;
     void context.inputResponses;
-    // @ts-expect-error Public resource handlers do not receive caller principals.
-    void context.principal;
+    const publicPrincipal: undefined = context.principal;
+    void publicPrincipal;
     void deadline;
     void signal;
     return { contents: [{ uri: "type-check://resource/value", text: "value" }] };
   },
 });
 
+defineResource({
+  access: "protected",
+  requiredScopes: ["resource:read"],
+  name: "protected-resource-type-check",
+  uri: "type-check://resource/protected",
+  handler: ({ principal }) => {
+    const permissions: readonly string[] = principal.permissions;
+    void permissions;
+    return { contents: [{ uri: "type-check://resource/protected", text: "value" }] };
+  },
+});
+
 defineResourceTemplate({
+  access: "public",
   name: "resource-template-type-check",
   uriTemplate: "type-check://resource/{value}",
   complete: {
@@ -129,8 +143,8 @@ defineResourceTemplate({
     const deadline: number = context.deadlineMs;
     const signal: AbortSignal = context.signal;
     void context.inputResponses;
-    // @ts-expect-error Public resource-template handlers do not receive caller principals.
-    void context.principal;
+    const publicPrincipal: undefined = context.principal;
+    void publicPrincipal;
     void value;
     void deadline;
     void signal;
@@ -139,6 +153,7 @@ defineResourceTemplate({
 });
 
 definePrompt({
+  access: "public",
   name: "prompt-type-check",
   argsSchema: schema,
   complete: {
@@ -152,8 +167,8 @@ definePrompt({
     const deadline: number = context.deadlineMs;
     const signal: AbortSignal = context.signal;
     void context.inputResponses;
-    // @ts-expect-error Public prompt handlers do not receive caller principals.
-    void context.principal;
+    const publicPrincipal: undefined = context.principal;
+    void publicPrincipal;
     void deadline;
     void signal;
     return { messages: [{ role: "user", content: { type: "text", text: value } }] };
@@ -161,6 +176,19 @@ definePrompt({
 });
 
 definePrompt({
+  access: "protected",
+  requiredScopes: ["prompt:read"],
+  name: "protected-prompt-type-check",
+  argsSchema: schema,
+  handler: (value, { principal }) => {
+    const clientId: string = principal.clientId;
+    void clientId;
+    return { messages: [{ role: "user", content: { type: "text", text: value.value } }] };
+  },
+});
+
+definePrompt({
+  access: "public",
   name: "invalid-completion-key",
   argsSchema: schema,
   complete: {
@@ -172,6 +200,7 @@ definePrompt({
 
 // @ts-expect-error MCP prompt arguments must accept string values on the wire.
 definePrompt({
+  access: "public",
   name: "invalid-number-prompt",
   argsSchema: z.object({ count: z.number() }),
   handler: () => ({ messages: [] }),

@@ -126,7 +126,7 @@ bundle the CLI or copy your login credentials.
 For your own project, add `@emseepea/testing` as a development dependency and
 set `test:llm` to build your server and run `emseepea-test eval`.
 
-For a server that requires sign-in, set `authTokenEnvironment` to the name of
+For a server with protected access, set `authTokenEnvironment` to the name of
 an environment variable containing its test access token. Do not put real
 tokens in test files. The optional `environment` object supplies ordinary test
 settings to the server; model-provider credentials are not passed through.

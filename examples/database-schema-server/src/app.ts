@@ -1,12 +1,19 @@
-import { createEmseepea, discoverCapabilities } from "@emseepea/server";
+import {
+  createEmseepea,
+  discoverCapabilities,
+  type AccessPolicy,
+  type EmseepeaExtensions,
+} from "@emseepea/server";
 import { Pool } from "pg";
 import { z } from "zod";
 
-export interface DatabaseSchemaExampleOptions {
+export interface DatabaseSchemaExampleOptions extends EmseepeaExtensions {
   readonly databaseUrl: string;
+  readonly access?: AccessPolicy;
 }
 
 export async function createDatabaseSchemaExample(options: DatabaseSchemaExampleOptions) {
+  const { access = { access: "public" }, authentication, observability } = options;
   const databaseUrl = z.string().url().refine(
     (value) => ["postgres:", "postgresql:"].includes(new URL(value).protocol),
     "databaseUrl must use PostgreSQL",
@@ -41,7 +48,10 @@ export async function createDatabaseSchemaExample(options: DatabaseSchemaExample
     readinessTimeoutMs: 2_500,
     ...await discoverCapabilities(new URL("./capabilities/", import.meta.url), {
       database: () => database,
+      access,
     }),
+    authentication,
+    observability,
   });
   const closeProvider = async () => {
     const activeDatabase = database;

@@ -158,6 +158,7 @@ test("bad or unenforceable cache instructions fail before serving", () => {
   }));
   assert.throws(
     () => defineResource({
+      access: "public",
       name: "bad-resource-cache",
       uri: "cache://bad/resource",
       cacheHint: { ttlMs: -1 },
@@ -167,6 +168,7 @@ test("bad or unenforceable cache instructions fail before serving", () => {
   );
   assert.throws(
     () => defineResourceTemplate({
+      access: "public",
       name: "bad-template-cache",
       uriTemplate: "cache://bad/{name}",
       cacheHint: { extra: true },
@@ -182,6 +184,7 @@ test("defaults remain private and input requests are never cacheable", async () 
     name: "cache-defaults",
     version: "0.0.0",
     resources: [defineResource({
+      access: "public",
       name: "input-report",
       uri,
       cacheHint: { ttlMs: 500, cacheScope: "public" },
@@ -222,12 +225,14 @@ function completeDefinitions(calls, staticHint, templateHint) {
     })],
     resources: [
       defineResource({
+        access: "public",
         name: "bean-report",
         uri: "cache://beans/report",
         cacheHint: staticHint,
         handler: () => ({ contents: [{ uri: "cache://beans/report", text: "Three beans" }] }),
       }),
       defineResourceTemplate({
+        access: "public",
         name: "bean-detail",
         uriTemplate: "cache://origins/{origin}",
         cacheHint: templateHint,
@@ -235,6 +240,7 @@ function completeDefinitions(calls, staticHint, templateHint) {
       }),
     ],
     prompts: [definePrompt({
+      access: "public",
       name: "bean-report",
       argsSchema: z.object({}),
       handler: () => {

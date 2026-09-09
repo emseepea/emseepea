@@ -19,7 +19,7 @@ Use the current framework to create:
 
 - a Fastify MCP server that runs on Node.js 22 or 24
 - public tools that anyone can call
-- tools that require a sign-in token before their code runs
+- protected tools, resources, prompts, and completions that authenticate before application code runs
 - tools that call another service and check its response
 - resources, reusable resource addresses, prompts, and field suggestions
 - clear names, descriptions, icons, and usage hints for clients to display
@@ -50,7 +50,7 @@ It covers:
 
 - finding the server and listing what it offers without signing in
 - using tools, resources, prompts, reusable resource addresses, and suggestions
-- rejecting calls that need sign-in before their code runs
+- rejecting unauthorized calls before application code runs
 - checking results from connected services without exposing private errors
 - reporting progress through raw HTTP and the official MCP client
 - saving through one server process and reading the same state through another
@@ -65,7 +65,6 @@ Replace `my-server` with an unused directory name:
 
 - [One public tool](examples/tool-server/README.md): `npm init @emseepea/tool-server -- my-server`
 - [A public web API](examples/api-backed-server/README.md): `npm init @emseepea/api-backed-server -- my-server`
-- [A sign-in protected tool](examples/sign-in-tool-server/README.md): `npm init @emseepea/sign-in-tool-server -- my-server`
 - [Resources and prompts](examples/resources-and-prompts-server/README.md): `npm init @emseepea/resources-and-prompts-server -- my-server`
 - [Progress streaming](examples/progress-streaming-server/README.md): `npm init @emseepea/progress-streaming-server -- my-server`
 - [An HTML form](examples/html-ui-server/README.md): `npm init @emseepea/html-ui-server -- my-server`
@@ -85,8 +84,11 @@ experience. Ordinary tests qualify those MCP contracts.
 Each initializer package, README, changelog, and maintained source live together in the matching
 [`examples/` directory](https://github.com/emseepea/emseepea/tree/main/examples).
 
-The sign-in example uses the made-up token `example-access-token`. It shows
-where token checking fits. It is not a production sign-in system.
+Every starter is open by default. Its README and tests show how to add the same
+typed authentication and observability extensions without choosing a different
+template. Discovery stays public by default. It can be explicitly protected
+and filtered by the authenticated principal's permissions when the catalogue
+itself is sensitive.
 
 ## Check Whether AI Chooses and Uses the Right Tool
 
@@ -111,8 +113,8 @@ The pull-request checks run the current JSON performance test on Node.js 22 and
 
 ## Current Security Boundary
 
-The framework can check whether a bearer token has expired and whether it grants
-the required permission for this server.
+The framework authenticates bearer tokens through an application-supplied
+verifier and checks declared permissions before protected application code runs.
 
 Adopters remain responsible for:
 
@@ -121,17 +123,17 @@ Adopters remain responsible for:
 - deciding which records and organisations each person may access
 - controlling which external addresses the server may contact
 
-People can still discover the server and list its tools without signing in,
-even when using a tool requires permission.
+Discovery remains public by default, even when invoking a capability requires
+permission. An application may explicitly protect discovery and show each
+principal only the capabilities allowed by their permissions.
 
 ## Not Included Yet
 
 - tools that write data, group changes, retry failed requests, or safely repeat
   the same write
-- listing every possible resource address or requiring sign-in for resources and
-  prompts
+- listing every possible resource address
 - changing catalogues while a server runs
-- deployed progress streams from tools that require sign-in
+- deployed progress streams from protected tools
 - saved sessions, subscriptions, replay, or reconnect recovery
 - shared operation across computers without a reachable PostgreSQL database
 - a promise that retries change an external service only once
@@ -148,18 +150,18 @@ Publication does not expand these claims.
 - [Release-readiness review][release-readiness]
 - [Risk register](docs/risks/README.md)
 - [Server package decision](docs/decisions/0016-em-see-pea-product-npm-scope-and-server-package.superseded.md)
-- [Public discovery and sign-in checks][public-discovery]
+- [Typed authentication and optional protected discovery][public-discovery]
 - [Language-model understanding checks][semantic-qualification]
 - [Cognitive-accessibility publication rule][cognitive-publication]
 - [Brand style guide](docs/brand/STYLE-GUIDE.md)
 
 The source and examples are public under MIT. The monorepo root has
 `private: true` in `package.json`. The published packages include the server,
-testing helpers, React renderer, Tailwind stylesheet, and eleven example-backed
+testing helpers, React renderer, Tailwind stylesheet, and ten example-backed
 initializer packages.
 
 [cognitive-publication]: docs/decisions/0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md
-[public-discovery]: docs/decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md
+[public-discovery]: docs/decisions/0064-typed-authentication-with-optional-permission-shaped-discovery.proposed.md
 [quality-policy]: QUALITY.md
 [release-readiness]: docs/reviews/current-release-readiness.md
 [semantic-qualification]: docs/decisions/0055-native-client-journeys-only-in-semantic-tests.proposed.md

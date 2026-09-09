@@ -1,4 +1,4 @@
-import { defineTool, type CapabilityModuleFactory } from "@emseepea/server";
+import { defineTool, type CapabilityModuleFactory, type ToolContext } from "@emseepea/server";
 import { z } from "zod";
 import type { GetPeaRequest, GetPeaResponse } from "../generated/pea-service.js";
 import type { SoapExampleContext } from "./context.js";
@@ -14,13 +14,13 @@ const outputSchema = z.object({
   traits: z.array(z.string().max(100)).max(5).describe("Growing or eating traits."),
 });
 
-export default (({ client }) => defineTool({
+export default (({ client, access }) => defineTool({
   name: "get-pea-variety",
-  access: "public",
+  ...access,
   description: "Get details about one pea variety.",
   inputSchema,
   outputSchema,
-  async handler({ name }, { signal }) {
+  async handler({ name }, { signal }: ToolContext) {
     signal.throwIfAborted();
     const request: GetPeaRequest = { name };
     const [response] = await client.GetPeaAsync(request, { signal });

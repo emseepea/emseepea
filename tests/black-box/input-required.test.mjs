@@ -48,6 +48,7 @@ test("direct handlers can request client input through every supported method", 
     },
   });
   const resource = defineResource({
+    access: "public",
     name: "requested-summary",
     uri: "coffee://summary",
     handler(context) {
@@ -67,6 +68,7 @@ test("direct handlers can request client input through every supported method", 
     },
   });
   const prompt = definePrompt({
+    access: "public",
     name: "authorization-link",
     argsSchema: z.object({}),
     handler(_args, context) {
@@ -91,6 +93,7 @@ test("direct handlers can request client input through every supported method", 
     },
   });
   const template = defineResourceTemplate({
+    access: "public",
     name: "personal-summary",
     uriTemplate: "coffee://summary/{name}",
     handler({ uri }, context) {
@@ -250,7 +253,7 @@ test("client input stays bounded, untrusted, cancellable, and authorized per rou
     tools: [tool],
     maxApplicationResultBytes: 512,
     operationTimeoutMs: 100,
-    oauth: {
+    authentication: {
       verifier: {
         async verifyAccessToken(token) {
           verifierCalls += 1;

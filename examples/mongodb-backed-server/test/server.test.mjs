@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test, { after } from "node:test";
 
-import { startMcpServer } from "@emseepea/testing";
+import {
+  insecureTestAuthentication,
+  startEmseepea,
+  startMcpServer,
+} from "@emseepea/testing";
 import { MongoClient } from "mongodb";
 import { createMongoExample } from "../dist/app.js";
 import {
@@ -55,6 +59,22 @@ test("each collection has one application schema and only varieties enforce it i
   assert.deepEqual(Object.keys(peaObservationDocumentSchema.properties), [
     "_id", "variety_name", "observed_on", "location", "growth_stage", "notes",
   ]);
+});
+
+test("the same template composes protected access and observability", async (t) => {
+  const events = [];
+  const permissions = ["catalogue:write"];
+  const { app } = await createMongoExample({
+    uri,
+    access: { access: "protected", requiredScopes: permissions },
+    authentication: insecureTestAuthentication(permissions),
+    observability: [{ id: "test-log", emit: (event) => events.push(event) }],
+  });
+  const running = await startEmseepea(t, app);
+  const client = await running.connect("test-token");
+  const result = await client.callTool({ name: "list-pea-varieties", arguments: {} });
+  assert.equal(result.isError, false);
+  assert.ok(events.some(({ capability }) => capability === "list-pea-varieties"));
 });
 
 test("setup fails closed when the schemaless collection already has a validator", async () => {

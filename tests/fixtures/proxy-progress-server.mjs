@@ -67,7 +67,7 @@ const signedIn = defineTool({
 const running = await serveEmseepea(createEmseepea({
   name: `proxy-test-${instance}`, version: "0.0.0", tools: [tool, signedIn],
   operationTimeoutMs: 2_000,
-  oauth: {
+  authentication: {
     verifier: {
       async verifyAccessToken(token) {
         if (token !== "test-valid") throw new OAuthError(OAuthErrorCode.InvalidToken, "invalid");

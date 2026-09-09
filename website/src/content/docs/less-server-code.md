@@ -17,7 +17,7 @@ migration, not a drop-in replacement.
 - Describing and listing the tools you register.
 - Checking tool input and output against your schemas.
 - Checking a connected service's data before it reaches a tool's caller.
-- Applying time limits, cancellation, safe error responses, and sign-in hooks.
+- Applying time limits, cancellation, safe error responses, and authentication.
 - Sending progress updates on supported tool calls.
 
 You may already have a small implementation of these features. Migration may

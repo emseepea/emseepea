@@ -1,11 +1,21 @@
 import { fileURLToPath } from "node:url";
-import { createEmseepea, discoverCapabilities } from "@emseepea/server";
+import {
+  createEmseepea,
+  discoverCapabilities,
+  type AccessPolicy,
+  type EmseepeaExtensions,
+} from "@emseepea/server";
 import { createClientAsync } from "soap";
 import { z } from "zod";
 import { loadSoapEnvelopeSchema } from "./soap-schema.js";
 import { ValidatingHttpClient } from "./validating-http-client.js";
 
-export async function createSoapExample(endpointValue: string) {
+export interface SoapExampleOptions extends EmseepeaExtensions {
+  readonly access?: AccessPolicy;
+}
+
+export async function createSoapExample(endpointValue: string, options: SoapExampleOptions = {}) {
+  const { access = { access: "public" }, ...extensions } = options;
   const endpoint = new URL(z.string().url().parse(endpointValue));
   if (!["http:", "https:"].includes(endpoint.protocol) || endpoint.username || endpoint.password || endpoint.hash) {
     throw new Error("SOAP endpoint must be an HTTP address without credentials or a fragment");
@@ -20,7 +30,8 @@ export async function createSoapExample(endpointValue: string) {
     name: "emseepea-soap-backed-server",
     version: "0.0.0",
     instructions: "Retrieve pea variety details from a legacy SOAP service.",
-    ...await discoverCapabilities(new URL("./capabilities/", import.meta.url), { client }),
+    ...await discoverCapabilities(new URL("./capabilities/", import.meta.url), { client, access }),
+    ...extensions,
   });
   return { app };
 }

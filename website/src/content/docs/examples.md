@@ -1,6 +1,6 @@
 ---
 title: Choose an example
-description: Find a starting point for tools, APIs, databases, SOAP, sign-in, progress, forms, or shared reports.
+description: Find a starting point for tools, APIs, databases, SOAP, progress, forms, or shared reports.
 ---
 
 Each initializer creates a standalone app with `private: true` in
@@ -38,17 +38,17 @@ npm init @emseepea/api-backed-server -- my-server
 
 [Read the API-backed server example](https://github.com/emseepea/emseepea/tree/main/examples/api-backed-server).
 
-## Require sign-in for a tool
+## Add authentication or observability
 
-Anyone can discover the server and list tools. Calling the restricted tool
-requires the example's made-up access token. Replace that token checker before
-using it in a real application.
+Every starter is open by default. Its app factory also accepts the same typed
+authentication and observability extensions. The starter's README and tests
+show both open and protected composition, so choose a starter for the
+application shape instead of choosing a separate security template.
 
-```sh
-npm init @emseepea/sign-in-tool-server -- my-server
-```
-
-[Read the sign-in tool server example](https://github.com/emseepea/emseepea/tree/main/examples/sign-in-tool-server).
+Discovery stays public by default. Protect it explicitly only when the
+catalogue itself is sensitive. Protected discovery shows each principal only
+the capabilities allowed by their permissions. OAuth metadata remains public
+so clients can learn how to authenticate.
 
 ## Share reference material and prompts
 

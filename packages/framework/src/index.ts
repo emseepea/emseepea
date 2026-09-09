@@ -65,7 +65,19 @@ import { isIP } from "node:net";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { z } from "zod";
-import { installRequestTelemetry } from "./telemetry.js";
+import {
+  installObservability,
+  type ObservabilityAdapter,
+} from "./telemetry.js";
+
+export {
+  openTelemetry,
+  structuredLogging,
+  type ObservabilityAdapter,
+  type ObservabilityEvent,
+  type ObservedHttpMethod,
+  type ObservedMcpMethod,
+} from "./telemetry.js";
 
 export * from "./ui.js";
 export type ClientInputRequest = Extract<InputRequest, { method: "elicitation/create" }>;
@@ -127,7 +139,9 @@ const RESOURCE_KIND = Symbol("resourceKind");
 const RESOURCE_MATCHES = Symbol("resourceMatches");
 const RESOURCE_ROUTE = Symbol("resourceRoute");
 const RESOURCE_LISTING = Symbol("resourceListing");
+const RESOURCE_ACCESS = Symbol("resourceAccess");
 const PROMPT_NAME = Symbol("promptName");
+const PROMPT_ACCESS = Symbol("promptAccess");
 const HAS_COMPLETION = Symbol("hasCompletion");
 const PROMPT_LISTING = Symbol("promptListing");
 const CACHEABLE_METHODS = [
@@ -143,18 +157,26 @@ const runtimes = new WeakMap<FastifyInstance, AppRuntime>();
 interface RequestOperation {
   readonly deadlineMs: number;
   readonly signal: AbortSignal;
+  readonly principal?: Principal;
+  readonly filterCatalogues: boolean;
 }
 const requestOperations = new AsyncLocalStorage<RequestOperation>();
 
-export interface ToolPrincipal {
+export interface Principal {
   readonly clientId: string;
-  readonly scopes: readonly string[];
+  /** Normalized permissions granted to this MCP resource. */
+  readonly permissions: readonly string[];
   readonly resource?: string;
 }
+export type ToolPrincipal = Principal;
+export type CapabilityAccess = "public" | "protected";
+export type AccessPolicy =
+  | { readonly access: "public" }
+  | { readonly access: "protected"; readonly requiredScopes: readonly string[] };
 export interface ToolContext<Access extends ToolAccess = ToolAccess> {
   readonly signal: AbortSignal;
   readonly deadlineMs: number;
-  readonly principal: Access extends "public" ? undefined : ToolPrincipal;
+  readonly principal: Access extends "public" ? undefined : Principal;
   /** Client-supplied responses from the current multi-round-trip retry. */
   readonly inputResponses?: Readonly<Record<string, unknown>>;
 }
@@ -167,7 +189,7 @@ export interface StreamingToolContext<Access extends ToolAccess = ToolAccess>
 {
   readonly signal: AbortSignal;
   readonly deadlineMs: number;
-  readonly principal: Access extends "public" ? undefined : ToolPrincipal;
+  readonly principal: Access extends "public" ? undefined : Principal;
   readonly reportProgress: (update: ProgressUpdate) => Promise<void>;
 }
 export interface ToolResult<Output> {
@@ -180,18 +202,22 @@ export interface BackendAdapterContext {
   readonly deadlineMs: number;
 }
 export type OperationContext = BackendAdapterContext;
-export interface ClientInputContext extends OperationContext {
+export interface ClientInputContext<Access extends CapabilityAccess = CapabilityAccess>
+  extends OperationContext {
+  readonly principal: Access extends "public" ? undefined : Principal;
   /** Client-supplied responses from the current multi-round-trip retry. */
   readonly inputResponses?: Readonly<Record<string, unknown>>;
 }
-export interface CompletionContext extends OperationContext {
+export interface CompletionContext<Access extends CapabilityAccess = CapabilityAccess>
+  extends OperationContext {
+  readonly principal: Access extends "public" ? undefined : Principal;
   readonly arguments: Readonly<Record<string, string>>;
 }
 export type CompletionHandler = (
   value: string,
   context: CompletionContext,
 ) => readonly string[] | Promise<readonly string[]>;
-interface ProtectedToolAccess {
+interface ProtectedCapabilityAccess {
   readonly type: "protected";
   readonly requiredScopes: readonly string[];
 }
@@ -288,7 +314,7 @@ export type MappedToolDefinition<
     };
 export interface EmseepeaTool {
   readonly [TOOL_NAME]: string;
-  readonly [TOOL_ACCESS]: "public" | ProtectedToolAccess;
+  readonly [TOOL_ACCESS]: "public" | ProtectedCapabilityAccess;
   readonly [TOOL_STREAMING]: boolean;
   readonly [TOOL_LISTING]: Readonly<Record<string, unknown>>;
   readonly [REGISTER]: (
@@ -299,7 +325,7 @@ export interface EmseepeaTool {
     maxProgressEventBytes: number,
   ) => void;
 }
-export interface ResourceDefinition {
+interface ResourceDefinitionBase {
   readonly name: string;
   readonly uri: string;
   readonly title?: string;
@@ -310,10 +336,16 @@ export interface ResourceDefinition {
   readonly size?: number;
   readonly _meta?: Readonly<MetaObject>;
   readonly cacheHint?: CacheHint;
-  readonly handler: (context: ClientInputContext) =>
-    ReadResourceResult | InputRequiredResult | Promise<ReadResourceResult | InputRequiredResult>;
 }
-export interface ResourceTemplateDefinition {
+export type ResourceDefinition = ResourceDefinitionBase & (
+  | { readonly access: "public"; readonly requiredScopes?: never;
+      readonly handler: (context: ClientInputContext<"public">) =>
+        ReadResourceResult | InputRequiredResult | Promise<ReadResourceResult | InputRequiredResult> }
+  | { readonly access: "protected"; readonly requiredScopes: readonly string[];
+      readonly handler: (context: ClientInputContext<"protected">) =>
+        ReadResourceResult | InputRequiredResult | Promise<ReadResourceResult | InputRequiredResult> }
+);
+interface ResourceTemplateDefinitionBase {
   readonly name: string;
   readonly uriTemplate: string;
   readonly title?: string;
@@ -324,15 +356,20 @@ export interface ResourceTemplateDefinition {
   readonly _meta?: Readonly<MetaObject>;
   readonly cacheHint?: CacheHint;
   readonly complete?: Readonly<Record<string, CompletionHandler>>;
-  readonly handler: (
-    input: {
-      readonly uri: string;
-      readonly variables: Readonly<Record<string, string | readonly string[]>>;
-    },
-    context: ClientInputContext,
-  ) => ReadResourceResult | InputRequiredResult |
-  Promise<ReadResourceResult | InputRequiredResult>;
 }
+type ResourceTemplateHandler<Access extends CapabilityAccess> = (
+  input: {
+    readonly uri: string;
+    readonly variables: Readonly<Record<string, string | readonly string[]>>;
+  },
+  context: ClientInputContext<Access>,
+) => ReadResourceResult | InputRequiredResult | Promise<ReadResourceResult | InputRequiredResult>;
+export type ResourceTemplateDefinition = ResourceTemplateDefinitionBase & (
+  | { readonly access: "public"; readonly requiredScopes?: never;
+      readonly handler: ResourceTemplateHandler<"public"> }
+  | { readonly access: "protected"; readonly requiredScopes: readonly string[];
+      readonly handler: ResourceTemplateHandler<"protected"> }
+);
 interface ResourceTemplateRoute {
   readonly protocol: string;
   readonly host: string;
@@ -348,6 +385,7 @@ export interface EmseepeaResource {
     readonly method: "resources/list" | "resources/templates/list";
     readonly value: Readonly<Record<string, unknown>>;
   };
+  readonly [RESOURCE_ACCESS]: "public" | ProtectedCapabilityAccess;
   readonly [HAS_COMPLETION]: boolean;
   readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
 }
@@ -360,7 +398,7 @@ type PromptInputConstraint<Args extends z.ZodObject> =
   [NonStringPromptArgumentKeys<Args>] extends [never]
     ? object
     : { readonly promptArgumentsMustAcceptStrings: never };
-export type PromptDefinition<Args extends z.ZodObject> = {
+type PromptDefinitionBase<Args extends z.ZodObject> = {
   readonly name: string;
   readonly title?: string;
   readonly description?: string;
@@ -368,13 +406,18 @@ export type PromptDefinition<Args extends z.ZodObject> = {
   readonly _meta?: Readonly<MetaObject>;
   readonly argsSchema: Args;
   readonly complete?: Readonly<Partial<Record<Extract<keyof z.input<Args>, string>, CompletionHandler>>>;
-  readonly handler: (
-    args: z.output<Args>,
-    context: ClientInputContext,
-  ) => GetPromptResult | InputRequiredResult | Promise<GetPromptResult | InputRequiredResult>;
-} & PromptInputConstraint<Args>;
+};
+export type PromptDefinition<Args extends z.ZodObject> = PromptDefinitionBase<Args> & (
+  | { readonly access: "public"; readonly requiredScopes?: never;
+      readonly handler: (args: z.output<Args>, context: ClientInputContext<"public">) =>
+        GetPromptResult | InputRequiredResult | Promise<GetPromptResult | InputRequiredResult> }
+  | { readonly access: "protected"; readonly requiredScopes: readonly string[];
+      readonly handler: (args: z.output<Args>, context: ClientInputContext<"protected">) =>
+        GetPromptResult | InputRequiredResult | Promise<GetPromptResult | InputRequiredResult> }
+) & PromptInputConstraint<Args>;
 export interface EmseepeaPrompt {
   readonly [PROMPT_NAME]: string;
+  readonly [PROMPT_ACCESS]: "public" | ProtectedCapabilityAccess;
   readonly [HAS_COMPLETION]: boolean;
   readonly [PROMPT_LISTING]: Readonly<Record<string, unknown>>;
   readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
@@ -389,15 +432,18 @@ export interface DiscoveredCapabilities {
   readonly prompts: readonly EmseepeaPrompt[];
 }
 export type HttpRouteHandler = RouteHandlerMethod;
-export interface OAuthResourceServerOptions {
+export interface AuthenticationOptions {
   readonly verifier: OAuthTokenVerifier;
   readonly metadata: Omit<AuthMetadataOptions, "dangerouslyAllowInsecureIssuerUrl"> & {
     readonly dangerouslyAllowInsecureIssuerUrl?: false;
   };
   readonly verificationTimeoutMs?: number;
+  /** Public lists every contract. Protected authenticates and permission-filters the catalogue. */
+  readonly discovery?: "public" | "protected";
 }
+export type OAuthResourceServerOptions = AuthenticationOptions;
 export interface EmseepeaOptions {
-  readonly telemetry?: boolean;
+  readonly observability?: readonly ObservabilityAdapter[];
   readonly readiness?: (context: { readonly signal: AbortSignal }) => boolean | Promise<boolean>;
   readonly readinessTimeoutMs?: number;
   readonly name: string;
@@ -418,8 +464,9 @@ export interface EmseepeaOptions {
   readonly maxProgressEventBytes?: number;
   readonly operationTimeoutMs?: number;
   readonly deployment?: DeploymentProfile;
-  readonly oauth?: OAuthResourceServerOptions;
+  readonly authentication?: AuthenticationOptions;
 }
+export type EmseepeaExtensions = Pick<EmseepeaOptions, "authentication" | "observability">;
 export interface ListPaginationOptions {
   readonly pageSize: number;
   readonly maxPageBytes?: number;
@@ -437,8 +484,7 @@ export interface ServeOptions {
   readonly host?: "127.0.0.1" | "::1" | "localhost" | "0.0.0.0" | "::";
   readonly port?: number;
   readonly shutdownTimeoutMs?: number;
-  readonly flushTelemetry?: (context: { readonly signal: AbortSignal }) => void | Promise<void>;
-  readonly telemetryFlushTimeoutMs?: number;
+  readonly observabilityFlushTimeoutMs?: number;
 }
 export interface RunningEmseepeaServer {
   readonly url: URL;
@@ -459,13 +505,15 @@ interface AppRuntime {
   deployment: NormalizedDeployment;
   requestTimeoutMs: number;
   stopping: AbortController;
-  finishTelemetry: (() => Promise<void>) | undefined;
+  observabilityLimits: { deliveryTimeoutMs: number } | undefined;
+  finishObservability: ((timeoutMs: number) => Promise<void>) | undefined;
 }
 interface NormalizedOAuth {
   readonly verifier: OAuthTokenVerifier;
   readonly metadata: AuthMetadataOptions;
   readonly resourceMetadataUrl: string;
   readonly verificationTimeoutMs: number;
+  readonly discovery: "public" | "protected";
 }
 
 export function defineTool<
@@ -544,6 +592,7 @@ export function defineMappedTool<
 export function defineResource(definition: ResourceDefinition): EmseepeaResource {
   const { name, handler } = definition;
   assertRegistrationName("Resource", name);
+  const access = normalizeCapabilityAccess("Resource", definition.access, definition.requiredScopes);
   const uri = canonicalResourceUri(definition.uri);
   const listing = checkedProtocolValue<McpResource>("Resource", {
     name,
@@ -554,7 +603,7 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
     icons: definition.icons,
     annotations: definition.annotations,
     size: definition.size,
-    _meta: definition._meta,
+    _meta: accessMetadata(definition._meta, access),
   });
   const metadata = Object.freeze({
     title: listing.title,
@@ -572,6 +621,7 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
     [RESOURCE_NAME]: name,
     [RESOURCE_URI]: uri,
     [RESOURCE_KIND]: "static",
+    [RESOURCE_ACCESS]: access,
     [RESOURCE_LISTING]: Object.freeze({
       method: "resources/list",
       value: listing,
@@ -590,8 +640,9 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
               const result = await handler({
                 signal,
                 deadlineMs,
+                principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
                 inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
-              });
+              } as ClientInputContext<"public"> & ClientInputContext<"protected">);
               signal.throwIfAborted();
               if (isInputRequiredResult(result)) {
                 assertStatelessInputRequired(result);
@@ -619,6 +670,11 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
 export function defineResourceTemplate(definition: ResourceTemplateDefinition): EmseepeaResource {
   const { name, handler } = definition;
   assertRegistrationName("Resource template", name);
+  const access = normalizeCapabilityAccess(
+    "Resource template",
+    definition.access,
+    definition.requiredScopes,
+  );
   const { template, route } = checkedResourceTemplate(definition.uriTemplate);
   const uriTemplate = template.uriTemplate.toString();
   const listing = checkedProtocolValue<ResourceTemplateType>("ResourceTemplate", {
@@ -629,7 +685,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
     mimeType: definition.mimeType,
     icons: definition.icons,
     annotations: definition.annotations,
-    _meta: definition._meta,
+    _meta: accessMetadata(definition._meta, access),
   });
   const metadata = Object.freeze({
     title: listing.title,
@@ -652,6 +708,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
     [RESOURCE_NAME]: name,
     [RESOURCE_URI]: uriTemplate,
     [RESOURCE_KIND]: "template",
+    [RESOURCE_ACCESS]: access,
     [RESOURCE_MATCHES]: (uri) => template.uriTemplate.match(uri) !== null,
     [RESOURCE_ROUTE]: route,
     [RESOURCE_LISTING]: Object.freeze({
@@ -689,8 +746,9 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
                 {
                   signal,
                   deadlineMs,
+                  principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
                   inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
-                },
+                } as ClientInputContext<"public"> & ClientInputContext<"protected">,
               );
               signal.throwIfAborted();
               if (isInputRequiredResult(result)) {
@@ -722,6 +780,7 @@ export function definePrompt<Args extends z.ZodObject>(
 ): EmseepeaPrompt {
   const { name, argsSchema, handler } = definition;
   assertRegistrationName("Prompt", name);
+  const access = normalizeCapabilityAccess("Prompt", definition.access, definition.requiredScopes);
   const argumentNames = Object.keys(argsSchema.shape);
   const completions = checkedCompletionHandlers("Prompt", definition.complete, argumentNames);
   const listing = checkedProtocolValue<Prompt>("Prompt", {
@@ -729,7 +788,7 @@ export function definePrompt<Args extends z.ZodObject>(
     title: definition.title,
     description: definition.description,
     icons: definition.icons,
-    _meta: definition._meta,
+    _meta: accessMetadata(definition._meta, access),
     arguments: promptArguments(argsSchema),
   });
   const metadata = Object.freeze({
@@ -740,6 +799,7 @@ export function definePrompt<Args extends z.ZodObject>(
   });
   const registration: EmseepeaPrompt = {
     [PROMPT_NAME]: name,
+    [PROMPT_ACCESS]: access,
     [HAS_COMPLETION]: completions.size > 0,
     [PROMPT_LISTING]: listing,
     [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
@@ -765,8 +825,9 @@ export function definePrompt<Args extends z.ZodObject>(
               const result = await handler(parsedArgs.data, {
                 signal,
                 deadlineMs,
+                principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
                 inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
-              });
+              } as ClientInputContext<"public"> & ClientInputContext<"protected">);
               signal.throwIfAborted();
               if (isInputRequiredResult(result)) {
                 assertStatelessInputRequired(result);
@@ -933,10 +994,7 @@ function createCheckedTool(
   const { name, inputSchema, outputSchema } = definition;
   assertRegistrationName("Tool", name);
   assertValidMcpHeaderAnnotations(inputSchema);
-  const access = normalizeToolAccess(definition.access, definition.requiredScopes);
-  const publicAccess = access === "public"
-    ? Object.freeze({ type: "public" as const })
-    : Object.freeze({ type: "protected" as const, requiredScopes: [...access.requiredScopes] });
+  const access = normalizeCapabilityAccess("Tool", definition.access, definition.requiredScopes);
   const sdkInputSchema = sdkMetadataSchema(inputSchema);
   const sdkOutputSchema = sdkMetadataSchema(outputSchema);
   const listing = checkedProtocolValue<Tool>("Tool", {
@@ -947,10 +1005,7 @@ function createCheckedTool(
     annotations: definition.annotations,
     inputSchema: jsonMetadataSchema(inputSchema, "input"),
     outputSchema: jsonMetadataSchema(outputSchema, "output"),
-    _meta: {
-      ...definition._meta,
-      "io.emseepea/access": publicAccess,
-    },
+    _meta: accessMetadata(definition._meta, access),
   });
   const metadata = Object.freeze({
     title: listing.title,
@@ -1108,7 +1163,7 @@ function progressReporter(
     },
     async finish() {
       closed = true;
-      await Promise.allSettled([...pending]);
+                  await Promise.allSettled(pending);
     },
     throwIfFailed() { if (failure) throw failure; },
   };
@@ -1125,6 +1180,23 @@ interface CompiledCataloguePages {
   readonly byCursor: ReadonlyMap<string, Readonly<Record<string, unknown>>>;
 }
 type CompiledListPagination = ReadonlyMap<ListMethod, CompiledCataloguePages>;
+
+function catalogueListings(
+  tools: readonly EmseepeaTool[],
+  resources: readonly EmseepeaResource[],
+  prompts: readonly EmseepeaPrompt[],
+): ReadonlyMap<ListMethod, readonly Readonly<Record<string, unknown>>[]> {
+  return new Map([
+    ["tools/list", tools.map((tool) => tool[TOOL_LISTING])],
+    ["resources/list", resources
+      .filter((resource) => resource[RESOURCE_LISTING].method === "resources/list")
+      .map((resource) => resource[RESOURCE_LISTING].value)],
+    ["resources/templates/list", resources
+      .filter((resource) => resource[RESOURCE_LISTING].method === "resources/templates/list")
+      .map((resource) => resource[RESOURCE_LISTING].value)],
+    ["prompts/list", prompts.map((prompt) => prompt[PROMPT_LISTING])],
+  ] as const);
+}
 
 function normalizeListPagination(options: ListPaginationOptions): NormalizedListPagination {
   const pageSize = positiveInteger("listPagination.pageSize", options.pageSize);
@@ -1246,9 +1318,7 @@ function installListPagination(server: McpServer, pagination: CompiledListPagina
 }
 
 export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
-  if (options.telemetry !== undefined && typeof options.telemetry !== "boolean") {
-    throw new TypeError("telemetry must be a boolean");
-  }
+  const observability = normalizeObservability(options.observability);
   const readiness = options.readiness;
   const readinessTimeoutMs = callbackTimeout("readiness", readiness, "readinessTimeoutMs", options.readinessTimeoutMs);
   const stopping = new AbortController();
@@ -1303,16 +1373,27 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     options.operationTimeoutMs ?? 30_000,
   );
   const deployment = normalizeDeployment(options.deployment ?? { mode: "loopback" });
-  const oauth = options.oauth ? normalizeOAuth(options.oauth) : undefined;
+  const authentication = options.authentication
+    ? normalizeAuthentication(options.authentication)
+    : undefined;
   const hasStreaming = tools.some((tool) => tool[TOOL_STREAMING]);
   if (deployment.mode !== "loopback" &&
       tools.some((tool) => tool[TOOL_STREAMING] && tool[TOOL_ACCESS] !== "public")) {
     throw new TypeError("Protected streaming tools currently require the loopback deployment profile");
   }
-  if (tools.some((tool) => tool[TOOL_ACCESS] !== "public") && !oauth) {
-    throw new TypeError("Protected tools require OAuth resource-server configuration");
+  if ([
+    ...tools.map((tool) => tool[TOOL_ACCESS]),
+    ...resources.map((resource) => resource[RESOURCE_ACCESS]),
+    ...prompts.map((prompt) => prompt[PROMPT_ACCESS]),
+  ].some((access) => access !== "public") && !authentication) {
+    throw new TypeError("Protected capabilities require authentication configuration");
   }
   const toolsByName = new Map(tools.map((tool) => [tool[TOOL_NAME], tool]));
+  const resourcesByUri = new Map(resources
+    .filter((resource) => resource[RESOURCE_KIND] === "static")
+    .map((resource) => [resource[RESOURCE_URI], resource]));
+  const resourceTemplates = resources.filter((resource) => resource[RESOURCE_KIND] === "template");
+  const promptsByName = new Map(prompts.map((prompt) => [prompt[PROMPT_NAME], prompt]));
   const enabledMethods = new Set(["server/discover"]);
   if (tools.length) enabledMethods.add("tools/list").add("tools/call");
   if (resources.length) enabledMethods.add("resources/list").add("resources/read");
@@ -1326,35 +1407,37 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   const cacheHints = options.cacheHints === undefined
     ? undefined
     : normalizeCacheHints(options.cacheHints, enabledMethods);
-  const pagination = paginationOptions
-    ? compileListPagination(paginationOptions, new Map([
-        ["tools/list", tools.map((tool) => tool[TOOL_LISTING])],
-        ["resources/list", resources
-          .filter((resource) => resource[RESOURCE_LISTING].method === "resources/list")
-          .map((resource) => resource[RESOURCE_LISTING].value)],
-        ["resources/templates/list", resources
-          .filter((resource) => resource[RESOURCE_LISTING].method === "resources/templates/list")
-          .map((resource) => resource[RESOURCE_LISTING].value)],
-        ["prompts/list", prompts.map((prompt) => prompt[PROMPT_LISTING])],
-      ] as const))
+  const basePagination = paginationOptions
+    ? compileListPagination(paginationOptions, catalogueListings(tools, resources, prompts))
     : undefined;
-
   const sdkHandler = createMcpHandler(() => {
+    const request = requestOperations.getStore();
+    const activeTools = request?.filterCatalogues
+      ? tools.filter((tool) => accessAllows(tool[TOOL_ACCESS], request.principal))
+      : tools;
+    const activeResources = request?.filterCatalogues
+      ? resources.filter((resource) => accessAllows(resource[RESOURCE_ACCESS], request.principal))
+      : resources;
+    const activePrompts = request?.filterCatalogues
+      ? prompts.filter((prompt) => accessAllows(prompt[PROMPT_ACCESS], request.principal))
+      : prompts;
+    const activeHasCompletion = activeResources.some((resource) => resource[HAS_COMPLETION]) ||
+      activePrompts.some((prompt) => prompt[HAS_COMPLETION]);
     const server = new McpServer(
       serverInfo,
       {
         capabilities: {
-          ...(tools.length ? { tools: { listChanged: false } } : {}),
-          ...(resources.length ? { resources: { subscribe: false, listChanged: false } } : {}),
-          ...(prompts.length ? { prompts: { listChanged: false } } : {}),
-          ...(hasCompletion ? { completions: {} } : {}),
+          ...(activeTools.length ? { tools: { listChanged: false } } : {}),
+          ...(activeResources.length ? { resources: { subscribe: false, listChanged: false } } : {}),
+          ...(activePrompts.length ? { prompts: { listChanged: false } } : {}),
+          ...(activeHasCompletion ? { completions: {} } : {}),
         },
         instructions: options.instructions,
-        cacheHints,
+        cacheHints: request?.filterCatalogues ? undefined : cacheHints,
         supportedProtocolVersions: [PROTOCOL_VERSION],
       },
     );
-    for (const tool of tools) {
+    for (const tool of activeTools) {
       tool[REGISTER](
         server,
         operationTimeoutMs,
@@ -1363,8 +1446,14 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         maxProgressEventBytes,
       );
     }
-    for (const resource of resources) resource[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
-    for (const prompt of prompts) prompt[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
+    for (const resource of activeResources) resource[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
+    for (const prompt of activePrompts) prompt[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
+    const pagination = request?.filterCatalogues && paginationOptions
+      ? compileListPagination(
+          paginationOptions,
+          catalogueListings(activeTools, activeResources, activePrompts),
+        )
+      : basePagination;
     if (pagination) installListPagination(server, pagination);
     return server;
   }, {
@@ -1374,7 +1463,16 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   });
   const nodeHandler = toNodeHandler(sdkHandler);
   const app = createMcpFastifyApp({ host: deployment.mode === "loopback" ? "127.0.0.1" : "0.0.0.0" });
-  const finishTelemetry = options.telemetry === true ? installRequestTelemetry(app) : undefined;
+  const observabilityLimits = observability.length ? { deliveryTimeoutMs: 1_000 } : undefined;
+  const finishObservability = observabilityLimits
+    ? installObservability(app, observability, (body) => capabilityNameForRequest(
+        body,
+        toolsByName,
+        resourcesByUri,
+        resourceTemplates,
+        promptsByName,
+      ), observabilityLimits)
+    : undefined;
   const limiter = deployment.mode === "production-behind-proxy"
     ? new FixedWindowRateLimiter(deployment.rateLimit)
     : undefined;
@@ -1386,13 +1484,13 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       .code(available ? 200 : 503).send(available ? "ready\n" : "not ready\n");
   });
   app.addHook("preClose", async () => { stopping.abort(); });
-  if (oauth) {
+  if (authentication) {
     app.all("/.well-known/*", async (request, reply) => {
       const response = oauthMetadataResponse(
-        new Request(new URL(request.url, oauth.metadata.resourceServerUrl.origin), {
+        new Request(new URL(request.url, authentication.metadata.resourceServerUrl.origin), {
           method: request.method,
         }),
-        oauth.metadata,
+        authentication.metadata,
       );
       if (!response) {
         await reply.code(404).send();
@@ -1415,18 +1513,42 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       await sendRpcError(reply, 404, -32601, "Method not found", requestId(request.body.id));
       return;
     }
-    const access = protectedAccessForCall(request.body, toolsByName);
-    if (access && oauth) {
+    const access = capabilityAccessForRequest(
+      request.body,
+      toolsByName,
+      resourcesByUri,
+      resourceTemplates,
+      promptsByName,
+    );
+    const protectsCatalogue = authentication?.discovery === "protected";
+    let authInfo: AuthInfo | undefined;
+    if (authentication && (protectsCatalogue || access && access !== "public")) {
       try {
-        const authInfo = await verifyProtectedCall(request, reply, access, oauth);
+        authInfo = await verifyAuthenticatedRequest(
+          request,
+          reply,
+          protectsCatalogue ? [] : (access as ProtectedCapabilityAccess).requiredScopes,
+          authentication,
+        );
         (request.raw as typeof request.raw & { auth?: AuthInfo }).auth = authInfo;
       } catch (error) {
         await sendWebResponse(reply, bearerAuthChallengeResponse(safeOAuthError(error), {
-          requiredScopes: [...access.requiredScopes],
-          resourceMetadataUrl: oauth.resourceMetadataUrl,
+          requiredScopes: protectsCatalogue
+            ? []
+            : [...(access as ProtectedCapabilityAccess).requiredScopes],
+          resourceMetadataUrl: authentication.resourceMetadataUrl,
         }));
         return;
       }
+    }
+    const principal = authInfo ? principalFrom(authInfo) : undefined;
+    if (protectsCatalogue) reply.raw.setHeader("cache-control", "private, no-store");
+    if (protectsCatalogue && isCapabilityInvocation(request.body) &&
+        (access === undefined || !accessAllows(access, principal))) {
+      await sendRpcError(reply, 200, -32602, "Capability not found", requestId(
+        isRecord(request.body) ? request.body.id : undefined,
+      ));
+      return;
     }
     const disconnected = new AbortController();
     const abort = () => disconnected.abort();
@@ -1436,7 +1558,12 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     reply.hijack();
     try {
       await requestOperations.run(
-        { deadlineMs: Date.now() + operationTimeoutMs, signal: disconnected.signal },
+        {
+          deadlineMs: Date.now() + operationTimeoutMs,
+          signal: disconnected.signal,
+          principal,
+          filterCatalogues: protectsCatalogue,
+        },
         () => nodeHandler(request.raw, reply.raw, request.body),
       );
     } finally {
@@ -1454,7 +1581,13 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     }
   });
   app.addHook("onClose", async () => sdkHandler.close());
-  runtimes.set(app, { deployment, requestTimeoutMs: operationTimeoutMs + 5_000, stopping, finishTelemetry });
+  runtimes.set(app, {
+    deployment,
+    requestTimeoutMs: operationTimeoutMs + 5_000,
+    stopping,
+    observabilityLimits,
+    finishObservability,
+  });
   return app;
 }
 
@@ -1470,11 +1603,11 @@ function safeOAuthError(error: unknown): unknown {
   return new OAuthError(error.code, message);
 }
 
-async function verifyProtectedCall(
+async function verifyAuthenticatedRequest(
   request: FastifyRequest,
   reply: FastifyReply,
-  access: ProtectedToolAccess,
-  oauth: NormalizedOAuth,
+  requiredScopes: readonly string[],
+  authentication: NormalizedOAuth,
 ): Promise<AuthInfo> {
   const disconnected = new AbortController();
   const abort = () => disconnected.abort();
@@ -1484,16 +1617,22 @@ async function verifyProtectedCall(
   try {
     const authInfo = await runWithDeadline(
       disconnected.signal,
-      Date.now() + oauth.verificationTimeoutMs,
+      Date.now() + authentication.verificationTimeoutMs,
       () => verifyBearerToken(singleHeader(request.raw.rawHeaders, "authorization"), {
-        verifier: oauth.verifier,
-        requiredScopes: [...access.requiredScopes],
-        resourceMetadataUrl: oauth.resourceMetadataUrl,
+        verifier: {
+          async verifyAccessToken(token) {
+            const authInfo = await authentication.verifier.verifyAccessToken(token);
+            principalFrom(authInfo);
+            return authInfo;
+          },
+        },
+        requiredScopes: [...requiredScopes],
+        resourceMetadataUrl: authentication.resourceMetadataUrl,
       }),
     );
     if (!authInfo.resource || authInfo.resource.hash || !checkResourceAllowed({
       requestedResource: authInfo.resource,
-      configuredResource: oauth.metadata.resourceServerUrl,
+      configuredResource: authentication.metadata.resourceServerUrl,
     })) {
       throw new OAuthError(OAuthErrorCode.InvalidToken, "Token is not valid for this resource");
     }
@@ -1514,23 +1653,104 @@ async function sendWebResponse(reply: FastifyReply, response: Response): Promise
   await reply.code(response.status).send(body.length ? body : undefined);
 }
 
-function protectedAccessForCall(
+function capabilityAccessForRequest(
   body: unknown,
   toolsByName: ReadonlyMap<string, EmseepeaTool>,
-): ProtectedToolAccess | undefined {
-  if (!isRecord(body) || body.method !== "tools/call" || !isRecord(body.params) ||
-      typeof body.params.name !== "string") return undefined;
-  const access = toolsByName.get(body.params.name)?.[TOOL_ACCESS];
-  return access === "public" ? undefined : access;
+  resourcesByUri: ReadonlyMap<string, EmseepeaResource>,
+  resourceTemplates: readonly EmseepeaResource[],
+  promptsByName: ReadonlyMap<string, EmseepeaPrompt>,
+): "public" | ProtectedCapabilityAccess | undefined {
+  if (!isRecord(body) || !isRecord(body.params)) return undefined;
+  const params = body.params;
+  if (body.method === "tools/call" && typeof params.name === "string") {
+    return toolsByName.get(params.name)?.[TOOL_ACCESS];
+  }
+  if (body.method === "resources/read" && typeof params.uri === "string") {
+    return resourcesByUri.get(params.uri)?.[RESOURCE_ACCESS] ?? resourceTemplates.find(
+      (resource) => resource[RESOURCE_MATCHES]?.(params.uri as string),
+    )?.[RESOURCE_ACCESS];
+  }
+  if (body.method === "prompts/get" && typeof params.name === "string") {
+    return promptsByName.get(params.name)?.[PROMPT_ACCESS];
+  }
+  if (body.method === "completion/complete" && isRecord(params.ref)) {
+    const reference = params.ref;
+    if (reference.type === "ref/prompt" && typeof reference.name === "string") {
+      return promptsByName.get(reference.name)?.[PROMPT_ACCESS];
+    }
+    if (reference.type === "ref/resource" && typeof reference.uri === "string") {
+      return resourceTemplates.find(
+        (resource) => resource[RESOURCE_URI] === reference.uri,
+      )?.[RESOURCE_ACCESS];
+    }
+  }
+  return undefined;
 }
 
-function principalFrom(authInfo: AuthInfo | undefined): ToolPrincipal {
-  if (!authInfo) throw new Error("Protected tool reached execution without verified authorization");
-  return {
+function isCapabilityInvocation(body: unknown): boolean {
+  return isRecord(body) && (
+    body.method === "tools/call" || body.method === "resources/read" ||
+    body.method === "prompts/get" || body.method === "completion/complete"
+  );
+}
+
+function capabilityNameForRequest(
+  body: unknown,
+  toolsByName: ReadonlyMap<string, EmseepeaTool>,
+  resourcesByUri: ReadonlyMap<string, EmseepeaResource>,
+  resourceTemplates: readonly EmseepeaResource[],
+  promptsByName: ReadonlyMap<string, EmseepeaPrompt>,
+): string | undefined {
+  if (!isRecord(body) || !isRecord(body.params)) return undefined;
+  const params = body.params;
+  if (body.method === "tools/call" && typeof params.name === "string") {
+    return toolsByName.has(params.name) ? params.name : undefined;
+  }
+  if (body.method === "resources/read" && typeof params.uri === "string") {
+    const resource = resourcesByUri.get(params.uri) ?? resourceTemplates.find(
+      (candidate) => candidate[RESOURCE_MATCHES]?.(params.uri as string),
+    );
+    return resource?.[RESOURCE_NAME];
+  }
+  if (body.method === "prompts/get" && typeof params.name === "string") {
+    return promptsByName.has(params.name) ? params.name : undefined;
+  }
+  if (body.method === "completion/complete" && isRecord(params.ref)) {
+    const reference = params.ref;
+    return reference.type === "ref/prompt" && typeof reference.name === "string"
+      ? (promptsByName.has(reference.name) ? reference.name : undefined)
+      : reference.type === "ref/resource" && typeof reference.uri === "string"
+        ? resourceTemplates.find((candidate) => candidate[RESOURCE_URI] === reference.uri)?.[RESOURCE_NAME]
+        : undefined;
+  }
+  return undefined;
+}
+
+function principalFrom(authInfo: AuthInfo | undefined): Principal {
+  if (!authInfo) throw new Error("Protected capability reached execution without verified authorization");
+  if (typeof authInfo.clientId !== "string" || !authInfo.clientId.trim() || authInfo.clientId.length > 256) {
+    throw new TypeError("Authentication verifier returned an invalid clientId");
+  }
+  if (!Array.isArray(authInfo.scopes) || authInfo.scopes.some(
+    (scope) => typeof scope !== "string" || !/^[\x21\x23-\x5B\x5D-\x7E]+$/.test(scope),
+  ) || new Set(authInfo.scopes).size !== authInfo.scopes.length) {
+    throw new TypeError("Authentication verifier returned invalid permissions");
+  }
+  const permissions = Object.freeze([...authInfo.scopes]);
+  return Object.freeze({
     clientId: authInfo.clientId,
-    scopes: [...authInfo.scopes],
+    permissions,
     resource: authInfo.resource?.href,
-  };
+  });
+}
+
+function accessAllows(
+  access: "public" | ProtectedCapabilityAccess,
+  principal: Principal | undefined,
+): boolean {
+  if (access === "public") return true;
+  return principal !== undefined &&
+    access.requiredScopes.every((permission) => principal.permissions.includes(permission));
 }
 
 export async function serveEmseepea(
@@ -1545,10 +1765,16 @@ export async function serveEmseepea(
   }
   const port = nonNegativePort(options.port ?? 3000);
   const shutdownTimeoutMs = positiveInteger("shutdownTimeoutMs", options.shutdownTimeoutMs ?? 5_000);
-  const flushTelemetry = options.flushTelemetry;
-  const telemetryFlushTimeoutMs = callbackTimeout(
-    "flushTelemetry", flushTelemetry, "telemetryFlushTimeoutMs", options.telemetryFlushTimeoutMs,
+  const observabilityFlushTimeoutMs = positiveInteger(
+    "observabilityFlushTimeoutMs",
+    options.observabilityFlushTimeoutMs === undefined ? 1_000 : options.observabilityFlushTimeoutMs,
   );
+  if (observabilityFlushTimeoutMs > 60_000) {
+    throw new TypeError("observabilityFlushTimeoutMs must not exceed 60000");
+  }
+  if (runtime.observabilityLimits) {
+    runtime.observabilityLimits.deliveryTimeoutMs = observabilityFlushTimeoutMs;
+  }
   await app.listen({ host, port });
   app.server.headersTimeout = 10_000;
   app.server.keepAliveTimeout = 5_000;
@@ -1566,7 +1792,12 @@ export async function serveEmseepea(
     url: new URL(`http://${urlHost}:${address.port}/mcp`),
     close: () => {
       runtime.stopping.abort();
-      return closing ??= closeApp(app, shutdownTimeoutMs, flushTelemetry, telemetryFlushTimeoutMs, runtime.finishTelemetry);
+      return closing ??= closeApp(
+        app,
+        shutdownTimeoutMs,
+        observabilityFlushTimeoutMs,
+        runtime.finishObservability,
+      );
     },
   };
 }
@@ -1655,29 +1886,42 @@ class FixedWindowRateLimiter {
   }
 }
 
-function normalizeToolAccess(
+function normalizeCapabilityAccess(
+  kind: string,
   access: unknown,
   requiredScopes: unknown,
-): "public" | ProtectedToolAccess {
+): "public" | ProtectedCapabilityAccess {
   if (access === "public") return access;
   if (access !== "protected" || !Array.isArray(requiredScopes) || requiredScopes.length === 0) {
-    throw new TypeError('Tool access must be explicitly declared as "public" or protected with scopes');
+    throw new TypeError(`${kind} access must be explicitly declared as "public" or protected with scopes`);
   }
   const scopes = requiredScopes.map((scope) => {
     if (typeof scope !== "string" || !/^[\x21\x23-\x5B\x5D-\x7E]+$/.test(scope)) {
-      throw new TypeError("Protected tool scopes must be valid OAuth scope tokens");
+      throw new TypeError(`Protected ${kind.toLowerCase()} scopes must be valid OAuth scope tokens`);
     }
     return scope;
   });
   if (new Set(scopes).size !== scopes.length) {
-    throw new TypeError("Protected tool scopes must be unique");
+    throw new TypeError(`Protected ${kind.toLowerCase()} scopes must be unique`);
   }
   return { type: "protected", requiredScopes: scopes };
 }
 
-function normalizeOAuth(options: OAuthResourceServerOptions): NormalizedOAuth {
+function accessMetadata(
+  metadata: Readonly<MetaObject> | undefined,
+  access: "public" | ProtectedCapabilityAccess,
+): Readonly<MetaObject> {
+  return Object.freeze({
+    ...metadata,
+    "io.emseepea/access": access === "public"
+      ? Object.freeze({ type: "public" as const })
+      : Object.freeze({ type: "protected" as const, requiredScopes: [...access.requiredScopes] }),
+  });
+}
+
+function normalizeAuthentication(options: AuthenticationOptions): NormalizedOAuth {
   if (!options.verifier || typeof options.verifier.verifyAccessToken !== "function") {
-    throw new TypeError("oauth.verifier must implement verifyAccessToken");
+    throw new TypeError("authentication.verifier must implement verifyAccessToken");
   }
   if ((options.metadata as AuthMetadataOptions).dangerouslyAllowInsecureIssuerUrl === true) {
     throw new TypeError("Insecure OAuth issuer URLs are not supported");
@@ -1694,10 +1938,38 @@ function normalizeOAuth(options: OAuthResourceServerOptions): NormalizedOAuth {
     metadata: options.metadata,
     resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(options.metadata.resourceServerUrl),
     verificationTimeoutMs: positiveInteger(
-      "oauth.verificationTimeoutMs",
+      "authentication.verificationTimeoutMs",
       options.verificationTimeoutMs ?? 10_000,
     ),
+    discovery: options.discovery === undefined || options.discovery === "public"
+      ? "public"
+      : options.discovery === "protected"
+        ? "protected"
+        : (() => { throw new TypeError('authentication.discovery must be "public" or "protected"'); })(),
   };
+}
+
+function normalizeObservability(
+  adapters: readonly ObservabilityAdapter[] | undefined,
+): readonly ObservabilityAdapter[] {
+  if (adapters === undefined) return [];
+  if (!Array.isArray(adapters)) throw new TypeError("observability must be an array");
+  const ids = new Set<string>();
+  return Object.freeze(adapters.map((adapter) => {
+    if (!adapter || typeof adapter !== "object" ||
+        typeof adapter.id !== "string" || !/^[A-Za-z0-9_.-]{1,64}$/.test(adapter.id) ||
+        typeof adapter.emit !== "function" ||
+        adapter.flush !== undefined && typeof adapter.flush !== "function") {
+      throw new TypeError("observability adapters require a valid id, emit function, and optional flush function");
+    }
+    if (ids.has(adapter.id)) throw new TypeError(`Duplicate observability adapter id: ${adapter.id}`);
+    ids.add(adapter.id);
+    return Object.freeze({
+      id: adapter.id,
+      emit: adapter.emit,
+      ...(adapter.flush ? { flush: adapter.flush } : {}),
+    });
+  }));
 }
 
 function isLoopbackUrl(url: URL): boolean {
@@ -2127,6 +2399,7 @@ function completionCallback(
         const values = await complete(value, {
           signal,
           deadlineMs,
+          principal: request?.principal,
           arguments: completionArguments(context?.arguments, allowedArguments),
         });
         signal.throwIfAborted();
@@ -2375,9 +2648,8 @@ function isLoopbackHost(host: string): boolean {
 async function closeApp(
   app: FastifyInstance,
   timeoutMs: number,
-  flushTelemetry: ServeOptions["flushTelemetry"],
   flushTimeoutMs: number,
-  finishTelemetry: AppRuntime["finishTelemetry"],
+  finishObservability: AppRuntime["finishObservability"],
 ): Promise<void> {
   let timer: NodeJS.Timeout | undefined;
   let onClosed: () => void;
@@ -2395,21 +2667,14 @@ async function closeApp(
     await Promise.race([app.close(), timeout]);
   } finally {
     if (timer) clearTimeout(timer);
-    if (flushTelemetry) {
-      const controller = new AbortController();
-      const flushDeadline = Date.now() + flushTimeoutMs;
+    if (finishObservability) {
       const expired = new Promise<void>((resolve) => {
         // Keep the process alive long enough to finish flushing after sockets close.
-        timer = setTimeout(() => { controller.abort(); resolve(); }, flushTimeoutMs);
+        timer = setTimeout(resolve, flushTimeoutMs);
       });
       try {
         await Promise.race([
-          httpClosed.then(async () => {
-            await finishTelemetry?.();
-            if (!controller.signal.aborted && Date.now() < flushDeadline) {
-              await flushTelemetry({ signal: controller.signal });
-            }
-          }).catch(() => {}),
+          httpClosed.then(() => finishObservability(flushTimeoutMs)).catch(() => {}),
           expired,
         ]);
       } finally {

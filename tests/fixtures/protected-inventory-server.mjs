@@ -1,24 +1,35 @@
-import { createEmseepea, discoverCapabilities, serveEmseepea } from "@emseepea/server";
 import { OAuthError, OAuthErrorCode } from "@modelcontextprotocol/server";
+import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
+import { z } from "zod";
 
 const resourceServerUrl = new URL("https://inventory.example/mcp");
-const demoToken = "example-access-token";
 
 const app = createEmseepea({
-  name: "emseepea-sign-in-tool-server",
+  name: "protected-inventory-fixture",
   version: "0.0.0",
-  instructions: "Use get-private-inventory-report for private inventory availability.",
-  ...await discoverCapabilities(new URL("./capabilities/", import.meta.url)),
-  oauth: {
+  tools: [defineTool({
+    name: "get-private-inventory-report",
+    access: "protected",
+    requiredScopes: ["inventory:read"],
+    description: "Return packet inventory available to promise.",
+    inputSchema: z.object({}),
+    outputSchema: z.object({
+      onHand: z.number(),
+      reserved: z.number(),
+      inbound: z.number(),
+    }),
+    handler: () => ({ data: { onHand: 120, reserved: 35, inbound: 40 } }),
+  })],
+  authentication: {
     verifier: {
       async verifyAccessToken(token) {
-        if (token !== demoToken && token !== "example-wrong-scope") {
-          throw new OAuthError(OAuthErrorCode.InvalidToken, "Invalid sample token");
+        if (token !== "example-access-token") {
+          throw new OAuthError(OAuthErrorCode.InvalidToken, "Invalid test token");
         }
         return {
           token,
-          clientId: "synthetic-inventory-client",
-          scopes: token === demoToken ? ["inventory:read"] : ["profile:read"],
+          clientId: "test-client",
+          scopes: ["inventory:read"],
           expiresAt: Math.floor(Date.now() / 1_000) + 3_600,
           resource: resourceServerUrl,
         };
@@ -26,7 +37,6 @@ const app = createEmseepea({
     },
     metadata: {
       resourceServerUrl,
-      resourceName: "Sample private inventory",
       scopesSupported: ["inventory:read"],
       oauthMetadata: {
         issuer: "https://auth.example",
@@ -42,11 +52,10 @@ const running = await serveEmseepea(app, {
   port: Number.parseInt(process.env.PORT ?? "3000", 10),
 });
 
-console.log(`Em See Pea protected no-UI example listening at ${running.url}`);
+console.log(`Protected inventory fixture listening at ${running.url}`);
 
-async function shutdown(): Promise<void> {
+async function shutdown() {
   await running.close();
-  process.exitCode = 0;
 }
 
 process.once("SIGINT", () => void shutdown());

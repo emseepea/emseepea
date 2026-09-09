@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { defineTool, type CapabilityModuleFactory } from "@emseepea/server";
+import { defineTool, type CapabilityModuleFactory, type ToolContext } from "@emseepea/server";
 import type { MongoContext } from "../database.js";
 import { parsePeaObservationDocument } from "../pea-observation-document.js";
 import { observationSchema } from "../pea-observation.js";
@@ -9,11 +9,11 @@ const outputSchema = observationSchema;
 
 export default ((context) => defineTool({
   name: "record-pea-observation",
-  access: "public",
+  ...context.access,
   description: "Record one dated observation of a pea plant.",
   inputSchema,
   outputSchema,
-  async handler(observation, { signal }) {
+  async handler(observation, { signal }: ToolContext) {
     const collection = context.observations();
     if (!collection) throw new Error("Observation provider unavailable");
     signal.throwIfAborted();

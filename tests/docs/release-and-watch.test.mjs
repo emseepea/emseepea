@@ -37,6 +37,11 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
       ]);
     }
     if (joined.startsWith("run view")) return JSON.stringify({ status: "completed", conclusion: "success" });
+    if (command === "npm" && joined.includes("create-tool-server version")) return '"0.0.1"';
+    if (command === "npm" && joined.includes("create-sign-in-tool-server versions")) return '["0.0.9"]';
+    if (command === "npm" && joined.includes("create-sign-in-tool-server@0.0.9 deprecated")) {
+      return '"Deprecated: use @emseepea/create-tool-server and add authentication instead."';
+    }
     if (command === "npm" && joined.includes("create-multi-instance-postgres-server version")) return '"0.0.1"';
     if (command === "npm" && joined.includes("create-multi-instance-sqlite-server versions")) return '["0.0.11"]';
     if (command === "npm" && joined.includes("create-multi-instance-sqlite-server@0.0.11 deprecated")) {

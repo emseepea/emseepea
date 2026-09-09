@@ -1,8 +1,9 @@
-import { defineResourceTemplate, type CapabilityModuleFactory } from "@emseepea/server";
+import { defineResourceTemplate, type AccessPolicy, type CapabilityModuleFactory } from "@emseepea/server";
 
 const methods = ["container", "raised-bed", "row"];
 
-export default (() => defineResourceTemplate({
+export default ((access) => defineResourceTemplate({
+  ...access,
   name: "planting-guide",
   uriTemplate: "guide://peas/planting/{method}",
   title: "Pea planting guide",
@@ -18,4 +19,4 @@ export default (() => defineResourceTemplate({
       text: `# ${String(variables.method)}\n`,
     }],
   }),
-})) satisfies CapabilityModuleFactory;
+})) satisfies CapabilityModuleFactory<AccessPolicy>;

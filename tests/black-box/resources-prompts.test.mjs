@@ -22,47 +22,56 @@ const requestMeta = {
 
 test("resource and prompt registrations fail invalid startup state", () => {
   assert.throws(() => defineResource({
+    access: "public",
     name: "guide",
     uri: "relative",
     handler: () => ({ contents: [] }),
   }), /absolute canonical URI/);
   assert.throws(() => defineResourceTemplate({
+    access: "public",
     name: "guide-template",
     uriTemplate: "relative/{topic}",
     handler: () => ({ contents: [] }),
   }), /fixed scheme and authority/);
   assert.throws(() => defineResourceTemplate({
+    access: "public",
     name: "guide-template",
     uriTemplate: "guide://coffee/static",
     handler: () => ({ contents: [] }),
   }), /fixed scheme and authority/);
   assert.throws(() => defineResourceTemplate({
+    access: "public",
     name: "guide-template",
     uriTemplate: "guide://coffee/{?topic}",
     handler: () => ({ contents: [] }),
   }), /fixed scheme and authority/);
   assert.throws(() => defineResourceTemplate({
+    access: "public",
     name: "guide-template",
     uriTemplate: "guide://coffee/prefix-{topic}",
     handler: () => ({ contents: [] }),
   }), /whole path-segment variables/);
   assert.throws(() => defineResourceTemplate({
+    access: "public",
     name: "guide-template",
     uriTemplate: "guide://coffee/{topic}/{topic}",
     handler: () => ({ contents: [] }),
   }), /unique whole path-segment variables/);
   assert.doesNotThrow(() => defineResourceTemplate({
+    access: "public",
     name: "sentinel-literal-template",
     uriTemplate: "guide://coffee/emseepea-variable-0/{topic}",
     handler: ({ uri: requestedUri }) => ({ contents: [{ uri: requestedUri, text: "guide" }] }),
   }));
   assert.throws(() => defineResourceTemplate({
+    access: "public",
     name: "unknown-template-completion",
     uriTemplate: "guide://coffee/{topic}",
     complete: { unknown: () => [] },
     handler: ({ uri: requestedUri }) => ({ contents: [{ uri: requestedUri, text: "guide" }] }),
   }), /completion key is not registered: unknown/);
   assert.throws(() => definePrompt({
+    access: "public",
     name: "unknown-prompt-completion",
     argsSchema: z.object({ topic: z.string() }),
     complete: { unknown: () => [] },
@@ -70,11 +79,13 @@ test("resource and prompt registrations fail invalid startup state", () => {
   }), /completion key is not registered: unknown/);
 
   const resource = (name, resourceUri) => defineResource({
+    access: "public",
     name,
     uri: resourceUri,
     handler: () => ({ contents: [{ uri: resourceUri, text: "guide" }] }),
   });
   const prompt = definePrompt({
+    access: "public",
     name: "brew",
     argsSchema: z.object({}),
     handler: () => ({ messages: [] }),
@@ -91,6 +102,7 @@ test("resource and prompt registrations fail invalid startup state", () => {
     resources: [resource("guide", uri), resource("other", uri)],
   }), /Duplicate resource URI/);
   const template = (name, uriTemplate) => defineResourceTemplate({
+    access: "public",
     name,
     uriTemplate,
     handler: ({ uri: requestedUri }) => ({ contents: [{ uri: requestedUri, text: "guide" }] }),
@@ -143,12 +155,14 @@ test("resource and prompt registrations fail invalid startup state", () => {
 
 test("resource and prompt definitions are captured before exposure", async () => {
   const resourceDefinition = {
+    access: "public",
     name: "captured-resource",
     uri,
     title: "Original resource",
     handler: () => ({ contents: [{ uri, text: "original resource" }] }),
   };
   const promptDefinition = {
+    access: "public",
     name: "captured-prompt",
     title: "Original prompt",
     argsSchema: z.object({ topic: z.string() }),
@@ -157,6 +171,7 @@ test("resource and prompt definitions are captured before exposure", async () =>
     }),
   };
   const templateDefinition = {
+    access: "public",
     name: "captured-template",
     uriTemplate: "guide://coffee/topic/{topic}",
     title: "Original template",
@@ -232,6 +247,7 @@ test("resource and prompt definitions are captured before exposure", async () =>
       name: "captured-template",
       uriTemplate: "guide://coffee/topic/{topic}",
       title: "Original template",
+      _meta: { "io.emseepea/access": { type: "public" } },
     }]);
     const templateRead = await rpc(running.url, "resources/read", {
       uri: "guide://coffee/topic/espresso",
@@ -303,16 +319,19 @@ test("successful operations carry the active result envelopes", async () => {
     handler: () => ({ text: "ok", data: { ok: true } }),
   });
   const resource = defineResource({
+    access: "public",
     name: "envelope-resource",
     uri: resourceUri,
     handler: () => ({ contents: [{ uri: resourceUri, text: "catalogue" }] }),
   });
   const template = defineResourceTemplate({
+    access: "public",
     name: "envelope-template",
     uriTemplate: "envelope://topics/{topic}",
     handler: ({ uri }) => ({ contents: [{ uri, text: "topic" }] }),
   });
   const prompt = definePrompt({
+    access: "public",
     name: "envelope-prompt",
     argsSchema: z.object({ topic: z.string() }),
     complete: { topic: () => ["espresso"] },
@@ -407,6 +426,7 @@ test("public resources and prompts stay checked and identity-free", async () => 
   let resourceCancelled = false;
 
   const guide = defineResource({
+    access: "public",
     name: "getting-started",
     uri,
     title: "Coffee getting started",
@@ -434,6 +454,7 @@ test("public resources and prompts stay checked and identity-free", async () => 
     },
   });
   const brew = definePrompt({
+    access: "public",
     name: "brew-guide",
     title: "Brew guide",
     description: "Create a synthetic brewing prompt.",
@@ -453,6 +474,7 @@ test("public resources and prompts stay checked and identity-free", async () => 
     },
   });
   const slowPrompt = definePrompt({
+    access: "public",
     name: "slow-prompt-schema",
     description: "Exercise asynchronous prompt argument validation.",
     argsSchema: z.object({ topic: z.string() }).refine(async () => {
@@ -471,7 +493,7 @@ test("public resources and prompts stay checked and identity-free", async () => 
     prompts: [brew, slowPrompt],
     operationTimeoutMs: 40,
     maxApplicationResultBytes: 512,
-    oauth: {
+    authentication: {
       verifier: {
         async verifyAccessToken() {
           verifierCalls += 1;
@@ -520,6 +542,7 @@ test("public resources and prompts stay checked and identity-free", async () => 
       title: "Coffee getting started",
       description: "A synthetic coffee guide.",
       mimeType: "text/markdown",
+      _meta: { "io.emseepea/access": { type: "public" } },
     }]);
 
     const read = await rpc(running.url, "resources/read", { uri }, "irrelevant");
@@ -543,11 +566,13 @@ test("public resources and prompts stay checked and identity-free", async () => 
         title: "Brew guide",
         description: "Create a synthetic brewing prompt.",
         arguments: [{ name: "topic", required: true }],
+        _meta: { "io.emseepea/access": { type: "public" } },
       },
       {
         name: "slow-prompt-schema",
         description: "Exercise asynchronous prompt argument validation.",
         arguments: [{ name: "topic", required: true }],
+        _meta: { "io.emseepea/access": { type: "public" } },
       },
     ]);
 
@@ -654,6 +679,7 @@ test("public resource templates stay checked and identity-free", async () => {
   let handlerCalls = 0;
   let slowCancelled = false;
   const template = defineResourceTemplate({
+    access: "public",
     name: "topic-guide",
     uriTemplate: "guide://coffee/{topic}",
     title: "Coffee topic guide",
@@ -690,7 +716,7 @@ test("public resource templates stay checked and identity-free", async () => {
     resources: [template],
     operationTimeoutMs: 40,
     maxApplicationResultBytes: 512,
-    oauth: {
+    authentication: {
       verifier: {
         async verifyAccessToken() {
           verifierCalls += 1;
@@ -731,6 +757,7 @@ test("public resource templates stay checked and identity-free", async () => {
       title: "Coffee topic guide",
       description: "A synthetic guide selected by topic.",
       mimeType: "text/markdown",
+      _meta: { "io.emseepea/access": { type: "public" } },
     }]);
     assert.deepEqual((await rpc(running.url, "resources/list")).body.result.resources, []);
 
@@ -808,7 +835,11 @@ test("prompt and resource-template completion is opt-in and checked", async () =
       assert.ok(deadlineMs > Date.now() - 1_000);
       if (promptMode === "secret") throw new Error("completion-secret-sentinel");
       if (promptMode === "invalid") return [1];
-      if (promptMode === "sparse") return new Array(1);
+      if (promptMode === "sparse") {
+        const values = [];
+        values.length = 1;
+        return values;
+      }
       if (promptMode === "huge-sparse") {
         const values = [];
         values.length = 1_000_000;
@@ -835,6 +866,7 @@ test("prompt and resource-template completion is opt-in and checked", async () =
     },
   };
   const prompt = definePrompt({
+    access: "public",
     name: "complete-brew-guide",
     argsSchema: z.object({
       topic: z.string(),
@@ -848,6 +880,7 @@ test("prompt and resource-template completion is opt-in and checked", async () =
     handler: () => ({ messages: [] }),
   });
   const template = defineResourceTemplate({
+    access: "public",
     name: "complete-method-guide",
     uriTemplate: "guide://coffee/{method}/{size}",
     complete: templateComplete,
@@ -862,7 +895,7 @@ test("prompt and resource-template completion is opt-in and checked", async () =
     resources: [template],
     operationTimeoutMs: 40,
     maxApplicationResultBytes: 4_096,
-    oauth: {
+    authentication: {
       verifier: {
         async verifyAccessToken() {
           verifierCalls += 1;
@@ -1020,6 +1053,7 @@ test("disconnect cancels a cooperating completion handler", async () => {
     version: "0.0.0",
     operationTimeoutMs: 1_000,
     prompts: [definePrompt({
+      access: "public",
       name: "disconnect-completion",
       argsSchema: z.object({ topic: z.string() }),
       complete: {
@@ -1060,6 +1094,7 @@ test("an already-aborted request cannot start completion work", async () => {
     name: "completion-already-aborted",
     version: "0.0.0",
     prompts: [definePrompt({
+      access: "public",
       name: "already-aborted-completion",
       argsSchema: z.object({ topic: z.string() }),
       complete: {
@@ -1098,6 +1133,7 @@ test("concurrent completions keep signals and sibling context isolated", async (
     version: "0.0.0",
     operationTimeoutMs: 1_000,
     prompts: [definePrompt({
+      access: "public",
       name: "concurrent-completion",
       argsSchema: z.object({ topic: z.string(), marker: z.string().optional() }),
       complete: {
@@ -1161,6 +1197,7 @@ test("disconnect cancels cooperating resource and prompt handlers", async () => 
     operationTimeoutMs: 1_000,
     resources: [
       defineResource({
+        access: "public",
         name: "disconnect-resource",
         uri,
         async handler({ signal }) {
@@ -1172,6 +1209,7 @@ test("disconnect cancels cooperating resource and prompt handlers", async () => 
         },
       }),
       defineResourceTemplate({
+        access: "public",
         name: "disconnect-template",
         uriTemplate: "guide://disconnect/{topic}",
         async handler({ uri: requestedUri }, { signal }) {
@@ -1184,6 +1222,7 @@ test("disconnect cancels cooperating resource and prompt handlers", async () => 
       }),
     ],
     prompts: [definePrompt({
+      access: "public",
       name: "disconnect-prompt",
       argsSchema: z.object({}),
       async handler(_args, { signal }) {
@@ -1242,6 +1281,137 @@ test("disconnect cancels cooperating resource and prompt handlers", async () => 
     assert.equal(resourceCompleted, false);
     assert.equal(promptCompleted, false);
     assert.equal(templateCompleted, false);
+  } finally {
+    await running.close();
+  }
+});
+
+test("protected discovery and invocation cover resources, templates, prompts, and completion", async () => {
+  const protectedUri = "guide://protected-static/item";
+  const requiredScopes = ["guides:read"];
+  let handlerCalls = 0;
+  let completionCalls = 0;
+  const checkPrincipal = ({ principal }) => {
+    assert.deepEqual(principal.permissions, requiredScopes);
+    handlerCalls += 1;
+  };
+  const resource = defineResource({
+    access: "protected",
+    requiredScopes,
+    name: "protected-resource",
+    uri: protectedUri,
+    handler(context) {
+      checkPrincipal(context);
+      return { contents: [{ uri: protectedUri, text: "protected" }] };
+    },
+  });
+  const template = defineResourceTemplate({
+    access: "protected",
+    requiredScopes,
+    name: "protected-template",
+    uriTemplate: "guide://protected/{topic}",
+    complete: {
+      topic: (_value, context) => {
+        assert.deepEqual(context.principal.permissions, requiredScopes);
+        completionCalls += 1;
+        return ["peas"];
+      },
+    },
+    handler({ uri: requestedUri }, context) {
+      checkPrincipal(context);
+      return { contents: [{ uri: requestedUri, text: "protected" }] };
+    },
+  });
+  const prompt = definePrompt({
+    access: "protected",
+    requiredScopes,
+    name: "protected-prompt",
+    argsSchema: z.object({ topic: z.string() }),
+    complete: {
+      topic: (_value, context) => {
+        assert.deepEqual(context.principal.permissions, requiredScopes);
+        completionCalls += 1;
+        return ["peas"];
+      },
+    },
+    handler({ topic }, context) {
+      checkPrincipal(context);
+      return { messages: [{ role: "user", content: { type: "text", text: topic } }] };
+    },
+  });
+  const resourceServerUrl = new URL("https://api.example/mcp");
+  const running = await serveEmseepea(createEmseepea({
+    name: "protected-capabilities",
+    version: "0",
+    resources: [resource, template],
+    prompts: [prompt],
+    authentication: {
+      discovery: "protected",
+      verifier: {
+        async verifyAccessToken(token) {
+          return {
+            token,
+            clientId: "test-client",
+            scopes: token === "permitted" ? requiredScopes : ["other:read"],
+            expiresAt: Math.floor(Date.now() / 1_000) + 60,
+            resource: resourceServerUrl,
+          };
+        },
+      },
+      metadata: {
+        resourceServerUrl,
+        oauthMetadata: {
+          issuer: "https://auth.example",
+          authorization_endpoint: "https://auth.example/authorize",
+          token_endpoint: "https://auth.example/token",
+          response_types_supported: ["code"],
+        },
+      },
+    },
+  }), { port: 0 });
+
+  try {
+    for (const method of ["resources/list", "resources/templates/list", "prompts/list"]) {
+      assert.equal((await rpc(running.url, method, {}, "restricted")).body.error.code, -32601);
+    }
+
+    assert.equal((await rpc(running.url, "resources/list", {}, "permitted")).body.result.resources.length, 1);
+    assert.equal(
+      (await rpc(running.url, "resources/templates/list", {}, "permitted")).body.result.resourceTemplates.length,
+      1,
+    );
+    assert.equal((await rpc(running.url, "prompts/list", {}, "permitted")).body.result.prompts.length, 1);
+
+    for (const [method, params] of [
+      ["resources/read", { uri: protectedUri }],
+      ["resources/read", { uri: "guide://protected/peas" }],
+      ["prompts/get", { name: "protected-prompt", arguments: { topic: "peas" } }],
+      ["completion/complete", {
+        ref: { type: "ref/prompt", name: "protected-prompt" },
+        argument: { name: "topic", value: "p" },
+      }],
+    ]) {
+      const hidden = await rpc(running.url, method, params, "restricted");
+      assert.deepEqual(hidden.body.error, { code: -32602, message: "Capability not found" });
+    }
+    assert.equal(handlerCalls, 0);
+    assert.equal(completionCalls, 0);
+
+    await rpc(running.url, "resources/read", { uri: protectedUri }, "permitted");
+    await rpc(running.url, "resources/read", { uri: "guide://protected/peas" }, "permitted");
+    await rpc(
+      running.url,
+      "prompts/get",
+      { name: "protected-prompt", arguments: { topic: "peas" } },
+      "permitted",
+    );
+    const completion = await rpc(running.url, "completion/complete", {
+      ref: { type: "ref/prompt", name: "protected-prompt" },
+      argument: { name: "topic", value: "p" },
+    }, "permitted");
+    assert.deepEqual(completion.body.result.completion.values, ["peas"]);
+    assert.equal(handlerCalls, 3);
+    assert.equal(completionCalls, 1);
   } finally {
     await running.close();
   }

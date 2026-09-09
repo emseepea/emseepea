@@ -1,4 +1,5 @@
 import { MongoClient, type Collection, type Db } from "mongodb";
+import type { AccessPolicy } from "@emseepea/server";
 import type { PeaObservationDocument } from "./pea-observation-document.js";
 import type { PeaDocument } from "./pea-document.js";
 
@@ -23,6 +24,7 @@ export function createDatabase(uri: string) {
 }
 
 export interface MongoContext {
+  readonly access: AccessPolicy;
   readonly varieties: () => Collection<PeaDocument> | undefined;
   readonly observations: () => Collection<PeaObservationDocument> | undefined;
   readonly database: () => Db | undefined;

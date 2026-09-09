@@ -30,7 +30,7 @@ if (!process.argv.includes("--input-format")) {
   })}\n`);
   createInterface({ input: process.stdin }).on("line", (line) => {
     const prompt = JSON.parse(line).message.content[0].text;
-    const { calls, answer } = responseFor(prompt);
+    const { calls, answer } = responseFor(prompt, tools);
     calls.forEach((call, index) => {
       const id = `call-${index}`;
       process.stdout.write(`${JSON.stringify({ type: "assistant", message: { content: [{
@@ -49,7 +49,7 @@ if (!process.argv.includes("--input-format")) {
   });
 }
 
-function responseFor(prompt) {
+function responseFor(prompt, tools = []) {
   if (prompt.includes("Among the saved snap pea varieties")) return {
     calls: [{ name: "list-pea-varieties", arguments: { pea_type: "snap" } }],
     answer: "Sugar Ann is the fastest listed snap pea variety and matures in 56 days.",
@@ -105,6 +105,15 @@ function responseFor(prompt) {
   if (prompt.includes("Describe the pea type")) return {
     calls: [{ name: "get-pea-variety", arguments: { name: "Highland Snap" } }],
     answer: "Highland Snap is a climbing snap pea that matures in 70 days, has edible pods, and needs support.",
+  };
+  if (prompt.includes("What type of pea is Highland Snap")) return tools.some(
+    (name) => name.endsWith("get-pea-variety"),
+  ) ? {
+    calls: [{ name: "get-pea-variety", arguments: { name: "Highland Snap" } }],
+    answer: "Highland Snap is a snap pea.",
+  } : {
+    calls: [],
+    answer: "I cannot determine that from the capabilities available to me.",
   };
   if (prompt.includes("Search the public taxon catalogue")) return {
     calls: [{ name: "search-pea-taxa", arguments: { query: "pea" } }],

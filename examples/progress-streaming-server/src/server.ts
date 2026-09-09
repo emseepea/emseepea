@@ -1,11 +1,9 @@
-import { createEmseepea, discoverCapabilities, serveEmseepea } from "@emseepea/server";
+import { serveEmseepea } from "@emseepea/server";
+import { createProgressStreamingServer } from "./app.js";
 
-const running = await serveEmseepea(createEmseepea({
-  name: "emseepea-progress-streaming-server",
-  version: "0.0.0",
-  instructions: "Use run-germination-trial for the sample pea germination trial.",
-  ...await discoverCapabilities(new URL("./capabilities/", import.meta.url)),
-}), { port: Number.parseInt(process.env.PORT ?? "3000", 10) });
+const running = await serveEmseepea(await createProgressStreamingServer(), {
+  port: Number.parseInt(process.env.PORT ?? "3000", 10),
+});
 
 console.log(`Em See Pea progress-streaming-server example listening at ${running.url}`);
 

@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import { startMcpServer } from "@emseepea/testing";
+import {
+  insecureTestAuthentication,
+  startEmseepea,
+  startMcpServer,
+} from "@emseepea/testing";
 import { createSoapExample } from "../dist/app.js";
 import { artifactsFromSources } from "../scripts/generate-types.mjs";
 import { parseSoapEnvelopeSchema } from "../dist/soap-schema.js";
@@ -88,6 +92,22 @@ test("retrieves XSD-validated SOAP data through a described MCP schema", async (
     daysToMaturity: 1,
     traits: ["1", "2", "3", "4", "5"],
   });
+});
+
+test("the same template composes protected access and observability", async (t) => {
+  const fixture = await startSoapFixture(t);
+  const events = [];
+  const permissions = ["varieties:read"];
+  const { app } = await createSoapExample(fixture.url.href, {
+    access: { access: "protected", requiredScopes: permissions },
+    authentication: insecureTestAuthentication(permissions),
+    observability: [{ id: "test-log", emit: (event) => events.push(event) }],
+  });
+  const running = await startEmseepea(t, app);
+  const client = await running.connect("test-token");
+  const result = await client.callTool({ name: "get-pea-variety", arguments: { name: "Sugar Ann" } });
+  assert.equal(result.isError, false);
+  assert.ok(events.some(({ capability }) => capability === "get-pea-variety"));
 });
 
 test("rejects unsafe and invalid SOAP responses with generic public failures", async (t) => {

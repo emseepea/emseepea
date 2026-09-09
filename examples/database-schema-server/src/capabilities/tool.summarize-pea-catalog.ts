@@ -1,4 +1,4 @@
-import { defineTool, type CapabilityModuleFactory } from "@emseepea/server";
+import { defineTool, type CapabilityModuleFactory, type ToolContext } from "@emseepea/server";
 import { z } from "zod";
 import { peaCatalogSummary } from "../generated/public/PeaCatalogSummary.mjs";
 import type { DatabaseSchemaContext } from "./context.js";
@@ -16,11 +16,11 @@ const outputSchema = z.object({
 
 export default ((context) => defineTool({
   name: "summarize-pea-catalog",
-  access: "public",
+  ...context.access,
   description: "Summarize the pea catalogue.",
   inputSchema,
   outputSchema,
-  async handler({ pea_type }, { signal }) {
+  async handler({ pea_type }, { signal }: ToolContext) {
     const database = context.database();
     if (!database) throw new Error("Variety provider unavailable");
     signal.throwIfAborted();

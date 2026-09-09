@@ -11,7 +11,7 @@ import { collectMcpMaterial, startSemanticServer, stopSemanticServer } from "../
 const cli = fileURLToPath(new URL("../semantic/cli.mjs", import.meta.url));
 const helper = new URL("../semantic/test.mjs", import.meta.url).href;
 const server = new URL("../../../examples/tool-server/dist/server.js", import.meta.url).href;
-const protectedServer = new URL("../../../examples/sign-in-tool-server/dist/server.js", import.meta.url).href;
+const protectedServer = new URL("../../../tests/fixtures/protected-inventory-server.mjs", import.meta.url).href;
 
 test("cancellation stops MCP collection and the server receives no model token", { timeout: 15_000 }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "semantic-cancel-"));

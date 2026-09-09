@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { defineTool, type CapabilityModuleFactory } from "@emseepea/server";
+import { defineTool, type CapabilityModuleFactory, type ToolContext } from "@emseepea/server";
 import { parsePeaDocument } from "../pea-document.js";
 import { varietySchema } from "../pea-variety.js";
 import type { MongoContext } from "../database.js";
@@ -9,11 +9,11 @@ const outputSchema = varietySchema;
 
 export default ((context) => defineTool({
   name: "add-pea-variety",
-  access: "public",
+  ...context.access,
   description: "Add one pea variety to the catalogue.",
   inputSchema,
   outputSchema,
-  async handler(variety, { signal }) {
+  async handler(variety, { signal }: ToolContext) {
     const collection = context.varieties();
     if (!collection) throw new Error("Variety provider unavailable");
     signal.throwIfAborted();

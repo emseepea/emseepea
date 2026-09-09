@@ -215,6 +215,7 @@ function catalogueDefinitions(count) {
     resources: indexes.map((index) => {
       const uri = `page://resources/item-${index}`;
       return defineResource({
+        access: "public",
         name: `resource-${index}`,
         uri,
         title: `Resource ${index}`,
@@ -224,6 +225,7 @@ function catalogueDefinitions(count) {
       });
     }),
     resourceTemplates: indexes.map((index) => defineResourceTemplate({
+      access: "public",
       name: `template-${index}`,
       uriTemplate: `page://template-${index}/{item}`,
       title: `Template ${index}`,
@@ -232,6 +234,7 @@ function catalogueDefinitions(count) {
       handler: ({ uri }) => { calls += 1; return { contents: [{ uri, text: String(index) }] }; },
     })),
     prompts: indexes.map((index) => definePrompt({
+      access: "public",
       name: `prompt-${index}`,
       title: `Prompt ${index}`,
       description: `Prompt description ${index}`,

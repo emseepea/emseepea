@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
 import test from "node:test";
 import { OAuthError, OAuthErrorCode } from "@modelcontextprotocol/server";
 import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
@@ -16,7 +15,7 @@ test("protected tools fail startup without OAuth resource-server configuration",
   const tool = protectedTool(() => {});
   assert.throws(
     () => createEmseepea({ name: "missing-oauth", version: "0.0.0", tools: [tool] }),
-    /Protected tools require OAuth/,
+    /Protected capabilities require authentication/,
   );
 });
 
@@ -27,7 +26,7 @@ test("invalid OAuth metadata and verification limits fail before listening", () 
     name: "invalid-oauth",
     version: "0.0.0",
     tools: [tool],
-    oauth: {
+    authentication: {
       verifier,
       metadata: {
         resourceServerUrl: new URL(resourceServerUrl),
@@ -44,11 +43,11 @@ test("invalid OAuth metadata and verification limits fail before listening", () 
   assert.throws(() => createEmseepea(options("https://api.example/mcp#fragment")), /must be HTTPS/);
   assert.throws(() => createEmseepea(options("https://api.example/mcp", "http://auth.example")), /Issuer URL must be HTTPS/);
   const insecureIssuer = options("https://api.example/mcp", "http://auth.example");
-  insecureIssuer.oauth.metadata.dangerouslyAllowInsecureIssuerUrl = true;
+  insecureIssuer.authentication.metadata.dangerouslyAllowInsecureIssuerUrl = true;
   assert.throws(() => createEmseepea(insecureIssuer), /Insecure OAuth issuer URLs are not supported/);
   assert.throws(() => createEmseepea({
     ...options("https://api.example/mcp"),
-    oauth: { ...options("https://api.example/mcp").oauth, verificationTimeoutMs: 0 },
+    authentication: { ...options("https://api.example/mcp").authentication, verificationTimeoutMs: 0 },
   }), /positive safe integer/);
 });
 
@@ -94,7 +93,7 @@ test("discovery stays public while protected invocation is fail-closed", async (
     name: "oauth-test",
     version: "0.0.0",
     tools: [publicBean, protectedBean],
-    oauth: {
+    authentication: {
       verifier,
       verificationTimeoutMs: 20,
       metadata: {
@@ -258,7 +257,7 @@ test("discovery stays public while protected invocation is fail-closed", async (
     assert.doesNotMatch(JSON.stringify(valid.body), /valid/);
     assert.deepEqual(observedPrincipal, {
       clientId: "synthetic-client",
-      scopes: ["beans:read"],
+      permissions: ["beans:read"],
       resource: resourceServerUrl.href,
     });
     assert.doesNotMatch(JSON.stringify(observedPrincipal), /valid/);
@@ -267,41 +266,137 @@ test("discovery stays public while protected invocation is fail-closed", async (
   }
 });
 
-test("protected example lists anonymously and requires the synthetic bearer token", async () => {
-  const running = await startProtectedExample();
+test("protected discovery authenticates first and exposes only permitted capabilities", async () => {
+  let protectedCalls = 0;
+  const publicBean = defineTool({
+    name: "public-bean",
+    access: "public",
+    description: "Return a public bean.",
+    inputSchema: z.object({}),
+    outputSchema: z.object({ kind: z.literal("public") }),
+    handler: () => ({ data: { kind: "public" } }),
+  });
+  const protectedBean = protectedTool(() => { protectedCalls += 1; });
+  const authentication = {
+    discovery: "protected",
+    verifier: {
+      async verifyAccessToken(token) {
+        if (token === "invalid") throw new OAuthError(OAuthErrorCode.InvalidToken, "invalid");
+        return {
+          token,
+          clientId: "catalogue-client",
+          scopes: token === "permitted" ? ["beans:read"] : ["other:read"],
+          expiresAt: Math.floor(Date.now() / 1_000) + 60,
+          resource: resourceServerUrl,
+        };
+      },
+    },
+    metadata: {
+      resourceServerUrl,
+      oauthMetadata: {
+        issuer: "https://auth.example",
+        authorization_endpoint: "https://auth.example/authorize",
+        token_endpoint: "https://auth.example/token",
+        response_types_supported: ["code"],
+      },
+    },
+  };
+  const running = await serveEmseepea(createEmseepea({
+    name: "protected-discovery",
+    version: "0.0.0",
+    tools: [publicBean, protectedBean],
+    listPagination: { pageSize: 1 },
+    authentication,
+  }), { port: 0 });
+
   try {
-    const list = await rpc(running.url, "tools/list");
-    assert.equal(list.response.status, 200);
-    const tool = list.body.result.tools.find(
-      ({ name }) => name === "get-private-inventory-report",
-    );
-    assert.deepEqual(tool._meta["io.emseepea/access"], {
-      type: "protected",
-      requiredScopes: ["inventory:read"],
-    });
-    assert.doesNotMatch(JSON.stringify(list.body), /example-access-token|120 on hand/);
+    assert.equal((await fetch(new URL("/.well-known/oauth-protected-resource/mcp", running.url))).status, 200);
+    assert.equal((await rpc(running.url, "tools/list")).response.status, 401);
+    assert.equal((await rpc(running.url, "tools/list", {}, "invalid")).response.status, 401);
 
-    const params = { name: "get-private-inventory-report", arguments: {} };
-    assert.equal((await rpc(running.url, "tools/call", params)).response.status, 401);
-    assert.equal((await rpc(running.url, "tools/call", params, "invalid")).response.status, 401);
-    assert.equal(
-      (await rpc(running.url, "tools/call", params, "example-wrong-scope")).response.status,
-      403,
-    );
+    const restricted = await rpc(running.url, "tools/list", {}, "restricted");
+    assert.deepEqual(restricted.body.result.tools.map(({ name }) => name), ["public-bean"]);
+    assert.equal(restricted.body.result.nextCursor, undefined);
+    assert.equal(restricted.response.headers.get("cache-control"), "private, no-store");
 
-    const valid = await rpc(running.url, "tools/call", params, "example-access-token");
-    assert.equal(valid.response.status, 200);
-    assert.deepEqual(valid.body.result.structuredContent, {
-      item: "Pea seed packets",
-      onHandPackets: 120,
-      reservedPackets: 35,
-      availableToPromisePackets: 85,
-      inboundPackets: 40,
-      inboundAvailableToPromise: false,
-    });
-    assert.doesNotMatch(JSON.stringify(valid.body), /example-access-token/);
+    const permittedFirst = await rpc(running.url, "tools/list", {}, "permitted");
+    assert.deepEqual(permittedFirst.body.result.tools.map(({ name }) => name), ["public-bean"]);
+    assert.match(permittedFirst.body.result.nextCursor, /^[A-Za-z0-9_-]{43}$/);
+    const permittedSecond = await rpc(
+      running.url,
+      "tools/list",
+      { cursor: permittedFirst.body.result.nextCursor },
+      "permitted",
+    );
+    assert.deepEqual(permittedSecond.body.result.tools.map(({ name }) => name), ["protected-bean"]);
+
+    const replay = await rpc(
+      running.url,
+      "tools/list",
+      { cursor: permittedFirst.body.result.nextCursor },
+      "restricted",
+    );
+    assert.equal(replay.body.error.code, -32602);
+
+    const hidden = await protectedCall(running.url, "restricted");
+    const unknown = await rpc(
+      running.url,
+      "tools/call",
+      { name: "unknown-bean", arguments: { id: "protected-request" } },
+      "restricted",
+    );
+    assert.deepEqual(hidden.body.error, unknown.body.error);
+    assert.equal(protectedCalls, 0);
+
+    assert.equal((await protectedCall(running.url, "permitted")).response.status, 200);
+    assert.equal(protectedCalls, 1);
   } finally {
     await running.close();
+  }
+});
+
+test("malformed verifier identity never reaches a protected handler", async () => {
+  const invalidPrincipals = [
+    { clientId: "", scopes: ["beans:read"] },
+    { clientId: "x".repeat(257), scopes: ["beans:read"] },
+    { clientId: "client", scopes: "beans:read" },
+    { clientId: "client", scopes: ["beans:read", "beans:read"] },
+    { clientId: "client", scopes: ["invalid scope"] },
+  ];
+  for (const invalid of invalidPrincipals) {
+    let calls = 0;
+    const running = await serveEmseepea(createEmseepea({
+      name: "invalid-principal",
+      version: "0.0.0",
+      tools: [protectedTool(() => { calls += 1; })],
+      authentication: {
+        verifier: {
+          async verifyAccessToken(token) {
+            return {
+              token,
+              ...invalid,
+              expiresAt: Math.floor(Date.now() / 1_000) + 60,
+              resource: resourceServerUrl,
+            };
+          },
+        },
+        metadata: {
+          resourceServerUrl,
+          oauthMetadata: {
+            issuer: "https://auth.example",
+            authorization_endpoint: "https://auth.example/authorize",
+            token_endpoint: "https://auth.example/token",
+            response_types_supported: ["code"],
+          },
+        },
+      },
+    }), { port: 0 });
+    try {
+      assert.equal((await protectedCall(running.url, "valid")).response.status, 500);
+      assert.equal(calls, 0);
+    } finally {
+      await running.close();
+    }
   }
 });
 
@@ -353,40 +448,4 @@ async function rpc(url, method, params = {}, token, extraHeaders = {}, meta = re
     }),
   });
   return { response, body: await response.json() };
-}
-
-async function startProtectedExample() {
-  const child = spawn(process.execPath, ["examples/sign-in-tool-server/dist/server.js"], {
-    env: { ...process.env, PORT: "0" },
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  let stdout = "";
-  let stderr = "";
-  child.stdout.on("data", (chunk) => {
-    stdout += chunk.toString();
-  });
-  child.stderr.on("data", (chunk) => {
-    stderr += chunk.toString();
-  });
-  const url = await new Promise((resolveUrl, rejectUrl) => {
-    const timeout = setTimeout(() => rejectUrl(new Error("protected example startup timed out")), 10_000);
-    const inspect = () => {
-      const match = stdout.match(/http:\/\/127\.0\.0\.1:\d+\/mcp/);
-      if (!match) return;
-      clearTimeout(timeout);
-      resolveUrl(match[0]);
-    };
-    child.stdout.on("data", inspect);
-    child.once("error", rejectUrl);
-    child.once("exit", (code) => rejectUrl(new Error(`protected example exited ${code}: ${stderr}`)));
-    inspect();
-  });
-  return {
-    url,
-    async close() {
-      if (child.exitCode !== null) return;
-      child.kill("SIGTERM");
-      await new Promise((resolveClose) => child.once("close", resolveClose));
-    },
-  };
 }

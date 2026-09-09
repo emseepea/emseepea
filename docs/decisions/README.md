@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 62 decisions: 33 current and 29 historical.
+This project has 64 decisions: 33 current and 31 historical.
 
 ## Quick Index
 
@@ -17,9 +17,7 @@ This project has 62 decisions: 33 current and 29 historical.
 - [ADR-0009: Capability-Scoped Reliability, Effects, and State](0009-capability-scoped-reliability-effects-and-state.proposed.md): Proposed; human review confirmed.
 - [ADR-0010: POST-Scoped Streaming, Progress, and Subscriptions](0010-post-scoped-streaming-progress-and-subscriptions.proposed.md): Proposed; human review confirmed.
 - [ADR-0011: Framework-Neutral Accessible Elicitation and Approval UI](0011-framework-neutral-accessible-elicitation-and-approval-ui.proposed.md): Proposed; human review confirmed.
-- [ADR-0012: Typed Operations and OpenTelemetry Boundary](0012-typed-operations-and-opentelemetry-boundary.proposed.md): Proposed; human review confirmed.
 - [ADR-0014: Performance Budget for the Initial JSON HTTP Boundary](0014-performance-budget-initial-json-http-boundary.proposed.md): Proposed; human review confirmed.
-- [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md): Proposed; human review confirmed.
 - [ADR-0023: Mandatory Cognitive-Accessibility Review for Published Content](0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md): Proposed; human review confirmed.
 - [ADR-0025: Astro Starlight Documentation Generator](0025-static-documentation-website-with-astro-starlight.proposed.md): Proposed; human review confirmed.
 - [ADR-0028: Example-Owned Oxlint with Root Orchestration](0028-example-owned-oxlint-with-root-orchestration.proposed.md): Proposed; human review confirmed.
@@ -44,6 +42,8 @@ This project has 62 decisions: 33 current and 29 historical.
 - [ADR-0060: Database Schema Generated Internal Validation](0060-database-schema-generated-internal-validation.proposed.md): Proposed; human review confirmed.
 - [ADR-0062: XSD-Generated SOAP Structure and Runtime Validation](0062-wsdl-and-xsd-generated-soap-validation.proposed.md): Proposed; human review confirmed.
 - [ADR-0063: Two MongoDB Collection Validation Patterns](0063-two-mongodb-collection-validation-patterns.proposed.md): Proposed; human review confirmed.
+- [ADR-0064: Typed Authentication with Optional Permission-Shaped Discovery](0064-typed-authentication-with-optional-permission-shaped-discovery.proposed.md): Proposed; human review confirmed.
+- [ADR-0065: Typed Operations with Framework-Redacted Observability Adapters](0065-framework-redacted-observability-adapters.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -52,9 +52,11 @@ This project has 62 decisions: 33 current and 29 historical.
 - [ADR-0003: Public Windy Road Repository with Gated Changesets Releases](0003-public-repository-and-release-governance.superseded.md): Superseded; human review confirmed.
 - [ADR-0004: Fastify-First TypeScript Framework Foundation](0004-fastify-first-typescript-foundation.superseded.md): Superseded; human review confirmed.
 - [ADR-0008: Public and OAuth Protected Resource Security](0008-public-and-oauth-protected-resource-security.superseded.md): Superseded; human review confirmed.
+- [ADR-0012: Typed Operations and OpenTelemetry Boundary](0012-typed-operations-and-opentelemetry-boundary.superseded.md): Superseded; human review confirmed.
 - [ADR-0015: Ordinary Evidence and Exact Release Claims](0015-ordinary-evidence-and-exact-release-claims.superseded.md): Superseded; human review confirmed.
 - [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.superseded.md): Superseded; human review confirmed.
 - [ADR-0017: Public Discovery with Protected Tool Invocation](0017-public-discovery-with-protected-tool-invocation.superseded.md): Superseded; human review confirmed.
+- [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.superseded.md): Superseded; human review confirmed.
 - [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md): Superseded; human review confirmed.
 - [ADR-0020: Mandatory Semantic LLM Qualification for Examples and Releases](0020-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md): Superseded; human review confirmed.
 - [ADR-0021: Mandatory Semantic LLM Qualification for Examples and Releases](0021-mandatory-semantic-llm-qualification-for-examples-and-releases.superseded.md): Superseded; human review confirmed.
@@ -290,10 +292,11 @@ Chosen option: **"Optional React renderer and Tailwind style packages"**.
 - Shared native and React fixtures pass with and without the published stylesheet.
 - Focus, contrast, forced-colors, reduced-motion, reflow, and target-size checks pass.
 
-### [ADR-0012: Typed Operations and OpenTelemetry Boundary](0012-typed-operations-and-opentelemetry-boundary.proposed.md)
+### [ADR-0012: Typed Operations and OpenTelemetry Boundary](0012-typed-operations-and-opentelemetry-boundary.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0065: Typed Operations with Framework-Redacted Observability Adapters](0065-framework-redacted-observability-adapters.proposed.md)
 
 #### ADR-0012 Decision
 
@@ -373,7 +376,7 @@ Chosen option: **"Product scope with role-specific package names"**, because `@e
 - Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0008: Public and OAuth Protected Resource Security](0008-public-and-oauth-protected-resource-security.superseded.md)
-- Replaced by: [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md)
+- Replaced by: [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.superseded.md)
 
 #### ADR-0017 Decision
 
@@ -388,11 +391,12 @@ Chosen option: **"Public discovery and listing, invocation-scoped protection"**.
 - Caller tokens never appear in backend authorization, public output, or logs.
 - Disabled capabilities remain absent and no protected-path performance claim is made without a separate budget.
 
-### [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md)
+### [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0017: Public Discovery with Protected Tool Invocation](0017-public-discovery-with-protected-tool-invocation.superseded.md)
+- Replaced by: [ADR-0064: Typed Authentication with Optional Permission-Shaped Discovery](0064-typed-authentication-with-optional-permission-shaped-discovery.proposed.md)
 
 #### ADR-0018 Decision
 
@@ -1339,3 +1343,64 @@ Chosen option: **"Two validation patterns in one initializer"**, because users c
 - Semantic evaluation covers model-visible variety and observation behavior at the minimum useful model cost. It does not claim to test database enforcement.
 - The initializer creates a private standalone project and passes ordinary, semantic, pack, clean-install, OSV, licence, software-bill-of-materials, provenance, registry, accessibility, and documentation checks.
 - Measured process CPU, memory, and network evidence for both paths replaces the planning assumptions before release.
+
+### [ADR-0064: Typed Authentication with Optional Permission-Shaped Discovery](0064-typed-authentication-with-optional-permission-shaped-discovery.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](0018-public-discovery-and-invocation-scoped-oauth-security.superseded.md)
+
+#### ADR-0064 Decision
+
+Chosen option: **"Typed authentication with optional permission-shaped discovery"**, because it keeps the common open-discovery experience simple while supporting teams whose catalogue is itself protected information.
+
+#### ADR-0064 Checks
+
+- With no authentication extension, every maintained initializer starts in open mode and its discovery, listing, and invocation tests pass.
+- Every maintained initializer documents and tests adding the same protected authentication composition without maintaining a second template tree.
+- Public discovery remains the default when protected capabilities exist.
+- Default public discovery lists the public contracts for both open and protected capabilities. Permission filtering occurs only in explicitly protected-discovery mode.
+- OAuth protected-resource and authorization-server discovery metadata remain public in both discovery modes.
+- Explicit protected discovery rejects missing or invalid credentials before constructing a catalogue.
+- Two principals with different normalized permissions receive the exact expected deterministic catalogues with stable ordering.
+- Pagination cursors cannot be reused across different permission views.
+- A capability hidden from a principal fails closed when called directly.
+- Hidden and unknown direct calls have the same safe public error and cause zero handler, availability, completion, and backend calls.
+- Open and protected capabilities coexist in one server.
+- Tools, resources, templates, and prompts receive identical discovery and invocation enforcement. Completion inherits the policy of its referenced prompt or resource template.
+- Missing permissions cause zero handler, availability, completion, or backend calls.
+- Tokens, credentials, raw claims, and provider errors never reach handlers, logs, public results, or observability adapters.
+- Invalid issuer, audience, expiry, intended resource, or permissions cause zero application and backend calls.
+- The authentication provider is operator-configured, Em See Pea does not act as an authorization server, and caller credentials are never backend credentials.
+- Outbound-request tests retain fixed destinations, safe parsing, redirect and DNS revalidation, prohibited-address rejection, and bounded response checks.
+- Duplicate authentication configuration and unenforceable access policy fail at startup.
+- `@emseepea/create-sign-in-tool-server` is removed from the canonical package list and all of its published versions are deprecated in favour of `@emseepea/create-tool-server`.
+- READMEs, the website, standalone initializer qualification, semantic evaluation, software bills of materials, provenance, registry checks, and exact-release checks cover the new composition model.
+- Native semantic tests prove, without extra model hints, that principals with different permissions are offered and select only their visible capabilities.
+- A pinned profile and percentile accompany measured protected-discovery evidence before any protected-path performance claim is published.
+
+### [ADR-0065: Typed Operations with Framework-Redacted Observability Adapters](0065-framework-redacted-observability-adapters.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0012: Typed Operations and OpenTelemetry Boundary](0012-typed-operations-and-opentelemetry-boundary.superseded.md)
+
+#### ADR-0065 Decision
+
+Chosen option: **"Framework-redacted observability adapters"**, because one safe event boundary supports common destinations without giving adapters access to sensitive request or backend data.
+
+#### ADR-0065 Checks
+
+- Every maintained initializer documents and tests optional observability composition without maintaining another template variant.
+- OpenTelemetry and structured logging adapters consume the same safe event contract.
+- Two adapters with unique identifiers receive the expected event once and in stable order.
+- Duplicate adapter identifiers fail during startup.
+- Invalid, missing, and out-of-range safety configuration fails closed.
+- Liveness and readiness expose no application data and reflect the exact enabled profile and dependency state.
+- Tests prove adapters never receive bodies, headers, arguments, results, tokens, credentials, URLs, raw errors, provider claims, or backend details.
+- Adapter and exporter failures leave protocol status and body unchanged.
+- Slow or failed flush operations remain bounded and cannot prevent other adapters from receiving their flush opportunity.
+- Shutdown tests prove admission stops and outstanding work drains or cancels within the configured deadline before bounded adapter flushing finishes.
+- No public adapter can register lifecycle hooks or bypass authentication, authorization, validation, limits, cancellation, or safe errors.
+- README, website, API reference, standalone generated-project checks, semantic evaluation where model-visible behaviour changes, software bills of materials, provenance, registry checks, and exact-release checks reflect the adapter model.
+- Measured CPU, allocation, and event-size evidence meets the existing whole-request performance budget and any separately published adapter claim before release.

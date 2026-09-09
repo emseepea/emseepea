@@ -1,8 +1,9 @@
-import { defineResource, type CapabilityModuleFactory } from "@emseepea/server";
+import { defineResource, type AccessPolicy, type CapabilityModuleFactory } from "@emseepea/server";
 
 const guideUri = "guide://peas/getting-started";
 
-export default (() => defineResource({
+export default ((access) => defineResource({
+  ...access,
   name: "getting-started",
   uri: guideUri,
   title: "Pea growing: getting started",
@@ -15,4 +16,4 @@ export default (() => defineResource({
       text: "# Plant peas clearly\n\nSowing depth is how deep a seed goes; plant spacing is the gap between plants. They are separate choices, not interchangeable measurements.\n",
     }],
   }),
-})) satisfies CapabilityModuleFactory;
+})) satisfies CapabilityModuleFactory<AccessPolicy>;

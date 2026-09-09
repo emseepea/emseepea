@@ -6,8 +6,8 @@ This directory is both the maintained example and its public npm initializer.
 
 Use this template when a tool calls a public JSON API and must validate and
 select the fields returned to the caller. Choose the [tool server](../tool-server/README.md)
-when all data is local, or the [sign-in tool server](../sign-in-tool-server/README.md)
-when calling the tool requires authentication. [Compare all templates](https://emseepea.github.io/emseepea/examples/).
+when all data is local. Add authentication to either template when calling the
+tool requires permission. [Compare all templates](https://emseepea.github.io/emseepea/examples/).
 
 ## Create a Project
 
@@ -16,6 +16,30 @@ npm init @emseepea/api-backed-server -- my-server
 ```
 
 <!-- generated-project-readme -->
+
+## Choose Open or Protected Access
+
+Start open when the catalogue and operations are public.
+
+To protect this template, pass both options to the app factory:
+
+- `access: { access: "protected", requiredScopes: ["peas:read"] }`
+- an `authentication` adapter
+
+Keep `authentication.discovery` as `"public"` unless capability names or
+schemas are sensitive. Use `"protected"` only when each principal should see a
+permission-filtered catalogue. OAuth metadata remains public in both modes.
+
+## Add Observability
+
+The same factory accepts `observability`.
+
+- Use `structuredLogging` for safe structured events.
+- Use `openTelemetry` for traces and metrics.
+
+Adapters receive only redacted framework events. They never receive request
+bodies, arguments, results, tokens, provider claims, or raw errors. See the
+[server API](https://github.com/emseepea/emseepea/tree/main/packages/framework#authentication-and-observability) for the complete configuration.
 
 ## Public Web Service Backend Example
 

@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { startMcpServer } from "@emseepea/testing";
+import {
+  insecureTestAuthentication,
+  startEmseepea,
+  startMcpServer,
+} from "@emseepea/testing";
+import { createHtmlUiServer } from "../dist/app.js";
 
 test("describes every planting-plan tool property", async (t) => {
   const running = await startMcpServer(t, new URL("../dist/server.js", import.meta.url));
@@ -28,4 +33,17 @@ test("describes every planting-plan tool property", async (t) => {
     arguments: { title: "Spring peas", peaType: "snap", includeTips: false },
   });
   assert.equal(result.content[0].text, JSON.stringify(result.structuredContent));
+});
+
+test("the same UI template composes protected access and observability", async (t) => {
+  const events = [];
+  const permissions = ["plans:preview"];
+  const running = await startEmseepea(t, await createHtmlUiServer({
+    access: { access: "protected", requiredScopes: permissions },
+    authentication: insecureTestAuthentication(permissions),
+    observability: [{ id: "test-log", emit: (event) => events.push(event) }],
+  }));
+  const client = await running.connect("test-token");
+  assert.deepEqual((await client.listTools()).tools.map(({ name }) => name), ["preview-planting-plan"]);
+  assert.ok(events.some(({ method }) => method === "tools/list"));
 });

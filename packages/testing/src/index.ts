@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import { serveEmseepea, type AuthenticationOptions } from "@emseepea/server";
 
 export interface TestCleanup {
   after(cleanup: () => Promise<void>): void;
@@ -18,6 +19,55 @@ export interface RunningMcpServer {
   connect(token?: string): Promise<Client>;
   output(): Readonly<{ stdout: string; stderr: string }>;
   url: URL;
+}
+
+/** Test-only verifier. Never use it in a deployed server. */
+export function insecureTestAuthentication(
+  permissions: readonly string[],
+  discovery: "public" | "protected" = "protected",
+): AuthenticationOptions {
+  const resourceServerUrl = new URL("https://test.example/mcp");
+  return {
+    discovery,
+    verifier: {
+      async verifyAccessToken(token) {
+        return {
+          token,
+          clientId: "emseepea-test-client",
+          scopes: [...permissions],
+          expiresAt: Math.floor(Date.now() / 1_000) + 60,
+          resource: resourceServerUrl,
+        };
+      },
+    },
+    metadata: {
+      resourceServerUrl,
+      oauthMetadata: {
+        issuer: "https://auth.test.example",
+        authorization_endpoint: "https://auth.test.example/authorize",
+        token_endpoint: "https://auth.test.example/token",
+        response_types_supported: ["code"],
+      },
+    },
+  };
+}
+
+export async function startEmseepea(
+  test: TestCleanup,
+  app: Parameters<typeof serveEmseepea>[0],
+  options: Pick<StartMcpServerOptions, "clientName" | "token"> = {},
+): Promise<RunningMcpServer> {
+  const running = await serveEmseepea(app, { port: 0 });
+  const clients: Client[] = [];
+  test.after(async () => {
+    await Promise.allSettled(clients.map((client) => client.close()));
+    await running.close();
+  });
+  return {
+    ...running,
+    output: () => Object.freeze({ stdout: "", stderr: "" }),
+    connect: (token = options.token) => connect(running.url, clients, options.clientName, token),
+  };
 }
 
 export async function startMcpServer(
@@ -76,19 +126,26 @@ export async function startMcpServer(
   return {
     url,
     output: () => Object.freeze({ stdout: output, stderr: errors }),
-    async connect(token = options.token) {
-      const client = new Client(
-        { name: options.clientName ?? "emseepea-test", version: "0.0.0" },
-        { versionNegotiation: { mode: { pin: "2026-07-28" } } },
-      );
-      await client.connect(new StreamableHTTPClientTransport(
-        url,
-        token ? { authProvider: { token: async () => token } } : undefined,
-      ));
-      clients.push(client);
-      return client;
-    },
+    connect: (token = options.token) => connect(url, clients, options.clientName, token),
   };
+}
+
+async function connect(
+  url: URL,
+  clients: Client[],
+  clientName = "emseepea-test",
+  token?: string,
+): Promise<Client> {
+  const client = new Client(
+    { name: clientName, version: "0.0.0" },
+    { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+  );
+  await client.connect(new StreamableHTTPClientTransport(
+    url,
+    token ? { authProvider: { token: async () => token } } : undefined,
+  ));
+  clients.push(client);
+  return client;
 }
 
 async function stopProcess(child: ReturnType<typeof spawn>): Promise<void> {

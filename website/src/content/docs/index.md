@@ -36,7 +36,7 @@ take over, and which application responsibilities remain yours.
 ## What you can create
 
 - Tools that answer questions using your data or another service.
-- Tools that require sign-in, while their names and descriptions remain public.
+- Protected capabilities with public discovery by default, or explicit permission-shaped discovery.
 - Reference material and reusable prompts for assistants.
 - Tools that send progress updates while they work.
 - Optional web forms, using native HTML or React.

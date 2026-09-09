@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { serveEmseepea } from "@emseepea/server";
+import { insecureTestAuthentication, startEmseepea } from "@emseepea/testing";
 import { createBackendExample } from "../dist/app.js";
 import { inaturalistFixture } from "../test-support/inaturalist-fixture.mjs";
 
@@ -112,4 +113,22 @@ test("the API-backed example checks and passes through selected iNaturalist valu
     await client.close();
     await running.close();
   }
+});
+
+test("the same template composes protected access and observability", async (t) => {
+  const events = [];
+  const permissions = ["taxa:search"];
+  const app = await createBackendExample(
+    { get: async () => inaturalistFixture },
+    {
+      access: { access: "protected", requiredScopes: permissions },
+      authentication: insecureTestAuthentication(permissions),
+      observability: [{ id: "test-log", emit: (event) => events.push(event) }],
+    },
+  );
+  const running = await startEmseepea(t, app);
+  const client = await running.connect("test-token");
+  const result = await client.callTool({ name: "search-pea-taxa", arguments: { query: "pea" } });
+  assert.equal(result.isError, false);
+  assert.ok(events.some(({ capability }) => capability === "search-pea-taxa"));
 });

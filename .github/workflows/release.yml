@@ -182,26 +182,27 @@ jobs:
             - Fastify-first MCP 2026-07-28 server
             - JSON operations
             - checked, bounded public POST progress through a trusted proxy
-            - public and invocation-scoped OAuth-protected tools
+            - public and protected tools, resources, prompts, and completions
+            - public discovery by default and explicit permission-shaped protected discovery
             - checked mapped adapters
-            - public static-resource and non-enumerating resource-template discovery and reads
-            - public prompt listing and rendering
+            - static-resource and non-enumerating resource-template discovery and reads
+            - prompt listing and rendering
             - opt-in prompt and resource-template completion
             - opt-in bounded pages for tool, resource, resource-address-pattern, and prompt catalogues with opaque cursors
             - configurable reuse instructions for discovery, catalogues, and resource reads
-            - anonymous resource metadata and discovery
+            - public OAuth metadata in every discovery mode
             - checked request headers and advertised metadata
             - direct tools, resources, and prompts that request more client input
             - fixed-origin HTTPS JSON GET client with network-address and response checks
             - native HTML form rendering
-            - optional request telemetry, dependency readiness, and bounded shutdown flushing
+            - typed authentication, redacted observability adapters, dependency readiness, and bounded shutdown flushing
             - code-first AI understanding tests with three answers and nine judgments per case
           - Excluded:
-            - template enumeration and protected templates
+            - template enumeration
             - changing catalogues while a server runs
             - object or tenant authorization
             - general or authenticated outbound HTTP policy, retries, or effects
-            - deployed streaming tools requiring sign-in
+            - deployed protected streaming tools
             - transport backpressure and queue overflow
             - resynchronisation, subscriptions, replay, sessions, and framework-managed shared state
             - website deployment

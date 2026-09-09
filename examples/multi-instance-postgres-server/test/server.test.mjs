@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import test, { after } from "node:test";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { Pool } from "pg";
+import { insecureTestAuthentication, startEmseepea } from "@emseepea/testing";
+import { createMultiInstanceExample } from "../dist/app.js";
 
 const serverPath = fileURLToPath(new URL("../dist/server.js", import.meta.url));
 const databaseUrl = process.env.DATABASE_URL;
@@ -65,6 +67,25 @@ test("two interchangeable server processes share one coherent report store", asy
   const readiness = await fetch(new URL("/readyz", first.url));
   assert.equal(readiness.status, 503);
   assert.equal(await readiness.text(), "not ready\n");
+});
+
+test("the same template composes protected access and observability", async (t) => {
+  const events = [];
+  const permissions = ["reports:write"];
+  const { app } = await createMultiInstanceExample({
+    databaseUrl,
+    access: { access: "protected", requiredScopes: permissions },
+    authentication: insecureTestAuthentication(permissions),
+    observability: [{ id: "test-log", emit: (event) => events.push(event) }],
+  });
+  const running = await startEmseepea(t, app);
+  const client = await running.connect("test-token");
+  const result = await client.callTool({
+    name: "get-harvest-report",
+    arguments: { gardenBed: "Missing", harvestDate: "2026-09-08" },
+  });
+  assert.equal(result.isError, false);
+  assert.ok(events.some(({ capability }) => capability === "get-harvest-report"));
 });
 
 test("describes every public harvest report property", async (t) => {

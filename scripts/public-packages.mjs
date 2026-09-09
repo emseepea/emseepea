@@ -16,21 +16,18 @@ export const publicPackages = [
     path: "examples/tool-server",
     key: "create-tool-server",
     example: "tool-server",
-    description: "Create an Em See Pea server with one public tool.",
+    description: "Create an Em See Pea server with one tool.",
+    replaces: {
+      name: "@emseepea/create-sign-in-tool-server",
+      deprecation: "Deprecated: use @emseepea/create-tool-server and add authentication instead.",
+    },
   },
   {
     name: "@emseepea/create-api-backed-server",
     path: "examples/api-backed-server",
     key: "create-api-backed-server",
     example: "api-backed-server",
-    description: "Create an Em See Pea server backed by a public web API.",
-  },
-  {
-    name: "@emseepea/create-sign-in-tool-server",
-    path: "examples/sign-in-tool-server",
-    key: "create-sign-in-tool-server",
-    example: "sign-in-tool-server",
-    description: "Create an Em See Pea server with a sign-in protected tool.",
+    description: "Create an Em See Pea server backed by a web API.",
   },
   {
     name: "@emseepea/create-resources-and-prompts-server",

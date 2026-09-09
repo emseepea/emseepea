@@ -1,4 +1,9 @@
-import { defineElicitationView, defineTool, type ElicitationView } from "@emseepea/server";
+import {
+  defineElicitationView,
+  defineTool,
+  type AccessPolicy,
+  type ElicitationView,
+} from "@emseepea/server";
 import { z } from "zod";
 
 const peaTypeSchema = z.enum(["all", "shelling", "snap"])
@@ -40,10 +45,10 @@ export function previewPlantingPlan(input: z.output<typeof inputSchema>) {
   };
 }
 
-export function createPreviewPlantingPlanTool() {
+export function createPreviewPlantingPlanTool(access: AccessPolicy = { access: "public" }) {
   return defineTool({
     name: "preview-planting-plan",
-    access: "public",
+    ...access,
     title: "Preview a Pea Planting Plan",
     description: "Preview a sample pea planting plan without sending, storing, or changing anything.",
     inputSchema,

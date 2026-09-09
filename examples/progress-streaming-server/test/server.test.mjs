@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { startMcpServer } from "@emseepea/testing";
+import {
+  insecureTestAuthentication,
+  startEmseepea,
+  startMcpServer,
+} from "@emseepea/testing";
+import { createProgressStreamingServer } from "../dist/app.js";
 
 test("reports bounded progress before returning the final germination result", async (t) => {
   const running = await startMcpServer(t, new URL("../dist/server.js", import.meta.url));
@@ -28,4 +33,21 @@ test("reports bounded progress before returning the final germination result", a
     stages: ["soak", "sow", "sprout"],
   });
   assert.equal(result.content[0].text, JSON.stringify(result.structuredContent));
+});
+
+test("the same template composes protected access and observability", async (t) => {
+  const events = [];
+  const permissions = ["trials:run"];
+  const running = await startEmseepea(t, await createProgressStreamingServer({
+    access: { access: "protected", requiredScopes: permissions },
+    authentication: insecureTestAuthentication(permissions),
+    observability: [{ id: "test-log", emit: (event) => events.push(event) }],
+  }));
+  const client = await running.connect("test-token");
+  const result = await client.callTool({
+    name: "run-germination-trial",
+    arguments: { tray: "sample-tray" },
+  });
+  assert.equal(result.structuredContent.status, "complete");
+  assert.ok(events.some(({ capability }) => capability === "run-germination-trial"));
 });

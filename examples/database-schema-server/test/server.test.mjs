@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
 import test, { after } from "node:test";
 
-import { startMcpServer } from "@emseepea/testing";
+import {
+  insecureTestAuthentication,
+  startEmseepea,
+  startMcpServer,
+} from "@emseepea/testing";
 import { Pool } from "pg";
+import { createDatabaseSchemaExample } from "../dist/app.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 assert.ok(databaseUrl, "DATABASE_URL is required");
@@ -72,6 +77,22 @@ test("reads and writes through the view and summarizes through the procedure", a
     `${running.output().stdout}\n${running.output().stderr}`,
     new RegExp(escapeRegExp(databaseUrl)),
   );
+});
+
+test("the same template composes protected access and observability", async (t) => {
+  const events = [];
+  const permissions = ["catalogue:write"];
+  const { app } = await createDatabaseSchemaExample({
+    databaseUrl,
+    access: { access: "protected", requiredScopes: permissions },
+    authentication: insecureTestAuthentication(permissions),
+    observability: [{ id: "test-log", emit: (event) => events.push(event) }],
+  });
+  const running = await startEmseepea(t, app);
+  const client = await running.connect("test-token");
+  const result = await client.callTool({ name: "list-pea-varieties", arguments: {} });
+  assert.equal(result.isError, false);
+  assert.ok(events.some(({ capability }) => capability === "list-pea-varieties"));
 });
 
 test("the catalogue read has a fixed 20-row boundary", async (t) => {

@@ -1,4 +1,4 @@
-import { defineTool, type CapabilityModuleFactory } from "@emseepea/server";
+import { defineTool, type CapabilityModuleFactory, type ToolContext } from "@emseepea/server";
 import { z } from "zod";
 import { parsePeaDocument } from "../pea-document.js";
 import { varietySchema } from "../pea-variety.js";
@@ -14,11 +14,11 @@ const outputSchema = z.object({
 
 export default ((context) => defineTool({
   name: "list-pea-varieties",
-  access: "public",
+  ...context.access,
   description: "List up to 20 pea varieties, optionally filtered by pea type.",
   inputSchema,
   outputSchema,
-  async handler({ pea_type }, { signal }) {
+  async handler({ pea_type }, { signal }: ToolContext) {
     const collection = context.varieties();
     if (!collection) throw new Error("Variety provider unavailable");
     signal.throwIfAborted();

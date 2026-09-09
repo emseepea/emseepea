@@ -1,13 +1,26 @@
-import { createEmseepea, discoverCapabilities } from "@emseepea/server";
+import {
+  createEmseepea,
+  discoverCapabilities,
+  type AccessPolicy,
+  type EmseepeaExtensions,
+} from "@emseepea/server";
 import type { Collection, Db } from "mongodb";
 import { z } from "zod";
 import { createDatabase } from "./database.js";
 import type { PeaObservationDocument } from "./pea-observation-document.js";
 import type { PeaDocument } from "./pea-document.js";
 
-export interface MongoExampleOptions { readonly uri: string }
+export interface MongoExampleOptions extends EmseepeaExtensions {
+  readonly uri: string;
+  readonly access?: AccessPolicy;
+}
 
-export async function createMongoExample({ uri }: MongoExampleOptions) {
+export async function createMongoExample({
+  uri,
+  access = { access: "public" },
+  authentication,
+  observability,
+}: MongoExampleOptions) {
   const parsedUri = z.string().url().refine(
     (value) => ["mongodb:", "mongodb+srv:"].includes(new URL(value).protocol),
     "uri must use MongoDB",
@@ -33,10 +46,13 @@ export async function createMongoExample({ uri }: MongoExampleOptions) {
     },
     readinessTimeoutMs: 2_500,
     ...await discoverCapabilities(new URL("./capabilities/", import.meta.url), {
+      access,
       database: () => database,
       observations: () => observations,
       varieties: () => varieties,
     }),
+    authentication,
+    observability,
   });
   const closeProvider = async () => {
     observations = undefined;

@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { startMcpServer } from "@emseepea/testing";
+import {
+  insecureTestAuthentication,
+  startEmseepea,
+  startMcpServer,
+} from "@emseepea/testing";
+import { createToolServer } from "../dist/app.js";
 
 test("advertises and returns understandable pea variety details", async (t) => {
   const running = await startMcpServer(t, new URL("../dist/server.js", import.meta.url));
@@ -30,4 +35,22 @@ test("advertises and returns understandable pea variety details", async (t) => {
     traits: ["edible pods", "needs support"],
   });
   assert.equal(result.content[0].text, JSON.stringify(result.structuredContent));
+});
+
+test("the same template composes protected access and observability", async (t) => {
+  const events = [];
+  const permissions = ["varieties:read"];
+  const running = await startEmseepea(t, await createToolServer({
+    access: { access: "protected", requiredScopes: permissions },
+    authentication: insecureTestAuthentication(permissions),
+    observability: [{ id: "test-log", emit: (event) => events.push(event) }],
+  }));
+  const client = await running.connect("test-token");
+  assert.deepEqual((await client.listTools()).tools.map(({ name }) => name), ["get-pea-variety"]);
+  const result = await client.callTool({
+    name: "get-pea-variety",
+    arguments: { name: "Harbour Gem" },
+  });
+  assert.equal(result.structuredContent.name, "Harbour Gem");
+  assert.ok(events.some(({ capability }) => capability === "get-pea-variety"));
 });

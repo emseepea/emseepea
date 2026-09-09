@@ -1,4 +1,4 @@
-import { defineTool, type CapabilityModuleFactory } from "@emseepea/server";
+import { defineTool, type AccessPolicy, type CapabilityModuleFactory } from "@emseepea/server";
 import { z } from "zod";
 
 const varietyNames = ["Harbour Gem", "Highland Snap"] as const;
@@ -29,12 +29,12 @@ const varieties: Record<(typeof varietyNames)[number], z.input<typeof outputSche
   },
 };
 
-export default (() => defineTool({
+export default ((access) => defineTool({
   name: "get-pea-variety",
-  access: "public",
+  ...access,
   title: "Pea Variety Details",
   description: "Get the type, growth habit, maturity time, and traits of a sample pea variety.",
   inputSchema,
   outputSchema,
   handler: ({ name }) => ({ data: varieties[name] }),
-})) satisfies CapabilityModuleFactory;
+})) satisfies CapabilityModuleFactory<AccessPolicy>;

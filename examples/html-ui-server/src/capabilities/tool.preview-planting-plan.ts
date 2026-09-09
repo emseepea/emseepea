@@ -1,4 +1,4 @@
 import { createPreviewPlantingPlanTool } from "@emseepea/example-ui-shared";
-import type { CapabilityModuleFactory } from "@emseepea/server";
+import type { AccessPolicy, CapabilityModuleFactory } from "@emseepea/server";
 
-export default (() => createPreviewPlantingPlanTool()) satisfies CapabilityModuleFactory;
+export default ((access) => createPreviewPlantingPlanTool(access)) satisfies CapabilityModuleFactory<AccessPolicy>;

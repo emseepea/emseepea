@@ -56,7 +56,7 @@ test("the native renderer escapes hostile text and attributes", () => {
       id: "hostile",
       name: "hostile",
       label: "Hostile value",
-      value: '\"><img src=x onerror=alert("value")>',
+      value: '"><img src=x onerror=alert("value")>',
     }],
   });
   const html = renderElicitationForm(view, { headingLevel: 2 });

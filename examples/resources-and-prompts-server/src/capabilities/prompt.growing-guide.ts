@@ -1,9 +1,10 @@
-import { definePrompt, type CapabilityModuleFactory } from "@emseepea/server";
+import { definePrompt, type AccessPolicy, type CapabilityModuleFactory } from "@emseepea/server";
 import { z } from "zod";
 
 const topics = ["sowing-depth", "plant-spacing", "trellis-support"];
 
-export default (() => definePrompt({
+export default ((access) => definePrompt({
+  ...access,
   name: "growing-guide",
   title: "Pea growing guide",
   description: "Create a prompt for a sample pea-growing topic.",
@@ -23,4 +24,4 @@ export default (() => definePrompt({
       },
     }],
   }),
-})) satisfies CapabilityModuleFactory;
+})) satisfies CapabilityModuleFactory<AccessPolicy>;

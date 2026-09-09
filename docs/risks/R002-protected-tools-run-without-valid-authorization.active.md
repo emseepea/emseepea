@@ -27,9 +27,10 @@ Impact × Likelihood *before* controls.
 
 ## Controls
 
-- **Explicit access policy** - Every tool must declare public access or protected
-  scopes. Protected tools fail startup without OAuth resource-server
-  configuration. Implemented in `packages/framework/src/index.ts`.
+- **Explicit access policy** - Every capability must declare public access or
+  protected scopes. Protected capabilities fail startup without authentication
+  verifier and metadata configuration. Implemented in
+  `packages/framework/src/index.ts`.
 - **Authorization before execution** - Token verification, resource checks, and
   scope checks complete before protected handlers or adapters run. Public calls
   receive no authenticated identity. Implemented in
@@ -73,7 +74,7 @@ withdraws the protected-tool claim until a later exact revision restores it.
 - Criteria: `RISK-POLICY.md`
 - Realised-as: none recorded
 - Treatment ADRs:
-  [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](../decisions/0018-public-discovery-and-invocation-scoped-oauth-security.proposed.md)
+  [ADR-0018: Public Discovery and Invocation-Scoped OAuth Security](../decisions/0018-public-discovery-and-invocation-scoped-oauth-security.superseded.md)
 - Personas affected: framework adopters and their users
 
 ## Source Evidence (auto-scaffolded 2026-08-27)

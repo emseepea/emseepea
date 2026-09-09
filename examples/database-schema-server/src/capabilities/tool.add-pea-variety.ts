@@ -1,4 +1,4 @@
-import { defineTool, type CapabilityModuleFactory } from "@emseepea/server";
+import { defineTool, type CapabilityModuleFactory, type ToolContext } from "@emseepea/server";
 import { peaVarietyCatalog } from "../generated/public/PeaVarietyCatalog.mjs";
 import { varietySchema } from "../pea-variety.js";
 import type { DatabaseSchemaContext } from "./context.js";
@@ -8,11 +8,11 @@ const outputSchema = varietySchema;
 
 export default ((context) => defineTool({
   name: "add-pea-variety",
-  access: "public",
+  ...context.access,
   description: "Add one pea variety to the catalogue.",
   inputSchema,
   outputSchema,
-  async handler(variety, { signal }) {
+  async handler(variety, { signal }: ToolContext) {
     const database = context.database();
     if (!database) throw new Error("Variety provider unavailable");
     signal.throwIfAborted();

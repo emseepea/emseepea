@@ -3,9 +3,9 @@
 `@emseepea/server` is the Fastify-first package for building Model Context
 Protocol (MCP) `2026-07-28` servers over Streamable HTTP.
 
-It checks data when requests enter and leave the server. It supports public
-tools, tools that require sign-in, public resources and prompts, request time
-limits, and bounded progress updates. Direct tools,
+It checks data when requests enter and leave the server. It supports public and
+protected tools, resources, prompts, and completions, request time limits, and
+bounded progress updates. Direct tools,
 resources, and prompts can ask capable clients for more information. Prompt
 arguments and resource fields may also offer suggestions.
 
@@ -161,40 +161,64 @@ This is optional. Direct `app.get()`, `app.post()`, and other Fastify route
 registration continue to work. Use direct registration for routes that do not
 fit the file convention.
 
-## Measure Requests
+## Authentication and Observability
 
-Set `telemetry: true` in `createEmseepea` to record request traces, counts, and
-response times through OpenTelemetry. Leave it out to disable these measurements.
+Authentication and observability are optional extensions. The application
+factory in every initializer accepts the same `EmseepeaExtensions` type, so an
+API, database, SOAP, or UI server can add either feature without changing
+templates.
 
-Configure your OpenTelemetry providers and context manager before creating the
-app. Em See Pea does not choose an exporter or send data to a service.
+Every capability declares an access policy. Public discovery is the default,
+including when protected capabilities exist. The framework authenticates only
+protected calls in this mode.
 
-### What Gets Measured
+Set `authentication.discovery` to `"protected"` only when the catalogue itself
+is sensitive. Then every MCP request requires a valid token and list responses
+contain only capabilities allowed by the principal's permissions. OAuth
+discovery metadata remains public in both modes.
 
-Each trace covers one `/mcp` request through response completion or
-disconnection, including progress updates. Measurements report:
+```ts
+const app = createEmseepea({
+  name: "seed-inventory",
+  version: "1.0.0",
+  tools: [lookup],
+  authentication: {
+    discovery: "public",
+    verifier,
+    metadata: {
+      resourceServerUrl: new URL("https://api.example/mcp"),
+      scopesSupported: ["seeds:read"],
+      oauthMetadata,
+    },
+  },
+  observability: [
+    structuredLogging("application-log", (event) => logger.info(event)),
+    openTelemetry(),
+  ],
+});
+```
 
-- the HTTP method and status
-- the known MCP method, or `_OTHER` for unknown names
-- whether the response finished or disconnected
+The verifier must validate the token issuer, audience, expiry, intended
+resource, and permissions. The framework gives protected handlers only a
+normalized principal with `clientId`, `permissions`, and optional `resource`.
+It never gives them the token or raw provider claims. Authentication and
+authorization finish before handlers, availability checks, completion
+callbacks, or backend calls.
 
-An HTTP 200 response can still contain a tool error. These measurements describe
-the response, not whether the tool achieved its task.
+Each observability adapter receives one immutable, framework-created event per
+MCP request. Its bounded fields are the known MCP method, known capability name
+when applicable, HTTP method and status, completion outcome, and duration.
 
-### What Stays Out
+Adapters never receive request or response objects, bodies, headers, arguments,
+results, tokens, URLs, raw errors, or provider claims. Adapter failures do not
+change protocol results.
 
-The framework does not attach tool names, request data, tokens, URLs, or error
-messages. It preserves a valid active parent trace identity, but drops baggage
-and other context data. It does not read trace headers itself.
-
-### Current Limits
-
-SDK host and origin rejections happen before this measurement starts.
-Ordinary telemetry API and exporter failures do not change tool results.
-An adopter exporter that blocks the process or throws outside the telemetry
-call is not isolated.
-
-Structured logs are not included yet.
+Configure OpenTelemetry providers before calling `openTelemetry()`. Em See Pea
+does not choose an exporter or send data to a service. To flush a provider,
+include its bounded `flush` function on your adapter. `running.close()` gives
+each adapter an independent flush opportunity. Set
+`observabilityFlushTimeoutMs` in `serveEmseepea` to change the 1,000 millisecond
+default, up to 60,000 milliseconds.
 
 ## Report Dependency Readiness
 
@@ -218,28 +242,6 @@ ignores cancellation, later probes return not-ready until it settles.
 
 Readiness reports health for a load balancer or monitoring system. It does not
 block MCP calls itself. Tool handlers must still handle an unavailable backend.
-
-## Flush Measurements on Shutdown
-
-Pass `flushTelemetry` to `serveEmseepea` to flush your OpenTelemetry providers
-when the returned server's `close()` method runs. The callback receives
-`{ signal }`; it can call your providers' `forceFlush()` methods. Calling the
-Fastify app's `close()` directly does not run this callback.
-
-Shutdown uses two time limits:
-
-- `shutdownTimeoutMs`: finish existing requests, then close remaining
-  connections. The default is 5,000 milliseconds.
-- `telemetryFlushTimeoutMs`: wait for the final request measurements, then flush.
-  The default is 1,000 milliseconds; the allowed range is 1 to 60,000.
-
-The total waiting budget is the sum of those limits. The second limit applies
-only when you provide `flushTelemetry`. If final measurements are not ready in
-time, flushing is skipped. Repeated `close()` calls share the same work.
-
-Flushing is best-effort. Its errors do not change tool responses, and completion
-of `close()` does not prove that an exporter delivered data. Callbacks that block
-JavaScript or ignore cancellation cannot be forcibly stopped by the framework.
 
 ## Describe What Clients Can Show
 
@@ -268,7 +270,7 @@ audience and importance. Use `_meta` for application-specific public details.
 Em See Pea checks this metadata when the application starts and copies it, so
 later changes to the original objects have no effect. Tool annotations are
 hints for clients. They do not prove that a tool is safe, grant permission, or
-replace sign-in and authorization checks.
+replace authentication and authorization checks.
 
 ## Route with a Tool Argument
 
@@ -360,7 +362,7 @@ boundary.
 
 The client must advertise elicitation for form input or URL-mode elicitation,
 where the client opens a URL. Em See Pea applies the normal result-size limit,
-time limit, cancellation, safe-error handling, and sign-in policy to every
+time limit, cancellation, safe-error handling, and access policy to every
 round.
 
 This release supports stateless requests only. It rejects opaque
@@ -421,7 +423,7 @@ const getPeaTaxon = defineMappedTool({
 });
 ```
 
-For a read-only JSON API that does not require sign-in, use the narrow HTTP
+For a read-only JSON API that does not require backend credentials, use the narrow HTTP
 client from `@emseepea/server/http`:
 
 ```ts
@@ -568,7 +570,7 @@ Not supported yet:
 - saved sessions, replay, or subscriptions
 - recovery after reconnecting
 - slowing the producer when a client cannot keep up
-- progress from tools requiring sign-in outside local development
+- progress from protected tools outside local development
 
 See the [progress coverage and tested proxy setup](../../docs/protocol-coverage.md#progress-updates)
 for the current checks and their limits.
@@ -669,19 +671,19 @@ Suggestions are optional. When enabled, a handler receives the partial text,
 the request time limit, cancellation, and registered string arguments. Em See
 Pea checks the returned suggestions and keeps at most the first 100.
 
-Suggestions are public even when some tools require sign-in. Return only text
-that is safe for anyone to discover.
+Completion inherits the access policy of its prompt or resource template.
+With public discovery, return suggestions that are safe to expose in that
+catalogue. With protected discovery, the framework authenticates before the
+completion callback runs.
 
-Listing every matching address, catalogue pages without the bounds above, and
-sign-in for resources are not included yet.
+Listing every matching address and catalogue pages without the bounds above
+are not included yet.
 
 ## Tool That Requires Sign-In
 
-Tools that require sign-in declare their permissions. The framework leaves
-`server/discover` and `tools/list` open to everyone. It verifies a bearer token
-only when someone calls the restricted tool, then checks its expiry,
-permissions, and intended server. The tool receives the caller's identity, not
-the token itself.
+Protected capabilities declare their permissions. Discovery remains public by
+default. Set `authentication.discovery` to `"protected"` when capability names
+and schemas must also be hidden from principals without permission.
 
 ```ts
 const lookup = defineTool({
@@ -701,7 +703,8 @@ const app = createEmseepea({
   name: "seed-inventory",
   version: "1.0.0",
   tools: [lookup],
-  oauth: {
+  authentication: {
+    discovery: "protected",
     verifier,
     metadata: {
       resourceServerUrl: new URL("https://api.example/mcp"),
@@ -716,8 +719,7 @@ The application's token checker must verify who issued the token and stop its
 own slow network or file work. Em See Pea limits how long the request waits.
 The official MCP library cannot pass a cancellation signal to the checker.
 
-The application must decide whether the signed-in person may access each
-record.
+The application must still decide whether the principal may access each record.
 
 The HTTP client described above is only for public, read-only JSON APIs. The
 application remains responsible for backend requests that use credentials.

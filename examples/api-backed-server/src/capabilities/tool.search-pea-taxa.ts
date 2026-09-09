@@ -1,8 +1,11 @@
-import { defineMappedTool, type CapabilityModuleFactory } from "@emseepea/server";
+import { defineMappedTool, type AccessPolicy, type CapabilityModuleFactory } from "@emseepea/server";
 import type { JsonHttpClient } from "@emseepea/server/http";
 import { z } from "zod";
 
-export interface BackendExampleContext { readonly client: JsonHttpClient }
+export interface BackendExampleContext {
+  readonly client: JsonHttpClient;
+  readonly access: AccessPolicy;
+}
 
 const backendTaxon = z.object({
   id: z.number().int().positive().describe("iNaturalist identifier for the taxon."),
@@ -35,9 +38,9 @@ const backendInputSchema = z.object({
 });
 const backendOutputSchema = z.object({ request: backendInputSchema, payload: backendPayload });
 
-export default (({ client }) => defineMappedTool({
+export default (({ client, access }) => defineMappedTool({
   name: "search-pea-taxa",
-  access: "public",
+  ...access,
   description: "Search iNaturalist's public taxon catalogue for pea species.",
   inputSchema,
   outputSchema,

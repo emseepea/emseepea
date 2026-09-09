@@ -395,7 +395,7 @@ test("protected mapped tools reject authorization failures before adapter execut
     name: "protected-adapter-test",
     version: "0.0.0",
     tools: [tool],
-    oauth: {
+    authentication: {
       verifier: {
         async verifyAccessToken() {
           verifierCalls += 1;

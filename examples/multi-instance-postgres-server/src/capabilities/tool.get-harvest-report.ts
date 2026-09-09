@@ -1,4 +1,4 @@
-import { defineTool, type CapabilityModuleFactory } from "@emseepea/server";
+import { defineTool, type CapabilityModuleFactory, type ToolContext } from "@emseepea/server";
 import { z } from "zod";
 import { reportKeySchema, reportSchema } from "../harvest-report.js";
 import type { MultiInstanceContext } from "./context.js";
@@ -12,11 +12,11 @@ const outputSchema = z.object({
 
 export default ((context) => defineTool({
   name: "get-harvest-report",
-  access: "public",
+  ...context.access,
   description: "Get the pea harvest report for a garden bed and date.",
   inputSchema,
   outputSchema,
-  async handler({ gardenBed, harvestDate }, { signal }) {
+  async handler({ gardenBed, harvestDate }, { signal }: ToolContext) {
     const database = context.database();
     if (!database) throw new Error("Report provider unavailable");
     signal.throwIfAborted();

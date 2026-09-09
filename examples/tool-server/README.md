@@ -4,8 +4,8 @@ This directory is both the maintained example and its public npm initializer.
 
 ## Use This Template
 
-Use this template for the smallest server with one public, read-only tool and
-no external service, sign-in, web page, progress stream, or shared storage.
+Use this template for the smallest server with one read-only tool and no
+external service, web page, progress stream, or shared storage.
 Choose the [API-backed server](../api-backed-server/README.md) when the tool
 must call a public web service. [Compare all templates](https://emseepea.github.io/emseepea/examples/).
 
@@ -16,6 +16,30 @@ npm init @emseepea/tool-server -- my-server
 ```
 
 <!-- generated-project-readme -->
+
+## Choose Open or Protected Access
+
+Start open when the catalogue and operations are public.
+
+To protect this template, pass both options to the app factory:
+
+- `access: { access: "protected", requiredScopes: ["peas:read"] }`
+- an `authentication` adapter
+
+Keep `authentication.discovery` as `"public"` unless capability names or
+schemas are sensitive. Use `"protected"` only when each principal should see a
+permission-filtered catalogue. OAuth metadata remains public in both modes.
+
+## Add Observability
+
+The same factory accepts `observability`.
+
+- Use `structuredLogging` for safe structured events.
+- Use `openTelemetry` for traces and metrics.
+
+Adapters receive only redacted framework events. They never receive request
+bodies, arguments, results, tokens, provider claims, or raw errors. See the
+[server API](https://github.com/emseepea/emseepea/tree/main/packages/framework#authentication-and-observability) for the complete configuration.
 
 ## Your First Public Tool
 
@@ -33,8 +57,9 @@ See Pea checks the input and result before returning them through the public
 - checks for tool input and output
 - local use on your computer only
 
-It does not include sign-in, saved sessions, live progress, changes to data, or
-production network setup.
+It does not include saved sessions, live progress, changes to data, or
+production network setup. The protected-access test shows how to add an
+application-supplied authentication adapter.
 
 ## Run
 
@@ -66,5 +91,10 @@ Check that Claude chooses the variety tool and understands its result:
 ```sh
 npm run test:llm
 ```
+
+The semantic suite also checks that protected discovery offers the tool to a
+permitted principal and does not offer it to a principal without permission.
+Those two authorization cases assert native tool selection only, so they do not
+pay for unrelated answer-meaning judgments.
 
 If Claude is not already signed in, run `claude auth login` first.

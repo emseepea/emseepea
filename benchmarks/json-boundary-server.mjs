@@ -1,5 +1,5 @@
 import { Session } from "node:inspector";
-import { createEmseepea, defineMappedTool, serveEmseepea } from "@emseepea/server";
+import { createEmseepea, defineMappedTool, openTelemetry, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
 const tool = defineMappedTool({
@@ -16,7 +16,7 @@ const tool = defineMappedTool({
 });
 const app = createEmseepea({
   name: "emseepea-benchmark", version: "0.0.0", tools: [tool],
-  telemetry: process.argv.includes("--telemetry"),
+  observability: process.argv.includes("--observability") ? [openTelemetry()] : undefined,
 });
 const running = await serveEmseepea(app, { port: 0 });
 let cpuStart;

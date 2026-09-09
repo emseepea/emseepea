@@ -51,7 +51,7 @@ test("production rejects signed-in streaming even with valid OAuth configuration
   });
   assert.throws(() => createEmseepea({
     name: "signed-in-stream-test", version: "0.0.0", tools: [tool],
-    oauth: {
+    authentication: {
       verifier: { async verifyAccessToken() { throw new Error("must not be called"); } },
       metadata: {
         resourceServerUrl: new URL("https://api.example/mcp"),
@@ -315,7 +315,7 @@ test("authorization finishes before protected streaming begins", async () => {
     name: "protected-streaming",
     version: "0.0.0",
     tools: [tool],
-    oauth: {
+    authentication: {
       verifier: {
         async verifyAccessToken() {
           throw new OAuthError(OAuthErrorCode.InvalidToken, "invalid");

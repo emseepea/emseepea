@@ -72,7 +72,8 @@ Accessibility Guidelines (WCAG) conformance.
 - Public discovery and public tools must prove that bearer headers neither
   invoke the verifier nor create an authenticated handler context.
 - Public resources and prompts must prove that listing and invocation remain
-  verifier-free and identity-free, including when OAuth is configured.
+  verifier-free and identity-free, including when authentication is configured
+  with public discovery.
 - Public resource templates must additionally prove exact catalogue metadata,
   URI-variable extraction, matching reads, and zero calls for unmatched or
   malformed URIs.
@@ -90,6 +91,10 @@ Accessibility Guidelines (WCAG) conformance.
 - Protected calls must prove failure before handler execution for missing,
   invalid, expired, insufficient-scope, wrong-resource, and timed-out
   verification outcomes.
+- Every maintained initializer must prove its open default and composition with
+  protected access and one framework-redacted observability adapter. Protected
+  discovery tests must prove permission-shaped listings and authorization
+  before application or backend work.
 - Keep tests outside production packages, but include their JavaScript and
   TypeScript in runnable or static quality checks.
 - Add a contract check only when a public artifact exists; do not create a

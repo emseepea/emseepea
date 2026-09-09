@@ -36,6 +36,7 @@ test("advertised MCP metadata is complete, checked, and copied", async () => {
     handler: ({ name }) => ({ text: `${name} is from Burundi.`, data: { origin: "Burundi" } }),
   });
   const resource = defineResource({
+    access: "public",
     name: "bean-report",
     uri: "report://coffee/beans",
     title: "Bean report",
@@ -48,6 +49,7 @@ test("advertised MCP metadata is complete, checked, and copied", async () => {
     handler: () => ({ contents: [{ uri: "report://coffee/beans", text: "Three beans" }] }),
   });
   const template = defineResourceTemplate({
+    access: "public",
     name: "origin-report",
     uriTemplate: "report://coffee/origins/{origin}",
     title: "Origin report",
@@ -57,6 +59,7 @@ test("advertised MCP metadata is complete, checked, and copied", async () => {
     handler: ({ uri }) => ({ contents: [{ uri, text: "Origin report" }] }),
   });
   const prompt = definePrompt({
+    access: "public",
     name: "brew-guide",
     title: "Brew guide",
     description: "Create a brew guide.",
@@ -147,30 +150,35 @@ test("invalid MCP metadata fails during definition or server creation", () => {
     handler: () => ({ text: "no", data: {} }),
   }), /Tool metadata does not match/);
   assert.throws(() => defineResource({
+    access: "public",
     name: "bad-annotations",
     uri: "report://coffee/bad-annotations",
     annotations: { audience: ["server"] },
     handler: () => ({ contents: [] }),
   }), /Resource metadata does not match/);
   assert.throws(() => defineResourceTemplate({
+    access: "public",
     name: "bad-priority",
     uriTemplate: "report://coffee/{origin}",
     annotations: { priority: 2 },
     handler: () => ({ contents: [] }),
   }), /ResourceTemplate metadata does not match/);
   assert.throws(() => definePrompt({
+    access: "public",
     name: "bad-meta",
     _meta: { "com.example/value": 1n },
     argsSchema: z.object({}),
     handler: () => ({ messages: [] }),
   }), /Prompt metadata must be JSON data/);
   assert.throws(() => definePrompt({
+    access: "public",
     name: "lossy-meta",
     _meta: { "com.example/value": Number.NaN },
     argsSchema: z.object({}),
     handler: () => ({ messages: [] }),
   }), /Prompt metadata must be JSON data/);
   assert.throws(() => definePrompt({
+    access: "public",
     name: "lossy-array-meta",
     _meta: { "com.example/value": arrayWithExtraData },
     argsSchema: z.object({}),

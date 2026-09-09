@@ -30,6 +30,28 @@ never production. Resources and prompts need deterministic protocol tests;
 this library does not pretend that manually injecting their content proves a
 native user journey.
 
+## Test Extension Composition
+
+Use `startEmseepea` in ordinary tests when you have an app factory and want to
+exercise it in the same process. `insecureTestAuthentication` supplies a small
+test-only verifier for protected-access examples:
+
+```js
+import { insecureTestAuthentication, startEmseepea } from "@emseepea/testing";
+
+const running = await startEmseepea(t, await createApp({
+  access: { access: "protected", requiredScopes: ["peas:read"] },
+  authentication: insecureTestAuthentication(["peas:read"]),
+  observability: [{ id: "test", emit: (event) => events.push(event) }],
+}), { token: "test-token" });
+
+const client = await running.connect();
+```
+
+Never deploy `insecureTestAuthentication`. It accepts any supplied bearer token
+and exists only to keep ordinary tests focused on composition and authorization
+flow. Test a real verifier separately against its provider contract.
+
 When a conversation writes to external state, pass an `environment` function
 that returns a separate test database connection for each trial. The trial
 number selects infrastructure only. It is never sent to the model or MCP

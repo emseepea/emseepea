@@ -33,8 +33,8 @@ const headers = {
 };
 let nextMessageId = 0;
 
-const telemetry = process.argv.includes("--telemetry");
-const child = fork(fileURLToPath(new URL("./json-boundary-server.mjs", import.meta.url)), telemetry ? ["--telemetry"] : [], {
+const observabilityEnabled = process.argv.includes("--observability");
+const child = fork(fileURLToPath(new URL("./json-boundary-server.mjs", import.meta.url)), observabilityEnabled ? ["--observability"] : [], {
   execArgv: ["--expose-gc"],
   stdio: ["ignore", "inherit", "inherit", "ipc"],
 });
@@ -87,7 +87,7 @@ try {
 
   const result = {
     profile: {
-      telemetry: telemetry ? "enabled, no provider (API overhead only)" : "disabled",
+      observability: observabilityEnabled ? "OpenTelemetry adapter, no exporter" : "disabled",
       node: process.version,
       profileName: process.env.EMSEEPEA_BENCHMARK_PROFILE ?? "local",
       platform: `${process.platform}-${process.arch}`,
