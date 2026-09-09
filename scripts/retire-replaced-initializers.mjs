@@ -20,7 +20,10 @@ export async function retireReplacedInitializers({
 } = {}) {
   for (const replacement of initializerPackages.filter(({ replaces }) => replaces)) {
     const { name, deprecation } = replacement.replaces;
-    assert.equal(typeof JSON.parse(await view(run, replacement.name, "version")), "string",
+    const replacementVersion = JSON.parse(await view(run, replacement.name, "version"));
+    const replacementVersions = Array.isArray(replacementVersion) ? replacementVersion : [replacementVersion];
+    assert.ok(replacementVersions.length > 0
+      && replacementVersions.every((version) => typeof version === "string" && version.trim()),
       `${replacement.name} must be published before ${name} is retired`);
     let versions;
     try {

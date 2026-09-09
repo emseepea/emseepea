@@ -18,7 +18,7 @@ test("accepts a replaced initializer that has already been removed", async () =>
   const run = async (command, args) => {
     calls.push([command, ...args]);
     const joined = args.join(" ");
-    if (joined.includes("create-multi-instance-postgres-server version")) return '"0.0.1"';
+    if (joined.includes("create-multi-instance-postgres-server version")) return '["0.0.1"]';
     if (joined.includes("create-multi-instance-sqlite-server versions")) throw new Error("E404");
     throw new Error(`Unexpected command: ${command} ${joined}`);
   };
@@ -60,12 +60,14 @@ test("does not mistake registry failures for package removal", async () => {
 });
 
 test("does not mutate npm when the replacement is not published", async () => {
-  const calls = [];
-  await assert.rejects(
-    () => retireReplacedInitializers({
-      run: async (command, args) => { calls.push([command, ...args]); return "null"; },
-    }),
-    /must be published/,
-  );
-  assert.equal(calls.some(([, first]) => first === "deprecate"), false);
+  for (const response of ["null", "[]", '[""]', '["0.0.1",null]']) {
+    const calls = [];
+    await assert.rejects(
+      () => retireReplacedInitializers({
+        run: async (command, args) => { calls.push([command, ...args]); return response; },
+      }),
+      /must be published/,
+    );
+    assert.equal(calls.some(([, first]) => first === "deprecate"), false);
+  }
 });
