@@ -174,6 +174,8 @@ finding remains.
 
 - `.changeset/protected-proxy-progress.md`
   SHA-256: `35440562fb087e35334b460d2fa876f21887fc2f2f920f6439a5cd8519d5d87a`
+- `.github/workflows/release.yml`
+  SHA-256: `b104b94edde9ef515dd27119578ec2255cfb93bc8cbb92fc4a596d5aac671c32`
 - `README.md`
   SHA-256: `d45371772ed18fbc5348d503896c06daf318e18d516e1b6da3985917fabdc4cf`
 - `docs/decisions/0030-public-post-progress-behind-a-trusted-proxy.superseded.md`

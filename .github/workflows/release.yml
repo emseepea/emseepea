@@ -183,7 +183,8 @@ jobs:
           - Supported slice:
             - Fastify-first MCP 2026-07-28 server
             - JSON operations
-            - checked, bounded public POST progress through a trusted proxy
+            - checked, bounded public and protected POST progress through a trusted proxy
+            - the framework authenticates and authorizes protected calls before application code runs or server-sent events begin
             - public and protected tools, resources, prompts, and completions
             - public discovery by default and explicit permission-shaped protected discovery
             - checked mapped adapters
@@ -205,7 +206,6 @@ jobs:
             - changing catalogues while a server runs
             - object or tenant authorization
             - general or authenticated outbound HTTP policy, retries, or effects
-            - deployed protected streaming tools
             - transport backpressure and queue overflow
             - resynchronisation, subscriptions, replay, sessions, and framework-managed shared state
             - website deployment

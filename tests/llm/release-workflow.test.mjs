@@ -126,6 +126,17 @@ test("publication evidence uses the canonical public package list", () => {
   assert.doesNotMatch(workflow, /SERVER_RELEASE_SHA|TESTING_RELEASE_SHA/);
 });
 
+test("publication evidence describes the protected progress boundary", () => {
+  assert.match(
+    workflow,
+    /checked, bounded public and protected POST progress through a trusted proxy/,
+  );
+  assert.match(workflow, /the framework authenticates and authorizes protected calls before application code runs or server-sent events begin/);
+  assert.doesNotMatch(workflow, /deployed protected streaming tools/);
+  assert.match(workflow, /transport backpressure and queue overflow/);
+  assert.match(workflow, /resynchronisation, subscriptions, replay, sessions, and framework-managed shared state/);
+});
+
 test("registry tarball downloads retry bounded propagation failures", async () => {
   let calls = 0;
   let waits = 0;
