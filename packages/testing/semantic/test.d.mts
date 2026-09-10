@@ -32,6 +32,8 @@ export function createConversation(
 
 export function assertToolCalls(turn: ConversationTurn, expected: readonly ToolCall[]): void;
 export function assertNoToolCalls(turn: ConversationTurn): void;
+/** Allows no tool call or exactly one call to the named tool in each trial. */
+export function assertOptionalToolCall(turn: ConversationTurn, name: string): void;
 export function assertToolNames(turn: ConversationTurn, expected: readonly string[]): void;
 export function assertToolArguments(
   turn: ConversationTurn,

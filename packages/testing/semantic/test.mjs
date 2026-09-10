@@ -191,6 +191,21 @@ export function assertNoToolCalls(turn) {
   assertToolCalls(turn, []);
 }
 
+export function assertOptionalToolCall(turn, name) {
+  const trials = turnTrials(turn);
+  if (typeof name !== "string" || !name.trim()) {
+    throw new Error("Optional tool-call expectation needs a tool name");
+  }
+  for (const trial of trials) {
+    trial.record.expectedOptionalTool = name;
+    trial.record.expectedSelectionSha256 = hash(JSON.stringify({ optionalTool: name }));
+    if (trial.calls.length > 1 || (trial.calls.length === 1 && trial.calls[0].name !== name)) {
+      failAssertion([trial], "optional tool-call assertion");
+      throw new Error(`Expected no tool call or one ${name} call`);
+    }
+  }
+}
+
 export function assertToolNames(turn, expected) {
   const trials = turnTrials(turn);
   if (!Array.isArray(expected) || expected.some((name) => typeof name !== "string" || !name.trim())) {
@@ -416,7 +431,8 @@ async function closeConversation(state, evidence, output) {
   }));
   const complete = !state.failed && state.meaningAssertions > 0 && evidence.answerTrials.length === 3
     && evidence.answerTrials.every(({ turns }) => turns.length > 0
-      && turns.every((turn) => Array.isArray(turn.expectedTools)));
+      && turns.every((turn) => Array.isArray(turn.expectedTools)
+        || typeof turn.expectedOptionalTool === "string"));
   if (complete) {
     evidence.status = "passed";
   } else if (!evidence.failedPhase) {

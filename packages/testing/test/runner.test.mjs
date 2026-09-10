@@ -189,11 +189,14 @@ if (!process.argv.includes("--input-format")) {
     literal = "85 packets available to promise",
     serverUrl = protectedServer,
     expectedCalls,
+    firstOptionalTool,
+    followUpOptionalTool,
   } = {}) => `
 import test from "node:test";
 import {
   assertNoNegativeFeedback,
   assertNoToolCalls,
+  assertOptionalToolCall,
   assertResponseContains,
   assertResponseMeaning,
   assertToolCalls,
@@ -207,14 +210,18 @@ test("inventory conversation", async (t) => {
     ${context === undefined ? "" : `context: ${JSON.stringify(context)},`}
   });
   const inventory = await chat.send("How many packets can we promise now?");
-  assertToolCalls(inventory, ${JSON.stringify(expectedCalls ?? [{
-    name: "get-private-inventory-report",
-    arguments: expectedArguments,
-  }])});
+  ${firstOptionalTool
+    ? `assertOptionalToolCall(inventory, ${JSON.stringify(firstOptionalTool)});`
+    : `assertToolCalls(inventory, ${JSON.stringify(expectedCalls ?? [{
+      name: "get-private-inventory-report",
+      arguments: expectedArguments,
+    }])});`}
   ${firstResponseAssertions ? `assertResponseContains(inventory, ${JSON.stringify(literal)});` : ""}
 
   const followUp = await chat.send("How many packets were inbound?");
-  assertNoToolCalls(followUp);
+  ${followUpOptionalTool
+    ? `assertOptionalToolCall(followUp, ${JSON.stringify(followUpOptionalTool)});`
+    : "assertNoToolCalls(followUp);"}
   assertResponseContains(followUp, "40 inbound packets");
   assertNoNegativeFeedback(inventory, followUp);
   ${followUpMeaning ? `await assertResponseMeaning(followUp, { expected: ${JSON.stringify(followUpMeaning)} });` : ""}
@@ -295,7 +302,28 @@ test("inventory conversation", async (t) => {
     tools.length === 1 && Object.keys(config.mcpServers).join() === "emseepea_eval"
       && hasJsonSchema === false && hasServerToken === true));
 
-  const contextStart = invocations.length;
+  await writeFile(file, source({
+    firstOptionalTool: "get-private-inventory-report",
+    followUpOptionalTool: "get-private-inventory-report",
+  }));
+  const optional = run();
+  assert.equal(optional.status, 0, optional.stdout + optional.stderr);
+  const optionalEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+  assert.ok(optionalEvidence.answerTrials.every(({ turns }) =>
+    turns[0].expectedOptionalTool === "get-private-inventory-report"
+      && turns[0].toolCallCount === 1
+      && turns[1].expectedOptionalTool === "get-private-inventory-report"
+      && turns[1].toolCallCount === 0));
+
+  await writeFile(file, source({ firstOptionalTool: "get-pea-variety" }));
+  const unexpectedOptional = run();
+  assert.equal(unexpectedOptional.status, 1, "A different optional tool must fail");
+  assert.equal(
+    Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0].failedPhase,
+    "optional tool-call assertion",
+  );
+
+  const contextStart = (await readFile(modelLog, "utf8")).trim().split("\n").length;
   await writeFile(file, source({ context: "CONTEXT_MARKER" }));
   const contextual = run();
   assert.equal(contextual.status, 0, contextual.stdout + contextual.stderr);
@@ -357,6 +385,13 @@ test("inventory conversation", async (t) => {
   }));
   const reversed = run();
   assert.equal(reversed.status, 1, "Reversed tool-call order must fail");
+  await writeFile(file, source({
+    context: "TWO_ORDERED_CALLS",
+    serverUrl: server,
+    firstOptionalTool: "get-pea-variety",
+  }));
+  const duplicateOptional = run();
+  assert.equal(duplicateOptional.status, 1, "Duplicate optional tool calls must fail");
 
   await writeFile(file, source({ meaning: "REJECT_THIS_RESPONSE" }));
   const rejected = run();

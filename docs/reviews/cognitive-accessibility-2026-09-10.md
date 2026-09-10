@@ -1,5 +1,19 @@
 # Cognitive Accessibility Review, 10 September 2026
 
+## Optional Feedback Semantic Assertion
+
+Result: PASS. Independent cognitive-accessibility and Markdown accessibility
+reviews covered the exact release note and public testing guidance. The text
+limits optional feedback to deliberately unsuccessful journeys and keeps
+successful journeys subject to exact tool and negative-feedback assertions.
+
+- `.changeset/brave-peas-answer.md`
+  SHA-256: `e2e59c76b8f205aeb10daf3a8ec1ef5ff2ca42a0c792dc4b6825480eba3d7f0a`
+- `packages/testing/README.md`
+  SHA-256: `cbfeab675e46dc5e9cfef53bdb87f4b0de34cfc3a50b3293bcf1c57ec999966c`
+- `website/src/content/docs/ai-tests.md`
+  SHA-256: `db2878ac78ee9a9e2f670c6bd74504f413faacb5d49441694d7574c6d076a37f`
+
 ## Optional Feedback Capability
 
 Result: PASS. Independent accessibility and cognitive-accessibility reviews

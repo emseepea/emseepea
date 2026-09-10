@@ -19,6 +19,10 @@ it with `assertToolArguments` for the stable call and `assertFeedback` for the
 feedback observation and important detail. Keep `assertToolCalls` when every
 complete argument should match exactly.
 
+Use `assertOptionalToolCall(turn, "submit-feedback")` only for a deliberately
+unsuccessful journey where feedback is valid but not required. It accepts no
+call or one feedback call and rejects duplicate feedback or any other tool.
+
 For a successful application journey that advertises `submit-feedback`, call
 `assertNoNegativeFeedback(...turns)` once after its normal assertions. It fails
 if the AI records an error, friction, annoyance, unnecessary difficulty,

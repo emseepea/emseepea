@@ -102,6 +102,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
       import { startMcpServer } from "@emseepea/testing";
       import {
         assertNoToolCalls,
+        assertOptionalToolCall,
         assertResponseContains,
         assertResponseMeaning,
         assertToolCalls,
@@ -111,6 +112,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
 
       if (typeof startMcpServer !== "function" || typeof createConversation !== "function"
           || typeof assertToolCalls !== "function" || typeof assertNoToolCalls !== "function"
+          || typeof assertOptionalToolCall !== "function"
           || typeof assertResponseContains !== "function"
           || typeof assertResponseMeaning !== "function") {
         throw new Error("packed testing package is missing its public helpers");
@@ -293,7 +295,6 @@ test("every packed initializer creates a standalone checked project", {
       "multi-instance-postgres-server": [["save-harvest-report"], ["get-harvest-report"]],
       "progress-streaming-server": [["run-germination-trial"], []],
       "react-ui-server": [["preview-planting-plan"], []],
-      "resources-and-prompts-server": [[]],
       "soap-backed-server": [["get-pea-variety"]],
       "tool-server": [
         ["get-pea-variety"],
@@ -407,6 +408,15 @@ test("every packed initializer creates a standalone checked project", {
       assert.equal(result.judgeVerdicts.length, initializer.example === "mongodb-backed-server" ? 18 : 9);
       assert.equal(result.mode, "conversation");
       for (const trial of result.answerTrials) {
+        if (initializer.example === "resources-and-prompts-server") {
+          assert.equal(trial.turns.length, 1);
+          assert.equal(trial.turns[0].interactionMode, "native-mcp");
+          assert.equal(trial.turns[0].expectedOptionalTool, "submit-feedback");
+          assert.equal(trial.turns[0].advertisedToolCount, 1);
+          assert.equal(trial.turns[0].toolCallCount, 0);
+          assert.equal(trial.turns[0].pathEvidence.length, 0);
+          continue;
+        }
         const expectedTurns = expectedToolsByTurn[initializer.example];
         assert.ok(expectedTurns, `missing smoke expectations for ${initializer.example}`);
         assert.equal(trial.turns.length, expectedTurns.length);
@@ -414,11 +424,6 @@ test("every packed initializer creates a standalone checked project", {
           assert.equal(trial.turns[index].interactionMode, "native-mcp");
           assert.deepEqual(trial.turns[index].expectedTools, expectedTools);
           assert.deepEqual(trial.turns[index].selectedTools, expectedTools);
-        }
-        if (initializer.example === "resources-and-prompts-server") {
-          assert.equal(trial.turns[0].advertisedToolCount, 1);
-          assert.equal(trial.turns[0].toolCallCount, 0);
-          assert.equal(trial.turns[0].pathEvidence.length, 0);
         }
         assert.ok(trial.turns.every(({ expectedNegativeFeedback, negativeFeedbackCalls }) =>
           expectedNegativeFeedback === false && negativeFeedbackCalls.length === 0));

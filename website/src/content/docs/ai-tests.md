@@ -85,6 +85,12 @@ call count. `assertNoToolCalls` checks that a turn used the existing conversatio
 without making another call. `assertResponseContains` accepts literal strings
 only. Put alternative wording and numerical meaning in `assertResponseMeaning`.
 
+Use `assertOptionalToolCall(turn, "submit-feedback")` only for a deliberately
+unsuccessful journey where feedback is valid but not required. It accepts no
+call or one feedback call, while rejecting duplicate feedback and every other
+tool. Successful journeys should instead use exact tool assertions and
+`assertNoNegativeFeedback`.
+
 The optional `context` setting represents real application context. It is absent
 by default so test guidance cannot bias the model. Use it only when the deployed
 application supplies the same context.

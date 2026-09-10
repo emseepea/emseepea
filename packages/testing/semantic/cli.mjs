@@ -125,9 +125,10 @@ function validRecord(record, authoritative, smoke) {
       && isHash(turn.promptSha256) && isHash(turn.answerSha256)
       && isHash(turn.advertisedToolsSha256) && isHash(turn.selectedCallsSha256)
       && Array.isArray(turn.toolCalls)
+      && JSON.stringify(turn.selectedTools)
+        === JSON.stringify(turn.toolCalls.map(({ name }) => name))
       && validToolAssertions(turn, isHash)
       && turn.toolCalls.every((call) => Object.hasOwn(call, "result"))
-      && JSON.stringify(turn.selectedTools) === JSON.stringify(turn.expectedTools)
       && Array.isArray(turn.pathEvidence) && turn.pathEvidence.length === turn.toolCallCount
       && turn.pathEvidence.every(({ method, target, requestSha256, responseSha256 }) =>
         method === "tools/call" && turn.selectedTools.includes(target)
@@ -135,6 +136,15 @@ function validRecord(record, authoritative, smoke) {
 }
 
 function validToolAssertions(turn, isHash) {
+  if (typeof turn.expectedOptionalTool === "string" && turn.expectedOptionalTool.trim()) {
+    const expectedHash = createHash("sha256").update(JSON.stringify({
+      optionalTool: turn.expectedOptionalTool,
+    })).digest("hex");
+    return expectedHash === turn.expectedSelectionSha256
+      && (turn.toolCalls.length === 0
+        || (turn.toolCalls.length === 1 && turn.toolCalls[0].name === turn.expectedOptionalTool));
+  }
+  if (JSON.stringify(turn.selectedTools) !== JSON.stringify(turn.expectedTools)) return false;
   if (isHash(turn.expectedCallsSha256)) {
     return JSON.stringify(turn.toolCalls.map(({ name, arguments: args }) => ({ name, arguments: args })))
       === JSON.stringify(turn.expectedCalls);

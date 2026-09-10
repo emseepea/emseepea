@@ -54,7 +54,7 @@ test("protected discovery offers a permitted tool", async (t) => {
   const chat = await createConversation(t, {
     server: protectedServer,
     authToken: "test-token",
-    environment: { TEST_PERMISSIONS: "varieties:read" },
+    environment: { TEST_PERMISSIONS: "varieties:read,feedback:write" },
   });
 
   // This one answer check confirms that protected discovery still supports a

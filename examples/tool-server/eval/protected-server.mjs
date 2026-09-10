@@ -5,7 +5,8 @@ import { createToolServer } from "../dist/app.js";
 
 const permissions = process.env.TEST_PERMISSIONS?.split(",").filter(Boolean) ?? [];
 const feedback = defineFeedbackSubmission({
-  access: "public",
+  access: "protected",
+  requiredScopes: ["feedback:write"],
   backend: { submit: () => ({ id: crypto.randomUUID(), recordedAt: new Date().toISOString() }) },
 });
 const app = await createToolServer({
