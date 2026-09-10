@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/feedback",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Optional detailed feedback and support conversations for Em See Pea servers",
   "license": "MIT",
   "repository": {
