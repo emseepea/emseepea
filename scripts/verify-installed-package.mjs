@@ -7,6 +7,7 @@ import {
   defineResourceTemplate,
   defineStreamingTool,
   defineTool,
+  notifyResourceUpdated,
   renderElicitationForm,
   serveEmseepea,
 } from "@emseepea/server";
@@ -103,8 +104,11 @@ const app = createEmseepea({
   additionalTools: [feedback],
   resources: [resource, resourceTemplate],
   prompts: [prompt],
+  resourceSubscriptions: { maxLifetimeMs: 5_000 },
 });
 const running = await serveEmseepea(app, { port: 0 });
+const subscriptionController = new AbortController();
+let subscriptionReader;
 const request = async (method, params = {}) => {
   const response = await fetch(running.url, {
     method: "POST",
@@ -174,6 +178,42 @@ try {
       throw new Error("installed package did not complete its public definition");
     }
   }
+  const subscription = await fetch(running.url, {
+    method: "POST",
+    signal: AbortSignal.any([subscriptionController.signal, AbortSignal.timeout(5_000)]),
+    headers: {
+      Accept: "application/json, text/event-stream",
+      "Content-Type": "application/json",
+      "MCP-Protocol-Version": "2026-07-28",
+      "Mcp-Method": "subscriptions/listen",
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: crypto.randomUUID(),
+      method: "subscriptions/listen",
+      params: {
+        notifications: { resourceSubscriptions: [resourceUri] },
+        _meta: {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientInfo": { name: "release-smoke", version: "0.0.0" },
+          "io.modelcontextprotocol/clientCapabilities": {},
+        },
+      },
+    }),
+  });
+  if (!subscription.ok || !subscription.headers.get("content-type")?.startsWith("text/event-stream")) {
+    throw new Error("installed package did not open a resource subscription");
+  }
+  subscriptionReader = subscription.body.getReader();
+  const acknowledged = await nextSseMessage(subscriptionReader);
+  if (acknowledged.method !== "notifications/subscriptions/acknowledged") {
+    throw new Error("installed package did not acknowledge its resource subscription");
+  }
+  notifyResourceUpdated(app, resourceUri);
+  const updated = await nextSseMessage(subscriptionReader);
+  if (updated.method !== "notifications/resources/updated" || updated.params?.uri !== resourceUri) {
+    throw new Error("installed package did not deliver its resource update");
+  }
   const streamed = await fetch(running.url, {
     method: "POST",
     headers: {
@@ -206,5 +246,22 @@ try {
     throw new Error("installed package did not stream progress and its final result");
   }
 } finally {
+  subscriptionController.abort();
+  await subscriptionReader?.cancel().catch(() => {});
   await running.close();
+}
+
+async function nextSseMessage(reader) {
+  const decoder = new TextDecoder();
+  let pending = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) throw new Error("installed package resource subscription ended early");
+    pending += decoder.decode(value, { stream: true });
+    const boundary = pending.indexOf("\n\n");
+    if (boundary === -1) continue;
+    const data = pending.slice(0, boundary).split("\n").find((line) => line.startsWith("data: "));
+    if (data) return JSON.parse(data.slice(6));
+    pending = pending.slice(boundary + 2);
+  }
 }
