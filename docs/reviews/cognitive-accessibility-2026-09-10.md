@@ -14,6 +14,8 @@ accessibility finding remains.
 
 - `.changeset/friendly-peas-listen.md`
   SHA-256: `25779a407477a1e0db188dbe96bd13be633e8f00cff232f0ce58eb9df973f405`
+- `.changeset/tidy-peas-wait.md`
+  SHA-256: `ff3a3312d9b6cc1d300cd27f8b3ec8e7a230057da6ca62710ac3fe0b28c74899`
 - `QUALITY.md`
   SHA-256: `7113617e1c3ee0276c02d1f908315e7ea771baebe15c14233822d061e6e58d26`
 - `README.md`
