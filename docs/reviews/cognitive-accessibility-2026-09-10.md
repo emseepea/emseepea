@@ -1,5 +1,21 @@
 # Cognitive Accessibility Review, 10 September 2026
 
+## Resource Catalogue Boundaries
+
+Result: PASS. Architecture, voice and tone, and Markdown accessibility reviews
+covered the exact public guidance. The wording separates catalogue metadata,
+application record search, and resource reading. It uses short paragraphs,
+descriptive headings and links, exact MCP method names, and no visual-only cues.
+
+- `README.md`
+  SHA-256: `a9657a5a921acdead8df8844277b75aa243b69f2a4c907e27e6dfa2ae2890884`
+- `docs/protocol-coverage.md`
+  SHA-256: `28929ee1723b60dbc0861010a01640d1ebfa6daac17fe203c4556e924dee1dcd`
+- `packages/framework/README.md`
+  SHA-256: `37755c754845306268cb8e2943b30dc04e00041d8ba7ce500a2ab2d12968aec3`
+- `website/src/content/docs/examples.md`
+  SHA-256: `9fd4b1101d4afdd40235313369c962900eb76ff605dbb18066a1cc0db84a5598`
+
 ## Optional Feedback Semantic Assertion
 
 Result: PASS. Independent cognitive-accessibility and Markdown accessibility

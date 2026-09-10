@@ -311,6 +311,9 @@ they signed in, grant permission, or protect a secret.
 Split long tool, resource, resource-address, and prompt lists into pages by
 adding one option to the server:
 
+This option pages the registered catalogue metadata. It does not page through
+application records or expand a resource template.
+
 ```ts
 const app = createEmseepea({
   name: "pea-guide",
@@ -659,6 +662,10 @@ const app = createEmseepea({
   },
 });
 ```
+
+The `resources` definitions populate the static-resource and resource-template
+catalogues. Their list methods do not query application records or return
+resource contents. See [when to provide a list or search tool](https://emseepea.github.io/emseepea/examples/#share-reference-material-and-prompts).
 
 ## Tell Clients When They May Reuse Results
 
