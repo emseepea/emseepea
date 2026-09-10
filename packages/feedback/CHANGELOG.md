@@ -1,5 +1,12 @@
 # @emseepea/feedback
 
+## 0.1.1
+
+### Patch Changes
+
+- [`3cd2cad`](https://github.com/emseepea/emseepea/commit/3cd2cadba6fdff8cc6aa7059a5135364a2d8a96b) Thanks [@tompahoward](https://github.com/tompahoward)! - Make AI clients state the specific feedback they recorded, and keep the native
+  semantic checks focused on the observation rather than incidental wording.
+
 ## 0.1.0
 
 ### Minor Changes

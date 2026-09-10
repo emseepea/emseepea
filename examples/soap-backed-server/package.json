@@ -20,7 +20,7 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/feedback": "0.1.0",
+    "@emseepea/feedback": "0.1.1",
     "@emseepea/server": "0.5.0",
     "soap": "1.11.0",
     "xml-xsd-engine": "1.7.3",
