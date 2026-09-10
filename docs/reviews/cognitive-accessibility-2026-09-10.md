@@ -1,5 +1,28 @@
 # Cognitive Accessibility Review, 10 September 2026
 
+## Capability Discovery Suppression
+
+Result: PASS. Codex reviewed the exact changed public Markdown using the
+repository's Markdown accessibility workflow and cognitive-accessibility
+checks. The wording uses descriptive headings, short paragraphs, a numbered
+retirement sequence, and consistent terms for visible, hidden-but-callable,
+permission-hidden, disabled, and removed states. The code block has a language
+label. There are no images, tables, diagrams, emoji, visual-only instructions,
+or inaccessible links. No blocking accessibility finding remains.
+
+- `.changeset/quiet-peas-retire.md`
+  SHA-256: `398b68754974e8d67b38774efabb178d322d0d97016599a48997c8f3bb1890a8`
+- `docs/decisions/0067-capability-local-static-discovery-suppression.proposed.md`
+  SHA-256: `f98c664039276ddf107914d7fd62de34b0e993d81b65428303c3bf55ea35968f`
+- `docs/decisions/README.md`
+  SHA-256: `6889933fbceb2ad33a549ab94f29da8c6939dfbeb92a06b8b926235eb0815037`
+- `docs/protocol-coverage.md`
+  SHA-256: `e80df7f16128a053a734e760c4a12b83e49170e4f7209e494ba89cfe636cbe42`
+- `packages/framework/README.md`
+  SHA-256: `a0360114a8e2fb1bd8e94667e7fdd2aef46646e25043fa81707f2526c8732b4e`
+- `website/src/content/docs/examples.md`
+  SHA-256: `d94be26646dbca74a873667530a614bc66056cb95663f5ad887d31b9a0c88bd3`
+
 ## Resource Catalogue Boundaries
 
 Result: PASS. Architecture, voice and tone, and Markdown accessibility reviews

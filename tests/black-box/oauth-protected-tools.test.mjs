@@ -277,6 +277,16 @@ test("protected discovery authenticates first and exposes only permitted capabil
     handler: () => ({ data: { kind: "public" } }),
   });
   const protectedBean = protectedTool(() => { protectedCalls += 1; });
+  const retiringBean = defineTool({
+    name: "retiring-bean",
+    access: "protected",
+    requiredScopes: ["beans:read"],
+    discoverable: false,
+    description: "Return a protected retiring bean.",
+    inputSchema: z.object({ id: z.string() }),
+    outputSchema: z.object({ id: z.string() }),
+    handler: ({ id }) => { protectedCalls += 1; return { data: { id } }; },
+  });
   const authentication = {
     discovery: "protected",
     verifier: {
@@ -304,7 +314,7 @@ test("protected discovery authenticates first and exposes only permitted capabil
   const running = await serveEmseepea(createEmseepea({
     name: "protected-discovery",
     version: "0.0.0",
-    tools: [publicBean, protectedBean],
+    tools: [publicBean, protectedBean, retiringBean],
     listPagination: { pageSize: 1 },
     authentication,
   }), { port: 0 });
@@ -329,6 +339,7 @@ test("protected discovery authenticates first and exposes only permitted capabil
       "permitted",
     );
     assert.deepEqual(permittedSecond.body.result.tools.map(({ name }) => name), ["protected-bean"]);
+    assert.equal(permittedSecond.body.result.nextCursor, undefined);
 
     const replay = await rpc(
       running.url,
@@ -348,8 +359,26 @@ test("protected discovery authenticates first and exposes only permitted capabil
     assert.deepEqual(hidden.body.error, unknown.body.error);
     assert.equal(protectedCalls, 0);
 
-    assert.equal((await protectedCall(running.url, "permitted")).response.status, 200);
+    const restrictedRetiring = await rpc(
+      running.url,
+      "tools/call",
+      { name: "retiring-bean", arguments: { id: "known" } },
+      "restricted",
+    );
+    assert.deepEqual(restrictedRetiring.body.error, unknown.body.error);
+    assert.equal(protectedCalls, 0);
+
+    const lifecycleHidden = await rpc(
+      running.url,
+      "tools/call",
+      { name: "retiring-bean", arguments: { id: "known" } },
+      "permitted",
+    );
+    assert.equal(lifecycleHidden.body.result.isError, false);
     assert.equal(protectedCalls, 1);
+
+    assert.equal((await protectedCall(running.url, "permitted")).response.status, 200);
+    assert.equal(protectedCalls, 2);
   } finally {
     await running.close();
   }

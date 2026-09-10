@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 65 decisions: 34 current and 31 historical.
+This project has 66 decisions: 35 current and 31 historical.
 
 ## Quick Index
 
@@ -45,6 +45,7 @@ This project has 65 decisions: 34 current and 31 historical.
 - [ADR-0064: Typed Authentication with Optional Permission-Shaped Discovery](0064-typed-authentication-with-optional-permission-shaped-discovery.proposed.md): Proposed; human review confirmed.
 - [ADR-0065: Typed Operations with Framework-Redacted Observability Adapters](0065-framework-redacted-observability-adapters.proposed.md): Proposed; human review confirmed.
 - [ADR-0066: Pluggable Detailed Feedback Conversations and Event Hooks](0066-pluggable-detailed-feedback-conversations-and-event-hooks.proposed.md): Proposed; human review confirmed.
+- [ADR-0067: Capability-Local Static Discovery Suppression](0067-capability-local-static-discovery-suppression.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -1430,3 +1431,27 @@ Chosen option: **"Optional feedback package with detailed submissions, durable c
 - Ordinary checks run before the later, more expensive semantic evaluations.
 - README files, the website, API reference, generated standalone projects, software bills of materials, provenance, registry readback, and clean-install verification cover the released feedback package and supported adapters.
 - No feedback performance claim is published until representative database and ticketing profiles are measured with a stated percentile and workload.
+
+### [ADR-0067: Capability-Local Static Discovery Suppression](0067-capability-local-static-discovery-suppression.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0067 Decision
+
+Chosen option: **"Capability-local static discovery flag"**, because it is the smallest public API, keeps retirement intent with the definition, and avoids repeating capability identities in deployment composition.
+
+#### ADR-0067 Checks
+
+- Omitting `discoverable` and setting it to `true` produce the current catalogue and direct-call behaviour byte for byte.
+- Setting `discoverable: false` omits the exact entry from `tools/list`, `resources/list`, `resources/templates/list`, or `prompts/list` while its direct call, read, or get still succeeds under the unchanged access policy.
+- Completion for a known hidden prompt or resource template remains available and retains the parent capability's access policy.
+- Public and protected lifecycle-hidden capabilities remain subject to their existing authentication and authorization rules, with zero handler or completion calls after an authorization failure.
+- Protected discovery first removes lifecycle-hidden entries and then applies principal permission filtering without exposing either hidden set.
+- A category containing only lifecycle-hidden capabilities remains advertised by `server/discover`; its list method returns the correct empty result while a known direct call succeeds.
+- Tools, static resources, resource templates, and prompts have ordinary tests for visible, hidden-but-callable, and removed states.
+- Explicit arrays and deterministic filesystem discovery produce identical lifecycle suppression, ordering, public contracts, and invocation behaviour.
+- Paginated discovery never includes hidden entries, and its stable cursors are compiled from the effective discovery catalogue.
+- Startup still rejects duplicate or invalid registrations independently of their discovery flag.
+- An end-to-end compatibility check proves the sequence visible and callable, then hidden but callable, then removed and uncallable.
+- Published documentation states that discovery suppression is a retirement mechanism, not an authorization or secrecy mechanism.

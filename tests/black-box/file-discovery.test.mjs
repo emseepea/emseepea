@@ -20,6 +20,7 @@ test("filesystem discovery is deterministic and uses the checked tool boundary",
   await Promise.all([
     writeFile(join(directory.path, "tool.zeta.mjs"), toolModule("zeta")),
     writeFile(join(directory.path, "tool.alpha.ts"), toolModule("alpha")),
+    writeFile(join(directory.path, "tool.retiring.mjs"), toolModule("retiring", false)),
     writeFile(join(directory.path, "tool.ignored.test.mjs"), "throw new Error('must not load');\n"),
     writeFile(join(directory.path, "tool.ignored.d.ts"), "export default never;\n"),
     writeFile(join(directory.path, "tool.ignored.js.map"), "{}\n"),
@@ -30,8 +31,8 @@ test("filesystem discovery is deterministic and uses the checked tool boundary",
     const second = await discoverCapabilities(pathToFileURL(`${directory.path}/`), { calls });
     assert.equal(Object.isFrozen(first), true);
     assert.equal(Object.isFrozen(first.tools), true);
-    assert.equal(first.tools.length, 2);
-    assert.equal(second.tools.length, 2);
+    assert.equal(first.tools.length, 3);
+    assert.equal(second.tools.length, 3);
 
     const running = await serveEmseepea(createEmseepea({
       name: "discovered-server",
@@ -50,26 +51,33 @@ test("filesystem discovery is deterministic and uses the checked tool boundary",
       assert.deepEqual(relisted.body.result.tools.map(({ name }) => name), ["alpha", "zeta"]);
       assert.equal(JSON.stringify(relisted.body.result), JSON.stringify(listed.body.result));
 
+      const retiring = await rpc(running.url, "tools/call", {
+        name: "retiring",
+        arguments: { id: "known" },
+      });
+      assert.equal(retiring.body.result.isError, false);
+      assert.deepEqual(calls, ["retiring:known"]);
+
       const invalidInput = await rpc(running.url, "tools/call", {
         name: "alpha",
         arguments: { missing: true },
       });
       assert.equal(invalidInput.body.result.isError, true);
-      assert.deepEqual(calls, []);
+      assert.deepEqual(calls, ["retiring:known"]);
 
       const valid = await rpc(running.url, "tools/call", {
         name: "alpha",
         arguments: { id: "valid" },
       });
       assert.equal(valid.body.result.isError, false);
-      assert.deepEqual(calls, ["alpha:valid"]);
+      assert.deepEqual(calls, ["retiring:known", "alpha:valid"]);
 
       const invalidOutput = await rpc(running.url, "tools/call", {
         name: "zeta",
         arguments: { id: "invalid-output" },
       });
       assert.equal(invalidOutput.body.result.isError, true);
-      assert.deepEqual(calls, ["alpha:valid", "zeta:invalid-output"]);
+      assert.deepEqual(calls, ["retiring:known", "alpha:valid", "zeta:invalid-output"]);
       assert.doesNotMatch(JSON.stringify(invalidOutput.body), /wrong|stack|schema/i);
     } finally {
       await Promise.all([running.close(), repeated.close()]);
@@ -205,13 +213,14 @@ test("HTTP route discovery rejects malformed, conflicting, and unsafe modules", 
   });
 });
 
-function toolModule(name) {
+function toolModule(name, discoverable = true) {
   return `
 import { defineTool } from ${JSON.stringify(serverUrl)};
 import { z } from ${JSON.stringify(zodUrl)};
 export default ({ calls }) => defineTool({
   name: ${JSON.stringify(name)},
   access: "public",
+  discoverable: ${JSON.stringify(discoverable)},
   description: "Discovered test tool.",
   inputSchema: z.object({ id: z.string() }),
   outputSchema: z.object({ id: z.string() }),

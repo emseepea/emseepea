@@ -30,6 +30,9 @@ capabilities require authentication. Applications may explicitly protect
 discovery and filter it by principal permissions. See the
 [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs) and
 [authentication tests](../tests/black-box/oauth-protected-tools.test.mjs).
+Lifecycle-hidden capabilities remain advertised as callable categories while
+their individual entries are omitted, as covered by the
+[discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
 ### `tools/list`
 
@@ -38,7 +41,9 @@ titles, icons, annotations, access policy, and public application metadata. Chan
 the list while the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
-[list-pagination tests](../tests/black-box/list-pagination.test.mjs).
+[list-pagination tests](../tests/black-box/list-pagination.test.mjs). Hidden but
+callable tools are covered by the
+[discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
 ### `tools/call`
 
@@ -49,7 +54,9 @@ See the
 [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
 [mapped backend tests](../tests/black-box/mapped-adapter.test.mjs),
 [progress tests](../tests/black-box/streaming-progress.test.mjs), and
-[client-input tests](../tests/black-box/input-required.test.mjs).
+[client-input tests](../tests/black-box/input-required.test.mjs). Direct calls to
+known lifecycle-hidden tools and their later removal are covered by the
+[discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
 ### `resources/list`
 
@@ -60,6 +67,8 @@ Opt-in bounded pages are covered by the
 [list-pagination tests](../tests/black-box/list-pagination.test.mjs).
 The result contains metadata for registered static resources. It does not return
 resource contents, query application records, or expand resource templates.
+Lifecycle-hidden resource listing is covered by the
+[discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
 ### `resources/templates/list`
 
@@ -70,6 +79,8 @@ Opt-in bounded pages are covered by the
 [list-pagination tests](../tests/black-box/list-pagination.test.mjs).
 The result contains metadata for registered URI templates. It does not return
 resource contents, query application records, or list matching concrete URIs.
+Lifecycle-hidden template listing is covered by the
+[discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
 ### `resources/read`
 
@@ -77,7 +88,9 @@ resource contents, query application records, or list matching concrete URIs.
 A resource may ask a capable client for more input before returning its final
 result. Resource update subscriptions are not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs) and
-[client-input tests](../tests/black-box/input-required.test.mjs).
+[client-input tests](../tests/black-box/input-required.test.mjs). Reads of known
+lifecycle-hidden resources and templates, followed by removal, are covered by
+the [discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
 ### `prompts/list`
 
@@ -86,6 +99,8 @@ the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
 [list-pagination tests](../tests/black-box/list-pagination.test.mjs).
+Lifecycle-hidden prompt listing is covered by the
+[discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
 ### `prompts/get`
 
@@ -93,7 +108,9 @@ Opt-in bounded pages are covered by the
 prompt may ask a capable client for more input before returning its final
 result. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs) and
-[client-input tests](../tests/black-box/input-required.test.mjs).
+[client-input tests](../tests/black-box/input-required.test.mjs). Known
+lifecycle-hidden prompts remain callable until removal, as covered by the
+[discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
 ### `completion/complete`
 
@@ -101,6 +118,9 @@ result. See the
 arguments and resource fields. Completion inherits the referenced prompt or
 resource-template access policy. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
+Completion for known lifecycle-hidden prompts and templates, authorization
+failure, and later removal are covered by the
+[discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
 ### `subscriptions/listen`
 

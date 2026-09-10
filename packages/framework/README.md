@@ -117,6 +117,35 @@ module discovers source in a source runner or JavaScript in a built project.
 If both forms for one capability are in the same directory, discovery rejects
 the duplicate instead of choosing one.
 
+## Retire a Capability Safely
+
+Set `discoverable: false` on a tool, resource, resource template, or prompt to
+remove it from MCP list discovery while keeping direct calls available under
+its existing access policy:
+
+```ts
+const legacyLookup = defineTool({
+  name: "legacy-pea-lookup",
+  access: "public",
+  discoverable: false,
+  description: "Look up one pea variety for clients migrating to the replacement tool.",
+  inputSchema: z.object({ name: z.string() }),
+  outputSchema,
+  handler: ({ name }) => ({ data: lookupVariety(name) }),
+});
+```
+
+Omitting `discoverable` is equivalent to `discoverable: true`. Suppression is
+static for that server version and works the same for explicitly registered and
+filesystem-discovered capabilities. It is a compatibility mechanism, not an
+authorization or secrecy control: clients that already know the name or URI can
+still call the capability.
+
+For a marketplace retirement, first publish the replacement while the old
+capability remains visible. Next submit and publish a version with the old
+capability hidden but callable. Remove it only after that hidden version is the
+supported marketplace version.
+
 ## Register HTTP Route Modules at Startup
 
 Keep page and asset handlers out of the server entrypoint by putting each route

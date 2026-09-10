@@ -129,6 +129,7 @@ export function inputResponse(
 
 const PROTOCOL_VERSION = "2026-07-28";
 const REGISTER = Symbol("register");
+const DISCOVERABLE = Symbol("discoverable");
 const TOOL_NAME = Symbol("toolName");
 const TOOL_ACCESS = Symbol("toolAccess");
 const TOOL_STREAMING = Symbol("toolStreaming");
@@ -224,6 +225,7 @@ interface ProtectedCapabilityAccess {
 export type ToolAccess = "public" | "protected";
 interface ToolDefinitionBase<Input extends z.ZodObject, Output extends z.ZodObject> {
   readonly name: string;
+  readonly discoverable?: boolean;
   readonly title?: string;
   readonly description: string;
   readonly icons?: readonly Icon[];
@@ -313,6 +315,7 @@ export type MappedToolDefinition<
       readonly requiredScopes: readonly string[];
     };
 export interface EmseepeaTool {
+  readonly [DISCOVERABLE]: boolean;
   readonly [TOOL_NAME]: string;
   readonly [TOOL_ACCESS]: "public" | ProtectedCapabilityAccess;
   readonly [TOOL_STREAMING]: boolean;
@@ -327,6 +330,7 @@ export interface EmseepeaTool {
 }
 interface ResourceDefinitionBase {
   readonly name: string;
+  readonly discoverable?: boolean;
   readonly uri: string;
   readonly title?: string;
   readonly description?: string;
@@ -347,6 +351,7 @@ export type ResourceDefinition = ResourceDefinitionBase & (
 );
 interface ResourceTemplateDefinitionBase {
   readonly name: string;
+  readonly discoverable?: boolean;
   readonly uriTemplate: string;
   readonly title?: string;
   readonly description?: string;
@@ -376,6 +381,7 @@ interface ResourceTemplateRoute {
   readonly segments: readonly (string | undefined)[];
 }
 export interface EmseepeaResource {
+  readonly [DISCOVERABLE]: boolean;
   readonly [RESOURCE_NAME]: string;
   readonly [RESOURCE_URI]: string;
   readonly [RESOURCE_KIND]: "static" | "template";
@@ -400,6 +406,7 @@ type PromptInputConstraint<Args extends z.ZodObject> =
     : { readonly promptArgumentsMustAcceptStrings: never };
 type PromptDefinitionBase<Args extends z.ZodObject> = {
   readonly name: string;
+  readonly discoverable?: boolean;
   readonly title?: string;
   readonly description?: string;
   readonly icons?: readonly Icon[];
@@ -416,6 +423,7 @@ export type PromptDefinition<Args extends z.ZodObject> = PromptDefinitionBase<Ar
         GetPromptResult | InputRequiredResult | Promise<GetPromptResult | InputRequiredResult> }
 ) & PromptInputConstraint<Args>;
 export interface EmseepeaPrompt {
+  readonly [DISCOVERABLE]: boolean;
   readonly [PROMPT_NAME]: string;
   readonly [PROMPT_ACCESS]: "public" | ProtectedCapabilityAccess;
   readonly [HAS_COMPLETION]: boolean;
@@ -625,6 +633,7 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
     ? undefined
     : normalizeCacheHint(definition.cacheHint, `resource ${name}`);
   const registration: EmseepeaResource = {
+    [DISCOVERABLE]: normalizeDiscoverable("Resource", definition.discoverable),
     [RESOURCE_NAME]: name,
     [RESOURCE_URI]: uri,
     [RESOURCE_KIND]: "static",
@@ -712,6 +721,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
     variableNames,
   );
   const registration: EmseepeaResource = {
+    [DISCOVERABLE]: normalizeDiscoverable("Resource template", definition.discoverable),
     [RESOURCE_NAME]: name,
     [RESOURCE_URI]: uriTemplate,
     [RESOURCE_KIND]: "template",
@@ -805,6 +815,7 @@ export function definePrompt<Args extends z.ZodObject>(
     _meta: listing._meta,
   });
   const registration: EmseepeaPrompt = {
+    [DISCOVERABLE]: normalizeDiscoverable("Prompt", definition.discoverable),
     [PROMPT_NAME]: name,
     [PROMPT_ACCESS]: access,
     [HAS_COMPLETION]: completions.size > 0,
@@ -971,6 +982,7 @@ function discoveredCapabilityIdentity(
 
 interface CheckedToolDefinition {
   readonly name: string;
+  readonly discoverable?: boolean;
   readonly title?: string;
   readonly description: string;
   readonly icons?: readonly Icon[];
@@ -1024,6 +1036,7 @@ function createCheckedTool(
     _meta: listing._meta,
   });
   const registration: EmseepeaTool = {
+    [DISCOVERABLE]: normalizeDiscoverable("Tool", definition.discoverable),
     [TOOL_NAME]: name,
     [TOOL_ACCESS]: access,
     [TOOL_STREAMING]: streaming,
@@ -1192,17 +1205,27 @@ function catalogueListings(
   tools: readonly EmseepeaTool[],
   resources: readonly EmseepeaResource[],
   prompts: readonly EmseepeaPrompt[],
+  supportedTools = tools,
+  supportedResources = resources,
+  supportedPrompts = prompts,
 ): ReadonlyMap<ListMethod, readonly Readonly<Record<string, unknown>>[]> {
-  return new Map([
-    ["tools/list", tools.map((tool) => tool[TOOL_LISTING])],
-    ["resources/list", resources
+  const catalogues = new Map<ListMethod, readonly Readonly<Record<string, unknown>>[]>();
+  if (supportedTools.length) catalogues.set("tools/list", tools.map((tool) => tool[TOOL_LISTING]));
+  if (supportedResources.some((resource) => resource[RESOURCE_KIND] === "static")) {
+    catalogues.set("resources/list", resources
       .filter((resource) => resource[RESOURCE_LISTING].method === "resources/list")
-      .map((resource) => resource[RESOURCE_LISTING].value)],
-    ["resources/templates/list", resources
+      .map((resource) => resource[RESOURCE_LISTING].value));
+  }
+  if (supportedResources.some((resource) => resource[RESOURCE_KIND] === "template")) {
+    catalogues.set("resources/templates/list", resources
       .filter((resource) => resource[RESOURCE_LISTING].method === "resources/templates/list")
-      .map((resource) => resource[RESOURCE_LISTING].value)],
-    ["prompts/list", prompts.map((prompt) => prompt[PROMPT_LISTING])],
-  ] as const);
+      .map((resource) => resource[RESOURCE_LISTING].value));
+  }
+  if (supportedPrompts.length) catalogues.set(
+    "prompts/list",
+    prompts.map((prompt) => prompt[PROMPT_LISTING]),
+  );
+  return catalogues;
 }
 
 function normalizeListPagination(options: ListPaginationOptions): NormalizedListPagination {
@@ -1223,15 +1246,7 @@ function compileListPagination(
 ): CompiledListPagination {
   const compiled = new Map<ListMethod, CompiledCataloguePages>();
   for (const [method, entries] of catalogues) {
-    if (entries.length === 0) continue;
-    const resultKey = method === "tools/list"
-      ? "tools"
-      : method === "prompts/list"
-        ? "prompts"
-        : method === "resources/templates/list"
-          ? "resourceTemplates"
-          : "resources";
-    compiled.set(method, compileCataloguePages(method, resultKey, entries, options));
+    compiled.set(method, compileCataloguePages(method, listResultKey(method), entries, options));
   }
   return compiled;
 }
@@ -1242,7 +1257,7 @@ function compileCataloguePages(
   entries: readonly Readonly<Record<string, unknown>>[],
   options: NormalizedListPagination,
 ): CompiledCataloguePages {
-  const groups: Readonly<Record<string, unknown>>[][] = [];
+  const groups: Readonly<Record<string, unknown>>[][] = entries.length ? [] : [[]];
   for (let index = 0; index < entries.length;) {
     const group: Readonly<Record<string, unknown>>[] = [];
     while (group.length < options.pageSize && index < entries.length) {
@@ -1278,6 +1293,23 @@ function compileCataloguePages(
     byCursor.set(cursorFor(index), pages[index]!);
   }
   return Object.freeze({ first: pages[0]!, byCursor });
+}
+
+function compileUnpaginatedCatalogue(
+  catalogues: ReadonlyMap<ListMethod, readonly Readonly<Record<string, unknown>>[]>,
+): CompiledListPagination {
+  return new Map([...catalogues].map(([method, entries]) => [method, Object.freeze({
+    first: Object.freeze({
+      [listResultKey(method)]: Object.freeze([...entries]),
+    }),
+    byCursor: new Map(),
+  })]));
+}
+
+function listResultKey(method: ListMethod): "tools" | "resources" | "resourceTemplates" | "prompts" {
+  if (method === "tools/list") return "tools";
+  if (method === "prompts/list") return "prompts";
+  return method === "resources/templates/list" ? "resourceTemplates" : "resources";
 }
 
 function cataloguePageBytes(
@@ -1356,6 +1388,9 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   const tools = Object.freeze([...(options.tools ?? []), ...(options.additionalTools ?? [])]);
   const resources = Object.freeze([...(options.resources ?? [])]);
   const prompts = Object.freeze([...(options.prompts ?? [])]);
+  const discoverableTools = Object.freeze(tools.filter((tool) => tool[DISCOVERABLE]));
+  const discoverableResources = Object.freeze(resources.filter((resource) => resource[DISCOVERABLE]));
+  const discoverablePrompts = Object.freeze(prompts.filter((prompt) => prompt[DISCOVERABLE]));
   assertUniqueToolNames(tools);
   assertUniqueResources(resources);
   assertUniquePromptNames(prompts);
@@ -1414,9 +1449,21 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   const cacheHints = options.cacheHints === undefined
     ? undefined
     : normalizeCacheHints(options.cacheHints, enabledMethods);
+  const baseCatalogues = catalogueListings(
+    discoverableTools,
+    discoverableResources,
+    discoverablePrompts,
+    tools,
+    resources,
+    prompts,
+  );
+  const hasSuppressedCapabilities = discoverableTools.length !== tools.length ||
+    discoverableResources.length !== resources.length || discoverablePrompts.length !== prompts.length;
   const basePagination = paginationOptions
-    ? compileListPagination(paginationOptions, catalogueListings(tools, resources, prompts))
-    : undefined;
+    ? compileListPagination(paginationOptions, baseCatalogues)
+    : hasSuppressedCapabilities
+      ? compileUnpaginatedCatalogue(baseCatalogues)
+      : undefined;
   const sdkHandler = createMcpHandler(() => {
     const request = requestOperations.getStore();
     const activeTools = request?.filterCatalogues
@@ -1428,6 +1475,15 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     const activePrompts = request?.filterCatalogues
       ? prompts.filter((prompt) => accessAllows(prompt[PROMPT_ACCESS], request.principal))
       : prompts;
+    const activeDiscoverableTools = request?.filterCatalogues
+      ? discoverableTools.filter((tool) => accessAllows(tool[TOOL_ACCESS], request.principal))
+      : discoverableTools;
+    const activeDiscoverableResources = request?.filterCatalogues
+      ? discoverableResources.filter((resource) => accessAllows(resource[RESOURCE_ACCESS], request.principal))
+      : discoverableResources;
+    const activeDiscoverablePrompts = request?.filterCatalogues
+      ? discoverablePrompts.filter((prompt) => accessAllows(prompt[PROMPT_ACCESS], request.principal))
+      : discoverablePrompts;
     const activeHasCompletion = activeResources.some((resource) => resource[HAS_COMPLETION]) ||
       activePrompts.some((prompt) => prompt[HAS_COMPLETION]);
     const server = new McpServer(
@@ -1455,11 +1511,24 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     }
     for (const resource of activeResources) resource[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
     for (const prompt of activePrompts) prompt[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
-    const pagination = request?.filterCatalogues && paginationOptions
-      ? compileListPagination(
-          paginationOptions,
-          catalogueListings(activeTools, activeResources, activePrompts),
+    const filteredCatalogues = request?.filterCatalogues
+      ? catalogueListings(
+          activeDiscoverableTools,
+          activeDiscoverableResources,
+          activeDiscoverablePrompts,
+          activeTools,
+          activeResources,
+          activePrompts,
         )
+      : undefined;
+    const pagination = filteredCatalogues
+      ? paginationOptions
+        ? compileListPagination(paginationOptions, filteredCatalogues)
+        : activeDiscoverableTools.length !== activeTools.length ||
+            activeDiscoverableResources.length !== activeResources.length ||
+            activeDiscoverablePrompts.length !== activePrompts.length
+          ? compileUnpaginatedCatalogue(filteredCatalogues)
+          : undefined
       : basePagination;
     if (pagination) installListPagination(server, pagination);
     return server;
@@ -1912,6 +1981,12 @@ function normalizeCapabilityAccess(
     throw new TypeError(`Protected ${kind.toLowerCase()} scopes must be unique`);
   }
   return { type: "protected", requiredScopes: scopes };
+}
+
+function normalizeDiscoverable(kind: string, value: unknown): boolean {
+  if (value === undefined || value === true) return true;
+  if (value === false) return false;
+  throw new TypeError(`${kind} discoverable must be a boolean`);
 }
 
 function accessMetadata(
