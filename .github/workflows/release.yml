@@ -212,10 +212,20 @@ jobs:
             - resource, prompt, template, completion, or streaming performance
             - full-profile conformance
           EOF
+      - name: Bootstrap the first feedback publication
+        if: steps.release-state.outputs.has_changesets == 'false'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          test "$(node -p "require('./packages/feedback/package.json').name")" = "@emseepea/feedback"
+          test "$(node -p "require('./packages/feedback/package.json').version")" = "0.2.0"
+          if npm view @emseepea/feedback@0.2.0 version --userconfig /dev/null >/dev/null 2>&1; then
+            exit 0
+          fi
+          test -n "$NODE_AUTH_TOKEN"
+          npm publish --workspace @emseepea/feedback --access public --provenance
       - name: Create release pull request or publish
         id: changesets
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
