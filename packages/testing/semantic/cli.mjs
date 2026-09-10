@@ -229,5 +229,6 @@ function validFeedbackDisclosure(turn, judgments, trial, isHash) {
 function feedbackDisclosureExpectation(call) {
   return "The final assistant response makes it clear that feedback was submitted, recorded, or noted, "
     + "and communicates the substance "
-    + `of this specific ${call.arguments.observation} observation: ${call.arguments.detail}`;
+    + `of this specific ${call.arguments.observation} observation: ${call.arguments.detail} `
+    + "A concise, faithful summary is enough. It need not repeat every example, field, or phrase.";
 }

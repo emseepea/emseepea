@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 
 const exec = promisify(execFile);
 const repository = "emseepea/emseepea";
+const pollIntervalMs = 30_000;
 
 async function execute(command, args, { timeoutMs } = {}) {
   const { stdout } = await exec(command, args, { encoding: "utf8", timeout: timeoutMs });
@@ -52,7 +53,7 @@ export async function watchWorkflowRuns({
         ], { timeoutMs: Math.min(30_000, Math.max(1, deadline - Date.now())) }) || "[]");
       } catch (error) {
         if (Date.now() >= deadline) throw error;
-        await pause(3_000);
+        await pause(pollIntervalMs);
         continue;
       }
       assert.notEqual(listed.length, 100, `${workflow} run list reached its safety limit`);
@@ -60,7 +61,7 @@ export async function watchWorkflowRuns({
         && (workflow !== "release.yml" || conclusion !== "skipped"));
       if (runs.length === 0) {
         assert.ok(Date.now() < deadline, `${workflow} did not start for ${sha}`);
-        await pause(3_000);
+        await pause(pollIntervalMs);
         continue;
       }
       const unseen = runs
@@ -93,7 +94,7 @@ async function waitForWorkflowRun({ item, workflow, run, pause, deadline }) {
       assert.equal(state.conclusion, "success", `${workflow} concluded ${state.conclusion || "without a result"}`);
       return;
     }
-    await pause(3_000);
+    await pause(pollIntervalMs);
   }
 }
 

@@ -106,6 +106,7 @@ test("push and watch propagates a failed pipeline", async () => {
 
 test("push and watch survives transient GitHub read failures", async () => {
   const sha = "a".repeat(40);
+  const pauses = [];
   const listAttempts = { "quality.yml": 0, "release.yml": 0 };
   const viewAttempts = { 1: 0, 2: 0 };
   const run = async (_command, args) => {
@@ -123,11 +124,12 @@ test("push and watch survives transient GitHub read failures", async () => {
     return JSON.stringify({ status: viewAttempts[databaseId] === 2 ? "in_progress" : "completed", conclusion: viewAttempts[databaseId] === 2 ? "" : "success" });
   };
   assert.deepEqual(
-    await watchWorkflowRuns({ sha, run, pause: async () => {}, timeoutMs: 10_000 }),
+    await watchWorkflowRuns({ sha, run, pause: async (milliseconds) => pauses.push(milliseconds), timeoutMs: 10_000 }),
     ["https://example.test/1", "https://example.test/2"],
   );
   assert.deepEqual(listAttempts, { "quality.yml": 3, "release.yml": 3 });
   assert.deepEqual(viewAttempts, { 1: 3, 2: 3 });
+  assert.deepEqual(pauses, Array(6).fill(30_000));
 });
 
 test("push and watch rejects a truncated workflow result set", async () => {

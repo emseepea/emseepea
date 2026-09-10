@@ -48,6 +48,11 @@ mismatches, suggestions, and notable success. It tells the AI to:
 - avoid normal uneventful operation, expected empty results, and duplicates
 - stop recording if the user objects
 
+The successful structured result includes `nextAction`. It reminds the AI to
+finish every part of the user's original request before briefly stating the
+specific feedback recorded. A routine successful tool call, structured result,
+or expected number of steps is not feedback-worthy.
+
 These are instructions for the AI, not server-enforced guarantees. Qualify the
 behaviour with a native semantic test for every AI client you support.
 

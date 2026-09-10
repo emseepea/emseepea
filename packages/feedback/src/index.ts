@@ -100,6 +100,9 @@ const backendEventSchema = feedbackEventSchema.omit({ scope: true });
 const backendEventsSchema = z.array(backendEventSchema).max(100).optional();
 export type FeedbackBackendEvent = z.input<typeof backendEventSchema>;
 
+const submissionNextAction =
+  "Start your final response by answering every part of the user's original request from earlier tool results. A response that only discusses feedback is incomplete. Then tell the user, \"I recorded feedback about ...\", with a brief, specific summary of the observation.";
+
 const submissionResultSchema = z.strictObject({
   id: identifier.describe("Stable feedback submission identifier."),
   recordedAt: timestamp.describe("When the feedback was durably recorded."),
@@ -130,13 +133,17 @@ export function defineFeedbackSubmission<ContextSchema extends z.ZodType = z.Zod
       ),
     } : {}),
   });
-  const outputSchema = submissionResultSchema.omit({ events: true });
+  const outputSchema = submissionResultSchema.omit({ events: true }).extend({
+    nextAction: z.literal(submissionNextAction).describe(
+      "What the AI should do after the feedback was durably recorded.",
+    ),
+  });
   const common = {
     name: "submit-feedback",
     title: "Record Detailed Feedback",
     description:
-      "Record one notable observation about an error, friction, annoyance, unnecessary difficulty, confusion, repetition, surprise, capability mismatch, suggestion, or notable success. " +
-      "Use this without asking a separate permission question, then answer the user's original request and briefly state the specific observation recorded. Saying only that feedback was recorded is not enough. Do not let feedback displace the requested answer. Do not record normal uneventful operation, expected empty results, session opening or closing, a duplicate observation, or anything after the user objects. Never include surrounding conversation, credentials, or raw tool payloads.",
+      "Record one notable observation about an error, friction, annoyance, unnecessary difficulty, confusion, repetition, an unexpected result, a capability mismatch, a suggestion, or a notable success. " +
+      "Call this tool when another tool result or the user's message reveals notable friction or another qualifying observation. Use it without asking a separate permission question. After it succeeds, fully answer the user's original request. Then briefly state the specific observation you recorded. Do not let feedback replace the requested answer. A tool that works as designed, returns structured data, or takes only the expected steps is ordinary operation. Do not record these outcomes as feedback. Do not record expected empty results, session opening or closing, duplicate observations, or anything after the user objects. Never include surrounding conversation, credentials, raw tool data, or personal information.",
     annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
     inputSchema,
     outputSchema,
@@ -152,7 +159,13 @@ export function defineFeedbackSubmission<ContextSchema extends z.ZodType = z.Zod
         context: ("context" in input ? input.context : undefined) as z.output<ContextSchema>,
       }, adapterContext));
       await dispatchHooks(options.hooks, result.events ?? [], adapterContext);
-      return { data: { id: result.id, recordedAt: result.recordedAt } };
+      return {
+        data: {
+          id: result.id,
+          recordedAt: result.recordedAt,
+          nextAction: submissionNextAction,
+        } as const,
+      };
   };
   if (options.access === "public") {
     if (options.requiredScopes !== undefined) {

@@ -47,6 +47,11 @@ response. It must avoid normal uneventful operation and duplicates, and stop if
 the user objects. These are model behaviours, so test them with every supported
 AI client.
 
+The successful structured result includes `nextAction`. It reminds the AI to
+finish every part of the user's original request before briefly stating the
+specific feedback recorded. A routine successful tool call, structured result,
+or expected number of steps is not feedback-worthy.
+
 ## Add a support conversation
 
 ```ts

@@ -56,6 +56,11 @@ test("records useful public detail and application-declared context", async (t) 
   const listed = await client.listTools();
   assert.equal(listed.tools[0].inputSchema.properties.detail.description,
     "What happened, what helped or failed, what was harder than it should have been, or what was surprising.");
+  assert.deepEqual(listed.tools[0].outputSchema.properties.nextAction, {
+    type: "string",
+    const: "Start your final response by answering every part of the user's original request from earlier tool results. A response that only discusses feedback is incomplete. Then tell the user, \"I recorded feedback about ...\", with a brief, specific summary of the observation.",
+    description: "What the AI should do after the feedback was durably recorded.",
+  });
   const result = await client.callTool({
     name: "submit-feedback",
     arguments: {
@@ -66,7 +71,15 @@ test("records useful public detail and application-declared context", async (t) 
   }, { timeout: 2_000 });
 
   assert.equal(result.isError, false);
-  assert.deepEqual(result.structuredContent, { id: "feedback-1", recordedAt: now });
+  assert.deepEqual(result.structuredContent, {
+    id: "feedback-1",
+    recordedAt: now,
+    nextAction: "Start your final response by answering every part of the user's original request from earlier tool results. A response that only discusses feedback is incomplete. Then tell the user, \"I recorded feedback about ...\", with a brief, specific summary of the observation.",
+  });
+  assert.deepEqual(result.content, [{
+    type: "text",
+    text: JSON.stringify(result.structuredContent),
+  }]);
   assert.deepEqual(calls, [{
     command: {
       observation: "friction",

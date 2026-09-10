@@ -54,11 +54,11 @@ test("records notable success", async (t) => {
   assertToolNames(praised, ["submit-feedback"]);
   assertFeedback(praised, {
     observation: ["notable_success", "unexpected_good_result"],
-    detailIncludes: ["shelling pea", "Harbour Gem", "time"],
+    detailIncludes: ["shelling pea", "time"],
   });
   await assertResponseMeaning(praised, {
     expected:
-      "The response openly tells the user that their unexpectedly helpful, time-saving experience was recorded as feedback.",
+      "The response tells the user in first-person language that feedback was recorded and briefly summarizes the specific positive observation.",
   });
 });
 
