@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
+import { beforeDeadline } from "./deadline.js";
 import { feedbackConversationSchema } from "./index.js";
 import type {
   FeedbackAdapterContext,
@@ -56,10 +57,10 @@ export function createZendeskFeedbackBackend(
     expected: readonly number[] = [200],
   ) {
     const token = typeof options.token === "function" ? await options.token() : options.token;
-    return requestJson(fetcher, new URL(path, base), providerRequestInit(context, {
+    return beforeDeadline(requestJson(fetcher, new URL(path, base), providerRequestInit(context, {
       ...init,
       headers: { ...bearerHeaders(token), ...init.headers },
-    }), expected);
+    }), expected), context);
   }
 
   return {

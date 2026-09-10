@@ -23,6 +23,17 @@ test("provider, PostgreSQL, and Firestore waits stop at the feedback deadline", 
   });
   await assert.rejects(github.listThreads({ limit: 20 }, context()), /deadline|timed out|Timeout/i);
 
+  const stalledBody = createGitHubFeedbackBackend({
+    owner: "emseepea",
+    repository: "support",
+    token: "test-token",
+    apiUrl: new URL("https://github.test/"),
+    fetch: async () => new Response(new ReadableStream({ start() {} }), {
+      headers: { "content-type": "application/json" },
+    }),
+  });
+  await assert.rejects(stalledBody.listThreads({ limit: 20 }, context()), /deadline|timed out|Timeout/i);
+
   const postgres = createPostgresFeedbackSubmissionBackend({
     pool: { connect: () => new Promise(() => {}), query: () => new Promise(() => {}) },
   });
