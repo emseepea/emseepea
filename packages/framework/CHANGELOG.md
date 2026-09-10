@@ -1,5 +1,12 @@
 # @emseepea/server
 
+## 0.6.1
+
+### Patch Changes
+
+- [`3dd98aa`](https://github.com/emseepea/emseepea/commit/3dd98aaa73b0b7e1385e8abd758657a6f5e11f4c) Thanks [@tompahoward](https://github.com/tompahoward)! - Allow protected tools to stream bounded POST-scoped progress in production
+  after authentication and authorization succeed behind a trusted proxy.
+
 ## 0.6.0
 
 ### Minor Changes
