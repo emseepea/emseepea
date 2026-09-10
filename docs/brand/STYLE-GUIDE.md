@@ -166,10 +166,11 @@ Do not:
 
 ## Intentionally unspecified
 
-This guide does not yet define a general typography system, voice and tone,
-imagery style, icon family, spacing scale, UI design tokens, print rules, or
-co-branding system. Do not infer those systems from the logo. Define them only
-when a real product or communication need requires them.
+This guide does not yet define a general typography system, imagery style, icon
+family, spacing scale, UI design tokens, print rules, or co-branding system. Do
+not infer those systems from the logo. Define them only when a real product or
+communication need requires them. For writing, use the
+[voice and tone guide](../VOICE-AND-TONE.md).
 
 ## Pre-publication check
 
