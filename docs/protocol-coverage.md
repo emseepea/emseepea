@@ -58,6 +58,8 @@ the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
 [list-pagination tests](../tests/black-box/list-pagination.test.mjs).
+The result contains metadata for registered static resources. It does not return
+resource contents, query application records, or expand resource templates.
 
 ### `resources/templates/list`
 
@@ -66,6 +68,8 @@ Changing the list while the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
 [list-pagination tests](../tests/black-box/list-pagination.test.mjs).
+The result contains metadata for registered URI templates. It does not return
+resource contents, query application records, or list matching concrete URIs.
 
 ### `resources/read`
 

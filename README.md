@@ -138,7 +138,8 @@ principal only the capabilities allowed by their permissions.
 
 - grouped changes, automatic write retries, or a universal promise that a
   repeated write changes an external service only once
-- listing every possible resource address
+- querying application records or expanding templates through `resources/list`
+  or `resources/templates/list`
 - changing catalogues while a server runs
 - deployed progress streams from protected tools
 - saved sessions, subscriptions, replay, or reconnect recovery

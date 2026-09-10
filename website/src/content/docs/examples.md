@@ -68,6 +68,20 @@ support system, including native replies, actions, status, and notifications.
 Provide readable resources, resource addresses with parameters, reusable
 prompts, and suggestions for prompt fields.
 
+Use a static resource for content at one registered URI. Use a resource template
+for content at predictable URIs, such as `invoice://{invoiceId}`.
+
+`resources/list` returns metadata for static resources registered with the
+server. `resources/templates/list` returns metadata for registered URI
+templates. These methods do not query application records, return resource
+contents, or expand templates into matching resource URIs.
+
+For a large or searchable collection, provide a list or search tool that
+validates its inputs and limits the number of results. The tool can return
+useful record details and a concrete resource URI for each relevant result. A
+client can pass that URI to `resources/read`, which performs its own
+authorization check before reading the resource.
+
 ```sh
 npm init @emseepea/resources-and-prompts-server -- my-server
 ```
