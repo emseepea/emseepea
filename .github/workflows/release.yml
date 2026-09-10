@@ -102,7 +102,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: semantic-eval-${{ needs.quality-gate.outputs.sha }}
-          path: examples/*/artifacts/llm-eval/evidence.json
+          path: |
+            examples/*/artifacts/llm-eval/evidence.json
+            packages/feedback/artifacts/llm-eval/evidence.json
           if-no-files-found: error
           retention-days: 14
 
@@ -196,6 +198,7 @@ jobs:
             - fixed-origin HTTPS JSON GET client with network-address and response checks
             - native HTML form rendering
             - typed authentication, redacted observability adapters, dependency readiness, and bounded shutdown flushing
+            - optional detailed feedback, protected append-only support conversations, typed feedback event hooks, PostgreSQL integration checks, Firestore contract checks, and deterministic GitHub Issues and Zendesk HTTP contract checks
             - code-first AI understanding tests with three answers and nine judgments per case
           - Excluded:
             - template enumeration

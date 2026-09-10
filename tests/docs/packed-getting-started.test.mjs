@@ -66,6 +66,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
   try {
     const tarballs = await Promise.all([
       packPackage("./packages/framework", directory),
+      packPackage("./packages/feedback", directory),
       packPackage("./packages/testing", directory),
     ]);
 
@@ -97,6 +98,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
     );
     await writeFile(path.join(directory, "check.mjs"), `
       import { createEmseepea, defineTool, registerRoutes, serveEmseepea } from "@emseepea/server";
+      import { defineFeedbackSubmission } from "@emseepea/feedback";
       import { startMcpServer } from "@emseepea/testing";
       import {
         assertNoToolCalls,
@@ -112,6 +114,9 @@ test("the packed public packages pass fresh-install and getting-started checks",
           || typeof assertResponseContains !== "function"
           || typeof assertResponseMeaning !== "function") {
         throw new Error("packed testing package is missing its public helpers");
+      }
+      if (typeof defineFeedbackSubmission !== "function") {
+        throw new Error("packed feedback package is missing its public constructor");
       }
       const value = z.object({ value: z.string() });
       const tool = defineTool({
@@ -267,6 +272,7 @@ test("every packed initializer creates a standalone checked project", {
   try {
     const tarballs = new Map(await Promise.all([
       ["@emseepea/server", "./packages/framework"],
+      ["@emseepea/feedback", "./packages/feedback"],
       ["@emseepea/testing", "./packages/testing"],
       ["@emseepea/react", "./packages/react"],
       ["@emseepea/tailwind", "./packages/tailwind"],
@@ -335,6 +341,22 @@ test("every packed initializer creates a standalone checked project", {
         "--no-fund",
         ...internalPackages,
       ], example);
+      await writeFile(path.join(example, "src/feedback-composition.ts"), `
+        import { defineFeedbackSubmission } from "@emseepea/feedback";
+        import type { EmseepeaExtensions } from "@emseepea/server";
+
+        const feedback = defineFeedbackSubmission({
+          access: "public",
+          scope: "standalone-example",
+          backend: {
+            submit: () => ({ id: "feedback-1", recordedAt: "2026-09-10T00:00:00.000Z" }),
+          },
+        });
+
+        export const feedbackExtensions = {
+          additionalTools: [feedback],
+        } satisfies EmseepeaExtensions;
+      `);
       await runAsync("npm", ["run", "lint"], example);
       await runAsync("npm", ["test"], example);
       await runAsync("npm", [
@@ -374,6 +396,8 @@ test("every packed initializer creates a standalone checked project", {
               trial.turns.map(({ selectedTools }) => selectedTools),
               expected.tools,
             );
+            assert.ok(trial.turns.every(({ expectedNegativeFeedback, negativeFeedbackCalls }) =>
+              expectedNegativeFeedback === false && negativeFeedbackCalls.length === 0));
           }
         }
         return;
@@ -392,10 +416,12 @@ test("every packed initializer creates a standalone checked project", {
           assert.deepEqual(trial.turns[index].selectedTools, expectedTools);
         }
         if (initializer.example === "resources-and-prompts-server") {
-          assert.equal(trial.turns[0].advertisedToolCount, 0);
+          assert.equal(trial.turns[0].advertisedToolCount, 1);
           assert.equal(trial.turns[0].toolCallCount, 0);
           assert.equal(trial.turns[0].pathEvidence.length, 0);
         }
+        assert.ok(trial.turns.every(({ expectedNegativeFeedback, negativeFeedbackCalls }) =>
+          expectedNegativeFeedback === false && negativeFeedbackCalls.length === 0));
       }
     };
 

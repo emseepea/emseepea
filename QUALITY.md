@@ -95,6 +95,15 @@ Accessibility Guidelines (WCAG) conformance.
   protected access and one framework-redacted observability adapter. Protected
   discovery tests must prove permission-shaped listings and authorization
   before application or backend work.
+- Every packed initializer must compile with the optional feedback package
+  through `additionalTools`. Generated application code and runtime dependencies
+  remain feedback-free; semantic tests use the package as a development-only
+  negative control.
+- Feedback tests must prove bounded explicit detail, scope isolation,
+  append-only ordering, first-offer receipts, private-note exclusion, event
+  payload minimization, and best-effort hook failure semantics. PostgreSQL,
+  Firestore, GitHub Issues, and Zendesk adapters must pass their checked
+  contract journeys. PostgreSQL runs against the pinned disposable service.
 - Keep tests outside production packages, but include their JavaScript and
   TypeScript in runnable or static quality checks.
 - Add a contract check only when a public artifact exists; do not create a
@@ -110,6 +119,13 @@ Accessibility Guidelines (WCAG) conformance.
   conversations, exact assertions for each turn's selected calls, and three
   independent judgments for each meaning assertion. All three conversations
   must pass.
+- Every successful example case must advertise the real `submit-feedback` tool
+  and assert that the AI submitted no negative feedback. This adds no model turn
+  or meaning judgment.
+- Feedback semantic tests run only in the later credentialed release job. They
+  must prove open disclosure, stop after an objection, exact tool selection,
+  presentation of a team reply, and a later reply on the same thread. They do
+  not run in ordinary tests or the Node.js compatibility matrix.
 - For every trial, the harness must connect the model to exactly one loopback
   MCP server and allow only that server's advertised tools. It must send each
   user message unchanged and derive tool assertions from native provider tool

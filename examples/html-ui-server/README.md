@@ -72,6 +72,13 @@ Open
 
 The page previews a sample pea planting plan only. It does not send or store a report.
 
+## Add Feedback
+
+Install `@emseepea/feedback` when this server needs a detailed one-way
+observation or a durable support conversation. Pass its tools through the
+application factory's `additionalTools` option. Choose PostgreSQL, Firestore,
+GitHub Issues, or Zendesk in the [feedback guide](../../packages/feedback/README.md).
+
 ## Check This Example
 
 [Ordinary tests](test/) live in `test/`.

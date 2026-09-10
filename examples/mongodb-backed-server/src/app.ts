@@ -18,8 +18,7 @@ export interface MongoExampleOptions extends EmseepeaExtensions {
 export async function createMongoExample({
   uri,
   access = { access: "public" },
-  authentication,
-  observability,
+  ...extensions
 }: MongoExampleOptions) {
   const parsedUri = z.string().url().refine(
     (value) => ["mongodb:", "mongodb+srv:"].includes(new URL(value).protocol),
@@ -51,8 +50,7 @@ export async function createMongoExample({
       observations: () => observations,
       varieties: () => varieties,
     }),
-    authentication,
-    observability,
+    ...extensions,
   });
   const closeProvider = async () => {
     observations = undefined;

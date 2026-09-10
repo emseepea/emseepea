@@ -84,7 +84,11 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
     }
     return { name: publicName, arguments: input };
   });
-  if (toolUses.length > 3) throw new Error("Model command used more than three tools");
+  if (toolUses.length > 3) {
+    throw Object.assign(new Error("Model command used more than three tools"), {
+      attemptedToolCalls: calls,
+    });
+  }
   if (init) {
     const available = [...(init.tools ?? [])].sort();
     const expected = [...advertised.keys()].sort();

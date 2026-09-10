@@ -1,15 +1,23 @@
 import test from "node:test";
 import {
   assertNoToolCalls,
+  assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
   assertToolCalls,
   createConversation,
 } from "@emseepea/testing/semantic";
 
+const server = new URL(import.meta.resolve("@emseepea/feedback/testing-server"));
+const environment = {
+  EMSEEPEA_EVAL_APP_MODULE: new URL("../dist/app.js", import.meta.url).href,
+  EMSEEPEA_EVAL_APP_FACTORY: "createHtmlUiServer",
+};
+
 test("does not mistake a native UI preview for a completed effect", async (t) => {
   const chat = await createConversation(t, {
-    server: new URL("../dist/server.js", import.meta.url),
+    server,
+    environment,
   });
 
   // The judged turn covers the UI tool's main semantic risk: preview is not an
@@ -35,4 +43,5 @@ test("does not mistake a native UI preview for a completed effect", async (t) =>
   );
   assertNoToolCalls(followUp);
   assertResponseContains(followUp, "2");
+  assertNoNegativeFeedback(response, followUp);
 });

@@ -53,6 +53,47 @@ if (!process.argv.includes("--input-format")) {
 }
 
 function responseFor(prompt, tools = []) {
+  if (prompt === "Find a snap pea variety in the catalogue.") return {
+    calls: [
+      { name: "search-pea-varieties", arguments: { query: "snap pea" } },
+      { name: "submit-feedback", arguments: {
+        observation: "friction",
+        detail: "The variety filter was below the results, difficult to find, and took three attempts.",
+      } },
+    ],
+    answer: "Highland Snap matched. I also recorded that finding the variety filter took three attempts.",
+  };
+  if (prompt === "Do not record any more feedback in this conversation.") return { calls: [], answer: "Understood." };
+  if (prompt === "Find that same snap pea variety again.") return {
+    calls: [{ name: "search-pea-varieties", arguments: { query: "snap pea" } }],
+    answer: "Highland Snap matched again.",
+  };
+  if (prompt === "Find a shelling pea variety in the catalogue.") return {
+    calls: [{ name: "search-pea-varieties", arguments: { query: "shelling pea" } }],
+    answer: "Harbour Gem matched.",
+  };
+  if (prompt === "That was unexpectedly helpful and saved me a lot of time.") return {
+    calls: [{ name: "submit-feedback", arguments: {
+      observation: "notable_success",
+      detail: "The result was unexpectedly helpful and saved the user a lot of time.",
+    } }],
+    answer: "I recorded that the result was unexpectedly helpful and saved you a lot of time.",
+  };
+  if (prompt === "Now search for a purple-podded pea variety.") return {
+    calls: [{ name: "search-pea-varieties", arguments: { query: "purple-podded pea" } }],
+    answer: "No purple-podded varieties matched.",
+  };
+  if (prompt === "Check support feedback thread thread-1 for a reply.") return {
+    calls: [{ name: "get-feedback-thread", arguments: { threadId: "thread-1" } }],
+    answer: "Support moved the variety filter above the results and kept it there after every search.",
+  };
+  if (prompt === "Reply exactly: That fixes the problem, thank you.") return {
+    calls: [{ name: "reply-to-feedback-thread", arguments: {
+      threadId: "thread-1",
+      message: "That fixes the problem, thank you.",
+    } }],
+    answer: "That fixes the problem, thank you.",
+  };
   if (prompt.includes("Among the saved snap pea varieties")) return {
     calls: [{ name: "list-pea-varieties", arguments: { pea_type: "snap" } }],
     answer: "Sugar Ann is the fastest listed snap pea variety and matures in 56 days.",

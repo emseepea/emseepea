@@ -32,6 +32,18 @@ export function createConversation(
 
 export function assertToolCalls(turn: ConversationTurn, expected: readonly ToolCall[]): void;
 export function assertNoToolCalls(turn: ConversationTurn): void;
+export function assertToolNames(turn: ConversationTurn, expected: readonly string[]): void;
+export function assertToolArguments(
+  turn: ConversationTurn,
+  name: string,
+  expected: Record<string, unknown>,
+): void;
+export function assertFeedback(
+  turn: ConversationTurn,
+  expectation: { observation: string | readonly string[]; detailIncludes: readonly string[] },
+): void;
+/** Asserts that successful turns did not submit an error, friction, or other negative observation. */
+export function assertNoNegativeFeedback(...turns: readonly ConversationTurn[]): void;
 export function assertResponseContains(turn: ConversationTurn, expected: string | readonly string[]): void;
 export function assertResponseMeaning(
   turn: ConversationTurn,

@@ -456,6 +456,8 @@ export interface EmseepeaOptions {
   readonly tools?: readonly EmseepeaTool[];
   readonly resources?: readonly EmseepeaResource[];
   readonly prompts?: readonly EmseepeaPrompt[];
+  /** Optional capabilities composed onto an application or initializer's own catalogue. */
+  readonly additionalTools?: readonly EmseepeaTool[];
   readonly listPagination?: ListPaginationOptions;
   readonly cacheHints?: CacheHints;
   readonly maxRequestBytes?: number;
@@ -466,7 +468,12 @@ export interface EmseepeaOptions {
   readonly deployment?: DeploymentProfile;
   readonly authentication?: AuthenticationOptions;
 }
-export type EmseepeaExtensions = Pick<EmseepeaOptions, "authentication" | "observability">;
+export type EmseepeaExtensions = Pick<
+  EmseepeaOptions,
+  | "authentication"
+  | "observability"
+  | "additionalTools"
+>;
 export interface ListPaginationOptions {
   readonly pageSize: number;
   readonly maxPageBytes?: number;
@@ -1346,7 +1353,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     icons: options.icons,
     websiteUrl: options.websiteUrl,
   });
-  const tools = Object.freeze([...(options.tools ?? [])]);
+  const tools = Object.freeze([...(options.tools ?? []), ...(options.additionalTools ?? [])]);
   const resources = Object.freeze([...(options.resources ?? [])]);
   const prompts = Object.freeze([...(options.prompts ?? [])]);
   assertUniqueToolNames(tools);

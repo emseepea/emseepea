@@ -1,18 +1,26 @@
 import test from "node:test";
 import {
+  assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
   assertToolCalls,
   createConversation,
 } from "@emseepea/testing/semantic";
 
+const server = new URL(import.meta.resolve("@emseepea/feedback/testing-server"));
+
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required for the PostgreSQL semantic test");
 
 test("saves and retrieves a harvest report without exposing server instances", async (t) => {
   const chat = await createConversation(t, {
-    server: new URL("../dist/server.js", import.meta.url),
-    environment: { DATABASE_URL: databaseUrl },
+    server,
+    environment: {
+      DATABASE_URL: databaseUrl,
+      EMSEEPEA_EVAL_APP_MODULE: new URL("../dist/app.js", import.meta.url).href,
+      EMSEEPEA_EVAL_APP_FACTORY: "createMultiInstanceExample",
+      EMSEEPEA_EVAL_APP_KIND: "postgres",
+    },
   });
 
   // Two natural turns cover write and read tool selection at low model cost.
@@ -49,4 +57,5 @@ test("saves and retrieves a harvest report without exposing server instances", a
       "The saved report for North Bed on 2026-09-08 has 12 shelling pea plants, " +
       "8 snap pea plants, and 20 plants in total.",
   });
+  assertNoNegativeFeedback(saved, retrieved);
 });

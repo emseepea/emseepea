@@ -1,0 +1,71 @@
+{
+  "name": "@emseepea/feedback",
+  "version": "0.0.0",
+  "description": "Optional detailed feedback and support conversations for Em See Pea servers",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emseepea/emseepea.git",
+    "directory": "packages/feedback"
+  },
+  "homepage": "https://emseepea.github.io/emseepea/feedback/",
+  "bugs": "https://github.com/emseepea/emseepea/issues",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./postgres": {
+      "types": "./dist/postgres.d.ts",
+      "import": "./dist/postgres.js"
+    },
+    "./firestore": {
+      "types": "./dist/firestore.d.ts",
+      "import": "./dist/firestore.js"
+    },
+    "./github": {
+      "types": "./dist/github.d.ts",
+      "import": "./dist/github.js"
+    },
+    "./zendesk": {
+      "types": "./dist/zendesk.d.ts",
+      "import": "./dist/zendesk.js"
+    },
+    "./webhooks": {
+      "types": "./dist/webhooks.d.ts",
+      "import": "./dist/webhooks.js"
+    },
+    "./testing-server": "./dist/testing-server.js"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.type-tests.json",
+    "prepack": "npm run build",
+    "test": "npm run build && npm run test:built",
+    "test:built": "node --test test/*.test.mjs",
+    "test:postgres": "cd ../../examples/multi-instance-postgres-server && node test/with-postgres.mjs node --test ../../packages/feedback/test/postgres.integration.mjs",
+    "test:llm": "npm run build && npm run test:llm:built",
+    "test:llm:built": "emseepea-test eval",
+    "lint": "oxlint src test eval"
+  },
+  "dependencies": {
+    "@emseepea/server": "0.4.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@emseepea/testing": "0.6.1",
+    "pg": "8.23.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -21,6 +21,7 @@ Use the current framework to create:
 - public tools that anyone can call
 - protected tools, resources, prompts, and completions that authenticate before application code runs
 - tools that call another service and check its response
+- optional detailed feedback and protected support conversations backed by PostgreSQL, Firestore, GitHub Issues, or Zendesk
 - resources, reusable resource addresses, prompts, and field suggestions
 - clear names, descriptions, icons, and usage hints for clients to display
 - a server that tells clients when a list or resource is safe to reuse
@@ -54,6 +55,7 @@ It covers:
 - checking results from connected services without exposing private errors
 - reporting progress through raw HTTP and the official MCP client
 - saving through one server process and reading the same state through another
+- recording detailed feedback, appending support replies, and keeping client scopes separate
 
 For detailed gates and evidence, see the [quality policy][quality-policy] and
 [current release-readiness review][release-readiness].
@@ -89,6 +91,11 @@ typed authentication and observability extensions without choosing a different
 template. Discovery stays public by default. It can be explicitly protected
 and filtered by the authenticated principal's permissions when the catalogue
 itself is sensitive.
+
+After choosing a starter, add [`@emseepea/feedback`](packages/feedback/README.md)
+when you need a detailed one-way observation or a durable support conversation.
+The optional package composes through `additionalTools`, so it does not require
+a separate application-shape initializer.
 
 ## Check Whether AI Chooses and Uses the Right Tool
 
@@ -129,8 +136,8 @@ principal only the capabilities allowed by their permissions.
 
 ## Not Included Yet
 
-- tools that write data, group changes, retry failed requests, or safely repeat
-  the same write
+- grouped changes, automatic write retries, or a universal promise that a
+  repeated write changes an external service only once
 - listing every possible resource address
 - changing catalogues while a server runs
 - deployed progress streams from protected tools
@@ -152,6 +159,7 @@ Publication does not expand these claims.
 - [Server package decision](docs/decisions/0016-em-see-pea-product-npm-scope-and-server-package.superseded.md)
 - [Typed authentication and optional protected discovery][public-discovery]
 - [Language-model understanding checks][semantic-qualification]
+- [Optional feedback and support conversations](packages/feedback/README.md)
 - [Cognitive-accessibility publication rule][cognitive-publication]
 - [Brand style guide](docs/brand/STYLE-GUIDE.md)
 

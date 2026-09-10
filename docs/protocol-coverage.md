@@ -332,6 +332,22 @@ An uncooperative callback can outlive the framework's wait. Successful shutdown
 does not prove delivery to an external observability service. This limit keeps
 the operations claim partial.
 
+## Optional Feedback Package
+
+**Status: Checked application capability, not an MCP protocol claim.**
+`@emseepea/feedback` composes ordinary tools through `additionalTools`. Tests
+cover bounded detailed submissions, protected append-only conversations,
+client-scoped access, first-offer receipts, deadlines, cancellation, minimal
+events, PostgreSQL, Firestore, and deterministic GitHub and Zendesk HTTP
+contracts. Checked webhook boundaries authenticate, validate, scope, bound, and
+deduplicate provider changes.
+
+GitHub and Zendesk checks do not prove behavior in a live customer account.
+Provider-native assignment, categories, milestones, status automation,
+notifications, and email require deployment-specific qualification. Feedback
+performance is not claimed. See the
+[`@emseepea/feedback` guide](../packages/feedback/README.md).
+
 ## Why Full Coverage Is Not Claimed
 
 Em See Pea supports useful parts of the active server surface, but it does not

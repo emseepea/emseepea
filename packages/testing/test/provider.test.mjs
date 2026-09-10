@@ -148,6 +148,21 @@ test("native tool assertions come from provider MCP events", () => {
     }] } }
     : event), tools), /forbidden tool/);
   assert.throws(() => parseNativeClaudeEvents(events.slice(1), tools, true), /initialization evidence/);
+
+  const excessive = Array.from({ length: 4 }, (_, index) => ({
+    type: "assistant",
+    message: { content: [{
+      type: "tool_use",
+      id: `call-${index}`,
+      name: "mcp__emseepea_eval__get-pea",
+      input: { name: `Pea ${index}` },
+    }] },
+  }));
+  assert.throws(
+    () => parseNativeClaudeEvents(excessive, tools),
+    (error) => error.message === "Model command used more than three tools"
+      && error.attemptedToolCalls.length === 4,
+  );
 });
 
 test("requires exact judge JSON", () => {

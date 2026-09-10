@@ -1,6 +1,7 @@
 import test from "node:test";
 import {
   assertNoToolCalls,
+  assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
   assertToolCalls,
@@ -35,4 +36,5 @@ test("searches once and remembers the common name for a follow-up", async (t) =>
   const followUp = await chat.send("What was its common name?");
   assertNoToolCalls(followUp);
   assertResponseContains(followUp, "Common Pea");
+  assertNoNegativeFeedback(search, followUp);
 });

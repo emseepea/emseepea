@@ -39,9 +39,12 @@ take over, and which application responsibilities remain yours.
 - Protected capabilities with public discovery by default, or explicit permission-shaped discovery.
 - Reference material and reusable prompts for assistants.
 - Tools that send progress updates while they work.
+- Optional detailed feedback and durable support conversations.
 - Optional web forms, using native HTML or React.
 
 [Choose an example](./examples/) that matches what you want to build.
+
+[Add feedback](./feedback/) after choosing the application shape.
 
 ## Test the choice and meaning, not just the response
 

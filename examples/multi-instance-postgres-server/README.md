@@ -117,6 +117,13 @@ to the shared database continues to serve the same state.
 - No claim of exactly-once external effects, latency, throughput, or unlimited
   scale.
 
+## Add Feedback
+
+Install `@emseepea/feedback` when this server needs a detailed one-way
+observation or a durable support conversation. Pass its tools through the
+application factory's `additionalTools` option. Choose PostgreSQL, Firestore,
+GitHub Issues, or Zendesk in the [feedback guide](../../packages/feedback/README.md).
+
 ## Check This Project
 
 [Ordinary tests](test/) prove cross-process state, complete-state replacement,

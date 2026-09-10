@@ -109,6 +109,13 @@ The tools never accept SQL, operators, table names, sort expressions, or
 destinations from the caller. PostgreSQL statements have a 1.5 second timeout,
 the connection pool is bounded, and provider failures return a generic error.
 
+## Add Feedback
+
+Install `@emseepea/feedback` when this server needs a detailed one-way
+observation or a durable support conversation. Pass its tools through the
+application factory's `additionalTools` option. Choose PostgreSQL, Firestore,
+GitHub Issues, or Zendesk in the [feedback guide](../../packages/feedback/README.md).
+
 ## Check This Project
 
 Run generation, lint, build, and ordinary integration tests without spending

@@ -27,6 +27,7 @@ test("the public package list and built initializers are complete", async () => 
   ]);
   assert.deepEqual((await publishablePackages()).map(({ name }) => name), [
     "@emseepea/server",
+    "@emseepea/feedback",
     "@emseepea/testing",
     "@emseepea/react",
     "@emseepea/tailwind",
@@ -45,6 +46,7 @@ test("the public package list and built initializers are complete", async () => 
     const manifest = JSON.parse(await readFile(new URL(`${initializer.path}/package.json`, root), "utf8"));
     const template = JSON.parse(await readFile(new URL(`${initializer.path}/initializer-dist/template/package.json`, root), "utf8"));
     const readme = await readFile(new URL(`${initializer.path}/README.md`, root), "utf8");
+    const semanticTest = await readFile(new URL(`${initializer.path}/eval/meaning.test.mjs`, root), "utf8");
     assert.match(initializer.path, /^examples\//, `${initializer.name} is not colocated with its example`);
     assert.equal(path.basename(initializer.path), initializer.name.split("/create-")[1]);
     assert.ok(rootReadme.includes(`](${initializer.path}/README.md)`));
@@ -58,6 +60,9 @@ test("the public package list and built initializers are complete", async () => 
     await assert.rejects(access(new URL(`../../packages/${initializer.key}/package.json`, import.meta.url)));
     assert.equal(template.private, true);
     assert.equal(template.starterDependencies, undefined);
+    assert.equal(template.dependencies?.["@emseepea/feedback"], undefined);
+    assert.ok(template.devDependencies?.["@emseepea/feedback"]);
+    assert.match(semanticTest, /assertNoNegativeFeedback\(/);
     for (const [name, version] of Object.entries({ ...template.dependencies, ...template.devDependencies })) {
       assert.ok(!name.startsWith("@emseepea/example-"), `${initializer.name} retains ${name}`);
       assert.doesNotMatch(version, /^(?:file:|workspace:|\.\.?[\\/])/);

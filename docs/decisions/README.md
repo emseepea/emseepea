@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 64 decisions: 33 current and 31 historical.
+This project has 65 decisions: 34 current and 31 historical.
 
 ## Quick Index
 
@@ -44,6 +44,7 @@ This project has 64 decisions: 33 current and 31 historical.
 - [ADR-0063: Two MongoDB Collection Validation Patterns](0063-two-mongodb-collection-validation-patterns.proposed.md): Proposed; human review confirmed.
 - [ADR-0064: Typed Authentication with Optional Permission-Shaped Discovery](0064-typed-authentication-with-optional-permission-shaped-discovery.proposed.md): Proposed; human review confirmed.
 - [ADR-0065: Typed Operations with Framework-Redacted Observability Adapters](0065-framework-redacted-observability-adapters.proposed.md): Proposed; human review confirmed.
+- [ADR-0066: Pluggable Detailed Feedback Conversations and Event Hooks](0066-pluggable-detailed-feedback-conversations-and-event-hooks.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -1404,3 +1405,28 @@ Chosen option: **"Framework-redacted observability adapters"**, because one safe
 - No public adapter can register lifecycle hooks or bypass authentication, authorization, validation, limits, cancellation, or safe errors.
 - README, website, API reference, standalone generated-project checks, semantic evaluation where model-visible behaviour changes, software bills of materials, provenance, registry checks, and exact-release checks reflect the adapter model.
 - Measured CPU, allocation, and event-size evidence meets the existing whole-request performance budget and any separately published adapter claim before release.
+
+### [ADR-0066: Pluggable Detailed Feedback Conversations and Event Hooks](0066-pluggable-detailed-feedback-conversations-and-event-hooks.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0066 Decision
+
+Chosen option: **"Optional feedback package with detailed submissions, durable conversations, vendor-authoritative adapters, and typed event hooks"**, because it makes the user-facing and backend contracts reusable without weakening the checked kernel or forcing feedback into every server.
+
+#### ADR-0066 Checks
+
+- The package exposes separate detailed-submission and conversation constructors without changing the framework observability event contract.
+- Public submissions accept bounded explanatory prose and application-declared structured context, while tests prove there is no automatic chat, payload, credential, identifier, or sensitive-value capture.
+- Conversation tests prove scope isolation, append-only ordering, pagination, concurrent writes, status changes, and exact thread correlation.
+- PostgreSQL and Firestore contract tests prove their documented atomicity, receipt uniqueness, and optional transactional outbox behaviour.
+- GitHub integration tests prove issue creation, exact issue correlation, support comments, labels, assignment, milestones, close and reopen changes, client offer receipts, later user comments, and native notification compatibility.
+- Zendesk integration tests prove ticket creation, exact ticket correlation, requester and agent public comments, private-note exclusion, assignment, categorisation, status changes, client offer receipts, later user comments, ticket audit visibility, and native email compatibility.
+- Checked ingestion tests reject unauthenticated, oversized, invalid, duplicate, expired, and caller-selected-destination vendor events before state or hook effects.
+- Hook tests prove immutable minimal events, bounded dispatch attempts, failure isolation, consumer deduplication support, and absence of feedback bodies, summaries, recipients, raw vendor data, credentials, requests, and responses.
+- Native multi-turn semantic tests, without coaching context, prove the AI records each notable positive or negative observation openly, does not ask permission first, does not record expected empty or uneventful behaviour, stops after objection, avoids duplicate observations, retrieves team replies, presents their meaning to the user, and continues the same thread.
+- Semantic evidence contains synthetic non-sensitive conversations, tool calls, tool results, assistant responses, expectations, and judge reasons.
+- Ordinary checks run before the later, more expensive semantic evaluations.
+- README files, the website, API reference, generated standalone projects, software bills of materials, provenance, registry readback, and clean-install verification cover the released feedback package and supported adapters.
+- No feedback performance claim is published until representative database and ticketing profiles are measured with a stated percentile and workload.

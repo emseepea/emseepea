@@ -73,6 +73,7 @@ test("the initialized quickstart passes its documented checks", {
     if (packageSource === "packed") {
       const generatedManifest = JSON.parse(await readFile(path.join(project, "package.json"), "utf8"));
       generatedManifest.dependencies["@emseepea/server"] = `file:${await packPackage("packages/framework", directory)}`;
+      generatedManifest.devDependencies["@emseepea/feedback"] = `file:${await packPackage("packages/feedback", directory)}`;
       generatedManifest.devDependencies["@emseepea/testing"] = `file:${await packPackage("packages/testing", directory)}`;
       await writeFile(path.join(project, "package.json"), `${JSON.stringify(generatedManifest, null, 2)}\n`);
     }
@@ -94,7 +95,7 @@ test("the initialized quickstart passes its documented checks", {
       const timeout = command === "npm install --ignore-scripts" ? 600_000 : 120_000;
       await exec(binary, args, { cwd: project, env, timeout, maxBuffer: 1024 * 1024 });
     }
-    for (const name of ["@emseepea/server", "@emseepea/testing"]) {
+    for (const name of ["@emseepea/server", "@emseepea/feedback", "@emseepea/testing"]) {
       const installed = JSON.parse(await readFile(path.join(project, "node_modules", name, "package.json"), "utf8"));
       assert.equal(installed.version, manifest.dependencies?.[name] ?? manifest.devDependencies?.[name]);
     }

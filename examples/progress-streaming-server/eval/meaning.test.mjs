@@ -1,15 +1,23 @@
 import test from "node:test";
 import {
   assertNoToolCalls,
+  assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
   assertToolCalls,
   createConversation,
 } from "@emseepea/testing/semantic";
 
+const server = new URL(import.meta.resolve("@emseepea/feedback/testing-server"));
+const environment = {
+  EMSEEPEA_EVAL_APP_MODULE: new URL("../dist/app.js", import.meta.url).href,
+  EMSEEPEA_EVAL_APP_FACTORY: "createProgressStreamingServer",
+};
+
 test("keeps progress stages distinct from the completed result", async (t) => {
   const chat = await createConversation(t, {
-    server: new URL("../dist/server.js", import.meta.url),
+    server,
+    environment,
   });
 
   // The judge checks the important progress-versus-result distinction once.
@@ -34,4 +42,5 @@ test("keeps progress stages distinct from the completed result", async (t) => {
   );
   assertNoToolCalls(followUp);
   assertResponseContains(followUp, "sow");
+  assertNoNegativeFeedback(response, followUp);
 });

@@ -21,6 +21,7 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
+    "@emseepea/feedback": "0.0.0",
     "@emseepea/server": "0.4.0",
     "pg": "8.23.0",
     "zod": "4.4.3",

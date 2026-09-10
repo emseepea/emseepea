@@ -116,6 +116,8 @@ jobs:
           npm run generate:check -w @emseepea/create-soap-backed-server
       - name: Verify every standalone initializer
         run: npm run test:initializers:packed
+      - name: Check the PostgreSQL feedback adapter
+        run: npm run test:postgres -w @emseepea/feedback
       - name: Enforce integration example performance budgets
         run: |
           cd "$GITHUB_WORKSPACE/examples/database-schema-server"

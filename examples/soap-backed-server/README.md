@@ -101,6 +101,13 @@ service XSD. Public failures contain no provider details.
 `get-pea-variety` retrieves one variety and returns described JSON. The MCP
 caller never sees SOAP XML or chooses transport details.
 
+## Add Feedback
+
+Install `@emseepea/feedback` when this server needs a detailed one-way
+observation or a durable support conversation. Pass its tools through the
+application factory's `additionalTools` option. Choose PostgreSQL, Firestore,
+GitHub Issues, or Zendesk in the [feedback guide](../../packages/feedback/README.md).
+
 ## Check This Project
 
 Run generation, lint, build, and ordinary tests without spending model tokens:

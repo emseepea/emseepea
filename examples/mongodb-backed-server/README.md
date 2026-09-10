@@ -114,6 +114,13 @@ The tools never accept database operators, collection names, sort documents,
 or destinations. The pool and database operations are bounded, and provider
 failures return a generic error.
 
+## Add Feedback
+
+Install `@emseepea/feedback` when this server needs a detailed one-way
+observation or a durable support conversation. Pass its tools through the
+application factory's `additionalTools` option. Choose PostgreSQL, Firestore,
+GitHub Issues, or Zendesk in the [feedback guide](../../packages/feedback/README.md).
+
 ## Check This Project
 
 Run lint, build, and ordinary database integration tests without spending model

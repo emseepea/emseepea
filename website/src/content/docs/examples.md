@@ -50,6 +50,19 @@ catalogue itself is sensitive. Protected discovery shows each principal only
 the capabilities allowed by their permissions. OAuth metadata remains public
 so clients can learn how to authenticate.
 
+## Add feedback to any starter
+
+Feedback is a cross-cutting capability, not another application shape. Install
+`@emseepea/feedback` after choosing any starter. Add a public detailed
+submission, a protected durable support conversation, or both through the
+starter's `additionalTools` option.
+
+PostgreSQL and Firestore can keep append-only conversations and transactional
+notification outboxes. GitHub Issues and Zendesk can remain the authoritative
+support system, including native replies, actions, status, and notifications.
+
+[Choose a feedback mode and backend](../feedback/).
+
 ## Share reference material and prompts
 
 Provide readable resources, resource addresses with parameters, reusable

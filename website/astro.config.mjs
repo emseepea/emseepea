@@ -26,7 +26,7 @@ export default defineConfig({
       Search: "./src/components/Search.astro",
     },
     sidebar: [
-      { label: "Start here", items: ["index", "getting-started", "ai-tests", "less-server-code"] },
+      { label: "Start here", items: ["index", "getting-started", "ai-tests", "feedback", "less-server-code"] },
       { label: "Explore", items: ["examples"] },
     ],
   })],

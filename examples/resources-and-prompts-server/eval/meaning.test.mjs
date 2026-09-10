@@ -1,13 +1,21 @@
 import test from "node:test";
 import {
   assertNoToolCalls,
+  assertNoNegativeFeedback,
   assertResponseMeaning,
   createConversation,
 } from "@emseepea/testing/semantic";
 
+const server = new URL(import.meta.resolve("@emseepea/feedback/testing-server"));
+const environment = {
+  EMSEEPEA_EVAL_APP_MODULE: new URL("../dist/app.js", import.meta.url).href,
+  EMSEEPEA_EVAL_APP_FACTORY: "createResourcesAndPromptsServer",
+};
+
 test("does not pretend an unselected resource was supplied", async (t) => {
   const chat = await createConversation(t, {
-    server: new URL("../dist/server.js", import.meta.url),
+    server,
+    environment,
   });
 
   const response = await chat.send(
@@ -23,4 +31,5 @@ test("does not pretend an unselected resource was supplied", async (t) => {
       "The response does not claim to know the guide's recommendation. It says " +
       "the user must select or attach the resource before its content can be used.",
   });
+  assertNoNegativeFeedback(response);
 });

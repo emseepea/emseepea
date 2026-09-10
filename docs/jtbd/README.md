@@ -32,3 +32,27 @@ Maintainers who extend and publish Em See Pea.
 | JTBD-100 | Extend the supported protocol | [Extend the supported protocol](framework-maintainer/JTBD-100-extend-the-supported-protocol.proposed.md) |
 | JTBD-101 | Publish installable packages safely | [Publish installable packages safely](framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md) |
 | JTBD-102 | Keep guidance accurate | [Keep guidance accurate](framework-maintainer/JTBD-102-keep-guidance-accurate.proposed.md) |
+
+## Model Context Protocol Application User
+
+People completing tasks with an AI application connected to an Em See Pea server.
+
+[Persona definition](mcp-application-user/persona.md)
+
+### Proposed
+
+| ID | Job | File |
+| --- | --- | --- |
+| JTBD-200 | Give feedback without disrupting my task | [Give feedback without disrupting my task](mcp-application-user/JTBD-200-give-feedback-without-disrupting-my-task.proposed.md) |
+
+## Feedback Operator
+
+Support team members who investigate and respond to MCP application feedback.
+
+[Persona definition](feedback-operator/persona.md)
+
+### Proposed
+
+| ID | Job | File |
+| --- | --- | --- |
+| JTBD-300 | Handle MCP feedback in my existing support system | [Handle MCP feedback in my existing support system](feedback-operator/JTBD-300-handle-mcp-feedback-in-my-existing-support-system.proposed.md) |

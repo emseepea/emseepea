@@ -14,6 +14,17 @@ Use `createConversation` inside an ordinary `node:test` test. Send one or more
 user prompts, then assert exact tool calls and response meaning with the exported
 semantic assertions.
 
+Use `assertToolNames` when one tool has intentionally free-form arguments. Pair
+it with `assertToolArguments` for the stable call and `assertFeedback` for the
+feedback observation and important detail. Keep `assertToolCalls` when every
+complete argument should match exactly.
+
+For a successful application journey that advertises `submit-feedback`, call
+`assertNoNegativeFeedback(...turns)` once after its normal assertions. It fails
+if the AI records an error, friction, annoyance, unnecessary difficulty,
+confusion, repetition, an unexpected bad result, or a capability mismatch. The
+evidence records both the expectation and any offending call.
+
 The runner sends each prompt unchanged through one provider-native MCP
 conversation. It does not add tool-selection instructions, a JSON call plan,
 advertised-tool text, an answer wrapper, or prepared MCP material. Exact tool

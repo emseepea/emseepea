@@ -13,11 +13,11 @@ export interface DatabaseSchemaExampleOptions extends EmseepeaExtensions {
 }
 
 export async function createDatabaseSchemaExample(options: DatabaseSchemaExampleOptions) {
-  const { access = { access: "public" }, authentication, observability } = options;
+  const { databaseUrl: databaseUrlOption, access = { access: "public" }, ...extensions } = options;
   const databaseUrl = z.string().url().refine(
     (value) => ["postgres:", "postgresql:"].includes(new URL(value).protocol),
     "databaseUrl must use PostgreSQL",
-  ).parse(options.databaseUrl);
+  ).parse(databaseUrlOption);
   let database: Pool | undefined = new Pool({
     connectionString: databaseUrl,
     connectionTimeoutMillis: 2_000,
@@ -50,8 +50,7 @@ export async function createDatabaseSchemaExample(options: DatabaseSchemaExample
       database: () => database,
       access,
     }),
-    authentication,
-    observability,
+    ...extensions,
   });
   const closeProvider = async () => {
     const activeDatabase = database;

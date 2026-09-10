@@ -192,6 +192,7 @@ if (!process.argv.includes("--input-format")) {
   } = {}) => `
 import test from "node:test";
 import {
+  assertNoNegativeFeedback,
   assertNoToolCalls,
   assertResponseContains,
   assertResponseMeaning,
@@ -215,6 +216,7 @@ test("inventory conversation", async (t) => {
   const followUp = await chat.send("How many packets were inbound?");
   assertNoToolCalls(followUp);
   assertResponseContains(followUp, "40 inbound packets");
+  assertNoNegativeFeedback(inventory, followUp);
   ${followUpMeaning ? `await assertResponseMeaning(followUp, { expected: ${JSON.stringify(followUpMeaning)} });` : ""}
   ${firstResponseAssertions ? `await assertResponseMeaning(inventory, { expected: ${JSON.stringify(meaning)} });` : ""}
 });
@@ -261,6 +263,8 @@ test("inventory conversation", async (t) => {
       && turns[0].toolCalls[0].name === "get-private-inventory-report"
       && turns[0].toolCalls[0].result.includes('"onHand":120')
       && turns[0].expectedCalls[0].name === "get-private-inventory-report"
+      && turns[0].expectedNegativeFeedback === false
+      && turns[0].negativeFeedbackCalls.length === 0
       && turns[0].expectedResponseContent.includes("85 packets available to promise")
       && turns[0].expectedMeaning === "The response says 85 packets are available to promise."));
   assert.ok(record.judgeVerdicts.every(({ expectedMeaning, verdict }) =>

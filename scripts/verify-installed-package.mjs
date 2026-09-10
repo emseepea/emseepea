@@ -10,6 +10,7 @@ import {
   renderElicitationForm,
   serveEmseepea,
 } from "@emseepea/server";
+import { defineFeedbackSubmission } from "@emseepea/feedback";
 import { z } from "zod";
 
 const value = z.object({ value: z.string() });
@@ -32,6 +33,16 @@ const tool = defineTool({
   inputSchema: value,
   outputSchema: value,
   handler: ({ value }) => ({ text: value, data: { value } }),
+});
+const feedback = defineFeedbackSubmission({
+  access: "public",
+  scope: "release-smoke",
+  backend: {
+    submit: () => ({
+      id: "release-feedback",
+      recordedAt: "2026-09-10T00:00:00.000Z",
+    }),
+  },
 });
 let availabilityCalls = 0;
 const mapped = defineMappedTool({
@@ -89,6 +100,7 @@ const app = createEmseepea({
   name: "installed-package-smoke",
   version: "0.0.0",
   tools: [tool, mapped, streaming],
+  additionalTools: [feedback],
   resources: [resource, resourceTemplate],
   prompts: [prompt],
 });
@@ -122,6 +134,16 @@ const request = async (method, params = {}) => {
   return response.json();
 };
 try {
+  const feedbackResult = await request("tools/call", {
+    name: "submit-feedback",
+    arguments: {
+      observation: "notable_success",
+      detail: "The installed feedback package worked.",
+    },
+  });
+  if (feedbackResult.result.structuredContent?.id !== "release-feedback") {
+    throw new Error("installed feedback package did not compose with the server");
+  }
   const mappedResult = await request("tools/call", {
     name: "smoke-mapped-tool",
     arguments: { value: "checked" },

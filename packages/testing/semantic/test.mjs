@@ -101,7 +101,14 @@ export async function createConversation(testContext, options) {
           );
           const answer = await trial.model.send(prompt);
           const calls = answer.calls;
-          trial.history.push({ user: prompt, assistant: answer.answer });
+          trial.history.push({
+            user: prompt,
+            toolCalls: calls.map((call, index) => ({
+              ...call,
+              result: answer.toolResults[index],
+            })),
+            assistant: answer.answer,
+          });
           const record = {
             turn: trial.record.turns.length + 1,
             interactionMode: "native-mcp",
@@ -141,7 +148,12 @@ export async function createConversation(testContext, options) {
           });
         }
       } catch (error) {
-        if (activeTrial) activeTrial.record.error = safeModelFailure(error);
+        if (activeTrial) {
+          activeTrial.record.error = safeModelFailure(error);
+          if (Array.isArray(error?.attemptedToolCalls)) {
+            activeTrial.record.attemptedToolCalls = error.attemptedToolCalls;
+          }
+        }
         state.failed = true;
         evidence.failedPhase = "conversation turn";
         throw new Error(`Semantic test failed during conversation turn: ${name}`);
@@ -177,6 +189,97 @@ export function assertToolCalls(turn, expected) {
 
 export function assertNoToolCalls(turn) {
   assertToolCalls(turn, []);
+}
+
+export function assertToolNames(turn, expected) {
+  const trials = turnTrials(turn);
+  if (!Array.isArray(expected) || expected.some((name) => typeof name !== "string" || !name.trim())) {
+    throw new Error("Expected tool names must be a string array");
+  }
+  for (const trial of trials) {
+    trial.record.expectedTools = expected;
+    recordFlexibleExpectation(trial.record);
+  }
+  try {
+    for (const trial of trials) assert.deepStrictEqual(trial.calls.map(({ name }) => name), expected);
+  } catch {
+    failAssertion(trials, "tool-name assertion");
+    throw new Error("Tool names did not match the expected order and count");
+  }
+}
+
+export function assertToolArguments(turn, name, expected) {
+  const trials = turnTrials(turn);
+  if (typeof name !== "string" || !name.trim() || !expected || typeof expected !== "object"
+    || Array.isArray(expected)) {
+    throw new Error("Tool argument expectation needs a name and object arguments");
+  }
+  for (const trial of trials) {
+    const matches = trial.calls.filter((call) => call.name === name);
+    trial.record.expectedArguments ??= {};
+    trial.record.expectedArguments[name] = expected;
+    recordFlexibleExpectation(trial.record);
+    try {
+      assert.equal(matches.length, 1);
+      assert.deepStrictEqual(matches[0].arguments, expected);
+    } catch {
+      failAssertion([trial], "tool-argument assertion");
+      throw new Error(`Arguments for ${name} did not match exactly`);
+    }
+  }
+}
+
+export function assertFeedback(turn, expectation) {
+  const trials = turnTrials(turn);
+  const observations = typeof expectation?.observation === "string"
+    ? [expectation.observation]
+    : expectation?.observation;
+  const detailIncludes = expectation?.detailIncludes;
+  if (!Array.isArray(observations) || observations.length === 0
+    || !Array.isArray(detailIncludes) || detailIncludes.length === 0
+    || [...observations, ...detailIncludes].some((value) => typeof value !== "string" || !value.trim())) {
+    throw new Error("Feedback expectation needs observation and detailIncludes strings");
+  }
+  for (const trial of trials) {
+    trial.record.expectedFeedback = { observation: observations, detailIncludes };
+    recordFlexibleExpectation(trial.record);
+    const calls = trial.calls.filter(({ name }) => name === "submit-feedback");
+    const detail = calls[0]?.arguments?.detail;
+    if (calls.length !== 1
+      || !observations.includes(calls[0].arguments?.observation)
+      || typeof detail !== "string"
+      || detailIncludes.some((value) => !detail.toLowerCase().includes(value.toLowerCase()))) {
+      failAssertion([trial], "feedback assertion");
+      throw new Error("Feedback did not match the expected observation and useful detail");
+    }
+  }
+}
+
+const negativeFeedbackObservations = new Set([
+  "error",
+  "friction",
+  "annoyance",
+  "unnecessary_difficulty",
+  "confusion",
+  "repetition",
+  "unexpected_bad_result",
+  "capability_mismatch",
+]);
+
+export function assertNoNegativeFeedback(...turns) {
+  if (turns.length === 0) throw new Error("No-negative-feedback assertion needs at least one turn");
+  const trials = turns.flatMap(turnTrials);
+  for (const trial of trials) {
+    const offendingCalls = trial.calls.filter((call) =>
+      call.name === "submit-feedback"
+      && negativeFeedbackObservations.has(call.arguments?.observation));
+    trial.record.expectedNegativeFeedback = false;
+    trial.record.negativeFeedbackCalls = offendingCalls;
+    if (offendingCalls.length > 0) {
+      failAssertion([trial], "negative-feedback assertion");
+      throw new Error("A successful example interaction recorded negative feedback");
+    }
+  }
 }
 
 export function assertResponseContains(turn, expected) {
@@ -322,7 +425,7 @@ async function closeConversation(state, evidence, output) {
   await mkdir(dirname(output), { recursive: true });
   await writeFile(output, `${JSON.stringify(evidence, null, 2)}\n`, { mode: 0o600 });
   if (!complete && !state.failed) {
-    throw new Error("Semantic conversation needs exact tool-call assertions for every turn and a meaning assertion");
+    throw new Error("Semantic conversation needs tool-selection assertions for every turn and a meaning assertion");
   }
 }
 
@@ -341,6 +444,14 @@ function turnTrials(turn) {
 function failAssertion(trials, phase) {
   for (const trial of trials) trial.state.failed = true;
   trials[0].evidence.failedPhase = phase;
+}
+
+function recordFlexibleExpectation(record) {
+  record.expectedSelectionSha256 = hash(JSON.stringify({
+    tools: record.expectedTools,
+    arguments: record.expectedArguments,
+    feedback: record.expectedFeedback,
+  }));
 }
 
 function judgePrompt(history, expected) {

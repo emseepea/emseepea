@@ -168,6 +168,22 @@ factory in every initializer accepts the same `EmseepeaExtensions` type, so an
 API, database, SOAP, or UI server can add either feature without changing
 templates.
 
+The same extension type accepts `additionalTools`. Use it to compose optional
+capability packages without replacing the initializer's own discovered tool
+catalogue:
+
+```ts
+const app = await createToolServer({
+  additionalTools: feedbackTools,
+  authentication,
+  observability,
+});
+```
+
+Duplicate public names are rejected before the server listens. See the
+[`@emseepea/feedback` guide](../feedback/README.md) for a complete optional
+capability example.
+
 Every capability declares an access policy. Public discovery is the default,
 including when protected capabilities exist. The framework authenticates only
 protected calls in this mode.

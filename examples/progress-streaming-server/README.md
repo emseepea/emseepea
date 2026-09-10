@@ -68,6 +68,13 @@ To adapt it for a public server, see
 It does not add saved sessions, replay, subscriptions, or recovery after
 reconnecting.
 
+## Add Feedback
+
+Install `@emseepea/feedback` when this server needs a detailed one-way
+observation or a durable support conversation. Pass its tools through the
+application factory's `additionalTools` option. Choose PostgreSQL, Firestore,
+GitHub Issues, or Zendesk in the [feedback guide](../../packages/feedback/README.md).
+
 ## Check This Example
 
 [Ordinary tests](test/) live in `test/`.

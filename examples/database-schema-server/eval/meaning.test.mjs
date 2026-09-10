@@ -1,10 +1,14 @@
 import test from "node:test";
 import {
+  assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
   assertToolCalls,
   createConversation,
 } from "@emseepea/testing/semantic";
+
+const server = new URL(import.meta.resolve("@emseepea/feedback/testing-server"));
+const appModule = new URL("../dist/app.js", import.meta.url).href;
 
 const trialDatabaseUrls = [1, 2, 3].map((trial) => {
   const value = process.env[`DATABASE_URL_TRIAL_${trial}`];
@@ -14,8 +18,13 @@ const trialDatabaseUrls = [1, 2, 3].map((trial) => {
 
 test("finds and adds pea varieties through natural requests", async (t) => {
   const chat = await createConversation(t, {
-    server: new URL("../dist/server.js", import.meta.url),
-    environment: (trial) => ({ DATABASE_URL: trialDatabaseUrls[trial - 1] }),
+    server,
+    environment: (trial) => ({
+      DATABASE_URL: trialDatabaseUrls[trial - 1],
+      EMSEEPEA_EVAL_APP_MODULE: appModule,
+      EMSEEPEA_EVAL_APP_FACTORY: "createDatabaseSchemaExample",
+      EMSEEPEA_EVAL_APP_KIND: "postgres",
+    }),
   });
 
   // One read and one write show both important selection decisions. Procedure
@@ -45,4 +54,5 @@ test("finds and adds pea varieties through natural requests", async (t) => {
     },
   }]);
   assertResponseContains(added, ["Golden Sweet", "mangetout", "70"]);
+  assertNoNegativeFeedback(fastest, added);
 });

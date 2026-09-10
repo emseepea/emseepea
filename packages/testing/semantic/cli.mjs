@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
@@ -123,14 +124,39 @@ function validRecord(record, authoritative, smoke) {
       && typeof turn.response === "string"
       && isHash(turn.promptSha256) && isHash(turn.answerSha256)
       && isHash(turn.advertisedToolsSha256) && isHash(turn.selectedCallsSha256)
-      && isHash(turn.expectedCallsSha256)
       && Array.isArray(turn.toolCalls)
-      && JSON.stringify(turn.toolCalls.map(({ name, arguments: args }) => ({ name, arguments: args })))
-        === JSON.stringify(turn.expectedCalls)
+      && validToolAssertions(turn, isHash)
       && turn.toolCalls.every((call) => Object.hasOwn(call, "result"))
       && JSON.stringify(turn.selectedTools) === JSON.stringify(turn.expectedTools)
       && Array.isArray(turn.pathEvidence) && turn.pathEvidence.length === turn.toolCallCount
       && turn.pathEvidence.every(({ method, target, requestSha256, responseSha256 }) =>
         method === "tools/call" && turn.selectedTools.includes(target)
           && isHash(requestSha256) && isHash(responseSha256))));
+}
+
+function validToolAssertions(turn, isHash) {
+  if (isHash(turn.expectedCallsSha256)) {
+    return JSON.stringify(turn.toolCalls.map(({ name, arguments: args }) => ({ name, arguments: args })))
+      === JSON.stringify(turn.expectedCalls);
+  }
+  if (!isHash(turn.expectedSelectionSha256)) return false;
+  const expectedHash = createHash("sha256").update(JSON.stringify({
+    tools: turn.expectedTools,
+    arguments: turn.expectedArguments,
+    feedback: turn.expectedFeedback,
+  })).digest("hex");
+  if (expectedHash !== turn.expectedSelectionSha256) return false;
+  for (const [name, expected] of Object.entries(turn.expectedArguments ?? {})) {
+    const matches = turn.toolCalls.filter((call) => call.name === name);
+    if (matches.length !== 1 || JSON.stringify(matches[0].arguments) !== JSON.stringify(expected)) return false;
+  }
+  if (turn.expectedFeedback) {
+    const calls = turn.toolCalls.filter((call) => call.name === "submit-feedback");
+    const detail = calls[0]?.arguments?.detail;
+    if (calls.length !== 1 || !turn.expectedFeedback.observation.includes(calls[0].arguments?.observation)
+      || typeof detail !== "string" || turn.expectedFeedback.detailIncludes.some(
+        (value) => !detail.toLowerCase().includes(value.toLowerCase()),
+      )) return false;
+  }
+  return true;
 }

@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { serveEmseepea } from "@emseepea/server";
+import { defineFeedbackSubmission } from "@emseepea/feedback";
 import { createBackendExample } from "../dist/app.js";
 import { inaturalistFixture } from "./inaturalist-fixture.mjs";
 
-const app = await createBackendExample({
+const client = {
   async get({ pathname, searchParams }) {
     assert.equal(pathname, "/v1/taxa");
     const { q, ...options } = searchParams;
@@ -11,7 +12,12 @@ const app = await createBackendExample({
     assert.deepEqual(options, { rank: "species", per_page: "5" });
     return inaturalistFixture;
   },
+};
+const feedback = defineFeedbackSubmission({
+  access: "public",
+  backend: { submit: () => ({ id: crypto.randomUUID(), recordedAt: new Date().toISOString() }) },
 });
+const app = await createBackendExample(client, { additionalTools: [feedback] });
 const running = await serveEmseepea(app, { port: 0 });
 
 console.log(`Em See Pea API-backed fixture listening at ${running.url}`);

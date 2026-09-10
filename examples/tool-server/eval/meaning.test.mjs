@@ -1,6 +1,7 @@
 import test from "node:test";
 import {
   assertNoToolCalls,
+  assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
   assertToolCalls,
@@ -8,10 +9,16 @@ import {
 } from "@emseepea/testing/semantic";
 
 const protectedServer = new URL("./protected-server.mjs", import.meta.url);
+const server = new URL(import.meta.resolve("@emseepea/feedback/testing-server"));
+const environment = {
+  EMSEEPEA_EVAL_APP_MODULE: new URL("../dist/app.js", import.meta.url).href,
+  EMSEEPEA_EVAL_APP_FACTORY: "createToolServer",
+};
 
 test("looks up pea varieties and compares a follow-up", async (t) => {
   const chat = await createConversation(t, {
-    server: new URL("../dist/server.js", import.meta.url),
+    server,
+    environment,
   });
 
   // The first turn's flexible prose needs the one model judge. The follow-up's
@@ -40,6 +47,7 @@ test("looks up pea varieties and compares a follow-up", async (t) => {
     arguments: { name: "Harbour Gem" },
   }]);
   assertResponseContains(comparison, "Harbour Gem");
+  assertNoNegativeFeedback(highland, comparison);
 });
 
 test("protected discovery offers a permitted tool", async (t) => {
@@ -59,6 +67,7 @@ test("protected discovery offers a permitted tool", async (t) => {
   await assertResponseMeaning(answer, {
     expected: "The response says that Highland Snap is a snap pea.",
   });
+  assertNoNegativeFeedback(answer);
 });
 
 test("protected discovery does not offer a hidden tool", async (t) => {
@@ -78,4 +87,5 @@ test("protected discovery does not offer a hidden tool", async (t) => {
     expected:
       "The response explains that it has no available tool for looking up Highland Snap.",
   });
+  assertNoNegativeFeedback(answer);
 });
