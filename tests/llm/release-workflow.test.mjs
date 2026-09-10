@@ -133,8 +133,14 @@ test("publication evidence describes the protected progress boundary", () => {
   );
   assert.match(workflow, /the framework authenticates and authorizes protected calls before application code runs or server-sent events begin/);
   assert.doesNotMatch(workflow, /deployed protected streaming tools/);
-  assert.match(workflow, /transport backpressure and queue overflow/);
-  assert.match(workflow, /resynchronisation, subscriptions, replay, sessions, and framework-managed shared state/);
+  assert.match(workflow, /slowing a producer when a client cannot keep up/);
+  assert.match(workflow, /opt-in, bounded, process-local resource-update subscriptions/);
+  assert.match(workflow, /each stream listens to one registered static resource URI or one concrete URI that matches a registered resource template/);
+  assert.match(workflow, /list-change subscriptions, resynchronisation, replay, sessions, or reconnect recovery/);
+  assert.match(workflow, /durable or cross-process notification delivery/);
+  assert.match(workflow, /framework-managed shared stream state/);
+  assert.doesNotMatch(workflow, /resynchronisation, subscriptions, replay/);
+  assert.match(workflow, /Subscription load check: \\`node --expose-gc --test tests\/load\/subscription-sdk\.test\.mjs\\`/);
 });
 
 test("the feedback bootstrap credential is confined to its exact publication step", () => {
@@ -241,6 +247,8 @@ test("release tags are created at the provenance commit and then verified", () =
 test("the installed-package smoke uses distinct fixed and template resource routes", async () => {
   assert.match(installedSmoke, /const resourceUri = "smoke:\/\/static\/value"/);
   assert.match(installedSmoke, /uriTemplate: "smoke:\/\/resource\/\{value\}"/);
+  assert.match(installedSmoke, /notifyResourceUpdated\(app, resourceUri\)/);
+  assert.match(installedSmoke, /notifications\/resources\/updated/);
   assert.match(workflow, /node --input-type=module < "\$GITHUB_WORKSPACE\/scripts\/verify-installed-package\.mjs"/);
   await exec(process.execPath, [fileURLToPath(new URL("../../scripts/verify-installed-package.mjs", import.meta.url))]);
 });

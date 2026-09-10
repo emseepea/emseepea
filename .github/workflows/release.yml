@@ -176,7 +176,8 @@ jobs:
           - Node.js: $(node --version)
           - npm: $(npm --version)
           - GitHub CLI: $(gh --version | head -1)
-          - Qualification: OSV lockfile scan; npm test; npm run benchmark; npm run test:load:streaming; npm pack; standalone initializer checks
+          - Exact-commit Quality qualification: OSV lockfile scan; package tests; performance benchmarks; streaming and subscription memory tests; package builds; standalone initializer checks
+          - Subscription load check: \`node --expose-gc --test tests/load/subscription-sdk.test.mjs\`
           - Semantic qualification: $SEMANTIC_EVAL_RUN_URL, artifact $SEMANTIC_EVAL_ARTIFACT
           - Reviews: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/$review_record
           - Coverage and limits: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/docs/protocol-coverage.md
@@ -189,6 +190,8 @@ jobs:
             - public discovery by default and explicit permission-shaped protected discovery
             - checked mapped adapters
             - static-resource and non-enumerating resource-template discovery and reads
+            - opt-in, bounded, process-local resource-update subscriptions
+            - each stream listens to one registered static resource URI or one concrete URI that matches a registered resource template
             - prompt listing and rendering
             - opt-in prompt and resource-template completion
             - opt-in bounded pages for tool, resource, resource-address-pattern, and prompt catalogues with opaque cursors
@@ -206,8 +209,10 @@ jobs:
             - changing catalogues while a server runs
             - object or tenant authorization
             - general or authenticated outbound HTTP policy, retries, or effects
-            - transport backpressure and queue overflow
-            - resynchronisation, subscriptions, replay, sessions, and framework-managed shared state
+            - slowing a producer when a client cannot keep up
+            - list-change subscriptions, resynchronisation, replay, sessions, or reconnect recovery
+            - durable or cross-process notification delivery
+            - framework-managed shared stream state
             - website deployment
             - resource, prompt, template, completion, or streaming performance
             - full-profile conformance
