@@ -62,7 +62,11 @@ test("the public package list and built initializers are complete", async () => 
     assert.equal(template.starterDependencies, undefined);
     assert.equal(template.dependencies?.["@emseepea/feedback"], undefined);
     assert.ok(template.devDependencies?.["@emseepea/feedback"]);
-    assert.match(semanticTest, /assertNoNegativeFeedback\(/);
+    if (initializer.example === "resources-and-prompts-server") {
+      assert.match(semanticTest, /assertOptionalToolCall\(response, "submit-feedback"\)/);
+    } else {
+      assert.match(semanticTest, /assertNoNegativeFeedback\(/);
+    }
     for (const [name, version] of Object.entries({ ...template.dependencies, ...template.devDependencies })) {
       assert.ok(!name.startsWith("@emseepea/example-"), `${initializer.name} retains ${name}`);
       assert.doesNotMatch(version, /^(?:file:|workspace:|\.\.?[\\/])/);
