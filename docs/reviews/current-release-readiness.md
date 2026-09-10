@@ -4,19 +4,20 @@ Date: 2026-09-10
 
 ## Release Batch
 
-- `@emseepea/server@0.5.0`
-- `@emseepea/feedback@0.1.0`
-- `@emseepea/testing@0.7.0`
-- `@emseepea/create-api-backed-server@0.0.16`
-- `@emseepea/create-database-schema-server@0.0.3`
-- `@emseepea/create-html-ui-server@0.0.17`
-- `@emseepea/create-mongodb-backed-server@0.0.3`
-- `@emseepea/create-multi-instance-postgres-server@0.0.6`
-- `@emseepea/create-progress-streaming-server@0.0.15`
-- `@emseepea/create-react-ui-server@0.0.16`
-- `@emseepea/create-resources-and-prompts-server@0.0.15`
-- `@emseepea/create-soap-backed-server@0.0.3`
-- `@emseepea/create-tool-server@0.0.17`
+- `@emseepea/server@0.6.1`
+- `@emseepea/feedback@0.1.3`
+- `@emseepea/testing@0.9.2`
+- `@emseepea/react@0.0.13`
+- `@emseepea/create-tool-server@0.0.19`
+- `@emseepea/create-api-backed-server@0.0.17`
+- `@emseepea/create-resources-and-prompts-server@0.0.16`
+- `@emseepea/create-progress-streaming-server@0.0.17`
+- `@emseepea/create-html-ui-server@0.0.18`
+- `@emseepea/create-react-ui-server@0.0.17`
+- `@emseepea/create-multi-instance-postgres-server@0.0.7`
+- `@emseepea/create-database-schema-server@0.0.4`
+- `@emseepea/create-mongodb-backed-server@0.0.4`
+- `@emseepea/create-soap-backed-server@0.0.4`
 
 ## Change for Users
 
@@ -33,15 +34,32 @@ Every maintained starter now demonstrates a semantic negative control. Its
 successful journey advertises the real feedback tool and proves that the AI did
 not report the journey as negative feedback.
 
+Servers can set `discoverable: false` on a tool, resource, resource template, or
+prompt. The capability no longer appears in discovery. A client that knows the
+capability's name can still call it under the same access policy. This supports
+staged retirement before later removal.
+
+Protected tools can stream bounded progress during the POST request. Streaming
+starts only after authentication and authorization succeed, and only when the
+server is behind a trusted proxy. Sessions, replay, subscriptions, and
+framework-managed shared state remain excluded.
+
 ## Local Evidence Before Publication
 
-- Tom Howard ratified ADR-0066 and the two feedback personas and jobs. Their
-  human-oversight markers are confirmed and the decision compendium is current.
+- Tom Howard ratified ADR-0066, ADR-0067, ADR-0068, and the two feedback
+  personas and jobs. Their human-oversight markers are confirmed and the
+  decision compendium is current.
 - TypeScript compilation, lint, package tests, non-container framework tests,
   documentation checks, and website build pass.
 - Feedback adapter contract tests cover validation, deadlines, cancellation,
   scope isolation, append-only ordering, first-offer receipts, hook failure,
   and authenticated deduplicated provider event ingestion.
+- `tests/black-box/discovery-suppression.test.mjs` and
+  `tests/black-box/file-discovery.test.mjs` cover hidden-but-callable and
+  removed-and-uncallable behavior across the supported capability types.
+- `tests/black-box/proxy-progress.test.mjs` and
+  `tests/load/proxy-progress.test.mjs` cover protected progress after access
+  checks and behind the trusted-proxy boundary.
 - A local provider-native evaluation passed all feedback cases across three
   trials and retained inspectable evidence. It covers spontaneous friction and
   notable-success recording, open disclosure, objection and duplicate controls,
