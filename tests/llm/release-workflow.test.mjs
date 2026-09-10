@@ -143,6 +143,11 @@ test("publication evidence describes the protected progress boundary", () => {
   assert.match(workflow, /Subscription load check: \\`node --expose-gc --test tests\/load\/subscription-sdk\.test\.mjs\\`/);
 });
 
+test("the completed feedback bootstrap cannot remain as a credential fallback", () => {
+  assert.doesNotMatch(workflow, /Bootstrap the first feedback publication/);
+  assert.doesNotMatch(workflow, /secrets\.NPM_TOKEN/);
+});
+
 test("registry tarball downloads retry bounded propagation failures", async () => {
   let calls = 0;
   let waits = 0;
