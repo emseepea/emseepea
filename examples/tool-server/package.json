@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-tool-server",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "Create an Em See Pea server with one public tool.",
   "license": "MIT",
   "type": "module",
@@ -21,7 +21,7 @@
     "@emseepea/feedback": "0.1.1",
     "@emseepea/server": "0.5.0",
     "zod": "4.4.3",
-    "@emseepea/testing": "0.8.0",
+    "@emseepea/testing": "0.9.0",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",
     "oxlint": "1.80.0"

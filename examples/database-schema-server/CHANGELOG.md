@@ -1,5 +1,13 @@
 # @emseepea/create-database-schema-server
 
+## 0.0.4
+
+### Patch Changes
+
+- [`8925636`](https://github.com/emseepea/emseepea/commit/8925636bd8ca24cab7c22c73ec89d9de3e5ed17f) Thanks [@tompahoward](https://github.com/tompahoward)! - Allow successful semantic checks to accept one optional positive feedback call
+  after their exact primary tool calls. Also prove that the feedback call
+  succeeded and was openly described.
+
 ## 0.0.3
 
 ### Patch Changes
