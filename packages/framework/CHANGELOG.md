@@ -1,5 +1,13 @@
 # @emseepea/server
 
+## 0.6.0
+
+### Minor Changes
+
+- [`69d5dad`](https://github.com/emseepea/emseepea/commit/69d5dada9cafc9b11e3f16dbd4c1bef6b9adba9f) Thanks [@tompahoward](https://github.com/tompahoward)! - Add a backwards-compatible `discoverable` flag for hiding tools, resources,
+  resource templates, and prompts from discovery while keeping known direct calls
+  available under their existing access policy.
+
 ## 0.5.0
 
 ### Minor Changes
