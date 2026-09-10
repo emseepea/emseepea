@@ -1,5 +1,14 @@
 # @emseepea/create-database-schema-server
 
+## 0.0.5
+
+### Patch Changes
+
+- [`da97d77`](https://github.com/emseepea/emseepea/commit/da97d777f4bfe7081c04ccf593568733d010a7b0) Thanks [@tompahoward](https://github.com/tompahoward)! - Keep the user's original request primary after feedback is submitted. The
+  feedback result now reminds the AI to finish that request and disclose the
+  specific observation, while routine successful tool use is explicitly excluded
+  from feedback.
+
 ## 0.0.4
 
 ### Patch Changes
