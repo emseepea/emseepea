@@ -1,29 +1,31 @@
 # Current Release Readiness
 
-Date: 2026-09-10
+Date: 2026-09-11
 
 ## Release Batch
 
 - `@emseepea/server@0.6.1`
-- `@emseepea/feedback@0.1.3`
-- `@emseepea/testing@0.9.2`
+- `@emseepea/feedback@0.2.0`
+- `@emseepea/testing@0.9.3`
 - `@emseepea/react@0.0.13`
-- `@emseepea/create-tool-server@0.0.19`
-- `@emseepea/create-api-backed-server@0.0.17`
-- `@emseepea/create-resources-and-prompts-server@0.0.16`
-- `@emseepea/create-progress-streaming-server@0.0.17`
-- `@emseepea/create-html-ui-server@0.0.18`
-- `@emseepea/create-react-ui-server@0.0.17`
-- `@emseepea/create-multi-instance-postgres-server@0.0.7`
-- `@emseepea/create-database-schema-server@0.0.4`
-- `@emseepea/create-mongodb-backed-server@0.0.4`
-- `@emseepea/create-soap-backed-server@0.0.4`
+- `@emseepea/create-tool-server@0.0.20`
+- `@emseepea/create-api-backed-server@0.0.18`
+- `@emseepea/create-resources-and-prompts-server@0.0.17`
+- `@emseepea/create-progress-streaming-server@0.0.18`
+- `@emseepea/create-html-ui-server@0.0.19`
+- `@emseepea/create-react-ui-server@0.0.18`
+- `@emseepea/create-multi-instance-postgres-server@0.0.8`
+- `@emseepea/create-database-schema-server@0.0.5`
+- `@emseepea/create-mongodb-backed-server@0.0.5`
+- `@emseepea/create-soap-backed-server@0.0.5`
 
 ## Change for Users
 
 Any Em See Pea server can add optional detailed feedback. Public one-way
 submissions record useful explanations. Protected conversations preserve an
 append-only support thread and bring team replies back to the AI.
+Successful public submissions return a bounded `nextAction` instruction to
+finish the original request and disclose the specific recorded observation.
 
 Applications can use PostgreSQL, Firestore, GitHub Issues, or Zendesk. Typed
 hooks connect feedback events to email, queues, webhooks, Slack, analytics, or
@@ -53,7 +55,9 @@ framework-managed shared state remain excluded.
   documentation checks, and website build pass.
 - Feedback adapter contract tests cover validation, deadlines, cancellation,
   scope isolation, append-only ordering, first-offer receipts, hook failure,
-  and authenticated deduplicated provider event ingestion.
+  authenticated deduplicated provider event ingestion, and the public
+  `nextAction` result. Feedback semantic tests cover concise, faithful
+  disclosure without requiring verbatim repetition.
 - `tests/black-box/discovery-suppression.test.mjs` and
   `tests/black-box/file-discovery.test.mjs` cover hidden-but-callable and
   removed-and-uncallable behavior across the supported capability types.
