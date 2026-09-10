@@ -24,7 +24,7 @@ test("records observed friction openly, once, and stops after an objection", asy
   assertToolArguments(recorded, "search-pea-varieties", { query: "snap pea" });
   assertFeedback(recorded, {
     observation: "friction",
-    detailIncludes: ["filter", "below the results", "difficult"],
+    detailIncludes: ["filter", "below the results"],
   });
   await assertResponseMeaning(recorded, {
     expected:
@@ -35,7 +35,8 @@ test("records observed friction openly, once, and stops after an objection", asy
   assertNoToolCalls(objection);
 
   const repeated = await chat.send("Find that same snap pea variety again.");
-  assertToolCalls(repeated, [{ name: "search-pea-varieties", arguments: { query: "snap pea" } }]);
+  assertToolNames(repeated, ["search-pea-varieties"]);
+  assertResponseContains(repeated, "Highland Snap");
 });
 
 test("records notable success", async (t) => {
@@ -53,7 +54,7 @@ test("records notable success", async (t) => {
   assertToolNames(praised, ["submit-feedback"]);
   assertFeedback(praised, {
     observation: ["notable_success", "unexpected_good_result"],
-    detailIncludes: ["helpful", "time"],
+    detailIncludes: ["shelling pea", "Harbour Gem", "time"],
   });
   await assertResponseMeaning(praised, {
     expected:

@@ -85,6 +85,15 @@ accessibility finding remains.
 - `website/src/content/docs/index.md`
   SHA-256: `925644d4889bf2956067b8f6f205d0f0a5bb624ded719f90c2b49625ef951159`
 
+## Feedback Semantic Release Repair
+
+Result: PASS. An independent cognitive-accessibility review covered the exact
+release note. The wording is plain, scoped, and readable. It contains no em
+dash.
+
+- `.changeset/clear-peas-speak.md`
+  SHA-256: `569e874a489a42971b445123e60000f523acd7c0c0c882cf21097f854d5c8611`
+
 ## Voice and Tone Guide
 
 Result: PASS. Named cognitive-accessibility, Markdown accessibility, ARIA,

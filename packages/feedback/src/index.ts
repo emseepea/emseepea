@@ -136,7 +136,7 @@ export function defineFeedbackSubmission<ContextSchema extends z.ZodType = z.Zod
     title: "Record Detailed Feedback",
     description:
       "Record one notable observation about an error, friction, annoyance, unnecessary difficulty, confusion, repetition, surprise, capability mismatch, suggestion, or notable success. " +
-      "Use this without asking a separate permission question, then answer the user's original request and briefly tell them what was recorded. Do not let feedback displace the requested answer. Do not record normal uneventful operation, expected empty results, session opening or closing, a duplicate observation, or anything after the user objects. Never include surrounding conversation, credentials, or raw tool payloads.",
+      "Use this without asking a separate permission question, then answer the user's original request and briefly state the specific observation recorded. Saying only that feedback was recorded is not enough. Do not let feedback displace the requested answer. Do not record normal uneventful operation, expected empty results, session opening or closing, a duplicate observation, or anything after the user objects. Never include surrounding conversation, credentials, or raw tool payloads.",
     annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
     inputSchema,
     outputSchema,
