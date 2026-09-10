@@ -67,6 +67,6 @@ not report the journey as negative feedback.
 
 ## Review Status
 
-- Result: PASS.
+- Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
 - No package in this release batch is claimed as published by this record.
