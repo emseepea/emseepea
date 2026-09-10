@@ -4,14 +4,14 @@ import type { FastifyInstance } from "fastify";
 const methods = new Set<string>([
   "server/discover", "tools/list", "tools/call", "resources/list",
   "resources/templates/list", "resources/read", "prompts/list", "prompts/get",
-  "completion/complete",
+  "completion/complete", "subscriptions/listen",
 ]);
 const httpMethods = new Set<string>(["POST", "GET", "HEAD", "PUT", "PATCH", "DELETE", "OPTIONS"]);
 
 export type ObservedMcpMethod =
   | "server/discover" | "tools/list" | "tools/call" | "resources/list"
   | "resources/templates/list" | "resources/read" | "prompts/list" | "prompts/get"
-  | "completion/complete" | "_OTHER";
+  | "completion/complete" | "subscriptions/listen" | "_OTHER";
 export type ObservedHttpMethod =
   | "POST" | "GET" | "HEAD" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "_OTHER";
 

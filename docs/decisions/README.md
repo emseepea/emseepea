@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 67 decisions: 35 current and 32 historical.
+This project has 68 decisions: 35 current and 33 historical.
 
 ## Quick Index
 
@@ -81,6 +81,7 @@ This project has 67 decisions: 35 current and 32 historical.
 - [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.superseded.md): Superseded; human review confirmed.
 - [ADR-0061: MongoDB JSON Schema Generated Internal Validation](0061-mongodb-json-schema-generated-internal-validation.superseded.md): Superseded; human review confirmed.
+- [ADR-0069: Atomic Runtime Activation of Startup-Compiled Capabilities](0069-atomic-runtime-activation-of-startup-compiled-capabilities.rejected.md): Rejected; human review confirmed.
 
 ## Decision Details
 
@@ -1480,3 +1481,28 @@ Chosen option: **"Allow protected POST progress after framework authentication"*
 - Load qualification runs in pull-request and exact-release CI on Node.js 22 and 24 and enforces the existing sampled resident set size (RSS) and retained-heap ceilings.
 - The official MCP client and an independent raw HTTP client both complete the protected progress journey from clean installs.
 - Public documentation claims only protected POST-scoped progress and explicitly excludes sessions, subscriptions, replay, recovery, shared stream state, and distributed rate limiting.
+
+### [ADR-0069: Atomic Runtime Activation of Startup-Compiled Capabilities](0069-atomic-runtime-activation-of-startup-compiled-capabilities.rejected.md)
+
+- Status: Rejected
+- Human review: Confirmed
+
+#### ADR-0069 Decision
+
+Chosen option: **"Atomic activation of startup-compiled capabilities"**, because it supports uninterrupted catalogue changes without moving schema, handler, or access-policy compilation into the running request boundary.
+
+#### ADR-0069 Checks
+
+- Omitting `runtimeCatalogueUpdates` preserves current behaviour and public types other than the new opt-in function.
+- The update function accepts only a complete active set drawn from the checked startup pool and is not exposed through MCP.
+- Valid activation and deactivation cover tools, static resources, resource templates, prompts, and inherited completion.
+- Duplicate, foreign, or invalid proposed entries throw and leave the previous revision unchanged.
+- A test pauses an authenticated request, publishes a replacement, and proves that the paused request finishes entirely on its old revision while the next request uses the new revision.
+- Inactive and permission-hidden direct calls return the same safe unknown response and cause zero application or backend work.
+- Active lifecycle-hidden capabilities remain absent from list discovery but directly callable under their unchanged access policy.
+- Public and protected discovery apply active selection, lifecycle suppression, and permission filtering in the specified order.
+- Old-revision, malformed, cross-method, and cross-permission pagination cursors fail without application work or protected-data disclosure.
+- Runtime update mode rejects positive reuse lifetimes for discovery, all catalogue lists, and resource reads.
+- Server discovery continues to report `listChanged: false`; documentation says no notification, cross-process consistency, session, subscription, or replay guarantee is included.
+- Existing page-size, page-byte, request, result, timeout, cancellation, authentication, authorization, and observability checks still pass.
+- Ordinary tests cover the exact boundaries. A released-package journey proves activation, deactivation, direct-call rejection, and in-flight isolation.

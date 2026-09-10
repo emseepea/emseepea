@@ -6,6 +6,7 @@ import {
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import {
   McpServer,
+  InMemoryServerEventBus,
   OAuthError,
   OAuthErrorCode,
   ProtocolError,
@@ -48,6 +49,8 @@ import {
   type ResourceTemplateType,
   type StandardSchemaV1,
   type ServerOptions,
+  type ServerEvent,
+  type ServerEventBus,
   type ToolAnnotations,
   type Tool,
 } from "@modelcontextprotocol/server";
@@ -472,9 +475,17 @@ export interface EmseepeaOptions {
   readonly maxApplicationResultBytes?: number;
   readonly maxProgressEvents?: number;
   readonly maxProgressEventBytes?: number;
+  readonly resourceSubscriptions?: ResourceSubscriptionOptions;
   readonly operationTimeoutMs?: number;
   readonly deployment?: DeploymentProfile;
   readonly authentication?: AuthenticationOptions;
+}
+export interface ResourceSubscriptionOptions {
+  readonly maxActive?: number;
+  readonly maxEvents?: number;
+  readonly maxEventBytes?: number;
+  readonly maxUriBytes?: number;
+  readonly lifetimeMs?: number;
 }
 export type EmseepeaExtensions = Pick<
   EmseepeaOptions,
@@ -522,6 +533,7 @@ interface AppRuntime {
   stopping: AbortController;
   observabilityLimits: { deliveryTimeoutMs: number } | undefined;
   finishObservability: ((timeoutMs: number) => Promise<void>) | undefined;
+  notifyResourceUpdated?: (uri: string) => void;
 }
 interface NormalizedOAuth {
   readonly verifier: OAuthTokenVerifier;
@@ -1414,6 +1426,22 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     "operationTimeoutMs",
     options.operationTimeoutMs ?? 30_000,
   );
+  const resourceSubscriptions = options.resourceSubscriptions && Object.freeze({
+    maxActive: positiveInteger("resourceSubscriptions.maxActive", options.resourceSubscriptions.maxActive ?? 16),
+    maxEvents: positiveInteger("resourceSubscriptions.maxEvents", options.resourceSubscriptions.maxEvents ?? 256),
+    maxEventBytes: positiveInteger(
+      "resourceSubscriptions.maxEventBytes",
+      options.resourceSubscriptions.maxEventBytes ?? 8 * 1024,
+    ),
+    maxUriBytes: positiveInteger(
+      "resourceSubscriptions.maxUriBytes",
+      options.resourceSubscriptions.maxUriBytes ?? 512,
+    ),
+    lifetimeMs: positiveInteger(
+      "resourceSubscriptions.lifetimeMs",
+      options.resourceSubscriptions.lifetimeMs ?? 30_000,
+    ),
+  });
   const deployment = normalizeDeployment(options.deployment ?? { mode: "loopback" });
   const authentication = options.authentication
     ? normalizeAuthentication(options.authentication)
@@ -1438,6 +1466,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   if (resources.some((resource) => resource[RESOURCE_KIND] === "template")) {
     enabledMethods.add("resources/templates/list");
   }
+  if (resourceSubscriptions && resources.length) enabledMethods.add("subscriptions/listen");
   if (prompts.length) enabledMethods.add("prompts/list").add("prompts/get");
   const hasCompletion = resources.some((resource) => resource[HAS_COMPLETION]) ||
     prompts.some((prompt) => prompt[HAS_COMPLETION]);
@@ -1460,6 +1489,8 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     : hasSuppressedCapabilities
       ? compileUnpaginatedCatalogue(baseCatalogues)
       : undefined;
+  const resourceEvents = resourceSubscriptions ? new InMemoryServerEventBus() : undefined;
+  const activeSubscriptions = new Set<{ close: () => Promise<void> }>();
   const sdkHandler = createMcpHandler(() => {
     const request = requestOperations.getStore();
     const activeTools = request?.filterCatalogues
@@ -1487,7 +1518,9 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       {
         capabilities: {
           ...(activeTools.length ? { tools: { listChanged: false } } : {}),
-          ...(activeResources.length ? { resources: { subscribe: false, listChanged: false } } : {}),
+          ...(activeResources.length ? {
+            resources: { subscribe: Boolean(resourceSubscriptions), listChanged: false },
+          } : {}),
           ...(activePrompts.length ? { prompts: { listChanged: false } } : {}),
           ...(activeHasCompletion ? { completions: {} } : {}),
         },
@@ -1530,11 +1563,91 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     return server;
   }, {
     legacy: "reject",
-    responseMode: hasStreaming ? "auto" : "json",
+    responseMode: hasStreaming || resourceSubscriptions ? "auto" : "json",
     keepAliveMs: 0,
   });
   const nodeHandler = toNodeHandler(sdkHandler);
   const app = createMcpFastifyApp({ host: deployment.mode === "loopback" ? "127.0.0.1" : "0.0.0.0" });
+  async function serveResourceSubscription(
+    request: FastifyRequest,
+    reply: FastifyReply,
+    uri: string,
+  ): Promise<void> {
+    if (!resourceSubscriptions || !resourceEvents) return;
+    if (activeSubscriptions.size >= resourceSubscriptions.maxActive) {
+      await sendRpcError(reply, 503, -32603, "Subscription capacity is exhausted", requestId(
+        isRecord(request.body) ? request.body.id : undefined,
+      ));
+      return;
+    }
+    const subscriptionId = requestId(isRecord(request.body) ? request.body.id : undefined);
+    const totalByteLimit = Math.min(
+      Number.MAX_SAFE_INTEGER,
+      resourceSubscriptions.maxEvents * resourceSubscriptions.maxEventBytes,
+    );
+    let admitted = 0;
+    let admittedBytes = 0;
+    let detach = () => {};
+    let ended = false;
+    const boundedBus: ServerEventBus = {
+      publish: (event) => resourceEvents.publish(event),
+      subscribe(listener) {
+        detach = resourceEvents.subscribe((event: ServerEvent) => {
+          if (ended || event.kind !== "resource_updated" || event.uri !== uri) return;
+          const frameBytes = Buffer.byteLength(`event: message\ndata: ${JSON.stringify({
+            jsonrpc: "2.0",
+            method: "notifications/resources/updated",
+            params: {
+              uri,
+              _meta: { "io.modelcontextprotocol/subscriptionId": subscriptionId },
+            },
+          })}\n\n`, "utf8");
+          if (frameBytes > resourceSubscriptions.maxEventBytes ||
+              admitted >= resourceSubscriptions.maxEvents ||
+              admittedBytes + frameBytes > totalByteLimit) {
+            ended = true;
+            detach();
+            reply.raw.destroy();
+            return;
+          }
+          admitted += 1;
+          admittedBytes += frameBytes;
+          listener(event);
+        });
+        return () => {
+          ended = true;
+          detach();
+        };
+      },
+    };
+    const handler = createMcpHandler(() => new McpServer(serverInfo, {
+      capabilities: { resources: { subscribe: true, listChanged: false } },
+      supportedProtocolVersions: [PROTOCOL_VERSION],
+    }), {
+      legacy: "reject",
+      responseMode: "sse",
+      bus: boundedBus,
+      maxSubscriptions: 1,
+      keepAliveMs: 0,
+    });
+    activeSubscriptions.add(handler);
+    const lifetime = setTimeout(() => { void handler.close(); }, resourceSubscriptions.lifetimeMs);
+    lifetime.unref();
+    const closeDisconnected = () => {
+      activeSubscriptions.delete(handler);
+      void handler.close();
+    };
+    reply.raw.once("close", closeDisconnected);
+    reply.hijack();
+    try {
+      await toNodeHandler(handler)(request.raw, reply.raw, request.body);
+    } finally {
+      reply.raw.off("close", closeDisconnected);
+      clearTimeout(lifetime);
+      activeSubscriptions.delete(handler);
+      await handler.close();
+    }
+  }
   const observabilityLimits = observability.length ? { deliveryTimeoutMs: 1_000 } : undefined;
   const finishObservability = observabilityLimits
     ? installObservability(app, observability, (body) => capabilityNameForRequest(
@@ -1555,7 +1668,10 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     await reply.header("cache-control", "no-store").type("text/plain; charset=utf-8")
       .code(available ? 200 : 503).send(available ? "ready\n" : "not ready\n");
   });
-  app.addHook("preClose", async () => { stopping.abort(); });
+  app.addHook("preClose", async () => {
+    stopping.abort();
+    await Promise.all([...activeSubscriptions].map((handler) => handler.close()));
+  });
   if (authentication) {
     app.all("/.well-known/*", async (request, reply) => {
       const response = oauthMetadataResponse(
@@ -1585,14 +1701,32 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       await sendRpcError(reply, 404, -32601, "Method not found", requestId(request.body.id));
       return;
     }
-    const access = capabilityAccessForRequest(
+    const protectsCatalogue = authentication?.discovery === "protected";
+    let subscriptionTarget: ReturnType<typeof resourceSubscriptionTarget> | undefined;
+    if (isRecord(request.body) && request.body.method === "subscriptions/listen") {
+      try {
+        subscriptionTarget = resourceSubscriptionTarget(
+          request.body,
+          resourceSubscriptions!.maxUriBytes,
+          resourcesByUri,
+          resourceTemplates,
+        );
+      } catch {
+        await sendRpcError(reply, 400, -32602, "Invalid resource subscription", requestId(request.body.id));
+        return;
+      }
+      if (!subscriptionTarget.resource && !protectsCatalogue) {
+        await sendRpcError(reply, 200, -32602, "Capability not found", requestId(request.body.id));
+        return;
+      }
+    }
+    const access = subscriptionTarget?.resource?.[RESOURCE_ACCESS] ?? capabilityAccessForRequest(
       request.body,
       toolsByName,
       resourcesByUri,
       resourceTemplates,
       promptsByName,
     );
-    const protectsCatalogue = authentication?.discovery === "protected";
     let authInfo: AuthInfo | undefined;
     if (authentication && (protectsCatalogue || access && access !== "public")) {
       try {
@@ -1620,6 +1754,10 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       await sendRpcError(reply, 200, -32602, "Capability not found", requestId(
         isRecord(request.body) ? request.body.id : undefined,
       ));
+      return;
+    }
+    if (subscriptionTarget) {
+      await serveResourceSubscription(request, reply, subscriptionTarget.uri);
       return;
     }
     const disconnected = new AbortController();
@@ -1659,8 +1797,26 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     stopping,
     observabilityLimits,
     finishObservability,
+    ...(resourceEvents ? {
+      notifyResourceUpdated(uri: string) {
+        if (stopping.signal.aborted) throw new Error("Cannot notify from a stopped Em See Pea app");
+        if (typeof uri !== "string" || Buffer.byteLength(uri, "utf8") > resourceSubscriptions!.maxUriBytes ||
+            !(resourcesByUri.has(uri) || resourceTemplates.some(
+              (resource) => resource[RESOURCE_MATCHES]?.(uri),
+            ))) {
+          throw new TypeError("Resource update URI must match a registered resource");
+        }
+        resourceEvents.publish({ kind: "resource_updated", uri });
+      },
+    } : {}),
   });
   return app;
+}
+
+export function notifyResourceUpdated(app: FastifyInstance, uri: string): void {
+  const notify = runtimes.get(app)?.notifyResourceUpdated;
+  if (!notify) throw new TypeError("notifyResourceUpdated requires resourceSubscriptions");
+  notify(uri);
 }
 
 function safeOAuthError(error: unknown): unknown {
@@ -1759,10 +1915,38 @@ function capabilityAccessForRequest(
   return undefined;
 }
 
+function resourceSubscriptionTarget(
+  body: unknown,
+  maxUriBytes: number,
+  resourcesByUri: ReadonlyMap<string, EmseepeaResource>,
+  resourceTemplates: readonly EmseepeaResource[],
+): { readonly uri: string; readonly resource?: EmseepeaResource } {
+  if (!isRecord(body) || body.method !== "subscriptions/listen" || !isRecord(body.params) ||
+      !isRecord(body.params.notifications)) {
+    throw new TypeError("Invalid resource subscription");
+  }
+  const notifications = body.params.notifications;
+  if (Object.keys(notifications).some((key) => key !== "resourceSubscriptions") ||
+      !Array.isArray(notifications.resourceSubscriptions) ||
+      notifications.resourceSubscriptions.length !== 1 ||
+      typeof notifications.resourceSubscriptions[0] !== "string" ||
+      Buffer.byteLength(notifications.resourceSubscriptions[0], "utf8") > maxUriBytes) {
+    throw new TypeError("Invalid resource subscription");
+  }
+  const uri = notifications.resourceSubscriptions[0];
+  return {
+    uri,
+    resource: resourcesByUri.get(uri) ?? resourceTemplates.find(
+      (candidate) => candidate[RESOURCE_MATCHES]?.(uri),
+    ),
+  };
+}
+
 function isCapabilityInvocation(body: unknown): boolean {
   return isRecord(body) && (
     body.method === "tools/call" || body.method === "resources/read" ||
-    body.method === "prompts/get" || body.method === "completion/complete"
+    body.method === "prompts/get" || body.method === "completion/complete" ||
+    body.method === "subscriptions/listen"
   );
 }
 
@@ -1783,6 +1967,14 @@ function capabilityNameForRequest(
       (candidate) => candidate[RESOURCE_MATCHES]?.(params.uri as string),
     );
     return resource?.[RESOURCE_NAME];
+  }
+  if (body.method === "subscriptions/listen" && isRecord(params.notifications) &&
+      Array.isArray(params.notifications.resourceSubscriptions) &&
+      typeof params.notifications.resourceSubscriptions[0] === "string") {
+    const uri = params.notifications.resourceSubscriptions[0];
+    return (resourcesByUri.get(uri) ?? resourceTemplates.find(
+      (candidate) => candidate[RESOURCE_MATCHES]?.(uri),
+    ))?.[RESOURCE_NAME];
   }
   if (body.method === "prompts/get" && typeof params.name === "string") {
     return promptsByName.has(params.name) ? params.name : undefined;
