@@ -1419,10 +1419,6 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     ? normalizeAuthentication(options.authentication)
     : undefined;
   const hasStreaming = tools.some((tool) => tool[TOOL_STREAMING]);
-  if (deployment.mode !== "loopback" &&
-      tools.some((tool) => tool[TOOL_STREAMING] && tool[TOOL_ACCESS] !== "public")) {
-    throw new TypeError("Protected streaming tools currently require the loopback deployment profile");
-  }
   if ([
     ...tools.map((tool) => tool[TOOL_ACCESS]),
     ...resources.map((resource) => resource[RESOURCE_ACCESS]),

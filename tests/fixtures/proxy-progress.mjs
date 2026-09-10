@@ -40,6 +40,7 @@ export async function startCluster() {
       forwarding,
       stats: () => Promise.all(children.map((child) => child.ask("stats"))),
       release: (id) => Promise.all(children.map((child) => child.ask("release", id))),
+      shutdown: () => Promise.all(children.map((child) => child.close())),
       async close() {
         proxy.closeAllConnections();
         await new Promise((resolve) => proxy.close(resolve));
@@ -59,6 +60,7 @@ async function startChild(instance) {
     stdio: ["ignore", "inherit", "inherit", "ipc"],
   });
   let sequence = 0;
+  let closing;
   const exited = new Promise((resolve) => child.once("exit", (code, signal) => resolve({ code, signal })));
   function receive(send, matches) {
     return new Promise((resolve, reject) => {
@@ -90,33 +92,42 @@ async function startChild(instance) {
     const ready = await receive(undefined, (message) => message.type === "ready");
     return {
       url: new URL(ready.url), ask,
-      async close() {
-        let timer;
-        try {
-          await ask("shutdown");
-          const result = await Promise.race([exited, new Promise((_, reject) => {
-            timer = setTimeout(() => reject(new Error("fixture shutdown timeout")), 5_000);
-          })]);
-          assert.deepEqual(result, { code: 0, signal: null });
-        } finally {
-          clearTimeout(timer);
-          if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
-        }
+      close() {
+        if (!closing) closing = closeChild();
+        return closing;
       },
     };
   } catch (error) { child.kill("SIGKILL"); throw error; }
+
+  async function closeChild() {
+    let timer;
+    try {
+      const stats = await ask("shutdown");
+      const result = await Promise.race([exited, new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error("fixture shutdown timeout")), 5_000);
+      })]);
+      assert.deepEqual(result, { code: 0, signal: null });
+      return stats;
+    } finally {
+      clearTimeout(timer);
+      if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+    }
+  }
 }
 
-export function callOptions(id, mode = "normal", { signal, token = true, headers = {}, name = "progress" } = {}) {
+export function callOptions(id, mode = "normal", {
+  signal, token = true, headers = {}, name = "progress", authToken,
+} = {}) {
   return {
     method: "POST",
     signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(10_000)]) : AbortSignal.timeout(10_000),
     headers: {
       Accept: "application/json, text/event-stream", "Content-Type": "application/json",
-      "MCP-Protocol-Version": "2026-07-28", "Mcp-Method": "tools/call", "Mcp-Name": name, ...headers,
+      "MCP-Protocol-Version": "2026-07-28", "Mcp-Method": "tools/call", "Mcp-Name": name,
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}), ...headers,
     },
     body: JSON.stringify({ jsonrpc: "2.0", id, method: "tools/call", params: {
-      name, arguments: name === "progress" ? { id, mode } : {},
+      name, arguments: ["progress", "protected-progress"].includes(name) ? { id, mode } : {},
       _meta: {
         "io.modelcontextprotocol/protocolVersion": "2026-07-28",
         "io.modelcontextprotocol/clientInfo": { name: "proxy-test", version: "0.0.0" },
@@ -155,7 +166,7 @@ export async function readMessages(response, onMessage = () => {}, maxBytes = 1_
   return messages;
 }
 
-export function checkMessages(messages, id, mode = "normal") {
+export function checkMessages(messages, id, mode = "normal", caller = "public") {
   const error = ["event-size", "event-count", "result-size", "timeout"].includes(mode);
   const count = ["event-size", "timeout"].includes(mode) ? 1 : ["burst", "event-count"].includes(mode) ? 32 : 3;
   assert.equal(messages.length, count + 1, `missing or extra events: ${mode}`);
@@ -165,7 +176,8 @@ export function checkMessages(messages, id, mode = "normal") {
     assert.equal(message.method, "notifications/progress");
     assert.equal(message.params.progressToken, id);
     assert.equal(message.params.progress, index + 1);
-    assert.equal(message.params.message, `${instance}:${id}:` + (mode === "burst" ? "x".repeat(7_000) : "stage"));
+    assert.equal(message.params.message,
+      `${instance}:${caller}:${id}:` + (mode === "burst" ? "x".repeat(7_000) : "stage"));
     assert.ok(Buffer.byteLength(JSON.stringify({ method: message.method, params: message.params })) <= 8_192);
   }
   const final = messages.at(-1);
@@ -173,14 +185,19 @@ export function checkMessages(messages, id, mode = "normal") {
   assert.equal(final.id, id);
   assert.equal(final.result.isError, error);
   if (!error) assert.deepEqual(final.result.structuredContent, {
-    id, instance, padding: mode === "burst" ? "x".repeat(900_000) : "",
+    id, instance, caller, padding: mode === "burst" ? "x".repeat(900_000) : "",
   });
   else assert.equal(final.result.content[0].text, "Tool execution failed");
   return instance;
 }
 
-export async function checkedCall(cluster, id, mode = "normal", onMessage) {
-  return checkMessages(await readMessages(await fetch(cluster.url, callOptions(id, mode)), onMessage), id, mode);
+export async function checkedCall(cluster, id, mode = "normal", onMessage, options) {
+  return checkMessages(
+    await readMessages(await fetch(cluster.url, callOptions(id, mode, options)), onMessage),
+    id,
+    mode,
+    options?.expectedCaller,
+  );
 }
 
 export async function waitForIdle(cluster, expectedCancelled) {
@@ -193,14 +210,26 @@ export async function waitForIdle(cluster, expectedCancelled) {
   assert.fail("server work did not stop after cancellation");
 }
 
-export async function disconnectCall(cluster, id) {
+export async function waitForWaiting(cluster, id) {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const stats = await cluster.stats();
+    if (stats.some((entry) => entry.waiting.includes(id))) return stats;
+    await delay(20);
+  }
+  assert.fail(`server did not reach waiting point: ${id}`);
+}
+
+export async function disconnectCall(cluster, id, options) {
   const controller = new AbortController();
-  const response = await fetch(cluster.url, callOptions(id, "disconnect", { signal: controller.signal }));
+  const response = await fetch(cluster.url, callOptions(id, "disconnect", {
+    ...options, signal: controller.signal,
+  }));
   await assert.rejects(readMessages(response, (message) => {
     assert.equal(message.method, "notifications/progress");
     assert.equal(message.params.progressToken, id);
     assert.equal(message.params.progress, 1);
-    assert.match(message.params.message, new RegExp(`^(one|two):${id}:stage$`));
+    assert.match(message.params.message,
+      new RegExp(`^(one|two):${options?.expectedCaller ?? "public"}:${id}:stage$`));
     controller.abort();
   }), /abort/i);
   const until = performance.now() + 1_000;

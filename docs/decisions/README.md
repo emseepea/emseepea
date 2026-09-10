@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 66 decisions: 35 current and 31 historical.
+This project has 67 decisions: 35 current and 32 historical.
 
 ## Quick Index
 
@@ -21,7 +21,6 @@ This project has 66 decisions: 35 current and 31 historical.
 - [ADR-0023: Mandatory Cognitive-Accessibility Review for Published Content](0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md): Proposed; human review confirmed.
 - [ADR-0025: Astro Starlight Documentation Generator](0025-static-documentation-website-with-astro-starlight.proposed.md): Proposed; human review confirmed.
 - [ADR-0028: Example-Owned Oxlint with Root Orchestration](0028-example-owned-oxlint-with-root-orchestration.proposed.md): Proposed; human review confirmed.
-- [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.proposed.md): Proposed; human review confirmed.
 - [ADR-0031: Website Workspace in the Existing Monorepo](0031-website-workspace-in-the-existing-monorepo.proposed.md): Proposed; human review confirmed.
 - [ADR-0032: Static-Only Website Runtime](0032-static-only-website-runtime.proposed.md): Proposed; human review confirmed.
 - [ADR-0033: GitHub Pages Website Hosting](0033-github-pages-website-hosting.proposed.md): Proposed; human review confirmed.
@@ -46,6 +45,7 @@ This project has 66 decisions: 35 current and 31 historical.
 - [ADR-0065: Typed Operations with Framework-Redacted Observability Adapters](0065-framework-redacted-observability-adapters.proposed.md): Proposed; human review confirmed.
 - [ADR-0066: Pluggable Detailed Feedback Conversations and Event Hooks](0066-pluggable-detailed-feedback-conversations-and-event-hooks.proposed.md): Proposed; human review confirmed.
 - [ADR-0067: Capability-Local Static Discovery Suppression](0067-capability-local-static-discovery-suppression.proposed.md): Proposed; human review confirmed.
+- [ADR-0068: Protected POST Progress Behind a Trusted Proxy](0068-protected-post-progress-behind-a-trusted-proxy.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -67,6 +67,7 @@ This project has 66 decisions: 35 current and 31 historical.
 - [ADR-0026: Example-Owned Quality Assurance Surfaces](0026-example-owned-quality-assurance-surfaces.superseded.md): Superseded; human review confirmed.
 - [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md): Superseded; human review confirmed.
 - [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md): Superseded; human review confirmed.
+- [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.superseded.md): Superseded; human review confirmed.
 - [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.superseded.md): Superseded; human review confirmed.
 - [ADR-0039: Website Performance Budget](0039-website-performance-budget.superseded.md): Superseded; human review confirmed.
 - [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.superseded.md): Superseded; human review confirmed.
@@ -106,7 +107,7 @@ Chosen option: **"Public-specification-first framework using the official SDK"**
 
 - Status: Superseded
 - Human review: Confirmed
-- Replaced by: [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.proposed.md)
+- Replaced by: [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.superseded.md)
 
 #### ADR-0002 Decision
 
@@ -664,11 +665,12 @@ Chosen option: **"Direct code-first semantic tests"**, because normal code gives
 - The exact release revision passes all semantic cases before npm publication.
 - The clean packed-install example gate finishes without installing Promptfoo.
 
-### [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.proposed.md)
+### [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0002: Explicit Anonymous Production Boundary Behind a Trusted Proxy](0002-anonymous-production-boundary.superseded.md)
+- Replaced by: [ADR-0068: Protected POST Progress Behind a Trusted Proxy](0068-protected-post-progress-behind-a-trusted-proxy.proposed.md)
 
 #### ADR-0030 Decision
 
@@ -1455,3 +1457,26 @@ Chosen option: **"Capability-local static discovery flag"**, because it is the s
 - Startup still rejects duplicate or invalid registrations independently of their discovery flag.
 - An end-to-end compatibility check proves the sequence visible and callable, then hidden but callable, then removed and uncallable.
 - Published documentation states that discovery suppression is a retirement mechanism, not an authorization or secrecy mechanism.
+
+### [ADR-0068: Protected POST Progress Behind a Trusted Proxy](0068-protected-post-progress-behind-a-trusted-proxy.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.superseded.md)
+
+#### ADR-0068 Decision
+
+Chosen option: **"Allow protected POST progress after framework authentication"**.
+
+#### ADR-0068 Checks
+
+- Invalid proxy, forwarding, HTTPS, authority, origin, request-size, method, header, and rate-limit inputs fail before authentication or application work.
+- Missing, invalid, wrong-resource, expired, or insufficient credentials return the bounded JSON bearer challenge and cause zero handler and progress calls.
+- Authentication and authorization finish before SSE headers or events begin.
+- Valid protected calls receive strictly ordered bounded progress and exactly one checked final result through a real non-buffering proxy.
+- Concurrent calls routed to two server processes never exchange principals, events, errors, final results, or cancellation.
+- Tests fail on a wrong, missing, duplicate, oversized, or late event.
+- Slow readers, operation and verifier deadlines, disconnect, cancellation, and shutdown terminate work and leave no detached progress producer.
+- Load qualification runs in pull-request and exact-release CI on Node.js 22 and 24 and enforces the existing sampled resident set size (RSS) and retained-heap ceilings.
+- The official MCP client and an independent raw HTTP client both complete the protected progress journey from clean installs.
+- Public documentation claims only protected POST-scoped progress and explicitly excludes sessions, subscriptions, replay, recovery, shared stream state, and distributed rate limiting.

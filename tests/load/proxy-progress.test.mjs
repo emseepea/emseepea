@@ -8,12 +8,15 @@ import { callOptions, checkMessages, checkedCall, disconnectCall, readMessages, 
 const limits = { concurrency: 16, batches: 8, pauseMs: 250, peakRssBytes: 384 * 1024 * 1024,
   retainedHeapGrowthBytes: 24 * 1024 * 1024 };
 
-test("proxy streams stay isolated and bounded under load and paused readers", { timeout: 120_000 }, async (t) => {
+test("protected proxy streams stay isolated and bounded under load and paused readers", { timeout: 120_000 }, async (t) => {
   assert.equal(process.env.GITHUB_ACTIONS, "true", "Run load qualification in GitHub Actions");
   assert.equal(typeof globalThis.gc, "function", "memory qualification requires --expose-gc");
   console.log(JSON.stringify({ profile: "two-process-http-proxy", node: process.version, limits }));
   const cluster = await startCluster();
   t.after(() => cluster.close());
+  const protectedOptions = {
+    name: "protected-progress", authToken: "test-valid", expectedCaller: "client-default",
+  };
   let parentPeak = process.memoryUsage().rss;
   let parentSamples = 0;
   const sample = () => { parentSamples++; parentPeak = Math.max(parentPeak, process.memoryUsage().rss); };
@@ -23,12 +26,13 @@ test("proxy streams stay isolated and bounded under load and paused readers", { 
   let cancelled = 0;
   const measurements = [];
 
-  await Promise.all(Array.from({ length: limits.concurrency }, (_, index) => checkedCall(cluster, `warm-${index}`, "burst")));
+  await Promise.all(Array.from({ length: limits.concurrency }, (_, index) =>
+    checkedCall(cluster, `warm-${index}`, "burst", undefined, protectedOptions)));
   globalThis.gc();
   const baseline = { parent: process.memoryUsage().heapUsed, children: await cluster.stats() };
   for (let batch = 0; batch < limits.batches; batch++) {
     const paused = await Promise.all(Array.from({ length: limits.concurrency }, (_, index) =>
-      openPausedCall(cluster, `paused-${batch}-${index}`)));
+      openPausedCall(cluster, `paused-${batch}-${index}`, protectedOptions)));
     const beforePause = await cluster.stats();
     const samplesBeforePause = parentSamples;
     await delay(limits.pauseMs);
@@ -43,10 +47,10 @@ test("proxy streams stay isolated and bounded under load and paused readers", { 
       const id = `case-${batch}-${index}`;
       if (mode === "disconnect") {
         cancelled++;
-        await disconnectCall(cluster, id);
+        await disconnectCall(cluster, id, protectedOptions);
       } else {
         if (mode === "timeout") cancelled++;
-        instances.add(await checkedCall(cluster, id, mode));
+        instances.add(await checkedCall(cluster, id, mode, undefined, protectedOptions));
       }
     }));
     const children = await waitForIdle(cluster, cancelled);
@@ -65,8 +69,8 @@ test("proxy streams stay isolated and bounded under load and paused readers", { 
   assert.deepEqual([...instances].sort(), ["one", "two"]);
 });
 
-function openPausedCall(cluster, id) {
-  const options = callOptions(id, "burst");
+function openPausedCall(cluster, id, protectedOptions) {
+  const options = callOptions(id, "burst", protectedOptions);
   return new Promise((resolve, reject) => {
     let failure;
     const outgoing = request(cluster.url, options, (incoming) => {
@@ -78,7 +82,7 @@ function openPausedCall(cluster, id) {
           if (failure) throw failure;
           // Begin consuming only after the pause; all frames must still survive through EOF.
           const response = { status: incoming.statusCode, headers: new Headers(incoming.headers), body: incoming };
-          return checkMessages(await readMessages(response), id, "burst");
+          return checkMessages(await readMessages(response), id, "burst", protectedOptions.expectedCaller);
         },
       });
     });

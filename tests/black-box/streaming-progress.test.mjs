@@ -42,14 +42,14 @@ test("streaming configuration is bounded and public streaming permits a trusted 
   await app.close();
 });
 
-test("production rejects signed-in streaming even with valid OAuth configuration", () => {
+test("production accepts signed-in streaming with valid OAuth configuration", async () => {
   const tool = defineStreamingTool({
     name: "signed-in-stream", access: "protected", requiredScopes: ["read"],
     description: "Stream after sign-in.", inputSchema: z.object({}),
     outputSchema: z.object({ ok: z.literal(true) }),
     handler: () => ({ text: "ok", data: { ok: true } }),
   });
-  assert.throws(() => createEmseepea({
+  const app = createEmseepea({
     name: "signed-in-stream-test", version: "0.0.0", tools: [tool],
     authentication: {
       verifier: { async verifyAccessToken() { throw new Error("must not be called"); } },
@@ -66,7 +66,8 @@ test("production rejects signed-in streaming even with valid OAuth configuration
       allowedOrigins: ["https://api.example"], trustedProxyAddresses: ["127.0.0.1"],
       rateLimit: { maxRequests: 10, windowMs: 1_000, maxClients: 1 },
     },
-  }), /Protected streaming tools currently require the loopback deployment profile/);
+  });
+  await app.close();
 });
 
 test("POST-scoped progress stays checked, bounded, and terminal", async () => {

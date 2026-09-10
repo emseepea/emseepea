@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 import test from "node:test";
 import { createEmseepea, defineStreamingTool, defineTool, serveEmseepea } from "@emseepea/server";
+import { insecureTestAuthentication } from "@emseepea/testing";
 import { z } from "zod";
 import { callOptions } from "../fixtures/proxy-progress.mjs";
 
@@ -109,7 +110,8 @@ test("shutdown aborts work, stops admission, shares one close, and flushes obser
   let flushed = 0;
   const tool = defineStreamingTool({
     name: "progress",
-    access: "public",
+    access: "protected",
+    requiredScopes: ["progress:run"],
     description: "Report progress.",
     inputSchema: z.object({ id: z.string(), mode: z.string() }),
     outputSchema: z.object({ value: z.string() }),
@@ -122,9 +124,10 @@ test("shutdown aborts work, stops admission, shares one close, and flushes obser
   });
   const running = await start(t, {
     tools: [tool],
+    authentication: insecureTestAuthentication(["progress:run"], "public"),
     observability: [{ id: "test", emit() {}, flush() { flushed += 1; } }],
   }, { shutdownTimeoutMs: 40, observabilityFlushTimeoutMs: 100 });
-  const response = await fetch(running.url, callOptions("shutdown"));
+  const response = await fetch(running.url, callOptions("shutdown", "normal", { authToken: "test-token" }));
   const reader = response.body.getReader();
   await reader.read();
   const closing = running.close();

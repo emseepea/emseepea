@@ -46,7 +46,8 @@ bodies, arguments, results, tokens, provider claims, or raw errors. See the
 Choose this example when a tool takes long enough that people benefit from
 seeing progress before the final answer.
 
-The public tool reports progress during its request. A client can ask for
+The tool reports progress during its request. It can use the public access shown
+in the template or the protected access described above. A client can ask for
 server-sent events (SSE), which carry progress over the same `POST` request.
 Without that request, the tool returns one JSON response when it finishes.
 
@@ -63,7 +64,7 @@ npm start
 The server listens on `http://127.0.0.1:3000/mcp` by default. Set `PORT` to
 choose another port. This example starts locally and does not configure a proxy.
 
-To adapt it for a public server, see
+To adapt it for a deployed server, see
 [Use Progress Behind a Proxy](https://github.com/emseepea/emseepea/blob/main/packages/framework/README.md#use-progress-behind-a-proxy).
 It does not add saved sessions, replay, subscriptions, or recovery after
 reconnecting.

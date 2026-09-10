@@ -101,8 +101,11 @@ npm init @emseepea/resources-and-prompts-server -- my-server
 
 ## Report progress during a tool call
 
-Send updates over the call's open HTTP connection, then return the final
-result. This is not a saved session or a reconnectable subscription.
+Public or protected tools can send updates over the same open `POST` response,
+then return one final result. In production, a trusted proxy can forward this
+response without buffering it. The framework authenticates and authorizes
+protected calls before application code or the event stream begins. This does
+not add saved sessions, replay, or subscriptions.
 
 ```sh
 npm init @emseepea/progress-streaming-server -- my-server

@@ -251,15 +251,18 @@ progress work. See the
 
 ### Progress Updates
 
-**Status: Partial.** Public tools can send bounded progress through a trusted
-proxy on the same POST response. Independent requests can reach different
-server processes without requiring the client to stay with one process.
-This capability was first published in `@emseepea/server` 0.0.3.
+**Status: Partial.** Public and protected tools can send bounded progress through
+a trusted proxy on the same POST response. The framework authenticates and
+authorizes protected calls before application code or the event stream begins.
+Independent requests can reach different server processes without requiring
+the client to stay with one process. Public proxy progress was first published in
+`@emseepea/server` 0.0.3.
 See the [release evidence](https://github.com/emseepea/emseepea/releases/tag/%40emseepea/server%400.0.3).
 
-The [proxy tests](../tests/black-box/proxy-progress.test.mjs) check incremental
-delivery, final responses, request isolation, cancellation, and configured
-limits. The [CI load test](../tests/load/proxy-progress.test.mjs) adds concurrent
+The [proxy tests](../tests/black-box/proxy-progress.test.mjs) check authentication
+failures, incremental delivery through the official client and raw HTTP,
+cross-process isolation, cancellation, and configured limits. The
+[CI load test](../tests/load/proxy-progress.test.mjs) adds concurrent protected
 calls and paused readers, with fixed memory limits.
 
 [Node.js 22 and 24 passed](https://github.com/emseepea/emseepea/actions/runs/33341972321)
@@ -269,8 +272,8 @@ metadata. It does not test a real TLS terminator or every proxy product.
 
 There is no throughput or load-balancing fairness guarantee. Rate limits remain
 per server, and application state is not shared. Paused-reader memory checks
-do not prove that a slow reader slows the producer. Recovery, replay,
-subscriptions, and deployed protected streaming tools remain unsupported.
+do not prove that a slow reader slows the producer. Recovery, replay, and
+subscriptions remain unsupported.
 
 ### Server-Sent Event Completion
 

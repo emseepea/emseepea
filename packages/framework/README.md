@@ -567,7 +567,9 @@ rejected.
 
 ### Use Progress Behind a Proxy
 
-Public tools can also report progress behind a trusted HTTPS proxy.
+Public and protected tools can also report progress behind a trusted HTTPS
+proxy. The framework authenticates and authorizes a protected call before it
+starts the event stream or calls application code.
 
 Using the `germination` tool above, configure the proxy's exact address and the public
 host and origin your clients use:
@@ -618,7 +620,6 @@ Not supported yet:
 - saved sessions, replay, or subscriptions
 - recovery after reconnecting
 - slowing the producer when a client cannot keep up
-- progress from protected tools outside local development
 
 See the [progress coverage and tested proxy setup](../../docs/protocol-coverage.md#progress-updates)
 for the current checks and their limits.

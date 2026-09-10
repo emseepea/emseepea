@@ -162,3 +162,31 @@ tool calls from one optional trailing feedback call and contains no em dash.
   SHA-256: `6e46e65c524338bf81c289b1d51ec25c9851e4ef666efd55c622963d39a50c95`
 - `website/src/content/docs/ai-tests.md`
   SHA-256: `28ad12d3d7619332de3616bb71bb90741b02774f699b82945ca92651344a8439`
+
+## Protected POST Progress Increment
+
+Result: PASS. Architecture, voice and tone, Markdown accessibility, and
+cognitive-accessibility reviews covered the exact ratified decision, release
+note, reader guides, and generated compendium. The documents use short sections,
+name the actor at the authentication boundary, and separate supported behavior
+from excluded sessions, replay, and subscriptions. No blocking accessibility
+finding remains.
+
+- `.changeset/protected-proxy-progress.md`
+  SHA-256: `35440562fb087e35334b460d2fa876f21887fc2f2f920f6439a5cd8519d5d87a`
+- `README.md`
+  SHA-256: `d45371772ed18fbc5348d503896c06daf318e18d516e1b6da3985917fabdc4cf`
+- `docs/decisions/0030-public-post-progress-behind-a-trusted-proxy.superseded.md`
+  SHA-256: `74124a59ac23893fb3f18b69e1b8464231c3aad9ed5f70d32b61c499c9888335`
+- `docs/decisions/0068-protected-post-progress-behind-a-trusted-proxy.proposed.md`
+  SHA-256: `55996cadfef642dcc3de1772dfc268ffa1744a0f090cf754698628e32f7401e1`
+- `docs/decisions/README.md`
+  SHA-256: `f13f40364f9e14d206ff3b63aaf540f35585f098ee0f686120cbd08e283142ed`
+- `docs/protocol-coverage.md`
+  SHA-256: `4c909612e5f1f4ccfbb4de57948954de8fa78843e31132282710924e920a8b49`
+- `examples/progress-streaming-server/README.md`
+  SHA-256: `e471bfd8d2ae5547aab5a47c6983d5e27e9c18bee870a6cd38821cefcf216fb0`
+- `packages/framework/README.md`
+  SHA-256: `99d7e143927546081d1978a1a6b86f7329894806d84adb8512b276e978a80db4`
+- `website/src/content/docs/examples.md`
+  SHA-256: `5d24115226a5478365629fb4d8821b8959b2881d9cd531dca215325f7c8a0c7e`

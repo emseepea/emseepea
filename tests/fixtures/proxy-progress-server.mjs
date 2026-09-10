@@ -9,6 +9,7 @@ let calls = 0;
 let active = 0;
 let cancelled = 0;
 let protectedCalls = 0;
+let verifierCalls = 0;
 const cancelledRequests = {};
 let peakRss = 0;
 let samples = 0;
@@ -16,18 +17,19 @@ const sample = () => { samples++; peakRss = Math.max(peakRss, process.memoryUsag
 const sampler = setInterval(sample, 10);
 sampler.unref();
 
-const tool = defineStreamingTool({
-  name: "progress", access: "public", description: "Report request-specific progress.",
+const progressDefinition = {
+  description: "Report request-specific progress.",
   inputSchema: z.object({ id: z.string(), mode: z.enum([
     "normal", "gated", "disconnect", "timeout", "event-size", "event-count", "result-size", "burst",
   ]) }),
-  outputSchema: z.object({ id: z.string(), instance: z.string(), padding: z.string() }),
-  async handler({ id, mode }, { reportProgress, signal }) {
+  outputSchema: z.object({ id: z.string(), instance: z.string(), caller: z.string(), padding: z.string() }),
+  async handler({ id, mode }, { reportProgress, signal, principal }) {
     const started = performance.now();
     calls++; active++;
     try {
       const count = mode === "burst" || mode === "event-count" ? 32 : 3;
-      const message = `${instance}:${id}:` + (mode === "burst" ? "x".repeat(7_000) : "stage");
+      const caller = principal?.clientId ?? "public";
+      const message = `${instance}:${caller}:${id}:` + (mode === "burst" ? "x".repeat(7_000) : "stage");
       for (let progress = 1; progress <= count; progress++) {
         await reportProgress({ progress, total: count, message });
         if (progress === 1) {
@@ -46,7 +48,8 @@ const tool = defineStreamingTool({
       if (mode === "event-count") await reportProgress({ progress: 33, total: 33, message });
       return {
         text: "complete",
-        data: { id, instance, padding: "x".repeat(mode === "burst" ? 900_000 : mode === "result-size" ? 1_048_576 : 0) },
+        data: { id, instance, caller,
+          padding: "x".repeat(mode === "burst" ? 900_000 : mode === "result-size" ? 1_048_576 : 0) },
       };
     } finally {
       if (signal.aborted) {
@@ -57,6 +60,10 @@ const tool = defineStreamingTool({
       active--; sample();
     }
   },
+};
+const tool = defineStreamingTool({ name: "progress", access: "public", ...progressDefinition });
+const protectedProgress = defineStreamingTool({
+  name: "protected-progress", access: "protected", requiredScopes: ["read"], ...progressDefinition,
 });
 const signedIn = defineTool({
   name: "signed-in", access: "protected", requiredScopes: ["read"],
@@ -65,16 +72,29 @@ const signedIn = defineTool({
   handler: () => { protectedCalls++; return { text: "ok", data: { instance } }; },
 });
 const running = await serveEmseepea(createEmseepea({
-  name: `proxy-test-${instance}`, version: "0.0.0", tools: [tool, signedIn],
+  name: `proxy-test-${instance}`, version: "0.0.0", tools: [tool, protectedProgress, signedIn],
   operationTimeoutMs: 2_000,
   authentication: {
     verifier: {
       async verifyAccessToken(token) {
-        if (token !== "test-valid") throw new OAuthError(OAuthErrorCode.InvalidToken, "invalid");
-        return { token, clientId: "test", scopes: ["read"], expiresAt: Math.floor(Date.now() / 1_000) + 60,
-          resource: new URL("https://api.example/mcp") };
+        verifierCalls++;
+        if (["invalid", "secret-bearer-sentinel"].includes(token)) {
+          throw new OAuthError(OAuthErrorCode.InvalidToken, `invalid ${token}`);
+        }
+        if (token === "slow") return new Promise(() => {});
+        if (token === "test-gated") {
+          await new Promise((resolve) => { waiting.set("auth", resolve); });
+          waiting.delete("auth");
+        }
+        return {
+          token, clientId: token === "test-alice" ? "client-alice" : token === "test-bob" ? "client-bob" : "client-default",
+          scopes: token === "wrong-scope" ? ["other"] : ["read"],
+          expiresAt: token === "expired" ? 1 : Math.floor(Date.now() / 1_000) + 60,
+          resource: new URL(token === "wrong-resource" ? "https://other.example/mcp" : "https://api.example/mcp"),
+        };
       },
     },
+    verificationTimeoutMs: 100,
     metadata: {
       resourceServerUrl: new URL("https://api.example/mcp"),
       oauthMetadata: { issuer: "https://auth.example", authorization_endpoint: "https://auth.example/authorize",
@@ -95,11 +115,12 @@ process.on("message", async ({ sequence, type, id }) => {
     else if (type === "stats") {
       sample();
       globalThis.gc?.();
-      value = { instance, calls, active, cancelled, cancelledRequests, protectedCalls, peakRss, samples,
-        heap: process.memoryUsage().heapUsed };
+      value = { instance, calls, active, cancelled, cancelledRequests, protectedCalls, verifierCalls,
+        waiting: [...waiting.keys()], peakRss, samples, heap: process.memoryUsage().heapUsed };
     } else if (type === "shutdown") {
       await running.close();
       clearInterval(sampler);
+      value = { active, cancelled, cancelledRequests };
     } else throw new Error("Unknown fixture command");
     process.send({ sequence, value });
     if (type === "shutdown") process.disconnect();

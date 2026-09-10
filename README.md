@@ -25,13 +25,13 @@ Use the current framework to create:
 - resources, reusable resource addresses, prompts, and field suggestions
 - clear names, descriptions, icons, and usage hints for clients to display
 - a server that tells clients when a list or resource is safe to reuse
-- public tools that report live progress while work is running
+- public or protected tools that report live progress while work is running
 - capability modules discovered once at startup from an opt-in directory
 - independently deployable server instances that share one PostgreSQL report store
 - a server with a native HTML form, or the same form rendered with React and
   the Em See Pea stylesheet
 
-Public tools can also report progress behind a trusted proxy. See
+Public and protected tools can also report progress behind a trusted proxy. See
 [how to configure proxy progress](packages/framework/README.md#use-progress-behind-a-proxy)
 and its [tested limits](docs/protocol-coverage.md#progress-updates).
 
@@ -141,7 +141,6 @@ principal only the capabilities allowed by their permissions.
 - querying application records or expanding templates through `resources/list`
   or `resources/templates/list`
 - changing catalogues while a server runs
-- deployed progress streams from protected tools
 - saved sessions, subscriptions, replay, or reconnect recovery
 - shared operation across computers without a reachable PostgreSQL database
 - a promise that retries change an external service only once
