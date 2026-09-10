@@ -1,5 +1,13 @@
 # @emseepea/create-tool-server
 
+## 0.0.18
+
+### Patch Changes
+
+- [`1518f94`](https://github.com/emseepea/emseepea/commit/1518f9409d76b0306fd745190323798d7ade2af2) Thanks [@tompahoward](https://github.com/tompahoward)! - Allow deliberately unsuccessful semantic journeys to accept either no tool
+  call or one named feedback call, while still rejecting unrelated or duplicate
+  calls. Keep successful starter journeys strict about negative feedback.
+
 ## 0.0.17
 
 ### Patch Changes
