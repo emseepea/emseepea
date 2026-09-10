@@ -31,6 +31,11 @@ export function createConversation(
 ): Promise<SemanticConversation>;
 
 export function assertToolCalls(turn: ConversationTurn, expected: readonly ToolCall[]): void;
+/** Requires the exact primary calls and allows one trailing submit-feedback call. */
+export function assertToolCallsWithOptionalFeedback(
+  turn: ConversationTurn,
+  expected: readonly ToolCall[],
+): Promise<void>;
 export function assertNoToolCalls(turn: ConversationTurn): void;
 /** Allows no tool call or exactly one call to the named tool in each trial. */
 export function assertOptionalToolCall(turn: ConversationTurn, name: string): void;

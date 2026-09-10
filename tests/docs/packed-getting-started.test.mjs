@@ -106,6 +106,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
         assertResponseContains,
         assertResponseMeaning,
         assertToolCalls,
+        assertToolCallsWithOptionalFeedback,
         createConversation,
       } from "@emseepea/testing/semantic";
       import { z } from "zod";
@@ -113,6 +114,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
       if (typeof startMcpServer !== "function" || typeof createConversation !== "function"
           || typeof assertToolCalls !== "function" || typeof assertNoToolCalls !== "function"
           || typeof assertOptionalToolCall !== "function"
+          || typeof assertToolCallsWithOptionalFeedback !== "function"
           || typeof assertResponseContains !== "function"
           || typeof assertResponseMeaning !== "function") {
         throw new Error("packed testing package is missing its public helpers");
@@ -397,6 +399,8 @@ test("every packed initializer creates a standalone checked project", {
               trial.turns.map(({ selectedTools }) => selectedTools),
               expected.tools,
             );
+            assert.ok(trial.turns.every((turn) => turn.expectedTools.length === 0
+              || turn.expectedOptionalFeedback === true));
             assert.ok(trial.turns.every(({ expectedNegativeFeedback, negativeFeedbackCalls }) =>
               expectedNegativeFeedback === false && negativeFeedbackCalls.length === 0));
           }
@@ -424,6 +428,7 @@ test("every packed initializer creates a standalone checked project", {
           assert.equal(trial.turns[index].interactionMode, "native-mcp");
           assert.deepEqual(trial.turns[index].expectedTools, expectedTools);
           assert.deepEqual(trial.turns[index].selectedTools, expectedTools);
+          if (expectedTools.length > 0) assert.equal(trial.turns[index].expectedOptionalFeedback, true);
         }
         assert.ok(trial.turns.every(({ expectedNegativeFeedback, negativeFeedbackCalls }) =>
           expectedNegativeFeedback === false && negativeFeedbackCalls.length === 0));

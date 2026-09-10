@@ -17,7 +17,19 @@ semantic assertions.
 Use `assertToolNames` when one tool has intentionally free-form arguments. Pair
 it with `assertToolArguments` for the stable call and `assertFeedback` for the
 feedback observation and important detail. Keep `assertToolCalls` when every
-complete argument should match exactly.
+complete argument should match exactly and no feedback tool is advertised.
+
+For a successful turn that advertises feedback, use
+`assertToolCallsWithOptionalFeedback`. It requires the exact ordered primary
+calls and arguments, then allows no feedback call or one trailing
+`submit-feedback` call. When feedback is present, it also requires a successful
+tool result and semantically checks that the response openly states the
+specific observation. Await this assertion.
+
+Pair it with `assertNoNegativeFeedback` so legitimate positive feedback does
+not make the primary behavior fail. Disclosure costs three judge calls for each
+feedback-bearing trial, with no extra judge calls when feedback is absent and a
+maximum of nine across the three trials.
 
 Use `assertOptionalToolCall(turn, "submit-feedback")` only for a deliberately
 unsuccessful journey where feedback is valid but not required. It accepts no

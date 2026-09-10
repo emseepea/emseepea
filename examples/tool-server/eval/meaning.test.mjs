@@ -4,7 +4,7 @@ import {
   assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
-  assertToolCalls,
+  assertToolCallsWithOptionalFeedback,
   createConversation,
 } from "@emseepea/testing/semantic";
 
@@ -27,7 +27,7 @@ test("looks up pea varieties and compares a follow-up", async (t) => {
     "Describe the pea type, growth habit, maturity time, and traits of Highland Snap.",
   );
 
-  assertToolCalls(highland, [{
+  await assertToolCallsWithOptionalFeedback(highland, [{
     name: "get-pea-variety",
     arguments: { name: "Highland Snap" },
   }]);
@@ -42,7 +42,7 @@ test("looks up pea varieties and compares a follow-up", async (t) => {
   const comparison = await chat.send(
     "Compare that with Harbour Gem. Include its pea type, growth habit, and maturity time.",
   );
-  assertToolCalls(comparison, [{
+  await assertToolCallsWithOptionalFeedback(comparison, [{
     name: "get-pea-variety",
     arguments: { name: "Harbour Gem" },
   }]);
@@ -60,7 +60,7 @@ test("protected discovery offers a permitted tool", async (t) => {
   // This one answer check confirms that protected discovery still supports a
   // useful answer, while keeping the authorization case to one short turn.
   const answer = await chat.send("What type of pea is Highland Snap?");
-  assertToolCalls(answer, [{
+  await assertToolCallsWithOptionalFeedback(answer, [{
     name: "get-pea-variety",
     arguments: { name: "Highland Snap" },
   }]);

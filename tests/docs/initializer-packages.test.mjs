@@ -65,6 +65,7 @@ test("the public package list and built initializers are complete", async () => 
     if (initializer.example === "resources-and-prompts-server") {
       assert.match(semanticTest, /assertOptionalToolCall\(response, "submit-feedback"\)/);
     } else {
+      assert.match(semanticTest, /assertToolCallsWithOptionalFeedback\(/);
       assert.match(semanticTest, /assertNoNegativeFeedback\(/);
     }
     for (const [name, version] of Object.entries({ ...template.dependencies, ...template.devDependencies })) {

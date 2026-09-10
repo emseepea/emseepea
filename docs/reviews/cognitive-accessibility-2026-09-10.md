@@ -126,3 +126,16 @@ conformance or certification claim. No blocking accessibility finding remains.
   SHA-256: `40eacc22638c6bee4e3f2293f9df08dcc891bee52dc35bf7e5c06d4b132291c2`
 - `docs/brand/STYLE-GUIDE.md`
   SHA-256: `19b4bcfbf17e50ebd528e470f5656e33dd70b709e71dc7d2e7fbea1ecd660297`
+
+## Optional Positive Feedback Assertions
+
+Result: PASS. An independent cognitive-accessibility review covered the exact
+testing guidance and release note. The text clearly distinguishes exact primary
+tool calls from one optional trailing feedback call and contains no em dash.
+
+- `.changeset/fair-peas-report.md`
+  SHA-256: `0c43fae9ee5573ad171f80c5033cd53da524e157ca1f38654927dc2ef16965c6`
+- `packages/testing/README.md`
+  SHA-256: `6e46e65c524338bf81c289b1d51ec25c9851e4ef666efd55c622963d39a50c95`
+- `website/src/content/docs/ai-tests.md`
+  SHA-256: `28ad12d3d7619332de3616bb71bb90741b02774f699b82945ca92651344a8439`

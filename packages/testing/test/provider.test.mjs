@@ -140,7 +140,12 @@ test("native tool assertions come from provider MCP events", () => {
   ];
   const parsed = parseNativeClaudeEvents(events, tools);
   assert.deepEqual(parsed.calls, [{ name: "get-pea", arguments: { name: "Snap" } }]);
-  assert.deepEqual(parsed.toolResults, ['{"name":"Snap"}']);
+  assert.deepEqual(parsed.toolResults, [{ content: '{"name":"Snap"}', isError: false }]);
+  const failedResult = structuredClone(events);
+  failedResult[2].message.content[0].is_error = true;
+  assert.deepEqual(parseNativeClaudeEvents(failedResult, tools).toolResults, [
+    { content: '{"name":"Snap"}', isError: true },
+  ]);
   assert.equal(parsed.pathEvidence[0].target, "get-pea");
   assert.throws(() => parseNativeClaudeEvents(events.map((event) => event.type === "assistant"
     ? { ...event, message: { content: [{

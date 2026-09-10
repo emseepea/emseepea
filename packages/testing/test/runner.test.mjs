@@ -12,6 +12,7 @@ const cli = fileURLToPath(new URL("../semantic/cli.mjs", import.meta.url));
 const helper = new URL("../semantic/test.mjs", import.meta.url).href;
 const server = new URL("../../../examples/tool-server/dist/server.js", import.meta.url).href;
 const protectedServer = new URL("../../../tests/fixtures/protected-inventory-server.mjs", import.meta.url).href;
+const feedbackServer = new URL("../../../examples/api-backed-server/test-support/llm-server.mjs", import.meta.url).href;
 
 test("cancellation stops MCP collection and the server receives no model token", { timeout: 15_000 }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "semantic-cancel-"));
@@ -122,7 +123,12 @@ if (!process.argv.includes("--input-format")) {
       subtype: "sk-ant-private-secret" }) + "\\n");
     process.exit(0);
   }
-  const pass = !prompt.includes("REJECT_THIS_RESPONSE");
+  const conversationText = prompt.match(/Conversation:\\n(.+)\\n\\nExpected meaning:/s)?.[1];
+  const assistant = conversationText ? JSON.parse(conversationText).at(-1)?.assistant ?? "" : "";
+  const disclosure = prompt.includes("makes it clear that feedback was submitted");
+  const pass = !prompt.includes("REJECT_THIS_RESPONSE")
+    && (!disclosure || (assistant.includes("recorded")
+      && (assistant.includes("immediately useful") || assistant.includes("harder to obtain"))));
   log({ judge: true, prompt });
   const answer = prompt.includes("MALFORMED_JUDGE") ? "not-json" : JSON.stringify({
     pass, score: pass ? 1 : 0,
@@ -154,7 +160,37 @@ if (!process.argv.includes("--input-format")) {
     const followUp = prompt === "How many packets were inbound?";
     const forceTwoCalls = context === "TWO_ORDERED_CALLS";
     const forceFollowUpTool = context === "FORCE_TOOL_ON_FOLLOW_UP";
-    const calls = forceTwoCalls && !followUp
+    const feedbackCalls = ["PRIMARY_WITH_POSITIVE_FEEDBACK", "PRIMARY_WITH_UNDISCLOSED_FEEDBACK"].includes(context)
+      ? [{ name: "submit-feedback", arguments: {
+        observation: "notable_success", detail: "The result was immediately useful and clear.",
+      } }]
+      : context === "PRIMARY_WITH_NEGATIVE_FEEDBACK"
+        ? [{ name: "submit-feedback", arguments: {
+          observation: "friction", detail: "The result was harder to obtain than it should have been.",
+        } }]
+        : context === "PRIMARY_WITH_DUPLICATE_FEEDBACK"
+          ? [
+            { name: "submit-feedback", arguments: {
+              observation: "notable_success", detail: "The result was immediately useful and clear.",
+            } },
+            { name: "submit-feedback", arguments: {
+              observation: "notable_success", detail: "The result was immediately useful and clear.",
+            } },
+          ]
+          : context === "PRIMARY_WITH_FAILED_FEEDBACK"
+            ? [{ name: "submit-feedback", arguments: {
+              observation: "notable_success", detail: "The result was immediately useful and clear.",
+            } }]
+            : [];
+    const feedbackScenario = context?.startsWith("PRIMARY_WITH_") && !followUp;
+    const calls = feedbackScenario
+      ? [
+        { name: "search-pea-taxa", arguments: { query: "pea" } },
+        ...(context === "PRIMARY_WITH_WRONG_EXTRA"
+          ? [{ name: "search-pea-taxa", arguments: { query: "snap pea" } }]
+          : feedbackCalls),
+      ]
+      : forceTwoCalls && !followUp
       ? [
         { name: "get-pea-variety", arguments: { name: "Highland Snap" } },
         { name: "get-pea-variety", arguments: { name: "Harbour Gem" } },
@@ -170,10 +206,17 @@ if (!process.argv.includes("--input-format")) {
       }] } }) + "\\n");
       process.stdout.write(JSON.stringify({ type: "user", message: { role: "user", content: [{
         type: "tool_result", tool_use_id: id,
+        is_error: context === "PRIMARY_WITH_FAILED_FEEDBACK" && call.name === "submit-feedback",
         content: "{\\"onHand\\":120,\\"reserved\\":35,\\"inbound\\":40}",
       }] } }) + "\\n");
     });
-    const answer = followUp
+    const answer = feedbackScenario
+      ? context === "PRIMARY_WITH_UNDISCLOSED_FEEDBACK"
+        ? "Pisum sativum was returned from the catalogue."
+        : context === "PRIMARY_WITH_NEGATIVE_FEEDBACK"
+          ? "Pisum sativum was returned. I recorded that the result was harder to obtain than it should have been."
+          : "Pisum sativum was returned. I recorded that the result was immediately useful and clear."
+      : followUp
       ? "40 inbound packets"
       : "There are 85 packets available to promise from 120 on hand minus 35 reserved; 40 inbound packets do not count.";
     process.stdout.write(JSON.stringify(result(answer, calls.length)) + "\\n");
@@ -191,6 +234,7 @@ if (!process.argv.includes("--input-format")) {
     expectedCalls,
     firstOptionalTool,
     followUpOptionalTool,
+    allowOptionalFeedback = false,
   } = {}) => `
 import test from "node:test";
 import {
@@ -200,6 +244,7 @@ import {
   assertResponseContains,
   assertResponseMeaning,
   assertToolCalls,
+  assertToolCallsWithOptionalFeedback,
   createConversation,
 } from ${JSON.stringify(helper)};
 
@@ -212,7 +257,7 @@ test("inventory conversation", async (t) => {
   const inventory = await chat.send("How many packets can we promise now?");
   ${firstOptionalTool
     ? `assertOptionalToolCall(inventory, ${JSON.stringify(firstOptionalTool)});`
-    : `assertToolCalls(inventory, ${JSON.stringify(expectedCalls ?? [{
+    : `${allowOptionalFeedback ? "await assertToolCallsWithOptionalFeedback" : "assertToolCalls"}(inventory, ${JSON.stringify(expectedCalls ?? [{
       name: "get-private-inventory-report",
       arguments: expectedArguments,
     }])});`}
@@ -314,6 +359,60 @@ test("inventory conversation", async (t) => {
       && turns[0].toolCallCount === 1
       && turns[1].expectedOptionalTool === "get-private-inventory-report"
       && turns[1].toolCallCount === 0));
+
+  await writeFile(file, source({ allowOptionalFeedback: true }));
+  const noFeedback = run();
+  assert.equal(noFeedback.status, 0, noFeedback.stdout + noFeedback.stderr);
+
+  const feedbackOptions = {
+    allowOptionalFeedback: true,
+    serverUrl: feedbackServer,
+    expectedCalls: [{ name: "search-pea-taxa", arguments: { query: "pea" } }],
+    literal: "Pisum sativum",
+    meaning: "The response says Pisum sativum was returned from the catalogue.",
+  };
+  await writeFile(file, source({ ...feedbackOptions, context: "PRIMARY_WITH_POSITIVE_FEEDBACK" }));
+  const positiveFeedback = run();
+  assert.equal(positiveFeedback.status, 0, positiveFeedback.stdout + positiveFeedback.stderr);
+  const positiveEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+  assert.ok(positiveEvidence.answerTrials.every(({ turns }) =>
+    turns[0].expectedOptionalFeedback === true
+      && turns[0].selectedTools.join() === "search-pea-taxa,submit-feedback"
+      && turns[0].toolCalls[1].isError === false
+      && turns[0].feedbackDisclosure.detail === "The result was immediately useful and clear."));
+
+  for (const context of ["PRIMARY_WITH_WRONG_EXTRA", "PRIMARY_WITH_DUPLICATE_FEEDBACK"]) {
+    await writeFile(file, source({ ...feedbackOptions, context }));
+    const invalidFeedback = run();
+    assert.equal(invalidFeedback.status, 1, `${context} must fail`);
+    assert.equal(
+      Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0].failedPhase,
+      "tool-call assertion",
+    );
+  }
+
+  await writeFile(file, source({ ...feedbackOptions, context: "PRIMARY_WITH_NEGATIVE_FEEDBACK" }));
+  const negativeFeedback = run();
+  assert.equal(negativeFeedback.status, 1, "Negative feedback on a successful journey must fail");
+  assert.equal(
+    Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0].failedPhase,
+    "negative-feedback assertion",
+  );
+
+  await writeFile(file, source({ ...feedbackOptions, context: "PRIMARY_WITH_FAILED_FEEDBACK" }));
+  const failedFeedback = run();
+  assert.equal(failedFeedback.status, 1, "A failed feedback tool result must fail");
+  assert.equal(
+    Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0].failedPhase,
+    "feedback-disclosure assertion",
+  );
+
+  await writeFile(file, source({ ...feedbackOptions, context: "PRIMARY_WITH_UNDISCLOSED_FEEDBACK" }));
+  const undisclosedFeedback = run();
+  assert.equal(undisclosedFeedback.status, 1, "Undisclosed feedback must fail");
+  const undisclosedEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+  assert.equal(undisclosedEvidence.failedPhase, "feedback-disclosure assertion");
+  assert.equal(undisclosedEvidence.judgeVerdicts.length, 9);
 
   await writeFile(file, source({ firstOptionalTool: "get-pea-variety" }));
   const unexpectedOptional = run();

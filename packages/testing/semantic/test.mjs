@@ -105,7 +105,8 @@ export async function createConversation(testContext, options) {
             user: prompt,
             toolCalls: calls.map((call, index) => ({
               ...call,
-              result: answer.toolResults[index],
+              result: answer.toolResults[index].content,
+              isError: answer.toolResults[index].isError,
             })),
             assistant: answer.answer,
           });
@@ -116,7 +117,8 @@ export async function createConversation(testContext, options) {
             response: answer.answer,
             toolCalls: calls.map((call, index) => ({
               ...call,
-              result: answer.toolResults[index],
+              result: answer.toolResults[index].content,
+              isError: answer.toolResults[index].isError,
             })),
             promptSha256: hash(prompt),
             answerSha256: hash(answer.answer),
@@ -169,11 +171,7 @@ export async function createConversation(testContext, options) {
 
 export function assertToolCalls(turn, expected) {
   const trials = turnTrials(turn);
-  if (!Array.isArray(expected) || expected.some((call) => !call || typeof call.name !== "string"
-    || !call.name.trim() || !call.arguments || typeof call.arguments !== "object"
-    || Array.isArray(call.arguments))) {
-    throw new Error("Expected tool calls must have names and object arguments");
-  }
+  validateExpectedCalls(expected);
   for (const trial of trials) {
     trial.record.expectedTools = expected.map(({ name }) => name);
     trial.record.expectedCalls = expected;
@@ -184,6 +182,51 @@ export function assertToolCalls(turn, expected) {
   } catch {
     failAssertion(trials, "tool-call assertion");
     throw new Error("Tool calls did not match the expected names, arguments, order, and count");
+  }
+}
+
+export async function assertToolCallsWithOptionalFeedback(turn, expected) {
+  const trials = turnTrials(turn);
+  validateExpectedCalls(expected);
+  for (const trial of trials) {
+    trial.record.expectedTools = expected.map(({ name }) => name);
+    trial.record.expectedCalls = expected;
+    trial.record.expectedOptionalFeedback = true;
+    trial.record.expectedSelectionSha256 = hash(JSON.stringify({ calls: expected, optionalFeedback: true }));
+    const primaryCalls = trial.calls.slice(0, expected.length);
+    const trailingCalls = trial.calls.slice(expected.length);
+    try {
+      assert.deepStrictEqual(primaryCalls, expected);
+      assert.ok(trailingCalls.length <= 1);
+      if (trailingCalls.length === 1) assert.equal(trailingCalls[0].name, "submit-feedback");
+    } catch {
+      failAssertion(trials, "tool-call assertion");
+      throw new Error("Tool calls did not match the expected calls with at most one trailing feedback call");
+    }
+  }
+  let failed = false;
+  for (let trialIndex = 0; trialIndex < trials.length; trialIndex += 1) {
+    const trial = trials[trialIndex];
+    const feedback = trial.calls[expected.length];
+    if (!feedback) continue;
+    const recordedCall = trial.record.toolCalls[expected.length];
+    if (typeof feedback.arguments.observation !== "string" || !feedback.arguments.observation.trim()
+      || typeof feedback.arguments.detail !== "string" || !feedback.arguments.detail.trim()) {
+      failed = true;
+      continue;
+    }
+    const expectation = feedbackDisclosureExpectation(feedback);
+    trial.record.feedbackDisclosure = {
+      observation: feedback.arguments.observation,
+      detail: feedback.arguments.detail,
+      expectationSha256: hash(expectation),
+    };
+    const disclosureFailed = await judgeTrialMeaning(trial, trialIndex, expectation);
+    if (recordedCall.isError || disclosureFailed) failed = true;
+  }
+  if (failed) {
+    failAssertion(trials, "feedback-disclosure assertion");
+    throw new Error("Optional feedback failed or was not openly described in the response");
   }
 }
 
@@ -329,41 +372,7 @@ export async function assertResponseMeaning(turn, expectation) {
   for (let trialIndex = 0; trialIndex < trials.length; trialIndex += 1) {
     const trial = trials[trialIndex];
     trial.record.expectedMeaning = expectation.expected;
-    for (let judgment = 1; judgment <= 3; judgment += 1) {
-      const request = judgePrompt(trial.history, expectation.expected);
-      const record = {
-        trial: trialIndex + 1,
-        turn: trial.record.turn,
-        judgment,
-        expectedMeaning: expectation.expected,
-        expectationSha256: hash(expectation.expected),
-        requestSha256: hash(request),
-      };
-      try {
-        const response = await isolatedModel(
-          trial.provider,
-          request,
-          "emseepea-judge-",
-          trial.signal,
-        );
-        Object.assign(record, {
-          models: response.models,
-          turnCount: response.turnCount,
-          providerTurnCount: response.providerTurnCount,
-          providerToolCount: response.providerToolCount,
-          responseSha256: hash(response.answer),
-        });
-        const verdict = parseJudgeVerdict(response.answer.trim());
-        record.verdict = verdict;
-        if (!verdict.pass) failed = true;
-      } catch (error) {
-        record.error = error instanceof SyntaxError || error.message === "Judge returned an invalid verdict"
-          ? "invalid judge verdict"
-          : safeModelFailure(error);
-        failed = true;
-      }
-      trial.evidence.judgeVerdicts.push(record);
-    }
+    if (await judgeTrialMeaning(trial, trialIndex, expectation.expected)) failed = true;
     trial.record.meaningAssertionCount += 1;
   }
   trials[0].state.meaningAssertions += 1;
@@ -371,6 +380,41 @@ export async function assertResponseMeaning(turn, expectation) {
     failAssertion(trials, "model judgment");
     throw new Error("Response did not have the expected meaning");
   }
+}
+
+async function judgeTrialMeaning(trial, trialIndex, expected) {
+  let failed = false;
+  for (let judgment = 1; judgment <= 3; judgment += 1) {
+    const request = judgePrompt(trial.history, expected);
+    const record = {
+      trial: trialIndex + 1,
+      turn: trial.record.turn,
+      judgment,
+      expectedMeaning: expected,
+      expectationSha256: hash(expected),
+      requestSha256: hash(request),
+    };
+    try {
+      const response = await isolatedModel(trial.provider, request, "emseepea-judge-", trial.signal);
+      Object.assign(record, {
+        models: response.models,
+        turnCount: response.turnCount,
+        providerTurnCount: response.providerTurnCount,
+        providerToolCount: response.providerToolCount,
+        responseSha256: hash(response.answer),
+      });
+      const verdict = parseJudgeVerdict(response.answer.trim());
+      record.verdict = verdict;
+      if (!verdict.pass) failed = true;
+    } catch (error) {
+      record.error = error instanceof SyntaxError || error.message === "Judge returned an invalid verdict"
+        ? "invalid judge verdict"
+        : safeModelFailure(error);
+      failed = true;
+    }
+    trial.evidence.judgeVerdicts.push(record);
+  }
+  return failed;
 }
 
 function safeModelFailure(error) {
@@ -432,6 +476,7 @@ async function closeConversation(state, evidence, output) {
   const complete = !state.failed && state.meaningAssertions > 0 && evidence.answerTrials.length === 3
     && evidence.answerTrials.every(({ turns }) => turns.length > 0
       && turns.every((turn) => Array.isArray(turn.expectedTools)
+        || turn.expectedOptionalFeedback === true
         || typeof turn.expectedOptionalTool === "string"));
   if (complete) {
     evidence.status = "passed";
@@ -455,6 +500,20 @@ function turnTrials(turn) {
     throw new Error("Expected an Em See Pea conversation turn");
   }
   return trials;
+}
+
+function validateExpectedCalls(expected) {
+  if (!Array.isArray(expected) || expected.some((call) => !call || typeof call.name !== "string"
+    || !call.name.trim() || !call.arguments || typeof call.arguments !== "object"
+    || Array.isArray(call.arguments))) {
+    throw new Error("Expected tool calls must have names and object arguments");
+  }
+}
+
+function feedbackDisclosureExpectation(call) {
+  return "The final assistant response makes it clear that feedback was submitted, recorded, or noted, "
+    + "and communicates the substance "
+    + `of this specific ${call.arguments.observation} observation: ${call.arguments.detail}`;
 }
 
 function failAssertion(trials, phase) {

@@ -4,7 +4,7 @@ import {
   assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
-  assertToolCalls,
+  assertToolCallsWithOptionalFeedback,
   createConversation,
 } from "@emseepea/testing/semantic";
 
@@ -26,7 +26,7 @@ test("keeps progress stages distinct from the completed result", async (t) => {
     "Run the sample-tray pea germination trial. List its progress stages and final result.",
   );
 
-  assertToolCalls(response, [{
+  await assertToolCallsWithOptionalFeedback(response, [{
     name: "run-germination-trial",
     arguments: { tray: "sample-tray" },
   }]);

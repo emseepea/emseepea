@@ -4,7 +4,7 @@ import {
   assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
-  assertToolCalls,
+  assertToolCallsWithOptionalFeedback,
   createConversation,
 } from "@emseepea/testing/semantic";
 
@@ -21,7 +21,7 @@ test("searches once and remembers the common name for a follow-up", async (t) =>
     "and does that count estimate the wild population?",
   );
 
-  assertToolCalls(search, [{
+  await assertToolCallsWithOptionalFeedback(search, [{
     name: "search-pea-taxa",
     arguments: { query: "pea" },
   }]);

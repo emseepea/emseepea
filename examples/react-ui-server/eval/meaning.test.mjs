@@ -4,7 +4,7 @@ import {
   assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
-  assertToolCalls,
+  assertToolCallsWithOptionalFeedback,
   createConversation,
 } from "@emseepea/testing/semantic";
 
@@ -27,7 +27,7 @@ test("understands an all-varieties React UI preview", async (t) => {
     "Summarize the matches and say whether anything was sent, stored, or changed.",
   );
 
-  assertToolCalls(response, [{
+  await assertToolCallsWithOptionalFeedback(response, [{
     name: "preview-planting-plan",
     arguments: { title: "All pea plan", peaType: "all", includeTips: false },
   }]);

@@ -3,7 +3,7 @@ import {
   assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
-  assertToolCalls,
+  assertToolCallsWithOptionalFeedback,
   createConversation,
 } from "@emseepea/testing/semantic";
 
@@ -30,7 +30,7 @@ test("saves and retrieves a harvest report without exposing server instances", a
     "Save a harvest report for North Bed on 2026-09-08 with 12 shelling pea " +
     "plants and 8 snap pea plants.",
   );
-  assertToolCalls(saved, [
+  await assertToolCallsWithOptionalFeedback(saved, [
     {
       name: "save-harvest-report",
       arguments: {
@@ -46,7 +46,7 @@ test("saves and retrieves a harvest report without exposing server instances", a
   const retrieved = await chat.send(
     "What harvest report do we have for that garden bed and date?",
   );
-  assertToolCalls(retrieved, [
+  await assertToolCallsWithOptionalFeedback(retrieved, [
     {
       name: "get-harvest-report",
       arguments: { gardenBed: "North Bed", harvestDate: "2026-09-08" },

@@ -3,7 +3,7 @@ import {
   assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
-  assertToolCalls,
+  assertToolCallsWithOptionalFeedback,
   createConversation,
 } from "@emseepea/testing/semantic";
 
@@ -30,7 +30,7 @@ test("finds and adds MongoDB-backed pea varieties through natural requests", asy
   // The read and write turns cover both public decisions. Storage validation
   // remains in deterministic tests because asking a model cannot prove it.
   const fastest = await chat.send("Among the saved snap pea varieties, which matures fastest?");
-  assertToolCalls(fastest, [{
+  await assertToolCallsWithOptionalFeedback(fastest, [{
     name: "list-pea-varieties",
     arguments: { pea_type: "snap" },
   }]);
@@ -42,7 +42,7 @@ test("finds and adds MongoDB-backed pea varieties through natural requests", asy
     "Add Golden Sweet as a climbing mangetout pea that matures in 70 days. " +
     "Use exactly mangetout as its pea type. Its notes are: Purple flowers and flat edible pods.",
   );
-  assertToolCalls(added, [{
+  await assertToolCallsWithOptionalFeedback(added, [{
     name: "add-pea-variety",
     arguments: {
       name: "Golden Sweet",
@@ -60,7 +60,7 @@ test("finds and adds MongoDB-backed pea varieties through natural requests", asy
     "Record that Golden Sweet was flowering in the west trellis on 2026-09-08. " +
     "The notes are: First flower opened.",
   );
-  assertToolCalls(recorded, [{
+  await assertToolCallsWithOptionalFeedback(recorded, [{
     name: "record-pea-observation",
     arguments: {
       variety_name: "Golden Sweet",
@@ -72,7 +72,7 @@ test("finds and adds MongoDB-backed pea varieties through natural requests", asy
   }]);
 
   const observations = await chat.send("What have I observed about Golden Sweet?");
-  assertToolCalls(observations, [{
+  await assertToolCallsWithOptionalFeedback(observations, [{
     name: "list-pea-observations",
     arguments: { variety_name: "Golden Sweet" },
   }]);

@@ -3,7 +3,7 @@ import {
   assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
-  assertToolCalls,
+  assertToolCallsWithOptionalFeedback,
   createConversation,
 } from "@emseepea/testing/semantic";
 
@@ -31,7 +31,7 @@ test("finds and adds pea varieties through natural requests", async (t) => {
   // selection stays in ordinary tests because a third model turn adds cost but
   // does not teach a meaningfully different MCP interaction.
   const fastest = await chat.send("Which snap pea variety matures fastest?");
-  assertToolCalls(fastest, [{
+  await assertToolCallsWithOptionalFeedback(fastest, [{
     name: "list-pea-varieties",
     arguments: { pea_type: "snap" },
   }]);
@@ -43,7 +43,7 @@ test("finds and adds pea varieties through natural requests", async (t) => {
     "Add Golden Sweet as a climbing mangetout pea that matures in 70 days. " +
     "Use exactly mangetout as its pea type. Its notes are: Purple flowers and flat edible pods.",
   );
-  assertToolCalls(added, [{
+  await assertToolCallsWithOptionalFeedback(added, [{
     name: "add-pea-variety",
     arguments: {
       name: "Golden Sweet",

@@ -53,9 +53,10 @@ or the
 import test from "node:test";
 import {
   assertNoToolCalls,
+  assertNoNegativeFeedback,
   assertResponseContains,
   assertResponseMeaning,
-  assertToolCalls,
+  assertToolCallsWithOptionalFeedback,
   createConversation,
 } from "@emseepea/testing/semantic";
 
@@ -65,7 +66,7 @@ test("searches once and remembers the result", async (t) => {
   });
 
   const search = await chat.send('Search the catalogue for "pea".');
-  assertToolCalls(search, [{
+  await assertToolCallsWithOptionalFeedback(search, [{
     name: "search-pea-taxa",
     arguments: { query: "pea" },
   }]);
@@ -77,19 +78,31 @@ test("searches once and remembers the result", async (t) => {
   const followUp = await chat.send("What was its common name?");
   assertNoToolCalls(followUp);
   assertResponseContains(followUp, "Common Pea");
+  assertNoNegativeFeedback(search, followUp);
 });
 ```
 
-`assertToolCalls` checks the complete ordered call list, including arguments and
-call count. `assertNoToolCalls` checks that a turn used the existing conversation
-without making another call. `assertResponseContains` accepts literal strings
-only. Put alternative wording and numerical meaning in `assertResponseMeaning`.
+`assertToolCallsWithOptionalFeedback` checks the complete ordered primary call
+list and arguments, then allows no feedback call or one trailing
+`submit-feedback` call. Await it. When feedback is present, it requires a
+successful tool result and semantically checks that the response openly states
+the specific observation.
+
+Pair it with `assertNoNegativeFeedback` so legitimate positive feedback does
+not make the primary behavior fail. The disclosure check costs three judge
+calls for each feedback-bearing trial, with no extra calls when feedback is
+absent and a maximum of nine across the three trials.
+
+Use `assertToolCalls` when no feedback tool is advertised. `assertNoToolCalls`
+checks that a turn used the existing conversation without making another call.
+`assertResponseContains` accepts literal strings only. Put alternative wording
+and numerical meaning in `assertResponseMeaning`.
 
 Use `assertOptionalToolCall(turn, "submit-feedback")` only for a deliberately
 unsuccessful journey where feedback is valid but not required. It accepts no
 call or one feedback call, while rejecting duplicate feedback and every other
-tool. Successful journeys should instead use exact tool assertions and
-`assertNoNegativeFeedback`.
+tool. Successful journeys should instead use
+`assertToolCallsWithOptionalFeedback` and `assertNoNegativeFeedback`.
 
 The optional `context` setting represents real application context. It is absent
 by default so test guidance cannot bias the model. Use it only when the deployed
