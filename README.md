@@ -23,6 +23,7 @@ Use the current framework to create:
 - tools that call another service and check its response
 - optional detailed feedback and protected support conversations backed by PostgreSQL, Firestore, GitHub Issues, or Zendesk
 - resources, reusable resource addresses, prompts, and field suggestions
+- bounded notifications when a registered resource changes
 - clear names, descriptions, icons, and usage hints for clients to display
 - a server that tells clients when a list or resource is safe to reuse
 - public or protected tools that report live progress while work is running
@@ -141,7 +142,7 @@ principal only the capabilities allowed by their permissions.
 - querying application records or expanding templates through `resources/list`
   or `resources/templates/list`
 - changing catalogues while a server runs
-- saved sessions, subscriptions, replay, or reconnect recovery
+- saved sessions, replay, reconnect recovery, or list-change subscriptions
 - shared operation across computers without a reachable PostgreSQL database
 - a promise that retries change an external service only once
 - full coverage of the active MCP server protocol

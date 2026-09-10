@@ -72,21 +72,22 @@ Lifecycle-hidden resource listing is covered by the
 
 ### `resources/templates/list`
 
-**Status: Partial.** Lists visible public and protected resource address patterns.
-Changing the list while the server is running is not supported. See the
+**Status: Partial.** Lists visible public and protected resource templates.
+Each template is a registered URI pattern. Changing the list while the server
+is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
 [list-pagination tests](../tests/black-box/list-pagination.test.mjs).
-The result contains metadata for registered URI templates. It does not return
+The result contains metadata for registered resource templates. It does not return
 resource contents, query application records, or list matching concrete URIs.
-Lifecycle-hidden template listing is covered by the
+Lifecycle-hidden resource-template listing is covered by the
 [discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
 ### `resources/read`
 
 **Status: Partial.** Reads registered public or protected resources and checks their result.
 A resource may ask a capable client for more input before returning its final
-result. Resource update subscriptions are not supported. See the
+result. Resource update subscriptions are covered separately below. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs) and
 [client-input tests](../tests/black-box/input-required.test.mjs). Reads of known
 lifecycle-hidden resources and templates, followed by removal, are covered by
@@ -124,9 +125,16 @@ failure, and later removal are covered by the
 
 ### `subscriptions/listen`
 
-**Status: Not built.** The current MCP server dependency does not expose a
-bounded queue for slow readers. Em See Pea will not add subscriptions until it
-can prove that one slow client cannot grow server memory without limit.
+**Status: Partial.** An application can opt into resource-update subscriptions.
+Each request listens to one registered static resource URI or one concrete URI
+that matches a registered resource template. The framework authenticates
+access to a protected resource before opening the stream and bounds active streams, stream
+lifetime, event count, event size, and total event bytes. Overflow closes only
+the affected stream. See the
+[resource subscription tests](../tests/black-box/resource-subscriptions.test.mjs).
+
+Subscriptions and notifications are process-local. There is no replay,
+reconnect recovery, or tool, resource, or prompt list-change subscription.
 
 ## HTTP and Shared Behaviour
 
@@ -272,8 +280,8 @@ metadata. It does not test a real TLS terminator or every proxy product.
 
 There is no throughput or load-balancing fairness guarantee. Rate limits remain
 per server, and application state is not shared. Paused-reader memory checks
-do not prove that a slow reader slows the producer. Recovery, replay, and
-subscriptions remain unsupported.
+do not prove that a slow reader slows the producer. Recovery and replay remain
+unsupported for progress streams.
 
 ### Server-Sent Event Completion
 
@@ -314,8 +322,10 @@ controls it would need. See the
 
 ### Long-Lived Change Notifications
 
-**Status: Not built.** Tool, resource, and prompt list changes and resource
-updates need `subscriptions/listen`, which is not yet supported.
+**Status: Partial.** Applications can publish an update for a registered
+resource URI with `notifyResourceUpdated`. Matching `subscriptions/listen`
+streams receive `notifications/resources/updated`. Tool, resource, and prompt
+list-change notifications are not supported.
 
 ### `notifications/cancelled` From a Client
 
@@ -379,7 +389,7 @@ performance is not claimed. See the
 
 Em See Pea supports useful parts of the active server surface, but it does not
 yet support every active request, result shape, notification, and transport
-rule. In particular, it lacks bounded subscriptions and several partial
+rule. In particular, it lacks list-change subscriptions and several partial
 capabilities listed above.
 
 The full active server-surface claim stays withdrawn until a fresh comparison
@@ -391,7 +401,7 @@ tests from clean checkouts with two independent MCP clients.
 
 Work should close one row at a time:
 
-1. add subscriptions only after slow-reader memory is bounded
+1. add list-change subscriptions only after memory use for slow readers is bounded
 2. compare this page with every active server rule in the pinned specification
 3. rerun every row on this page with two independent clients from clean copies
 

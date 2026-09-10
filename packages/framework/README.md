@@ -617,7 +617,7 @@ signal. These checks do not slow the producer to match a slow reader.
 Not supported yet:
 
 - long-running streams opened with GET
-- saved sessions, replay, or subscriptions
+- saved sessions or replay
 - recovery after reconnecting
 - slowing the producer when a client cannot keep up
 
@@ -693,9 +693,36 @@ const app = createEmseepea({
 });
 ```
 
-The `resources` definitions populate the static-resource and resource-template
-catalogues. Their list methods do not query application records or return
-resource contents. See [when to provide a list or search tool](https://emseepea.github.io/emseepea/examples/#share-reference-material-and-prompts).
+The `resources` definitions populate the catalogues of static resources and
+resource templates. `resources/list` and `resources/templates/list` do not
+query application records or return resource contents. See
+[when to provide a list or search tool](https://emseepea.github.io/emseepea/examples/#share-reference-material-and-prompts).
+
+To let clients watch a resource they already know about, opt into bounded
+resource-update subscriptions and publish its registered URI after its content
+changes:
+
+```ts
+import { notifyResourceUpdated } from "@emseepea/server";
+
+const app = createEmseepea({
+  name: "peas",
+  version: "1.0.0",
+  resources: [guide, methodGuide],
+  resourceSubscriptions: {},
+});
+
+notifyResourceUpdated(app, "guide://peas/getting-started");
+```
+
+Each `subscriptions/listen` request accepts one static resource URI or one
+concrete URI matching a registered template. The framework authenticates
+access to a protected resource before opening the stream.
+
+The default limits are 16 active streams, 256 events, 8 KiB per event, a
+512-byte URI, and a 30-second lifetime. Configure them with
+`resourceSubscriptions`. Streams and notifications are process-local, with no
+replay or reconnect recovery. List-change subscriptions are not supported.
 
 ## Tell Clients When They May Reuse Results
 
