@@ -214,6 +214,8 @@ jobs:
           EOF
       - name: Create release pull request or publish
         id: changesets
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
