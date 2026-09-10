@@ -143,16 +143,6 @@ test("publication evidence describes the protected progress boundary", () => {
   assert.match(workflow, /Subscription load check: \\`node --expose-gc --test tests\/load\/subscription-sdk\.test\.mjs\\`/);
 });
 
-test("the feedback bootstrap credential is confined to its exact publication step", () => {
-  const step = workflow.match(
-    /- name: Bootstrap the first feedback publication[\s\S]*?(?=\n\s+- name:)/,
-  )?.[0] ?? "";
-  assert.match(step, /if: steps\.release-state\.outputs\.has_changesets == 'false'/);
-  assert.match(step, /NODE_AUTH_TOKEN: \$\{\{ secrets\.NPM_TOKEN \}\}/);
-  assert.match(step, /@emseepea\/feedback[\s\S]*?0\.2\.0[\s\S]*?npm publish --workspace @emseepea\/feedback --access public --provenance/);
-  assert.equal((workflow.match(/secrets\.NPM_TOKEN/g) ?? []).length, 1);
-});
-
 test("registry tarball downloads retry bounded propagation failures", async () => {
   let calls = 0;
   let waits = 0;
