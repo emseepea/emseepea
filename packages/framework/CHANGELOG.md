@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.9.0
+
+### Minor Changes
+
+- [`02fe020`](https://github.com/emseepea/emseepea/commit/02fe0209e7a934415d46681678497dfd993f72ec) Thanks [@tompahoward](https://github.com/tompahoward)! - Add opt-in, bounded MCP 2026-07-28 request-scoped client log messages.
+
 ## 0.8.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @emseepea/create-database-schema-server
 
+## 0.0.8
+
+### Patch Changes
+
+- [`3c5c0f4`](https://github.com/emseepea/emseepea/commit/3c5c0f47aaeefc04476a666dbb57a9cad72d2ee3) Thanks [@tompahoward](https://github.com/tompahoward)! - Update every initializer to generate projects with `@emseepea/server` 0.9.0 and its request-scoped client logging API.
+
 ## 0.0.7
 
 ### Patch Changes

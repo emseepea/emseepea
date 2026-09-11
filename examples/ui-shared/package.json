@@ -18,7 +18,7 @@
     "lint": "oxlint src test"
   },
   "dependencies": {
-    "@emseepea/server": "0.8.1",
+    "@emseepea/server": "0.9.0",
     "zod": "4.4.3"
   },
   "engines": {
