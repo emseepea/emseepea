@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.9.10
+
+### Patch Changes
+
+- [`c24cf39`](https://github.com/emseepea/emseepea/commit/c24cf391b4214a36a276655c032e67a5ae88f950) Thanks [@tompahoward](https://github.com/tompahoward)! - Report expired Claude authentication as an authentication failure instead of a generic missing answer. Keep provider error text out of saved semantic evidence.
+
 ## 0.9.9
 
 ### Patch Changes
