@@ -618,17 +618,6 @@ export type DeploymentProfile =
       readonly rateLimit: Readonly<RateLimitOptions>;
     };
 
-const productionDeploymentFile = z.strictObject({
-  allowedAuthorities: z.array(z.string()).min(1),
-  allowedOrigins: z.array(z.string()).min(1),
-  trustedProxyAddresses: z.array(z.string()).min(1),
-  rateLimit: z.strictObject({
-    maxRequests: z.number().int().positive(),
-    windowMs: z.number().int().positive(),
-    maxClients: z.number().int().positive(),
-  }),
-});
-
 export function loadDeploymentProfile(
   environment: Readonly<Record<string, string | undefined>> = process.env,
 ): DeploymentProfile {
@@ -645,7 +634,16 @@ export function loadDeploymentProfile(
   const bytes = readFileSync(configPath);
   if (bytes.byteLength > 16 * 1024) throw new TypeError("Production deployment config exceeds 16 KiB");
   const source = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-  const parsed = productionDeploymentFile.parse(JSON.parse(source));
+  const parsed = z.strictObject({
+    allowedAuthorities: z.array(z.string()).min(1),
+    allowedOrigins: z.array(z.string()).min(1),
+    trustedProxyAddresses: z.array(z.string()).min(1),
+    rateLimit: z.strictObject({
+      maxRequests: z.number().int().positive(),
+      windowMs: z.number().int().positive(),
+      maxClients: z.number().int().positive(),
+    }),
+  }).parse(JSON.parse(source));
   const profile = { mode, ...parsed } satisfies DeploymentProfile;
   const normalized = normalizeDeployment(profile);
   if (normalized.mode !== "production-behind-proxy") throw new TypeError("Production deployment config is invalid");
