@@ -26,7 +26,7 @@ are clear, local evidence remains separate from required publication evidence,
 and the unpublished disclaimer prevents an early publication claim.
 
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `208d1386053b177b007a6ba95d61fc31b2227e38b26340f6f79037bde46b960e`
+  SHA-256: `0dd5cca65f832e831a7c2127893e1f7e1ee4e2a9fab89e95b1dff0c43731a21f`
 - `.changeset/fresh-peas-generate.md`
   SHA-256: `ca762cf4a25112623617fe8598126de81420d40866629d812c4f209d15bd0b2b`
 
