@@ -1,5 +1,12 @@
 # @emseepea/server
 
+## 0.8.0
+
+### Minor Changes
+
+- [`c77d852`](https://github.com/emseepea/emseepea/commit/c77d852e729f3d809f87f8d0f4dd83774be915b0) Thanks [@tompahoward](https://github.com/tompahoward)! - Add opt-in, SDK-signed MCP request state for direct tools, resources, resource
+  templates, and prompts.
+
 ## 0.7.0
 
 ### Minor Changes
@@ -29,7 +36,7 @@
 - [`55d7853`](https://github.com/emseepea/emseepea/commit/55d785354ffd1081e44b5803033bc6cfb7ba7add) Thanks [@tompahoward](https://github.com/tompahoward)! - Add optional detailed feedback submissions, protected append-only support
   conversations, PostgreSQL and Firestore storage, GitHub Issues and Zendesk HTTP
   adapters, authenticated provider event ingestion, and typed application hooks.
-  
+
   Allow every server factory to compose optional tools through `additionalTools`.
   Add a semantic assertion that successful application journeys did not record
   negative feedback, and run it against the real feedback tool in every starter.
@@ -155,7 +162,7 @@
 - [#10](https://github.com/windyroad/emseepea/pull/10) [`1250701`](https://github.com/windyroad/emseepea/commit/1250701b1d613aa850b6698f8566ad0e77db24ef) Thanks [@tompahoward](https://github.com/tompahoward)! - Allow public tools to send progress updates through a trusted reverse proxy.
   Updates and the final result use the same HTTP response. Each new request can
   go to a different server, without sticky sessions.
-  
+
   Existing request checks, size limits, deadlines, and cancellation still apply.
   Tools that require sign-in cannot stream in the production proxy profile yet.
   This does not add reconnect, replay, or subscriptions.
@@ -180,7 +187,7 @@
 - [`2cb487e`](https://github.com/windyroad/emseepea/commit/2cb487e4249188bd44345e247e678ad8eb00b72b) Thanks [@tompahoward](https://github.com/tompahoward)! - Add mapped tools that check backend commands and results. The adapter runs
   inside the shared time limit and cancellation path. Tools can add a quick
   availability check without disappearing from discovery.
-  
+
   Add `@emseepea/server/http`, a fixed-origin HTTPS client for read-only public
   JSON APIs. It blocks private network addresses, redirects, compressed or
   oversized responses, and non-JSON data. Adapter results are now `unknown` until

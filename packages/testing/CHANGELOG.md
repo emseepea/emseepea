@@ -1,5 +1,12 @@
 # @emseepea/testing
 
+## 0.9.5
+
+### Patch Changes
+
+- Updated dependencies [[`c77d852`](https://github.com/emseepea/emseepea/commit/c77d852e729f3d809f87f8d0f4dd83774be915b0)]:
+  - @emseepea/server@0.8.0
+
 ## 0.9.4
 
 ### Patch Changes
@@ -53,7 +60,7 @@
 - [`55d7853`](https://github.com/emseepea/emseepea/commit/55d785354ffd1081e44b5803033bc6cfb7ba7add) Thanks [@tompahoward](https://github.com/tompahoward)! - Add optional detailed feedback submissions, protected append-only support
   conversations, PostgreSQL and Firestore storage, GitHub Issues and Zendesk HTTP
   adapters, authenticated provider event ingestion, and typed application hooks.
-  
+
   Allow every server factory to compose optional tools through `additionalTools`.
   Add a semantic assertion that successful application journeys did not record
   negative feedback, and run it against the real feedback tool in every starter.
@@ -89,7 +96,7 @@
 - [`3e655bb`](https://github.com/emseepea/emseepea/commit/3e655bb9095e67a4b40381b35cc12122a706d885) Thanks [@tompahoward](https://github.com/tompahoward)! - Add initializer packages for schema-generated PostgreSQL integration, MongoDB
   collections with and without database validation, and contract-validated SOAP
   services.
-  
+
   Isolate stateful semantic-test server environments per answer trial and expose
   captured server output for credential-safe integration assertions.
 
@@ -161,10 +168,10 @@
 
 - [#13](https://github.com/windyroad/emseepea/pull/13) [`a53f874`](https://github.com/windyroad/emseepea/commit/a53f8748bf5c8e8751e54c061c61eab6b8d19d46) Thanks [@tompahoward](https://github.com/tompahoward)! - Write AI understanding tests in JavaScript instead of YAML. Tests can use setup
   hooks, several MCP calls, generated cases, and custom assertions.
-  
+
   Move cases into an `eval/` directory and run `emseepea-test eval`. Ordinary
   tests stay in `test/`. The runner finds nested test files automatically.
-  
+
   YAML cases are no longer supported. Use `semanticTest` from
   `@emseepea/testing/semantic` to migrate them. Each case still requires three
   fresh answers and nine independent judgments. Promptfoo is no longer a

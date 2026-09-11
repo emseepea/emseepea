@@ -1,5 +1,12 @@
 # @emseepea/react
 
+## 0.0.15
+
+### Patch Changes
+
+- Updated dependencies [[`c77d852`](https://github.com/emseepea/emseepea/commit/c77d852e729f3d809f87f8d0f4dd83774be915b0)]:
+  - @emseepea/server@0.8.0
+
 ## 0.0.14
 
 ### Patch Changes

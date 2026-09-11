@@ -1,5 +1,12 @@
 # @emseepea/feedback
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [[`c77d852`](https://github.com/emseepea/emseepea/commit/c77d852e729f3d809f87f8d0f4dd83774be915b0)]:
+  - @emseepea/server@0.8.0
+
 ## 0.2.1
 
 ### Patch Changes
@@ -44,7 +51,7 @@
 - [`55d7853`](https://github.com/emseepea/emseepea/commit/55d785354ffd1081e44b5803033bc6cfb7ba7add) Thanks [@tompahoward](https://github.com/tompahoward)! - Add optional detailed feedback submissions, protected append-only support
   conversations, PostgreSQL and Firestore storage, GitHub Issues and Zendesk HTTP
   adapters, authenticated provider event ingestion, and typed application hooks.
-  
+
   Allow every server factory to compose optional tools through `additionalTools`.
   Add a semantic assertion that successful application journeys did not record
   negative feedback, and run it against the real feedback tool in every starter.
