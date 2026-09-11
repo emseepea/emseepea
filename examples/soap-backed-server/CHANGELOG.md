@@ -1,5 +1,13 @@
 # @emseepea/create-soap-backed-server
 
+## 0.0.10
+
+### Patch Changes
+
+- [`89f450d`](https://github.com/emseepea/emseepea/commit/89f450dfb1daf662dcd1ae4c4ec0bf7619dfe24b) Thanks [@tompahoward](https://github.com/tompahoward)! - Add optional checked client roots through MCP input-required rounds. Direct
+  tools, resources, resource templates, and prompts can request workspace roots.
+  Validate roots before handlers run and preserve authorization on every round.
+
 ## 0.0.9
 
 ### Patch Changes
