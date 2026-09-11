@@ -1,7 +1,7 @@
-FROM docker.io/library/node:24.20.0-trixie-slim@sha256:50c3b2f6988dfc307b86e5301d69611af31f4789bdf232863b07d3b02fe55ae0 AS build
+FROM docker.io/library/node:24.21.0-trixie-slim@sha256:db3ae80f5d8df06e04dabdf7b44cbf008d32de168205fa0294444aabbc08c590 AS build
 WORKDIR /app
 COPY . .
-RUN test "$(node --version)" = "v24.20.0" \
+RUN test "$(node --version)" = "v24.21.0" \
   && test -f package-lock.json \
   && npm ci --ignore-scripts \
   && npm run build \

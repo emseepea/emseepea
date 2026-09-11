@@ -52,7 +52,7 @@ make users memorize Docker flags. `npm install` remains the bootstrap step that
 creates the lockfile used by the container build.
 
 Each generated project includes its own Dockerfile and `.dockerignore`. The
-images use a digest-pinned official Node 24.20.0 Trixie Slim builder and a
+images use a digest-pinned official Node 24.21.0 Trixie Slim builder and a
 digest-pinned Google Distroless Node 24 Debian 13 non-root runtime.
 
 Production containers fail closed. The image selects
