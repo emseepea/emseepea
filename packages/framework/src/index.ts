@@ -15,6 +15,7 @@ import {
   bearerAuthChallengeResponse,
   buildOAuthProtectedResourceMetadata,
   checkResourceAllowed,
+  classifyInboundRequest,
   completable,
   createMcpHandler,
   createRequestStateCodec,
@@ -137,6 +138,14 @@ export function inputResponse(
 }
 
 const PROTOCOL_VERSION = "2026-07-28";
+const LEGACY_PROTOCOL_VERSIONS = Object.freeze([
+  "2025-11-25",
+  "2025-06-18",
+  "2025-03-26",
+  "2024-11-05",
+  "2024-10-07",
+]);
+const SUPPORTED_PROTOCOLS = Object.freeze([PROTOCOL_VERSION, ...LEGACY_PROTOCOL_VERSIONS]);
 const REGISTER = Symbol("register");
 const DISCOVERABLE = Symbol("discoverable");
 const TOOL_NAME = Symbol("toolName");
@@ -170,6 +179,7 @@ interface RequestOperation {
   readonly principal?: Principal;
   readonly filterCatalogues: boolean;
   readonly capability?: string;
+  readonly legacy: boolean;
 }
 const requestOperations = new AsyncLocalStorage<RequestOperation>();
 interface RequestStateRuntime {
@@ -1591,15 +1601,18 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         capabilities: {
           ...(activeTools.length ? { tools: { listChanged: false } } : {}),
           ...(activeResources.length ? {
-            resources: { subscribe: Boolean(resourceSubscriptions), listChanged: false },
+            resources: {
+              subscribe: Boolean(resourceSubscriptions) && !request?.legacy,
+              listChanged: false,
+            },
           } : {}),
           ...(activePrompts.length ? { prompts: { listChanged: false } } : {}),
           ...(activeHasCompletion ? { completions: {} } : {}),
         },
         instructions: options.instructions,
-        cacheHints: request?.filterCatalogues ? undefined : cacheHints,
-        supportedProtocolVersions: [PROTOCOL_VERSION],
-        ...(requestState ? { requestState: { verify: requestState.verify } } : {}),
+        cacheHints: request?.filterCatalogues || request?.legacy ? undefined : cacheHints,
+        supportedProtocolVersions: [...SUPPORTED_PROTOCOLS],
+        ...(requestState && !request?.legacy ? { requestState: { verify: requestState.verify } } : {}),
       },
     );
     for (const tool of activeTools) {
@@ -1640,7 +1653,6 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     if (pagination) installListPagination(server, pagination);
     return server;
   }, {
-    legacy: "reject",
     responseMode: hasStreaming || resourceSubscriptions ? "auto" : "json",
     keepAliveMs: 0,
   });
@@ -1773,15 +1785,55 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   app.post("/mcp", { bodyLimit: maxRequestBytes }, async (request, reply) => {
     if (deployment.mode === "production-behind-proxy" &&
         !validateProductionRequest(request, reply, deployment, limiter!)) return;
-    if (!await validateMcpRequestHeaders(request, reply)) return;
-    if (isRecord(request.body) && typeof request.body.method === "string" &&
+    const protocolVersionHeader = singleHeader(request.raw.rawHeaders, "mcp-protocol-version");
+    const mcpMethodHeader = singleHeader(request.raw.rawHeaders, "mcp-method");
+    const mcpNameHeader = singleHeader(request.raw.rawHeaders, "mcp-name");
+    if (protocolVersionHeader === null || mcpMethodHeader === null || mcpNameHeader === null) {
+      await sendRpcError(reply, 400, -32020, "Conflicting MCP headers", requestId(
+        isRecord(request.body) ? request.body.id : undefined,
+      ));
+      return;
+    }
+    const classification = classifyInboundRequest({
+      httpMethod: request.method,
+      ...(protocolVersionHeader ? { protocolVersionHeader } : {}),
+      ...(mcpMethodHeader ? { mcpMethodHeader } : {}),
+      ...(mcpNameHeader ? { mcpNameHeader } : {}),
+      body: request.body,
+    });
+    if (classification.kind === "reject") {
+      await sendRpcError(
+        reply,
+        classification.httpStatus,
+        classification.code,
+        classification.message,
+        requestId(isRecord(request.body) ? request.body.id : undefined),
+        isRecord(classification.data) ? classification.data : undefined,
+      );
+      return;
+    }
+    const legacy = classification.kind === "legacy";
+    if (legacy && classification.requestedVersion &&
+        !LEGACY_PROTOCOL_VERSIONS.includes(classification.requestedVersion)) {
+      await sendRpcError(
+        reply,
+        400,
+        ProtocolErrorCode.UnsupportedProtocolVersion,
+        `Unsupported protocol version: ${classification.requestedVersion}`,
+        requestId(isRecord(request.body) ? request.body.id : undefined),
+        { requested: classification.requestedVersion, supported: [...SUPPORTED_PROTOCOLS] },
+      );
+      return;
+    }
+    if (!await validateMcpRequestHeaders(request, reply, legacy)) return;
+    if (!legacy && isRecord(request.body) && typeof request.body.method === "string" &&
         !enabledMethods.has(request.body.method)) {
       await sendRpcError(reply, 404, -32601, "Method not found", requestId(request.body.id));
       return;
     }
     const protectsCatalogue = authentication?.discovery === "protected";
     let subscriptionTarget: ReturnType<typeof resourceSubscriptionTarget> | undefined;
-    if (isRecord(request.body) && request.body.method === "subscriptions/listen") {
+    if (!legacy && isRecord(request.body) && request.body.method === "subscriptions/listen") {
       try {
         subscriptionTarget = resourceSubscriptionTarget(
           request.body,
@@ -1859,6 +1911,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
           principal,
           filterCatalogues: protectsCatalogue,
           capability,
+          legacy,
         },
         () => nodeHandler(request.raw, reply.raw, request.body),
       );
@@ -2407,6 +2460,7 @@ function singleHeader(rawHeaders: readonly string[], name: string): string | und
 async function validateMcpRequestHeaders(
   request: FastifyRequest,
   reply: FastifyReply,
+  legacy: boolean,
 ): Promise<boolean> {
   const body = request.body;
   const id = isRecord(body) ? requestId(body.id) : null;
@@ -2420,7 +2474,7 @@ async function validateMcpRequestHeaders(
     );
     return false;
   }
-  if (!isRecord(body) || typeof body.method !== "string") return true;
+  if (legacy || !isRecord(body) || typeof body.method !== "string") return true;
   const header = (name: string) => singleHeader(request.raw.rawHeaders, name);
   const rejectMismatch = async (name: string) => {
     await sendRpcError(reply, 400, -32020, `Missing or mismatched ${name} header`, id);

@@ -183,6 +183,7 @@ jobs:
           - Coverage and limits: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/docs/protocol-coverage.md
           - Supported slice:
             - Fastify-first MCP 2026-07-28 server
+            - stateless POST compatibility for MCP 2025-11-25, 2025-06-18, 2025-03-26, 2024-11-05, and 2024-10-07
             - JSON operations
             - checked, bounded public and protected POST progress through a trusted proxy
             - the framework authenticates and authorizes protected calls before application code runs or server-sent events begin
@@ -210,7 +211,7 @@ jobs:
             - object or tenant authorization
             - general or authenticated outbound HTTP policy, retries, or effects
             - slowing a producer when a client cannot keep up
-            - list-change subscriptions, resynchronisation, replay, sessions, or reconnect recovery
+            - legacy session identifiers and GET streams; list-change subscriptions, resynchronisation, replay, sessions, or reconnect recovery
             - durable or cross-process notification delivery
             - framework-managed shared stream state
             - website deployment

@@ -1,5 +1,31 @@
 # Cognitive Accessibility Review, 11 September 2026
 
+## Stateless Legacy Protocol Compatibility
+
+Result: PASS. Independent cognitive-accessibility review covered the exact
+legacy protocol decision, release note, protocol ledger, framework guidance,
+release-readiness record, superseded decision, and generated decision index.
+The documents use descriptive headings, short lists, explicit revision names,
+and direct exclusions. Model Context Protocol and software development kit are
+expanded on first use where the review identified standalone-document
+ambiguity. No visual-only instruction or blocking finding remains. This review
+covers source Markdown; rendered output remains subject to the release gates.
+
+- `.changeset/green-peas-rest.md`
+  SHA-256: `ece44a5592813ec5202ed4bd8dae6d4e3767c3cc1de0734b8e1352455f176435`
+- `docs/decisions/0005-active-streamable-http-scope-and-adaptive-delivery.superseded.md`
+  SHA-256: `21c5e6f24a563f6f60b9d2b7b9b30f6e4516c7762bd7187a31b59554d9935e56`
+- `docs/decisions/0074-same-endpoint-stateless-legacy-protocol-support.proposed.md`
+  SHA-256: `4b53c9ca13e1ebda71ef10761089933987f7baff90650e31e02052c99d8cf716`
+- `docs/decisions/README.md`
+  SHA-256: `255b5cd1eca4abf13129e88a262d6ce8a537db6b5b4c2213caa337727d46884f`
+- `docs/protocol-coverage.md`
+  SHA-256: `00b0241fdaa7a00be4c1dbe4fa8dd59c2c4621e2f12bed1a6f40b1eb4b18ca7b`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `da533f39c01c94ec5faa501d8a74907b6b5d6b87afaeb999f96b779304c7b514`
+- `packages/framework/README.md`
+  SHA-256: `0aebde2f394e7b6381ac95ebd70af17b05964d6fc70b3edcc9293fa24996757b`
+
 ## Release Retrospective and Problem Capture
 
 Result: PASS. Named cognitive-accessibility specialist review covered the exact

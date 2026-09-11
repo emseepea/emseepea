@@ -3,6 +3,13 @@
 This page shows how much of the active Model Context Protocol (MCP) server
 surface Em See Pea supports today.
 
+The active target remains MCP `2026-07-28`. The same stateless `POST /mcp`
+endpoint also provides a checked compatibility subset for `2025-11-25`,
+`2025-06-18`, `2025-03-26`, `2024-11-05`, and `2024-10-07`. For each legacy
+revision, an independent SDK client completes initialization, tool listing,
+and tool invocation. See the
+[legacy protocol tests](../tests/black-box/legacy-protocol.test.mjs).
+
 It is based on the public
 [MCP 2026-07-28 schema](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/5f5440bb26a62e2cf3440b92da5a667efa03b267/schema/2026-07-28/schema.ts)
 and the matching
@@ -141,16 +148,20 @@ reconnect recovery, or tool, resource, or prompt list-change subscription.
 ### One `POST /mcp` Endpoint
 
 **Status: Checked.** Raw HTTP tests and the official MCP client cover JSON
-requests. Common non-POST methods are rejected. See the
-[basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs).
+requests in both protocol eras. Common non-POST methods are rejected with
+`Allow: POST`; legacy sessions, GET streams, replay, and resumption are not
+supported. See the [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs)
+and [legacy protocol tests](../tests/black-box/legacy-protocol.test.mjs).
 
 ### Protocol Version
 
-**Status: Checked.** Discovery and calls use the pinned version. Missing,
-unsupported, and mismatched versions are rejected before authentication or
-application work. See the
+**Status: Checked.** Modern discovery and calls use the pinned `2026-07-28`
+version. Legacy initialization is limited to the five compatibility revisions
+listed above. Missing, unsupported, malformed, and mixed-era versions are
+rejected before authentication or application work. See the
 [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs) and
-[authentication tests](../tests/black-box/oauth-protected-tools.test.mjs).
+[authentication tests](../tests/black-box/oauth-protected-tools.test.mjs), and
+[legacy protocol tests](../tests/black-box/legacy-protocol.test.mjs).
 
 ### Result Envelopes
 
@@ -226,9 +237,12 @@ the [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
 values copied into custom HTTP headers. They cover string, integer, and boolean
 values, safe encoding, optional values, unknown headers, and rejection of
 invalid declarations or missing, different, and malformed values before the
-tool runs. See the [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
+tool runs. These envelope headers apply to MCP `2026-07-28`; correctly
+classified legacy requests use their revision's standard header rules. See the
+[basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
 [authentication tests](../tests/black-box/oauth-protected-tools.test.mjs), and
-[custom request-header tests](../tests/black-box/request-headers.test.mjs).
+[custom request-header tests](../tests/black-box/request-headers.test.mjs), and
+[legacy protocol tests](../tests/black-box/legacy-protocol.test.mjs).
 
 ### Notification `POST` Requests
 

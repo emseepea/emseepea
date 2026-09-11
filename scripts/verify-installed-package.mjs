@@ -160,6 +160,38 @@ const request = async (method, params = {}) => {
   return response.json();
 };
 try {
+  for (const protocolVersion of [
+    "2025-11-25",
+    "2025-06-18",
+    "2025-03-26",
+    "2024-11-05",
+    "2024-10-07",
+  ]) {
+    const transport = new StreamableHTTPClientTransport(running.url);
+    const client = new Client(
+      { name: `installed-legacy-${protocolVersion}`, version: "0.0.0" },
+      { supportedProtocolVersions: [protocolVersion], versionNegotiation: { mode: "legacy" } },
+    );
+    try {
+      await client.connect(transport);
+      if (client.getNegotiatedProtocolVersion() !== protocolVersion || transport.sessionId !== undefined) {
+        throw new Error(`installed package did not negotiate stateless MCP ${protocolVersion}`);
+      }
+      const tools = await client.listTools();
+      if (!tools.tools.some(({ name }) => name === "smoke-tool")) {
+        throw new Error(`installed package did not list tools for MCP ${protocolVersion}`);
+      }
+      const result = await client.callTool({
+        name: "smoke-tool",
+        arguments: { value: protocolVersion },
+      });
+      if (result.structuredContent?.value !== protocolVersion || transport.sessionId !== undefined) {
+        throw new Error(`installed package did not call a tool statelessly for MCP ${protocolVersion}`);
+      }
+    } finally {
+      await client.close();
+    }
+  }
   const firstStateRound = await request("tools/call", {
     name: "smoke-stateful-tool",
     arguments: {},

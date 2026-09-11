@@ -5,13 +5,12 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 71 decisions: 37 current and 34 historical.
+This project has 72 decisions: 37 current and 35 historical.
 
 ## Quick Index
 
 ### Current decisions
 
-- [ADR-0005: Active Streamable HTTP Scope and Adaptive Delivery](0005-active-streamable-http-scope-and-adaptive-delivery.proposed.md): Proposed; human review confirmed.
 - [ADR-0006: Canonical Public Contract and Private Manifest Compilation](0006-canonical-public-contract-and-private-manifest-compilation.proposed.md): Proposed; human review confirmed.
 - [ADR-0007: Deterministic Execution Kernel and Checked Boundaries](0007-deterministic-execution-kernel-and-checked-boundaries.proposed.md): Proposed; human review confirmed.
 - [ADR-0009: Capability-Scoped Reliability, Effects, and State](0009-capability-scoped-reliability-effects-and-state.proposed.md): Proposed; human review confirmed.
@@ -48,6 +47,7 @@ This project has 71 decisions: 37 current and 34 historical.
 - [ADR-0068: Protected POST Progress Behind a Trusted Proxy](0068-protected-post-progress-behind-a-trusted-proxy.proposed.md): Proposed; human review confirmed.
 - [ADR-0071: Separate OpenAPI-Backed Example and Initializer](0071-separate-openapi-backed-example-and-initializer.proposed.md): Proposed; human review confirmed.
 - [ADR-0072: Opt-In Integrity-Protected Request State](0072-opt-in-integrity-protected-request-state.proposed.md): Proposed; human review confirmed.
+- [ADR-0074: Same-Endpoint Stateless Legacy Protocol Support](0074-same-endpoint-stateless-legacy-protocol-support.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -55,6 +55,7 @@ This project has 71 decisions: 37 current and 34 historical.
 - [ADR-0002: Explicit Anonymous Production Boundary Behind a Trusted Proxy](0002-anonymous-production-boundary.superseded.md): Superseded; human review confirmed.
 - [ADR-0003: Public Windy Road Repository with Gated Changesets Releases](0003-public-repository-and-release-governance.superseded.md): Superseded; human review confirmed.
 - [ADR-0004: Fastify-First TypeScript Framework Foundation](0004-fastify-first-typescript-foundation.superseded.md): Superseded; human review confirmed.
+- [ADR-0005: Active Streamable HTTP Scope and Adaptive Delivery](0005-active-streamable-http-scope-and-adaptive-delivery.superseded.md): Superseded; human review confirmed.
 - [ADR-0008: Public and OAuth Protected Resource Security](0008-public-and-oauth-protected-resource-security.superseded.md): Superseded; human review confirmed.
 - [ADR-0012: Typed Operations and OpenTelemetry Boundary](0012-typed-operations-and-opentelemetry-boundary.superseded.md): Superseded; human review confirmed.
 - [ADR-0015: Ordinary Evidence and Exact Release Claims](0015-ordinary-evidence-and-exact-release-claims.superseded.md): Superseded; human review confirmed.
@@ -168,10 +169,11 @@ Chosen option: **"Fastify-first official MCP integration"**.
 - Examples use only the public Em See Pea API for MCP behavior.
 - No public generic request-handler, server adapter, or caller-supplied capability map exists.
 
-### [ADR-0005: Active Streamable HTTP Scope and Adaptive Delivery](0005-active-streamable-http-scope-and-adaptive-delivery.proposed.md)
+### [ADR-0005: Active Streamable HTTP Scope and Adaptive Delivery](0005-active-streamable-http-scope-and-adaptive-delivery.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0074: Same-Endpoint Stateless Legacy Protocol Support](0074-same-endpoint-stateless-legacy-protocol-support.proposed.md)
 
 #### ADR-0005 Decision
 
@@ -1582,3 +1584,26 @@ Chosen option: **"Opt-in signed request state using the MCP SDK"**.
 - Tests cover restart and multi-process use with the same configured key.
 - Official-client and raw-HTTP tests pass from a packed clean install.
 - Documentation states that signing is not encryption or replay prevention and that retry, circuit-breaker, and effect-idempotency behavior is application owned.
+
+### [ADR-0074: Same-Endpoint Stateless Legacy Protocol Support](0074-same-endpoint-stateless-legacy-protocol-support.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0005: Active Streamable HTTP Scope and Adaptive Delivery](0005-active-streamable-http-scope-and-adaptive-delivery.superseded.md)
+
+#### ADR-0074 Decision
+
+Chosen option: **"Same-endpoint stateless legacy fallback"**, because it provides broad interoperability through the SDK's existing compatibility path without introducing a second endpoint, dependency, capability registry, or execution kernel.
+
+#### ADR-0074 Checks
+
+- An independent legacy client completes `initialize`, `tools/list`, and `tools/call` through `POST /mcp` for every named legacy revision.
+- Existing independent MCP `2026-07-28` discovery, listing, and invocation journeys remain unchanged.
+- Correctly classified legacy requests bypass only modern-era envelope and header requirements. Production proxy, origin, request-size, rate-limit, authentication, authorization, cancellation, input/output validation, result redaction, and observability gates remain enforced before application work.
+- Malformed, mixed-era, and unsupported-version requests fail closed and cause zero handler or backend calls.
+- Tests prove that each legacy request uses a fresh server instance and retains no cross-request protocol state.
+- `GET`, `DELETE`, `PUT`, `PATCH`, and `OPTIONS /mcp` remain `405 Method Not Allowed` with `Allow: POST`.
+- No session identifier, session store, replay, resumption, or GET stream is introduced.
+- Modern-only and unsupported legacy capabilities are not advertised on legacy connections.
+- The protocol coverage ledger distinguishes the MCP `2026-07-28` surface from the exact legacy compatibility subset.
+- The existing JSON HTTP performance budget passes for the expanded request matrix. No performance claim is made for an unmeasured legacy path.

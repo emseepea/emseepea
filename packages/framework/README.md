@@ -1,7 +1,10 @@
 # `@emseepea/server`
 
 `@emseepea/server` is the Fastify-first package for building Model Context
-Protocol (MCP) `2026-07-28` servers over Streamable HTTP.
+Protocol (MCP) `2026-07-28` servers over Streamable HTTP. Its stateless
+`POST /mcp` endpoint also supports the legacy revisions `2025-11-25`,
+`2025-06-18`, `2025-03-26`, `2024-11-05`, and `2024-10-07`. It does not add
+legacy sessions, GET streams, replay, or resumption.
 
 It checks data when requests enter and leave the server. It supports public and
 protected tools, resources, prompts, and completions, request time limits, and

@@ -207,7 +207,7 @@ test("discovery stays public while protected invocation is fail-closed", async (
       missingBodyVersion,
     );
     assert.equal(malformedBodyMetadata.response.status, 400);
-    assert.equal(malformedBodyMetadata.body.error.code, -32020);
+    assert.equal(malformedBodyMetadata.body.error.code, -32602);
     assert.equal(verifierCalls, 0);
     assert.equal(protectedCalls, 0);
 
@@ -261,6 +261,14 @@ test("discovery stays public while protected invocation is fail-closed", async (
       resource: resourceServerUrl.href,
     });
     assert.doesNotMatch(JSON.stringify(observedPrincipal), /valid/);
+
+    const legacyMissing = await legacyProtectedCall(running.url);
+    assert.equal(legacyMissing.response.status, 401);
+    assert.equal(protectedCalls, 1);
+    const legacyValid = await legacyProtectedCall(running.url, "valid");
+    assert.equal(legacyValid.response.status, 200);
+    assert.equal(legacyValid.body.result.isError, false);
+    assert.equal(protectedCalls, 2);
   } finally {
     await running.close();
   }
@@ -451,6 +459,30 @@ function protectedCall(url, token) {
     { name: "protected-bean", arguments: { id: "protected-request" } },
     token,
   );
+}
+
+async function legacyProtectedCall(url, token) {
+  const headers = {
+    Accept: "application/json, text/event-stream",
+    "Content-Type": "application/json",
+    "MCP-Protocol-Version": "2025-11-25",
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: crypto.randomUUID(),
+      method: "tools/call",
+      params: { name: "protected-bean", arguments: { id: "legacy-protected-request" } },
+    }),
+  });
+  const text = await response.text();
+  const payload = response.headers.get("content-type")?.startsWith("text/event-stream")
+    ? text.split("\n").find((line) => line.startsWith("data: "))?.slice(6)
+    : text;
+  return { response, body: JSON.parse(payload) };
 }
 
 async function rpc(url, method, params = {}, token, extraHeaders = {}, meta = requestMeta) {

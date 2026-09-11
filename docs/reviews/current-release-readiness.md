@@ -4,19 +4,31 @@ Date: 2026-09-11
 
 ## Release Batch
 
-- `@emseepea/create-tool-server@0.0.21`
-- `@emseepea/create-api-backed-server@0.0.19`
-- `@emseepea/create-openapi-backed-server@0.0.1`
-- `@emseepea/create-resources-and-prompts-server@0.0.18`
-- `@emseepea/create-progress-streaming-server@0.0.19`
-- `@emseepea/create-html-ui-server@0.0.20`
-- `@emseepea/create-react-ui-server@0.0.19`
-- `@emseepea/create-multi-instance-postgres-server@0.0.9`
-- `@emseepea/create-database-schema-server@0.0.6`
-- `@emseepea/create-mongodb-backed-server@0.0.6`
-- `@emseepea/create-soap-backed-server@0.0.6`
+- `@emseepea/server@0.8.1`
+- `@emseepea/feedback@0.2.3`
+- `@emseepea/react@0.0.16`
+- `@emseepea/testing@0.9.6`
+- `@emseepea/create-tool-server@0.0.22`
+- `@emseepea/create-api-backed-server@0.0.20`
+- `@emseepea/create-openapi-backed-server@0.0.2`
+- `@emseepea/create-resources-and-prompts-server@0.0.19`
+- `@emseepea/create-progress-streaming-server@0.0.20`
+- `@emseepea/create-html-ui-server@0.0.21`
+- `@emseepea/create-react-ui-server@0.0.20`
+- `@emseepea/create-multi-instance-postgres-server@0.0.10`
+- `@emseepea/create-database-schema-server@0.0.7`
+- `@emseepea/create-mongodb-backed-server@0.0.7`
+- `@emseepea/create-soap-backed-server@0.0.7`
 
 ## Change for Users
+
+The same stateless `POST /mcp` endpoint now supports Model Context Protocol
+(MCP) `2026-07-28` and the
+five legacy revisions `2025-11-25`, `2025-06-18`, `2025-03-26`, `2024-11-05`,
+and `2024-10-07`. All revisions share the existing capability registry,
+authentication, authorization, validation, limits, cancellation, redaction,
+and observability path. Legacy sessions, session identifiers, GET streams,
+replay, and resumption remain excluded.
 
 Developers with an OpenAPI 3 or Swagger 2 contract can create a separate
 OpenAPI-backed starter. It generates checked-in TypeScript declarations and
@@ -67,6 +79,10 @@ excluded.
   decision compendium is current.
 - Tom Howard ratified ADR-0071. ADR-0070 is clearly marked as superseded, and
   the decision compendium records their relationship.
+- Tom Howard ratified ADR-0074. The five-version legacy client matrix and the
+  existing independent MCP `2026-07-28` client pass against the same endpoint.
+  Mixed-era and malformed requests fail without application work, protected
+  legacy calls retain OAuth enforcement, and no session identifier is emitted.
 - TypeScript compilation, lint, package tests, non-container framework tests,
   documentation checks, and website build pass.
 - Feedback adapter contract tests cover validation, deadlines, cancellation,

@@ -64,6 +64,24 @@ test("an untrusted socket peer is rejected before tool execution", async () => {
   }
 });
 
+test("the trusted-proxy boundary also precedes legacy execution", async () => {
+  let calls = 0;
+  const app = productionApp(() => { calls += 1; }, { maxRequests: 10, windowMs: 1_000, maxClients: 10 });
+  const running = await serveEmseepea(app, { port: 0 });
+  try {
+    assert.equal((await legacyCall(running.url, {})).status, 403);
+    assert.equal((await legacyCall(
+      running.url,
+      validHeaders({ Origin: "https://attacker.example" }),
+    )).status, 403);
+    assert.equal(calls, 0);
+    assert.equal((await legacyCall(running.url, validHeaders())).status, 200);
+    assert.equal(calls, 1);
+  } finally {
+    await running.close();
+  }
+});
+
 test("the anonymous limiter bounds request rate and client state", async () => {
   let calls = 0;
   const app = productionApp(() => { calls += 1; }, { maxRequests: 1, windowMs: 1_000, maxClients: 1 });
@@ -152,6 +170,32 @@ async function call(url, extraHeaders) {
       "Mcp-Name": "synthetic-read",
       ...extraHeaders,
     },
+    }, (incoming) => {
+      incoming.resume();
+      incoming.on("end", () => resolve({ status: incoming.statusCode }));
+    });
+    outgoing.on("error", reject);
+    outgoing.end(body);
+  });
+}
+
+async function legacyCall(url, extraHeaders) {
+  const body = JSON.stringify({
+    jsonrpc: "2.0",
+    id: crypto.randomUUID(),
+    method: "tools/call",
+    params: { name: "synthetic-read", arguments: { id: "legacy-value" } },
+  });
+  return new Promise((resolve, reject) => {
+    const outgoing = request(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json, text/event-stream",
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(body),
+        "MCP-Protocol-Version": "2025-11-25",
+        ...extraHeaders,
+      },
     }, (incoming) => {
       incoming.resume();
       incoming.on("end", () => resolve({ status: incoming.statusCode }));
