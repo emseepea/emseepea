@@ -4,41 +4,26 @@ Date: 2026-09-11
 
 ## Release Batch
 
-- `@emseepea/server@0.9.0`
-- `@emseepea/feedback@0.2.4`
-- `@emseepea/react@0.0.17`
-- `@emseepea/testing@0.9.7`
-- `@emseepea/create-api-backed-server@0.0.21`
-- `@emseepea/create-database-schema-server@0.0.8`
-- `@emseepea/create-html-ui-server@0.0.22`
-- `@emseepea/create-mongodb-backed-server@0.0.8`
-- `@emseepea/create-multi-instance-postgres-server@0.0.11`
-- `@emseepea/create-openapi-backed-server@0.0.3`
-- `@emseepea/create-progress-streaming-server@0.0.21`
-- `@emseepea/create-react-ui-server@0.0.21`
-- `@emseepea/create-resources-and-prompts-server@0.0.20`
-- `@emseepea/create-soap-backed-server@0.0.8`
-- `@emseepea/create-tool-server@0.0.23`
+- `@emseepea/server@0.9.1`
+- `@emseepea/feedback@0.2.5`
+- `@emseepea/react@0.0.18`
+- `@emseepea/testing@0.9.8`
+- `@emseepea/create-api-backed-server@0.0.22`
+- `@emseepea/create-database-schema-server@0.0.9`
+- `@emseepea/create-html-ui-server@0.0.23`
+- `@emseepea/create-mongodb-backed-server@0.0.9`
+- `@emseepea/create-multi-instance-postgres-server@0.0.12`
+- `@emseepea/create-openapi-backed-server@0.0.4`
+- `@emseepea/create-progress-streaming-server@0.0.22`
+- `@emseepea/create-react-ui-server@0.0.22`
+- `@emseepea/create-resources-and-prompts-server@0.0.21`
+- `@emseepea/create-soap-backed-server@0.0.9`
+- `@emseepea/create-tool-server@0.0.24`
 
 The initializer patches regenerate their published tarballs under new package
 versions so generated projects pin the package versions in this batch.
 
 ## Change for Users
-
-Applications can opt into deprecated MCP 2026-07-28 request-scoped client log
-messages. Direct tool, streaming tool, resource, resource-template, and prompt
-handlers receive a bounded `reportLog` function. The calling client must request
-a log level on that operation, and the installed MCP SDK applies the severity
-threshold.
-
-Protected calls authenticate and authorize before application work or response
-streaming. Logging is not advertised when disabled or on legacy requests. The
-removed `logging/setLevel` method remains unavailable.
-
-This release adds no sessions, persistence, replay, reconnect recovery, retry
-logic, or circuit breaker. Client-visible messages remain separate from
-framework observability, and the framework does not copy sensitive request or
-result data into them.
 
 Every standalone initializer now creates a project with the same container
 build contract:
@@ -74,23 +59,15 @@ link to the guide.
 
 ## Local Evidence Before Publication
 
-- Tom Howard ratified ADR-0075, ADR-0076, ADR-0077, and ADR-0078. Their
+- Tom Howard ratified ADR-0076, ADR-0077, and ADR-0078. Their
   human-oversight markers are confirmed and the decision compendium is current.
 - Focused raw HTTP, official-client, type, authentication, authorization,
   isolation, cancellation, limit, late-call, and installed-package checks pass.
-- The local Node.js 24 logging load check completed eight batches of sixteen
-  concurrent requests with paused readers. Peak RSS was 217,595,904 bytes and
-  retained heap stayed below its 24 MiB ceiling. This is measured qualification
-  evidence, not conformance to the separate JSON-boundary performance budget.
 - TypeScript compilation, lint, package tests, non-container framework tests,
   documentation checks, and website build pass.
 - `tests/black-box/proxy-progress.test.mjs` and
   `tests/load/proxy-progress.test.mjs` cover protected progress after access
   checks and behind the trusted-proxy boundary.
-- `tests/black-box/resource-subscriptions.test.mjs` covers static and concrete
-  resource-template URIs, protected access, expiry, disconnect, event limits,
-  and isolated overflow. `tests/load/subscription-sdk.test.mjs` covers bounded
-  memory with paused readers.
 - Independent architecture, Jobs To Be Done, Markdown accessibility, cognitive
   accessibility, and release-risk reviews are required on the final content.
 - The generated request and response validation path measured 1.08 ms median
@@ -123,10 +100,11 @@ link to the guide.
   `.github/workflows/release.yml`.
 - Cognitive-accessibility evidence is bound to the changed public Markdown in
   `docs/reviews/cognitive-accessibility-2026-09-11.md`.
-- Local Docker became unresponsive during database and container execution.
-  Exact generated-container, database-backed initializer, and multi-architecture
-  image execution evidence is therefore delegated to the GitHub Quality and
-  Release workflows for the exact pushed commit.
+- Before the latest rebase, implementation commit
+  `49e637d4bce20f86435d5f61445f80104b07ec22` passed all 15 jobs in
+  [Quality run 34589512078](https://github.com/emseepea/emseepea/actions/runs/34589512078),
+  including Node.js 22 and 24 and all 11 container initializer shards. This is
+  pre-publication evidence only.
 
 ## Required Publication Evidence
 
@@ -150,12 +128,13 @@ link to the guide.
   the image runs `npm ci`, and reuse the complete container qualification
   harness against those installed registry versions.
 - GitHub Pages publication must complete before website deployment is claimed.
-- The registry-installed server smoke test must deliver one request-scoped log
-  through the official client and return the checked final result.
+- The registry-installed server smoke test must still cover one request-scoped
+  log as regression evidence for the already-versioned logging path, then return
+  the checked final result.
 
 ## Review Status
 
-- Result: PENDING
+- Result: PENDING for the rebased implementation.
 - Release verification: NOT COMPLETE until the exact registry, provenance,
   standalone, container, website, and remaining publication gates pass.
 - Final result: within appetite, subject to the required exact-commit gates.

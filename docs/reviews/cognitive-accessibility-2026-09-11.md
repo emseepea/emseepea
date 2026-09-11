@@ -225,7 +225,7 @@ server-operator observability and state its limits and exclusions directly.
 - `website/src/content/docs/getting-started.md`
   SHA-256: `e327737aa77024b8ffb3fb9171134813b9c381e09d0a1f9a1ef8cca13003678e`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `2e57f1036c25644d476a327628dab8fa2225054937197fad09ae4436b1657090`
+  SHA-256: `7d4f797c91b28d15344fb6617561b630df2cdf914140d511994ed537f3cf873c`
 
 ## Problem Backlog Parser Contract
 
@@ -251,7 +251,7 @@ unpublished status are stated directly without visual-only meaning.
 - `.changeset/initializers-use-logging-server.md`
   SHA-256: `90b672e96366869568a0f1d2c973112a1b5519b43fd9cb9761c5fd089a31367a`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `2e57f1036c25644d476a327628dab8fa2225054937197fad09ae4436b1657090`
+  SHA-256: `43b9f592ead2b1e7f228d97ea718a1430344af49bf2688bf8c7d6741d75a16dd`
 
 ## Safe Container Initializers
 
@@ -280,7 +280,7 @@ checks remain responsible for rendered output.
 - `docs/decisions/README.md`
   SHA-256: `5b51c9e7cfcbce93509191e6659745722115eb4b38c679794150134e8a983872`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `2e57f1036c25644d476a327628dab8fa2225054937197fad09ae4436b1657090`
+  SHA-256: `44ececcf27481a4c175b7891890e0a2f2028e1794c9185433d1b0297c7459d67`
 - `docs/jtbd/README.md`
   SHA-256: `1aa428e49fed32314f7af253073a2049b6b10bbe07a2418003faa80ae5645903`
 - `docs/jtbd/framework-maintainer/JTBD-102-keep-guidance-accurate.proposed.md`
