@@ -9,16 +9,16 @@ Date: 2026-09-11
 - `@emseepea/testing@0.9.4`
 - `@emseepea/react@0.0.14`
 - `@emseepea/tailwind@0.0.2`
-- `@emseepea/create-tool-server@0.0.20`
-- `@emseepea/create-api-backed-server@0.0.18`
-- `@emseepea/create-resources-and-prompts-server@0.0.17`
-- `@emseepea/create-progress-streaming-server@0.0.18`
-- `@emseepea/create-html-ui-server@0.0.19`
-- `@emseepea/create-react-ui-server@0.0.18`
-- `@emseepea/create-multi-instance-postgres-server@0.0.8`
-- `@emseepea/create-database-schema-server@0.0.5`
-- `@emseepea/create-mongodb-backed-server@0.0.5`
-- `@emseepea/create-soap-backed-server@0.0.5`
+- `@emseepea/create-tool-server@0.0.21`
+- `@emseepea/create-api-backed-server@0.0.19`
+- `@emseepea/create-resources-and-prompts-server@0.0.18`
+- `@emseepea/create-progress-streaming-server@0.0.19`
+- `@emseepea/create-html-ui-server@0.0.20`
+- `@emseepea/create-react-ui-server@0.0.19`
+- `@emseepea/create-multi-instance-postgres-server@0.0.9`
+- `@emseepea/create-database-schema-server@0.0.6`
+- `@emseepea/create-mongodb-backed-server@0.0.6`
+- `@emseepea/create-soap-backed-server@0.0.6`
 
 ## Change for Users
 

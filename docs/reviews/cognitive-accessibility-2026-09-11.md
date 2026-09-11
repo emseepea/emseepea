@@ -21,12 +21,16 @@ audience broadens beyond developers.
 ## Current Release Readiness
 
 Result: PASS. Independent cognitive-accessibility review covered the exact
-current release-readiness document. Its package list and user-change summary
-are clear, local evidence remains separate from required publication evidence,
-and the unpublished disclaimer prevents an early publication claim.
+initializer republishing changeset and current release-readiness document. The
+dependency versions and reason for republishing are direct. The package list
+and user-change summary are clear, local evidence remains separate from
+required publication evidence, and the unpublished disclaimer prevents an
+early publication claim.
 
+- `.changeset/fresh-starters-install.md`
+  SHA-256: `30f8627225a1b0c14b5bbfda9b213f52ba0322997c048c0b40bcdfd45fdbcf1b`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `1af8a3b805cbc4bbb83ed6547f475442df24ca34b504c10ca0be1e1e5ceb5d56`
+  SHA-256: `1cb02efc07ffb7ee626deaffe04268e06c0ecae277e2a85d14f5644e6b709b8c`
 
 ## Resource Catalogue and Subscription Guidance
 
