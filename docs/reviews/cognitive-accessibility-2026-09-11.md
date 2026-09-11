@@ -76,3 +76,15 @@ verification.
   SHA-256: `0391e3c7e5d4712726569d8668cb7bae0330bd4fac5460d244aacd6f6088a13b`
 - `website/src/content/docs/examples.md`
   SHA-256: `f23931ed80101c9e2b373018109a12a57a1cd3955a0329d156e711fa6d00f400`
+
+## Retrospective Context Analysis
+
+Result: PASS. Independent cognitive-accessibility review covered the exact
+retrospective index and context-analysis report. The headings and tables are
+clear, unavailable measurements are stated explicitly, and the suggestions do
+not require hidden context.
+
+- `docs/retros/README.md`
+  SHA-256: `f0440a5f76ca69b1b7408980a4d0993a01b69edcf2036e82028f8fc7e0cdf85c`
+- `docs/retros/2026-09-11-context-analysis.md`
+  SHA-256: `a13913d95d3f253eb9906177b1e0e855ffbfcadd73c7de29062aa40585c042be`
