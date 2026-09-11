@@ -148,3 +148,18 @@ review covers source Markdown only.
   SHA-256: `7f4cb1687bd47718547c724e4572ed6104fc39ff51e1e8daa4784d8498fb9905`
 - `docs/retros/2026-09-11-context-analysis.md`
   SHA-256: `23c5c0632a56bdea68075375bb80c616b81b3d00e3f82df80c5abe5ddb69f7de`
+
+## First-Package Publication Problem
+
+Result: PASS. Independent cognitive-accessibility review covered the exact new
+problem ticket and updated problem indexes. Weighted Shortest Job First and
+Jobs To Be Done are expanded on first use, the duplicate-check evidence uses
+plain language, and the recovery and investigation actions are direct. This
+review covers source Markdown only.
+
+- `docs/problems/README.md`
+  SHA-256: `6532311e1ceaf8b4df641e32a0817da82b7f8422e7053d0ae6a56065e2dc2001`
+- `docs/problems/README-history.md`
+  SHA-256: `a78606898574fbc149d296c05e5f2cd3021da362135e072dbd16ea9c854658a9`
+- `docs/problems/open/003-release-workflow-lacks-first-package-trusted-publisher-preflight.md`
+  SHA-256: `41525d7b89ec7b77682dba9ca2eb51096f75032b449bbb06a53d4dcc415bdb1d`
