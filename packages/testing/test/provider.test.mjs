@@ -1,13 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 
 import {
+  codexInvocation,
   conversationInvocation,
   modelInvocation,
   parseClaudeEvents,
+  parseCodexEvents,
   parseJudgeVerdict,
   parseNativeClaudeEvents,
+  providerModel,
 } from "../semantic/provider.mjs";
+import { startGuardedMcpProxy } from "../semantic/material.mjs";
 
 const result = {
   type: "result",
@@ -179,6 +184,116 @@ test("requires exact judge JSON", () => {
     () => parseJudgeVerdict('{"pass":true,"score":0,"reason":"Contradictory."}'),
     /invalid verdict/,
   );
+});
+
+test("runs OpenAI locally through logged-in Codex with isolated capabilities", () => {
+  const original = process.env.OPENAI_API_KEY;
+  process.env.OPENAI_API_KEY = "OPENAI_KEY_SENTINEL";
+  try {
+    const first = codexInvocation({ directory: "/tmp/eval", home: "/tmp/eval/codex", prompt: "exact prompt",
+      proxyUrl: "http://127.0.0.1:4321/mcp", token: "MCP_TOKEN_SENTINEL",
+      tools: [{ name: "get-pea" }], context: "context" });
+    const resumed = codexInvocation({ directory: "/tmp/eval", home: "/tmp/eval/codex", prompt: "follow up",
+      proxyUrl: "http://127.0.0.1:4321/mcp", token: "MCP_TOKEN_SENTINEL",
+      tools: [{ name: "get-pea" }], threadId: "thread-id" });
+    assert.equal(providerModel("openai-local"), "gpt-5.6-sol");
+    assert.deepEqual(first.args.slice(-3), ["--cd", "/tmp/eval", "exact prompt"]);
+    assert.deepEqual(resumed.args.slice(-2), ["thread-id", "follow up"]);
+    const disabled = first.args.flatMap((value, index) => first.args[index - 1] === "--disable" ? [value] : []);
+    assert.deepEqual(disabled, ["apps", "browser_use", "computer_use", "hooks", "image_generation", "memories",
+      "multi_agent", "multi_agent_v2", "plugins", "remote_plugin", "shell_tool", "skill_mcp_dependency_install",
+      "skill_search", "standalone_web_search", "tool_suggest", "unified_exec", "workspace_dependencies"]);
+    assert.ok(first.args.includes("--strict-config"));
+    assert.ok(first.args.includes("read-only"));
+    assert.match(resumed.args.join(" "), /sandbox_mode='read-only'/);
+    assert.match(resumed.args.join(" "), /approval_policy='never'/);
+    assert.match(first.args.join(" "), /default_tools_approval_mode='approve'/);
+    assert.match(first.args.join(" "), /enabled_tools=\["get-pea"\]/);
+    assert.match(first.args.join(" "), /mcp_servers\.emseepea_eval\.required=true/);
+    assert.deepEqual(first.args.filter((value) => value.startsWith("mcp_servers.")).every(
+      (value) => value.startsWith("mcp_servers.emseepea_eval."),
+    ), true);
+    assert.equal(first.env.OPENAI_API_KEY, undefined);
+    assert.equal(first.env.CODEX_HOME, "/tmp/eval/codex");
+    assert.equal(first.env.EMSEEPEA_CODEX_MCP_TOKEN, "MCP_TOKEN_SENTINEL");
+    assert.doesNotMatch(JSON.stringify(first.args), /OPENAI_KEY_SENTINEL|MCP_TOKEN_SENTINEL/);
+  } finally { restore("OPENAI_API_KEY", original); }
+});
+
+test("accepts bounded Codex JSONL and rejects failed or forbidden actions", () => {
+  const base = [
+    { type: "thread.started", thread_id: "thread" },
+    { type: "turn.started" },
+    { type: "item.completed", item: { type: "mcp_tool_call", server: "emseepea_eval",
+      tool: "get-pea", arguments: {}, status: "completed", error: null } },
+    { type: "item.completed", item: { type: "agent_message", text: "done" } },
+    { type: "turn.completed", usage: {} },
+  ];
+  assert.deepEqual(parseCodexEvents(base.map(JSON.stringify).join("\n")), {
+    answer: "done", auxiliaryDiscovery: { resourceTemplates: 0, resources: 0 },
+    threadId: "thread", toolCalls: 1,
+  });
+  assert.throws(() => parseCodexEvents(base.map((event) => event.item?.type === "mcp_tool_call"
+    ? { ...event, item: { ...event.item, status: "failed", error: { message: "private" } } } : event)
+    .map(JSON.stringify).join("\n")), /tool call failed/);
+  assert.throws(() => parseCodexEvents(base.map((event) => event.item?.type === "mcp_tool_call"
+    ? { ...event, item: { type: "command_execution" } } : event).map(JSON.stringify).join("\n")),
+  /forbidden capability/);
+});
+
+test("admits only bounded empty Codex MCP discovery", () => {
+  const event = (tool, text, overrides = {}) => ({ type: "item.completed", item: {
+    type: "mcp_tool_call", server: "codex", tool, arguments: {}, error: null, status: "completed",
+    result: { content: [{ type: "text", text }], structured_content: null }, ...overrides,
+  } });
+  const wrap = (...items) => [
+    { type: "thread.started", thread_id: "thread" }, { type: "turn.started" }, ...items,
+    { type: "item.completed", item: { type: "agent_message", text: "done" } },
+    { type: "turn.completed", usage: {} },
+  ].map(JSON.stringify).join("\n");
+  const parsed = parseCodexEvents(wrap(
+    event("list_mcp_resources", '{"resources":[]}'),
+    event("list_mcp_resource_templates", '{"resourceTemplates":[]}'),
+  ));
+  assert.deepEqual(parsed.auxiliaryDiscovery, { resourceTemplates: 1, resources: 1 });
+  assert.equal(parsed.toolCalls, 0);
+  assert.throws(() => parseCodexEvents(wrap(
+    event("list_mcp_resources", '{"resources":[]}'),
+    event("list_mcp_resources", '{"resources":[]}'),
+  )), /repeated auxiliary/);
+  assert.throws(() => parseCodexEvents(wrap(event("list_mcp_resources", '{"resources":[{}]}'))),
+  /discovery changed/);
+  assert.throws(() => parseCodexEvents(wrap(event("other", "{}"))), /discovery changed/);
+  assert.throws(() => parseCodexEvents(wrap(event("list_mcp_resources", '{"resources":[]}', {
+    server: "other",
+  }))), /non-target MCP/);
+  assert.throws(() => parseCodexEvents(wrap(event("list_mcp_resources", '{"resources":[]}', {
+    arguments: { cursor: "next" },
+  }))), /non-target MCP/);
+});
+
+test("guarded MCP proxy rejects invalid, repeated, and excessive calls before forwarding", async (t) => {
+  const forwarded = [];
+  const tool = { name: "get-pea", description: "Get a pea", inputSchema: { type: "object",
+    properties: { name: { type: "string" } }, required: ["name"], additionalProperties: false } };
+  const proxy = await startGuardedMcpProxy({ tools: [tool], async callTool(name, args) {
+    forwarded.push({ name, args });
+    return { content: [{ type: "text", text: args.name }], isError: false, pathEvidence: {} };
+  } }, "token");
+  const client = new Client({ name: "test", version: "0.0.0" });
+  await client.connect(new StreamableHTTPClientTransport(new URL(proxy.url), {
+    authProvider: { token: async () => "token" },
+  }));
+  t.after(async () => { await client.close(); await proxy.close(); });
+  proxy.beginTurn();
+  assert.equal((await client.callTool({ name: "get-pea", arguments: {} })).isError, true);
+  await client.callTool({ name: "get-pea", arguments: { name: "Snap" } });
+  assert.equal((await client.callTool({ name: "get-pea", arguments: { name: "Snap" } })).isError, true);
+  await client.callTool({ name: "get-pea", arguments: { name: "Snow" } });
+  await client.callTool({ name: "get-pea", arguments: { name: "Sugar" } });
+  assert.equal((await client.callTool({ name: "get-pea", arguments: { name: "Scout" } })).isError, true);
+  assert.equal(forwarded.length, 3);
+  assert.equal(proxy.finishTurn().calls.length, 3);
 });
 
 function restore(name, value) {

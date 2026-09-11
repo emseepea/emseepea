@@ -21,13 +21,18 @@ test("cancellation stops MCP collection and the server receives no model token",
   await writeFile(entry, `
 import assert from "node:assert/strict";
 assert.equal(process.env.CLAUDE_CODE_OAUTH_TOKEN, undefined);
+assert.equal(process.env.OPENAI_API_KEY, undefined);
 await import(${JSON.stringify(server)});
 `);
   const previous = process.env.CLAUDE_CODE_OAUTH_TOKEN;
+  const previousOpenAi = process.env.OPENAI_API_KEY;
   process.env.CLAUDE_CODE_OAUTH_TOKEN = "test-only-provider-sentinel";
+  process.env.OPENAI_API_KEY = "test-only-openai-sentinel";
   t.after(() => {
     if (previous === undefined) delete process.env.CLAUDE_CODE_OAUTH_TOKEN;
     else process.env.CLAUDE_CODE_OAUTH_TOKEN = previous;
+    if (previousOpenAi === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = previousOpenAi;
   });
   const controller = new AbortController();
   const running = await startSemanticServer({ server: entry, directory }, controller.signal);
@@ -298,7 +303,7 @@ test("inventory conversation", async (t) => {
   const evidence = JSON.parse(evidenceText);
   assert.equal(evidence.status, "passed");
   assert.doesNotMatch(evidenceText,
-    /PROVIDER_SECRET_SENTINEL|example-access-token|RAW_PROVIDER_EVENT_SENTINEL|MODEL_STDERR_SENTINEL|UNRELATED_ENV_SENTINEL/);
+    /PROVIDER_SECRET_SENTINEL|test-only-openai-sentinel|example-access-token|RAW_PROVIDER_EVENT_SENTINEL|MODEL_STDERR_SENTINEL|UNRELATED_ENV_SENTINEL/);
   assert.doesNotMatch(evidenceText, /mcpServers|Authorization|EMSEEPEA_SEMANTIC_MCP_TOKEN|127\.0\.0\.1:\d+\/mcp/);
   assert.doesNotMatch(evidenceText, directoryPattern);
   const record = Object.values(evidence.cases)[0];

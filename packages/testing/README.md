@@ -41,11 +41,20 @@ if the AI records an error, friction, annoyance, unnecessary difficulty,
 confusion, repetition, an unexpected bad result, or a capability mismatch. The
 evidence records both the expectation and any offending call.
 
-The runner sends each prompt unchanged through one provider-native MCP
-conversation. It does not add tool-selection instructions, a JSON call plan,
-advertised-tool text, an answer wrapper, or prepared MCP material. Exact tool
-assertions come from the provider's native MCP events. Follow-up messages use
-the same conversation.
+With the default Claude provider, the runner sends each prompt unchanged through
+one provider-native MCP conversation. Exact tool assertions come from Claude's
+native MCP events. Follow-up messages use the same conversation.
+
+For an optional local OpenAI comparison, sign in with `codex login` and run
+`npm run test:llm -- --provider openai-local`. The pinned Codex CLI reuses that
+ChatGPT login, receives each prompt unchanged, and selects the target tools
+through a guarded loopback MCP proxy. Accepted calls still reach the fixture
+through the official MCP client. The temporary Codex home and copied login are
+deleted after each conversation. This evidence is always non-authoritative and
+cannot approve a release; `OPENAI_API_KEY` is neither required nor passed on.
+Codex may also perform its two built-in, read-only MCP resource discovery calls;
+the harness accepts each at most once only when it returns an empty list and
+records a sanitized count.
 
 Optional `context` is application context, not test guidance. Use it only when
 the deployed application supplies the same context. Leaving it out is the best

@@ -1,8 +1,12 @@
 import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
+import { chmod, copyFile, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { startGuardedMcpProxy } from "./material.mjs";
 
-const model = "claude-sonnet-4-6";
+const claudeModel = "claude-sonnet-4-6";
+const openAiModel = "gpt-5.6-sol";
+const codexVersionRequired = "0.145.0";
 const mcpServerName = "emseepea_eval";
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const providerErrorMessages = new Map([
@@ -16,6 +20,17 @@ export async function modelVersion() {
   const version = result.stdout.trim().match(/^(\d+\.\d+\.\d+)\b/)?.[1];
   if (result.code !== 0 || !version) throw new Error("Could not verify Claude CLI version");
   return version;
+}
+
+export async function codexVersion() {
+  const result = await runProcess("codex", ["--version"], { env: modelEnvironment({}) });
+  const version = result.stdout.trim().match(/codex-cli (\d+\.\d+\.\d+)/)?.[1];
+  if (result.code !== 0 || version !== codexVersionRequired) throw new Error("Could not verify required Codex CLI version");
+  return version;
+}
+
+export function providerModel(provider) {
+  return provider === "openai-local" ? openAiModel : claudeModel;
 }
 
 export function parseClaudeEvents(stdout, processExitCode = 0) {
@@ -53,8 +68,8 @@ export function parseClaudeEvents(stdout, processExitCode = 0) {
   if (!Number.isInteger(result.num_turns)) throw new Error("Model command returned an invalid turn count");
   if (result.num_turns !== expectedTurns) throw new Error("Model command used an unexpected number of turns");
   if ((result.permission_denials?.length ?? 0) > 0) throw new Error("Model command attempted a forbidden action");
-  const usage = result.modelUsage?.[model];
-  if (usage?.canonicalModel !== model || usage.provider !== "firstParty") {
+  const usage = result.modelUsage?.[claudeModel];
+  if (usage?.canonicalModel !== claudeModel || usage.provider !== "firstParty") {
     throw new Error("Model command did not use the required model");
   }
   return {
@@ -131,8 +146,8 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
   if (result.num_turns !== toolUses.length + 1) {
     throw new Error("Model command used an unexpected number of turns");
   }
-  const usage = result.modelUsage?.[model];
-  if (usage?.canonicalModel !== model || usage.provider !== "firstParty") {
+  const usage = result.modelUsage?.[claudeModel];
+  if (usage?.canonicalModel !== claudeModel || usage.provider !== "firstParty") {
     throw new Error("Model command did not use the required model");
   }
   return {
@@ -175,7 +190,7 @@ export function modelInvocation(provider, prompt, directory) {
     command: process.env.EMSEEPEA_MODEL_COMMAND ?? "claude",
     args: [
       "--print", prompt,
-      "--model", model,
+      "--model", claudeModel,
       "--effort", "low",
       "--max-turns", "4",
       "--safe-mode",
@@ -216,7 +231,7 @@ export function conversationInvocation(provider, directory, url, tools, authToke
       "--input-format", "stream-json",
       "--output-format", "stream-json",
       "--verbose",
-      "--model", model,
+      "--model", claudeModel,
       "--effort", "low",
       "--max-turns", "4",
       "--strict-mcp-config",
@@ -235,7 +250,8 @@ export function conversationInvocation(provider, directory, url, tools, authToke
   };
 }
 
-export function startModelConversation(provider, directory, url, tools, authToken, context, signal) {
+export async function startModelConversation(provider, directory, url, tools, authToken, context, signal, mcpSession) {
+  if (provider === "openai-local") return startOpenAiConversation(tools, context, signal, mcpSession, directory);
   signal?.throwIfAborted();
   const invocation = conversationInvocation(provider, directory, url, tools, authToken, context);
   const child = spawn(invocation.command, invocation.args, {
@@ -329,6 +345,7 @@ export function startModelConversation(provider, directory, url, tools, authToke
 }
 
 export async function runModel(provider, prompt, directory, signal) {
+  if (provider === "openai-local") return runOpenAiJudge(prompt, directory, signal);
   signal?.throwIfAborted();
   const invocation = modelInvocation(provider, prompt, directory);
   const execution = await runProcess(invocation.command, invocation.args, {
@@ -345,29 +362,261 @@ export async function runModel(provider, prompt, directory, signal) {
   return parseClaudeEvents(execution.stdout, execution.code);
 }
 
+async function startOpenAiConversation(tools, context, signal, mcpSession, directory) {
+  if (!mcpSession) throw new Error("OpenAI model conversation needs an MCP tool session");
+  const home = await prepareCodexHome(directory);
+  const token = randomBytes(32).toString("hex");
+  let proxy;
+  try {
+    proxy = await startGuardedMcpProxy(mcpSession, token, signal);
+    await verifyCodexLogin(home, directory);
+  } catch (error) {
+    await proxy?.close();
+    await rm(home, { recursive: true });
+    throw error;
+  }
+  let threadId;
+  let pending = false;
+  let closed = false;
+  return Object.freeze({
+    async send(prompt) {
+      if (closed) throw new Error("Model conversation is closed");
+      if (pending) throw new Error("Model conversation already has a pending turn");
+      pending = true;
+      proxy.beginTurn();
+      try {
+        const invocation = codexInvocation({ context, directory, home, prompt, proxyUrl: proxy.url, token, tools, threadId });
+        const execution = await runProcess(invocation.command, invocation.args, {
+          cwd: directory, env: invocation.env, signal, timeout: 120_000,
+        });
+        ensureProcessSucceeded(execution);
+        const parsed = parseCodexEvents(execution.stdout);
+        threadId ??= parsed.threadId;
+        if (parsed.threadId !== threadId) throw new Error("Codex resumed a different conversation");
+        const material = proxy.finishTurn();
+        pending = false;
+        const eventCalls = parsed.toolEvents.map(({ tool, arguments: args }) => ({ name: tool, arguments: args }));
+        if (JSON.stringify(eventCalls) !== JSON.stringify(material.calls)) throw Object.assign(
+          new Error("Codex tool evidence did not match the guarded MCP proxy"),
+          { codexToolEvents: parsed.toolEvents, eventToolCalls: parsed.toolCalls,
+            forwardedToolCalls: material.calls.length },
+        );
+        const model = await codexSessionModel(home, threadId);
+        const auxiliaryCount = Object.values(parsed.auxiliaryDiscovery).reduce((sum, count) => sum + count, 0);
+        return { ...parsed, ...material, models: [model], turnCount: 1,
+          providerTurnCount: material.calls.length + auxiliaryCount + 1,
+          providerToolCount: material.calls.length + auxiliaryCount };
+      } finally {
+        try { if (pending) proxy.finishTurn(); } catch {}
+        pending = false;
+      }
+    },
+    async close() {
+      if (closed) return;
+      closed = true;
+      await proxy.close();
+      await rm(home, { recursive: true });
+    },
+  });
+}
+
+async function runOpenAiJudge(prompt, directory, signal) {
+  const home = await prepareCodexHome(directory);
+  const schema = join(directory, "judge-schema.json");
+  await writeFile(schema, JSON.stringify({ type: "object", properties: {
+    pass: { type: "boolean" }, score: { type: "integer", enum: [0, 1] }, reason: { type: "string" },
+  }, required: ["pass", "score", "reason"], additionalProperties: false }), { mode: 0o600 });
+  try {
+    await verifyCodexLogin(home, directory);
+    const invocation = codexInvocation({ directory, home, prompt, schema });
+    const execution = await runProcess(invocation.command, invocation.args, {
+      cwd: directory, env: invocation.env, signal, timeout: 120_000,
+    });
+    ensureProcessSucceeded(execution);
+    const parsed = parseCodexEvents(execution.stdout);
+    if (parsed.toolCalls !== 0) throw new Error("Codex judge used a forbidden tool");
+    return { answer: parsed.answer, models: [openAiModel], turnCount: 1, providerTurnCount: 1, providerToolCount: 0 };
+  } finally {
+    await rm(home, { recursive: true });
+    await rm(schema);
+  }
+}
+
+export function codexInvocation({ context, directory, home, prompt, proxyUrl, schema, threadId, token, tools = [] }) {
+  if (Buffer.byteLength(prompt) > 1_048_576 || Buffer.byteLength(context ?? "") > 1_048_576) {
+    throw new Error("Codex input exceeded its limit");
+  }
+  const disabled = ["apps", "browser_use", "computer_use", "hooks", "image_generation", "memories",
+    "multi_agent", "multi_agent_v2", "plugins", "remote_plugin", "shell_tool", "skill_mcp_dependency_install",
+    "skill_search", "standalone_web_search", "tool_suggest", "unified_exec", "workspace_dependencies"];
+  const config = [
+    "approval_policy='never'", "forced_login_method='chatgpt'", "model_reasoning_effort='low'",
+    "sandbox_mode='read-only'", "web_search='disabled'", "tools.web_search=false", "history.persistence='none'",
+    ...(context ? [`developer_instructions=${JSON.stringify(context)}`] : []),
+    ...(proxyUrl ? [
+      `mcp_servers.${mcpServerName}.url=${JSON.stringify(proxyUrl)}`,
+      `mcp_servers.${mcpServerName}.required=true`,
+      `mcp_servers.${mcpServerName}.bearer_token_env_var='EMSEEPEA_CODEX_MCP_TOKEN'`,
+      `mcp_servers.${mcpServerName}.default_tools_approval_mode='approve'`,
+      `mcp_servers.${mcpServerName}.enabled_tools=${JSON.stringify(tools.map(({ name }) => name))}`,
+    ] : []),
+  ];
+  const common = ["--strict-config", "--ignore-user-config", "--ignore-rules", "--skip-git-repo-check",
+    "--json", "--model", openAiModel, ...disabled.flatMap((feature) => ["--disable", feature]),
+    ...config.flatMap((value) => ["--config", value]), ...(schema ? ["--ephemeral", "--output-schema", schema] : [])];
+  return {
+    command: process.env.NODE_TEST_CONTEXT && process.env.EMSEEPEA_CODEX_COMMAND || "codex",
+    args: threadId ? ["exec", "resume", ...common, threadId, prompt]
+      : ["exec", ...common, "--sandbox", "read-only", "--cd", directory, prompt],
+    cwd: directory,
+    env: modelEnvironment({ CODEX_HOME: home, HOME: directory, ...(token ? { EMSEEPEA_CODEX_MCP_TOKEN: token } : {}) }),
+  };
+}
+
+export function parseCodexEvents(stdout) {
+  let events;
+  try { events = stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line)); }
+  catch { throw new Error("Codex returned invalid event data"); }
+  const allowed = new Set(["thread.started", "turn.started", "item.started", "item.updated", "item.completed",
+    "turn.completed", "turn.failed", "error"]);
+  if (events.some(({ type }) => !allowed.has(type))) throw new Error("Codex returned a forbidden event");
+  const thread = events.find(({ type }) => type === "thread.started");
+  const completed = events.findLast(({ type }) => type === "turn.completed");
+  if (!thread?.thread_id || !completed) throw new Error("Codex omitted completion evidence");
+  if (events.some(({ type }) => type === "error" || type === "turn.failed")) throw new Error("Codex reported an error");
+  const items = events.filter(({ type }) => type.startsWith("item.")).map(({ item }) => item);
+  const forbidden = items.find(({ type }) => !["agent_message", "reasoning", "mcp_tool_call"].includes(type));
+  if (forbidden) throw Object.assign(new Error("Codex used a forbidden capability"), { capability: forbidden.type });
+  const answers = events.filter(({ type, item }) => type === "item.completed" && item?.type === "agent_message")
+    .map(({ item }) => item.text);
+  const calls = events.filter(({ type, item }) => type === "item.completed" && item?.type === "mcp_tool_call");
+  if (calls.some(({ item }) => item.status !== "completed" || item.error)) throw new Error("Codex MCP tool call failed");
+  const targetCalls = calls.filter(({ item }) => item.server === mcpServerName);
+  const auxiliary = calls.filter(({ item }) => item.server !== mcpServerName).map(({ item }) => auxiliaryDiscovery(item));
+  const auxiliaryDiscoveryCounts = { resourceTemplates: 0, resources: 0 };
+  for (const type of auxiliary) {
+    auxiliaryDiscoveryCounts[type] += 1;
+    if (auxiliaryDiscoveryCounts[type] > 1) throw new Error("Codex repeated auxiliary MCP discovery");
+  }
+  if (!answers.length || typeof answers.at(-1) !== "string") throw new Error("Codex returned no answer");
+  const result = { answer: answers.at(-1), auxiliaryDiscovery: auxiliaryDiscoveryCounts,
+    threadId: thread.thread_id, toolCalls: targetCalls.length };
+  Object.defineProperty(result, "toolEvents", { value: targetCalls.map(({ item }) => item) });
+  return result;
+}
+
+function auxiliaryDiscovery(item) {
+  if (item.server !== "codex" || JSON.stringify(item.arguments) !== "{}") {
+    throw new Error("Codex used a non-target MCP tool");
+  }
+  const contracts = {
+    list_mcp_resources: ["resources", '{"resources":[]}'],
+    list_mcp_resource_templates: ["resourceTemplates", '{"resourceTemplates":[]}'],
+  };
+  const contract = contracts[item.tool];
+  if (!contract || JSON.stringify(item.result) !== JSON.stringify({
+    content: [{ type: "text", text: contract[1] }], structured_content: null,
+  })) throw new Error("Codex auxiliary MCP discovery changed");
+  return contract[0];
+}
+
+async function prepareCodexHome(directory) {
+  const source = join(process.env.CODEX_HOME ?? join(process.env.HOME ?? "", ".codex"), "auth.json");
+  const home = join(directory, "codex-home");
+  await mkdir(home, { mode: 0o700 });
+  try { await copyFile(source, join(home, "auth.json")); }
+  catch { throw new Error("Codex ChatGPT authentication is unavailable"); }
+  await chmod(join(home, "auth.json"), 0o600);
+  return home;
+}
+
+async function verifyCodexLogin(home, directory) {
+  const result = await runProcess("codex", ["login", "status"], {
+    cwd: directory, env: modelEnvironment({ CODEX_HOME: home, HOME: directory }), timeout: 15_000,
+  });
+  if (result.code !== 0 || !/logged in using chatgpt/i.test(result.stderr)) throw new Error("Codex CLI is not logged in with ChatGPT");
+}
+
+async function codexSessionModel(home, threadId) {
+  const files = await recursiveFiles(home);
+  for (const file of files.filter((name) => name.endsWith(".jsonl"))) {
+    const text = await readFile(file, "utf8");
+    if (Buffer.byteLength(text) > 1_048_576) throw new Error("Codex session evidence exceeded its limit");
+    const events = text.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+    const session = events.find(({ type, payload }) => type === "session_meta" && payload?.id === threadId);
+    if (!session) continue;
+    const models = events.filter(({ type }) => type === "turn_context").map(({ payload }) => payload?.model);
+    if (session.payload.model_provider !== "openai" || !models.length || models.some((model) => model !== openAiModel)) {
+      throw new Error("Codex did not use the required OpenAI model");
+    }
+    return openAiModel;
+  }
+  throw new Error("Codex omitted model identity evidence");
+}
+
+async function recursiveFiles(directory) {
+  const files = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) files.push(...await recursiveFiles(path));
+    else files.push(path);
+  }
+  return files;
+}
+
+function ensureProcessSucceeded(execution) {
+  if (execution.timedOut) throw new Error("Model command timed out");
+  if (execution.outputLimitExceeded) throw new Error("Model command output exceeded its limit");
+  if (execution.errorCode === "ABORT_ERR") throw new Error("Model command was cancelled");
+  if (execution.errorCode) throw new Error("Model command could not start");
+  if (execution.code !== 0) throw new Error(`Model command exited ${execution.code}`);
+}
+
 function runProcess(command, args, options) {
   return new Promise((resolve) => {
-    const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], ...options });
+    const { timeout = 180_000, signal, ...spawnOptions } = options;
+    signal?.throwIfAborted();
+    const child = spawn(command, args, {
+      stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32", ...spawnOptions,
+    });
     let stdout = "";
+    let stderr = "";
+    let stderrLength = 0;
+    let aborted = false;
     let timedOut = false;
     let outputLimitExceeded = false;
-    const timer = setTimeout(() => { timedOut = true; child.kill("SIGKILL"); }, 180_000);
+    const kill = () => {
+      try {
+        if (process.platform === "win32" || !child.pid) child.kill("SIGKILL");
+        else process.kill(-child.pid, "SIGKILL");
+      } catch (error) { if (error.code !== "ESRCH") child.kill("SIGKILL"); }
+    };
+    const timer = setTimeout(() => { timedOut = true; kill(); }, timeout);
     timer.unref();
+    const abort = () => { aborted = true; kill(); };
+    signal?.addEventListener("abort", abort, { once: true });
     child.stdout.on("data", (chunk) => {
       stdout += chunk;
       if (stdout.length > 1_048_576) {
         outputLimitExceeded = true;
-        child.kill("SIGKILL");
+        kill();
       }
     });
-    child.stderr.resume();
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+      stderrLength += chunk.length;
+      if (stderrLength > 1_048_576) { outputLimitExceeded = true; kill(); }
+    });
     child.once("error", (error) => {
       clearTimeout(timer);
-      resolve({ code: 1, errorCode: error.code, outputLimitExceeded, stdout, timedOut });
+      signal?.removeEventListener("abort", abort);
+      resolve({ code: 1, errorCode: error.code, outputLimitExceeded, stderr, stdout, timedOut });
     });
     child.once("close", (code) => {
       clearTimeout(timer);
-      resolve({ code: code ?? 1, outputLimitExceeded, stdout, timedOut });
+      signal?.removeEventListener("abort", abort);
+      resolve({ code: code ?? 1, errorCode: aborted ? "ABORT_ERR" : undefined,
+        outputLimitExceeded, stderr, stdout, timedOut });
     });
   });
 }

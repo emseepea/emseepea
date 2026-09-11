@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promis
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { discoverTests } from "./discover.mjs";
-import { modelVersion } from "./provider.mjs";
+import { codexVersion, modelVersion, providerModel } from "./provider.mjs";
 
 const negativeFeedbackObservations = new Set([
   "error",
@@ -32,18 +32,19 @@ for (let i = 2; i < process.argv.length; i += 1) {
   else if (arg.startsWith("--")) throw new Error(`Unknown option: ${arg}`);
   else paths.push(arg);
 }
-if (!["claude-local", "claude-ci"].includes(provider)) throw new Error("Unsupported provider");
-if ((smoke && provider === "claude-ci") || (modelCommand && !smoke)) throw new Error("Custom model commands are smoke-only");
+if (!["claude-local", "claude-ci", "openai-local"].includes(provider)) throw new Error("Unsupported provider");
+if ((smoke && provider !== "claude-local") || (modelCommand && !smoke)) throw new Error("Custom model commands are smoke-only");
 if (!paths.length) paths.push("eval");
 const files = await discoverTests(paths);
 const directory = await mkdtemp(join(tmpdir(), "emseepea-evidence-"));
 const evidence = { authoritative: provider === "claude-ci", provider, smoke,
-  model: "claude-sonnet-4-6", semanticRetries: 0, revision: process.env.GITHUB_SHA,
+  model: providerModel(provider), semanticRetries: 0, revision: process.env.GITHUB_SHA,
   status: "failed", cases: {}, errors: [], startedAt: new Date().toISOString() };
 try {
   const client = JSON.parse(await readFile(new URL("../package.json", import.meta.resolve("@modelcontextprotocol/client")), "utf8"));
   if (client.name !== "@modelcontextprotocol/client" || client.version !== "2.0.0") throw new Error("Unexpected MCP client version");
-  evidence.dependencies = { mcpClient: client.version, claudeCli: smoke ? "simulated" : await modelVersion() };
+  evidence.dependencies = { mcpClient: client.version, ...(provider === "openai-local"
+    ? { codexCli: await codexVersion() } : { claudeCli: smoke ? "simulated" : await modelVersion() }) };
   if (provider === "claude-ci" && evidence.dependencies.claudeCli !== "2.1.248") throw new Error("Unexpected Claude CLI version");
   let interrupted = false;
   for (const file of files) {
@@ -53,6 +54,7 @@ try {
         EMSEEPEA_EVIDENCE_DIR: directory, EMSEEPEA_TEST_FILE: displayFile,
         EMSEEPEA_MODEL_COMMAND: modelCommand ? resolve(modelCommand) : "claude" };
       delete environment.NODE_TEST_CONTEXT;
+      if (provider === "openai-local") delete environment.OPENAI_API_KEY;
       const child = spawn(process.execPath, ["--test", "--test-concurrency=1", file], {
         stdio: "inherit",
         env: environment,
@@ -128,8 +130,9 @@ function validRecord(record, authoritative, smoke) {
       && turn.advertisedToolCount >= 0
       && turn.interactionMode === "native-mcp"
       && turn.answerTurnCount === 1
-      && turn.answerProviderToolCount === turn.toolCallCount
-      && turn.answerProviderTurnCount === turn.toolCallCount + 1
+      && validAuxiliaryDiscovery(turn, record.provider)
+      && turn.answerProviderToolCount === turn.toolCallCount + auxiliaryCount(turn)
+      && turn.answerProviderTurnCount === turn.toolCallCount + auxiliaryCount(turn) + 1
       && Number.isInteger(turn.toolCallCount) && turn.toolCallCount >= 0 && turn.toolCallCount <= 3
       && typeof turn.prompt === "string" && turn.prompt.length > 0
       && typeof turn.response === "string"
@@ -146,6 +149,17 @@ function validRecord(record, authoritative, smoke) {
       && turn.pathEvidence.every(({ method, target, requestSha256, responseSha256 }) =>
         method === "tools/call" && turn.selectedTools.includes(target)
           && isHash(requestSha256) && isHash(responseSha256))));
+}
+
+function validAuxiliaryDiscovery(turn, provider) {
+  if (provider !== "openai-local") return turn.providerAuxiliaryDiscovery === undefined;
+  const value = turn.providerAuxiliaryDiscovery;
+  return value && JSON.stringify(Object.keys(value).sort()) === '["resourceTemplates","resources"]'
+    && [value.resourceTemplates, value.resources].every((count) => Number.isInteger(count) && count >= 0 && count <= 1);
+}
+
+function auxiliaryCount(turn) {
+  return Object.values(turn.providerAuxiliaryDiscovery ?? {}).reduce((sum, count) => sum + count, 0);
 }
 
 function validToolAssertions(turn, isHash) {

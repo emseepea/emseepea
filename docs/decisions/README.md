@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 73 decisions: 38 current and 35 historical.
+This project has 76 decisions: 38 current and 38 historical.
 
 ## Quick Index
 
@@ -34,7 +34,6 @@ This project has 73 decisions: 38 current and 35 historical.
 - [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0050: Schema-Declared Pass-Through by Default](0050-schema-declared-pass-through-by-default.proposed.md): Proposed; human review confirmed.
 - [ADR-0052: Optional Deterministic HTTP Route Discovery](0052-optional-deterministic-http-route-discovery.proposed.md): Proposed; human review confirmed.
-- [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.proposed.md): Proposed; human review confirmed.
 - [ADR-0058: Instance-Agnostic Shared PostgreSQL State](0058-instance-agnostic-shared-postgresql-state.proposed.md): Proposed; human review confirmed.
 - [ADR-0059: Process CPU as the Website Work Budget](0059-process-cpu-as-the-website-work-budget.proposed.md): Proposed; human review confirmed.
 - [ADR-0060: Database Schema Generated Internal Validation](0060-database-schema-generated-internal-validation.proposed.md): Proposed; human review confirmed.
@@ -49,6 +48,7 @@ This project has 73 decisions: 38 current and 35 historical.
 - [ADR-0072: Opt-In Integrity-Protected Request State](0072-opt-in-integrity-protected-request-state.proposed.md): Proposed; human review confirmed.
 - [ADR-0074: Same-Endpoint Stateless Legacy Protocol Support](0074-same-endpoint-stateless-legacy-protocol-support.proposed.md): Proposed; human review confirmed.
 - [ADR-0075: Opt-In Bounded Request-Scoped MCP Logging](0075-opt-in-bounded-request-scoped-mcp-logging.proposed.md): Proposed; human review confirmed.
+- [ADR-0077: Bounded Provider-Auxiliary MCP Discovery in Logged-In Codex Evaluation](0077-bounded-provider-auxiliary-mcp-discovery-in-logged-in-codex-evaluation.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -84,9 +84,12 @@ This project has 73 decisions: 38 current and 35 historical.
 - [ADR-0054: Provider-Native MCP Semantic Conversations](0054-provider-native-mcp-semantic-conversations.superseded.md): Superseded; human review confirmed.
 - [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.superseded.md): Superseded; human review confirmed.
+- [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.superseded.md): Superseded; human review confirmed.
 - [ADR-0061: MongoDB JSON Schema Generated Internal Validation](0061-mongodb-json-schema-generated-internal-validation.superseded.md): Superseded; human review confirmed.
 - [ADR-0069: Atomic Runtime Activation of Startup-Compiled Capabilities](0069-atomic-runtime-activation-of-startup-compiled-capabilities.rejected.md): Rejected; human review confirmed.
 - [ADR-0070: OpenAPI-Generated Backend Types and Runtime Validation](0070-openapi-generated-backend-types-and-runtime-validation.superseded.md): Superseded; human review confirmed.
+- [ADR-0073: Local OpenAI Function-Tool Semantic Evaluation](0073-local-openai-function-tool-semantic-evaluation.superseded.md): Superseded; human review confirmed.
+- [ADR-0076: Logged-In Codex CLI Semantic Evaluation](0076-logged-in-codex-cli-semantic-evaluation.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -1166,7 +1169,7 @@ Chosen option: **"Provider-native MCP conversations"**, because it tests the beh
 - Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0054: Provider-Native MCP Semantic Conversations](0054-provider-native-mcp-semantic-conversations.superseded.md)
-- Replaced by: [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.proposed.md)
+- Replaced by: [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.superseded.md)
 
 #### ADR-0055 Decision
 
@@ -1204,11 +1207,12 @@ Chosen option: **"Replace SQLite with PostgreSQL"**, because a multi-instance ex
 - Root guidance, example guidance, the documentation website, semantic tests, package metadata, and release checks use the new name and honest scope.
 - The new package passes pack, standalone install, lint, ordinary tests, semantic smoke tests, provenance, software-bill-of-materials, registry readback, and clean-install verification.
 
-### [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.proposed.md)
+### [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0055: Native Client Journeys Only in Semantic Tests](0055-native-client-journeys-only-in-semantic-tests.superseded.md)
+- Replaced by: [ADR-0073: Local OpenAI Function-Tool Semantic Evaluation](0073-local-openai-function-tool-semantic-evaluation.superseded.md)
 
 #### ADR-0057 Decision
 
@@ -1586,6 +1590,27 @@ Chosen option: **"Opt-in signed request state using the MCP SDK"**.
 - Official-client and raw-HTTP tests pass from a packed clean install.
 - Documentation states that signing is not encryption or replay prevention and that retry, circuit-breaker, and effect-idempotency behavior is application owned.
 
+### [ADR-0073: Local OpenAI Function-Tool Semantic Evaluation](0073-local-openai-function-tool-semantic-evaluation.superseded.md)
+
+- Status: Superseded
+- Human review: Confirmed
+- Replaces: [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.superseded.md)
+- Replaced by: [ADR-0076: Logged-In Codex CLI Semantic Evaluation](0076-logged-in-codex-cli-semantic-evaluation.superseded.md)
+
+#### ADR-0073 Decision
+
+Chosen option: **"Supplemental local OpenAI function-tool evaluation"**, because it adds the requested local comparison without exposing fixtures, changing CI, or misrepresenting function-tool evidence as a native MCP journey.
+
+#### ADR-0073 Checks
+
+- `npm test -w @emseepea/testing` passes focused provider, runner, cancellation, call-bound, follow-up-history, and redaction tests.
+- `emseepea-test eval --provider openai-local` fails clearly without `OPENAI_API_KEY` and can pass a real local synthetic fixture with the key.
+- Evidence records the exact pinned OpenAI model, remains non-authoritative, and labels turns `provider-native-function-tools`, never `native-mcp`.
+- Tests prove the OpenAI key, authorization header, raw API events and errors, process environment, MCP address, and filesystem paths never reach fixture server processes or retained evidence.
+- Tests reject unknown, repeated, malformed, or more-than-three tool calls and prove cancellation, bounded execution, and genuine follow-up history.
+- `npm run test:eval:ci`, the release workflow, and publication conditions still select only `claude-ci`.
+- Public documentation states what each provider's evidence does and does not prove and gives the local OpenAI command without requesting key disclosure.
+
 ### [ADR-0074: Same-Endpoint Stateless Legacy Protocol Support](0074-same-endpoint-stateless-legacy-protocol-support.proposed.md)
 
 - Status: Proposed
@@ -1632,3 +1657,45 @@ Chosen option: **"Opt-in bounded request-scoped logging using the MCP SDK"**, be
 - Framework observability still receives only its existing redacted event and cannot change protocol output.
 - Raw HTTP, official-client, packed-package, slow-reader, disconnect, and bounded-load checks pass before release.
 - Documentation calls this channel deprecated and distinguishes it from server operator logging and observability.
+
+### [ADR-0076: Logged-In Codex CLI Semantic Evaluation](0076-logged-in-codex-cli-semantic-evaluation.superseded.md)
+
+- Status: Superseded
+- Human review: Confirmed
+- Replaces: [ADR-0073: Local OpenAI Function-Tool Semantic Evaluation](0073-local-openai-function-tool-semantic-evaluation.superseded.md)
+- Replaced by: [ADR-0077: Bounded Provider-Auxiliary MCP Discovery in Logged-In Codex Evaluation](0077-bounded-provider-auxiliary-mcp-discovery-in-logged-in-codex-evaluation.proposed.md)
+
+#### ADR-0076 Decision
+
+Chosen option: **"Logged-in Codex CLI with a guarded MCP proxy"**, because it matches the requested credential-free local experience and uses OpenAI's native MCP client without changing CI or exposing the fixture directly to an unbounded model tool loop.
+
+#### ADR-0076 Checks
+
+- `codex login status` succeeds against the isolated credential copy with ChatGPT authentication and no `OPENAI_API_KEY`; a real synthetic fixture evaluation passes with model `gpt-5.6-sol` on Codex CLI `0.145.0`.
+- A behavioral inventory sentinel proves only the fixture's advertised target MCP tools are callable; attempts to use shell, filesystem, web, browser, apps, plugins, skills, agents, or unrelated MCP tools cannot execute.
+- Behavioral tests prove an unknown, malformed, schema-invalid, canonical duplicate, or fourth tool call is rejected before the fixture sees it.
+- Follow-up tests prove the exact captured Codex thread is resumed and retains prior user messages, MCP calls, results, and answers.
+- Success, failure, timeout, and cancellation tests prove only the isolated temporary Codex home is removed and cleanup failure fails the evaluation.
+- Session metadata records the actual model as `gpt-5.6-sol`; a mismatch fails before evidence can pass.
+- Evidence omits auth material, raw JSONL, MCP credentials and addresses, temporary paths, user configuration, thread identifiers, and provider error bodies.
+- Output, individual events, prompts, answers, arguments, MCP results, total time, call count, and process-tree cancellation are bounded.
+- `npm run test:eval:ci`, release workflows, and publication conditions remain unchanged and select only `claude-ci`.
+
+### [ADR-0077: Bounded Provider-Auxiliary MCP Discovery in Logged-In Codex Evaluation](0077-bounded-provider-auxiliary-mcp-discovery-in-logged-in-codex-evaluation.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0076: Logged-In Codex CLI Semantic Evaluation](0076-logged-in-codex-cli-semantic-evaluation.superseded.md)
+
+#### ADR-0077 Decision
+
+Chosen option: **"Bounded empty discovery adapters"**, because the adapters are read-only provider protocol discovery and all task-relevant fixture calls remain protected by the existing guarded proxy.
+
+#### ADR-0077 Checks
+
+- A behavioral inventory check observes only fixture tools plus the two named provider-auxiliary adapters.
+- Each auxiliary adapter returns an empty list, runs at most once per turn, and causes no fixture forwarding.
+- Non-empty, repeated, cross-server, argument-bearing, and unknown auxiliary events fail before evidence can pass.
+- Fixture tool safety controls and exact call evidence continue to pass.
+- A real logged-in Codex fixture evaluation passes on CLI `0.145.0` with model `gpt-5.6-sol` and records sanitized auxiliary counts.
+- Claude CI and release commands remain unchanged.

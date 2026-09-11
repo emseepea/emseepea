@@ -6,11 +6,12 @@ import { dirname, join, resolve } from "node:path";
 import { environmentForTrial, validateConversationOptions } from "./case.mjs";
 import {
   listMcpTools,
+  openMcpToolSession,
   semanticAuthToken,
   startSemanticServer,
   stopSemanticServer,
 } from "./material.mjs";
-import { parseJudgeVerdict, runModel, startModelConversation } from "./provider.mjs";
+import { parseJudgeVerdict, providerModel, runModel, startModelConversation } from "./provider.mjs";
 
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const names = new Set();
@@ -28,9 +29,9 @@ export async function createConversation(testContext, options) {
   names.add(key);
 
   const provider = process.env.EMSEEPEA_EVAL_PROVIDER ?? "claude-local";
-  if (!["claude-local", "claude-ci"].includes(provider)) throw new Error("Unsupported model provider");
+  if (!["claude-local", "claude-ci", "openai-local"].includes(provider)) throw new Error("Unsupported model provider");
   const smoke = process.env.EMSEEPEA_EVAL_SMOKE === "1";
-  if (smoke && provider === "claude-ci") throw new Error("Smoke tests cannot qualify a release");
+  if (smoke && provider !== "claude-local") throw new Error("Smoke tests require the Claude local provider");
   const file = process.env.EMSEEPEA_TEST_FILE;
   const output = join(
     process.env.EMSEEPEA_EVIDENCE_DIR ?? resolve("artifacts/llm-eval/cases"),
@@ -43,7 +44,7 @@ export async function createConversation(testContext, options) {
     authoritative: provider === "claude-ci",
     smoke,
     provider,
-    model: "claude-sonnet-4-6",
+    model: providerModel(provider),
     semanticRetries: 0,
     status: "failed",
     caseSha256: hash(JSON.stringify({
@@ -64,13 +65,18 @@ export async function createConversation(testContext, options) {
         ...specification,
         environment: environmentForTrial(specification.environment, trial),
       }, testContext.signal);
+      let mcp;
       try {
-        const tools = await listMcpTools(running.url, specification, testContext.signal);
+        mcp = provider === "openai-local"
+          ? await openMcpToolSession(running.url, specification, testContext.signal)
+          : undefined;
+        const tools = mcp?.tools ?? await listMcpTools(running.url, specification, testContext.signal);
         const record = { trial, turns: [] };
         const directory = await mkdtemp(join(tmpdir(), "emseepea-conversation-"));
-        state.trials.push({ running, tools, record, directory, history: [], model: undefined });
+        state.trials.push({ running, tools, mcp, record, directory, history: [], model: undefined });
         evidence.answerTrials.push(record);
       } catch (error) {
+        await mcp?.close();
         await stopSemanticServer(running.child);
         throw error;
       }
@@ -90,7 +96,7 @@ export async function createConversation(testContext, options) {
       try {
         for (const trial of state.trials) {
           activeTrial = trial;
-          trial.model ??= startModelConversation(
+          trial.model ??= await startModelConversation(
             provider,
             trial.directory,
             trial.running.url,
@@ -98,6 +104,7 @@ export async function createConversation(testContext, options) {
             semanticAuthToken(specification),
             specification.context,
             testContext.signal,
+            trial.mcp,
           );
           const answer = await trial.model.send(prompt);
           const calls = answer.calls;
@@ -126,6 +133,7 @@ export async function createConversation(testContext, options) {
             answerTurnCount: answer.turnCount,
             answerProviderTurnCount: answer.providerTurnCount,
             answerProviderToolCount: answer.providerToolCount,
+            providerAuxiliaryDiscovery: answer.auxiliaryDiscovery,
             advertisedToolCount: trial.tools.length,
             advertisedToolsSha256: hash(JSON.stringify(trial.tools)),
             selectedCallsSha256: hash(JSON.stringify(calls)),
@@ -446,6 +454,26 @@ function safeModelFailure(error) {
     "Model conversation could not start",
     "Model conversation is closed",
     "Model conversation was cancelled",
+    "MCP tool arguments exceeded their limit",
+    "MCP tool result exceeded its limit",
+    "Codex ChatGPT authentication is unavailable",
+    "Codex CLI is not logged in with ChatGPT",
+    "Codex MCP tool call failed",
+    "Codex auxiliary MCP discovery changed",
+    "Codex input exceeded its limit",
+    "Codex omitted completion evidence",
+    "Codex omitted model identity evidence",
+    "Codex reported an error",
+    "Codex resumed a different conversation",
+    "Codex returned invalid event data",
+    "Codex returned a forbidden event",
+    "Codex returned no answer",
+    "Codex repeated auxiliary MCP discovery",
+    "Codex tool evidence did not match the guarded MCP proxy",
+    "Codex used a forbidden capability",
+    "Codex used a non-target MCP tool",
+    "Codex did not use the required OpenAI model",
+    "OpenAI model conversation needs an MCP tool session",
   ]);
   if (safeMessages.has(message) || /^Model (?:command|conversation) exited \d{1,3}$/.test(message)) {
     return message.replace(/^./, (character) => character.toLowerCase());
@@ -465,10 +493,11 @@ async function isolatedModel(provider, prompt, prefix, signal) {
 async function closeConversation(state, evidence, output) {
   if (state.closed) return;
   state.closed = true;
-  await Promise.all(state.trials.map(async ({ running, model, directory }) => {
+  await Promise.all(state.trials.map(async ({ running, model, mcp, directory }) => {
     try {
       await model?.close();
     } finally {
+      await mcp?.close();
       await stopSemanticServer(running.child);
       await rm(directory, { recursive: true, force: true });
     }

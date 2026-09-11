@@ -1,7 +1,10 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
+import { createServer } from "node:http";
 
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import { McpServer, createMcpHandler, fromJsonSchema } from "@modelcontextprotocol/server";
+import { localhostHostValidation, localhostOriginValidation, toNodeHandler } from "@modelcontextprotocol/node";
 
 const sha256 = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 
@@ -115,17 +118,122 @@ export async function listMcpTools(url, testCase, signal) {
     signal?.addEventListener("abort", abort, { once: true });
   });
   try {
-    const response = await Promise.race([client.listTools(), cancelled]);
-    const tools = response.tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
-    tools.sort((left, right) => left.name.localeCompare(right.name));
-    if (new Set(tools.map(({ name }) => name)).size !== tools.length) {
-      throw new Error("MCP server advertised duplicate tool names");
-    }
-    return tools;
+    return await Promise.race([advertisedTools(client), cancelled]);
   } finally {
     signal?.removeEventListener("abort", abort);
     await client.close();
   }
+}
+
+export async function openMcpToolSession(url, testCase, signal) {
+  signal?.throwIfAborted();
+  const client = await openClient(url, testCase);
+  let tools;
+  try {
+    tools = await advertisedTools(client);
+  } catch (error) {
+    await client.close();
+    throw error;
+  }
+  let closed = false;
+  const abort = () => { void client.close().catch(() => {}); };
+  signal?.addEventListener("abort", abort, { once: true });
+  return Object.freeze({
+    tools,
+    async callTool(name, args, callSignal = signal) {
+      callSignal?.throwIfAborted();
+      const request = { method: "tools/call", name, arguments: args };
+      const result = await client.callTool({ name, arguments: args }, { signal: callSignal });
+      return {
+        content: result.content,
+        isError: result.isError === true,
+        pathEvidence: {
+          method: "tools/call",
+          target: name,
+          requestSha256: sha256(request),
+          responseSha256: sha256(result.content),
+        },
+      };
+    },
+    async close() {
+      if (closed) return;
+      closed = true;
+      signal?.removeEventListener("abort", abort);
+      await client.close();
+    },
+  });
+}
+
+export async function startGuardedMcpProxy(mcpSession, token, signal) {
+  const tools = new Map(mcpSession.tools.map((tool) => [tool.name, tool]));
+  let turn;
+  const handler = createMcpHandler(() => {
+    const server = new McpServer({ name: "emseepea-eval-proxy", version: "0.0.0" });
+    for (const tool of tools.values()) {
+      server.registerTool(tool.name, {
+        description: tool.description,
+        inputSchema: fromJsonSchema(tool.inputSchema),
+      }, async (args) => {
+        if (!turn) throw new Error("No semantic evaluation turn is active");
+        const call = { name: tool.name, arguments: args };
+        if (Buffer.byteLength(JSON.stringify(args)) > 1_048_576) throw new Error("MCP tool arguments exceeded their limit");
+        const signature = JSON.stringify({ name: tool.name, arguments: canonical(args) });
+        if (turn.seen.has(signature)) throw new Error("Repeated MCP tool call");
+        if (turn.calls.length >= 3) throw new Error("MCP tool-call limit exceeded");
+        turn.seen.add(signature);
+        const result = await mcpSession.callTool(tool.name, args, signal);
+        const serialized = JSON.stringify(result);
+        if (Buffer.byteLength(serialized) > 1_048_576) throw new Error("MCP tool result exceeded its limit");
+        turn.calls.push(call);
+        turn.toolResults.push({ content: result.content, isError: result.isError });
+        turn.pathEvidence.push(result.pathEvidence);
+        return { content: result.content, isError: result.isError };
+      });
+    }
+    return server;
+  });
+  const serve = toNodeHandler(handler);
+  const validHost = localhostHostValidation();
+  const validOrigin = localhostOriginValidation();
+  const http = createServer((request, response) => {
+    if (request.headers.authorization !== `Bearer ${token}`) {
+      response.writeHead(401).end();
+      return;
+    }
+    if (!validHost(request, response) || !validOrigin(request, response)) return;
+    void serve(request, response);
+  });
+  await new Promise((resolve, reject) => {
+    http.once("error", reject);
+    http.listen(0, "127.0.0.1", resolve);
+  });
+  const address = http.address();
+  let closed = false;
+  const close = async () => {
+    if (closed) return;
+    closed = true;
+    try { await handler.close(); }
+    finally { await new Promise((resolve) => http.close(resolve)); }
+  };
+  const abort = () => { void close(); };
+  signal?.addEventListener("abort", abort, { once: true });
+  return Object.freeze({
+    url: `http://127.0.0.1:${address.port}/mcp`,
+    beginTurn() {
+      if (turn) throw new Error("An MCP proxy turn is already active");
+      turn = { calls: [], pathEvidence: [], seen: new Set(), toolResults: [] };
+    },
+    finishTurn() {
+      if (!turn) throw new Error("No MCP proxy turn is active");
+      const result = turn;
+      turn = undefined;
+      return { calls: result.calls, pathEvidence: result.pathEvidence, toolResults: result.toolResults };
+    },
+    async close() {
+      signal?.removeEventListener("abort", abort);
+      await close();
+    },
+  });
 }
 
 function requestFor(operation) {
@@ -163,6 +271,16 @@ async function openClient(url, testCase) {
   return client;
 }
 
+async function advertisedTools(client) {
+  const response = await client.listTools();
+  const tools = response.tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
+  tools.sort((left, right) => left.name.localeCompare(right.name));
+  if (new Set(tools.map(({ name }) => name)).size !== tools.length) {
+    throw new Error("MCP server advertised duplicate tool names");
+  }
+  return tools;
+}
+
 export function semanticAuthToken(testCase) {
   const token = testCase.authToken ?? (testCase.authTokenEnvironment
     ? process.env[testCase.authTokenEnvironment]?.trim()
@@ -191,4 +309,10 @@ function serverEnvironment(extra = {}) {
     USER: process.env.USER,
     ...extra,
   }).filter(([, value]) => value !== undefined));
+}
+
+function canonical(value) {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])]));
 }

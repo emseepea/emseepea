@@ -108,11 +108,12 @@ The optional `context` setting represents real application context. It is absent
 by default so test guidance cannot bias the model. Use it only when the deployed
 application supplies the same context.
 
-The runner sends each user message unchanged through one provider-native MCP
-conversation. It does not add selection instructions, a JSON call plan,
-advertised-tool text, an answer wrapper, or prepared MCP material. The native
-client discovers the server's advertised tool names, descriptions, and input
-schemas. Follow-up messages stay in the same conversation.
+With the default Claude provider, the runner sends each user message unchanged
+through one provider-native MCP conversation. It does not add selection
+instructions, a JSON call plan, advertised-tool text, an answer wrapper, or
+prepared MCP material. The native client discovers the server's advertised
+tool names, descriptions, and input schemas. Follow-up messages stay in the
+same conversation.
 
 The provider is connected to exactly one loopback MCP server and may use only
 that server's advertised tools. Shell, filesystem, browser, tool search,
@@ -142,6 +143,22 @@ The last command requires the Claude CLI on your command path and a signed-in
 Claude account. If needed, run `claude auth login` first. This package does not
 bundle the CLI or copy your login credentials.
 
+To compare OpenAI locally, sign in with `codex login` and run:
+
+```sh
+npm run test:llm -- --provider openai-local
+```
+
+This uses the pinned OpenAI model through Codex CLI and your saved ChatGPT
+login. Codex selects tools through a guarded loopback MCP proxy, while accepted
+calls reach the private fixture through the official MCP client. Each
+conversation uses and then deletes a temporary Codex home containing a private
+copy of the login file. The result is supplemental, non-authoritative native-MCP
+evidence and cannot approve a release. `OPENAI_API_KEY` is not required or used.
+Codex may also call its two built-in, read-only MCP resource discovery helpers.
+The harness admits each at most once only when it returns an empty list and
+records its sanitized type and count.
+
 For your own project, add `@emseepea/testing` as a development dependency and
 set `test:llm` to build your server and run `emseepea-test eval`.
 
@@ -162,11 +179,14 @@ A wrong selection, rejected call, failed literal assertion, rejected meaning, or
 missing MCP operation fails the test. Failed attempts are not retried or taken
 from a cache.
 
-The conversation model has no shell, files, browser, tool search, plugins,
-ambient MCP servers, or unrelated tools. It has one native connection to the
-target loopback MCP server. This proves native selection for the configured
-provider, model, server, and question, not identical behaviour in every client
-or deployment.
+The conversation model has no shell, files, browser, tool search, plugins, or
+ambient MCP servers. Claude connects directly to the target loopback MCP
+server. OpenAI uses Codex's native MCP client through the required guarded
+proxy; only accepted fixture calls are forwarded through the harness's official
+MCP client. Codex's two bounded empty resource-discovery calls are recorded as
+provider-auxiliary activity rather than fixture tool calls.
+Results prove selection for the recorded provider, tool protocol, model, server,
+and question, not identical behaviour in every client or deployment.
 
 Results are saved to `artifacts/llm-eval/evidence.json`. The report contains
 readable test prompts, assistant responses, advertised MCP tool calls and
