@@ -3,7 +3,9 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { createServer, request as httpRequest } from "node:http";
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { createServer as createHttpsServer } from "node:https";
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -23,11 +25,16 @@ const network = `${composeProject}_default`;
 const localImage = "emseepea-server:local";
 const composeEnvironment = { COMPOSE_PROJECT_NAME: composeProject };
 const databaseExamples = new Set(["database-schema-server", "mongodb-backed-server", "multi-instance-postgres-server"]);
+const fixtureNetworks = {
+  "api-backed-server": { subnet: "1.1.1.0/30", gateway: "1.1.1.1" },
+  "openapi-backed-server": { subnet: "1.0.0.0/30", gateway: "1.0.0.1" },
+};
 const images = [];
 const files = [];
 let ownsNetwork = false;
 let databaseStarted = false;
 let fixture;
+let fixtureDirectory;
 
 try {
   const staged = registryLock ? await verifyRegistryLock() : await stageExactPackages();
@@ -41,7 +48,10 @@ try {
       await run("npm", ["run", "db:start"], project, composeEnvironment, 300_000);
       databaseStarted = true;
     } else {
-      await run("docker", ["network", "create", network], project);
+      const fixtureNetwork = fixtureNetworks[key];
+      await run("docker", ["network", "create",
+        ...(fixtureNetwork ? ["--internal", "--subnet", fixtureNetwork.subnet, "--gateway", fixtureNetwork.gateway] : []),
+        network], project);
       ownsNetwork = true;
     }
     const networkInspection = JSON.parse(await run("docker", ["network", "inspect", network], project))[0];
@@ -71,6 +81,7 @@ try {
   }
 } finally {
   await fixture?.close();
+  if (fixtureDirectory) await rm(fixtureDirectory, { recursive: true, force: true });
   if (databaseStarted) await ignoreFailure("npm", ["run", "db:reset"], project, composeEnvironment);
   else if (ownsNetwork) await ignoreFailure("docker", ["network", "rm", network], project);
   for (const image of [localImage, ...images]) await ignoreFailure("docker", ["image", "rm", "--force", image], project);
@@ -138,9 +149,10 @@ async function verifyRunningImage(image, target, gateway) {
     assert.equal(fixture.requests, rejectedWorkBaseline, "rejected boundary input reached the dependency fixture");
     const accepted = await mcpCall(new URL("/mcp", proxyUrl), {
       authorization: "Bearer unchanged-by-proxy", origin: "https://mcp.example.com",
-    });
+    }, key === "resources-and-prompts-server" ? "resources/list" : "tools/list");
     assert.equal(accepted.status, 200);
-    assert.ok(Array.isArray((await accepted.json()).result.tools));
+    const catalogue = (await accepted.json()).result;
+    assert.ok(Array.isArray(key === "resources-and-prompts-server" ? catalogue.resources : catalogue.tools));
     assert.equal(proxy.forwardedAuthorization, "Bearer unchanged-by-proxy");
     await verifyJourney(new URL("/mcp", proxyUrl), fixture.requests);
     for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -208,19 +220,24 @@ async function withApp(image, target, configPath, check) {
   const container = `${composeProject}-${target.architecture}-app`;
   let proxy;
   try {
+    const fixtureArguments = fixture.caPath ? [
+      "--add-host", `fixture.example:${gateway}`,
+      "--mount", `type=bind,source=${fixture.caPath},target=/run/emseepea/fixture-ca.pem,readonly`,
+      "-e", "NODE_EXTRA_CA_CERTS=/run/emseepea/fixture-ca.pem",
+    ] : ["--add-host", "host.docker.internal:host-gateway"];
     const environment = [
       "-e", "EMSEEPEA_DEPLOYMENT_CONFIG_FILE=/run/emseepea/deployment.json",
       "-e", "EMSEEPEA_RUNTIME_SECRET_CANARY=runtime-only",
-      ...(key === "api-backed-server" ? ["-e", `PEA_API_ORIGIN=http://${fixture.address}`] : []),
-      ...(key === "openapi-backed-server" ? ["-e", `PETSTORE_API_ORIGIN=http://${fixture.address}`] : []),
-      ...(key === "soap-backed-server" ? ["-e", `PEA_SOAP_URL=http://${fixture.address}/soap`] : []),
+      ...(key === "api-backed-server" ? ["-e", `PEA_API_ORIGIN=${fixture.origin}`] : []),
+      ...(key === "openapi-backed-server" ? ["-e", `PETSTORE_API_ORIGIN=${fixture.origin}`] : []),
+      ...(key === "soap-backed-server" ? ["-e", `PEA_SOAP_URL=${fixture.origin}/soap`] : []),
       ...(key === "mongodb-backed-server" ? ["-e", "MONGODB_URL=mongodb://database:27017"] : []),
       ...(["database-schema-server", "multi-instance-postgres-server"].includes(key)
         ? ["-e", "DATABASE_URL=postgres://emseepea:emseepea@database:5432/emseepea"] : []),
     ];
     await run("docker", [
       "run", "--detach", "--name", container, "--platform", target.platform, "--network", network,
-      "--add-host", "host.docker.internal:host-gateway",
+      ...fixtureArguments,
       "--read-only", "--tmpfs", "/tmp:rw,noexec,nosuid,nodev,size=16m",
       "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
       "--publish", `127.0.0.1::${containerPort}`,
@@ -284,7 +301,19 @@ async function readRpcBody(response) {
 
 async function startFixture() {
   let requests = 0;
-  const server = createServer(async (request, response) => {
+  const secure = key === "api-backed-server" || key === "openapi-backed-server";
+  let caPath;
+  let tls;
+  if (secure) {
+    fixtureDirectory = await mkdtemp(path.join(tmpdir(), "emseepea-container-fixture-"));
+    const keyPath = path.join(fixtureDirectory, "fixture-key.pem");
+    caPath = path.join(fixtureDirectory, "fixture-cert.pem");
+    await run("openssl", ["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-sha256", "-days", "1",
+      "-subj", "/CN=fixture.example", "-addext", "subjectAltName=DNS:fixture.example",
+      "-addext", "basicConstraints=critical,CA:TRUE", "-keyout", keyPath, "-out", caPath], fixtureDirectory);
+    tls = { key: await readFile(keyPath), cert: await readFile(caPath) };
+  }
+  const handler = async (request, response) => {
     requests += 1;
     if (request.url?.startsWith("/v1/taxa")) {
       response.setHeader("content-type", "application/json");
@@ -300,12 +329,14 @@ async function startFixture() {
       response.setHeader("content-type", "text/xml; charset=utf-8");
       response.end('<?xml version="1.0"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:pea="urn:emseepea:pea-service"><soap:Body><pea:GetPeaResponse><pea:name>Sugar Ann</pea:name><pea:peaType>snap</pea:peaType><pea:daysToMaturity>56</pea:daysToMaturity><pea:trait>early</pea:trait></pea:GetPeaResponse></soap:Body></soap:Envelope>');
     } else response.writeHead(404).end();
-  });
+  };
+  const server = secure ? createHttpsServer(tls, handler) : createServer(handler);
   await new Promise((resolve, reject) => { server.once("error", reject); server.listen(0, "0.0.0.0", resolve); });
   const address = server.address();
   assert.ok(address && typeof address !== "string");
   return {
-    address: `host.docker.internal:${address.port}`,
+    origin: `${secure ? "https://fixture.example" : "http://host.docker.internal"}:${address.port}`,
+    caPath,
     get requests() { return requests; },
     close: () => new Promise((resolve) => { server.closeAllConnections(); server.close(resolve); }),
   };

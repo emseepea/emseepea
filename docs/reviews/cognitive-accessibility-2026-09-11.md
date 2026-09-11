@@ -211,7 +211,7 @@ The documents distinguish the deprecated client-visible channel from
 server-operator observability and state its limits and exclusions directly.
 
 - `README.md`
-  SHA-256: `db56e6092f8bb22cfc321a528afdab35889e17ef1d3ab6362dc3e50c7168eae9`
+  SHA-256: `70a5957cdaf8361727d963c5536b25be28131abe53404ddf1cb7f4f9a338fc40`
 - `packages/framework/README.md`
   SHA-256: `7eaa4dd3f06dcd5f7c71b4ec1b7357f5df68764a37278e679a6caaf3afef3420`
 - `docs/protocol-coverage.md`
@@ -219,13 +219,13 @@ server-operator observability and state its limits and exclusions directly.
 - `docs/decisions/0075-opt-in-bounded-request-scoped-mcp-logging.proposed.md`
   SHA-256: `664cdcaadea378efde9f54625d230d57ce72fa00f89439e02e1a03b6db9ca63c`
 - `docs/decisions/README.md`
-  SHA-256: `e2e19dbdca209a735fc12c63c6461b4e42f190ff7ab86759c39b2ca7bc09e168`
+  SHA-256: `5b51c9e7cfcbce93509191e6659745722115eb4b38c679794150134e8a983872`
 - `.changeset/bounded-request-logs.md`
   SHA-256: `b32833b74ced1d26444592413f4bb0de71a862c55420c1005d68c4072cd6a240`
 - `website/src/content/docs/getting-started.md`
-  SHA-256: `3e1091de42150a6307c5ff7ccf41fc5696fc1c562cc95c7f70afabda75538576`
+  SHA-256: `e327737aa77024b8ffb3fb9171134813b9c381e09d0a1f9a1ef8cca13003678e`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `1d32c4cac89e017963285f4586cc04cace1cfffc4837aa1a5f2e46b19fc85a13`
+  SHA-256: `7d4f797c91b28d15344fb6617561b630df2cdf914140d511994ed537f3cf873c`
 
 ## Problem Backlog Parser Contract
 
@@ -270,17 +270,17 @@ checks remain responsible for rendered output.
 - `.changeset/safe-container-examples.md`
   SHA-256: `991770b3e0a9110a312cb1fa57249ce9c5393e4c9daad99d89895493663d4fdb`
 - `README.md`
-  SHA-256: `71af4ee467a68f9c841e88759e26546d41c598413fc58219a35decd2bc01923f`
+  SHA-256: `70a5957cdaf8361727d963c5536b25be28131abe53404ddf1cb7f4f9a338fc40`
 - `docs/decisions/0076-npm-scripts-as-the-user-facing-command-contract.proposed.md`
   SHA-256: `91c7c49c7335bb7478d3f0e4013ea0c1039405ff8ee45418b9a8c9374389fea0`
 - `docs/decisions/0077-digest-pinned-official-node-builder-and-distroless-runtime.proposed.md`
-  SHA-256: `bfc8a48d9350cb7f1b34fd4ebc1f7eded8d0df597e9e56147c6f1ace12ed38a6`
+  SHA-256: `c6c62f76e9bb86f8ced225fd58625b31dace27af158a96695ee4138c73cb6bf0`
 - `docs/decisions/0078-example-owned-production-containers-behind-trusted-proxies.proposed.md`
-  SHA-256: `84cf1124067e6e2799a481d57a82c509db5b3298bb1d038f6f4dbd740ebcbfdf`
+  SHA-256: `24b6c56741bff3b6d631afb788b12c3cc0f9ddd6a46519940a66a57a16b43795`
 - `docs/decisions/README.md`
-  SHA-256: `5c4d00ffc02165f270185330118f656cc7602bdff7565767be87fa155f9a3d60`
+  SHA-256: `5b51c9e7cfcbce93509191e6659745722115eb4b38c679794150134e8a983872`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `fa3081e84a2ddc749879396e02de6c853c5620559031e63afd8f5afe1445a5bb`
+  SHA-256: `7d4f797c91b28d15344fb6617561b630df2cdf914140d511994ed537f3cf873c`
 - `docs/jtbd/README.md`
   SHA-256: `1aa428e49fed32314f7af253073a2049b6b10bbe07a2418003faa80ae5645903`
 - `docs/jtbd/framework-maintainer/JTBD-102-keep-guidance-accurate.proposed.md`
@@ -312,4 +312,4 @@ checks remain responsible for rendered output.
 - `website/src/content/docs/examples.md`
   SHA-256: `6af9673b7db788370c7ec111b0b660b6b5c0a7d1fe89d2928b9bbc61d3e3ccd4`
 - `website/src/content/docs/getting-started.md`
-  SHA-256: `c29972f8aecbf584d913dd42b68fd33fc622bd7ae3a8a19b534ff239cfeaafcb`
+  SHA-256: `e327737aa77024b8ffb3fb9171134813b9c381e09d0a1f9a1ef8cca13003678e`
