@@ -8,8 +8,9 @@ test("push and watch binds both pipelines to the pushed commit", async () => {
   const calls = [];
   let qualityPolls = 0;
   let releasePolls = 0;
-  const run = async (command, args) => {
+  const run = async (command, args, options) => {
     calls.push([command, ...args]);
+    if (command === process.execPath) assert.equal(options.env.GITHUB_BASE_REF, "main");
     const joined = args.join(" ");
     if (joined === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
     if (joined === "rev-parse HEAD") return sha;
@@ -44,8 +45,41 @@ test("push and watch binds both pipelines to the pushed commit", async () => {
   assert.deepEqual(calls.filter(([command, subcommand]) => command === "git" && subcommand === "push"), [
     ["git", "push", "origin", `${sha}:refs/heads/main`],
   ]);
+  assert.ok(calls.findIndex(([command, operation]) => command === "git" && operation === "fetch")
+    < calls.findIndex(([command]) => command === process.execPath));
+  assert.ok(calls.findIndex(([command]) => command === process.execPath)
+    < calls.findIndex(([command, operation]) => command === "git" && operation === "push"));
   assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), false);
   assert.equal(calls.filter(([command, first, second]) => command === "gh" && first === "run" && second === "view").length, 4);
+});
+
+test("push and watch rejects missing publication review evidence before pushing", async () => {
+  const sha = "a".repeat(40);
+  const calls = [];
+  const run = async (command, args) => {
+    calls.push([command, ...args]);
+    if (args.join(" ") === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
+    if (args.join(" ") === "rev-parse HEAD") return sha;
+    if (command === process.execPath) throw new Error("publication review evidence missing");
+    return "";
+  };
+
+  await assert.rejects(() => pushAndWatch({ run }), /publication review evidence missing/);
+  assert.equal(calls.some(([command, operation]) => command === "git" && operation === "push"), false);
+});
+
+test("push and watch rejects uncommitted review evidence before validation", async () => {
+  const calls = [];
+  const run = async (command, args) => {
+    calls.push([command, ...args]);
+    if (args.join(" ") === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
+    if (args[0] === "status") return "?? docs/reviews/uncommitted.md";
+    return "";
+  };
+
+  await assert.rejects(() => pushAndWatch({ run }), /clean checkout/);
+  assert.equal(calls.some(([command]) => command === process.execPath), false);
+  assert.equal(calls.some(([command, operation]) => command === "git" && operation === "push"), false);
 });
 
 test("push and watch rejects the wrong remote revision", async () => {
@@ -68,7 +102,9 @@ test("push and watch rejects invalid identity before pushing", async () => {
     const calls = [];
     const run = async (command, args) => {
       calls.push([command, ...args]);
-      return args[0] === "remote" ? origin : sha;
+      if (args[0] === "remote") return origin;
+      if (args[0] === "status") return "";
+      return sha;
     };
     await assert.rejects(() => pushAndWatch({ run }), message);
     assert.equal(calls.some(([command, operation]) => command === "git" && operation === "push"), false);

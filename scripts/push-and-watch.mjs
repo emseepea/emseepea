@@ -9,8 +9,8 @@ const exec = promisify(execFile);
 const repository = "emseepea/emseepea";
 const pollIntervalMs = 30_000;
 
-async function execute(command, args, { timeoutMs } = {}) {
-  const { stdout } = await exec(command, args, { encoding: "utf8", timeout: timeoutMs });
+async function execute(command, args, { timeoutMs, env } = {}) {
+  const { stdout } = await exec(command, args, { encoding: "utf8", timeout: timeoutMs, env });
   return stdout.trim();
 }
 
@@ -23,9 +23,18 @@ export async function pushAndWatch({
     await run("git", ["remote", "get-url", "origin"]),
     /^(?:https:\/\/github\.com\/|git@github\.com:)emseepea\/emseepea(?:\.git)?$/,
   );
+  assert.equal(
+    await run("git", ["status", "--porcelain=v1", "--untracked-files=all"]),
+    "",
+    "push:watch requires a clean checkout",
+  );
   const sha = await run("git", ["rev-parse", "HEAD"]);
   assert.match(sha, /^[a-f0-9]{40}$/);
 
+  await run("git", ["fetch", "origin", "main"]);
+  await run(process.execPath, ["--test", "tests/docs/published-content-review.test.mjs"], {
+    env: { ...process.env, GITHUB_BASE_REF: "main" },
+  });
   await run("git", ["push", "origin", `${sha}:refs/heads/main`]);
   const remote = await run("git", ["ls-remote", "origin", "refs/heads/main"]);
   assert.equal(remote.split("\t")[0], sha, "origin/main does not match the pushed commit");
