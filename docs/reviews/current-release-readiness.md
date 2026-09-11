@@ -135,8 +135,9 @@ link to the guide.
 
 ## Review Status
 
-- Result: PASS for pre-publication readiness at implementation commit
-  `dc77c1cd51832fed9439d09bf554f587e04b1a1b` via
+- Result: PASS
+- Pre-publication evidence: implementation commit
+  `dc77c1cd51832fed9439d09bf554f587e04b1a1b` passed
   [Quality run 34592518259](https://github.com/emseepea/emseepea/actions/runs/34592518259).
 - Release verification: NOT COMPLETE until the exact registry, provenance,
   standalone, container, website, and remaining publication gates pass.

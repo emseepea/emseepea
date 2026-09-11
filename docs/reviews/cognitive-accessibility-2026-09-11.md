@@ -280,7 +280,7 @@ checks remain responsible for rendered output.
 - `docs/decisions/README.md`
   SHA-256: `5b51c9e7cfcbce93509191e6659745722115eb4b38c679794150134e8a983872`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `f9042853d7e1b90038c964993b2a7967f0f4fafce6831985e27be841405974cd`
+  SHA-256: `14f55626c2954981d22c7f8be0729c75a6472bf6d0e6551c4fb2b459d19db002`
 - `docs/jtbd/README.md`
   SHA-256: `1aa428e49fed32314f7af253073a2049b6b10bbe07a2418003faa80ae5645903`
 - `docs/jtbd/framework-maintainer/JTBD-102-keep-guidance-accurate.proposed.md`
