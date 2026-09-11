@@ -7,7 +7,9 @@ import { fileURLToPath } from "node:url";
 const concurrency = 16;
 const durationMs = 1_000;
 const runs = 3;
-const cpuSamples = 400;
+const cpuMeasuredRequests = 400;
+const cpuBatchCount = 40;
+const cpuRequestsPerBatch = 10;
 const allocationSamples = 40;
 const modernRequestBody = JSON.stringify({
   jsonrpc: "2.0",
@@ -74,7 +76,10 @@ try {
       concurrency,
       durationMs,
       runs,
-      cpuSamples,
+      cpuMeasuredRequests,
+      cpuBatchCount,
+      cpuRequestsPerBatch,
+      cpuP95: "batch-amortized per-request samples",
       allocationSamples,
     },
     measurements,
@@ -118,10 +123,10 @@ async function measureProfile(profile) {
   }
   const cpuMs = [];
   const allocations = [];
-  for (let index = 0; index < cpuSamples; index += 1) {
+  for (let index = 0; index < cpuBatchCount; index += 1) {
     await ask("cpu-start");
-    await validRequest(profile);
-    cpuMs.push((await ask("cpu-stop")).value);
+    for (let request = 0; request < cpuRequestsPerBatch; request += 1) await validRequest(profile);
+    cpuMs.push((await ask("cpu-stop")).value / cpuRequestsPerBatch);
   }
   for (let index = 0; index < allocationSamples; index += 1) {
     await ask("allocation-start");
