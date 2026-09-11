@@ -141,7 +141,7 @@ async function verifyRunningImage(image, target, gateway, protectedGateway) {
   await withApp(image, target, wrongPolicy, async ({ proxyUrl }) => {
     assert.equal((await mcpCall(new URL("/mcp", proxyUrl))).status, 403);
   });
-  const validPolicy = await writePolicy(`${target.architecture}-valid`, policy(gateway));
+  const validPolicy = await writePolicy(`${target.architecture}-valid`, policy(fixture.caPath ? protectedGateway : gateway));
   await withApp(image, target, validPolicy, async ({ applicationUrl, proxyUrl, proxy }) => {
     await waitFor(new URL("/healthz", proxyUrl), 200);
     await waitFor(new URL("/readyz", proxyUrl), 200);
@@ -239,7 +239,8 @@ async function withApp(image, target, configPath, check) {
         ? ["-e", "DATABASE_URL=postgres://emseepea:emseepea@database:5432/emseepea"] : []),
     ];
     await run("docker", [
-      "run", "--detach", "--name", container, "--platform", target.platform, "--network", network,
+      "run", "--detach", "--name", container, "--platform", target.platform,
+      ...(fixture.caPath ? [] : ["--network", network]),
       ...fixtureArguments,
       "--read-only", "--tmpfs", "/tmp:rw,noexec,nosuid,nodev,size=16m",
       "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
@@ -247,6 +248,7 @@ async function withApp(image, target, configPath, check) {
       "--mount", `type=bind,source=${configPath},target=/run/emseepea/deployment.json,readonly`,
       ...environment, image,
     ], project);
+    if (fixture.caPath) await run("docker", ["network", "connect", network, container], project);
     const [running] = JSON.parse(await run("docker", ["inspect", container], project));
     assert.equal(running.HostConfig.ReadonlyRootfs, true);
     assert.deepEqual(running.HostConfig.CapDrop, ["ALL"]);
