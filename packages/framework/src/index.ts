@@ -1195,6 +1195,44 @@ function createCheckedTool(
       requestState,
       clientLogging,
     ) {
+      const runLoggedTool: CheckedToolRunner | undefined = clientLogging
+        ? async (input, context, signal, deadlineMs, reporter) => {
+            const logReporter = clientLogReporter(
+              context,
+              signal,
+              clientLogging.maxEvents,
+              clientLogging.maxEventBytes,
+            );
+            let result: unknown;
+            try {
+              result = await execute(input, {
+                ...(allowsInputRequired
+                  ? directHandlerContext(
+                      access,
+                      context,
+                      signal,
+                      deadlineMs,
+                      requestState,
+                      logReporter.report,
+                    )
+                  : {
+                      signal,
+                      deadlineMs,
+                      principal: access === "public"
+                        ? undefined
+                        : principalFrom(context.http?.authInfo),
+                      reportLog: logReporter.report,
+                    }),
+                ...(reporter ? { reportProgress: reporter.report } : {}),
+              });
+            } finally {
+              await Promise.all([reporter?.finish(), logReporter.finish()]);
+            }
+            reporter?.throwIfFailed();
+            logReporter.throwIfFailed();
+            return result;
+          }
+        : undefined;
       server.registerTool(
         name,
         metadata,
@@ -1219,39 +1257,8 @@ function createCheckedTool(
                     )
                   : undefined;
                 let result: unknown;
-                if (clientLogging) {
-                  const logReporter = clientLogReporter(
-                    context,
-                    signal,
-                    clientLogging.maxEvents,
-                    clientLogging.maxEventBytes,
-                  );
-                  try {
-                    result = await execute(parsedInput.data, {
-                      ...(allowsInputRequired
-                        ? directHandlerContext(
-                            access,
-                            context,
-                            signal,
-                            deadlineMs,
-                            requestState,
-                            logReporter.report,
-                          )
-                        : {
-                            signal,
-                            deadlineMs,
-                            principal: access === "public"
-                              ? undefined
-                              : principalFrom(context.http?.authInfo),
-                            reportLog: logReporter.report,
-                          }),
-                      ...(reporter ? { reportProgress: reporter.report } : {}),
-                    });
-                  } finally {
-                    await Promise.all([reporter?.finish(), logReporter.finish()]);
-                  }
-                  reporter?.throwIfFailed();
-                  logReporter.throwIfFailed();
+                if (runLoggedTool) {
+                  result = await runLoggedTool(parsedInput.data, context, signal, deadlineMs, reporter);
                 } else {
                   try {
                     result = await execute(parsedInput.data, {
@@ -1305,6 +1312,15 @@ function createCheckedTool(
   };
   return Object.freeze(registration);
 }
+
+type ProgressReporter = ReturnType<typeof progressReporter>;
+type CheckedToolRunner = (
+  input: unknown,
+  context: ServerContext,
+  signal: AbortSignal,
+  deadlineMs: number,
+  reporter: ProgressReporter | undefined,
+) => Promise<unknown>;
 
 function progressReporter(
   context: {
