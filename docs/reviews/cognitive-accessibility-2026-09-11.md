@@ -76,3 +76,39 @@ verification.
   SHA-256: `0391e3c7e5d4712726569d8668cb7bae0330bd4fac5460d244aacd6f6088a13b`
 - `website/src/content/docs/examples.md`
   SHA-256: `f23931ed80101c9e2b373018109a12a57a1cd3955a0329d156e711fa6d00f400`
+
+## Protocol Scope Boundaries
+
+Result: PASS. Independent cognitive-accessibility review covered the exact
+scope correction and protocol-audit guidance. The wording clearly separates
+application-owned resilience patterns from standard MCP work. It uses short
+paragraphs, descriptive headings and links, consistent method names, and no
+visual-only instructions.
+
+- `README.md`
+  SHA-256: `a7e829d6c9db79d1315b24ecd9e381eaeda556c3d10ef9963875fcbe88e60331`
+- `packages/framework/README.md`
+  SHA-256: `da4ae3a90e9863ad64aadd9304f87e3876f7098dfcafcb8bdeee81f533fbc03c`
+- `docs/protocol-coverage.md`
+  SHA-256: `f11f1d10a36e48a6cca3b6449d0e4eb513243615850e080ca7519bee5ceda982`
+
+## Signed Request State
+
+Result: PASS. Independent cognitive-accessibility review covered the exact
+request-state decision, framework guidance, protocol ledger, release note, and
+generated decision index. The wording distinguishes protocol state from
+application-owned retries, replay prevention, and effect safety. Instructions
+are direct, security limits are explicit, and no visual-only guidance remains.
+
+- `README.md`
+  SHA-256: `a7e829d6c9db79d1315b24ecd9e381eaeda556c3d10ef9963875fcbe88e60331`
+- `packages/framework/README.md`
+  SHA-256: `c2178c9362752eec87f5afa46a417cb9ab8f91d068f9181450bccb11cec172f2`
+- `docs/protocol-coverage.md`
+  SHA-256: `d148dd31ef83dbbcae9277ad9d494feab9c5fe0b480c0a3ea71eb2384afbba0f`
+- `docs/decisions/0072-opt-in-integrity-protected-request-state.proposed.md`
+  SHA-256: `68167fdb1c8f70a620f42a654ff0cf1710473f29d22730d3718f1ac5ff78dd6e`
+- `docs/decisions/README.md`
+  SHA-256: `0bcce41b687ff19f8ce334228cebb62dde7a3f4aab39d394451a074579c87b51`
+- `.changeset/signed-request-state.md`
+  SHA-256: `f0b2ebe001c40c24853f1504e064bb2e83a69619e85ea8fc2959e0b686acabdc`

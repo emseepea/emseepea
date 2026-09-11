@@ -7,10 +7,12 @@ import {
   defineResourceTemplate,
   defineStreamingTool,
   defineTool,
+  inputRequired,
   notifyResourceUpdated,
   renderElicitationForm,
   serveEmseepea,
 } from "@emseepea/server";
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { defineFeedbackSubmission } from "@emseepea/feedback";
 import { z } from "zod";
 
@@ -34,6 +36,21 @@ const tool = defineTool({
   inputSchema: value,
   outputSchema: value,
   handler: ({ value }) => ({ text: value, data: { value } }),
+});
+const statefulTool = defineTool({
+  name: "smoke-stateful-tool",
+  access: "public",
+  description: "Smoke-test signed request state.",
+  inputSchema: z.object({}),
+  outputSchema: value,
+  async handler(_input, context) {
+    const state = value.safeParse(context.requestState);
+    if (state.success) return { data: state.data };
+    if (!context.mintRequestState) throw new Error("request state is not configured");
+    return inputRequired({
+      requestState: await context.mintRequestState({ value: "signed state works" }),
+    });
+  },
 });
 const feedback = defineFeedbackSubmission({
   access: "public",
@@ -100,11 +117,16 @@ const prompt = definePrompt({
 const app = createEmseepea({
   name: "installed-package-smoke",
   version: "0.0.0",
-  tools: [tool, mapped, streaming],
+  tools: [tool, statefulTool, mapped, streaming],
   additionalTools: [feedback],
   resources: [resource, resourceTemplate],
   prompts: [prompt],
   resourceSubscriptions: { maxLifetimeMs: 5_000 },
+  requestState: {
+    key: "0123456789abcdef0123456789abcdef",
+    ttlSeconds: 60,
+    maxBytes: 4 * 1024,
+  },
 });
 const running = await serveEmseepea(app, { port: 0 });
 const subscriptionController = new AbortController();
@@ -138,6 +160,38 @@ const request = async (method, params = {}) => {
   return response.json();
 };
 try {
+  const firstStateRound = await request("tools/call", {
+    name: "smoke-stateful-tool",
+    arguments: {},
+  });
+  const rawStateResult = await request("tools/call", {
+    name: "smoke-stateful-tool",
+    arguments: {},
+    requestState: firstStateRound.result.requestState,
+  });
+  if (rawStateResult.result.structuredContent?.value !== "signed state works") {
+    throw new Error("installed package did not resume raw-HTTP request state");
+  }
+  const stateClient = new Client(
+    { name: "installed-state-client", version: "0.0.0" },
+    {
+      capabilities: {},
+      inputRequired: { maxRounds: 2 },
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
+  );
+  try {
+    await stateClient.connect(new StreamableHTTPClientTransport(running.url));
+    const stateResult = await stateClient.callTool({
+      name: "smoke-stateful-tool",
+      arguments: {},
+    });
+    if (stateResult.structuredContent?.value !== "signed state works") {
+      throw new Error("installed package did not resume official-client request state");
+    }
+  } finally {
+    await stateClient.close();
+  }
   const feedbackResult = await request("tools/call", {
     name: "submit-feedback",
     arguments: {

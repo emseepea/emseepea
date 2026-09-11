@@ -136,17 +136,25 @@ Discovery remains public by default, even when invoking a capability requires
 permission. An application may explicitly protect discovery and show each
 principal only the capabilities allowed by their permissions.
 
-## Not Included Yet
+## Scope Boundaries
 
-- grouped changes, automatic write retries, or a universal promise that a
-  repeated write changes an external service only once
+These are deliberate non-goals, not an implementation backlog:
+
+- generic backend or provider retries, circuit breakers, or grouped effect
+  orchestration; applications use custom code or an appropriate library with
+  settings chosen for their own provider and workload
+- a framework-supplied promise that repeated writes change an external service
+  only once
 - querying application records or expanding templates through `resources/list`
-  or `resources/templates/list`
+  or `resources/templates/list`; applications provide purpose-built search or
+  list tools, then clients use `resources/read` for a selected URI
 - changing catalogues while a server runs
-- saved sessions, replay, reconnect recovery, or list-change subscriptions
-- shared operation across computers without a reachable PostgreSQL database
-- a promise that retries change an external service only once
-- full coverage of the active MCP server protocol
+- saved sessions, replay, or reconnect recovery
+- shared operation across computers without an appropriate shared backend
+
+Em See Pea does not yet claim full coverage of the active MCP server protocol.
+Standard protocol gaps remain implementation work and are tracked separately in
+the [protocol coverage ledger](docs/protocol-coverage.md).
 
 Publication does not expand these claims.
 

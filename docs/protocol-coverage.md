@@ -315,9 +315,13 @@ treated as untrusted input.
 Tests cover accepted, declined, and cancelled replies, invalid client
 responses, oversized input-required results, time limits, and disconnections.
 They also prove that every signed-in round checks the caller again and that
-retries use fresh JSON-RPC identifiers. Opaque `requestState` is deliberately
-rejected because the framework does not yet provide the integrity and replay
-controls it would need. See the
+later rounds use fresh JSON-RPC identifiers.
+
+Signed `requestState` is opt-in for direct tools, static resources, resource
+templates, and prompts. Tests cover both protocol-valid result shapes,
+tampering, expiry, wire-size limits, method and capability binding, principal
+binding, key mismatch, and continuation on another process with the same key.
+Signing does not provide encryption, single use, or replay prevention. See the
 [client-input tests](../tests/black-box/input-required.test.mjs).
 
 ### Long-Lived Change Notifications
@@ -401,9 +405,10 @@ tests from clean checkouts with two independent MCP clients.
 
 Work should close one row at a time:
 
-1. add list-change subscriptions only after memory use for slow readers is bounded
-2. compare this page with every active server rule in the pinned specification
-3. rerun every row on this page with two independent clients from clean copies
+1. compare this page with every active server rule in the pinned specification
+2. select the smallest independent missing standard server behaviour
+3. add exact tests for that behaviour without broadening unrelated claims
+4. rerun every row on this page with two independent clients from clean copies
 
 If public MCP sources change, update this page and its tests before changing the
 claim.

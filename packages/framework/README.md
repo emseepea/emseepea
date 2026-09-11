@@ -413,9 +413,52 @@ where the client opens a URL. Em See Pea applies the normal result-size limit,
 time limit, cancellation, safe-error handling, and access policy to every
 round.
 
-This release supports stateless requests only. It rejects opaque
-`requestState`. Mapped tools and progress-reporting tools return through their
-existing checked paths and cannot request more client input.
+Stateful requests are opt-in. Configure one signing key for every process that
+may receive a later round:
+
+```ts
+const state = z.object({ page: z.number().int().nonnegative() });
+const requestStateKey = process.env.MCP_REQUEST_STATE_KEY;
+if (!requestStateKey) throw new Error("MCP_REQUEST_STATE_KEY is required");
+
+const nextPage = defineTool({
+  name: "next-page",
+  access: "public",
+  description: "Continue from signed request state.",
+  inputSchema: z.object({}),
+  outputSchema: state,
+  async handler(_input, context) {
+    const resumed = state.safeParse(context.requestState);
+    if (resumed.success) return { data: resumed.data };
+    if (!context.mintRequestState) throw new Error("Request state is not configured");
+    return inputRequired({
+      requestState: await context.mintRequestState({ page: 1 }),
+    });
+  },
+});
+
+const app = createEmseepea({
+  name: "stateful-server",
+  version: "1.0.0",
+  tools: [nextPage],
+  requestState: {
+    key: requestStateKey, // At least 32 UTF-8 bytes.
+    ttlSeconds: 600,
+    maxBytes: 4 * 1024,
+  },
+});
+```
+
+The installed MCP SDK signs and expires the state. Em See Pea also binds it to
+the method and capability, and to the authenticated principal for protected
+capabilities. Verification happens before the handler runs. The handler sees
+decoded `unknown` data and must validate it before use.
+
+Signed state is readable, not encrypted. Do not put secrets, credentials,
+private backend data, or effect authority in it. A valid state value can be
+replayed until it expires, so applications still own effect idempotency where
+their use case requires it. Mapped tools and progress-reporting tools remain on
+their existing checked paths and cannot request more client input.
 
 ## Mapped Backend Tool
 
@@ -756,8 +799,10 @@ With public discovery, return suggestions that are safe to expose in that
 catalogue. With protected discovery, the framework authenticates before the
 completion callback runs.
 
-Listing every matching address and catalogue pages without the bounds above
-are not included yet.
+Em See Pea does not enumerate every concrete address that could match a
+resource template or permit unbounded catalogue pages. Applications provide a
+purpose-built search or list tool when clients need concrete records, then the
+client uses `resources/read` for the selected URI.
 
 ## Tool That Requires Sign-In
 

@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 70 decisions: 36 current and 34 historical.
+This project has 71 decisions: 37 current and 34 historical.
 
 ## Quick Index
 
@@ -47,6 +47,7 @@ This project has 70 decisions: 36 current and 34 historical.
 - [ADR-0067: Capability-Local Static Discovery Suppression](0067-capability-local-static-discovery-suppression.proposed.md): Proposed; human review confirmed.
 - [ADR-0068: Protected POST Progress Behind a Trusted Proxy](0068-protected-post-progress-behind-a-trusted-proxy.proposed.md): Proposed; human review confirmed.
 - [ADR-0071: Separate OpenAPI-Backed Example and Initializer](0071-separate-openapi-backed-example-and-initializer.proposed.md): Proposed; human review confirmed.
+- [ADR-0072: Opt-In Integrity-Protected Request State](0072-opt-in-integrity-protected-request-state.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -1559,3 +1560,25 @@ Chosen option: **"Separate OpenAPI-backed example and initializer"**, because th
 - Both examples and generated projects independently install, lint, build, run ordinary tests, and pass their minimum semantic qualification.
 - The new initializer passes accessibility, licence, lockfile vulnerability, SBOM, packed-project, provenance, registry, and exact-release checks.
 - The canonical public-package list and template comparison documentation include the new initializer.
+
+### [ADR-0072: Opt-In Integrity-Protected Request State](0072-opt-in-integrity-protected-request-state.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0072 Decision
+
+Chosen option: **"Opt-in signed request state using the MCP SDK"**.
+
+#### ADR-0072 Checks
+
+- With no request-state setting, current stateless behavior and public types do not change.
+- Configured direct tools, static resources, resource templates, and prompts can return and resume both protocol-valid request-state shapes.
+- The implementation uses the installed MCP SDK codec rather than custom cryptography.
+- Keys shorter than 32 bytes and invalid lifetimes or size limits fail at startup.
+- Tampered, expired, oversized, wrong-method, wrong-capability, wrong-principal, and wrong-key state fails before the handler runs with no sensitive detail.
+- Protected handlers authenticate and authorize every round.
+- Handlers receive verified decoded state and examples validate its application schema before use.
+- Tests cover restart and multi-process use with the same configured key.
+- Official-client and raw-HTTP tests pass from a packed clean install.
+- Documentation states that signing is not encryption or replay prevention and that retry, circuit-breaker, and effect-idempotency behavior is application owned.

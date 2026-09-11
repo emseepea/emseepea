@@ -17,6 +17,7 @@ import {
   checkResourceAllowed,
   completable,
   createMcpHandler,
+  createRequestStateCodec,
   getOAuthProtectedResourceMetadataUrl,
   inputRequired as sdkInputRequired,
   acceptedContent as sdkAcceptedContent,
@@ -51,6 +52,7 @@ import {
   type ServerOptions,
   type ServerEvent,
   type ServerEventBus,
+  type ServerContext,
   type ToolAnnotations,
   type Tool,
 } from "@modelcontextprotocol/server";
@@ -88,13 +90,17 @@ export interface InputRequests {
   readonly [key: string]: ClientInputRequest;
 }
 
-export type InputRequiredResult = SdkInputRequiredResult & {
-  readonly inputRequests: InputRequests;
-  readonly requestState?: never;
-};
+declare const REQUEST_STATE: unique symbol;
+export type RequestState = string & { readonly [REQUEST_STATE]: true };
+
+type InputRequiredSpec =
+  | { readonly inputRequests: InputRequests; readonly requestState?: RequestState }
+  | { readonly inputRequests?: never; readonly requestState: RequestState };
+
+export type InputRequiredResult = SdkInputRequiredResult & InputRequiredSpec;
 
 interface InputRequiredBuilder {
-  (spec: { readonly inputRequests: InputRequests }): InputRequiredResult;
+  (spec: InputRequiredSpec): InputRequiredResult;
   elicit(
     ...args: Parameters<typeof sdkInputRequired.elicit>
   ): Extract<InputRequest, { method: "elicitation/create" }>;
@@ -104,8 +110,8 @@ interface InputRequiredBuilder {
 }
 
 export const inputRequired = Object.assign(
-  (spec: { readonly inputRequests: InputRequests }): InputRequiredResult =>
-    sdkInputRequired({ inputRequests: spec.inputRequests }) as InputRequiredResult,
+  (spec: InputRequiredSpec): InputRequiredResult =>
+    sdkInputRequired(spec) as InputRequiredResult,
   {
     elicit: sdkInputRequired.elicit,
     elicitUrl: sdkInputRequired.elicitUrl,
@@ -163,8 +169,51 @@ interface RequestOperation {
   readonly signal: AbortSignal;
   readonly principal?: Principal;
   readonly filterCatalogues: boolean;
+  readonly capability?: string;
 }
 const requestOperations = new AsyncLocalStorage<RequestOperation>();
+interface RequestStateRuntime {
+  readonly mint: (payload: unknown, context: ServerContext) => Promise<RequestState>;
+  readonly verify: (state: string, context: ServerContext) => Promise<unknown>;
+}
+
+function createRequestStateRuntime(options: RequestStateOptions): RequestStateRuntime {
+  if (typeof options.key !== "string" && !(options.key instanceof Uint8Array)) {
+    throw new TypeError("requestState.key must be a string or Uint8Array");
+  }
+  const ttlSeconds = positiveInteger("requestState.ttlSeconds", options.ttlSeconds);
+  const maxBytes = positiveInteger("requestState.maxBytes", options.maxBytes ?? 4 * 1024);
+  const codec = createRequestStateCodec({
+    key: typeof options.key === "string" ? options.key : Uint8Array.from(options.key),
+    ttlSeconds,
+    bind(context) {
+      const operation = requestOperations.getStore();
+      if (!operation?.capability) throw new Error("request state has no capability binding");
+      const principal = operation.principal;
+      return JSON.stringify([
+        context.mcpReq.method,
+        operation.capability,
+        principal
+          ? [principal.clientId, [...principal.permissions].sort(), principal.resource ?? null]
+          : null,
+      ]);
+    },
+  });
+  const assertWireSize = (state: string) => {
+    if (Buffer.byteLength(state, "utf8") > maxBytes) throw new Error("request state is oversized");
+  };
+  return Object.freeze({
+    async mint(payload: unknown, context: ServerContext) {
+      const state = await codec.mint(payload, context);
+      assertWireSize(state);
+      return state as RequestState;
+    },
+    async verify(state: string, context: ServerContext) {
+      assertWireSize(state);
+      return codec.verify(state, context);
+    },
+  });
+}
 
 export interface Principal {
   readonly clientId: string;
@@ -183,6 +232,10 @@ export interface ToolContext<Access extends ToolAccess = ToolAccess> {
   readonly principal: Access extends "public" ? undefined : Principal;
   /** Client-supplied responses from the current multi-round-trip retry. */
   readonly inputResponses?: Readonly<Record<string, unknown>>;
+  /** Verified decoded state from the current request round. */
+  readonly requestState?: unknown;
+  /** Signs state for a later request round when request-state support is configured. */
+  readonly mintRequestState?: (payload: unknown) => Promise<RequestState>;
 }
 export interface ProgressUpdate {
   readonly progress: number;
@@ -211,6 +264,10 @@ export interface ClientInputContext<Access extends CapabilityAccess = Capability
   readonly principal: Access extends "public" ? undefined : Principal;
   /** Client-supplied responses from the current multi-round-trip retry. */
   readonly inputResponses?: Readonly<Record<string, unknown>>;
+  /** Verified decoded state from the current request round. */
+  readonly requestState?: unknown;
+  /** Signs state for a later request round when request-state support is configured. */
+  readonly mintRequestState?: (payload: unknown) => Promise<RequestState>;
 }
 export interface CompletionContext<Access extends CapabilityAccess = CapabilityAccess>
   extends OperationContext {
@@ -329,6 +386,7 @@ export interface EmseepeaTool {
     maxApplicationResultBytes: number,
     maxProgressEvents: number,
     maxProgressEventBytes: number,
+    requestState?: RequestStateRuntime,
   ) => void;
 }
 interface ResourceDefinitionBase {
@@ -396,7 +454,12 @@ export interface EmseepeaResource {
   };
   readonly [RESOURCE_ACCESS]: "public" | ProtectedCapabilityAccess;
   readonly [HAS_COMPLETION]: boolean;
-  readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
+  readonly [REGISTER]: (
+    server: McpServer,
+    timeoutMs: number,
+    maxApplicationResultBytes: number,
+    requestState?: RequestStateRuntime,
+  ) => void;
 }
 type NonStringPromptArgumentKeys<Args extends z.ZodObject> = {
   [Key in keyof z.input<Args>]-?: Exclude<z.input<Args>[Key], undefined> extends string
@@ -431,7 +494,12 @@ export interface EmseepeaPrompt {
   readonly [PROMPT_ACCESS]: "public" | ProtectedCapabilityAccess;
   readonly [HAS_COMPLETION]: boolean;
   readonly [PROMPT_LISTING]: Readonly<Record<string, unknown>>;
-  readonly [REGISTER]: (server: McpServer, timeoutMs: number, maxApplicationResultBytes: number) => void;
+  readonly [REGISTER]: (
+    server: McpServer,
+    timeoutMs: number,
+    maxApplicationResultBytes: number,
+    requestState?: RequestStateRuntime,
+  ) => void;
 }
 export type EmseepeaCapability = EmseepeaTool | EmseepeaResource | EmseepeaPrompt;
 export type CapabilityModuleFactory<Context = undefined> = (
@@ -476,9 +544,15 @@ export interface EmseepeaOptions {
   readonly maxProgressEvents?: number;
   readonly maxProgressEventBytes?: number;
   readonly resourceSubscriptions?: ResourceSubscriptionOptions;
+  readonly requestState?: RequestStateOptions;
   readonly operationTimeoutMs?: number;
   readonly deployment?: DeploymentProfile;
   readonly authentication?: AuthenticationOptions;
+}
+export interface RequestStateOptions {
+  readonly key: Uint8Array | string;
+  readonly ttlSeconds: number;
+  readonly maxBytes?: number;
 }
 export interface ResourceSubscriptionOptions {
   readonly maxActive?: number;
@@ -655,7 +729,7 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
       value: listing,
     }),
     [HAS_COMPLETION]: false,
-    [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
+    [REGISTER](server, timeoutMs, maxApplicationResultBytes, requestState) {
       server.registerResource(
         name,
         uri,
@@ -665,15 +739,16 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
               signal.throwIfAborted();
-              const result = await handler({
+              const result = await handler(directHandlerContext(
+                access,
+                context,
                 signal,
                 deadlineMs,
-                principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
-                inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
-              } as ClientInputContext<"public"> & ClientInputContext<"protected">);
+                requestState,
+              ));
               signal.throwIfAborted();
               if (isInputRequiredResult(result)) {
-                assertStatelessInputRequired(result);
+                await assertInputRequired(result, requestState, context);
                 assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
                 return result as InputRequiredResult;
               }
@@ -745,7 +820,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
       value: listing,
     }),
     [HAS_COMPLETION]: completions.size > 0,
-    [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
+    [REGISTER](server, timeoutMs, maxApplicationResultBytes, requestState) {
       const registeredTemplate = completions.size === 0
         ? template
         : new ResourceTemplate(uriTemplate, {
@@ -772,16 +847,11 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
               signal.throwIfAborted();
               const result = await handler(
                 { uri: requestedUri.href, variables },
-                {
-                  signal,
-                  deadlineMs,
-                  principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
-                  inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
-                } as ClientInputContext<"public"> & ClientInputContext<"protected">,
+                directHandlerContext(access, context, signal, deadlineMs, requestState),
               );
               signal.throwIfAborted();
               if (isInputRequiredResult(result)) {
-                assertStatelessInputRequired(result);
+                await assertInputRequired(result, requestState, context);
                 assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
                 return result as InputRequiredResult;
               }
@@ -832,7 +902,7 @@ export function definePrompt<Args extends z.ZodObject>(
     [PROMPT_ACCESS]: access,
     [HAS_COMPLETION]: completions.size > 0,
     [PROMPT_LISTING]: listing,
-    [REGISTER](server, timeoutMs, maxApplicationResultBytes) {
+    [REGISTER](server, timeoutMs, maxApplicationResultBytes, requestState) {
       server.registerPrompt(
         name,
         {
@@ -852,15 +922,13 @@ export function definePrompt<Args extends z.ZodObject>(
               const parsedArgs = await argsSchema.safeParseAsync(args);
               if (!parsedArgs.success) throw new Error("Prompt received invalid arguments");
               signal.throwIfAborted();
-              const result = await handler(parsedArgs.data, {
-                signal,
-                deadlineMs,
-                principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
-                inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
-              } as ClientInputContext<"public"> & ClientInputContext<"protected">);
+              const result = await handler(
+                parsedArgs.data,
+                directHandlerContext(access, context, signal, deadlineMs, requestState),
+              );
               signal.throwIfAborted();
               if (isInputRequiredResult(result)) {
-                assertStatelessInputRequired(result);
+                await assertInputRequired(result, requestState, context);
                 assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
                 return result as InputRequiredResult;
               }
@@ -1053,7 +1121,7 @@ function createCheckedTool(
     [TOOL_ACCESS]: access,
     [TOOL_STREAMING]: streaming,
     [TOOL_LISTING]: listing,
-    [REGISTER](server, timeoutMs, maxApplicationResultBytes, maxProgressEvents, maxProgressEventBytes) {
+    [REGISTER](server, timeoutMs, maxApplicationResultBytes, maxProgressEvents, maxProgressEventBytes, requestState) {
       server.registerTool(
         name,
         metadata,
@@ -1080,14 +1148,15 @@ function createCheckedTool(
                 let result: unknown;
                 try {
                   result = await execute(parsedInput.data, {
-                    signal,
-                    deadlineMs,
-                    principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
                     ...(allowsInputRequired
-                      ? {
-                          inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
-                        }
-                      : {}),
+                      ? directHandlerContext(access, context, signal, deadlineMs, requestState)
+                      : {
+                          signal,
+                          deadlineMs,
+                          principal: access === "public"
+                            ? undefined
+                            : principalFrom(context.http?.authInfo),
+                        }),
                     ...(reporter ? { reportProgress: reporter.report } : {}),
                   });
                 } finally {
@@ -1096,7 +1165,7 @@ function createCheckedTool(
                 reporter?.throwIfFailed();
                 if (allowsInputRequired && isInputRequiredResult(result)) {
                   signal.throwIfAborted();
-                  assertStatelessInputRequired(result);
+                  await assertInputRequired(result, requestState, context);
                   assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
                   return result as InputRequiredResult;
                 }
@@ -1410,6 +1479,9 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     ? normalizeListPagination(options.listPagination)
     : undefined;
   const maxRequestBytes = positiveInteger("maxRequestBytes", options.maxRequestBytes ?? 1024 * 1024);
+  const requestState = options.requestState
+    ? createRequestStateRuntime(options.requestState)
+    : undefined;
   const maxApplicationResultBytes = positiveInteger(
     "maxApplicationResultBytes",
     options.maxApplicationResultBytes ?? 1024 * 1024,
@@ -1527,6 +1599,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         instructions: options.instructions,
         cacheHints: request?.filterCatalogues ? undefined : cacheHints,
         supportedProtocolVersions: [PROTOCOL_VERSION],
+        ...(requestState ? { requestState: { verify: requestState.verify } } : {}),
       },
     );
     for (const tool of activeTools) {
@@ -1536,10 +1609,15 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         maxApplicationResultBytes,
         maxProgressEvents,
         maxProgressEventBytes,
+        requestState,
       );
     }
-    for (const resource of activeResources) resource[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
-    for (const prompt of activePrompts) prompt[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes);
+    for (const resource of activeResources) {
+      resource[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes, requestState);
+    }
+    for (const prompt of activePrompts) {
+      prompt[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes, requestState);
+    }
     const filteredCatalogues = request?.filterCatalogues
       ? catalogueListings(
           activeDiscoverableTools,
@@ -1760,6 +1838,13 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       await serveResourceSubscription(request, reply, subscriptionTarget.uri);
       return;
     }
+    const capability = capabilityNameForRequest(
+      request.body,
+      toolsByName,
+      resourcesByUri,
+      resourceTemplates,
+      promptsByName,
+    );
     const disconnected = new AbortController();
     const abort = () => disconnected.abort();
     request.raw.once("aborted", abort);
@@ -1773,6 +1858,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
           signal: disconnected.signal,
           principal,
           filterCatalogues: protectsCatalogue,
+          capability,
         },
         () => nodeHandler(request.raw, reply.raw, request.body),
       );
@@ -2882,14 +2968,41 @@ function nonNegativePort(value: number): number {
   return value;
 }
 
-function assertStatelessInputRequired(
+function directHandlerContext(
+  access: "public" | ProtectedCapabilityAccess,
+  context: ServerContext,
+  signal: AbortSignal,
+  deadlineMs: number,
+  requestState: RequestStateRuntime | undefined,
+): ClientInputContext<"public"> & ClientInputContext<"protected"> {
+  return {
+    signal,
+    deadlineMs,
+    principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
+    inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
+    ...(requestState ? {
+      requestState: context.mcpReq.requestState(),
+      mintRequestState: (payload: unknown) => requestState.mint(payload, context),
+    } : {}),
+  } as ClientInputContext<"public"> & ClientInputContext<"protected">;
+}
+
+async function assertInputRequired(
   result: SdkInputRequiredResult,
-): asserts result is InputRequiredResult {
-  if (!result.inputRequests || result.requestState !== undefined) {
-    throw new Error("Client-input requests must be stateless");
+  requestState: RequestStateRuntime | undefined,
+  context: ServerContext,
+): Promise<void> {
+  if (!result.inputRequests && result.requestState === undefined) {
+    throw new Error("Client-input result must include requests or state");
   }
-  if (Object.values(result.inputRequests).some((request) => request.method !== "elicitation/create")) {
+  if (result.inputRequests && Object.values(result.inputRequests).some(
+    (request) => request.method !== "elicitation/create",
+  )) {
     throw new Error("Client-input request kind is not supported");
+  }
+  if (result.requestState !== undefined) {
+    if (!requestState) throw new Error("Client-input request state is not configured");
+    await requestState.verify(result.requestState, context);
   }
 }
 

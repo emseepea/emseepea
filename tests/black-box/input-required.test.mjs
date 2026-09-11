@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { once } from "node:events";
 import { setTimeout as delay } from "node:timers/promises";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   Client,
   StreamableHTTPClientTransport,
@@ -21,6 +24,308 @@ import {
 import { z } from "zod";
 
 const answerSchema = z.object({ answer: z.string().min(1) });
+const stateSchema = z.object({ value: z.string() });
+
+test("signed request state resumes every direct handler", async () => {
+  const calls = { prompt: 0, resource: 0, template: 0, tool: 0 };
+  const resume = async (kind, context, finish) => {
+    calls[kind] += 1;
+    const state = stateSchema.safeParse(context.requestState);
+    if (state.success) return finish(state.data.value);
+    assert.equal(typeof context.mintRequestState, "function");
+    return inputRequired({
+      requestState: await context.mintRequestState({ value: "resumed" }),
+    });
+  };
+  const tool = defineTool({
+    name: "stateful-tool",
+    access: "public",
+    description: "Resume a tool call from signed request state.",
+    inputSchema: z.object({}),
+    outputSchema: z.object({ value: z.string() }),
+    async handler(_input, context) {
+      calls.tool += 1;
+      const state = stateSchema.safeParse(context.requestState);
+      const answer = acceptedContent(context.inputResponses, "person", answerSchema);
+      if (state.success && answer) {
+        return { data: { value: `${state.data.value}:${answer.answer}` } };
+      }
+      assert.equal(typeof context.mintRequestState, "function");
+      return inputRequired({
+        requestState: await context.mintRequestState({ value: "resumed" }),
+        inputRequests: {
+          person: inputRequired.elicit({
+            message: "Who should resume this request?",
+            requestedSchema: answerSchema,
+          }),
+        },
+      });
+    },
+  });
+  const resource = defineResource({
+    name: "stateful-resource",
+    access: "public",
+    uri: "state://static",
+    handler: (context) => resume("resource", context, (value) => ({
+      contents: [{ uri: "state://static", text: value }],
+    })),
+  });
+  const template = defineResourceTemplate({
+    name: "stateful-template",
+    access: "public",
+    uriTemplate: "state://template/{id}",
+    handler: ({ uri }, context) => resume("template", context, (value) => ({
+      contents: [{ uri, text: value }],
+    })),
+  });
+  const prompt = definePrompt({
+    name: "stateful-prompt",
+    access: "public",
+    argsSchema: z.object({}),
+    handler: (_args, context) => resume("prompt", context, (value) => ({
+      messages: [{ role: "user", content: { type: "text", text: value } }],
+    })),
+  });
+  const running = await serveEmseepea(createEmseepea({
+    name: "request-state-test",
+    version: "0.0.0",
+    tools: [tool],
+    resources: [resource, template],
+    prompts: [prompt],
+    requestState: {
+      key: "0123456789abcdef0123456789abcdef",
+      ttlSeconds: 60,
+      maxBytes: 4 * 1024,
+    },
+  }), { port: 0 });
+  const client = new Client(
+    { name: "request-state-client", version: "0.0.0" },
+    {
+      capabilities: { elicitation: { form: {} } },
+      inputRequired: { maxRounds: 2 },
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
+  );
+  client.setRequestHandler("elicitation/create", async () => ({
+    action: "accept",
+    content: { answer: "Ada" },
+  }));
+
+  try {
+    await client.connect(new StreamableHTTPClientTransport(running.url));
+    assert.equal((await client.callTool({ name: "stateful-tool", arguments: {} }))
+      .structuredContent.value, "resumed:Ada");
+    assert.equal((await client.readResource({ uri: "state://static" })).contents[0].text, "resumed");
+    assert.equal((await client.readResource({ uri: "state://template/1" })).contents[0].text, "resumed");
+    assert.equal((await client.getPrompt({ name: "stateful-prompt", arguments: {} }))
+      .messages[0].content.text, "resumed");
+    assert.deepEqual(calls, { prompt: 2, resource: 2, template: 2, tool: 2 });
+  } finally {
+    await client.close();
+    await running.close();
+  }
+});
+
+test("request state rejects tampering, changed capabilities, and changed keys", async () => {
+  const calls = { alpha: 0, beta: 0 };
+  let resourceCalls = 0;
+  const statefulTool = (name) => defineTool({
+    name,
+    access: "public",
+    description: `Resume ${name} from signed state.`,
+    inputSchema: z.object({}),
+    outputSchema: z.object({ value: z.string() }),
+    async handler(_input, context) {
+      calls[name] += 1;
+      const state = stateSchema.safeParse(context.requestState);
+      if (state.success) return { data: state.data };
+      return inputRequired({ requestState: await context.mintRequestState({ value: name }) });
+    },
+  });
+  const tools = [statefulTool("alpha"), statefulTool("beta")];
+  const resource = defineResource({
+    name: "wrong-method-target",
+    access: "public",
+    uri: "state://wrong-method",
+    handler() {
+      resourceCalls += 1;
+      return { contents: [{ uri: "state://wrong-method", text: "unexpected" }] };
+    },
+  });
+  const makeServer = (key) => serveEmseepea(createEmseepea({
+    name: "request-state-security-test",
+    version: "0.0.0",
+    tools,
+    resources: [resource],
+    requestState: { key, ttlSeconds: 60, maxBytes: 4 * 1024 },
+  }), { port: 0 });
+  const first = await makeServer("0123456789abcdef0123456789abcdef");
+  const otherKey = await makeServer("abcdef0123456789abcdef0123456789");
+  let child;
+
+  try {
+    const initial = await rawToolCall(first.url, "alpha");
+    const state = initial.body.result.requestState;
+    assert.equal(typeof state, "string");
+
+    const macStart = state.lastIndexOf(".") + 1;
+    const tampered = `${state.slice(0, macStart)}${state[macStart] === "a" ? "b" : "a"}${state.slice(macStart + 1)}`;
+
+    for (const [url, name, candidate] of [
+      [first.url, "alpha", tampered],
+      [first.url, "alpha", `${state}${"x".repeat(5_000)}`],
+      [first.url, "beta", state],
+      [otherKey.url, "alpha", state],
+    ]) {
+      const rejected = await rawToolCall(url, name, candidate);
+      assert.equal(rejected.body.error.code, -32602);
+      assert.equal(rejected.body.error.message, "Invalid or expired requestState");
+      assert.equal(JSON.stringify(rejected.body).includes("alpha"), false);
+    }
+    const wrongMethod = await rawResourceRead(first.url, "state://wrong-method", state);
+    assert.equal(wrongMethod.body.error.code, -32602);
+    assert.equal(resourceCalls, 0);
+
+    await first.close();
+    child = spawn(process.execPath, [fileURLToPath(new URL(
+      "../fixtures/request-state-server.mjs",
+      import.meta.url,
+    ))], {
+      stdio: ["ignore", "ignore", "inherit", "ipc"],
+    });
+    const [childUrl] = await once(child, "message", { signal: AbortSignal.timeout(5_000) });
+    const resumedAfterRestart = await rawToolCall(new URL(childUrl), "alpha", state);
+    assert.equal(resumedAfterRestart.body.result.structuredContent.value, "alpha");
+    assert.deepEqual(calls, { alpha: 1, beta: 0 });
+  } finally {
+    if (child?.connected) child.send("close");
+    if (child && child.exitCode === null) await once(child, "exit");
+    await Promise.all([first.close(), otherKey.close()]);
+  }
+});
+
+test("expired request state fails before handler re-entry", async () => {
+  let handlerCalls = 0;
+  const tool = defineTool({
+    name: "expiring-state",
+    access: "public",
+    description: "Resume state before its expiry.",
+    inputSchema: z.object({}),
+    outputSchema: z.object({ value: z.string() }),
+    async handler(_input, context) {
+      handlerCalls += 1;
+      return inputRequired({ requestState: await context.mintRequestState({ value: "late" }) });
+    },
+  });
+  const running = await serveEmseepea(createEmseepea({
+    name: "expiring-request-state-test",
+    version: "0.0.0",
+    tools: [tool],
+    requestState: {
+      key: "0123456789abcdef0123456789abcdef",
+      ttlSeconds: 1,
+    },
+  }), { port: 0 });
+
+  try {
+    const initial = await rawToolCall(running.url, "expiring-state");
+    await delay(2_100);
+    const expired = await rawToolCall(running.url, "expiring-state", initial.body.result.requestState);
+    assert.equal(expired.body.error.code, -32602);
+    assert.equal(expired.body.error.message, "Invalid or expired requestState");
+    assert.equal(handlerCalls, 1);
+  } finally {
+    await running.close();
+  }
+});
+
+test("request-state configuration fails closed at startup", () => {
+  const base = { name: "invalid-state-config", version: "0.0.0" };
+  assert.throws(() => createEmseepea({
+    ...base,
+    requestState: { key: "short", ttlSeconds: 60 },
+  }), /at least 32 bytes/);
+  assert.throws(() => createEmseepea({
+    ...base,
+    requestState: { key: "0123456789abcdef0123456789abcdef", ttlSeconds: 0 },
+  }), /positive safe integer/);
+  assert.throws(() => createEmseepea({
+    ...base,
+    requestState: {
+      key: "0123456789abcdef0123456789abcdef",
+      ttlSeconds: 60,
+      maxBytes: 0,
+    },
+  }), /positive safe integer/);
+});
+
+test("protected request state is authorized and bound to its principal every round", async () => {
+  let verifierCalls = 0;
+  let handlerCalls = 0;
+  const tool = defineTool({
+    name: "protected-state",
+    access: "protected",
+    requiredScopes: ["state:use"],
+    description: "Resume protected signed state.",
+    inputSchema: z.object({}),
+    outputSchema: z.object({ value: z.string() }),
+    async handler(_input, context) {
+      handlerCalls += 1;
+      const state = stateSchema.safeParse(context.requestState);
+      if (state.success) return { data: state.data };
+      return inputRequired({
+        requestState: await context.mintRequestState({ value: context.principal.clientId }),
+      });
+    },
+  });
+  const running = await serveEmseepea(createEmseepea({
+    name: "protected-request-state-test",
+    version: "0.0.0",
+    tools: [tool],
+    requestState: {
+      key: "0123456789abcdef0123456789abcdef",
+      ttlSeconds: 60,
+    },
+    authentication: {
+      verifier: {
+        async verifyAccessToken(token) {
+          verifierCalls += 1;
+          return {
+            token,
+            clientId: token,
+            scopes: ["state:use"],
+            expiresAt: Math.floor(Date.now() / 1_000) + 60,
+            resource: new URL("https://api.example/mcp"),
+          };
+        },
+      },
+      metadata: {
+        resourceServerUrl: new URL("https://api.example/mcp"),
+        scopesSupported: ["state:use"],
+        oauthMetadata: {
+          issuer: "https://auth.example",
+          authorization_endpoint: "https://auth.example/authorize",
+          token_endpoint: "https://auth.example/token",
+          response_types_supported: ["code"],
+        },
+      },
+    },
+  }), { port: 0 });
+
+  try {
+    const initial = await rawToolCall(running.url, "protected-state", undefined, "client-a");
+    const state = initial.body.result.requestState;
+    const wrongPrincipal = await rawToolCall(running.url, "protected-state", state, "client-b");
+    assert.equal(wrongPrincipal.body.error.code, -32602);
+    assert.equal(handlerCalls, 1);
+    const resumed = await rawToolCall(running.url, "protected-state", state, "client-a");
+    assert.equal(resumed.body.result.structuredContent.value, "client-a");
+    assert.equal(handlerCalls, 2);
+    assert.equal(verifierCalls, 3);
+  } finally {
+    await running.close();
+  }
+});
 
 test("direct handlers can request client input through every supported method", async () => {
   const calls = { prompt: 0, resource: 0, template: 0, tool: 0 };
@@ -521,4 +826,63 @@ function assertFreshRoundIds(requestIds, method, expectedCount) {
   const ids = requestIds.get(method) ?? [];
   assert.equal(ids.length, expectedCount);
   assert.equal(new Set(ids).size, expectedCount);
+}
+
+async function rawToolCall(url, name, requestState, token) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Accept: "application/json, text/event-stream",
+      "Content-Type": "application/json",
+      "MCP-Protocol-Version": "2026-07-28",
+      "Mcp-Method": "tools/call",
+      "Mcp-Name": name,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: crypto.randomUUID(),
+      method: "tools/call",
+      params: {
+        name,
+        arguments: {},
+        ...(requestState ? { requestState } : {}),
+        _meta: {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientInfo": { name: "raw-state-client", version: "0.0.0" },
+          "io.modelcontextprotocol/clientCapabilities": {},
+        },
+      },
+    }),
+  });
+  return { response, body: await response.json() };
+}
+
+
+async function rawResourceRead(url, uri, requestState) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Accept: "application/json, text/event-stream",
+      "Content-Type": "application/json",
+      "MCP-Protocol-Version": "2026-07-28",
+      "Mcp-Method": "resources/read",
+      "Mcp-Name": uri,
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: crypto.randomUUID(),
+      method: "resources/read",
+      params: {
+        uri,
+        requestState,
+        _meta: {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientInfo": { name: "raw-state-client", version: "0.0.0" },
+          "io.modelcontextprotocol/clientCapabilities": {},
+        },
+      },
+    }),
+  });
+  return { response, body: await response.json() };
 }

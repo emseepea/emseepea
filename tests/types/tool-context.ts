@@ -9,6 +9,7 @@ import {
   inputRequired,
   type CapabilityModuleFactory,
   type MappedToolDefinition,
+  type RequestState,
   type ToolPrincipal,
 } from "../../packages/framework/src/index.js";
 import { z } from "zod";
@@ -362,7 +363,15 @@ defineStreamingTool({
   },
 });
 
-// @ts-expect-error Opaque request state is not supported without an integrity design.
+// @ts-expect-error Raw request state must be minted by a configured direct handler.
 inputRequired({ requestState: "opaque" });
+const signedState = null as unknown as RequestState;
+inputRequired({ requestState: signedState });
+inputRequired({
+  requestState: signedState,
+  inputRequests: {
+    answer: inputRequired.elicit({ message: "Value?", requestedSchema: schema }),
+  },
+});
 // @ts-expect-error Roots are deprecated in MCP 2026-07-28.
 inputRequired.listRoots();
