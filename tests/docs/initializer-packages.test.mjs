@@ -16,6 +16,7 @@ test("the public package list and built initializers are complete", async () => 
   assert.deepEqual(initializerPackages.map(({ name }) => name), [
     "@emseepea/create-tool-server",
     "@emseepea/create-api-backed-server",
+    "@emseepea/create-openapi-backed-server",
     "@emseepea/create-resources-and-prompts-server",
     "@emseepea/create-progress-streaming-server",
     "@emseepea/create-html-ui-server",
@@ -33,6 +34,7 @@ test("the public package list and built initializers are complete", async () => 
     "@emseepea/tailwind",
     "@emseepea/create-tool-server",
     "@emseepea/create-api-backed-server",
+    "@emseepea/create-openapi-backed-server",
     "@emseepea/create-resources-and-prompts-server",
     "@emseepea/create-progress-streaming-server",
     "@emseepea/create-html-ui-server",

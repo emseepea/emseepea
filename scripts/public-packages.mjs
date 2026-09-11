@@ -31,6 +31,13 @@ export const publicPackages = [
     description: "Create an Em See Pea server backed by a web API.",
   },
   {
+    name: "@emseepea/create-openapi-backed-server",
+    path: "examples/openapi-backed-server",
+    key: "create-openapi-backed-server",
+    example: "openapi-backed-server",
+    description: "Create an Em See Pea server backed by an OpenAPI-described web API.",
+  },
+  {
     name: "@emseepea/create-resources-and-prompts-server",
     path: "examples/resources-and-prompts-server",
     key: "create-resources-and-prompts-server",

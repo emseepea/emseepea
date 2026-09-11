@@ -38,6 +38,19 @@ npm init @emseepea/api-backed-server -- my-server
 
 [Read the API-backed server example](https://github.com/emseepea/emseepea/tree/main/examples/api-backed-server).
 
+## Generate an API boundary from OpenAPI
+
+**OpenAPI-backed server.** Generate TypeScript declarations and Zod runtime
+validators from a committed OpenAPI 3 contract. A local Swagger 2 fixture also
+demonstrates the conversion path. Choose the API-backed server above when no
+usable machine-readable contract exists.
+
+```sh
+npm init @emseepea/openapi-backed-server -- my-server
+```
+
+[Read the OpenAPI-backed server example](https://github.com/emseepea/emseepea/tree/main/examples/openapi-backed-server).
+
 ## Add authentication or observability
 
 Every starter is open by default. Its app factory also accepts the same typed

@@ -286,6 +286,7 @@ test("every packed initializer creates a standalone checked project", {
     await cp(new URL("../fixtures/fake-semantic-model.mjs", import.meta.url), fakeModel);
     const expectedToolsByTurn = {
       "api-backed-server": [["search-pea-taxa"], []],
+      "openapi-backed-server": [["get-pet"]],
       "database-schema-server": [["list-pea-varieties"], ["add-pea-variety"]],
       "html-ui-server": [["preview-planting-plan"], []],
       "mongodb-backed-server": [

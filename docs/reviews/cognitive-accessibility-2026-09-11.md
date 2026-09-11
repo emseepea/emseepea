@@ -49,3 +49,30 @@ rather than current guidance.
   SHA-256: `a89f81b682bcb057fbba851b7cb543959e796bc7cd9d69ec08d344d938cb78c4`
 - `.changeset/calm-resources-listen.md`
   SHA-256: `994821830081410d943d9d021d1434732b392442806e014b4ae156cbf5e1df3d`
+
+## OpenAPI-Backed Initializer
+
+Result: PASS. Independent cognitive and Markdown accessibility review covered
+the new initializer, the OpenAPI and no-spec choice, both linked decisions,
+the generated decision index, and current release readiness. Headings are
+coherent, links are descriptive, instructions are direct, and current and
+superseded decisions are clearly distinguished. The review covered source
+Markdown; the exact-commit website gate remains responsible for rendered-site
+verification.
+
+- `.changeset/cool-pets-generate.md`
+  SHA-256: `0455efc2c2497d4b1e57d3acc9845ee7a1ee4c71f0c558c52ec82ce8daaad6c7`
+- `README.md`
+  SHA-256: `12858eb3776c2db9bf58b875e7f8d9376727f87d0e5d049108c9064bc4fca0c2`
+- `docs/decisions/0070-openapi-generated-backend-types-and-runtime-validation.superseded.md`
+  SHA-256: `bc20f39d54e894e2089d55ee342b0c724f840dce4318a4033e96708410588f36`
+- `docs/decisions/0071-separate-openapi-backed-example-and-initializer.proposed.md`
+  SHA-256: `a573f3b2ce1da5b17678cbb891b455d1f2fbdbba3646e145bda7c28aea08269f`
+- `docs/decisions/README.md`
+  SHA-256: `8654c7e01ecd9ebd4213126430448fa6550d9b6973b43f71ee4e09c009b7c67d`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `79dabcdbfe36d1e99d9f65749106281dcc3bdf9793eafd0806a2e32cacf2a986`
+- `examples/openapi-backed-server/README.md`
+  SHA-256: `0391e3c7e5d4712726569d8668cb7bae0330bd4fac5460d244aacd6f6088a13b`
+- `website/src/content/docs/examples.md`
+  SHA-256: `f23931ed80101c9e2b373018109a12a57a1cd3955a0329d156e711fa6d00f400`

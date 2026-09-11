@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 68 decisions: 35 current and 33 historical.
+This project has 70 decisions: 36 current and 34 historical.
 
 ## Quick Index
 
@@ -46,6 +46,7 @@ This project has 68 decisions: 35 current and 33 historical.
 - [ADR-0066: Pluggable Detailed Feedback Conversations and Event Hooks](0066-pluggable-detailed-feedback-conversations-and-event-hooks.proposed.md): Proposed; human review confirmed.
 - [ADR-0067: Capability-Local Static Discovery Suppression](0067-capability-local-static-discovery-suppression.proposed.md): Proposed; human review confirmed.
 - [ADR-0068: Protected POST Progress Behind a Trusted Proxy](0068-protected-post-progress-behind-a-trusted-proxy.proposed.md): Proposed; human review confirmed.
+- [ADR-0071: Separate OpenAPI-Backed Example and Initializer](0071-separate-openapi-backed-example-and-initializer.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -82,6 +83,7 @@ This project has 68 decisions: 35 current and 33 historical.
 - [ADR-0056: PostgreSQL-Backed Multi-Instance Initializer](0056-postgresql-backed-multi-instance-initializer.superseded.md): Superseded; human review confirmed.
 - [ADR-0061: MongoDB JSON Schema Generated Internal Validation](0061-mongodb-json-schema-generated-internal-validation.superseded.md): Superseded; human review confirmed.
 - [ADR-0069: Atomic Runtime Activation of Startup-Compiled Capabilities](0069-atomic-runtime-activation-of-startup-compiled-capabilities.rejected.md): Rejected; human review confirmed.
+- [ADR-0070: OpenAPI-Generated Backend Types and Runtime Validation](0070-openapi-generated-backend-types-and-runtime-validation.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -1506,3 +1508,54 @@ Chosen option: **"Atomic activation of startup-compiled capabilities"**, because
 - Server discovery continues to report `listChanged: false`; documentation says no notification, cross-process consistency, session, subscription, or replay guarantee is included.
 - Existing page-size, page-byte, request, result, timeout, cancellation, authentication, authorization, and observability checks still pass.
 - Ordinary tests cover the exact boundaries. A released-package journey proves activation, deactivation, direct-call rejection, and in-flight isolation.
+
+### [ADR-0070: OpenAPI-Generated Backend Types and Runtime Validation](0070-openapi-generated-backend-types-and-runtime-validation.superseded.md)
+
+- Status: Superseded
+- Human review: Confirmed
+- Replaced by: [ADR-0071: Separate OpenAPI-Backed Example and Initializer](0071-separate-openapi-backed-example-and-initializer.proposed.md)
+
+#### ADR-0070 Decision
+
+Chosen option: **"Canonical OpenAPI 3 with generated TypeScript and Zod"**, because one local contract can govern both compile-time and runtime backend checks while Swagger 2 remains an import format rather than a second internal model.
+
+#### ADR-0070 Checks
+
+- One committed canonical OpenAPI 3 document drives generated TypeScript and runtime Zod validation for the selected operation's parameters and response.
+- A committed Swagger 2 fixture normalizes deterministically during the explicit generation step; generation does not occur during build, start, or requests.
+- Clean offline regeneration produces no diff. Local fragment `$ref` values are accepted; an `https:` `$ref` and a relative-file `$ref` are rejected before conversion or generation.
+- Changing a required field, optional field, or primitive category changes the generated types and runtime acceptance. Changing a supported value constraint changes runtime acceptance even when the TypeScript shape does not change.
+- Mapper inputs and outputs compile against generated types without casts, duplicate backend interfaces, or hand-written duplicate provider validators.
+- An invalid mapped backend request causes zero HTTP calls. An invalid provider response never reaches public mapping or emission.
+- Public MCP schemas remain separately hand-authored, described, bounded, and contain no backend destinations, credentials, private errors, or undeclared provider fields.
+- A structurally valid new provider string value in an approved public field passes through unchanged; malformed values fail; undeclared fields do not reach public output.
+- Callers cannot select the backend origin, operation, credentials, redirects, pagination ceiling, deadline, response-size limit, or contract location.
+- The pinned generator, upgrader, and YAML parser pass licence, lockfile vulnerability, software bill of materials, packed standalone initializer, and provenance checks.
+- Qualification records runtime-validator CPU and transient memory cost before release and does not weaken validation to meet the JSON boundary budget.
+
+### [ADR-0071: Separate OpenAPI-Backed Example and Initializer](0071-separate-openapi-backed-example-and-initializer.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0070: OpenAPI-Generated Backend Types and Runtime Validation](0070-openapi-generated-backend-types-and-runtime-validation.superseded.md)
+
+#### ADR-0071 Decision
+
+Chosen option: **"Separate OpenAPI-backed example and initializer"**, because the spec-driven and no-spec journeys begin from materially different developer inputs even though they share the same checked runtime boundary.
+
+#### ADR-0071 Checks
+
+- `npm init @emseepea/openapi-backed-server -- <directory>` creates the new standalone specification-driven project.
+- The existing API-backed initializer retains hand-written backend schemas and its current no-spec behavior.
+- The OpenAPI-backed project contains one canonical OpenAPI 3 contract, selects one operation, and commits generated TypeScript declarations and Zod schemas.
+- Clean offline regeneration produces no diff.
+- The generation command uses `typed-openapi@4.0.1` with Zod 4, strict validation, an operation-ID filter, and no generated HTTP client.
+- A committed Swagger 2 fixture upgrades through `@scalar/openapi-upgrader@0.2.15` to the same canonical generation path.
+- Local fragment `$ref` values are accepted; URL and relative-file references are rejected before conversion or generation.
+- Changing a required field, optional field, primitive category, or supported value constraint changes generated types or runtime acceptance as applicable.
+- Invalid mapped backend requests cause zero HTTP calls, and invalid provider responses never reach public mapping or emission.
+- Callers cannot select the backend origin, operation, credentials, redirects, limits, deadline, or contract location.
+- Public MCP schemas remain separate and prevent undeclared provider fields or private backend details from reaching output.
+- Both examples and generated projects independently install, lint, build, run ordinary tests, and pass their minimum semantic qualification.
+- The new initializer passes accessibility, licence, lockfile vulnerability, SBOM, packed-project, provenance, registry, and exact-release checks.
+- The canonical public-package list and template comparison documentation include the new initializer.

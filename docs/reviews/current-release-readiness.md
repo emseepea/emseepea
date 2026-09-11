@@ -6,6 +6,7 @@ Date: 2026-09-11
 
 - `@emseepea/create-tool-server@0.0.21`
 - `@emseepea/create-api-backed-server@0.0.19`
+- `@emseepea/create-openapi-backed-server@0.0.1`
 - `@emseepea/create-resources-and-prompts-server@0.0.18`
 - `@emseepea/create-progress-streaming-server@0.0.19`
 - `@emseepea/create-html-ui-server@0.0.20`
@@ -16,6 +17,12 @@ Date: 2026-09-11
 - `@emseepea/create-soap-backed-server@0.0.6`
 
 ## Change for Users
+
+Developers with an OpenAPI 3 or Swagger 2 contract can create a separate
+OpenAPI-backed starter. It generates checked-in TypeScript declarations and
+Zod runtime validation for one selected backend operation. The existing
+API-backed starter remains the hand-written path for APIs without a usable
+machine-readable contract.
 
 Any Em See Pea server can add optional detailed feedback. Public one-way
 submissions record useful explanations. Protected conversations preserve an
@@ -58,6 +65,8 @@ excluded.
 - Tom Howard ratified ADR-0066, ADR-0067, ADR-0068, and the two feedback
   personas and jobs. Their human-oversight markers are confirmed and the
   decision compendium is current.
+- Tom Howard ratified ADR-0071. ADR-0070 is clearly marked as superseded, and
+  the decision compendium records their relationship.
 - TypeScript compilation, lint, package tests, non-container framework tests,
   documentation checks, and website build pass.
 - Feedback adapter contract tests cover validation, deadlines, cancellation,
@@ -83,20 +92,31 @@ excluded.
   publication authority.
 - Independent architecture, Jobs To Be Done, Markdown accessibility, cognitive
   accessibility, and release-risk reviews are required on the final content.
+- The OpenAPI generator and runtime tests pass. They cover local-only
+  references, Swagger 2 conversion, byte-identical regeneration, contract
+  mutations, invalid mapped requests, invalid provider responses, and bounded
+  public output. The existing no-spec API example still passes unchanged.
+- The generated starter was created from its packed initializer outside the
+  monorepo, installed, regenerated, linted, built, and tested successfully.
+  Its semantic smoke test passed all three trials with the expected `get-pet`
+  call.
+- The pinned OpenAPI toolchain has no npm audit findings. Direct licence checks
+  cover `typed-openapi`'s shipped MIT licence and the Scalar upgrader and YAML
+  parser metadata. The release SBOM for this initializer includes its generator
+  development dependencies.
+- The generated request and response validation path measured 1.08 ms median
+  CPU and 387 KiB median peak transient heap per call, within the 5 ms and
+  1 MiB integration-example budgets. Exact-commit CI repeats this check.
 - Local PostgreSQL and MongoDB integration qualification passed with fresh
   containers. Both UI browser accessibility suites and the SOAP integration
   suite also passed.
-- The first Trusted Publishing run published the new core package versions and
-  then failed closed when the registry quickstart exposed stale initializer
-  dependencies. This corrective batch publishes the regenerated initializers;
-  the failed run is not release-verification evidence.
 
 ## Required Publication Evidence
 
 - Exact-commit Quality must pass Node.js 22 and 24, Open Source Vulnerabilities
   (OSV), website, package, standalone initializer, integration, accessibility,
   and performance checks.
-- The standalone run must create all ten projects outside the monorepo, install
+- The standalone run must create all eleven projects outside the monorepo, install
   them, and pass lint, ordinary tests, and semantic smoke tests.
 - The release job that runs after Quality must pass every provider-native
   semantic example before publication. Semantic evaluation runs after the
@@ -110,6 +130,6 @@ excluded.
 ## Review Status
 
 - Result: PASS
-- Release verification: NOT COMPLETE until the corrected registry quickstart
-  and every remaining publication gate pass.
+- Release verification: NOT COMPLETE until the exact registry, provenance,
+  standalone, and remaining publication gates pass.
 - Final result: within appetite, subject to the required exact-commit gates.

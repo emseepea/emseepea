@@ -163,6 +163,10 @@ function responseFor(prompt, tools = []) {
     calls: [{ name: "search-pea-taxa", arguments: { query: "pea" } }],
     answer: "Pisum sativum, commonly Common Pea, has 8,720 observations. That is not a wild population estimate.",
   };
+  if (prompt.includes("Look up Swagger Petstore pet 7")) return {
+    calls: [{ name: "get-pet", arguments: { petId: 7 } }],
+    answer: "Pet 7 is named Sweet Pea and is available.",
+  };
   if (prompt === "What was its common name?") return { calls: [], answer: "Common Pea" };
   if (prompt.includes("How many pea seed packets")) return {
     calls: [{ name: "get-private-inventory-report", arguments: {} }],

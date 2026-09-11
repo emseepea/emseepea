@@ -28,7 +28,9 @@ async function main() {
     await writeFile(join(destination, `${item.key}-pack.json`), `${JSON.stringify(packed, null, 2)}\n`);
 
     const sbom = await run("npm", [
-      "sbom", "--workspace", item.name, "--omit=dev", "--package-lock-only",
+      "sbom", "--workspace", item.name,
+      ...(item.name === "@emseepea/create-openapi-backed-server" ? [] : ["--omit=dev"]),
+      "--package-lock-only",
       "--sbom-format", "cyclonedx", "--sbom-type", "framework",
     ], { maxBuffer: 16 * 1024 * 1024 });
     const sbomFile = `${item.key}-sbom.cdx.json`;

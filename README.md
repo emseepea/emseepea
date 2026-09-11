@@ -68,6 +68,7 @@ Replace `my-server` with an unused directory name:
 
 - [One public tool](examples/tool-server/README.md): `npm init @emseepea/tool-server -- my-server`
 - [A public web API](examples/api-backed-server/README.md): `npm init @emseepea/api-backed-server -- my-server`
+- [An OpenAPI-described web API](examples/openapi-backed-server/README.md): `npm init @emseepea/openapi-backed-server -- my-server`
 - [Resources and prompts](examples/resources-and-prompts-server/README.md): `npm init @emseepea/resources-and-prompts-server -- my-server`
 - [Progress streaming](examples/progress-streaming-server/README.md): `npm init @emseepea/progress-streaming-server -- my-server`
 - [An HTML form](examples/html-ui-server/README.md): `npm init @emseepea/html-ui-server -- my-server`
@@ -166,7 +167,7 @@ Publication does not expand these claims.
 
 The source and examples are public under MIT. The monorepo root has
 `private: true` in `package.json`. The published packages include the server,
-testing helpers, React renderer, Tailwind stylesheet, and ten example-backed
+testing helpers, React renderer, Tailwind stylesheet, and eleven example-backed
 initializer packages.
 
 [cognitive-publication]: docs/decisions/0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md

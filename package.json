@@ -32,6 +32,7 @@
     "release": "changeset publish",
     "start:tool-server": "npm run start -w @emseepea/create-tool-server",
     "start:api-backed-server": "npm run start -w @emseepea/create-api-backed-server",
+    "start:openapi-backed-server": "npm run start -w @emseepea/create-openapi-backed-server",
     "start:resources-and-prompts-server": "npm run start -w @emseepea/create-resources-and-prompts-server",
     "start:html-ui-server": "npm run start -w @emseepea/create-html-ui-server",
     "start:multi-instance-postgres-server": "npm run start -w @emseepea/create-multi-instance-postgres-server",

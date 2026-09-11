@@ -113,6 +113,7 @@ jobs:
       - name: Regenerate schema-derived code
         run: |
           npm run generate:check -w @emseepea/create-database-schema-server
+          npm run generate:check -w @emseepea/create-openapi-backed-server
           npm run generate:check -w @emseepea/create-soap-backed-server
       - name: Verify every standalone initializer
         run: npm run test:initializers:packed
@@ -125,6 +126,7 @@ jobs:
           cd "$GITHUB_WORKSPACE/examples/mongodb-backed-server"
           node test/with-mongodb.mjs node --expose-gc "$GITHUB_WORKSPACE/scripts/measure-integration-example.mjs" mongodb
           cd "$GITHUB_WORKSPACE"
+          node --expose-gc scripts/measure-integration-example.mjs openapi
           node --expose-gc scripts/measure-integration-example.mjs soap
 
   website-performance:

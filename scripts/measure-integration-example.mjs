@@ -31,8 +31,14 @@ if (mode === "database") {
   cleanups.push(backendProxy.close);
   const { createSoapExample } = await import(new URL("examples/soap-backed-server/dist/app.js", root));
   app = (await createSoapExample(backendProxy.url.href)).app;
+} else if (mode === "openapi") {
+  const [{ createBackendExample }, { petstoreFixture }] = await Promise.all([
+    import(new URL("examples/openapi-backed-server/dist/app.js", root)),
+    import(new URL("examples/openapi-backed-server/test-support/petstore-fixture.mjs", root)),
+  ]);
+  app = await createBackendExample({ get: async () => petstoreFixture });
 } else {
-  throw new Error("Expected database, mongodb, or soap");
+  throw new Error("Expected database, mongodb, openapi, or soap");
 }
 
 let sequence = 0;
@@ -67,7 +73,9 @@ const paths = mode === "database"
           notes: "Performance qualification.",
         })),
       ]
-    : [path("get-pea-variety", () => ({ name: "Sugar Ann" }))];
+    : mode === "openapi"
+      ? [path("get-pet", () => ({ petId: 7 }))]
+      : [path("get-pea-variety", () => ({ name: "Sugar Ann" }))];
 
 try {
   const results = [];
