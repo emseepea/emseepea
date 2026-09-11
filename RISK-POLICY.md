@@ -2,13 +2,13 @@
 
 ISO 31000-aligned project risk criteria
 
-Last reviewed: 2026-08-28
+Last reviewed: 2026-09-12
 
 ## Business Context
 
 Em See Pea is a pre-release, public, MIT-licensed TypeScript monorepo for a
 general-purpose Model Context Protocol (MCP) Streamable HTTP server framework.
-It includes examples, documentation, and future package releases.
+It includes examples, documentation, and pre-alpha packages published on npm.
 
 Adopters use this source to build deployable servers. This project does not
 operate a hosted service and makes no service-availability or service-level
@@ -21,7 +21,7 @@ Risk decisions cover:
 - accessibility of supplied user interfaces and documentation
 - dependency and GitHub Actions supply chains
 - honest capability claims
-- release metadata and future npm publication integrity
+- release metadata and npm publication integrity
 
 Every committed artifact is treated as public.
 
@@ -170,6 +170,6 @@ secret-exposure, destructive-action, supply-chain, or honest-claim controls.
 ## Governance
 
 The pipeline risk scorer and problem management process both use this policy as
-the project's risk-criteria source. Review it after a material incident, before
-enabling npm publication, when the supported MCP or Node.js surface changes
-materially, or when business context changes.
+the project's risk-criteria source. Review it after a material incident, when
+npm publication controls change materially, when the supported MCP or Node.js
+surface changes materially, or when business context changes.

@@ -10,6 +10,13 @@ const providerErrorMessages = new Map([
   ["error_max_budget_usd", "Model command exceeded its budget"],
   ["error_max_turns", "Model command exceeded its turn limit"],
 ]);
+const authenticationFailure = /not logged in|failed to authenticate|oauth session expired/i;
+const hasAuthenticationFailure = (events) => events.some((event) => (
+  (Array.isArray(event.message?.content)
+    && event.message.content.some(({ type, text }) => type === "text" && /not logged in/i.test(text ?? "")))
+  || (event.type === "result" && event.is_error === true
+    && typeof event.result === "string" && authenticationFailure.test(event.result))
+));
 
 export async function modelVersion() {
   const result = await runProcess("claude", ["--version"], { env: modelEnvironment({}) });
@@ -27,14 +34,10 @@ export function parseClaudeEvents(stdout, processExitCode = 0) {
   }
   const result = events.findLast(({ type }) => type === "result");
   const answer = result?.result;
-  const notLoggedIn = events.some(({ message }) => (
-    Array.isArray(message?.content)
-    && message.content.some(({ type, text }) => type === "text" && /not logged in/i.test(text ?? ""))
-  ));
   const toolUses = events.flatMap(({ message }) => (
     Array.isArray(message?.content) ? message.content.filter(({ type }) => type === "tool_use") : []
   ));
-  if (notLoggedIn) throw new Error("Model command is not signed in");
+  if (hasAuthenticationFailure(events)) throw new Error("Model command is not signed in");
   if (processExitCode !== 0) throw new Error(`Model command exited ${processExitCode}`);
   if (!result) throw new Error("Model command omitted its result event");
   if (result.is_error) {
@@ -118,9 +121,7 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
       responseSha256: hash(response.content),
     };
   });
-  const notLoggedIn = events.some(({ message }) => Array.isArray(message?.content)
-    && message.content.some(({ type, text }) => type === "text" && /not logged in/i.test(text ?? "")));
-  if (notLoggedIn) throw new Error("Model command is not signed in");
+  if (hasAuthenticationFailure(events)) throw new Error("Model command is not signed in");
   if (result?.is_error || typeof result?.result !== "string") {
     throw new Error("Model command returned no answer");
   }

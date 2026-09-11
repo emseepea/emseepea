@@ -19,6 +19,11 @@ const result = {
     "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" },
   },
 };
+const expiredAuthentication = {
+  ...result,
+  is_error: true,
+  result: "Failed to authenticate: OAuth session expired and could not be refreshed",
+};
 
 test("accepts one tool-free answer from the required model", () => {
   assert.equal(parseClaudeEvents(JSON.stringify(result)).answer, "One matching bean");
@@ -49,6 +54,14 @@ test("accepts one tool-free answer from the required model", () => {
     () => parseClaudeEvents(JSON.stringify({ ...result, is_error: true, subtype: "sk-ant-private-secret" })),
     (error) => error.message === "Model command reported an error",
   );
+  assert.throws(
+    () => parseClaudeEvents(JSON.stringify(expiredAuthentication)),
+    (error) => error.message === "Model command is not signed in" && !error.message.includes("OAuth"),
+  );
+  assert.equal(parseClaudeEvents(JSON.stringify({
+    ...result,
+    result: expiredAuthentication.result,
+  })).answer, expiredAuthentication.result);
   assert.throws(() => parseClaudeEvents("not-json"), /invalid event data/);
 });
 
@@ -153,6 +166,12 @@ test("native tool assertions come from provider MCP events", () => {
     }] } }
     : event), tools), /forbidden tool/);
   assert.throws(() => parseNativeClaudeEvents(events.slice(1), tools, true), /initialization evidence/);
+  assert.throws(
+    () => parseNativeClaudeEvents([expiredAuthentication], []),
+    (error) => error.message === "Model command is not signed in" && !error.message.includes("OAuth"),
+  );
+  assert.equal(parseNativeClaudeEvents([{ ...expiredAuthentication, is_error: false }], []).answer,
+    expiredAuthentication.result);
 
   const excessive = Array.from({ length: 4 }, (_, index) => ({
     type: "assistant",
