@@ -109,7 +109,7 @@ excluded.
 
 ## Review Status
 
-- Review result: PASS
+- Result: PASS
 - Release verification: NOT COMPLETE until the corrected registry quickstart
   and every remaining publication gate pass.
 - Final result: within appetite, subject to the required exact-commit gates.
