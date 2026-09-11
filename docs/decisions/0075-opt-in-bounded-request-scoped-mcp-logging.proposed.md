@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-09-11
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-09-11
 decision-makers: ["Tom Howard"]
 consulted: ["Architecture review"]
 informed: []

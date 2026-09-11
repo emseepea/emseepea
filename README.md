@@ -27,6 +27,7 @@ Use the current framework to create:
 - clear names, descriptions, icons, and usage hints for clients to display
 - a server that tells clients when a list or resource is safe to reuse
 - public or protected tools that report live progress while work is running
+- handlers that send bounded client-visible log messages when each request opts in
 - capability modules discovered once at startup from an opt-in directory
 - independently deployable server instances that share one PostgreSQL report store
 - a server with a native HTML form, or the same form rendered with React and
@@ -55,6 +56,7 @@ It covers:
 - rejecting unauthorized calls before application code runs
 - checking results from connected services without exposing private errors
 - reporting progress through raw HTTP and the official MCP client
+- filtering request-scoped client log messages through the official MCP client
 - saving through one server process and reading the same state through another
 - recording detailed feedback, appending support replies, and keeping client scopes separate
 

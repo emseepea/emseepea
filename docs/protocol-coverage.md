@@ -303,6 +303,25 @@ unsupported for progress streams.
 then closes. See the
 [progress tests](../tests/black-box/streaming-progress.test.mjs).
 
+### Client-Visible Log Messages
+
+**Status: Checked.** Applications can opt into the deprecated MCP 2026-07-28
+request-scoped logging channel. Named direct handlers receive a bounded
+`reportLog` function. A client receives `notifications/message` only when that
+request supplies `io.modelcontextprotocol/logLevel`, and the installed MCP SDK
+applies the requested severity threshold.
+
+Logging is not advertised when disabled or on legacy requests. The removed
+`logging/setLevel` method remains unavailable. This client-visible application
+output is separate from the redacted server-operator observability adapters;
+the framework does not copy arguments, results, credentials, or errors into it.
+There is no session state, replay, persistence, or reconnect recovery. See the
+[client logging tests](../tests/black-box/client-logging.test.mjs). The
+[logging load check](../tests/load/client-logging.test.mjs) runs the real
+framework path with concurrent paused readers and fixed memory ceilings. Its
+measurements qualify this streaming path; they do not claim conformance to the
+separate JSON-boundary performance budget.
+
 ### Proxy Buffering Header
 
 **Status: Checked.** Streamed responses include `X-Accel-Buffering: no`, which

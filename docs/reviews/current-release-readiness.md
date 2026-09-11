@@ -4,144 +4,48 @@ Date: 2026-09-11
 
 ## Release Batch
 
-- `@emseepea/server@0.8.1`
-- `@emseepea/feedback@0.2.3`
-- `@emseepea/react@0.0.16`
-- `@emseepea/testing@0.9.6`
-- `@emseepea/create-tool-server@0.0.22`
-- `@emseepea/create-api-backed-server@0.0.20`
-- `@emseepea/create-openapi-backed-server@0.0.2`
-- `@emseepea/create-resources-and-prompts-server@0.0.19`
-- `@emseepea/create-progress-streaming-server@0.0.20`
-- `@emseepea/create-html-ui-server@0.0.21`
-- `@emseepea/create-react-ui-server@0.0.20`
-- `@emseepea/create-multi-instance-postgres-server@0.0.10`
-- `@emseepea/create-database-schema-server@0.0.7`
-- `@emseepea/create-mongodb-backed-server@0.0.7`
-- `@emseepea/create-soap-backed-server@0.0.7`
+- `@emseepea/server@0.9.0`
 
 ## Change for Users
 
-The same stateless `POST /mcp` endpoint now supports Model Context Protocol
-(MCP) `2026-07-28` and the
-five legacy revisions `2025-11-25`, `2025-06-18`, `2025-03-26`, `2024-11-05`,
-and `2024-10-07`. All revisions share the existing capability registry,
-authentication, authorization, validation, limits, cancellation, redaction,
-and observability path. Legacy sessions, session identifiers, GET streams,
-replay, and resumption remain excluded.
+Applications can opt into deprecated MCP 2026-07-28 request-scoped client log
+messages. Direct tool, streaming tool, resource, resource-template, and prompt
+handlers receive a bounded `reportLog` function. The calling client must request
+a log level on that operation, and the installed MCP SDK applies the severity
+threshold.
 
-Developers with an OpenAPI 3 or Swagger 2 contract can create a separate
-OpenAPI-backed starter. It generates checked-in TypeScript declarations and
-Zod runtime validation for one selected backend operation. The existing
-API-backed starter remains the hand-written path for APIs without a usable
-machine-readable contract.
+Protected calls authenticate and authorize before application work or response
+streaming. Logging is not advertised when disabled or on legacy requests. The
+removed `logging/setLevel` method remains unavailable.
 
-Any Em See Pea server can add optional detailed feedback. Public one-way
-submissions record useful explanations. Protected conversations preserve an
-append-only support thread and bring team replies back to the AI.
-Successful public submissions return a bounded `nextAction` instruction to
-finish the original request and disclose the specific recorded observation.
-
-Applications can use PostgreSQL, Firestore, GitHub Issues, or Zendesk. Typed
-hooks connect feedback events to email, queues, webhooks, Slack, analytics, or
-other application handling. Database outboxes or provider-native automation
-remain the reliable notification path.
-
-Every maintained starter includes a negative control. It proves that ordinary
-successful tool use does not trigger feedback.
-
-Servers can set `discoverable: false` on a tool, resource, resource template, or
-prompt. The capability no longer appears in discovery. A client that knows the
-capability's name can still call it under the same access policy. This supports
-staged retirement before later removal.
-
-Protected tools can stream bounded progress during the POST request. Streaming
-starts only after authentication and authorization succeed, and only when the
-server is behind a trusted proxy.
-
-Servers can opt into bounded, process-local resource-update subscriptions. Each
-stream listens to one registered static resource URI or one concrete URI that
-matches a registered resource template. The framework authenticates and
-authorizes access to protected resources before server-sent events begin. It
-limits active streams, event counts, event sizes, total bytes, and stream
-lifetime. A limit overflow closes only the affected stream. Disconnect and
-shutdown end stream work.
-
-List-change subscriptions, resynchronisation, replay, sessions, reconnect
-recovery, durability, cross-process notification delivery, framework-managed
-shared stream state, and slowing producers when clients cannot keep up remain
-excluded.
+This release adds no sessions, persistence, replay, reconnect recovery, retry
+logic, or circuit breaker. Client-visible messages remain separate from
+framework observability, and the framework does not copy sensitive request or
+result data into them.
 
 ## Local Evidence Before Publication
 
-- Tom Howard ratified ADR-0066, ADR-0067, ADR-0068, and the two feedback
-  personas and jobs. Their human-oversight markers are confirmed and the
+- Tom Howard ratified ADR-0075. Its human-oversight marker is confirmed and the
   decision compendium is current.
-- Tom Howard ratified ADR-0071. ADR-0070 is clearly marked as superseded, and
-  the decision compendium records their relationship.
-- Tom Howard ratified ADR-0074. The five-version legacy client matrix and the
-  existing independent MCP `2026-07-28` client pass against the same endpoint.
-  Mixed-era and malformed requests fail without application work, protected
-  legacy calls retain OAuth enforcement, and no session identifier is emitted.
-- TypeScript compilation, lint, package tests, non-container framework tests,
-  documentation checks, and website build pass.
-- Feedback adapter contract tests cover validation, deadlines, cancellation,
-  scope isolation, append-only ordering, first-offer receipts, hook failure,
-  authenticated deduplicated provider event ingestion, and the public
-  `nextAction` result. Feedback semantic tests cover concise, faithful
-  disclosure without requiring verbatim repetition.
-- `tests/black-box/discovery-suppression.test.mjs` and
-  `tests/black-box/file-discovery.test.mjs` cover hidden-but-callable and
-  removed-and-uncallable behavior across the supported capability types.
-- `tests/black-box/proxy-progress.test.mjs` and
-  `tests/load/proxy-progress.test.mjs` cover protected progress after access
-  checks and behind the trusted-proxy boundary.
-- `tests/black-box/resource-subscriptions.test.mjs` covers static and concrete
-  resource-template URIs, protected access, expiry, disconnect, event limits,
-  and isolated overflow. `tests/load/subscription-sdk.test.mjs` covers bounded
-  memory with paused readers.
-- A local provider-native evaluation passed all feedback cases across three
-  trials and retained inspectable evidence. It covers spontaneous friction and
-  notable-success recording, open disclosure, objection and duplicate controls,
-  a normal empty-result control, team-reply presentation, and continued
-  threaded replies. Exact-commit continuous integration (CI) remains the
-  publication authority.
-- Independent architecture, Jobs To Be Done, Markdown accessibility, cognitive
-  accessibility, and release-risk reviews are required on the final content.
-- The OpenAPI generator and runtime tests pass. They cover local-only
-  references, Swagger 2 conversion, byte-identical regeneration, contract
-  mutations, invalid mapped requests, invalid provider responses, and bounded
-  public output. The existing no-spec API example still passes unchanged.
-- The generated starter was created from its packed initializer outside the
-  monorepo, installed, regenerated, linted, built, and tested successfully.
-  Its semantic smoke test passed all three trials with the expected `get-pet`
-  call.
-- The pinned OpenAPI toolchain has no npm audit findings. Direct licence checks
-  cover `typed-openapi`'s shipped MIT licence and the Scalar upgrader and YAML
-  parser metadata. The release SBOM for this initializer includes its generator
-  development dependencies.
-- The generated request and response validation path measured 1.08 ms median
-  CPU and 387 KiB median peak transient heap per call, within the 5 ms and
-  1 MiB integration-example budgets. Exact-commit CI repeats this check.
-- Local PostgreSQL and MongoDB integration qualification passed with fresh
-  containers. Both UI browser accessibility suites and the SOAP integration
-  suite also passed.
+- Focused raw HTTP, official-client, type, authentication, authorization,
+  isolation, cancellation, limit, late-call, and installed-package checks pass.
+- The local Node.js 24 logging load check completed eight batches of sixteen
+  concurrent requests with paused readers. Peak RSS was 217,595,904 bytes and
+  retained heap stayed below its 24 MiB ceiling. This is measured qualification
+  evidence, not conformance to the separate JSON-boundary performance budget.
+- Independent architecture, Markdown accessibility, cognitive accessibility,
+  and release-risk reviews are required on the final content.
 
 ## Required Publication Evidence
 
-- Exact-commit Quality must pass Node.js 22 and 24, Open Source Vulnerabilities
-  (OSV), website, package, standalone initializer, integration, accessibility,
-  and performance checks.
-- The standalone run must create all eleven projects outside the monorepo, install
-  them, and pass lint, ordinary tests, and semantic smoke tests.
-- The release job that runs after Quality must pass every provider-native
-  semantic example before publication. Semantic evaluation runs after the
-  cheaper quality checks.
+- Exact-commit Quality must pass Node.js 22 and 24, including the request-logging
+  load check with paused readers.
+- The release job must pass the existing publication gates before npm publish.
 - npm publication must use Trusted Publishing and expose provenance, registry
   metadata, clean installation, software bills of materials, and package
   evidence.
-- The registry-installed server smoke test must acknowledge a static-resource
-  subscription and deliver an update for that exact URI.
+- The registry-installed server smoke test must deliver one request-scoped log
+  through the official client and return the checked final result.
 
 ## Review Status
 

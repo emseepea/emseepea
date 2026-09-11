@@ -176,7 +176,8 @@ jobs:
           - Node.js: $(node --version)
           - npm: $(npm --version)
           - GitHub CLI: $(gh --version | head -1)
-          - Exact-commit Quality qualification: OSV lockfile scan; package tests; performance benchmarks; streaming and subscription memory tests; package builds; standalone initializer checks
+          - Exact-commit Quality qualification: OSV lockfile scan; package tests; performance benchmarks; streaming, request-logging, and subscription memory tests; package builds; standalone initializer checks
+          - Request-logging load check: \`node --expose-gc --test tests/load/client-logging.test.mjs\`
           - Subscription load check: \`node --expose-gc --test tests/load/subscription-sdk.test.mjs\`
           - Semantic qualification: $SEMANTIC_EVAL_RUN_URL, artifact $SEMANTIC_EVAL_ARTIFACT
           - Reviews: ${{ github.server_url }}/${{ github.repository }}/blob/$RELEASE_SHA/$review_record
@@ -186,6 +187,7 @@ jobs:
             - stateless POST compatibility for MCP 2025-11-25, 2025-06-18, 2025-03-26, 2024-11-05, and 2024-10-07
             - JSON operations
             - checked, bounded public and protected POST progress through a trusted proxy
+            - opt-in, bounded, request-scoped MCP log messages on the calling POST response
             - the framework authenticates and authorizes protected calls before application code runs or server-sent events begin
             - public and protected tools, resources, prompts, and completions
             - public discovery by default and explicit permission-shaped protected discovery

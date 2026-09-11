@@ -141,6 +141,8 @@ test("publication evidence describes the protected progress boundary", () => {
   assert.match(workflow, /framework-managed shared stream state/);
   assert.doesNotMatch(workflow, /resynchronisation, subscriptions, replay/);
   assert.match(workflow, /Subscription load check: \\`node --expose-gc --test tests\/load\/subscription-sdk\.test\.mjs\\`/);
+  assert.match(workflow, /opt-in, bounded, request-scoped MCP log messages on the calling POST response/);
+  assert.match(workflow, /Request-logging load check: \\`node --expose-gc --test tests\/load\/client-logging\.test\.mjs\\`/);
 });
 
 test("the completed feedback bootstrap cannot remain as a credential fallback", () => {

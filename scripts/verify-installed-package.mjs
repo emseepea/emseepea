@@ -35,7 +35,10 @@ const tool = defineTool({
   description: "Smoke-test a direct tool.",
   inputSchema: value,
   outputSchema: value,
-  handler: ({ value }) => ({ text: value, data: { value } }),
+  async handler({ value }, { reportLog }) {
+    await reportLog?.({ level: "notice", logger: "release-smoke", data: value });
+    return { text: value, data: { value } };
+  },
 });
 const statefulTool = defineTool({
   name: "smoke-stateful-tool",
@@ -127,6 +130,7 @@ const app = createEmseepea({
     ttlSeconds: 60,
     maxBytes: 4 * 1024,
   },
+  clientLogging: {},
 });
 const running = await serveEmseepea(app, { port: 0 });
 const subscriptionController = new AbortController();
@@ -191,6 +195,29 @@ try {
     } finally {
       await client.close();
     }
+  }
+  const loggedMessages = [];
+  const loggingClient = new Client(
+    { name: "installed-logging-client", version: "0.0.0" },
+    { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+  );
+  loggingClient.setNotificationHandler("notifications/message", ({ params }) => {
+    loggedMessages.push(params);
+  });
+  try {
+    await loggingClient.connect(new StreamableHTTPClientTransport(running.url));
+    const loggedResult = await loggingClient.callTool({
+      name: "smoke-tool",
+      arguments: { value: "client logging works" },
+      _meta: { "io.modelcontextprotocol/logLevel": "notice" },
+    });
+    if (loggedResult.structuredContent?.value !== "client logging works"
+        || loggedMessages.length !== 1
+        || loggedMessages[0].data !== "client logging works") {
+      throw new Error("installed package did not deliver request-scoped client logging");
+    }
+  } finally {
+    await loggingClient.close();
   }
   const firstStateRound = await request("tools/call", {
     name: "smoke-stateful-tool",

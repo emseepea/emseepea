@@ -48,7 +48,7 @@ This project has 73 decisions: 38 current and 35 historical.
 - [ADR-0071: Separate OpenAPI-Backed Example and Initializer](0071-separate-openapi-backed-example-and-initializer.proposed.md): Proposed; human review confirmed.
 - [ADR-0072: Opt-In Integrity-Protected Request State](0072-opt-in-integrity-protected-request-state.proposed.md): Proposed; human review confirmed.
 - [ADR-0074: Same-Endpoint Stateless Legacy Protocol Support](0074-same-endpoint-stateless-legacy-protocol-support.proposed.md): Proposed; human review confirmed.
-- [ADR-0075: Opt-In Bounded Request-Scoped MCP Logging](0075-opt-in-bounded-request-scoped-mcp-logging.proposed.md): Proposed; human review pending.
+- [ADR-0075: Opt-In Bounded Request-Scoped MCP Logging](0075-opt-in-bounded-request-scoped-mcp-logging.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -1612,7 +1612,7 @@ Chosen option: **"Same-endpoint stateless legacy fallback"**, because it provide
 ### [ADR-0075: Opt-In Bounded Request-Scoped MCP Logging](0075-opt-in-bounded-request-scoped-mcp-logging.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
+- Human review: Confirmed
 
 #### ADR-0075 Decision
 

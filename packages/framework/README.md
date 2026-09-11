@@ -670,6 +670,12 @@ Not supported yet:
 See the [progress coverage and tested proxy setup](../../docs/protocol-coverage.md#progress-updates)
 for the current checks and their limits.
 
+## Client-Visible Request Logs
+
+See [how to enable bounded request logs](https://emseepea.github.io/emseepea/getting-started/#send-logs-to-the-calling-client).
+This deprecated client-visible channel is separate from server-operator
+observability.
+
 ## Public Resources and Prompts
 
 Static resources and prompts are public operations. Their handlers receive only

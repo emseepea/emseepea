@@ -202,6 +202,31 @@ the exact commit and workflow runs. This review covers source Markdown only.
 - `docs/retros/2026-09-11-ask-hygiene.md`
   SHA-256: `4141231cdf224fe4b5812a9f77a1e5e811da48dddf1dbd17a0b807f7967fabb8`
 
+## Request-Scoped Client Logging
+
+Result: PASS. Independent cognitive-accessibility review covered the exact
+ratified decision, release note, framework and website guidance, protocol
+coverage, release-readiness record, root summary, and generated decision index.
+The documents distinguish the deprecated client-visible channel from
+server-operator observability and state its limits and exclusions directly.
+
+- `README.md`
+  SHA-256: `db56e6092f8bb22cfc321a528afdab35889e17ef1d3ab6362dc3e50c7168eae9`
+- `packages/framework/README.md`
+  SHA-256: `7eaa4dd3f06dcd5f7c71b4ec1b7357f5df68764a37278e679a6caaf3afef3420`
+- `docs/protocol-coverage.md`
+  SHA-256: `674db5a624fa62530a6e3908e8f640752674df4a9dadfc9adf30a9344688c217`
+- `docs/decisions/0075-opt-in-bounded-request-scoped-mcp-logging.proposed.md`
+  SHA-256: `664cdcaadea378efde9f54625d230d57ce72fa00f89439e02e1a03b6db9ca63c`
+- `docs/decisions/README.md`
+  SHA-256: `e2e19dbdca209a735fc12c63c6461b4e42f190ff7ab86759c39b2ca7bc09e168`
+- `.changeset/bounded-request-logs.md`
+  SHA-256: `b32833b74ced1d26444592413f4bb0de71a862c55420c1005d68c4072cd6a240`
+- `website/src/content/docs/getting-started.md`
+  SHA-256: `3e1091de42150a6307c5ff7ccf41fc5696fc1c562cc95c7f70afabda75538576`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `1d32c4cac89e017963285f4586cc04cace1cfffc4837aa1a5f2e46b19fc85a13`
+
 ## Problem Backlog Parser Contract
 
 Result: PASS. Independent cognitive-accessibility review covered the exact

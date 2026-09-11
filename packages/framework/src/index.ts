@@ -42,6 +42,8 @@ import {
   type ListResourcesResult,
   type ListResourceTemplatesResult,
   type ListToolsResult,
+  type LoggingLevel,
+  type JSONValue,
   type MetaObject,
   type OAuthTokenVerifier,
   type Annotations,
@@ -246,6 +248,8 @@ export interface ToolContext<Access extends ToolAccess = ToolAccess> {
   readonly requestState?: unknown;
   /** Signs state for a later request round when request-state support is configured. */
   readonly mintRequestState?: (payload: unknown) => Promise<RequestState>;
+  /** Sends a client-visible MCP log message when client logging is configured. */
+  readonly reportLog?: (message: ClientLogMessage) => Promise<void>;
 }
 export interface ProgressUpdate {
   readonly progress: number;
@@ -258,6 +262,13 @@ export interface StreamingToolContext<Access extends ToolAccess = ToolAccess>
   readonly deadlineMs: number;
   readonly principal: Access extends "public" ? undefined : Principal;
   readonly reportProgress: (update: ProgressUpdate) => Promise<void>;
+  /** Sends a client-visible MCP log message when client logging is configured. */
+  readonly reportLog?: (message: ClientLogMessage) => Promise<void>;
+}
+export interface ClientLogMessage {
+  readonly level: LoggingLevel;
+  readonly logger?: string;
+  readonly data: JSONValue;
 }
 export interface ToolResult<Output> {
   /** Optional custom text for clients that do not consume structured content. Omit it to serialize the validated data as JSON. */
@@ -278,6 +289,8 @@ export interface ClientInputContext<Access extends CapabilityAccess = Capability
   readonly requestState?: unknown;
   /** Signs state for a later request round when request-state support is configured. */
   readonly mintRequestState?: (payload: unknown) => Promise<RequestState>;
+  /** Sends a client-visible MCP log message when client logging is configured. */
+  readonly reportLog?: (message: ClientLogMessage) => Promise<void>;
 }
 export interface CompletionContext<Access extends CapabilityAccess = CapabilityAccess>
   extends OperationContext {
@@ -397,6 +410,7 @@ export interface EmseepeaTool {
     maxProgressEvents: number,
     maxProgressEventBytes: number,
     requestState?: RequestStateRuntime,
+    clientLogging?: NormalizedClientLogging,
   ) => void;
 }
 interface ResourceDefinitionBase {
@@ -469,6 +483,7 @@ export interface EmseepeaResource {
     timeoutMs: number,
     maxApplicationResultBytes: number,
     requestState?: RequestStateRuntime,
+    clientLogging?: NormalizedClientLogging,
   ) => void;
 }
 type NonStringPromptArgumentKeys<Args extends z.ZodObject> = {
@@ -509,6 +524,7 @@ export interface EmseepeaPrompt {
     timeoutMs: number,
     maxApplicationResultBytes: number,
     requestState?: RequestStateRuntime,
+    clientLogging?: NormalizedClientLogging,
   ) => void;
 }
 export type EmseepeaCapability = EmseepeaTool | EmseepeaResource | EmseepeaPrompt;
@@ -555,6 +571,7 @@ export interface EmseepeaOptions {
   readonly maxProgressEventBytes?: number;
   readonly resourceSubscriptions?: ResourceSubscriptionOptions;
   readonly requestState?: RequestStateOptions;
+  readonly clientLogging?: ClientLoggingOptions;
   readonly operationTimeoutMs?: number;
   readonly deployment?: DeploymentProfile;
   readonly authentication?: AuthenticationOptions;
@@ -563,6 +580,14 @@ export interface RequestStateOptions {
   readonly key: Uint8Array | string;
   readonly ttlSeconds: number;
   readonly maxBytes?: number;
+}
+export interface ClientLoggingOptions {
+  readonly maxEvents?: number;
+  readonly maxEventBytes?: number;
+}
+interface NormalizedClientLogging {
+  readonly maxEvents: number;
+  readonly maxEventBytes: number;
 }
 export interface ResourceSubscriptionOptions {
   readonly maxActive?: number;
@@ -739,7 +764,7 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
       value: listing,
     }),
     [HAS_COMPLETION]: false,
-    [REGISTER](server, timeoutMs, maxApplicationResultBytes, requestState) {
+    [REGISTER](server, timeoutMs, maxApplicationResultBytes, requestState, clientLogging) {
       server.registerResource(
         name,
         uri,
@@ -749,13 +774,19 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
               signal.throwIfAborted();
-              const result = await handler(directHandlerContext(
-                access,
+              const result = await withClientLogReporter(
                 context,
                 signal,
-                deadlineMs,
-                requestState,
-              ));
+                clientLogging,
+                (reportLog) => handler(directHandlerContext(
+                  access,
+                  context,
+                  signal,
+                  deadlineMs,
+                  requestState,
+                  reportLog,
+                )),
+              );
               signal.throwIfAborted();
               if (isInputRequiredResult(result)) {
                 await assertInputRequired(result, requestState, context);
@@ -830,7 +861,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
       value: listing,
     }),
     [HAS_COMPLETION]: completions.size > 0,
-    [REGISTER](server, timeoutMs, maxApplicationResultBytes, requestState) {
+    [REGISTER](server, timeoutMs, maxApplicationResultBytes, requestState, clientLogging) {
       const registeredTemplate = completions.size === 0
         ? template
         : new ResourceTemplate(uriTemplate, {
@@ -855,9 +886,21 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
               signal.throwIfAborted();
-              const result = await handler(
-                { uri: requestedUri.href, variables },
-                directHandlerContext(access, context, signal, deadlineMs, requestState),
+              const result = await withClientLogReporter(
+                context,
+                signal,
+                clientLogging,
+                (reportLog) => handler(
+                  { uri: requestedUri.href, variables },
+                  directHandlerContext(
+                    access,
+                    context,
+                    signal,
+                    deadlineMs,
+                    requestState,
+                    reportLog,
+                  ),
+                ),
               );
               signal.throwIfAborted();
               if (isInputRequiredResult(result)) {
@@ -912,7 +955,7 @@ export function definePrompt<Args extends z.ZodObject>(
     [PROMPT_ACCESS]: access,
     [HAS_COMPLETION]: completions.size > 0,
     [PROMPT_LISTING]: listing,
-    [REGISTER](server, timeoutMs, maxApplicationResultBytes, requestState) {
+    [REGISTER](server, timeoutMs, maxApplicationResultBytes, requestState, clientLogging) {
       server.registerPrompt(
         name,
         {
@@ -932,9 +975,21 @@ export function definePrompt<Args extends z.ZodObject>(
               const parsedArgs = await argsSchema.safeParseAsync(args);
               if (!parsedArgs.success) throw new Error("Prompt received invalid arguments");
               signal.throwIfAborted();
-              const result = await handler(
-                parsedArgs.data,
-                directHandlerContext(access, context, signal, deadlineMs, requestState),
+              const result = await withClientLogReporter(
+                context,
+                signal,
+                clientLogging,
+                (reportLog) => handler(
+                  parsedArgs.data,
+                  directHandlerContext(
+                    access,
+                    context,
+                    signal,
+                    deadlineMs,
+                    requestState,
+                    reportLog,
+                  ),
+                ),
               );
               signal.throwIfAborted();
               if (isInputRequiredResult(result)) {
@@ -1131,7 +1186,15 @@ function createCheckedTool(
     [TOOL_ACCESS]: access,
     [TOOL_STREAMING]: streaming,
     [TOOL_LISTING]: listing,
-    [REGISTER](server, timeoutMs, maxApplicationResultBytes, maxProgressEvents, maxProgressEventBytes, requestState) {
+    [REGISTER](
+      server,
+      timeoutMs,
+      maxApplicationResultBytes,
+      maxProgressEvents,
+      maxProgressEventBytes,
+      requestState,
+      clientLogging,
+    ) {
       server.registerTool(
         name,
         metadata,
@@ -1155,24 +1218,41 @@ function createCheckedTool(
                       maxProgressEventBytes,
                     )
                   : undefined;
+                const logReporter = clientLogging
+                  ? clientLogReporter(
+                      context,
+                      signal,
+                      clientLogging.maxEvents,
+                      clientLogging.maxEventBytes,
+                    )
+                  : undefined;
                 let result: unknown;
                 try {
                   result = await execute(parsedInput.data, {
                     ...(allowsInputRequired
-                      ? directHandlerContext(access, context, signal, deadlineMs, requestState)
+                      ? directHandlerContext(
+                          access,
+                          context,
+                          signal,
+                          deadlineMs,
+                          requestState,
+                          logReporter?.report,
+                        )
                       : {
                           signal,
                           deadlineMs,
                           principal: access === "public"
                             ? undefined
                             : principalFrom(context.http?.authInfo),
+                          ...(logReporter ? { reportLog: logReporter.report } : {}),
                         }),
                     ...(reporter ? { reportProgress: reporter.report } : {}),
                   });
                 } finally {
-                  await reporter?.finish();
+                  await Promise.all([reporter?.finish(), logReporter?.finish()]);
                 }
                 reporter?.throwIfFailed();
+                logReporter?.throwIfFailed();
                 if (allowsInputRequired && isInputRequiredResult(result)) {
                   signal.throwIfAborted();
                   await assertInputRequired(result, requestState, context);
@@ -1278,6 +1358,90 @@ function progressReporter(
     },
     throwIfFailed() { if (failure) throw failure; },
   };
+}
+
+function clientLogReporter(
+  context: {
+    readonly mcpReq: {
+      readonly log: (level: LoggingLevel, data: unknown, logger?: string) => Promise<void>;
+    };
+  },
+  signal: AbortSignal,
+  maxEvents: number,
+  maxEventBytes: number,
+): {
+  readonly report: (message: ClientLogMessage) => Promise<void>;
+  readonly finish: () => Promise<void>;
+  readonly throwIfFailed: () => void;
+} {
+  let closed = false;
+  let failure: Error | undefined;
+  let attempts = 0;
+  const pending = new Set<Promise<void>>();
+  return {
+    report(message) {
+      if (closed) return Promise.reject(new Error("Client logging is no longer available"));
+      if (failure) return Promise.reject(failure);
+      const operation = (async () => {
+        try {
+          signal.throwIfAborted();
+          attempts += 1;
+          if (attempts > maxEvents) throw new Error("Client log event limit exceeded");
+          const notification = {
+            method: "notifications/message" as const,
+            params: {
+              level: message.level,
+              data: message.data,
+              ...(message.logger === undefined ? {} : { logger: message.logger }),
+            },
+          };
+          assertJsonValue(notification, new WeakSet<object>());
+          const encoded = JSON.stringify(notification);
+          if (Buffer.byteLength(encoded, "utf8") > maxEventBytes) {
+            throw new Error("Client log event exceeds configured size limit");
+          }
+          const parsed = specTypeSchemas.LoggingMessageNotification["~standard"].validate(
+            JSON.parse(encoded) as unknown,
+          );
+          if (parsed instanceof Promise || "issues" in parsed) {
+            throw new Error("Client log event is invalid");
+          }
+          const params = parsed.value.params;
+          await context.mcpReq.log(params.level, params.data, params.logger);
+        } catch (error) {
+          failure = error instanceof Error ? error : new Error("Client log emission failed");
+          throw failure;
+        }
+      })();
+      pending.add(operation);
+      void operation.then(() => pending.delete(operation), () => pending.delete(operation));
+      return operation;
+    },
+    async finish() {
+      closed = true;
+      await Promise.allSettled(pending);
+    },
+    throwIfFailed() { if (failure) throw failure; },
+  };
+}
+
+async function withClientLogReporter<Result>(
+  context: Parameters<typeof clientLogReporter>[0],
+  signal: AbortSignal,
+  options: NormalizedClientLogging | undefined,
+  run: (report?: (message: ClientLogMessage) => Promise<void>) => Promise<Result> | Result,
+): Promise<Result> {
+  const reporter = options
+    ? clientLogReporter(context, signal, options.maxEvents, options.maxEventBytes)
+    : undefined;
+  let result: Result;
+  try {
+    result = await run(reporter?.report);
+  } finally {
+    await reporter?.finish();
+  }
+  reporter?.throwIfFailed();
+  return result;
 }
 
 type ListMethod =
@@ -1496,6 +1660,22 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     "maxApplicationResultBytes",
     options.maxApplicationResultBytes ?? 1024 * 1024,
   );
+  const clientLoggingOptions = options.clientLogging;
+  if (clientLoggingOptions !== undefined && !isRecord(clientLoggingOptions)) {
+    throw new TypeError("clientLogging must be an object");
+  }
+  const clientLogging = clientLoggingOptions === undefined
+    ? undefined
+    : Object.freeze({
+        maxEvents: positiveInteger(
+          "clientLogging.maxEvents",
+          (clientLoggingOptions as ClientLoggingOptions).maxEvents ?? 32,
+        ),
+        maxEventBytes: positiveInteger(
+          "clientLogging.maxEventBytes",
+          (clientLoggingOptions as ClientLoggingOptions).maxEventBytes ?? 8 * 1024,
+        ),
+      });
   const maxProgressEvents = positiveInteger(
     "maxProgressEvents",
     options.maxProgressEvents ?? 32,
@@ -1595,6 +1775,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       : discoverablePrompts;
     const activeHasCompletion = activeResources.some((resource) => resource[HAS_COMPLETION]) ||
       activePrompts.some((prompt) => prompt[HAS_COMPLETION]);
+    const activeClientLogging = request?.legacy ? undefined : clientLogging;
     const server = new McpServer(
       serverInfo,
       {
@@ -1608,6 +1789,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
           } : {}),
           ...(activePrompts.length ? { prompts: { listChanged: false } } : {}),
           ...(activeHasCompletion ? { completions: {} } : {}),
+          ...(activeClientLogging ? { logging: {} } : {}),
         },
         instructions: options.instructions,
         cacheHints: request?.filterCatalogues || request?.legacy ? undefined : cacheHints,
@@ -1623,13 +1805,26 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         maxProgressEvents,
         maxProgressEventBytes,
         requestState,
+        activeClientLogging,
       );
     }
     for (const resource of activeResources) {
-      resource[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes, requestState);
+      resource[REGISTER](
+        server,
+        operationTimeoutMs,
+        maxApplicationResultBytes,
+        requestState,
+        activeClientLogging,
+      );
     }
     for (const prompt of activePrompts) {
-      prompt[REGISTER](server, operationTimeoutMs, maxApplicationResultBytes, requestState);
+      prompt[REGISTER](
+        server,
+        operationTimeoutMs,
+        maxApplicationResultBytes,
+        requestState,
+        activeClientLogging,
+      );
     }
     const filteredCatalogues = request?.filterCatalogues
       ? catalogueListings(
@@ -1653,7 +1848,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     if (pagination) installListPagination(server, pagination);
     return server;
   }, {
-    responseMode: hasStreaming || resourceSubscriptions ? "auto" : "json",
+    responseMode: hasStreaming || resourceSubscriptions || clientLogging ? "auto" : "json",
     keepAliveMs: 0,
   });
   const nodeHandler = toNodeHandler(sdkHandler);
@@ -1826,8 +2021,9 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       return;
     }
     if (!await validateMcpRequestHeaders(request, reply, legacy)) return;
-    if (!legacy && isRecord(request.body) && typeof request.body.method === "string" &&
-        !enabledMethods.has(request.body.method)) {
+    if (isRecord(request.body) && typeof request.body.method === "string" &&
+        ((!legacy && !enabledMethods.has(request.body.method)) ||
+          (legacy && request.body.method === "logging/setLevel"))) {
       await sendRpcError(reply, 404, -32601, "Method not found", requestId(request.body.id));
       return;
     }
@@ -3028,6 +3224,7 @@ function directHandlerContext(
   signal: AbortSignal,
   deadlineMs: number,
   requestState: RequestStateRuntime | undefined,
+  reportLog?: (message: ClientLogMessage) => Promise<void>,
 ): ClientInputContext<"public"> & ClientInputContext<"protected"> {
   return {
     signal,
@@ -3038,6 +3235,7 @@ function directHandlerContext(
       requestState: context.mcpReq.requestState(),
       mintRequestState: (payload: unknown) => requestState.mint(payload, context),
     } : {}),
+    ...(reportLog ? { reportLog } : {}),
   } as ClientInputContext<"public"> & ClientInputContext<"protected">;
 }
 

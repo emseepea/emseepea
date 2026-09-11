@@ -97,3 +97,40 @@ understands the returned pea variety details.
 
 [Browse the examples](../examples/) to connect a public API, add authentication,
 send progress updates, or add a web form.
+
+## Send logs to the calling client
+
+MCP 2026-07-28 keeps a deprecated, request-scoped logging channel. Enable it
+only when an application needs to send diagnostics to the calling client:
+
+```ts title="Enable request logs"
+const lookup = defineTool({
+  name: "get-pea-variety",
+  access: "public",
+  description: "Get one pea variety.",
+  inputSchema: z.object({ name: z.string() }),
+  outputSchema: z.object({ name: z.string() }),
+  async handler({ name }, { reportLog }) {
+    await reportLog?.({ level: "info", logger: "catalogue", data: "Looking up variety" });
+    return { data: { name } };
+  },
+});
+
+const app = createEmseepea({
+  name: "pea-guide",
+  version: "1.0.0",
+  tools: [lookup],
+  clientLogging: {},
+});
+```
+
+The client must put `io.modelcontextprotocol/logLevel` in that request. The
+framework sends only messages at or above that level. It defaults to at most
+32 report attempts and 8 KiB per message. Change those positive bounds with
+`clientLogging.maxEvents` and `clientLogging.maxEventBytes`.
+
+`reportLog` is available only to direct and streaming tools, static resources,
+resource templates, and prompts when logging is enabled. It is separate from
+server-operator observability. Em See Pea never copies request or result data
+into it automatically. The removed `logging/setLevel` method is not supported,
+and there is no replay or reconnect recovery.

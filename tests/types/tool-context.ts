@@ -39,11 +39,12 @@ defineTool({
   description: "Compile-time public context check.",
   inputSchema: schema,
   outputSchema: schema,
-  handler: ({ value: _value }, { deadlineMs, inputResponses, principal }) => {
+  handler: async ({ value }, { deadlineMs, inputResponses, principal, reportLog }) => {
     const publicPrincipal: undefined = principal;
     const deadline: number = deadlineMs;
     void publicPrincipal;
     void deadline;
+    await reportLog?.({ level: "info", logger: "type-check", data: { value } });
     const answer = acceptedContent(inputResponses, "answer", schema);
     return answer
       ? { text: answer.value, data: answer }
@@ -62,11 +63,12 @@ defineStreamingTool({
   inputSchema: schema,
   outputSchema: schema,
   async handler({ value }, context) {
-    const { principal, reportProgress } = context;
+    const { principal, reportProgress, reportLog } = context;
     const publicPrincipal: undefined = principal;
     // @ts-expect-error Streaming tools cannot request more client input.
     void context.inputResponses;
     await reportProgress({ progress: 1, total: 1, message: value });
+    await reportLog?.({ level: "debug", data: value });
     void publicPrincipal;
     return { text: value, data: { value } };
   },
@@ -104,6 +106,7 @@ defineResource({
     void publicPrincipal;
     void deadline;
     void signal;
+    void context.reportLog?.({ level: "notice", data: "resource" });
     return { contents: [{ uri: "type-check://resource/value", text: "value" }] };
   },
 });
@@ -132,6 +135,8 @@ defineResourceTemplate({
       const siblings: Readonly<Record<string, string>> = context.arguments;
       // @ts-expect-error Suggestions cannot request more client input.
       void context.inputResponses;
+      // @ts-expect-error Completion handlers cannot emit client-visible logs.
+      void context.reportLog;
       void deadline;
       void signal;
       void siblings;
@@ -149,6 +154,7 @@ defineResourceTemplate({
     void value;
     void deadline;
     void signal;
+    void context.reportLog?.({ level: "info", data: requestedUri });
     return { contents: [{ uri: requestedUri, text: "value" }] };
   },
 });
@@ -161,6 +167,8 @@ definePrompt({
     value: (partial, context) => {
       const candidate: string = partial;
       const siblings: Readonly<Record<string, string>> = context.arguments;
+      // @ts-expect-error Completion handlers cannot emit client-visible logs.
+      void context.reportLog;
       return [candidate, ...Object.values(siblings)];
     },
   },
@@ -172,6 +180,7 @@ definePrompt({
     void publicPrincipal;
     void deadline;
     void signal;
+    void context.reportLog?.({ level: "warning", data: value });
     return { messages: [{ role: "user", content: { type: "text", text: value } }] };
   },
 });
@@ -232,6 +241,8 @@ defineMappedTool({
     void context.inputResponses;
     // @ts-expect-error Backend adapters do not receive caller principals.
     void context.principal;
+    // @ts-expect-error Backend adapters cannot emit client-visible logs.
+    void context.reportLog;
     void deadline;
     void signal;
     return { record: key };
