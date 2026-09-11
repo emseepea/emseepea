@@ -1226,18 +1226,17 @@ function createCheckedTool(
                   result = await runLoggedTool(parsedInput.data, context, signal, deadlineMs, reporter);
                 } else {
                   try {
-                    result = await execute(parsedInput.data, {
-                      ...(allowsInputRequired
-                        ? directHandlerContext(access, context, signal, deadlineMs, requestState)
-                        : {
-                            signal,
-                            deadlineMs,
-                            principal: access === "public"
-                              ? undefined
-                              : principalFrom(context.http?.authInfo),
-                          }),
-                      ...(reporter ? { reportProgress: reporter.report } : {}),
-                    });
+                    const handlerContext = allowsInputRequired
+                      ? directHandlerContext(access, context, signal, deadlineMs, requestState)
+                      : {
+                          signal,
+                          deadlineMs,
+                          principal: access === "public"
+                            ? undefined
+                            : principalFrom(context.http?.authInfo),
+                        };
+                    if (reporter) Object.assign(handlerContext, { reportProgress: reporter.report });
+                    result = await execute(parsedInput.data, handlerContext);
                   } finally {
                     await reporter?.finish();
                   }
