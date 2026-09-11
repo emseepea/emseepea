@@ -1,5 +1,12 @@
 # @emseepea/create-tool-server
 
+## 0.0.21
+
+### Patch Changes
+
+- [`79efc97`](https://github.com/emseepea/emseepea/commit/79efc975b2e7ec820b4fc3f3529c9bb0144fd75a) Thanks [@tompahoward](https://github.com/tompahoward)! - Regenerate every maintained initializer so new projects install
+  @emseepea/server 0.7.0, @emseepea/feedback 0.2.1, and @emseepea/testing 0.9.4.
+
 ## 0.0.20
 
 ### Patch Changes
