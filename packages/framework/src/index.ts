@@ -1218,45 +1218,59 @@ function createCheckedTool(
                       maxProgressEventBytes,
                     )
                   : undefined;
-                const logReporter = clientLogging
-                  ? clientLogReporter(
-                      context,
-                      signal,
-                      clientLogging.maxEvents,
-                      clientLogging.maxEventBytes,
-                    )
-                  : undefined;
                 let result: unknown;
-                try {
-                  const handlerContext = {
-                    ...(allowsInputRequired
-                      ? directHandlerContext(
-                          access,
-                          context,
-                          signal,
-                          deadlineMs,
-                          requestState,
-                          logReporter?.report,
-                        )
-                      : {
-                          signal,
-                          deadlineMs,
-                          principal: access === "public"
-                            ? undefined
-                            : principalFrom(context.http?.authInfo),
-                        }),
-                    ...(reporter ? { reportProgress: reporter.report } : {}),
-                  };
-                  if (!allowsInputRequired && logReporter) {
-                    Object.assign(handlerContext, { reportLog: logReporter.report });
+                if (clientLogging) {
+                  const logReporter = clientLogReporter(
+                    context,
+                    signal,
+                    clientLogging.maxEvents,
+                    clientLogging.maxEventBytes,
+                  );
+                  try {
+                    result = await execute(parsedInput.data, {
+                      ...(allowsInputRequired
+                        ? directHandlerContext(
+                            access,
+                            context,
+                            signal,
+                            deadlineMs,
+                            requestState,
+                            logReporter.report,
+                          )
+                        : {
+                            signal,
+                            deadlineMs,
+                            principal: access === "public"
+                              ? undefined
+                              : principalFrom(context.http?.authInfo),
+                            reportLog: logReporter.report,
+                          }),
+                      ...(reporter ? { reportProgress: reporter.report } : {}),
+                    });
+                  } finally {
+                    await Promise.all([reporter?.finish(), logReporter.finish()]);
                   }
-                  result = await execute(parsedInput.data, handlerContext);
-                } finally {
-                  if (logReporter) await Promise.all([reporter?.finish(), logReporter.finish()]);
-                  else await reporter?.finish();
+                  reporter?.throwIfFailed();
+                  logReporter.throwIfFailed();
+                } else {
+                  try {
+                    result = await execute(parsedInput.data, {
+                      ...(allowsInputRequired
+                        ? directHandlerContext(access, context, signal, deadlineMs, requestState)
+                        : {
+                            signal,
+                            deadlineMs,
+                            principal: access === "public"
+                              ? undefined
+                              : principalFrom(context.http?.authInfo),
+                          }),
+                      ...(reporter ? { reportProgress: reporter.report } : {}),
+                    });
+                  } finally {
+                    await reporter?.finish();
+                  }
+                  reporter?.throwIfFailed();
                 }
-                reporter?.throwIfFailed();
-                logReporter?.throwIfFailed();
                 if (allowsInputRequired && isInputRequiredResult(result)) {
                   signal.throwIfAborted();
                   await assertInputRequired(result, requestState, context);
