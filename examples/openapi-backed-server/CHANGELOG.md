@@ -1,5 +1,12 @@
 # @emseepea/create-openapi-backed-server
 
+## 0.0.2
+
+### Patch Changes
+
+- [`7843b73`](https://github.com/emseepea/emseepea/commit/7843b73e816bd8cdb2963f71ba77a877fd98b693) Thanks [@tompahoward](https://github.com/tompahoward)! - Support five named legacy Model Context Protocol (MCP) revisions through the existing stateless POST endpoint while retaining MCP 2026-07-28 as the active protocol target.
+  Refresh every maintained initializer so newly generated projects install this server release.
+
 ## 0.0.1
 
 ### Patch Changes

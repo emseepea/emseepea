@@ -1,5 +1,12 @@
 # @emseepea/create-progress-streaming-server
 
+## 0.0.20
+
+### Patch Changes
+
+- [`7843b73`](https://github.com/emseepea/emseepea/commit/7843b73e816bd8cdb2963f71ba77a877fd98b693) Thanks [@tompahoward](https://github.com/tompahoward)! - Support five named legacy Model Context Protocol (MCP) revisions through the existing stateless POST endpoint while retaining MCP 2026-07-28 as the active protocol target.
+  Refresh every maintained initializer so newly generated projects install this server release.
+
 ## 0.0.19
 
 ### Patch Changes
@@ -38,7 +45,7 @@
 - [`55d7853`](https://github.com/emseepea/emseepea/commit/55d785354ffd1081e44b5803033bc6cfb7ba7add) Thanks [@tompahoward](https://github.com/tompahoward)! - Add optional detailed feedback submissions, protected append-only support
   conversations, PostgreSQL and Firestore storage, GitHub Issues and Zendesk HTTP
   adapters, authenticated provider event ingestion, and typed application hooks.
-  
+
   Allow every server factory to compose optional tools through `additionalTools`.
   Add a semantic assertion that successful application journeys did not record
   negative feedback, and run it against the real feedback tool in every starter.

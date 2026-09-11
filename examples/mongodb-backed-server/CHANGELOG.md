@@ -1,5 +1,12 @@
 # @emseepea/create-mongodb-backed-server
 
+## 0.0.7
+
+### Patch Changes
+
+- [`7843b73`](https://github.com/emseepea/emseepea/commit/7843b73e816bd8cdb2963f71ba77a877fd98b693) Thanks [@tompahoward](https://github.com/tompahoward)! - Support five named legacy Model Context Protocol (MCP) revisions through the existing stateless POST endpoint while retaining MCP 2026-07-28 as the active protocol target.
+  Refresh every maintained initializer so newly generated projects install this server release.
+
 ## 0.0.6
 
 ### Patch Changes
@@ -31,7 +38,7 @@
 - [`55d7853`](https://github.com/emseepea/emseepea/commit/55d785354ffd1081e44b5803033bc6cfb7ba7add) Thanks [@tompahoward](https://github.com/tompahoward)! - Add optional detailed feedback submissions, protected append-only support
   conversations, PostgreSQL and Firestore storage, GitHub Issues and Zendesk HTTP
   adapters, authenticated provider event ingestion, and typed application hooks.
-  
+
   Allow every server factory to compose optional tools through `additionalTools`.
   Add a semantic assertion that successful application journeys did not record
   negative feedback, and run it against the real feedback tool in every starter.
@@ -51,7 +58,7 @@
 - [`3e655bb`](https://github.com/emseepea/emseepea/commit/3e655bb9095e67a4b40381b35cc12122a706d885) Thanks [@tompahoward](https://github.com/tompahoward)! - Add initializer packages for schema-generated PostgreSQL integration, MongoDB
   collections with and without database validation, and contract-validated SOAP
   services.
-  
+
   Isolate stateful semantic-test server environments per answer trial and expose
   captured server output for credential-safe integration assertions.
 

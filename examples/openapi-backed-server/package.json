@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-openapi-backed-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Create an Em See Pea server backed by an OpenAPI-described web API.",
   "license": "MIT",
   "type": "module",
@@ -21,10 +21,10 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/feedback": "0.2.2",
-    "@emseepea/server": "0.8.0",
+    "@emseepea/feedback": "0.2.3",
+    "@emseepea/server": "0.8.1",
     "@scalar/openapi-upgrader": "0.2.15",
-    "@emseepea/testing": "0.9.5",
+    "@emseepea/testing": "0.9.6",
     "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "24.13.3",
     "oxlint": "1.80.0",
