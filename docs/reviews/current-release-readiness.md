@@ -100,11 +100,12 @@ link to the guide.
   `.github/workflows/release.yml`.
 - Cognitive-accessibility evidence is bound to the changed public Markdown in
   `docs/reviews/cognitive-accessibility-2026-09-11.md`.
-- Before the latest rebase, implementation commit
-  `49e637d4bce20f86435d5f61445f80104b07ec22` passed all 15 jobs in
-  [Quality run 34589512078](https://github.com/emseepea/emseepea/actions/runs/34589512078),
-  including Node.js 22 and 24 and all 11 container initializer shards. This is
-  pre-publication evidence only.
+- Implementation commit
+  `dc77c1cd51832fed9439d09bf554f587e04b1a1b` passed all 15 required jobs in
+  [Quality run 34592518259](https://github.com/emseepea/emseepea/actions/runs/34592518259),
+  including Node.js 22.23.2, Node.js 24.21.0, OSV, website publication checks,
+  and all 11 initializer/container shards. The separate website publication
+  job was skipped, so this is pre-publication evidence only.
 
 ## Required Publication Evidence
 
@@ -134,7 +135,9 @@ link to the guide.
 
 ## Review Status
 
-- Result: PENDING for the rebased implementation.
+- Result: PASS for pre-publication readiness at implementation commit
+  `dc77c1cd51832fed9439d09bf554f587e04b1a1b` via
+  [Quality run 34592518259](https://github.com/emseepea/emseepea/actions/runs/34592518259).
 - Release verification: NOT COMPLETE until the exact registry, provenance,
   standalone, container, website, and remaining publication gates pass.
 - Final result: within appetite, subject to the required exact-commit gates.
