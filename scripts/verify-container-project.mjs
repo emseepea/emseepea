@@ -224,7 +224,7 @@ async function withApp(image, target, configPath, check) {
   let proxy;
   try {
     const fixtureArguments = fixture.caPath ? [
-      "--add-host", `fixture.example:${gateway}`,
+      "--add-host", `fixture.example:${fixtureNetworks[key].gateway}`,
       "--mount", `type=bind,source=${fixture.caPath},target=/run/emseepea/fixture-ca.pem,readonly`,
       "-e", "NODE_EXTRA_CA_CERTS=/run/emseepea/fixture-ca.pem",
     ] : ["--add-host", "host.docker.internal:host-gateway"];
