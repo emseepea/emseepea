@@ -1,0 +1,17 @@
+.env
+.env.*
+.git
+.github
+.npmrc
+artifacts
+coverage
+dist
+docs
+eval
+initializer-dist
+node_modules
+release-artifacts
+test
+test-support
+*.log
+*.tsbuildinfo

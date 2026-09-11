@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 73 decisions: 38 current and 35 historical.
+This project has 76 decisions: 41 current and 35 historical.
 
 ## Quick Index
 
@@ -49,6 +49,9 @@ This project has 73 decisions: 38 current and 35 historical.
 - [ADR-0072: Opt-In Integrity-Protected Request State](0072-opt-in-integrity-protected-request-state.proposed.md): Proposed; human review confirmed.
 - [ADR-0074: Same-Endpoint Stateless Legacy Protocol Support](0074-same-endpoint-stateless-legacy-protocol-support.proposed.md): Proposed; human review confirmed.
 - [ADR-0075: Opt-In Bounded Request-Scoped MCP Logging](0075-opt-in-bounded-request-scoped-mcp-logging.proposed.md): Proposed; human review confirmed.
+- [ADR-0076: npm Scripts as the User-Facing Command Contract](0076-npm-scripts-as-the-user-facing-command-contract.proposed.md): Proposed; human review confirmed.
+- [ADR-0077: Digest-Pinned Official Node Builder and Distroless Runtime](0077-digest-pinned-official-node-builder-and-distroless-runtime.proposed.md): Proposed; human review confirmed.
+- [ADR-0078: Example-Owned Production Containers Behind Trusted Proxies](0078-example-owned-production-containers-behind-trusted-proxies.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -1632,3 +1635,67 @@ Chosen option: **"Opt-in bounded request-scoped logging using the MCP SDK"**, be
 - Framework observability still receives only its existing redacted event and cannot change protocol output.
 - Raw HTTP, official-client, packed-package, slow-reader, disconnect, and bounded-load checks pass before release.
 - Documentation calls this channel deprecated and distinguishes it from server operator logging and observability.
+
+### [ADR-0076: npm Scripts as the User-Facing Command Contract](0076-npm-scripts-as-the-user-facing-command-contract.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0076 Decision
+
+Chosen option: **"npm scripts are the user-facing command contract"**, because npm already provides the smallest common command surface across every example and generated project.
+
+#### ADR-0076 Checks
+
+- Every generated initializer manifest contains exactly `"container:build": "docker build --tag emseepea-server:local ."` when container support is introduced.
+- Routine public documentation calls `npm run container:build` and contains no raw `docker build` or `docker run` instruction.
+- Database examples expose `db:start` and `db:reset`; their `dev` scripts compose npm scripts rather than repeat Docker Compose commands.
+- Documentation describes `db:reset` as deleting the local database volume before the command is run.
+- Existing build, start, test, lint, and generation instructions use their project scripts.
+- Automated documentation checks fail when a routine public instruction bypasses an available npm script or a required generated-project script is absent or inconsistent.
+- No second task runner or speculative script is added.
+
+### [ADR-0077: Digest-Pinned Official Node Builder and Distroless Runtime](0077-digest-pinned-official-node-builder-and-distroless-runtime.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0077 Decision
+
+Chosen option: **"Official Node builder with a Google Distroless runtime"**, because build tooling belongs in the build stage while the production stage needs only a minimal Node runtime whose exact contents, signature, user, and architectures can be verified.
+
+#### ADR-0077 Checks
+
+- Every example Dockerfile uses identical digest-pinned official Node `trixie-slim` builder and Distroless Node 24 Debian 13 non-root runtime references.
+- Both images report the exact Node 24 patch in `.node-version`.
+- Both OCI indexes contain `linux/amd64` and `linux/arm64/v8` manifests.
+- The Distroless signature matches Google's documented keyless issuer and publishing identity.
+- The release image reports a non-root user and contains no shell or package manager.
+- Every generated image passes health, readiness, runtime configuration, secret injection, and clean shutdown checks with a read-only root filesystem.
+- Native runtime dependencies pass on both required architectures.
+- A base refresh rebuilds and qualifies every standalone initializer image.
+- Release evidence records both exact base references used by the qualified commit.
+- No automatic-refresh claim is made unless updater configuration and its checks exist.
+
+### [ADR-0078: Example-Owned Production Containers Behind Trusted Proxies](0078-example-owned-production-containers-behind-trusted-proxies.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0078 Decision
+
+Chosen option: **"Example-owned production containers behind trusted proxies"**, because the copyable examples should teach the complete safe deployment path, not merely produce an image that cannot be deployed or is unsafe when exposed.
+
+#### ADR-0078 Checks
+
+- The canonical initializer list requires all eleven examples, and no non-initializer workspace, to own the container files.
+- Every initializer passes its documented install, npm image build, hardened execution, proxy, health, readiness, MCP, and shutdown journey.
+- Prepublication qualification uses exact packed first-party artifacts and fails on registry fallback.
+- Image inspection satisfies every ADR-0077 base, signature, architecture, runtime, and asset check.
+- Image history and context contain no secrets, credential files, local environment files, source-control metadata, or evidence artifacts.
+- Missing or invalid production policy exits before listening; local startup remains loopback-only.
+- Every journey rejects invalid forwarding, authority, origin, proxy address, rate-limit, authentication, and authorization inputs before application work.
+- Database Compose ports remain loopback-bound and its credentials and purpose are explicitly local and non-production.
+- Ordinary JSON performance reports the exact profile, four request classes, measurements, daily projection source, and result against ADR-0014.
+- Protected progress reports only ADR-0068's load and safety evidence.
+- Website, README, npm-script, link, build, and cognitive-accessibility checks pass without duplicated routine Docker commands.

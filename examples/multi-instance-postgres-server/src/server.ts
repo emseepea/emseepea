@@ -1,9 +1,9 @@
-import { serveEmseepea } from "@emseepea/server";
+import { loadDeploymentProfile, serveEmseepea } from "@emseepea/server";
 import { createMultiInstanceExample } from "./app.js";
 
 const instanceName = process.env.EMSEEPEA_INSTANCE ?? `instance-${process.pid}`;
 const databaseUrl = process.env.DATABASE_URL ?? "postgres://emseepea:emseepea@127.0.0.1:5432/emseepea";
-const { app, closeProvider } = await createMultiInstanceExample({ databaseUrl });
+const { app, closeProvider } = await createMultiInstanceExample({ databaseUrl, deployment: loadDeploymentProfile() });
 const running = await serveEmseepea(app, {
   port: Number.parseInt(process.env.PORT ?? "3000", 10),
 });

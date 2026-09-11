@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { execFile, spawnSync } from "node:child_process";
 import test from "node:test";
 
@@ -9,7 +10,14 @@ import { initializerPackages } from "../../scripts/public-packages.mjs";
 
 const root = new URL("../../", import.meta.url);
 const skipInitializers = process.env.EMSEEPEA_SKIP_PACKED_INITIALIZERS;
+const verifyContainers = process.env.EMSEEPEA_VERIFY_CONTAINERS;
+const containerExample = process.env.EMSEEPEA_CONTAINER_EXAMPLE;
 assert.ok(skipInitializers === undefined || skipInitializers === "true", "invalid initializer skip value");
+assert.ok(verifyContainers === undefined || verifyContainers === "true", "invalid container verification value");
+const selectedInitializers = containerExample === undefined
+  ? initializerPackages
+  : initializerPackages.filter(({ example }) => example === containerExample);
+assert.ok(containerExample === undefined || selectedInitializers.length === 1, "invalid container example");
 
 function registryDependencyVersions(lockfile) {
   const versions = new Set();
@@ -46,10 +54,10 @@ function run(command, args, cwd) {
   return result.stdout;
 }
 
-function runAsync(command, args, cwd) {
+function runAsync(command, args, cwd, timeoutOverride) {
   const environment = { ...process.env };
   delete environment.NODE_TEST_CONTEXT;
-  const timeout = command === "npm" && ["exec", "install"].includes(args[0]) ? 600_000 : 120_000;
+  const timeout = timeoutOverride ?? (command === "npm" && ["exec", "install"].includes(args[0]) ? 600_000 : 120_000);
   return new Promise((resolve, reject) => {
     execFile(command, args, { cwd, encoding: "utf8", timeout, env: environment }, (error, stdout, stderr) => {
       if (error) {
@@ -280,7 +288,7 @@ test("every packed initializer creates a standalone checked project", {
       ["@emseepea/testing", "./packages/testing"],
       ["@emseepea/react", "./packages/react"],
       ["@emseepea/tailwind", "./packages/tailwind"],
-      ...initializerPackages.map(({ name, path: packagePath }) => [name, `./${packagePath}`]),
+      ...selectedInitializers.map(({ name, path: packagePath }) => [name, `./${packagePath}`]),
     ].map(async ([name, packagePath]) => [name, await packPackage(packagePath, directory)])));
     const fakeModel = path.join(directory, "fake-model.mjs");
     await cp(new URL("../fixtures/fake-semantic-model.mjs", import.meta.url), fakeModel);
@@ -307,7 +315,7 @@ test("every packed initializer creates a standalone checked project", {
       ],
     };
 
-    const queue = [...initializerPackages];
+    const queue = [...selectedInitializers];
     const failures = [];
     const verify = async (initializer) => {
       const parent = path.join(directory, initializer.key);
@@ -326,6 +334,7 @@ test("every packed initializer creates a standalone checked project", {
       const manifest = JSON.parse(await readFile(path.join(example, "package.json"), "utf8"));
       assert.equal(manifest.name, "my-server");
       assert.equal(manifest.private, true);
+      assert.equal(manifest.scripts["container:build"], "docker build --tag emseepea-server:local .");
       const internalPackages = Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })
         .filter((dependency) => tarballs.has(dependency))
         .map((dependency) => tarballs.get(dependency));
@@ -362,7 +371,7 @@ test("every packed initializer creates a standalone checked project", {
         } satisfies EmseepeaExtensions;
       `);
       await runAsync("npm", ["run", "lint"], example);
-      await runAsync("npm", ["test"], example);
+      await runAsync("npm", ["test"], example, 300_000);
       await runAsync("npm", [
         "run",
         "test:llm:built",
@@ -449,6 +458,19 @@ test("every packed initializer creates a standalone checked project", {
       }
     }));
     if (failures.length > 0) throw failures[0];
+    if (verifyContainers === "true") {
+      const tarballMap = path.join(directory, "container-tarballs.json");
+      await writeFile(tarballMap, JSON.stringify(Object.fromEntries(tarballs)));
+      const verifier = fileURLToPath(new URL("../../scripts/verify-container-project.mjs", import.meta.url));
+      for (const initializer of selectedInitializers) {
+        await runAsync(process.execPath, [
+          verifier,
+          initializer.example,
+          path.join(directory, initializer.key, "my-server"),
+          tarballMap,
+        ], root, 1_200_000);
+      }
+    }
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

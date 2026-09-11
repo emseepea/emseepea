@@ -68,6 +68,24 @@ npm start
 ```
 
 The MCP endpoint is `http://127.0.0.1:3000/mcp`.
+`PETSTORE_API_ORIGIN` can select an operator-controlled compatible endpoint;
+when it is unset, the server uses Swagger Petstore.
+
+## Build a production container
+
+Run `npm install` first so the project has a lockfile. Then run:
+
+```sh
+npm run container:build
+```
+
+The image is for a production deployment behind a trusted proxy. It starts with
+the fail-closed production profile and needs a runtime-mounted deployment
+configuration file. Keep secrets in your platform's runtime secret store, not in
+the Dockerfile, build arguments, or deployment configuration file.
+
+For the production proxy, runtime configuration, and hardening requirements, see
+the [container guide](https://emseepea.github.io/emseepea/examples/#build-a-production-container).
 
 ## Choose Open or Protected Access
 

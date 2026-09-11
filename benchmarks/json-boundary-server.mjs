@@ -14,9 +14,21 @@ const tool = defineMappedTool({
   adapter: ({ id }) => ({ id, value: "synthetic" }),
   mapOutput: (data) => ({ text: "synthetic", data }),
 });
+const productionClass = process.argv.find((argument) => argument.startsWith("--production-class="))?.split("=")[1];
 const app = createEmseepea({
   name: "emseepea-benchmark", version: "0.0.0", tools: [tool],
   observability: process.argv.includes("--observability") ? [openTelemetry()] : undefined,
+  deployment: productionClass ? {
+    mode: "production-behind-proxy",
+    allowedAuthorities: ["mcp.example.com"],
+    allowedOrigins: ["https://mcp.example.com"],
+    trustedProxyAddresses: ["127.0.0.1"],
+    rateLimit: {
+      maxRequests: productionClass === "rate-limited" ? 1 : 1_000_000_000,
+      windowMs: 60_000,
+      maxClients: productionClass === "capacity-exhausted" ? 1 : 1_000,
+    },
+  } : undefined,
 });
 const running = await serveEmseepea(app, { port: 0 });
 let cpuStart;

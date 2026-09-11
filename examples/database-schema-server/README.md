@@ -77,8 +77,12 @@ Stop the server with Control-C. Remove the local database and volume when you
 no longer need them:
 
 ```sh
-docker compose down --volumes
+npm run db:reset
 ```
+
+`npm run db:reset` deletes the local PostgreSQL volume and its data. You cannot
+undo this action. Docker Compose starts PostgreSQL for local development only.
+It is not a production deployment recipe.
 
 ## Change the Database Contract
 
@@ -86,8 +90,8 @@ Edit `schema.sql`, recreate the development database, then regenerate the
 checked-in files:
 
 ```sh
-docker compose down --volumes
-docker compose up --detach --wait database
+npm run db:reset
+npm run db:start
 npm run generate
 ```
 
@@ -98,6 +102,23 @@ Views are the preferred application boundary because they support ordinary
 reads and writes while insulating tools from storage tables. The
 `summarize-pea-catalog` procedure is included only for databases where an
 existing operation must remain procedural.
+
+## Build a production container
+
+Run `npm install` first so the project has a lockfile. Then run:
+
+```sh
+npm run container:build
+```
+
+The image is for a production deployment behind a trusted proxy. It starts with
+the fail-closed production profile and needs a runtime-mounted deployment
+configuration file. Keep secrets, including `DATABASE_URL`, in your platform's
+runtime secret store, not in the Dockerfile, build arguments, or deployment
+configuration file.
+
+For the production proxy, runtime configuration, and hardening requirements, see
+the [container guide](https://emseepea.github.io/emseepea/examples/#build-a-production-container).
 
 ## Tools
 

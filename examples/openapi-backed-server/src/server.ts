@@ -1,13 +1,13 @@
-import { serveEmseepea } from "@emseepea/server";
+import { loadDeploymentProfile, serveEmseepea } from "@emseepea/server";
 import { createJsonHttpClient } from "@emseepea/server/http";
 import { createBackendExample } from "./app.js";
 
 const client = createJsonHttpClient({
-  origin: "https://petstore3.swagger.io",
+  origin: process.env.PETSTORE_API_ORIGIN ?? "https://petstore3.swagger.io",
   maxResponseBytes: 128 * 1024,
 });
 const running = await serveEmseepea(
-  await createBackendExample(client),
+  await createBackendExample(client, { deployment: loadDeploymentProfile() }),
   { port: Number.parseInt(process.env.PORT ?? "3000", 10) },
 );
 

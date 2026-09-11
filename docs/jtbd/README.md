@@ -18,6 +18,7 @@ Developers who use Em See Pea to create and test MCP servers.
 | JTBD-001 | Start a useful MCP server | [Start a useful MCP server](mcp-server-developer/JTBD-001-start-a-useful-mcp-server.proposed.md) |
 | JTBD-002 | Add optional capabilities | [Add optional capabilities](mcp-server-developer/JTBD-002-add-optional-capabilities.proposed.md) |
 | JTBD-003 | Prove an AI understands the result | [Prove an AI understands the result](mcp-server-developer/JTBD-003-prove-an-ai-understands-the-result.proposed.md) |
+| JTBD-004 | Deploy an MCP server safely | [Deploy an MCP server safely](mcp-server-developer/JTBD-004-deploy-an-mcp-server-safely.proposed.md) |
 
 ## Framework Maintainer
 

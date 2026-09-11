@@ -1,7 +1,7 @@
-import { serveEmseepea } from "@emseepea/server";
+import { loadDeploymentProfile, serveEmseepea } from "@emseepea/server";
 import { createProgressStreamingServer } from "./app.js";
 
-const running = await serveEmseepea(await createProgressStreamingServer(), {
+const running = await serveEmseepea(await createProgressStreamingServer({ deployment: loadDeploymentProfile() }), {
   port: Number.parseInt(process.env.PORT ?? "3000", 10),
 });
 

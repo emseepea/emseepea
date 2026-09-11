@@ -75,6 +75,23 @@ Keep service credentials outside the URL and source code. Add authentication
 headers inside the server for your provider. Never accept an endpoint, schema
 location, SOAP action, or arbitrary XML from an MCP caller.
 
+## Build a production container
+
+Run `npm install` first so the project has a lockfile. Then run:
+
+```sh
+npm run container:build
+```
+
+The image includes the local WSDL and XSD contracts required at runtime. It is
+for a production deployment behind a trusted proxy, starts with the fail-closed
+production profile, and needs a runtime-mounted deployment configuration file.
+Keep secrets in your platform's runtime secret store, not in the Dockerfile,
+build arguments, or deployment configuration file.
+
+For the production proxy, runtime configuration, and hardening requirements, see
+the [container guide](https://emseepea.github.io/emseepea/examples/#build-a-production-container).
+
 ## Change the Contract
 
 Edit the local files under `contracts/`, then regenerate and review the diff:

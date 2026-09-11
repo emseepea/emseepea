@@ -75,8 +75,12 @@ with Control-C. Remove the database container and local volume when you no
 longer need them:
 
 ```sh
-docker compose down --volumes
+npm run db:reset
 ```
+
+`npm run db:reset` deletes the local PostgreSQL volume and its data. You cannot
+undo this action. Docker Compose starts PostgreSQL for local development only.
+It is not a production deployment recipe.
 
 ## Use Managed PostgreSQL
 
@@ -93,6 +97,26 @@ Use a different port or deployment endpoint for each process. You may set
 `EMSEEPEA_INSTANCE` to add an operator-friendly label to logs. That label never
 enters the MCP tool contract. Protect `DATABASE_URL` as a secret. Do not put it
 in source control or send it to an MCP client.
+
+## Build a production container
+
+Run `npm install` first so the project has a lockfile. Then run:
+
+```sh
+npm run container:build
+```
+
+The image runs one `dist/server.js` process. Run separate containers for
+separate production instances and point them at the same managed PostgreSQL
+database.
+
+The image is for a production deployment behind a trusted proxy. It starts with
+the fail-closed production profile and needs a runtime-mounted deployment
+configuration file. Keep secrets in your platform's runtime secret store, not in
+the Dockerfile, build arguments, or deployment configuration file.
+
+For the production proxy, runtime configuration, and hardening requirements, see
+the [container guide](https://emseepea.github.io/emseepea/examples/#build-a-production-container).
 
 ## Tools
 
