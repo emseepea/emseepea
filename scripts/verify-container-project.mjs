@@ -59,6 +59,10 @@ try {
       .filter((gateway) => typeof gateway === "string" && gateway.includes("."));
     assert.equal(gateways.length, 1, "container network must have exactly one IPv4 gateway");
     const [gateway] = gateways;
+    const defaultNetworkInspection = JSON.parse(await run("docker", ["network", "inspect", "bridge"], project))[0];
+    const protectedGateway = defaultNetworkInspection.IPAM.Config.map(({ Gateway }) => Gateway)
+      .find((candidate) => typeof candidate === "string" && candidate.includes("."));
+    assert.ok(protectedGateway, "default container network must have an IPv4 gateway");
     fixture = await startFixture();
 
     for (const target of [
@@ -71,7 +75,7 @@ try {
         "buildx", "build", "--platform", target.platform, "--load", "--tag", image, ".",
       ], project, {}, 900_000);
       await verifyImage(image, target, secretCanary);
-      await verifyRunningImage(image, target, gateway);
+      await verifyRunningImage(image, target, gateway, protectedGateway);
     }
 
     if (key === "tool-server") {
@@ -124,8 +128,8 @@ async function verifyImage(image, { platform, architecture }, secretCanary) {
   }
 }
 
-async function verifyRunningImage(image, target, gateway) {
-  await verifyProtectedBoundary(image, target, gateway);
+async function verifyRunningImage(image, target, gateway, protectedGateway) {
+  await verifyProtectedBoundary(image, target, protectedGateway);
   await assert.rejects(run("docker", ["run", "--rm", "--platform", target.platform, image], project));
   const invalidPath = await writePolicy(`${target.architecture}-invalid`, "{\"unknown\":true}\n");
   await assert.rejects(run("docker", [
@@ -163,7 +167,7 @@ async function verifyRunningImage(image, target, gateway) {
   });
 }
 
-async function verifyProtectedBoundary(image, target, gateway) {
+async function verifyProtectedBoundary(image, target, protectedGateway) {
   const container = `${composeProject}-${target.architecture}-protected`;
   let proxy;
   const script = `
@@ -185,7 +189,7 @@ async function verifyProtectedBoundary(image, target, gateway) {
           response_types_supported: ["code"] } },
       },
       deployment: { mode: "production-behind-proxy", allowedAuthorities: ["mcp.example.com"],
-        allowedOrigins: ["https://mcp.example.com"], trustedProxyAddresses: [${JSON.stringify(gateway)}],
+        allowedOrigins: ["https://mcp.example.com"], trustedProxyAddresses: [${JSON.stringify(protectedGateway)}],
         rateLimit: { maxRequests: 10, windowMs: 60000, maxClients: 1 } },
     });
     const running = await serveEmseepea(app, { host: "0.0.0.0", port: ${containerPort} });
@@ -194,7 +198,6 @@ async function verifyProtectedBoundary(image, target, gateway) {
   try {
     await run("docker", [
       "run", "--detach", "--name", container, "--platform", target.platform,
-      "--network", network,
       "--read-only", "--tmpfs", "/tmp:rw,noexec,nosuid,nodev,size=16m", "--cap-drop", "ALL",
       "--security-opt", "no-new-privileges", "--publish", `127.0.0.1::${containerPort}`,
       "--entrypoint", "/nodejs/bin/node", image, "--input-type=module", "-e", script,
@@ -428,7 +431,7 @@ async function mcpCall(url, headers = {}, method = "tools/list", params = {}) {
     method: "POST",
     headers: {
       accept: "application/json, text/event-stream", "content-type": "application/json",
-      "mcp-method": method, ...(params.name ? { "mcp-name": params.name } : {}),
+      "mcp-method": method, ...(params.name ?? params.uri ? { "mcp-name": params.name ?? params.uri } : {}),
       "mcp-protocol-version": "2026-07-28", ...headers,
     },
     body: JSON.stringify({
