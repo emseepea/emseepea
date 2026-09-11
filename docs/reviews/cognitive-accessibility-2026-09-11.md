@@ -26,7 +26,7 @@ are clear, local evidence remains separate from required publication evidence,
 and the unpublished disclaimer prevents an early publication claim.
 
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `1af8a3b805cbc4bbb83ed6547f475442df24ca34b504c10ca0be1e1e5ceb5d56`
+  SHA-256: `208d1386053b177b007a6ba95d61fc31b2227e38b26340f6f79037bde46b960e`
 
 ## Resource Catalogue and Subscription Guidance
 

@@ -4,21 +4,16 @@ Date: 2026-09-11
 
 ## Release Batch
 
-- `@emseepea/server@0.7.0`
-- `@emseepea/feedback@0.2.1`
-- `@emseepea/testing@0.9.4`
-- `@emseepea/react@0.0.14`
-- `@emseepea/tailwind@0.0.2`
-- `@emseepea/create-tool-server@0.0.20`
-- `@emseepea/create-api-backed-server@0.0.18`
-- `@emseepea/create-resources-and-prompts-server@0.0.17`
-- `@emseepea/create-progress-streaming-server@0.0.18`
-- `@emseepea/create-html-ui-server@0.0.19`
-- `@emseepea/create-react-ui-server@0.0.18`
-- `@emseepea/create-multi-instance-postgres-server@0.0.8`
-- `@emseepea/create-database-schema-server@0.0.5`
-- `@emseepea/create-mongodb-backed-server@0.0.5`
-- `@emseepea/create-soap-backed-server@0.0.5`
+- `@emseepea/create-tool-server@0.0.21`
+- `@emseepea/create-api-backed-server@0.0.19`
+- `@emseepea/create-resources-and-prompts-server@0.0.18`
+- `@emseepea/create-progress-streaming-server@0.0.19`
+- `@emseepea/create-html-ui-server@0.0.20`
+- `@emseepea/create-react-ui-server@0.0.19`
+- `@emseepea/create-multi-instance-postgres-server@0.0.9`
+- `@emseepea/create-database-schema-server@0.0.6`
+- `@emseepea/create-mongodb-backed-server@0.0.6`
+- `@emseepea/create-soap-backed-server@0.0.6`
 
 ## Change for Users
 
@@ -91,6 +86,10 @@ excluded.
 - Local PostgreSQL and MongoDB integration qualification passed with fresh
   containers. Both UI browser accessibility suites and the SOAP integration
   suite also passed.
+- The first Trusted Publishing run published the new core package versions and
+  then failed closed when the registry quickstart exposed stale initializer
+  dependencies. This corrective batch publishes the regenerated initializers;
+  the failed run is not release-verification evidence.
 
 ## Required Publication Evidence
 
@@ -110,6 +109,7 @@ excluded.
 
 ## Review Status
 
-- Result: PASS
+- Review result: PASS
+- Release verification: NOT COMPLETE until the corrected registry quickstart
+  and every remaining publication gate pass.
 - Final result: within appetite, subject to the required exact-commit gates.
-- No package in this release batch is claimed as published by this record.
