@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 72 decisions: 37 current and 35 historical.
+This project has 73 decisions: 38 current and 35 historical.
 
 ## Quick Index
 
@@ -48,6 +48,7 @@ This project has 72 decisions: 37 current and 35 historical.
 - [ADR-0071: Separate OpenAPI-Backed Example and Initializer](0071-separate-openapi-backed-example-and-initializer.proposed.md): Proposed; human review confirmed.
 - [ADR-0072: Opt-In Integrity-Protected Request State](0072-opt-in-integrity-protected-request-state.proposed.md): Proposed; human review confirmed.
 - [ADR-0074: Same-Endpoint Stateless Legacy Protocol Support](0074-same-endpoint-stateless-legacy-protocol-support.proposed.md): Proposed; human review confirmed.
+- [ADR-0075: Opt-In Bounded Request-Scoped MCP Logging](0075-opt-in-bounded-request-scoped-mcp-logging.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -1607,3 +1608,27 @@ Chosen option: **"Same-endpoint stateless legacy fallback"**, because it provide
 - Modern-only and unsupported legacy capabilities are not advertised on legacy connections.
 - The protocol coverage ledger distinguishes the MCP `2026-07-28` surface from the exact legacy compatibility subset.
 - The existing JSON HTTP performance budget passes for the expanded request matrix. No performance claim is made for an unmeasured legacy path.
+
+### [ADR-0075: Opt-In Bounded Request-Scoped MCP Logging](0075-opt-in-bounded-request-scoped-mcp-logging.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### ADR-0075 Decision
+
+Chosen option: **"Opt-in bounded request-scoped logging using the MCP SDK"**, because it implements the protocol feature without introducing connection state or an unbounded output path.
+
+#### ADR-0075 Checks
+
+- Without logging configuration, discovery, handler types, and JSON response behavior remain unchanged.
+- With logging configured, modern discovery advertises `logging`; legacy discovery does not.
+- Only the named direct handler contexts expose `reportLog`.
+- A pinned official client receives only requested messages at or above its request-level threshold, followed by exactly one checked final result.
+- A request without `io.modelcontextprotocol/logLevel` receives no log message.
+- Invalid levels, logger text, non-JSON data, oversized messages, too many attempts, cancellation, late calls, and delivery failures fail closed.
+- Authentication and authorization failures produce no stream and make no application call.
+- Concurrent requests cannot receive each other's messages.
+- `logging/setLevel` is rejected before application work for modern and legacy requests.
+- Framework observability still receives only its existing redacted event and cannot change protocol output.
+- Raw HTTP, official-client, packed-package, slow-reader, disconnect, and bounded-load checks pass before release.
+- Documentation calls this channel deprecated and distinguishes it from server operator logging and observability.
