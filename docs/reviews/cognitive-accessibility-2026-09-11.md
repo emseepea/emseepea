@@ -163,3 +163,15 @@ review covers source Markdown only.
   SHA-256: `a78606898574fbc149d296c05e5f2cd3021da362135e072dbd16ea9c854658a9`
 - `docs/problems/open/003-release-workflow-lacks-first-package-trusted-publisher-preflight.md`
   SHA-256: `41525d7b89ec7b77682dba9ca2eb51096f75032b449bbb06a53d4dcc415bdb1d`
+
+## OpenAPI Release Retrospective
+
+Result: PASS. Independent cognitive-accessibility review covered the exact
+release briefing update and ask-hygiene record. Evidence labels, headings, and
+table labels are understandable in context, and the release proof distinguishes
+the exact commit and workflow runs. This review covers source Markdown only.
+
+- `docs/briefing/releases-and-ci.md`
+  SHA-256: `58c8f347a1fee5b4d6cced9676ce30fb45623ef927aa5c33aba56011d77e1b5e`
+- `docs/retros/2026-09-11-ask-hygiene.md`
+  SHA-256: `4141231cdf224fe4b5812a9f77a1e5e811da48dddf1dbd17a0b807f7967fabb8`

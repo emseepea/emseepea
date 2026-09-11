@@ -1,15 +1,17 @@
 # Ask Hygiene: 2026-09-11
 
-| Classification | Count | Evidence |
-|---|---:|---|
-| Direction-setting | 0 | None |
-| Taste | 0 | None |
-| Deviation approval | 0 | None |
-| Mechanical | 0 | None |
-| Lazy | 1 | Asked whether to keep waiting after an exact Quality run was cancelled, despite the existing terminal instruction to persist until completion. |
+| Call | Header | Classification | Citation |
+|---:|---|---|---|
+| 1 | Continue waiting after cancellation | **lazy** | Framework: the terminal instruction to persist until completion and the exact-commit pipeline-watch decision already required continued verification. |
 
-Lazy request count: **1**.
+**Lazy count: 1**
+**Direction count: 0**
+**Deviation-approval count: 0**
+**Override count: 0**
+**Silent-framework count: 0**
+**Taste count: 0**
+**Correction-followup count: 0**
 
-The plugin's diagnostic directory was not exported on `PATH`. After adding that
-directory for this invocation, `wr-retrospective-check-ask-hygiene` completed
-without firing the three-retro numeric gate.
+No additional user-input call occurred during the OpenAPI release completion or
+this retrospective. The installed diagnostic completed without firing the
+three-retro numeric gate.

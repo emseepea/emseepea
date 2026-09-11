@@ -7,7 +7,7 @@ dependencies are not represented in Changesets' public dependency graph. When
 core package versions change, explicitly patch-bump every maintained initializer
 and verify generated template manifests before release.
 
-<!-- briefing-score: 1; first-written: 2026-09-11; last-classified: 2026-09-11; classification: signal -->
+<!-- signal-score: -1 | last-classified: 2026-09-11 | first-written: 2026-09-11 -->
 
 ## Release-readiness marker contract
 
@@ -16,16 +16,17 @@ and verify generated template manifests before release.
 `- Release verification: NOT COMPLETE ...` line. A wording-only accessibility
 edit to the marker blocked publication before npm publish.
 
-<!-- briefing-score: 1; first-written: 2026-09-11; last-classified: 2026-09-11; classification: signal -->
+<!-- signal-score: -1 | last-classified: 2026-09-11 | first-written: 2026-09-11 -->
 
 ## Exact release evidence
 
-Release completion is exact-commit and exact-workflow evidence. The initializer
-release completed at `9bf599a8dd144fe9ea924c52d6bc95f5e601ce88` with Quality
-run `34552236550` and Release run `34552756999`, including registry quickstart,
-package signatures, attestations, and release assets.
+Release completion is exact-commit and exact-workflow evidence. The OpenAPI
+initializer release completed at `07430957d9e376b84761d85ec4f4b5aa336c391c`
+with Quality run `34554628933` and Release run `34555128253`, attempt 3. The
+evidence includes a registry quickstart, package signatures and attestations,
+matching release and registry tarballs, and the unchanged no-spec example.
 
-<!-- briefing-score: 1; first-written: 2026-09-11; last-classified: 2026-09-11; classification: signal -->
+<!-- signal-score: 2 | last-classified: 2026-09-11 | first-written: 2026-09-11 -->
 
 ## Concurrent trunk activity
 
@@ -33,4 +34,4 @@ package signatures, attestations, and release assets.
 newer trunk activity. Adopt or rebase the newer `main`, then rerun gates against
 the new exact head rather than treating the cancelled run as release proof.
 
-<!-- briefing-score: 1; first-written: 2026-09-11; last-classified: 2026-09-11; classification: signal -->
+<!-- signal-score: 2 | last-classified: 2026-09-11 | first-written: 2026-09-11 -->
