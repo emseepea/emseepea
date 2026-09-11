@@ -27,6 +27,8 @@ and the unpublished disclaimer prevents an early publication claim.
 
 - `docs/reviews/current-release-readiness.md`
   SHA-256: `208d1386053b177b007a6ba95d61fc31b2227e38b26340f6f79037bde46b960e`
+- `.changeset/fresh-peas-generate.md`
+  SHA-256: `ca762cf4a25112623617fe8598126de81420d40866629d812c4f209d15bd0b2b`
 
 ## Resource Catalogue and Subscription Guidance
 
