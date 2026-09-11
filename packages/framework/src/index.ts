@@ -89,7 +89,7 @@ export {
 } from "./telemetry.js";
 
 export * from "./ui.js";
-export type ClientInputRequest = Extract<InputRequest, { method: "elicitation/create" }>;
+export type ClientInputRequest = Extract<InputRequest, { method: "elicitation/create" | "roots/list" }>;
 export interface InputRequests {
   readonly [key: string]: ClientInputRequest;
 }
@@ -105,6 +105,7 @@ export type InputRequiredResult = SdkInputRequiredResult & InputRequiredSpec;
 
 interface InputRequiredBuilder {
   (spec: InputRequiredSpec): InputRequiredResult;
+  roots(): Extract<InputRequest, { method: "roots/list" }>;
   elicit(
     ...args: Parameters<typeof sdkInputRequired.elicit>
   ): Extract<InputRequest, { method: "elicitation/create" }>;
@@ -117,6 +118,7 @@ export const inputRequired = Object.assign(
   (spec: InputRequiredSpec): InputRequiredResult =>
     sdkInputRequired(spec) as InputRequiredResult,
   {
+    roots: sdkInputRequired.listRoots,
     elicit: sdkInputRequired.elicit,
     elicitUrl: sdkInputRequired.elicitUrl,
   },
@@ -138,6 +140,30 @@ export function inputResponse(
 ): InputResponseView {
   const response = sdkInputResponse(checkedInputResponses(responses), key);
   return response.kind === "elicit" ? response : { kind: "missing" };
+}
+
+declare const CHECKED_INPUT_RESPONSES: unique symbol;
+export type CheckedInputResponses = Readonly<Record<string, unknown>> & {
+  readonly [CHECKED_INPUT_RESPONSES]: true;
+};
+export interface ClientRoot {
+  readonly uri: string;
+  readonly name?: string;
+  readonly _meta?: Readonly<MetaObject>;
+}
+const checkedRootsResponses = new WeakSet<object>();
+
+/** Reads roots validated by the framework; missing keys return undefined. */
+export function rootsResponse(
+  responses: CheckedInputResponses | undefined,
+  key: string,
+): readonly ClientRoot[] | undefined {
+  if (responses === undefined) return undefined;
+  if (!checkedRootsResponses.has(responses)) throw new TypeError("Roots responses have not been checked");
+  if (!Object.hasOwn(responses, key)) return undefined;
+  const value = responses[key];
+  if (!isRecord(value) || !Array.isArray(value.roots)) throw new TypeError("Response is not roots");
+  return value.roots as readonly ClientRoot[];
 }
 
 const PROTOCOL_VERSION = "2026-07-28";
@@ -183,6 +209,7 @@ interface RequestOperation {
   readonly filterCatalogues: boolean;
   readonly capability?: string;
   readonly legacy: boolean;
+  readonly maxClientRoots?: number;
 }
 const requestOperations = new AsyncLocalStorage<RequestOperation>();
 interface RequestStateRuntime {
@@ -244,7 +271,7 @@ export interface ToolContext<Access extends ToolAccess = ToolAccess> {
   readonly deadlineMs: number;
   readonly principal: Access extends "public" ? undefined : Principal;
   /** Client-supplied responses from the current multi-round-trip retry. */
-  readonly inputResponses?: Readonly<Record<string, unknown>>;
+  readonly inputResponses?: CheckedInputResponses;
   /** Verified decoded state from the current request round. */
   readonly requestState?: unknown;
   /** Signs state for a later request round when request-state support is configured. */
@@ -285,7 +312,7 @@ export interface ClientInputContext<Access extends CapabilityAccess = Capability
   extends OperationContext {
   readonly principal: Access extends "public" ? undefined : Principal;
   /** Client-supplied responses from the current multi-round-trip retry. */
-  readonly inputResponses?: Readonly<Record<string, unknown>>;
+  readonly inputResponses?: CheckedInputResponses;
   /** Verified decoded state from the current request round. */
   readonly requestState?: unknown;
   /** Signs state for a later request round when request-state support is configured. */
@@ -573,6 +600,7 @@ export interface EmseepeaOptions {
   readonly resourceSubscriptions?: ResourceSubscriptionOptions;
   readonly requestState?: RequestStateOptions;
   readonly clientLogging?: ClientLoggingOptions;
+  readonly clientRoots?: { readonly maxRoots?: number };
   readonly operationTimeoutMs?: number;
   readonly deployment?: DeploymentProfile;
   readonly authentication?: AuthenticationOptions;
@@ -1740,6 +1768,11 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     ? normalizeListPagination(options.listPagination)
     : undefined;
   const maxRequestBytes = positiveInteger("maxRequestBytes", options.maxRequestBytes ?? 1024 * 1024);
+  if (options.clientRoots !== undefined && !isRecord(options.clientRoots)) {
+    throw new TypeError("clientRoots must be an object");
+  }
+  const maxClientRoots = options.clientRoots === undefined ? undefined
+    : positiveInteger("clientRoots.maxRoots", options.clientRoots.maxRoots === undefined ? 100 : options.clientRoots.maxRoots);
   const requestState = options.requestState
     ? createRequestStateRuntime(options.requestState)
     : undefined;
@@ -2194,6 +2227,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
           filterCatalogues: protectsCatalogue,
           capability,
           legacy,
+          maxClientRoots,
         },
         () => nodeHandler(request.raw, reply.raw, request.body),
       );
@@ -3316,7 +3350,7 @@ function directHandlerContext(
     signal,
     deadlineMs,
     principal: access === "public" ? undefined : principalFrom(context.http?.authInfo),
-    inputResponses: checkedInputResponses(context.mcpReq.inputResponses),
+    inputResponses: checkedDirectInputResponses(context, signal, deadlineMs),
     ...(requestState ? {
       requestState: context.mcpReq.requestState(),
       mintRequestState: (payload: unknown) => requestState.mint(payload, context),
@@ -3334,14 +3368,71 @@ async function assertInputRequired(
     throw new Error("Client-input result must include requests or state");
   }
   if (result.inputRequests && Object.values(result.inputRequests).some(
-    (request) => request.method !== "elicitation/create",
+    (request) => request.method !== "elicitation/create" && request.method !== "roots/list",
   )) {
     throw new Error("Client-input request kind is not supported");
+  }
+  if (result.inputRequests && Object.values(result.inputRequests).some(
+    (request) => request.method === "roots/list",
+  )) {
+    const operation = requestOperations.getStore();
+    if (operation?.legacy || operation?.maxClientRoots === undefined) {
+      throw new Error("Client roots are unavailable for this request");
+    }
+    // The SDK checks outgoing requests against this round's client capabilities.
   }
   if (result.requestState !== undefined) {
     if (!requestState) throw new Error("Client-input request state is not configured");
     await requestState.verify(result.requestState, context);
   }
+}
+
+function assertClientRootsEnabled(context: ServerContext): number {
+  const operation = requestOperations.getStore();
+  const envelope: unknown = context.mcpReq.envelope;
+  const capabilities = isRecord(envelope) ? envelope["io.modelcontextprotocol/clientCapabilities"] : undefined;
+  if (operation?.legacy || operation?.maxClientRoots === undefined ||
+      !isRecord(capabilities) || !isRecord(capabilities.roots)) {
+    throw new Error("Client roots are unavailable for this request");
+  }
+  return operation.maxClientRoots;
+}
+
+function checkedDirectInputResponses(
+  context: ServerContext,
+  signal: AbortSignal,
+  deadlineMs: number,
+): CheckedInputResponses | undefined {
+  const operation = requestOperations.getStore();
+  if (operation?.maxClientRoots === undefined || operation.legacy) {
+    return checkedInputResponses(context.mcpReq.inputResponses) as CheckedInputResponses | undefined;
+  }
+  if (context.mcpReq.droppedInputResponseKeys?.length) throw new Error("Malformed client input response");
+  const responses = context.mcpReq.inputResponses;
+  if (responses === undefined) return undefined;
+  const checked = Object.create(null) as Record<string, unknown>;
+  for (const [key, value] of Object.entries(responses)) {
+    if (isRecord(value) && Object.hasOwn(value, "roots")) {
+      const maxRoots = assertClientRootsEnabled(context);
+      if (!Array.isArray(value.roots) || value.roots.length > maxRoots || Object.hasOwn(value, "action")) {
+        throw new Error("Invalid roots response");
+      }
+      const result = specTypeSchemas.ListRootsResult["~standard"].validate(value);
+      if (result instanceof Promise || "issues" in result) throw new Error("Invalid roots response");
+      for (const root of result.value.roots) {
+        if (new URL(root.uri).protocol !== "file:") throw new Error("Invalid root URI");
+      }
+      checked[key] = deepFreeze(structuredClone(result.value));
+    } else {
+      const result = specTypeSchemas.ElicitResult["~standard"].validate(value);
+      if (result instanceof Promise || "issues" in result) throw new Error("Invalid client input response");
+      checked[key] = deepFreeze(structuredClone(result.value));
+    }
+  }
+  signal.throwIfAborted();
+  if (Date.now() >= deadlineMs) throw new Error("Client input validation exceeded its deadline");
+  checkedRootsResponses.add(checked);
+  return Object.freeze(checked) as CheckedInputResponses;
 }
 
 function assertResultSize(

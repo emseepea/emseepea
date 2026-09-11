@@ -224,6 +224,28 @@ server-operator observability and state its limits and exclusions directly.
   SHA-256: `b32833b74ced1d26444592413f4bb0de71a862c55420c1005d68c4072cd6a240`
 - `website/src/content/docs/getting-started.md`
   SHA-256: `e327737aa77024b8ffb3fb9171134813b9c381e09d0a1f9a1ef8cca13003678e`
+
+## Checked Client Roots
+
+Result: PASS. Independent cognitive-accessibility review covered the exact
+roots documentation, decision, release notes, and readiness record below.
+The optional setup, checked reply access, limits, and lack of file permissions
+are clear. The local Docker limitation and remaining CI requirements do not
+claim publication or full protocol conformance. This review covers source
+Markdown only.
+
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `7217b9592db8b0aecd29ec620091fcff2c837690cf7dfaf755f6b18db414dca9`
+- `docs/decisions/0079-opt-in-checked-client-roots.proposed.md`
+  SHA-256: `a735f0a4651af5e8a067bf8a68fb2fdb771ad731c1c7898e5a8c57f251d6dfc6`
+- `packages/framework/README.md`
+  SHA-256: `84c54a2dce9a873bf7101d1d26b406c2606404a2b9690d28aa4cd5a8b2b5c282`
+- `docs/protocol-coverage.md`
+  SHA-256: `76d0cc60abe03e80301bf6eae7805444e27619513c2b38506389aa8c00f9c956`
+- `.changeset/checked-client-roots.md`
+  SHA-256: `303a5b2f574332515abcd831c52300b26ee8d7d6d4e0d330c2f31b98f2e3653d`
+- `docs/decisions/README.md`
+  SHA-256: `b687658fec16fa2b06dd3e054439444354494b1c6a982513ce4501e2023a5001`
 - `docs/reviews/current-release-readiness.md`
   SHA-256: `7d4f797c91b28d15344fb6617561b630df2cdf914140d511994ed537f3cf873c`
 

@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 76 decisions: 41 current and 35 historical.
+This project has 77 decisions: 42 current and 35 historical.
 
 ## Quick Index
 
@@ -52,6 +52,7 @@ This project has 76 decisions: 41 current and 35 historical.
 - [ADR-0076: npm Scripts as the User-Facing Command Contract](0076-npm-scripts-as-the-user-facing-command-contract.proposed.md): Proposed; human review confirmed.
 - [ADR-0077: Digest-Pinned Official Node Builder and Distroless Runtime](0077-digest-pinned-official-node-builder-and-distroless-runtime.proposed.md): Proposed; human review confirmed.
 - [ADR-0078: Example-Owned Production Containers Behind Trusted Proxies](0078-example-owned-production-containers-behind-trusted-proxies.proposed.md): Proposed; human review confirmed.
+- [ADR-0079: Opt-In Checked Client Roots](0079-opt-in-checked-client-roots.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -1699,3 +1700,24 @@ Chosen option: **"Example-owned production containers behind trusted proxies"**,
 - Ordinary JSON performance reports the exact profile, four request classes, measurements, daily projection source, and result against ADR-0014.
 - Protected progress reports only ADR-0068's load and safety evidence.
 - Website, README, npm-script, link, build, and cognitive-accessibility checks pass without duplicated routine Docker commands.
+
+### [ADR-0079: Opt-In Checked Client Roots](0079-opt-in-checked-client-roots.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0079 Decision
+
+Chosen option: **"Checked bounded roots through existing input-required rounds"**, because it completes the protocol behaviour through the existing round-trip boundary without letting unchecked client-controlled paths reach application code.
+
+#### ADR-0079 Checks
+
+- Omitting `clientRoots` preserves current public types and runtime behaviour except for the new opt-in declarations.
+- Invalid `clientRoots` values fail server creation. The default accepts at most 100 roots, while a configured positive safe integer changes that count limit.
+- Direct public and protected tools, static resources, resource templates, and prompts complete a roots round through the official MCP client.
+- Raw HTTP tests cover a valid request and continuation, missing or malformed client capability metadata, missing and wrong-kind accessor results, malformed roots, non-file URIs, excess roots, oversized request bodies, cancellation, deadlines, and safe errors with zero continuation work after rejection.
+- Protected tests prove that every round authenticates and authorizes normally and that roots never grant access.
+- Signed request-state tests prove restart and cross-process continuation without claiming single use or replay prevention.
+- Mapped tools, streaming tools, completions, lists, subscriptions, legacy requests, observability, and disabled applications retain their existing behaviour.
+- Type tests cover the roots helper and accessor and reject raw or wrong-kind client responses.
+- Packed-package and published documentation checks exercise the released API.

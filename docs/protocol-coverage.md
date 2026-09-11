@@ -357,6 +357,18 @@ binding, key mismatch, and continuation on another process with the same key.
 Signing does not provide encryption, single use, or replay prevention. See the
 [client-input tests](../tests/black-box/input-required.test.mjs).
 
+### Client Workspace Roots
+
+**Status: Checked.** Applications opt in with `clientRoots`. Direct tools,
+static resources, resource templates, and prompts can request `roots/list`
+through `input_required`. The framework validates roots before invoking the
+continuation handler, bounds their count and request size, and preserves
+authorization on every round. The handler selects its expected response key
+using `rootsResponse`. Roots confer no permissions and are never dereferenced.
+See the [client roots tests](../tests/black-box/client-roots.test.mjs).
+
+This deprecated MCP feature does not add roots-change notifications or sessions.
+
 ### Long-Lived Change Notifications
 
 **Status: Partial.** Applications can publish an update for a registered

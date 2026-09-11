@@ -416,6 +416,39 @@ where the client opens a URL. Em See Pea applies the normal result-size limit,
 time limit, cancellation, safe-error handling, and access policy to every
 round.
 
+### Ask for Client Workspace Roots
+
+Set `clientRoots: {}` on `createEmseepea` to let direct tools, resources,
+resource templates, and prompts ask the client for its file or directory roots.
+The client must declare support for roots on each request. Roots are deprecated
+in MCP 2026-07-28 but remain part of that protocol version.
+
+Use `inputRequired.roots()` to request them and `rootsResponse` to read them:
+
+```ts
+import { rootsResponse, inputRequired } from "@emseepea/server";
+
+const roots = rootsResponse(context.inputResponses, "workspace");
+if (roots === undefined) {
+  return inputRequired({ inputRequests: { workspace: inputRequired.roots() } });
+}
+// An empty array is a valid answer. Each root has a file:// URI and optional name.
+```
+
+The framework validates roots before calling the handler. `rootsResponse`
+returns an immutable array, returns `undefined` for a missing key, and throws
+if that key contains another kind of answer. The handler chooses the expected
+key. Without saved application state, the framework cannot prove that an answer
+belongs to an earlier request.
+
+`clientRoots.maxRoots` defaults to 100 and accepts a positive safe integer.
+The existing `maxRequestBytes` setting limits the whole request, including
+root names, URIs, and metadata. Every protected round checks authorization.
+Roots grant no file access or permissions. Em See Pea never opens these paths
+or automatically logs them. Mapped and streaming tools do not request roots.
+
+### Carry Signed Request State
+
 Stateful requests are opt-in. Configure one signing key for every process that
 may receive a later round:
 

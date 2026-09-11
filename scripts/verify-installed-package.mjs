@@ -8,6 +8,7 @@ import {
   defineStreamingTool,
   defineTool,
   inputRequired,
+  rootsResponse,
   notifyResourceUpdated,
   renderElicitationForm,
   serveEmseepea,
@@ -117,10 +118,20 @@ const prompt = definePrompt({
     messages: [{ role: "user", content: { type: "text", text: value } }],
   }),
 });
+const rootsTool = defineTool({
+  name: "smoke-roots", access: "public", description: "Check client roots after installation.",
+  inputSchema: z.object({}), outputSchema: z.object({ uri: z.string() }),
+  handler(_input, context) {
+    const roots = rootsResponse(context.inputResponses, "workspace");
+    return roots === undefined
+      ? inputRequired({ inputRequests: { workspace: inputRequired.roots() } })
+      : { data: { uri: roots[0]?.uri ?? "" } };
+  },
+});
 const app = createEmseepea({
   name: "installed-package-smoke",
   version: "0.0.0",
-  tools: [tool, statefulTool, mapped, streaming],
+  tools: [tool, statefulTool, rootsTool, mapped, streaming],
   additionalTools: [feedback],
   resources: [resource, resourceTemplate],
   prompts: [prompt],
@@ -131,6 +142,7 @@ const app = createEmseepea({
     maxBytes: 4 * 1024,
   },
   clientLogging: {},
+  clientRoots: {},
 });
 const running = await serveEmseepea(app, { port: 0 });
 const subscriptionController = new AbortController();
@@ -234,13 +246,18 @@ try {
   const stateClient = new Client(
     { name: "installed-state-client", version: "0.0.0" },
     {
-      capabilities: {},
+      capabilities: { roots: {} },
       inputRequired: { maxRounds: 2 },
       versionNegotiation: { mode: { pin: "2026-07-28" } },
     },
   );
+  stateClient.setRequestHandler("roots/list", async () => ({ roots: [{ uri: "file:///release-smoke" }] }));
   try {
     await stateClient.connect(new StreamableHTTPClientTransport(running.url));
+    const rootsResult = await stateClient.callTool({ name: "smoke-roots", arguments: {} });
+    if (rootsResult.structuredContent?.uri !== "file:///release-smoke") {
+      throw new Error("installed package did not complete the client roots round trip");
+    }
     const stateResult = await stateClient.callTool({
       name: "smoke-stateful-tool",
       arguments: {},
