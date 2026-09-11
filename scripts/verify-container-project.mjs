@@ -114,7 +114,7 @@ async function verifyImage(image, { platform, architecture }, secretCanary) {
 }
 
 async function verifyRunningImage(image, target, gateway) {
-  await verifyProtectedBoundary(image, target);
+  await verifyProtectedBoundary(image, target, gateway);
   await assert.rejects(run("docker", ["run", "--rm", "--platform", target.platform, image], project));
   const invalidPath = await writePolicy(`${target.architecture}-invalid`, "{\"unknown\":true}\n");
   await assert.rejects(run("docker", [
@@ -151,8 +151,9 @@ async function verifyRunningImage(image, target, gateway) {
   });
 }
 
-async function verifyProtectedBoundary(image, target) {
+async function verifyProtectedBoundary(image, target, gateway) {
   const container = `${composeProject}-${target.architecture}-protected`;
+  let proxy;
   const script = `
     import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
     import { z } from "zod";
@@ -171,6 +172,9 @@ async function verifyProtectedBoundary(image, target) {
           authorization_endpoint: "https://auth.example/authorize", token_endpoint: "https://auth.example/token",
           response_types_supported: ["code"] } },
       },
+      deployment: { mode: "production-behind-proxy", allowedAuthorities: ["mcp.example.com"],
+        allowedOrigins: ["https://mcp.example.com"], trustedProxyAddresses: [${JSON.stringify(gateway)}],
+        rateLimit: { maxRequests: 10, windowMs: 60000, maxClients: 1 } },
     });
     const running = await serveEmseepea(app, { host: "0.0.0.0", port: ${containerPort} });
     process.once("SIGTERM", async () => { console.log("HANDLER_CALLS=" + calls); await running.close(); });
@@ -178,12 +182,16 @@ async function verifyProtectedBoundary(image, target) {
   try {
     await run("docker", [
       "run", "--detach", "--name", container, "--platform", target.platform,
+      "--network", network,
       "--read-only", "--tmpfs", "/tmp:rw,noexec,nosuid,nodev,size=16m", "--cap-drop", "ALL",
       "--security-opt", "no-new-privileges", "--publish", `127.0.0.1::${containerPort}`,
       "--entrypoint", "/nodejs/bin/node", image, "--input-type=module", "-e", script,
     ], project);
     const published = (await run("docker", ["port", container, `${containerPort}/tcp`], project)).trim();
-    const url = new URL(`http://${published.replace(/^(?:0\.0\.0\.0|\[::\]):/, "127.0.0.1:")}`);
+    const applicationUrl = new URL(`http://${published.replace(/^(?:0\.0\.0\.0|\[::\]):/, "127.0.0.1:")}`);
+    proxy = createProxy(applicationUrl);
+    await new Promise((resolve, reject) => { proxy.once("error", reject); proxy.listen(0, "127.0.0.1", resolve); });
+    const url = new URL(`http://127.0.0.1:${proxy.address().port}`);
     await waitFor(new URL("/healthz", url), 200);
     const params = { name: "protected-check", arguments: {} };
     assert.equal((await mcpCall(new URL("/mcp", url), {}, "tools/call", params)).status, 401);
@@ -191,6 +199,7 @@ async function verifyProtectedBoundary(image, target) {
     await run("docker", ["stop", "--time", "10", container], project, {}, 30_000);
     assert.match(await run("docker", ["logs", container], project), /HANDLER_CALLS=0/);
   } finally {
+    if (proxy) await new Promise((resolve) => proxy.close(resolve));
     await ignoreFailure("docker", ["rm", "--force", container], project);
   }
 }
