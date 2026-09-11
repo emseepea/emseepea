@@ -135,3 +135,16 @@ are direct, security limits are explicit, and no visual-only guidance remains.
   SHA-256: `0bcce41b687ff19f8ce334228cebb62dde7a3f4aab39d394451a074579c87b51`
 - `.changeset/signed-request-state.md`
   SHA-256: `f0b2ebe001c40c24853f1504e064bb2e83a69619e85ea8fc2959e0b686acabdc`
+
+## Context Analysis Retrospective
+
+Result: PASS. Independent cognitive-accessibility review covered the exact
+context-analysis report and its index entry. The opening identifies the source
+without an ambiguous project decision reference, measurement limits are stated
+next to the affected results, and headings and tables use direct labels. This
+review covers source Markdown only.
+
+- `docs/retros/README.md`
+  SHA-256: `7f4cb1687bd47718547c724e4572ed6104fc39ff51e1e8daa4784d8498fb9905`
+- `docs/retros/2026-09-11-context-analysis.md`
+  SHA-256: `23c5c0632a56bdea68075375bb80c616b81b3d00e3f82df80c5abe5ddb69f7de`
