@@ -189,8 +189,7 @@ test("request-scoped client logging is opt-in, filtered, bounded, and terminal",
     assert.equal(modernSetLevel.response.status, 404);
     assert.equal(modernSetLevel.body.error.code, -32601);
     const legacySetLevel = await legacyRpc(running.url, "logging/setLevel", { level: "debug" });
-    assert.equal(legacySetLevel.response.status, 404);
-    assert.equal(legacySetLevel.body.error.code, -32601);
+    assert.equal((legacySetLevel.messages.at(-1) ?? legacySetLevel.body).error.code, -32601);
   } finally {
     await running.close();
   }
@@ -345,5 +344,11 @@ async function legacyRpc(url, method, params) {
     },
     body: JSON.stringify({ jsonrpc: "2.0", id: crypto.randomUUID(), method, params }),
   });
-  return { response, body: await response.json() };
+  if (response.headers.get("content-type")?.startsWith("text/event-stream")) {
+    const messages = (await response.text()).split("\n\n")
+      .filter((frame) => frame.startsWith("event: message\n"))
+      .map((frame) => JSON.parse(frame.slice(frame.indexOf("data: ") + 6)));
+    return { response, messages };
+  }
+  return { response, body: await response.json(), messages: [] };
 }

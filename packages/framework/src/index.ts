@@ -1228,7 +1228,7 @@ function createCheckedTool(
                   : undefined;
                 let result: unknown;
                 try {
-                  result = await execute(parsedInput.data, {
+                  const handlerContext = {
                     ...(allowsInputRequired
                       ? directHandlerContext(
                           access,
@@ -1244,12 +1244,16 @@ function createCheckedTool(
                           principal: access === "public"
                             ? undefined
                             : principalFrom(context.http?.authInfo),
-                          ...(logReporter ? { reportLog: logReporter.report } : {}),
                         }),
                     ...(reporter ? { reportProgress: reporter.report } : {}),
-                  });
+                  };
+                  if (!allowsInputRequired && logReporter) {
+                    Object.assign(handlerContext, { reportLog: logReporter.report });
+                  }
+                  result = await execute(parsedInput.data, handlerContext);
                 } finally {
-                  await Promise.all([reporter?.finish(), logReporter?.finish()]);
+                  if (logReporter) await Promise.all([reporter?.finish(), logReporter.finish()]);
+                  else await reporter?.finish();
                 }
                 reporter?.throwIfFailed();
                 logReporter?.throwIfFailed();
@@ -2021,9 +2025,8 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       return;
     }
     if (!await validateMcpRequestHeaders(request, reply, legacy)) return;
-    if (isRecord(request.body) && typeof request.body.method === "string" &&
-        ((!legacy && !enabledMethods.has(request.body.method)) ||
-          (legacy && request.body.method === "logging/setLevel"))) {
+    if (!legacy && isRecord(request.body) && typeof request.body.method === "string" &&
+        !enabledMethods.has(request.body.method)) {
       await sendRpcError(reply, 404, -32601, "Method not found", requestId(request.body.id));
       return;
     }
