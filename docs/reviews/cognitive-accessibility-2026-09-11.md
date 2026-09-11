@@ -1,5 +1,28 @@
 # Cognitive Accessibility Review, 11 September 2026
 
+## Release Retrospective and Problem Capture
+
+Result: PASS. Named cognitive-accessibility specialist review covered the exact
+retrospective briefing, ask-hygiene record, problem inventory, and two release
+problem tickets. Headings are descriptive, instructions and evidence are
+direct, and the compact tables remain understandable without relying on visual
+position or colour. This review covers source Markdown only.
+
+- `docs/briefing/README.md`
+  SHA-256: `df06d9b78e8a79e00f682526eeff45fe136c521d4258e2e549ab9d91d7c6491a`
+- `docs/briefing/releases-and-ci.md`
+  SHA-256: `be80ea6331c5553e81ecc0105c958c318ba4dcb5ffb8c6801e9419052af38b0b`
+- `docs/problems/README-history.md`
+  SHA-256: `c9b667742bcb8386a5923e2c7485d037eb5202bbbf8a05966faa3598c25e96db`
+- `docs/problems/README.md`
+  SHA-256: `79c41d02582488254b3aa2b229a7ab547bcc60afb39be5b1d4c68ea183f9d69b`
+- `docs/problems/open/001-changesets-omit-initializer-bumps-when-embedded-template-dependencies-change.md`
+  SHA-256: `7ff6fdd5c3eb920f1b8bd1cabb765fb03bd8c94ed564c316f859b4f95254a900`
+- `docs/problems/open/002-release-readiness-verifier-only-tests-fixture-like-stable-pass-marker.md`
+  SHA-256: `b4f89c6bb6771055bfbcd992faffb0d9a45a7554c2df19aad19e2750e84ffa3b`
+- `docs/retros/2026-09-11-ask-hygiene.md`
+  SHA-256: `bc95f0e68b3c07b7b3e6168d668915c3df55f8f4604b78afa2accc095010d4fd`
+
 ## Feedback Disclosure and Semantic Qualification
 
 Result: PASS. Independent cognitive-accessibility review covered the exact
