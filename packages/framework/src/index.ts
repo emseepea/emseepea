@@ -1195,43 +1195,8 @@ function createCheckedTool(
       requestState,
       clientLogging,
     ) {
-      const runLoggedTool: CheckedToolRunner | undefined = clientLogging
-        ? async (input, context, signal, deadlineMs, reporter) => {
-            const logReporter = clientLogReporter(
-              context,
-              signal,
-              clientLogging.maxEvents,
-              clientLogging.maxEventBytes,
-            );
-            let result: unknown;
-            try {
-              result = await execute(input, {
-                ...(allowsInputRequired
-                  ? directHandlerContext(
-                      access,
-                      context,
-                      signal,
-                      deadlineMs,
-                      requestState,
-                      logReporter.report,
-                    )
-                  : {
-                      signal,
-                      deadlineMs,
-                      principal: access === "public"
-                        ? undefined
-                        : principalFrom(context.http?.authInfo),
-                      reportLog: logReporter.report,
-                    }),
-                ...(reporter ? { reportProgress: reporter.report } : {}),
-              });
-            } finally {
-              await Promise.all([reporter?.finish(), logReporter.finish()]);
-            }
-            reporter?.throwIfFailed();
-            logReporter.throwIfFailed();
-            return result;
-          }
+      const runLoggedTool = clientLogging
+        ? createLoggedToolRunner(clientLogging, execute, allowsInputRequired, access, requestState)
         : undefined;
       server.registerTool(
         name,
@@ -1321,6 +1286,51 @@ type CheckedToolRunner = (
   deadlineMs: number,
   reporter: ProgressReporter | undefined,
 ) => Promise<unknown>;
+
+function createLoggedToolRunner(
+  clientLogging: NormalizedClientLogging,
+  execute: CheckedToolExecutor,
+  allowsInputRequired: boolean,
+  access: "public" | ProtectedCapabilityAccess,
+  requestState: RequestStateRuntime | undefined,
+): CheckedToolRunner {
+  return async (input, context, signal, deadlineMs, reporter) => {
+    const logReporter = clientLogReporter(
+      context,
+      signal,
+      clientLogging.maxEvents,
+      clientLogging.maxEventBytes,
+    );
+    let result: unknown;
+    try {
+      result = await execute(input, {
+        ...(allowsInputRequired
+          ? directHandlerContext(
+              access,
+              context,
+              signal,
+              deadlineMs,
+              requestState,
+              logReporter.report,
+            )
+          : {
+              signal,
+              deadlineMs,
+              principal: access === "public"
+                ? undefined
+                : principalFrom(context.http?.authInfo),
+              reportLog: logReporter.report,
+            }),
+        ...(reporter ? { reportProgress: reporter.report } : {}),
+      });
+    } finally {
+      await Promise.all([reporter?.finish(), logReporter.finish()]);
+    }
+    reporter?.throwIfFailed();
+    logReporter.throwIfFailed();
+    return result;
+  };
+}
 
 function progressReporter(
   context: {
