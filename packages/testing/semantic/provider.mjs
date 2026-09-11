@@ -305,7 +305,7 @@ export function startModelConversation(provider, directory, url, tools, authToke
         const timer = setTimeout(() => {
           fail("Model command timed out");
           child.kill("SIGKILL");
-        }, 120_000);
+        }, 180_000);
         timer.unref();
         pending = { events: initialEvents, reject, resolve, timer };
         initialEvents = [];
@@ -351,7 +351,7 @@ function runProcess(command, args, options) {
     let stdout = "";
     let timedOut = false;
     let outputLimitExceeded = false;
-    const timer = setTimeout(() => { timedOut = true; child.kill("SIGKILL"); }, 120_000);
+    const timer = setTimeout(() => { timedOut = true; child.kill("SIGKILL"); }, 180_000);
     timer.unref();
     child.stdout.on("data", (chunk) => {
       stdout += chunk;

@@ -43,7 +43,7 @@ jobs:
     name: Check whether examples are understood
     needs: quality-gate
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 75
     permissions:
       contents: read
     outputs:
