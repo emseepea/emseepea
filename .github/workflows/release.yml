@@ -59,7 +59,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: 24.20.0
+          node-version: 24.21.0
           cache: npm
       - name: Use the recorded npm version
         run: |
@@ -113,7 +113,7 @@ jobs:
     needs: [quality-gate, semantic-eval]
     if: ${{ always() && needs.quality-gate.result == 'success' && (needs.semantic-eval.outputs.has_changesets == 'true' || (needs.semantic-eval.outputs.has_publication == 'true' && needs.semantic-eval.result == 'success')) }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    timeout-minutes: 120
     permissions:
       contents: write
       id-token: write
@@ -127,7 +127,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: 24.20.0
+          node-version: 24.21.0
           registry-url: https://registry.npmjs.org
       - name: Use the recorded npm version
         run: |
@@ -160,6 +160,8 @@ jobs:
         run: |
           mkdir -p release-artifacts
           node scripts/prepare-release-artifacts.mjs release-artifacts
+          mapfile -t base_images < <(node scripts/container-base-images.mjs)
+          test "${#base_images[@]}" -eq 2
           package_summary="$(node -e "const p=require('./release-artifacts/packages.json'); process.stdout.write(p.map(x => x.name + ' ' + x.version).join('; '))")"
           review_record="docs/reviews/current-release-readiness.md"
           test -s "$review_record"
@@ -176,7 +178,9 @@ jobs:
           - Node.js: $(node --version)
           - npm: $(npm --version)
           - GitHub CLI: $(gh --version | head -1)
-          - Exact-commit Quality qualification: OSV lockfile scan; package tests; performance benchmarks; streaming, request-logging, and subscription memory tests; package builds; standalone initializer checks
+          - Container builder base: ${base_images[0]}
+          - Container runtime base: ${base_images[1]}
+          - Exact-commit Quality qualification: OSV lockfile scan; base image architecture and signature checks; package tests; performance benchmarks; streaming, request-logging, and subscription memory tests; package builds; standalone initializer and container checks
           - Request-logging load check: \`node --expose-gc --test tests/load/client-logging.test.mjs\`
           - Subscription load check: \`node --expose-gc --test tests/load/subscription-sdk.test.mjs\`
           - Semantic qualification: $SEMANTIC_EVAL_RUN_URL, artifact $SEMANTIC_EVAL_ARTIFACT
@@ -205,6 +209,7 @@ jobs:
             - fixed-origin HTTPS JSON GET client with network-address and response checks
             - native HTML form rendering
             - typed authentication, redacted observability adapters, dependency readiness, and bounded shutdown flushing
+            - standalone initializer production containers behind trusted proxies with runtime-only policy and secrets
             - optional detailed feedback, protected append-only support conversations, typed feedback event hooks, PostgreSQL integration checks, Firestore contract checks, and deterministic GitHub Issues and Zendesk HTTP contract checks
             - code-first AI understanding tests with three answers and nine judgments per case
           - Excluded:
@@ -232,6 +237,12 @@ jobs:
         if: steps.release-state.outputs.has_changesets == 'false'
         id: registry-verify
         run: node scripts/verify-registry-release.mjs verify release-artifacts/registry-before.json release-artifacts/registry-after.json
+      - name: Enable cross-architecture container execution
+        if: steps.registry-verify.outputs.ready == 'true'
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - name: Set up the container builder
+        if: steps.registry-verify.outputs.ready == 'true'
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - name: Verify the downloaded packages
         if: steps.registry-verify.outputs.ready == 'true'
         env:
@@ -263,6 +274,7 @@ jobs:
           node --input-type=module < "$GITHUB_WORKSPACE/scripts/verify-installed-package.mjs"
           cd "$GITHUB_WORKSPACE"
           EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry node --test tests/docs/getting-started-references.test.mjs
+          EMSEEPEA_VERIFY_CONTAINERS=true \
           node scripts/verify-registry-initializers.mjs
           node --input-type=module <<'NODE'
           import { readFile, writeFile } from "node:fs/promises";

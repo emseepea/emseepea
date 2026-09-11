@@ -68,9 +68,10 @@ import type {
 } from "fastify";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { readdir, realpath } from "node:fs/promises";
 import { isIP } from "node:net";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { z } from "zod";
 import {
@@ -601,6 +602,7 @@ export type EmseepeaExtensions = Pick<
   | "authentication"
   | "observability"
   | "additionalTools"
+  | "deployment"
 >;
 export interface ListPaginationOptions {
   readonly pageSize: number;
@@ -615,6 +617,48 @@ export type DeploymentProfile =
       readonly trustedProxyAddresses: readonly string[];
       readonly rateLimit: Readonly<RateLimitOptions>;
     };
+
+export function loadDeploymentProfile(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): DeploymentProfile {
+  const mode = environment.EMSEEPEA_DEPLOYMENT_MODE;
+  const configPath = environment.EMSEEPEA_DEPLOYMENT_CONFIG_FILE;
+  if (mode === undefined) {
+    if (configPath !== undefined) throw new TypeError("Deployment config requires an explicit deployment mode");
+    return { mode: "loopback" };
+  }
+  if (mode !== "production-behind-proxy") throw new TypeError(`Unsupported deployment mode: ${mode}`);
+  if (!configPath || !isAbsolute(configPath)) {
+    throw new TypeError("Production deployment config must be an absolute file path");
+  }
+  const bytes = readFileSync(configPath);
+  if (bytes.byteLength > 16 * 1024) throw new TypeError("Production deployment config exceeds 16 KiB");
+  const source = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  const parsed = z.strictObject({
+    allowedAuthorities: z.array(z.string()).min(1),
+    allowedOrigins: z.array(z.string()).min(1),
+    trustedProxyAddresses: z.array(z.string()).min(1),
+    rateLimit: z.strictObject({
+      maxRequests: z.number().int().positive(),
+      windowMs: z.number().int().positive(),
+      maxClients: z.number().int().positive(),
+    }),
+  }).parse(JSON.parse(source));
+  const profile = { mode, ...parsed } satisfies DeploymentProfile;
+  const normalized = normalizeDeployment(profile);
+  if (normalized.mode !== "production-behind-proxy") throw new TypeError("Production deployment config is invalid");
+  for (const [label, values, normalizedValues] of [
+    ["allowed authority", parsed.allowedAuthorities, normalized.allowedAuthorities],
+    ["allowed origin", parsed.allowedOrigins, normalized.allowedOrigins],
+    ["trusted proxy address", parsed.trustedProxyAddresses, normalized.trustedProxyAddresses],
+  ] as const) {
+    if (normalizedValues.size !== values.length) throw new TypeError(`Duplicate ${label}`);
+  }
+  for (const address of parsed.trustedProxyAddresses) {
+    if (normalizeIp(address) !== address) throw new TypeError(`Trusted proxy address is not normalized: ${address}`);
+  }
+  return profile;
+}
 export interface ServeOptions {
   readonly host?: "127.0.0.1" | "::1" | "localhost" | "0.0.0.0" | "::";
   readonly port?: number;
@@ -2400,7 +2444,7 @@ export async function serveEmseepea(
 ): Promise<RunningEmseepeaServer> {
   const runtime = runtimes.get(app);
   if (!runtime) throw new TypeError("serveEmseepea requires an app created by createEmseepea");
-  const host = options.host ?? "127.0.0.1";
+  const host = options.host ?? (runtime.deployment.mode === "loopback" ? "127.0.0.1" : "0.0.0.0");
   if (runtime.deployment.mode === "loopback" && !isLoopbackHost(host)) {
     throw new TypeError("The loopback deployment profile cannot bind publicly");
   }

@@ -4,9 +4,12 @@ import test from "node:test";
 
 import { discoverTests } from "../../packages/testing/semantic/discover.mjs";
 import { fileURLToPath } from "node:url";
+import { initializerPackages } from "../../scripts/public-packages.mjs";
 
 const examplesRoot = new URL("../../examples/", import.meta.url);
 const testingManifest = JSON.parse(await readFile(new URL("../../packages/testing/package.json", import.meta.url), "utf8"));
+const builderImage = "docker.io/library/node:24.21.0-trixie-slim@sha256:db3ae80f5d8df06e04dabdf7b44cbf008d32de168205fa0294444aabbc08c590";
+const runtimeImage = "gcr.io/distroless/nodejs24-debian13:nonroot@sha256:7781e8b4fccf59240bd539af6738cccf8dad4be303165c3a1fa065c48699b937";
 
 test("every runnable example visibly owns deterministic and LLM checks", async () => {
   const directories = await readdir(examplesRoot, { withFileTypes: true });
@@ -43,4 +46,72 @@ test("every runnable example visibly owns deterministic and LLM checks", async (
     assert.match(manifest.scripts.lint, /\beval\b/);
     assert.ok(!(await readdir(new URL(directory.name + "/", examplesRoot))).some((name) => /eval.*\.ya?ml$/.test(name)));
   }
+});
+
+test("every initializer owns the same safe container contract", async () => {
+  const expectedIgnored = [
+    ".env", ".env.*", ".git", ".github", ".npmrc", "artifacts", "dist",
+    "initializer-dist", "node_modules", "release-artifacts", "*.log",
+  ];
+  for (const initializer of initializerPackages) {
+    const directory = new URL(`${initializer.example}/`, examplesRoot);
+    const [manifest, dockerfile, dockerignore, readme, server] = await Promise.all([
+      readFile(new URL("package.json", directory), "utf8").then(JSON.parse),
+      readFile(new URL("Dockerfile", directory), "utf8"),
+      readFile(new URL(".dockerignore", directory), "utf8"),
+      readFile(new URL("README.md", directory), "utf8"),
+      readFile(new URL(initializer.example === "react-ui-server" ? "src/server.tsx" : "src/server.ts", directory), "utf8"),
+    ]);
+    assert.equal(manifest.scripts["build:initializer"], "node ../../scripts/build-initializer.mjs");
+    assert.equal(dockerfile.match(/^FROM /gm)?.length, 2, `${initializer.example} should use two container stages`);
+    assert.ok(dockerfile.includes(`FROM ${builderImage} AS build`), `${initializer.example} builder image drifted`);
+    assert.ok(dockerfile.includes(`FROM ${runtimeImage}`), `${initializer.example} runtime image drifted`);
+    assert.ok(dockerfile.includes('test "$(node --version)" = "v24.21.0"'));
+    assert.ok(dockerfile.includes("test -f package-lock.json"));
+    assert.ok(dockerfile.includes("npm ci --ignore-scripts"));
+    assert.doesNotMatch(dockerfile, /\\\\\n/, `${initializer.example} has a doubled Dockerfile continuation`);
+    assert.ok(dockerfile.includes("npm prune --omit=dev --ignore-scripts"));
+    assert.ok(dockerfile.includes("ENV EMSEEPEA_DEPLOYMENT_MODE=production-behind-proxy"));
+    assert.doesNotMatch(dockerfile, /^ENV NODE_ENV=/m);
+    assert.ok(dockerfile.includes("USER 65532:65532"));
+    assert.ok(dockerfile.includes('CMD ["dist/server.js"]'));
+    assert.ok(dockerfile.includes('"/nodejs/bin/node"'));
+    assert.match(server, /loadDeploymentProfile\(\)/);
+    for (const ignored of expectedIgnored) {
+      assert.match(dockerignore, new RegExp(`^${ignored.replaceAll(".", "\\.").replaceAll("*", "\\*")}$`, "m"), `${initializer.example} does not ignore ${ignored}`);
+    }
+    if (initializer.example === "soap-backed-server") {
+      assert.ok(dockerfile.includes("/app/contracts ./contracts"));
+    }
+    if (initializer.example === "multi-instance-postgres-server") {
+      assert.doesNotMatch(dockerfile, /start-two/);
+    }
+    assert.match(readme, /\bnpm run container:build\b/);
+    assert.doesNotMatch(readme, /\bdocker (?:build|run)\b/i);
+    if (["database-schema-server", "mongodb-backed-server", "multi-instance-postgres-server"].includes(initializer.example)) {
+      assert.equal(manifest.scripts["db:start"], "docker compose up --detach --wait database");
+      assert.equal(manifest.scripts["db:reset"], "docker compose down --volumes");
+      assert.match(manifest.scripts.dev, /^npm run db:start && /);
+    }
+  }
+});
+
+test("public routine docs use npm scripts for containers and local databases", async () => {
+  const files = [
+    new URL("../../README.md", import.meta.url),
+    new URL("../../website/src/content/docs/examples.md", import.meta.url),
+    new URL("../../website/src/content/docs/getting-started.md", import.meta.url),
+    ...initializerPackages.map(({ example }) => new URL(`${example}/README.md`, examplesRoot)),
+  ];
+  for (const file of files) {
+    const source = await readFile(file, "utf8");
+    assert.doesNotMatch(source, /\bdocker (?:build|run)\b/i, file.pathname);
+    assert.doesNotMatch(source, /\bdocker compose (?:up|down)\b/i, file.pathname);
+  }
+  const website = await readFile(new URL("../../website/src/content/docs/examples.md", import.meta.url), "utf8");
+  const gettingStarted = await readFile(new URL("../../website/src/content/docs/getting-started.md", import.meta.url), "utf8");
+  const rootReadme = await readFile(new URL("../../README.md", import.meta.url), "utf8");
+  assert.match(website, /^## Build a production container$/m);
+  assert.match(gettingStarted, /\.\.\/examples\/#build-a-production-container/);
+  assert.match(rootReadme, /website\/src\/content\/docs\/examples\.md#build-a-production-container/);
 });

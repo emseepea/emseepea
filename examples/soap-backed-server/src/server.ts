@@ -1,8 +1,8 @@
-import { serveEmseepea } from "@emseepea/server";
+import { loadDeploymentProfile, serveEmseepea } from "@emseepea/server";
 import { createSoapExample } from "./app.js";
 
 const endpoint = process.env.PEA_SOAP_URL ?? "http://127.0.0.1:3999/soap";
-const { app } = await createSoapExample(endpoint);
+const { app } = await createSoapExample(endpoint, { deployment: loadDeploymentProfile() });
 const running = await serveEmseepea(app, {
   port: Number.parseInt(process.env.PORT ?? "3000", 10),
 });

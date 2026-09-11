@@ -1,8 +1,8 @@
-import { serveEmseepea } from "@emseepea/server";
+import { loadDeploymentProfile, serveEmseepea } from "@emseepea/server";
 import { createDatabaseSchemaExample } from "./app.js";
 
 const databaseUrl = process.env.DATABASE_URL ?? "postgres://emseepea:emseepea@127.0.0.1:5432/emseepea";
-const { app } = await createDatabaseSchemaExample({ databaseUrl });
+const { app } = await createDatabaseSchemaExample({ databaseUrl, deployment: loadDeploymentProfile() });
 const running = await serveEmseepea(app, {
   port: Number.parseInt(process.env.PORT ?? "3000", 10),
 });

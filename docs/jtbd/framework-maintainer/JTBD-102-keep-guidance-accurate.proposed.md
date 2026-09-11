@@ -8,6 +8,7 @@ screens:
   - README.md
   - docs/
   - examples/
+  - website/src/content/docs/
 ---
 
 # JTBD-102: Keep Guidance Accurate

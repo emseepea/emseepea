@@ -53,6 +53,7 @@ delete manifest.publishConfig;
 delete manifest.repository;
 delete manifest.workspaces;
 manifest.scripts.build = manifest.scripts["build:example"];
+manifest.scripts["container:build"] = "docker build --tag emseepea-server:local .";
 delete manifest.scripts["build:example"];
 delete manifest.scripts["build:initializer"];
 delete manifest.scripts.prepack;

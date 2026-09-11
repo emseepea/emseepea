@@ -1,8 +1,8 @@
-import { serveEmseepea } from "@emseepea/server";
+import { loadDeploymentProfile, serveEmseepea } from "@emseepea/server";
 import { createMongoExample } from "./app.js";
 
 const uri = process.env.MONGODB_URL ?? "mongodb://127.0.0.1:27017";
-const { app } = await createMongoExample({ uri });
+const { app } = await createMongoExample({ uri, deployment: loadDeploymentProfile() });
 const running = await serveEmseepea(app, {
   port: Number.parseInt(process.env.PORT ?? "3000", 10),
 });

@@ -211,7 +211,7 @@ The documents distinguish the deprecated client-visible channel from
 server-operator observability and state its limits and exclusions directly.
 
 - `README.md`
-  SHA-256: `db56e6092f8bb22cfc321a528afdab35889e17ef1d3ab6362dc3e50c7168eae9`
+  SHA-256: `70a5957cdaf8361727d963c5536b25be28131abe53404ddf1cb7f4f9a338fc40`
 - `packages/framework/README.md`
   SHA-256: `7eaa4dd3f06dcd5f7c71b4ec1b7357f5df68764a37278e679a6caaf3afef3420`
 - `docs/protocol-coverage.md`
@@ -219,13 +219,13 @@ server-operator observability and state its limits and exclusions directly.
 - `docs/decisions/0075-opt-in-bounded-request-scoped-mcp-logging.proposed.md`
   SHA-256: `664cdcaadea378efde9f54625d230d57ce72fa00f89439e02e1a03b6db9ca63c`
 - `docs/decisions/README.md`
-  SHA-256: `e2e19dbdca209a735fc12c63c6461b4e42f190ff7ab86759c39b2ca7bc09e168`
+  SHA-256: `5b51c9e7cfcbce93509191e6659745722115eb4b38c679794150134e8a983872`
 - `.changeset/bounded-request-logs.md`
   SHA-256: `b32833b74ced1d26444592413f4bb0de71a862c55420c1005d68c4072cd6a240`
 - `website/src/content/docs/getting-started.md`
-  SHA-256: `3e1091de42150a6307c5ff7ccf41fc5696fc1c562cc95c7f70afabda75538576`
+  SHA-256: `e327737aa77024b8ffb3fb9171134813b9c381e09d0a1f9a1ef8cca13003678e`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `1d32c4cac89e017963285f4586cc04cace1cfffc4837aa1a5f2e46b19fc85a13`
+  SHA-256: `7d4f797c91b28d15344fb6617561b630df2cdf914140d511994ed537f3cf873c`
 
 ## Problem Backlog Parser Contract
 
@@ -252,3 +252,64 @@ unpublished status are stated directly without visual-only meaning.
   SHA-256: `90b672e96366869568a0f1d2c973112a1b5519b43fd9cb9761c5fd089a31367a`
 - `docs/reviews/current-release-readiness.md`
   SHA-256: `43b9f592ead2b1e7f228d97ea718a1430344af49bf2688bf8c7d6741d75a16dd`
+
+## Safe Container Initializers
+
+Result: PASS. Accessibility Agents lead review covered the exact container
+decisions, website guide, Getting Started pointer, root README pointer, example
+README sections, Jobs To Be Done wording, and Changeset. The review used the
+a11y-agents-codex:markdown-accessibility and a11y-agents-codex:web-accessibility
+rules, plus cognitive, heading, and link-purpose checks. Routine instructions
+use one npm command, warnings are short, destructive database reset wording is
+clear before use, and links have descriptive labels. The single-source website
+guide carries the detailed proxy, runtime configuration, secret, and hardening
+requirements so the generated READMEs do not duplicate raw container commands.
+This review covers source Markdown only; website build, link, and performance
+checks remain responsible for rendered output.
+
+- `.changeset/safe-container-examples.md`
+  SHA-256: `991770b3e0a9110a312cb1fa57249ce9c5393e4c9daad99d89895493663d4fdb`
+- `README.md`
+  SHA-256: `70a5957cdaf8361727d963c5536b25be28131abe53404ddf1cb7f4f9a338fc40`
+- `docs/decisions/0076-npm-scripts-as-the-user-facing-command-contract.proposed.md`
+  SHA-256: `91c7c49c7335bb7478d3f0e4013ea0c1039405ff8ee45418b9a8c9374389fea0`
+- `docs/decisions/0077-digest-pinned-official-node-builder-and-distroless-runtime.proposed.md`
+  SHA-256: `c6c62f76e9bb86f8ced225fd58625b31dace27af158a96695ee4138c73cb6bf0`
+- `docs/decisions/0078-example-owned-production-containers-behind-trusted-proxies.proposed.md`
+  SHA-256: `24b6c56741bff3b6d631afb788b12c3cc0f9ddd6a46519940a66a57a16b43795`
+- `docs/decisions/README.md`
+  SHA-256: `5b51c9e7cfcbce93509191e6659745722115eb4b38c679794150134e8a983872`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `f9042853d7e1b90038c964993b2a7967f0f4fafce6831985e27be841405974cd`
+- `docs/jtbd/README.md`
+  SHA-256: `1aa428e49fed32314f7af253073a2049b6b10bbe07a2418003faa80ae5645903`
+- `docs/jtbd/framework-maintainer/JTBD-102-keep-guidance-accurate.proposed.md`
+  SHA-256: `48d467d824336fb554e43af6c56bec112a7cb9828a6e26ef452270f2370e482b`
+- `docs/jtbd/mcp-server-developer/JTBD-004-deploy-an-mcp-server-safely.proposed.md`
+  SHA-256: `0e42b650fe7498ad4d0e100f0564735c9795ff1c1c02844886062fc667746ee0`
+- `examples/api-backed-server/README.md`
+  SHA-256: `03261b684e49b6ad41f763980e9b697498ccdfe2c76b80cc50dfa10aa928f338`
+- `examples/database-schema-server/README.md`
+  SHA-256: `3668c320deb6446c2482c24a4428c1e8af760fc1dcceb7a0a2370e76a9b9842b`
+- `examples/html-ui-server/README.md`
+  SHA-256: `9338e2a51cd969444902ae55d12b6b0855e94fe7538f23efde77dc741711b85e`
+- `examples/mongodb-backed-server/README.md`
+  SHA-256: `66ab2bda0e677631d55ae246db666c7b769b63370cdcc95bd260ed52636e9012`
+- `examples/multi-instance-postgres-server/README.md`
+  SHA-256: `5d0a497032035183f5c2b023d9711b9a270ac1a69c0636cef32edb3c5c28a6a5`
+- `examples/openapi-backed-server/README.md`
+  SHA-256: `7f56bc9124dc94d06f8d7c3749116950aa411ec40d5e2acd1ac323bd7c94a3e9`
+- `examples/progress-streaming-server/README.md`
+  SHA-256: `087f85758854db17e19fdcf02587f4ede289be757aaef22cf3dc2d307a5fdee2`
+- `examples/react-ui-server/README.md`
+  SHA-256: `6e521bd950da73cd07a89bc9755f5a9772a55a56d2da48d9b168f1f72bca311e`
+- `examples/resources-and-prompts-server/README.md`
+  SHA-256: `9122e24aa29a0785b20e87d66b55779df0cc5b8d6fe60cac54c005d755101a3d`
+- `examples/soap-backed-server/README.md`
+  SHA-256: `6cd0256f882ea21cfba3d96d19ae1dc965a7660ed413600c396dea1edeaa86db`
+- `examples/tool-server/README.md`
+  SHA-256: `556d5280d84f0538a708935a9a1b8a458b7f419ae98e577136ceee0f944caf58`
+- `website/src/content/docs/examples.md`
+  SHA-256: `6af9673b7db788370c7ec111b0b660b6b5c0a7d1fe89d2928b9bbc61d3e3ccd4`
+- `website/src/content/docs/getting-started.md`
+  SHA-256: `e327737aa77024b8ffb3fb9171134813b9c381e09d0a1f9a1ef8cca13003678e`

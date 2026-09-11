@@ -134,3 +134,8 @@ resource templates, and prompts when logging is enabled. It is separate from
 server-operator observability. Em See Pea never copies request or result data
 into it automatically. The removed `logging/setLevel` method is not supported,
 and there is no replay or reconnect recovery.
+
+## Build a production container
+
+To build and configure this project as a production container, read
+[Build a production container](../examples/#build-a-production-container).

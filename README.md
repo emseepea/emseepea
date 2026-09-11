@@ -90,6 +90,9 @@ experience. Ordinary tests qualify those MCP contracts.
 Each initializer package, README, changelog, and maintained source live together in the matching
 [`examples/` directory](https://github.com/emseepea/emseepea/tree/main/examples).
 
+Every initializer includes a production container build. Read
+[how to run an example behind a trusted proxy](website/src/content/docs/examples.md#build-a-production-container).
+
 Every starter is open by default. Its README and tests show how to add the same
 typed authentication and observability extensions without choosing a different
 template. Discovery stays public by default. It can be explicitly protected

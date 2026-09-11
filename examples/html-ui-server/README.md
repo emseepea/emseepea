@@ -72,6 +72,22 @@ Open
 
 The page previews a sample pea planting plan only. It does not send or store a report.
 
+## Build a production container
+
+Run `npm install` first so the project has a lockfile. Then run:
+
+```sh
+npm run container:build
+```
+
+The image is for a production deployment behind a trusted proxy. It starts with
+the fail-closed production profile and needs a runtime-mounted deployment
+configuration file. Keep secrets in your platform's runtime secret store, not in
+the Dockerfile, build arguments, or deployment configuration file.
+
+For the production proxy, runtime configuration, and hardening requirements, see
+the [container guide](https://emseepea.github.io/emseepea/examples/#build-a-production-container).
+
 ## Add Feedback
 
 Install `@emseepea/feedback` when this server needs a detailed one-way

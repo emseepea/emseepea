@@ -1,7 +1,7 @@
-import { serveEmseepea } from "@emseepea/server";
+import { loadDeploymentProfile, serveEmseepea } from "@emseepea/server";
 import { createReactUiServer } from "./app.js";
 
-const running = await serveEmseepea(await createReactUiServer(), {
+const running = await serveEmseepea(await createReactUiServer({ deployment: loadDeploymentProfile() }), {
   port: Number.parseInt(process.env.PORT ?? "3001", 10),
 });
 console.log(`Em See Pea React UI example listening at ${running.url}`);

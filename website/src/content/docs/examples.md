@@ -10,6 +10,92 @@ modules live in `src/capabilities/` and are discovered once at startup. Replace
 `my-server` with an unused directory name. The [first-server guide](../getting-started/)
 continues from the tool server starter.
 
+## Build a production container
+
+### Build with npm
+
+Run `npm install` first. This creates the `package-lock.json` required by the
+image build. Then run:
+
+```sh
+npm run container:build
+```
+
+The Dockerfile uses `npm ci` and fails when the lockfile is absent.
+
+### Configure production behind a trusted proxy
+
+The container is not safe for direct public exposure. Run it behind a trusted
+proxy and mount the required deployment configuration at runtime. Local
+`npm start` remains loopback-only on your computer. Container startup selects the fail-closed
+`production-behind-proxy` deployment profile and refuses to start the app unless
+`EMSEEPEA_DEPLOYMENT_CONFIG_FILE` points to a runtime-mounted JSON file.
+
+The deployment file contains only non-secret policy:
+
+```json
+{
+  "allowedAuthorities": ["mcp.example.com"],
+  "allowedOrigins": ["https://mcp.example.com"],
+  "trustedProxyAddresses": ["10.0.0.10"],
+  "rateLimit": {
+    "maxRequests": 100,
+    "windowMs": 60000,
+    "maxClients": 1000
+  }
+}
+```
+
+Those values show the shape only. Replace them with your real host, browser
+origin, trusted proxy address, and request limits.
+
+### Keep secrets out of the image
+
+Provide secrets through your deployment platform at runtime. Do not add secrets
+to the image, Dockerfile, deployment configuration file, or source control.
+
+### Harden the running container
+
+Run the image with:
+
+- a read-only root filesystem
+- a small writable temporary filesystem
+- all Linux capabilities dropped
+- `no-new-privileges`
+- the deployment file mounted read-only
+
+Put the container behind a proxy that:
+
+- terminates TLS
+- forwards exactly one client address
+- sets HTTPS and authority metadata
+- forwards `Origin` only when the client supplied it
+- leaves `Authorization` unchanged
+
+### Database examples are local-only
+
+Docker Compose starts the database for local development only. It is not a
+production deployment recipe. Use `npm run db:start` to start the local
+database. `npm run db:reset` deletes the local database volume and its data.
+You cannot undo this action.
+
+### Read example-specific notes
+
+For example-specific runtime assets and dependency notes, use the maintained
+READMEs:
+
+- [Tool server](https://github.com/emseepea/emseepea/tree/main/examples/tool-server)
+- [API-backed server](https://github.com/emseepea/emseepea/tree/main/examples/api-backed-server)
+- [OpenAPI-backed server](https://github.com/emseepea/emseepea/tree/main/examples/openapi-backed-server)
+- [Resources and prompts server](https://github.com/emseepea/emseepea/tree/main/examples/resources-and-prompts-server)
+- [Progress streaming server](https://github.com/emseepea/emseepea/tree/main/examples/progress-streaming-server)
+- [HTML UI server](https://github.com/emseepea/emseepea/tree/main/examples/html-ui-server)
+- [React UI server](https://github.com/emseepea/emseepea/tree/main/examples/react-ui-server)
+- [Multi-instance PostgreSQL server](https://github.com/emseepea/emseepea/tree/main/examples/multi-instance-postgres-server)
+- [Database-schema server](https://github.com/emseepea/emseepea/tree/main/examples/database-schema-server)
+- [MongoDB-backed server](https://github.com/emseepea/emseepea/tree/main/examples/mongodb-backed-server)
+- [SOAP-backed server](https://github.com/emseepea/emseepea/tree/main/examples/soap-backed-server)
+
 For each starter, the linked GitHub example directory contains the public
 initializer package, README, changelog, and maintained example source. The
 commands use the default npm release channel.
