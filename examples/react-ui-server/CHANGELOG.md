@@ -1,5 +1,12 @@
 # @emseepea/create-react-ui-server
 
+## 0.0.22
+
+### Patch Changes
+
+- [#69](https://github.com/emseepea/emseepea/pull/69) [`7454904`](https://github.com/emseepea/emseepea/commit/7454904f4561a966ac72063f4a9ce2eda2c37578) Thanks [@tompahoward](https://github.com/tompahoward)! - Add safe production container builds to every standalone initializer, backed by
+  a fail-closed deployment-file loader and centralized npm commands.
+
 ## 0.0.21
 
 ### Patch Changes
