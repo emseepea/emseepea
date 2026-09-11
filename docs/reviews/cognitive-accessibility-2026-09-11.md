@@ -158,7 +158,7 @@ plain language, and the recovery and investigation actions are direct. This
 review covers source Markdown only.
 
 - `docs/problems/README.md`
-  SHA-256: `6532311e1ceaf8b4df641e32a0817da82b7f8422e7053d0ae6a56065e2dc2001`
+  SHA-256: `87a79f38f01b4a9971ebb7bf79b7aadff1ec73321c21902c1aaee11ca2120a6a`
 - `docs/problems/README-history.md`
   SHA-256: `a78606898574fbc149d296c05e5f2cd3021da362135e072dbd16ea9c854658a9`
 - `docs/problems/open/003-release-workflow-lacks-first-package-trusted-publisher-preflight.md`
@@ -175,3 +175,17 @@ the exact commit and workflow runs. This review covers source Markdown only.
   SHA-256: `58c8f347a1fee5b4d6cced9676ce30fb45623ef927aa5c33aba56011d77e1b5e`
 - `docs/retros/2026-09-11-ask-hygiene.md`
   SHA-256: `4141231cdf224fe4b5812a9f77a1e5e811da48dddf1dbd17a0b807f7967fabb8`
+
+## Problem Backlog Parser Contract
+
+Result: PASS. Independent cognitive-accessibility review covered the exact
+parser-contract problem and updated problem indexes. The stable heading is
+followed immediately by its plain-language expansion, and the evidence and
+repair choices are direct. This review covers source Markdown only.
+
+- `docs/problems/README.md`
+  SHA-256: `d7d897d316ff5df933fff65091b8029e10fe2620dfce9a3cf214b86d04f626f5`
+- `docs/problems/README-history.md`
+  SHA-256: `a4475ddc0338e93be06d5360e68e2ead860e3d261d3e713aa6d763d52c13f5f2`
+- `docs/problems/open/004-problem-backlog-parser-couples-to-an-unexplained-exact-heading.md`
+  SHA-256: `5bd7275514ea78261cb22398d5f2a56155dff778472238ec79ec8c851fc866db`
