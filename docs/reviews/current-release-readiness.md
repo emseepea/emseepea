@@ -5,6 +5,23 @@ Date: 2026-09-11
 ## Release Batch
 
 - `@emseepea/server@0.9.0`
+- `@emseepea/feedback@0.2.4`
+- `@emseepea/react@0.0.17`
+- `@emseepea/testing@0.9.7`
+- `@emseepea/create-api-backed-server@0.0.21`
+- `@emseepea/create-database-schema-server@0.0.8`
+- `@emseepea/create-html-ui-server@0.0.22`
+- `@emseepea/create-mongodb-backed-server@0.0.8`
+- `@emseepea/create-multi-instance-postgres-server@0.0.11`
+- `@emseepea/create-openapi-backed-server@0.0.3`
+- `@emseepea/create-progress-streaming-server@0.0.21`
+- `@emseepea/create-react-ui-server@0.0.21`
+- `@emseepea/create-resources-and-prompts-server@0.0.20`
+- `@emseepea/create-soap-backed-server@0.0.8`
+- `@emseepea/create-tool-server@0.0.23`
+
+The initializer patches regenerate their published tarballs under new package
+versions so generated projects pin the package versions in this batch.
 
 ## Change for Users
 

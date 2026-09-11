@@ -240,3 +240,15 @@ repair choices are direct. This review covers source Markdown only.
   SHA-256: `a4475ddc0338e93be06d5360e68e2ead860e3d261d3e713aa6d763d52c13f5f2`
 - `docs/problems/open/004-problem-backlog-parser-couples-to-an-unexplained-exact-heading.md`
   SHA-256: `5bd7275514ea78261cb22398d5f2a56155dff778472238ec79ec8c851fc866db`
+
+## Request-Logging Release Batch
+
+Result: PASS. Independent cognitive-accessibility and Markdown reviews covered
+the exact initializer Changeset and release-readiness record. The complete
+package list, initializer tarball purpose, publication requirements, and
+unpublished status are stated directly without visual-only meaning.
+
+- `.changeset/initializers-use-logging-server.md`
+  SHA-256: `90b672e96366869568a0f1d2c973112a1b5519b43fd9cb9761c5fd089a31367a`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `43b9f592ead2b1e7f228d97ea718a1430344af49bf2688bf8c7d6741d75a16dd`
