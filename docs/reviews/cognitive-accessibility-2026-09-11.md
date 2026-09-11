@@ -77,6 +77,20 @@ verification.
 - `website/src/content/docs/examples.md`
   SHA-256: `f23931ed80101c9e2b373018109a12a57a1cd3955a0329d156e711fa6d00f400`
 
+## Problem Backlog
+
+Result: PASS. Independent cognitive-accessibility review covered the exact
+problem index and two open problem records. The records separate observed
+symptoms from unconfirmed root causes, use descriptive links and clear table
+headers, and contain no visual-only instructions or confidential information.
+
+- `docs/problems/README.md`
+  SHA-256: `057d2676748f1d9ff013ebd479f48a1ec319a0f44f61d5a614979b101f5f238c`
+- `docs/problems/open/001-current-release-readiness-artifact-is-not-checked-before-semantic-evaluation.md`
+  SHA-256: `014f5a5a3e89779effaabc818b207bec951db348569973e72c0d11f21acea41c`
+- `docs/problems/open/002-retrospective-diagnostics-are-not-self-resolving-in-adopter-repositories.md`
+  SHA-256: `c2603ffb32fd8442c0cd58d9afd8e86dbd258c92615b27161770b7502a1d9853`
+
 ## Retrospective Context Analysis
 
 Result: PASS. Independent cognitive-accessibility review covered the exact
