@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-openapi-backed-server",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Create an Em See Pea server backed by an OpenAPI-described web API.",
   "license": "MIT",
   "type": "module",
