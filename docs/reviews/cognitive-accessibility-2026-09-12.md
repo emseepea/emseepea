@@ -202,7 +202,7 @@ the guidance does not add unnecessary memory burden for adopters.
 | `docs/jtbd/mcp-server-developer/persona.md` | `c1869ca21559000b42db21cc669c73be586ff25ec7556a8fc7dbab2c7501cd57` |
 | `docs/reviews/current-release-readiness.md` | `54769c2e6ea50d4654a7d5f251073600561c753565d365aeafc8372835b1d018` |
 | `examples/react-ui-server/README.md` | `10e06f0cbf7ef2213c4256b4ea3a9624268b825d30aa2d4f6196db6e39e09a88` |
-| `packages/framework/README.md` | `fc78be7ec2e8e8e9ec914cfad6d8cd50786b5e56a1a93978f119b2b4f8eccf11` |
+| `packages/framework/README.md` | `7453b8d3fc27114f3335b61dd756749b9904f2c310292a90f22bb62cb2d686ed` |
 | `packages/react/README.md` | `dee6ebbb83fb8a5f8d38e6adf2c843498ee0343f0079fd9119e94c974444d9e4` |
 | `packages/svelte/README.md` | `87ec28a9233b5ae60cb4a95b84d43585564f5eb16f34c2b2c21b7c78c670eb93` |
 

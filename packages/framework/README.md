@@ -21,7 +21,9 @@ package supports and what it does not support.
 `@emseepea/server/ui` exports `defineResultView`, `parseResultView`, and
 `renderResultView`. They validate a bounded presentation model and render
 unstyled native HTML for headings, persistent status, metrics, lists,
-disclosures, actions, and disclaimers. Use `ResultCard` from `@emseepea/react`
+disclosures, actions, and disclaimers.
+
+Use `ResultCard` from `@emseepea/react`
 when the adopter already uses React. Pass a unique `idPrefix` to
 `renderResultView` for each result rendered into one document.
 
