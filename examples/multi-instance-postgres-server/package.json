@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-multi-instance-postgres-server",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Create interchangeable Em See Pea server instances sharing PostgreSQL state.",
   "license": "MIT",
   "type": "module",

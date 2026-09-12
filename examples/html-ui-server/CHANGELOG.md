@@ -1,5 +1,11 @@
 # @emseepea/create-html-ui-server
 
+## 0.0.25
+
+### Patch Changes
+
+- [`4da6f31`](https://github.com/emseepea/emseepea/commit/4da6f31a9885c4613001545fcfefbd246a75fa6f) Thanks [@tompahoward](https://github.com/tompahoward)! - Generated starters now install `@emseepea/server@0.10.1` and matching Em See Pea package versions.
+
 ## 0.0.24
 
 ### Patch Changes
