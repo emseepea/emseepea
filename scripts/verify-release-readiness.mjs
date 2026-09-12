@@ -8,6 +8,7 @@ import { readChangesets } from "@changesets/read";
 import { getPackages } from "@manypkg/get-packages";
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
+import { initializerPackages } from "./public-packages.mjs";
 
 export function assertReleaseReadiness(registryBefore, review) {
   const pending = registryBefore.packages
@@ -59,6 +60,7 @@ export async function readPlannedReleaseStatus(cwd = process.cwd()) {
 }
 
 export function assertReleasePullRequestPlan(status, baseLock, headLock, changedFiles, manifests) {
+  const initializerNames = new Set(initializerPackages.map(({ name }) => name));
   const workspaceFiles = new Set(Object.keys(baseLock.packages)
     .filter((packagePath) => packagePath && !packagePath.startsWith("node_modules/"))
     .flatMap((packagePath) => [`${packagePath}/package.json`, `${packagePath}/CHANGELOG.md`]));
@@ -74,6 +76,9 @@ export function assertReleasePullRequestPlan(status, baseLock, headLock, changed
     .filter(({ type }) => type !== "none")
     .map(({ name, newVersion }) => `${name}@${newVersion}`)
     .sort();
+  const plannedNames = new Set(status.releases
+    .filter(({ type }) => type !== "none")
+    .map(({ name }) => name));
   const actual = Object.entries(headLock.packages)
     .filter(([packagePath, manifest]) => manifest.name && manifest.version !== baseLock.packages[packagePath]?.version)
     .map(([, manifest]) => `${manifest.name}@${manifest.version}`)
@@ -82,7 +87,16 @@ export function assertReleasePullRequestPlan(status, baseLock, headLock, changed
   const manifestVersions = manifests
     .map(({ base, head }) => {
       assert.equal(head.name, base.name, "release pull request changed a package name");
-      return head.version === base.version ? undefined : `${head.name}@${head.version}`;
+      const { version: baseVersion, ...baseManifest } = base;
+      const { version: headVersion, ...headManifest } = head;
+      if (initializerNames.has(base.name) && base.private !== true && !plannedNames.has(base.name)) {
+        assert.deepEqual(
+          headManifest,
+          baseManifest,
+          "release pull request changed an initializer manifest without a planned release",
+        );
+      }
+      return headVersion === baseVersion ? undefined : `${head.name}@${headVersion}`;
     })
     .filter(Boolean)
     .sort();

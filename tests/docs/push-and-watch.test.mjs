@@ -145,7 +145,10 @@ test("push and watch rejects the wrong remote revision", async () => {
     if (joined === "ls-remote origin refs/heads/main") return `${"b".repeat(40)}\trefs/heads/main`;
     return "";
   };
-  await assert.rejects(() => pushAndWatch({ run }), /origin\/main does not match/);
+  await assert.rejects(
+    () => pushAndWatch({ run, readStatus: async () => ({ releases: [] }) }),
+    /origin\/main does not match/,
+  );
 });
 
 test("push and watch rejects invalid identity before pushing", async () => {
@@ -179,7 +182,10 @@ test("push and watch fails when an exact workflow run does not appear", async ()
     if (joined.startsWith("run list")) return "[]";
     return "";
   };
-  await assert.rejects(() => pushAndWatch({ run, timeoutMs: -1 }), /quality\.yml did not start/);
+  await assert.rejects(
+    () => pushAndWatch({ run, readStatus: async () => ({ releases: [] }), timeoutMs: -1 }),
+    /quality\.yml did not start/,
+  );
   assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), false);
 });
 
@@ -240,6 +246,9 @@ test("push and watch rejects a truncated workflow result set", async () => {
     })));
     return "";
   };
-  await assert.rejects(() => pushAndWatch({ run }), /run list reached its safety limit/);
+  await assert.rejects(
+    () => pushAndWatch({ run, readStatus: async () => ({ releases: [] }) }),
+    /run list reached its safety limit/,
+  );
   assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), false);
 });

@@ -6,6 +6,7 @@ import {
   assertReleasePullRequestPlan,
   assertReleaseReadiness,
 } from "../../scripts/verify-release-readiness.mjs";
+import { initializerPackages } from "../../scripts/public-packages.mjs";
 
 const registry = { packages: [
   { name: "@emseepea/server", version: "1.0.0", present: true },
@@ -122,4 +123,33 @@ test("release readiness binds the Changesets plan to the release pull request", 
       head: { name: "@emseepea/website", version: "0.0.2" },
     }],
   ));
+});
+
+test("release readiness requires every changed published initializer in the Changesets plan", () => {
+  for (const { name } of initializerPackages) {
+    assert.doesNotThrow(() => assertReleasePullRequestPlan(
+      { releases: [{ name, type: "patch", newVersion: "1.0.1" }] },
+      { packages: { initializer: { name, version: "1.0.0" } } },
+      { packages: { initializer: { name, version: "1.0.1" } } },
+      [],
+      [{
+        base: { name, version: "1.0.0", description: "before" },
+        head: { name, version: "1.0.1", description: "after" },
+      }],
+    ));
+    assert.throws(
+      () => assertReleasePullRequestPlan(
+        { releases: [] },
+        { packages: {} },
+        { packages: {} },
+        [],
+        [{
+          base: { name, version: "1.0.0", description: "before" },
+          head: { name, version: "1.0.0", description: "after" },
+        }],
+      ),
+      /initializer manifest without a planned release/,
+      name,
+    );
+  }
 });

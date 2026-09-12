@@ -50,3 +50,19 @@ separates local evidence from required publication evidence.
 
 Scope: Public release-readiness text and evidence boundaries only. Publication
 verification remains separate.
+
+## Initializer Release Recovery
+
+Result: PASS. Independent cognitive-accessibility, Markdown accessibility, and
+voice reviews covered the exact initializer changeset and release-readiness
+record. The copy states that release verification is incomplete, names the
+planned versions, and separates published core-package evidence from the
+remaining initializer publication and downloaded-package checks.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `.changeset/fresh-starters-install.md` | `0be9a7c009b25ba1b9583c52cf4cd50f0055b3466bd8f7c21e2c9172854d906f` |
+| `docs/reviews/current-release-readiness.md` | `b57cc9e6785d27768a4919bfe7e08e3ef4e19e633e368f6a8aeb1c60de0552fb` |
+
+Scope: Public recovery changeset and release-readiness evidence boundaries.
+Publication verification remains separate.
