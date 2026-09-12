@@ -4,6 +4,14 @@ import { fileURLToPath } from "node:url";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { serveEmseepea, type AuthenticationOptions } from "@emseepea/server";
 
+export type SupportedProtocolVersion =
+  | "2026-07-28"
+  | "2025-11-25"
+  | "2025-06-18"
+  | "2025-03-26"
+  | "2024-11-05"
+  | "2024-10-07";
+
 export interface TestCleanup {
   after(cleanup: () => Promise<void>): void;
 }
@@ -11,6 +19,7 @@ export interface TestCleanup {
 export interface StartMcpServerOptions {
   clientName?: string;
   environment?: NodeJS.ProcessEnv;
+  protocolVersion?: SupportedProtocolVersion;
   startupTimeoutMs?: number;
   token?: string;
 }
@@ -55,7 +64,7 @@ export function insecureTestAuthentication(
 export async function startEmseepea(
   test: TestCleanup,
   app: Parameters<typeof serveEmseepea>[0],
-  options: Pick<StartMcpServerOptions, "clientName" | "token"> = {},
+  options: Pick<StartMcpServerOptions, "clientName" | "protocolVersion" | "token"> = {},
 ): Promise<RunningMcpServer> {
   const running = await serveEmseepea(app, { port: 0 });
   const clients: Client[] = [];
@@ -66,7 +75,13 @@ export async function startEmseepea(
   return {
     ...running,
     output: () => Object.freeze({ stdout: "", stderr: "" }),
-    connect: (token = options.token) => connect(running.url, clients, options.clientName, token),
+    connect: (token = options.token) => connect(
+      running.url,
+      clients,
+      options.clientName,
+      token,
+      options.protocolVersion,
+    ),
   };
 }
 
@@ -126,7 +141,13 @@ export async function startMcpServer(
   return {
     url,
     output: () => Object.freeze({ stdout: output, stderr: errors }),
-    connect: (token = options.token) => connect(url, clients, options.clientName, token),
+    connect: (token = options.token) => connect(
+      url,
+      clients,
+      options.clientName,
+      token,
+      options.protocolVersion,
+    ),
   };
 }
 
@@ -135,10 +156,13 @@ async function connect(
   clients: Client[],
   clientName = "emseepea-test",
   token?: string,
+  protocolVersion: SupportedProtocolVersion = "2026-07-28",
 ): Promise<Client> {
   const client = new Client(
     { name: clientName, version: "0.0.0" },
-    { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+    protocolVersion === "2026-07-28"
+      ? { versionNegotiation: { mode: { pin: protocolVersion } } }
+      : { supportedProtocolVersions: [protocolVersion], versionNegotiation: { mode: "legacy" } },
   );
   await client.connect(new StreamableHTTPClientTransport(
     url,

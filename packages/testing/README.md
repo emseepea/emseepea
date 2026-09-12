@@ -75,6 +75,11 @@ const running = await startEmseepea(t, await createApp({
 const client = await running.connect();
 ```
 
+Set `protocolVersion` on `startEmseepea` or `startMcpServer` to test one of the
+server's documented protocol revisions. Omitting it keeps the `2026-07-28`
+default; for example, `{ protocolVersion: "2025-11-25" }` exercises the legacy
+stateless path.
+
 Never deploy `insecureTestAuthentication`. It accepts any supplied bearer token
 and exists only to keep ordinary tests focused on composition and authorization
 flow. Test a real verifier separately against its provider contract.

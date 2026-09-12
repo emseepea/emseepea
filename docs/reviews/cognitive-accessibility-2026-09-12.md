@@ -126,3 +126,19 @@ No blocking accessibility finding remains.
 
 Scope: Public guidance and release prose only. Runtime and host integration
 evidence remains separate.
+
+## Testing Protocol Selection
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+exact public README addition and changeset. The copy is short, direct, and
+non-visual; it names the option, supported-revision boundary, modern default,
+and legacy stateless path consistently.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `packages/testing/README.md` | `5dcab6d885bd982289dc467afa094302335a26b64c3f2e8b6d066bc69108b4b6` |
+| `.changeset/calm-peas-negotiate.md` | `e3eb0d2a384274dcb0d19a2e61c753532c2831640af263db60d8631c08894cd4` |
+
+Scope: Public testing-helper README and changeset text only. Runtime behavior,
+published-package verification, and unsupported-version diagnostics remain
+separate.
