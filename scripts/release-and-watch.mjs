@@ -6,6 +6,11 @@ import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { retireReplacedInitializers } from "./retire-replaced-initializers.mjs";
 import { watchWorkflowRuns } from "./push-and-watch.mjs";
+import {
+  assertPlannedReleaseReadiness,
+  assertReleasePullRequestPlan,
+  readPlannedReleaseStatus,
+} from "./verify-release-readiness.mjs";
 
 const exec = promisify(execFile);
 const repository = "emseepea/emseepea";
@@ -17,6 +22,7 @@ async function execute(command, args, { timeoutMs } = {}) {
 
 export async function releaseAndWatch({
   run = execute,
+  readStatus = readPlannedReleaseStatus,
   pause = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   timeoutMs = 3_600_000,
 } = {}) {
@@ -38,6 +44,32 @@ export async function releaseAndWatch({
   const [pullRequest] = pullRequests;
   assert.equal(pullRequest.baseRefOid, baseSha, "release pull request base does not match local HEAD");
   assert.match(pullRequest.headRefOid, /^[a-f0-9]{40}$/);
+
+  const status = await readStatus();
+  assertPlannedReleaseReadiness(
+    status,
+    await run("git", ["show", "HEAD:docs/reviews/current-release-readiness.md"]),
+    { requireReleases: true },
+  );
+  await run("git", ["fetch", "origin", `pull/${pullRequest.number}/head`]);
+  const changedFiles = (await run("git", ["diff", "--name-only", baseSha, pullRequest.headRefOid]))
+    .split("\n")
+    .filter(Boolean);
+  const manifestPaths = changedFiles.filter((file) => file === "package.json" || file.endsWith("/package.json"));
+  const manifests = [];
+  for (const manifestPath of manifestPaths) {
+    manifests.push({
+      base: JSON.parse(await run("git", ["show", `HEAD:${manifestPath}`])),
+      head: JSON.parse(await run("git", ["show", `${pullRequest.headRefOid}:${manifestPath}`])),
+    });
+  }
+  assertReleasePullRequestPlan(
+    status,
+    JSON.parse(await run("git", ["show", "HEAD:package-lock.json"])),
+    JSON.parse(await run("git", ["show", `${pullRequest.headRefOid}:package-lock.json`])),
+    changedFiles,
+    manifests,
+  );
 
   await run("gh", [
     "pr", "merge", String(pullRequest.number), "--repo", repository, "--merge",

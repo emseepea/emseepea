@@ -3,6 +3,16 @@ import test from "node:test";
 
 import { pushAndWatch, watchWorkflowRuns } from "../../scripts/push-and-watch.mjs";
 
+const plannedStatus = JSON.stringify({ releases: [
+  { name: "@emseepea/server", type: "patch", newVersion: "1.0.1" },
+] });
+const readStatus = (status = plannedStatus) => async () => JSON.parse(status);
+const releaseReview = `
+- \`@emseepea/server@1.0.1\`
+- Result: PASS
+- Final result: within appetite.
+`;
+
 test("push and watch binds both pipelines to the pushed commit", async () => {
   const sha = "a".repeat(40);
   const calls = [];
@@ -15,6 +25,8 @@ test("push and watch binds both pipelines to the pushed commit", async () => {
     if (joined === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
     if (joined === "rev-parse HEAD") return sha;
     if (joined === "ls-remote origin refs/heads/main") return `${sha}\trefs/heads/main`;
+    if (command === "npm" && joined.startsWith("exec changeset status")) return plannedStatus;
+    if (joined === "show HEAD:docs/reviews/current-release-readiness.md") return releaseReview;
     if (joined.includes("--workflow quality.yml")) {
       qualityPolls += 1;
       const secondAttempt = qualityPolls > 1 ? [{ attempt: 2, databaseId: 2, headSha: sha, url: "https://example.test/quality-2-rerun" }] : [];
@@ -37,7 +49,7 @@ test("push and watch binds both pipelines to the pushed commit", async () => {
     return "";
   };
 
-  const result = await pushAndWatch({ run, pause: async () => {}, timeoutMs: 10_000 });
+  const result = await pushAndWatch({ run, readStatus: readStatus(), pause: async () => {}, timeoutMs: 10_000 });
   assert.deepEqual(result, {
     sha,
     urls: ["https://example.test/quality-1", "https://example.test/quality-2", "https://example.test/quality-2-rerun", "https://example.test/release"],
@@ -68,6 +80,46 @@ test("push and watch rejects missing publication review evidence before pushing"
   assert.equal(calls.some(([command, operation]) => command === "git" && operation === "push"), false);
 });
 
+test("push and watch rejects a stale release-readiness record before pushing", async () => {
+  const sha = "a".repeat(40);
+  const calls = [];
+  const run = async (command, args) => {
+    calls.push([command, ...args]);
+    const joined = args.join(" ");
+    if (joined === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
+    if (joined === "status --porcelain=v1 --untracked-files=all") return "";
+    if (joined === "rev-parse HEAD") return sha;
+    if (command === "npm") return plannedStatus;
+    if (joined === "show HEAD:docs/reviews/current-release-readiness.md") {
+      return releaseReview.replace("1.0.1", "1.0.2");
+    }
+    return "";
+  };
+
+  await assert.rejects(() => pushAndWatch({ run, readStatus: readStatus() }), /package set/);
+  assert.equal(calls.some(([command, operation]) => command === "git" && operation === "push"), false);
+});
+
+test("push and watch accepts an empty post-version plan without reusing local main", async () => {
+  const calls = [];
+  const run = async (command, args) => {
+    calls.push([command, ...args]);
+    const joined = args.join(" ");
+    if (joined === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
+    if (joined === "status --porcelain=v1 --untracked-files=all") return "";
+    if (joined === "rev-parse HEAD") return "a".repeat(40);
+    if (joined === `ls-remote origin refs/heads/main`) return `${"a".repeat(40)}\trefs/heads/main`;
+    if (joined.startsWith("run list")) return "[]";
+    return "";
+  };
+
+  await assert.rejects(
+    () => pushAndWatch({ run, readStatus: async () => ({ releases: [] }), timeoutMs: -1 }),
+    /quality\.yml did not start/,
+  );
+  assert.equal(calls.some(([command, operation]) => command === "git" && operation === "push"), true);
+});
+
 test("push and watch rejects uncommitted review evidence before validation", async () => {
   const calls = [];
   const run = async (command, args) => {
@@ -88,6 +140,8 @@ test("push and watch rejects the wrong remote revision", async () => {
     const joined = args.join(" ");
     if (joined === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
     if (joined === "rev-parse HEAD") return sha;
+    if (joined === "exec changeset status -- --output /dev/stdout") return JSON.stringify({ releases: [] });
+    if (joined === "show HEAD:docs/reviews/current-release-readiness.md") return "";
     if (joined === "ls-remote origin refs/heads/main") return `${"b".repeat(40)}\trefs/heads/main`;
     return "";
   };
@@ -119,6 +173,8 @@ test("push and watch fails when an exact workflow run does not appear", async ()
     const joined = args.join(" ");
     if (joined === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
     if (joined === "rev-parse HEAD") return sha;
+    if (joined === "exec changeset status -- --output /dev/stdout") return JSON.stringify({ releases: [] });
+    if (joined === "show HEAD:docs/reviews/current-release-readiness.md") return "";
     if (joined === "ls-remote origin refs/heads/main") return `${sha}\trefs/heads/main`;
     if (joined.startsWith("run list")) return "[]";
     return "";
@@ -176,6 +232,8 @@ test("push and watch rejects a truncated workflow result set", async () => {
     const joined = args.join(" ");
     if (joined === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
     if (joined === "rev-parse HEAD") return sha;
+    if (joined === "exec changeset status -- --output /dev/stdout") return JSON.stringify({ releases: [] });
+    if (joined === "show HEAD:docs/reviews/current-release-readiness.md") return "";
     if (joined === "ls-remote origin refs/heads/main") return `${sha}\trefs/heads/main`;
     if (joined.startsWith("run list")) return JSON.stringify(Array.from({ length: 100 }, (_, databaseId) => ({
       attempt: 1, databaseId, headSha: sha, url: `https://example.test/${databaseId}`,

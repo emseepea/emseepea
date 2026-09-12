@@ -12,6 +12,29 @@ const pullRequest = {
   headRefOid: headSha,
   url: "https://example.test/pull/25",
 };
+const plannedStatus = JSON.stringify({ releases: [
+  { name: "@emseepea/server", type: "patch", newVersion: "1.0.1" },
+] });
+const readStatus = (status = plannedStatus) => async () => JSON.parse(status);
+const releaseReview = `
+- \`@emseepea/server@1.0.1\`
+- Result: PASS
+- Final result: within appetite.
+`;
+const baseLock = JSON.stringify({ packages: {
+  "packages/server": { name: "@emseepea/server", version: "1.0.0" },
+} });
+const headLock = JSON.stringify({ packages: {
+  "packages/server": { name: "@emseepea/server", version: "1.0.1" },
+} });
+const baseManifest = JSON.stringify({ name: "@emseepea/server", version: "1.0.0" });
+const headManifest = JSON.stringify({ name: "@emseepea/server", version: "1.0.1" });
+const releaseFiles = [
+  ".changeset/server.md",
+  "package-lock.json",
+  "packages/server/CHANGELOG.md",
+  "packages/server/package.json",
+].join("\n");
 
 test("release and watch binds the Changesets PR and both pipelines to exact commits", async () => {
   const calls = [];
@@ -24,6 +47,13 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
     if (joined === "branch --show-current") return "main";
     if (joined === "rev-parse HEAD") return baseSha;
     if (joined.startsWith("pr list")) return JSON.stringify([pullRequest]);
+    if (command === "npm" && joined.startsWith("exec changeset status")) return plannedStatus;
+    if (joined === "show HEAD:docs/reviews/current-release-readiness.md") return releaseReview;
+    if (joined === "show HEAD:package-lock.json") return baseLock;
+    if (joined === `show ${headSha}:package-lock.json`) return headLock;
+    if (joined === "show HEAD:packages/server/package.json") return baseManifest;
+    if (joined === `show ${headSha}:packages/server/package.json`) return headManifest;
+    if (joined === `diff --name-only ${baseSha} ${headSha}`) return releaseFiles;
     if (joined.startsWith("pr view")) {
       return JSON.stringify({ state: "MERGED", mergeCommit: { oid: mergeSha }, url: pullRequest.url });
     }
@@ -50,7 +80,7 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
     return "";
   };
 
-  assert.deepEqual(await releaseAndWatch({ run, pause: async () => {}, timeoutMs: 10_000 }), {
+  assert.deepEqual(await releaseAndWatch({ run, readStatus: readStatus(), pause: async () => {}, timeoutMs: 10_000 }), {
     pullRequest: pullRequest.url,
     sha: mergeSha,
     urls: ["https://example.test/quality", "https://example.test/release"],
@@ -80,7 +110,29 @@ test("release and watch rejects unsafe checkout or pull request state before mer
   ]) {
     const calls = [];
     const run = checkoutRun(override, calls);
-    await assert.rejects(() => releaseAndWatch({ run }), message);
+    await assert.rejects(() => releaseAndWatch({ run, readStatus: readStatus() }), message);
+    assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "pr" && second === "merge"), false);
+  }
+});
+
+test("release and watch rejects a stale readiness record before merging", async () => {
+  const calls = [];
+  const run = checkoutRun({ releaseReview: releaseReview.replace("1.0.1", "1.0.2") }, calls);
+  await assert.rejects(() => releaseAndWatch({ run, readStatus: readStatus() }), /package set/);
+  assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "pr" && second === "merge"), false);
+});
+
+test("release and watch rejects an empty plan or tampered pull request before merging", async () => {
+  for (const override of [
+    { plannedStatus: JSON.stringify({ releases: [] }) },
+    { releaseFiles: `${releaseFiles}\npackages/server/src/index.ts` },
+    { headManifest: JSON.stringify({ name: "@emseepea/server", version: "9.0.0" }) },
+  ]) {
+    const calls = [];
+    await assert.rejects(() => releaseAndWatch({
+      run: checkoutRun(override, calls),
+      readStatus: readStatus(override.plannedStatus ?? plannedStatus),
+    }));
     assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "pr" && second === "merge"), false);
   }
 });
@@ -88,7 +140,7 @@ test("release and watch rejects unsafe checkout or pull request state before mer
 test("release and watch fails when an exact workflow run does not appear", async () => {
   const run = checkoutRun({ workflowRuns: "[]" });
   await assert.rejects(
-    () => releaseAndWatch({ run, timeoutMs: -1 }),
+    () => releaseAndWatch({ run, readStatus: readStatus(), timeoutMs: -1 }),
     /quality\.yml did not start/,
   );
 });
@@ -100,7 +152,7 @@ test("release and watch propagates a failed exact-commit pipeline", async () => 
     ]),
     conclusion: "failure",
   });
-  await assert.rejects(() => releaseAndWatch({ run }), /quality\.yml concluded failure/);
+  await assert.rejects(() => releaseAndWatch({ run, readStatus: readStatus() }), /quality\.yml concluded failure/);
 });
 
 test("release and watch times out after an exact workflow run starts", async () => {
@@ -109,7 +161,7 @@ test("release and watch times out after an exact workflow run starts", async () 
       { attempt: 1, databaseId: 10, headSha: mergeSha, url: "https://example.test/quality" },
     ]),
   });
-  await assert.rejects(() => releaseAndWatch({ run, timeoutMs: -1 }), /did not finish within the timeout/);
+  await assert.rejects(() => releaseAndWatch({ run, readStatus: readStatus(), timeoutMs: -1 }), /did not finish within the timeout/);
 });
 
 function checkoutRun(overrides = {}, calls = []) {
@@ -121,6 +173,15 @@ function checkoutRun(overrides = {}, calls = []) {
     if (joined === "branch --show-current") return overrides.branch ?? "main";
     if (joined === "rev-parse HEAD") return baseSha;
     if (joined.startsWith("pr list")) return JSON.stringify(overrides.pullRequests ?? [pullRequest]);
+    if (command === "npm" && joined.startsWith("exec changeset status")) return overrides.plannedStatus ?? plannedStatus;
+    if (joined === "show HEAD:docs/reviews/current-release-readiness.md") {
+      return overrides.releaseReview ?? releaseReview;
+    }
+    if (joined === "show HEAD:package-lock.json") return baseLock;
+    if (joined === `show ${headSha}:package-lock.json`) return headLock;
+    if (joined === "show HEAD:packages/server/package.json") return baseManifest;
+    if (joined === `show ${headSha}:packages/server/package.json`) return overrides.headManifest ?? headManifest;
+    if (joined === `diff --name-only ${baseSha} ${headSha}`) return overrides.releaseFiles ?? releaseFiles;
     if (joined.startsWith("pr view")) {
       return JSON.stringify({ state: "MERGED", mergeCommit: { oid: mergeSha }, url: pullRequest.url });
     }

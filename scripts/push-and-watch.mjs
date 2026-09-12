@@ -4,6 +4,10 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
+import {
+  assertPlannedReleaseReadiness,
+  readPlannedReleaseStatus,
+} from "./verify-release-readiness.mjs";
 
 const exec = promisify(execFile);
 const repository = "emseepea/emseepea";
@@ -16,6 +20,7 @@ async function execute(command, args, { timeoutMs, env } = {}) {
 
 export async function pushAndWatch({
   run = execute,
+  readStatus = readPlannedReleaseStatus,
   pause = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   timeoutMs = 3_600_000,
 } = {}) {
@@ -35,6 +40,10 @@ export async function pushAndWatch({
   await run(process.execPath, ["--test", "tests/docs/published-content-review.test.mjs"], {
     env: { ...process.env, GITHUB_BASE_REF: "main" },
   });
+  assertPlannedReleaseReadiness(
+    await readStatus(),
+    await run("git", ["show", "HEAD:docs/reviews/current-release-readiness.md"]),
+  );
   await run("git", ["push", "origin", `${sha}:refs/heads/main`]);
   const remote = await run("git", ["ls-remote", "origin", "refs/heads/main"]);
   assert.equal(remote.split("\t")[0], sha, "origin/main does not match the pushed commit");

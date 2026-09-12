@@ -1,72 +1,60 @@
 # Current Release Readiness
 
-Date: 2026-09-11
+Date: 2026-09-12
 
 ## Release Batch
 
-- `@emseepea/server@0.10.0`
-- `@emseepea/feedback@0.2.6`
-- `@emseepea/react@0.0.19`
-- `@emseepea/testing@0.9.9`
-- `@emseepea/create-api-backed-server@0.0.23`
-- `@emseepea/create-database-schema-server@0.0.10`
-- `@emseepea/create-html-ui-server@0.0.24`
-- `@emseepea/create-mongodb-backed-server@0.0.10`
-- `@emseepea/create-multi-instance-postgres-server@0.0.13`
-- `@emseepea/create-openapi-backed-server@0.0.5`
-- `@emseepea/create-progress-streaming-server@0.0.23`
-- `@emseepea/create-react-ui-server@0.0.23`
-- `@emseepea/create-resources-and-prompts-server@0.0.22`
-- `@emseepea/create-soap-backed-server@0.0.10`
-- `@emseepea/create-tool-server@0.0.25`
-
-Initializer patches publish new artifacts that use the server in this batch.
+- `@emseepea/feedback@0.2.7`
+- `@emseepea/server@0.10.1`
+- `@emseepea/react@0.0.20`
+- `@emseepea/testing@0.9.11`
 
 ## Change for Users
 
-Applications can enable `clientRoots` and ask a client for its workspace roots
-through the existing MCP 2026-07-28 `input_required` flow. Direct tools,
-resources, resource templates, and prompts use `inputRequired.roots()` and
-`rootsResponse`.
+Semantic tests now classify an expired Claude OAuth result as an authentication
+failure without saving the provider's error text as semantic evidence.
 
-The framework checks roots before invoking the continuation handler. The
-handler selects the expected reply key. Root count defaults to 100 and can be
-configured; the existing request-size limit bounds all roots data. Returned
-roots are immutable and grant no file access or permissions. The framework
-never opens their paths or automatically logs them.
+The feedback testing server now announces readiness only after its `SIGINT` and
+`SIGTERM` shutdown handlers are active.
+
+`defineTool`, `defineStreamingTool`, and `defineMappedTool` keep TypeScript
+inference bounded for large Zod output schemas while preserving handler output
+checks.
+
+The React package change is dependency-only. Testing 0.9.11 includes both the
+authentication fix prepared in unpublished 0.9.10 and the server dependency
+update.
 
 ## Verified Local Evidence
 
-- Server build, TypeScript checks, and lint pass.
-- All seven roots tests pass, covering public and protected official-client
-  journeys for each direct handler, malformed inputs, count and byte limits,
-  client capability declarations, safe accessor behavior, and authorization
-  on every round.
-- Roots tests prove timeout and cancellation behavior, legacy exclusion, and
-  continuation after the original process exits and a new process starts.
-- The eight existing client-input tests and the legacy protocol test pass.
-- The installed-package smoke script completes a roots round through the
-  official client using the local workspace build.
-- Independent architecture review passed and independently ran the roots tests.
-- Independent cognitive-accessibility review passed for the roots public copy.
+- The testing package's 13 tests pass, including both Claude event parsers,
+  safe authentication diagnostics, and a successful result containing the same
+  text as the authentication error.
+- All 18 feedback package tests pass on Node.js 22 and 24. The testing fixture
+  checks both shutdown handlers at the instant readiness is logged, and 40
+  concurrent runs pass on each Node.js version.
+- The large-schema type test passes with a 100-field Zod output schema under a
+  512 MB heap and 30-second limit. Project type checking also passes.
+- Independent architecture, Jobs To Be Done (JTBD), code, test-quality,
+  cognitive-accessibility, voice, and risk reviews passed for the changes in
+  this batch.
+- Quality passed for the exact source commit and for the merged version commit.
 
-These local results do not prove the published npm package or full protocol
-conformance. Broader Quality, packed initializers, container checks, performance,
-semantic evaluation, and registry checks remain publication gates.
+These results do not prove the published npm packages. None of the four release
+batch versions had registry proof when this record was prepared.
 
 The full local suite could not finish because Docker was unresponsive during
-PostgreSQL example setup. Container qualification remains required in CI.
+PostgreSQL example setup. Container qualification remains required in
+continuous integration (CI).
 
 ## Required Publication Evidence
 
 - Quality must pass on the publishing commit: supported Node.js versions,
   dependency scanning, package and documentation tests, accessibility,
   performance, and all eleven standalone initializer/container checks.
-- The existing JSON performance budgets remain unchanged. They do not establish
-  a throughput claim for roots continuations.
 - Release must pass the maintained semantic examples before publication.
 - Registry verification must check package versions, integrity, provenance,
-  signatures, clean installation, and the roots smoke round trip.
+  signatures, clean installation, and the affected package behaviour.
 - Registry initializer checks must exercise the actual downloaded packages and
   their container qualification.
 - Website deployment may be claimed only after its publication job succeeds.

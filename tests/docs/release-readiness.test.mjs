@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { assertReleaseReadiness } from "../../scripts/verify-release-readiness.mjs";
+import {
+  assertPlannedReleaseReadiness,
+  assertReleasePullRequestPlan,
+  assertReleaseReadiness,
+} from "../../scripts/verify-release-readiness.mjs";
 
 const registry = { packages: [
   { name: "@emseepea/server", version: "1.0.0", present: true },
@@ -47,4 +51,75 @@ test("release readiness covers every unpublished package", () => {
     "within appetite.",
     "within appetite, except for future checks.",
   )), /within appetite/);
+});
+
+test("release readiness covers every package planned by Changesets", () => {
+  const status = { releases: [
+    { name: "@emseepea/server", type: "patch", newVersion: "1.0.1" },
+    { name: "@emseepea/feedback", type: "patch", newVersion: "0.2.7" },
+    { name: "@emseepea/example", type: "none", newVersion: "0.0.1" },
+  ] };
+  const plannedReview = `
+- \`@emseepea/server@1.0.1\`
+- \`@emseepea/feedback@0.2.7\`
+
+- Result: PASS
+- Final result: within appetite.
+`;
+  assert.doesNotThrow(() => assertPlannedReleaseReadiness(status, plannedReview));
+  assert.throws(
+    () => assertPlannedReleaseReadiness(status, plannedReview.replace("1.0.1", "1.0.2")),
+    /package set/,
+  );
+  assert.throws(
+    () => assertPlannedReleaseReadiness({ releases: [] }, "", { requireReleases: true }),
+    /no planned releases/,
+  );
+});
+
+test("release readiness binds the Changesets plan to the release pull request", () => {
+  const status = { releases: [{ name: "@emseepea/server", type: "patch", newVersion: "1.0.1" }] };
+  const baseLock = { packages: { "packages/server": { name: "@emseepea/server", version: "1.0.0" } } };
+  const headLock = { packages: { "packages/server": { name: "@emseepea/server", version: "1.0.1" } } };
+  assert.doesNotThrow(() => assertReleasePullRequestPlan(
+    status,
+    baseLock,
+    headLock,
+    ["package-lock.json", "packages/server/package.json", "packages/server/CHANGELOG.md"],
+    [{
+      base: { name: "@emseepea/server", version: "1.0.0" },
+      head: { name: "@emseepea/server", version: "1.0.1" },
+    }],
+  ));
+  assert.throws(
+    () => assertReleasePullRequestPlan(status, baseLock, headLock, ["packages/server/src/index.ts"], []),
+    /non-generated files/,
+  );
+  assert.throws(
+    () => assertReleasePullRequestPlan(
+      status,
+      baseLock,
+      headLock,
+      ["package-lock.json", "packages/server/package.json"],
+      [{
+        base: { name: "@emseepea/server", version: "1.0.0" },
+        head: { name: "@emseepea/server", version: "9.0.0" },
+      }],
+    ),
+    /manifests do not match/,
+  );
+
+  const websiteStatus = { releases: [{ name: "@emseepea/website", type: "patch", newVersion: "0.0.2" }] };
+  const websiteBase = { packages: { website: { name: "@emseepea/website", version: "0.0.1" } } };
+  const websiteHead = { packages: { website: { name: "@emseepea/website", version: "0.0.2" } } };
+  assert.doesNotThrow(() => assertReleasePullRequestPlan(
+    websiteStatus,
+    websiteBase,
+    websiteHead,
+    ["package-lock.json", "website/package.json", "website/CHANGELOG.md"],
+    [{
+      base: { name: "@emseepea/website", version: "0.0.1" },
+      head: { name: "@emseepea/website", version: "0.0.2" },
+    }],
+  ));
 });
