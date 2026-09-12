@@ -360,6 +360,40 @@ defineTool({
   handler: ({ value }) => ({ text: 42, data: { value } }),
 });
 
+defineTool({
+  name: "missing-required-output-type-check",
+  access: "public",
+  description: "Compile-time required output check.",
+  inputSchema: schema,
+  outputSchema: schema,
+  // @ts-expect-error Tool handlers must return every required output property.
+  handler: () => ({ data: {} }),
+});
+
+defineTool({
+  name: "optional-defaulted-transformed-output-type-check",
+  access: "public",
+  description: "Compile-time shape-local output check.",
+  inputSchema: schema,
+  outputSchema: z.object({
+    required: z.string(),
+    optional: z.string().optional(),
+    defaulted: z.string().default("ready"),
+    transformed: z.string().transform(Number),
+  }),
+  handler: () => ({ data: { required: "ready", transformed: "1" } }),
+});
+
+defineTool({
+  name: "invalid-output-value-type-check",
+  access: "public",
+  description: "Compile-time output value check.",
+  inputSchema: schema,
+  outputSchema: schema,
+  // @ts-expect-error Tool handler values must match the corresponding output property schema input.
+  handler: () => ({ data: { value: 42 } }),
+});
+
 defineStreamingTool({
   name: "streaming-protected-type-check",
   access: "protected",

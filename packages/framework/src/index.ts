@@ -334,7 +334,7 @@ interface ProtectedCapabilityAccess {
   readonly requiredScopes: readonly string[];
 }
 export type ToolAccess = "public" | "protected";
-interface ToolDefinitionBase<Input extends z.ZodObject, Output extends z.ZodObject> {
+interface ToolDefinitionBase<Input, Output> {
   readonly name: string;
   readonly discoverable?: boolean;
   readonly title?: string;
@@ -345,20 +345,84 @@ interface ToolDefinitionBase<Input extends z.ZodObject, Output extends z.ZodObje
   readonly inputSchema: Input;
   readonly outputSchema: Output;
 }
-type ToolHandlerResult<Output extends z.ZodObject> = ToolResult<z.input<Output>> | InputRequiredResult;
+type ZodObjectLike = StandardSchemaV1 & {
+  readonly type: "object";
+  readonly shape: Readonly<Record<string, StandardSchemaV1>>;
+  readonly safeParseAsync: (value: unknown) => Promise<{ readonly success: boolean }>;
+  readonly toJSONSchema: () => unknown;
+};
+type InferredToolDefinition<
+  Input extends ZodObjectLike,
+  Output extends ZodObjectLike,
+  Access extends ToolAccess,
+  Result,
+> =
+  ToolDefinitionBase<Input, Output> & {
+    readonly handler: (
+      input: StandardSchemaV1.InferOutput<Input>,
+      context: ToolContext<NoInfer<Access>>
+    ) => Result;
+  } & (Access extends "public"
+    ? { readonly access: Access; readonly requiredScopes?: never }
+    : { readonly access: Access; readonly requiredScopes: readonly string[] });
+type InferredStreamingToolDefinition<
+  Input extends ZodObjectLike,
+  Output extends ZodObjectLike,
+  Access extends ToolAccess,
+  Result,
+> = ToolDefinitionBase<Input, Output> & {
+  readonly handler: (
+    input: StandardSchemaV1.InferOutput<Input>,
+    context: StreamingToolContext<NoInfer<Access>>
+  ) => Result;
+} & (Access extends "public"
+  ? { readonly access: Access; readonly requiredScopes?: never }
+  : { readonly access: Access; readonly requiredScopes: readonly string[] });
+type InferredMappedToolDefinition<
+  Input extends ZodObjectLike,
+  Output extends ZodObjectLike,
+  BackendInput extends ZodObjectLike,
+  BackendOutput extends ZodObjectLike,
+  Access extends ToolAccess,
+  Result,
+> = ToolDefinitionBase<Input, Output> & {
+  readonly backendInputSchema: BackendInput;
+  readonly backendOutputSchema: BackendOutput;
+  readonly isAvailable?: (context: BackendAdapterContext) => boolean | Promise<boolean>;
+  readonly mapInput: (
+    input: StandardSchemaV1.InferOutput<Input>
+  ) => StandardSchemaV1.InferInput<BackendInput>;
+  readonly adapter: (
+    input: StandardSchemaV1.InferOutput<BackendInput>,
+    context: BackendAdapterContext
+  ) => unknown | Promise<unknown>;
+  readonly mapOutput: (output: StandardSchemaV1.InferOutput<BackendOutput>) => Result;
+} & (Access extends "public"
+  ? { readonly access: Access; readonly requiredScopes?: never }
+  : { readonly access: Access; readonly requiredScopes: readonly string[] });
+type ShapeInput<Shape extends Readonly<Record<string, StandardSchemaV1>>> = {
+  -readonly [Key in keyof Shape as undefined extends StandardSchemaV1.InferInput<Shape[Key]> ? never : Key]:
+    StandardSchemaV1.InferInput<Shape[Key]>;
+} & {
+  -readonly [Key in keyof Shape as undefined extends StandardSchemaV1.InferInput<Shape[Key]> ? Key : never]?:
+    StandardSchemaV1.InferInput<Shape[Key]>;
+};
+type InferredToolHandlerResult = ToolResult<object> | InputRequiredResult;
 type ResultDataKeys<Result> = Result extends ToolResult<infer Data> ? keyof Data : never;
 type ExactToolResult<
   Result,
-  Output extends z.ZodObject,
+  Output extends ZodObjectLike,
   ErrorMessage extends string,
-> = [Exclude<ResultDataKeys<Awaited<Result>>, keyof z.input<Output>>] extends [never]
+> = [Exclude<ResultDataKeys<Awaited<Result>>, keyof Output["shape"]>] extends [never]
   ? object
   : { readonly [Key in ErrorMessage]: never };
 export type ToolDefinition<
   Input extends z.ZodObject,
   Output extends z.ZodObject,
-  Result extends ToolHandlerResult<Output> | Promise<ToolHandlerResult<Output>> =
-    ToolHandlerResult<Output> | Promise<ToolHandlerResult<Output>>,
+  Result extends ToolResult<ShapeInput<Output["shape"]>> | InputRequiredResult |
+    Promise<ToolResult<ShapeInput<Output["shape"]>> | InputRequiredResult> =
+    ToolResult<ShapeInput<Output["shape"]>> | InputRequiredResult |
+    Promise<ToolResult<ShapeInput<Output["shape"]>> | InputRequiredResult>,
 > =
   ToolDefinitionBase<Input, Output> & (
     | {
@@ -375,8 +439,9 @@ export type ToolDefinition<
 export type StreamingToolDefinition<
   Input extends z.ZodObject,
   Output extends z.ZodObject,
-  Result extends ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>> =
-    ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>,
+  Result extends ToolResult<ShapeInput<Output["shape"]>> |
+    Promise<ToolResult<ShapeInput<Output["shape"]>>> =
+    ToolResult<ShapeInput<Output["shape"]>> | Promise<ToolResult<ShapeInput<Output["shape"]>>>,
 > =
   ToolDefinitionBase<Input, Output> & (
     | {
@@ -395,7 +460,7 @@ interface MappedToolDefinitionBase<
   Output extends z.ZodObject,
   BackendInput extends z.ZodObject,
   BackendOutput extends z.ZodObject,
-  Result extends ToolResult<z.input<Output>> = ToolResult<z.input<Output>>,
+  Result extends ToolResult<ShapeInput<Output["shape"]>> = ToolResult<ShapeInput<Output["shape"]>>,
 > extends ToolDefinitionBase<Input, Output> {
   readonly backendInputSchema: BackendInput;
   readonly backendOutputSchema: BackendOutput;
@@ -415,7 +480,7 @@ export type MappedToolDefinition<
   Output extends z.ZodObject,
   BackendInput extends z.ZodObject,
   BackendOutput extends z.ZodObject,
-  Result extends ToolResult<z.input<Output>> = ToolResult<z.input<Output>>,
+  Result extends ToolResult<ShapeInput<Output["shape"]>> = ToolResult<ShapeInput<Output["shape"]>>,
 > =
   | MappedToolDefinitionBase<Input, Output, BackendInput, BackendOutput, Result> & {
       readonly access: "public";
@@ -725,56 +790,71 @@ interface NormalizedOAuth {
 }
 
 export function defineTool<
-  Input extends z.ZodObject,
-  Output extends z.ZodObject,
-  Result extends ToolHandlerResult<Output> | Promise<ToolHandlerResult<Output>>,
->(definition: ToolDefinition<Input, Output, Result> & ExactToolResult<
+  Input extends ZodObjectLike,
+  Output extends ZodObjectLike,
+  const Access extends ToolAccess,
+  const Result extends
+    | ToolResult<ShapeInput<Output["shape"]>>
+    | InputRequiredResult
+    | Promise<ToolResult<ShapeInput<Output["shape"]>> | InputRequiredResult>,
+>(definition: InferredToolDefinition<Input, Output, Access, Result> & ExactToolResult<
   Result,
   Output,
   "ERROR: handler data contains keys absent from outputSchema"
->,
-): EmseepeaTool {
+>): EmseepeaTool {
   const handler = definition.handler as unknown as (
-    input: z.output<Input>,
+    input: unknown,
     context: ToolContext,
-  ) => ToolResult<z.input<Output>> | InputRequiredResult |
-  Promise<ToolResult<z.input<Output>> | InputRequiredResult>;
-  return createCheckedTool(definition, handler as CheckedToolExecutor, false, true);
+  ) => InferredToolHandlerResult | Promise<InferredToolHandlerResult>;
+  return createCheckedTool(definition as unknown as CheckedToolDefinition, handler as CheckedToolExecutor, false, true);
 }
 
 export function defineStreamingTool<
-  Input extends z.ZodObject,
-  Output extends z.ZodObject,
-  Result extends ToolResult<z.input<Output>> | Promise<ToolResult<z.input<Output>>>,
->(definition: StreamingToolDefinition<Input, Output, Result> & ExactToolResult<
+  Input extends ZodObjectLike,
+  Output extends ZodObjectLike,
+  const Access extends ToolAccess,
+  const Result extends ToolResult<ShapeInput<Output["shape"]>> |
+    Promise<ToolResult<ShapeInput<Output["shape"]>>>,
+>(definition: InferredStreamingToolDefinition<Input, Output, Access, Result> & ExactToolResult<
   Result,
   Output,
   "ERROR: handler data contains keys absent from outputSchema"
->,
-): EmseepeaTool {
+>): EmseepeaTool {
   const handler = definition.handler as unknown as CheckedToolExecutor;
-  return createCheckedTool(definition, handler, true, false);
+  return createCheckedTool(definition as unknown as CheckedToolDefinition, handler, true, false);
 }
 
 export function defineMappedTool<
-  Input extends z.ZodObject,
-  Output extends z.ZodObject,
-  BackendInput extends z.ZodObject,
-  BackendOutput extends z.ZodObject,
-  Result extends ToolResult<z.input<Output>>,
->(definition: MappedToolDefinition<Input, Output, BackendInput, BackendOutput, Result> & ExactToolResult<
-  Result,
-  Output,
-  "ERROR: mapOutput data contains keys absent from outputSchema"
->): EmseepeaTool {
-  const { backendInputSchema, backendOutputSchema, isAvailable, adapter } = definition;
-  const mapInput = definition.mapInput as unknown as (
-    input: z.output<Input>,
-  ) => z.input<BackendInput>;
-  const mapOutput = definition.mapOutput as unknown as (
-    output: z.output<BackendOutput>,
-  ) => ToolResult<z.input<Output>>;
-  const execute = async (input: z.output<Input>, context: ToolContext) => {
+  Input extends ZodObjectLike,
+  Output extends ZodObjectLike,
+  BackendInput extends ZodObjectLike,
+  BackendOutput extends ZodObjectLike,
+  const Access extends ToolAccess,
+  const Result extends ToolResult<ShapeInput<Output["shape"]>>,
+>(
+  definition: InferredMappedToolDefinition<
+    Input,
+    Output,
+    BackendInput,
+    BackendOutput,
+    Access,
+    Result
+  > & ExactToolResult<
+    Result,
+    Output,
+    "ERROR: mapOutput data contains keys absent from outputSchema"
+  >
+): EmseepeaTool {
+  const checkedDefinition = definition as unknown as MappedToolDefinition<
+    z.ZodObject,
+    z.ZodObject,
+    z.ZodObject,
+    z.ZodObject
+  >;
+  const { backendInputSchema, backendOutputSchema, isAvailable, adapter } = checkedDefinition;
+  const mapInput = checkedDefinition.mapInput;
+  const mapOutput = checkedDefinition.mapOutput;
+  const execute = async (input: unknown, context: ToolContext) => {
     const adapterContext = Object.freeze({
       signal: context.signal,
       deadlineMs: context.deadlineMs,
@@ -784,7 +864,7 @@ export function defineMappedTool<
       throw new Error("Mapped tool provider is unavailable");
     }
     context.signal.throwIfAborted();
-    const command = await backendInputSchema.safeParseAsync(mapInput(input));
+    const command = await backendInputSchema.safeParseAsync(mapInput(input as Record<string, unknown>));
     if (!command.success) throw new Error("Mapped backend command does not match its schema");
     context.signal.throwIfAborted();
     const backendResult = await adapter(command.data, adapterContext);
@@ -794,7 +874,7 @@ export function defineMappedTool<
     context.signal.throwIfAborted();
     return mapOutput(parsedBackendResult.data);
   };
-  return createCheckedTool(definition, execute as CheckedToolExecutor, false, false);
+  return createCheckedTool(definition as unknown as CheckedToolDefinition, execute as CheckedToolExecutor, false, false);
 }
 
 export function defineResource(definition: ResourceDefinition): EmseepeaResource {

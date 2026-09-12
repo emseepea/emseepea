@@ -9,3 +9,20 @@ uses consistent terms, and does not rely on visual position or colour.
 
 Scope: Public changeset text only. Runtime interfaces and authentication flows
 were not part of this review.
+
+## Large Tool Schema Type Inference
+
+Result: PASS. Independent cognitive-accessibility and Markdown accessibility
+reviews covered the exact public changeset and TypeScript diagnostics. The
+release note states the developer benefit first. Output mismatch diagnostics
+name the affected handler contract and `outputSchema` directly. Technical terms
+are appropriate for package consumers, and the Markdown introduces no
+navigation or interpretation barriers. This review covers source content only;
+published package verification remains separate.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `.changeset/calm-tools-infer.md` | `fbe7937dbd4967a255082253d3a118ab5194ace72041dde6a3d66ad70940aa0f` |
+| `packages/framework/src/index.ts` | `c23f567ae3dfc23c459860ed2319ca87f2efebde56d2d560e8c8a3857437bc36` |
+| `tests/types/tool-context.ts` | `6634456419dd2c0ff47de86ff9e8b3fefe2f3d44f87fdbde8666335d7419c0a1` |
+| `tests/docs/large-tool-schema-typecheck.test.mjs` | `7d3d3db6397ba422ca09c413fa46a3a991a5e1fb8877ec759fae517d518dafba` |
