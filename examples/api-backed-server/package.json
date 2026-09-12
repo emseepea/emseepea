@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-api-backed-server",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "description": "Create an Em See Pea server backed by a public web API.",
   "license": "MIT",
   "type": "module",
@@ -18,10 +18,10 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/feedback": "0.2.9",
-    "@emseepea/server": "0.10.3",
+    "@emseepea/feedback": "0.2.10",
+    "@emseepea/server": "0.11.0",
     "zod": "4.4.3",
-    "@emseepea/testing": "0.9.13",
+    "@emseepea/testing": "0.9.14",
     "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",

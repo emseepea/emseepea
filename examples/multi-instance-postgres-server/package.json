@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-multi-instance-postgres-server",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "Create interchangeable Em See Pea server instances sharing PostgreSQL state.",
   "license": "MIT",
   "type": "module",
@@ -23,11 +23,11 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/feedback": "0.2.9",
-    "@emseepea/server": "0.10.3",
+    "@emseepea/feedback": "0.2.10",
+    "@emseepea/server": "0.11.0",
     "pg": "8.23.0",
     "zod": "4.4.3",
-    "@emseepea/testing": "0.9.13",
+    "@emseepea/testing": "0.9.14",
     "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "24.13.3",
     "@types/pg": "8.23.1",
