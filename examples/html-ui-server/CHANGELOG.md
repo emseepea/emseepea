@@ -1,5 +1,13 @@
 # @emseepea/create-html-ui-server
 
+## 0.0.28
+
+### Patch Changes
+
+- [`cb69374`](https://github.com/emseepea/emseepea/commit/cb693744387d52d31c463c939094282efb216c6c) Thanks [@tompahoward](https://github.com/tompahoward)! - Add a validated, accessible tool-result view model and native renderer, React
+  and Svelte `ResultCard` components, and standards-first MCP Apps lifecycle
+  bindings. Update the React UI server example to use the public result APIs.
+
 ## 0.0.27
 
 ### Patch Changes
