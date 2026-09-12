@@ -12,12 +12,23 @@ actions, and styles. It adds no Svelte initializer or Tailwind dependency.
 - `@emseepea/server@0.11.0`
 - `@emseepea/react@0.1.0`
 - `@emseepea/svelte@0.1.0`
+- `@emseepea/create-tool-server@0.0.29`
+- `@emseepea/create-api-backed-server@0.0.27`
+- `@emseepea/create-openapi-backed-server@0.0.9`
+- `@emseepea/create-resources-and-prompts-server@0.0.26`
+- `@emseepea/create-progress-streaming-server@0.0.27`
+- `@emseepea/create-html-ui-server@0.0.28`
 - `@emseepea/create-react-ui-server@0.0.27`
+- `@emseepea/create-multi-instance-postgres-server@0.0.17`
+- `@emseepea/create-database-schema-server@0.0.14`
+- `@emseepea/create-mongodb-backed-server@0.0.14`
+- `@emseepea/create-soap-backed-server@0.0.14`
 - `@emseepea/feedback@0.2.10`
 - `@emseepea/testing@0.9.14`
 
-The feedback and testing packages are dependency-alignment patch releases and
-add no separate feature.
+The ten added initializer releases, plus feedback and testing, are
+dependency-alignment patch releases and add no separate feature. The React
+initializer alone carries the maintained ResultCard example change.
 
 ## Change for Users
 
@@ -59,7 +70,7 @@ publication, registry state, provenance, or downloaded-package behavior.
 ## Required Publication Evidence
 
 - The Quality workflow must pass on the exact source commit.
-- The release workflow must publish the six planned versions from the exact
+- The release workflow must publish all sixteen planned versions from the exact
   version commit.
 - Registry readback must confirm every version and `latest` tag, integrity,
   signature, provenance, and source-commit binding.
@@ -67,6 +78,8 @@ publication, registry state, provenance, or downloaded-package behavior.
   publication through the release workflow.
 - Packed and downloaded clean-install checks must pass for every released
   package.
+- Every downloaded initializer must install its exact rewritten starter
+  dependencies and pass its documented checks.
 - The downloaded React initializer must install exact dependencies and pass its
   browser accessibility and MCP Apps lifecycle journey.
 - Downloaded React and Svelte packages must pass public import, compile, and
