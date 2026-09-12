@@ -1,5 +1,11 @@
 # @emseepea/create-openapi-backed-server
 
+## 0.0.7
+
+### Patch Changes
+
+- [`2c97dfb`](https://github.com/emseepea/emseepea/commit/2c97dfbb4cb0dd422675ea77fbe40ba35cbf2e54) Thanks [@tompahoward](https://github.com/tompahoward)! - Document and preserve the intentional rejection of deprecated MCP Sampling.
+
 ## 0.0.6
 
 ### Patch Changes

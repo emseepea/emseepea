@@ -1,5 +1,13 @@
 # @emseepea/testing
 
+## 0.9.12
+
+### Patch Changes
+
+- [`14c8f27`](https://github.com/emseepea/emseepea/commit/14c8f276e746f2e4d82785086f713e04ac158106) Thanks [@tompahoward](https://github.com/tompahoward)! - Let `startEmseepea` and `startMcpServer` select any protocol revision supported by the server while keeping MCP `2026-07-28` as the default.
+- Updated dependencies [[`2c97dfb`](https://github.com/emseepea/emseepea/commit/2c97dfbb4cb0dd422675ea77fbe40ba35cbf2e54)]:
+  - @emseepea/server@0.10.2
+
 ## 0.9.11
 
 ### Patch Changes
