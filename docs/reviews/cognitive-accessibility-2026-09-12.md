@@ -85,3 +85,25 @@ cross-process guarantees.
 Scope: ADR-0080 and its generated index and detail entries only. Runtime,
 rendered documentation, link-check, and reader-comprehension evidence remain
 separate.
+
+## Application-Owned Model Provider Integration Instead of Deprecated MCP Sampling
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+ratified decision, generated compendium entry, package guidance, protocol
+coverage, and release note. The text plainly identifies Sampling as
+unsupported, explains the direct model-provider alternative, and distinguishes
+the existing rejection boundary from a new runtime implementation. A Markdown
+accessibility review found a valid heading hierarchy, no ambiguous links, and
+no new image, table, diagram, or code-block accessibility concerns.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `.changeset/quiet-peas-decline-sampling.md` | `585b6b277baeb88327b7dfd1696f15a7d22287b7b33cad4a12fb98a4118c7b9e` |
+| `docs/decisions/0081-application-owned-model-provider-integration-instead-of-deprecated-mcp-sampling.proposed.md` | `5ed1e36efcf7cf4fc7cb9d44f5f29b93cf440414b67015267c8cb6dc4b8522dd` |
+| `docs/decisions/README.md` | `f3ae4bfb3739d5cd983c49dcb8cadd4f1a9801f5afae5575fe70d55b625d57fa` |
+| `docs/protocol-coverage.md` | `a5cb654f2e28f8a6979e452b20c3d78bbdac1c3067431f9e7635ba262f8e57ee` |
+| `docs/reviews/current-release-readiness.md` | `8769573ac85926a8c486708a5defb4e99cc674a928d9eefdf7817869b0cf626e` |
+| `packages/framework/README.md` | `82c7542abde710c4d867a2c7c313c7562ac6a62eb68391f0695a01b88eea89c3` |
+
+Scope: Changed public Markdown for the Sampling omission only. Runtime and
+registry verification remain separate evidence.

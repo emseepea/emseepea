@@ -105,7 +105,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
       'export default async (_request, reply) => { await reply.send("file route works"); };\n',
     );
     await writeFile(path.join(directory, "check.mjs"), `
-      import { createEmseepea, defineTool, registerRoutes, serveEmseepea } from "@emseepea/server";
+      import { createEmseepea, defineTool, inputRequired, registerRoutes, serveEmseepea } from "@emseepea/server";
       import { defineFeedbackSubmission } from "@emseepea/feedback";
       import { startMcpServer } from "@emseepea/testing";
       import {
@@ -129,6 +129,9 @@ test("the packed public packages pass fresh-install and getting-started checks",
       }
       if (typeof defineFeedbackSubmission !== "function") {
         throw new Error("packed feedback package is missing its public constructor");
+      }
+      if ("sampleMessage" in inputRequired) {
+        throw new Error("packed server unexpectedly exposes deprecated MCP Sampling");
       }
       const value = z.object({ value: z.string() });
       const tool = defineTool({
@@ -187,6 +190,8 @@ test("the packed public packages pass fresh-install and getting-started checks",
     run(process.execPath, ["verify-installed-package.mjs"], directory);
     const installed = JSON.parse(await readFile(path.join(directory, "node_modules/@emseepea/server/package.json"), "utf8"));
     assert.equal(installed.name, "@emseepea/server");
+    const installedReadme = await readFile(path.join(directory, "node_modules/@emseepea/server/README.md"), "utf8");
+    assert.match(installedReadme, /intentionally does not support.*sampling\/createMessage/s);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

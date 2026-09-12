@@ -2,29 +2,39 @@
 
 Date: 2026-09-12
 
-Release verification is not complete. Eleven initializer patch releases still
-require publication and verification.
+Release verification is not complete. Fifteen patch releases still require
+publication and verification.
 
 ## Release Batch
 
-- `@emseepea/create-tool-server@0.0.26`
-- `@emseepea/create-api-backed-server@0.0.24`
-- `@emseepea/create-openapi-backed-server@0.0.6`
-- `@emseepea/create-resources-and-prompts-server@0.0.23`
-- `@emseepea/create-progress-streaming-server@0.0.24`
-- `@emseepea/create-html-ui-server@0.0.25`
-- `@emseepea/create-react-ui-server@0.0.24`
-- `@emseepea/create-multi-instance-postgres-server@0.0.14`
-- `@emseepea/create-database-schema-server@0.0.11`
-- `@emseepea/create-mongodb-backed-server@0.0.11`
-- `@emseepea/create-soap-backed-server@0.0.11`
+- `@emseepea/server@0.10.2`
+- `@emseepea/create-tool-server@0.0.27`
+- `@emseepea/create-api-backed-server@0.0.25`
+- `@emseepea/create-openapi-backed-server@0.0.7`
+- `@emseepea/create-resources-and-prompts-server@0.0.24`
+- `@emseepea/create-progress-streaming-server@0.0.25`
+- `@emseepea/create-html-ui-server@0.0.26`
+- `@emseepea/create-react-ui-server@0.0.25`
+- `@emseepea/create-multi-instance-postgres-server@0.0.15`
+- `@emseepea/create-database-schema-server@0.0.12`
+- `@emseepea/create-mongodb-backed-server@0.0.12`
+- `@emseepea/create-soap-backed-server@0.0.12`
+- `@emseepea/feedback@0.2.8`
+- `@emseepea/react@0.0.21`
+- `@emseepea/testing@0.9.12`
 
 ## Change for Users
 
-After this initializer patch release, every generated starter should install
-the current Em See Pea packages. This includes `@emseepea/server@0.10.1`, which
-keeps TypeScript inference bounded for large Zod output schemas while preserving
-handler output checks.
+`@emseepea/server@0.10.2` documents and preserves the intentional rejection of
+deprecated MCP Sampling. Applications needing model generation use their
+chosen model-provider API instead.
+
+After the initializer patch releases, every generated starter should install
+`@emseepea/server@0.10.2`.
+
+The release planner also carries `@emseepea/feedback`, `@emseepea/react`, and
+`@emseepea/testing` as dependent patch releases so exact first-party package
+references remain aligned. They add no separate feature in this increment.
 
 ## Verified Evidence
 
@@ -43,10 +53,13 @@ handler output checks.
   so their generated projects receive those versions.
 - Independent architecture review confirmed that all eleven initializers need
   patch releases and that no new architecture decision or job is required.
+- The ratified Sampling decision, focused black-box and type checks, exact
+  packed-package check, and independent architecture and cognitive-accessibility
+  reviews passed for the server patch.
 
-These results do not prove the new initializer versions. Exact-commit checks,
-publication, downloaded-package installation, and container verification remain
-required.
+These results do not prove any release in this batch. Exact-commit checks,
+publication, registry readback, downloaded-package installation, and container
+verification remain required where applicable.
 
 ## Required Publication Evidence
 
@@ -54,11 +67,14 @@ required.
 - The release workflow must pass its maintained semantic examples before
   publication.
 - Registry verification must confirm version, integrity, provenance,
-  signatures, and clean installation for every initializer in this batch.
+  signatures, and clean installation for every package in this batch.
 - The documented quickstart must create a project that installs
-  `@emseepea/server@0.10.1` and passes its checks.
+  `@emseepea/server@0.10.2` and passes its checks.
 - Registry initializer checks must exercise the downloaded packages and their
   production containers.
+- Registry verification for `@emseepea/server@0.10.2` must confirm that the
+  package exposes no Sampling helper, rejects hand-built Sampling requests, and
+  includes the model-provider guidance.
 
 ## Review Status, Not Release Status
 

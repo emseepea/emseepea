@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 78 decisions: 43 current and 35 historical.
+This project has 79 decisions: 44 current and 35 historical.
 
 ## Quick Index
 
@@ -54,6 +54,7 @@ This project has 78 decisions: 43 current and 35 historical.
 - [ADR-0078: Example-Owned Production Containers Behind Trusted Proxies](0078-example-owned-production-containers-behind-trusted-proxies.proposed.md): Proposed; human review confirmed.
 - [ADR-0079: Opt-In Checked Client Roots](0079-opt-in-checked-client-roots.proposed.md): Proposed; human review confirmed.
 - [ADR-0080: Immutable Capability Catalogues Through Redeployment](0080-immutable-capability-catalogues-through-redeployment.proposed.md): Proposed; human review confirmed.
+- [ADR-0081: Application-Owned Model Provider Integration Instead of Deprecated MCP Sampling](0081-application-owned-model-provider-integration-instead-of-deprecated-mcp-sampling.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -1742,3 +1743,21 @@ Chosen option: **"Immutable catalogues through redeployment"**, because Em See P
 - Existing subscriptions end with their process; no reconnect, replay, or recovery guarantee is introduced.
 - Raw HTTP, official-client, protected-discovery, pagination, legacy, packed-package, documentation, and released-package checks preserve these boundaries.
 - Documentation states that catalogue changes require redeployment and fresh MCP initialization.
+
+### [ADR-0081: Application-Owned Model Provider Integration Instead of Deprecated MCP Sampling](0081-application-owned-model-provider-integration-instead-of-deprecated-mcp-sampling.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0081 Decision
+
+Chosen option: **"Application-owned model-provider integration without MCP Sampling"**, because MCP 2026-07-28 tells new implementations not to adopt the deprecated feature and no demonstrated Em See Pea compatibility need outweighs that direction.
+
+#### ADR-0081 Checks
+
+- Public framework types expose no Sampling request helper, response accessor, or accepted input-request type.
+- A hand-built `sampling/createMessage` input request is rejected before delivery or continuation work.
+- Modern and legacy discovery remain unchanged and advertise no Sampling support.
+- Protocol coverage and published framework guidance identify Sampling as intentionally unsupported and recommend model-provider APIs.
+- Source, type, black-box, packed-package, and released-package checks preserve the same rejection boundary.
+- Registry verification confirms that the released package exposes neither Sampling types nor runtime behavior.

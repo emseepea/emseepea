@@ -728,6 +728,22 @@ test("mapped and streaming tools cannot bypass their checked execution paths", a
       inputRequests: { roots: { method: "roots/list" } },
     }),
   });
+  const deprecatedSampling = defineTool({
+    name: "deprecated-sampling-request",
+    access: "public",
+    description: "Reject a deprecated Sampling request.",
+    inputSchema: schema,
+    outputSchema: schema,
+    handler: () => ({
+      resultType: "input_required",
+      inputRequests: {
+        sample: {
+          method: "sampling/createMessage",
+          params: { messages: [], maxTokens: 1 },
+        },
+      },
+    }),
+  });
   const inspect = defineTool({
     name: "inspect-untrusted-response",
     access: "public",
@@ -745,20 +761,30 @@ test("mapped and streaming tools cannot bypass their checked execution paths", a
   const running = await serveEmseepea(createEmseepea({
     name: "input-required-boundary-test",
     version: "0.0.0",
-    tools: [mapped, streaming, deprecatedRoots, inspect],
+    tools: [mapped, streaming, deprecatedRoots, deprecatedSampling, inspect],
   }), { port: 0 });
   const client = new Client(
     { name: "input-required-boundary-client", version: "0.0.0" },
     {
-      capabilities: { elicitation: { form: {} } },
+      capabilities: { elicitation: { form: {} }, sampling: {} },
       inputRequired: { maxRounds: 1 },
       versionNegotiation: { mode: { pin: "2026-07-28" } },
     },
   );
   let elicitationCalls = 0;
+  let samplingCalls = 0;
   client.setRequestHandler("elicitation/create", async () => {
     elicitationCalls += 1;
     return { action: "accept", content: { answer: "Ada" } };
+  });
+  client.setRequestHandler("sampling/createMessage", async () => {
+    samplingCalls += 1;
+    return {
+      role: "assistant",
+      content: { type: "text", text: "Unexpected" },
+      model: "test-model",
+      stopReason: "endTurn",
+    };
   });
 
   try {
@@ -767,6 +793,7 @@ test("mapped and streaming tools cannot bypass their checked execution paths", a
       "mapped-input-request",
       "streaming-input-request",
       "deprecated-roots-request",
+      "deprecated-sampling-request",
     ]) {
       const result = await client.callTool({ name, arguments: {} });
       assert.equal(result.isError, true);
@@ -785,6 +812,7 @@ test("mapped and streaming tools cannot bypass their checked execution paths", a
     });
     assert.deepEqual(malformed.structuredContent, { accepted: false, kind: "elicit" });
     assert.equal(elicitationCalls, 0);
+    assert.equal(samplingCalls, 0);
   } finally {
     await client.close();
     await running.close();

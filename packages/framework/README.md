@@ -447,6 +447,15 @@ root names, URIs, and metadata. Every protected round checks authorization.
 Roots grant no file access or permissions. Em See Pea never opens these paths
 or automatically logs them. Mapped and streaming tools do not request roots.
 
+### Use Model-Provider APIs Instead of MCP Sampling
+
+Em See Pea intentionally does not support the deprecated MCP 2026-07-28
+`sampling/createMessage` feature. The framework exposes no Sampling request
+helper or response accessor, and rejects hand-built Sampling requests at the
+checked client-input boundary. Applications that need model generation should
+integrate directly with their chosen model provider and own the credentials,
+model selection, cost controls, approval, and data-disclosure policy.
+
 ### Carry Signed Request State
 
 Stateful requests are opt-in. Configure one signing key for every process that

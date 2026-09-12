@@ -8,6 +8,7 @@ import {
   defineTool,
   inputRequired,
   type CapabilityModuleFactory,
+  type ClientInputRequest,
   type MappedToolDefinition,
   type RequestState,
   type ToolPrincipal,
@@ -420,3 +421,8 @@ inputRequired({
 });
 // @ts-expect-error Roots are deprecated in MCP 2026-07-28.
 inputRequired.listRoots();
+// @ts-expect-error Sampling is deprecated and intentionally unsupported.
+inputRequired.sampleMessage();
+// @ts-expect-error Sampling is not an accepted client-input request type.
+const unsupportedSampling: ClientInputRequest = { method: "sampling/createMessage", params: { messages: [], maxTokens: 1 } };
+void unsupportedSampling;

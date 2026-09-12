@@ -369,6 +369,16 @@ See the [client roots tests](../tests/black-box/client-roots.test.mjs).
 
 This deprecated MCP feature does not add roots-change notifications or sessions.
 
+### MCP Sampling
+
+**Status: Intentionally unsupported.** MCP 2026-07-28 deprecates
+`sampling/createMessage`, tells new implementations not to adopt it, and
+recommends direct integration with model-provider APIs. Em See Pea exposes no
+Sampling request helper, response accessor, or accepted client-input request
+type. Applications that need model generation integrate with their chosen
+provider directly. A hand-built Sampling request is rejected by the checked
+client-input boundary before delivery or continuation work.
+
 ### Long-Lived Change Notifications
 
 **Status: Partial.** Applications can publish an update for a registered
