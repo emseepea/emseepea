@@ -68,6 +68,10 @@ Open
 `http://127.0.0.1:3001/` for the page or use
 `http://127.0.0.1:3001/mcp` for Model Context Protocol (MCP).
 
+The MCP endpoint also publishes an opt-in MCP Apps result card for the preview
+tool. See the [UI example guide](https://emseepea.github.io/emseepea/examples/#add-a-web-form-or-mcp-app)
+for the resource contract and ChatGPT compatibility fields.
+
 The page previews a sample pea planting plan only. It does not send or store a report.
 
 ## Build a production container

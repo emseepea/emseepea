@@ -6,6 +6,7 @@ import {
   startEmseepea,
   startMcpServer,
 } from "@emseepea/testing";
+import { chromium } from "playwright";
 import { createReactUiServer } from "../dist/app.js";
 
 test("describes every planting-plan tool property", async (t) => {
@@ -33,6 +34,69 @@ test("describes every planting-plan tool property", async (t) => {
     arguments: { title: "Spring peas", peaType: "snap", includeTips: false },
   });
   assert.equal(result.content[0].text, JSON.stringify(result.structuredContent));
+});
+
+test("publishes the standards-first MCP Apps resource contract", async (t) => {
+  const running = await startMcpServer(t, new URL("../dist/server.js", import.meta.url));
+  const client = await running.connect();
+  const [tool] = (await client.listTools()).tools;
+  assert.deepEqual(tool._meta.ui, { resourceUri: "ui://pea-planting-plan/v1.html" });
+  assert.equal(tool._meta["openai/outputTemplate"], "ui://pea-planting-plan/v1.html");
+
+  const [resource] = (await client.listResources()).resources;
+  assert.equal(resource.uri, "ui://pea-planting-plan/v1.html");
+  assert.equal(resource.mimeType, "text/html;profile=mcp-app");
+  const [content] = (await client.readResource({ uri: resource.uri })).contents;
+  assert.equal(content.mimeType, "text/html;profile=mcp-app");
+  assert.deepEqual(content._meta.ui, {
+    prefersBorder: true,
+    csp: { connectDomains: [], resourceDomains: [] },
+  });
+  assert.deepEqual(content._meta["openai/widgetCSP"], {
+    connect_domains: [],
+    resource_domains: [],
+  });
+  assert.match(content.text, /method: "ui\/initialize"/);
+  assert.match(content.text, /method: "ui\/notifications\/initialized"/);
+  assert.match(content.text, /ui\/notifications\/tool-result/);
+  assert.match(content.text, /ui\/notifications\/tool-cancelled/);
+});
+
+test("the MCP Apps card completes initialization before rendering a result", async (t) => {
+  const running = await startMcpServer(t, new URL("../dist/server.js", import.meta.url));
+  const client = await running.connect();
+  const [resource] = (await client.listResources()).resources;
+  const [content] = (await client.readResource({ uri: resource.uri })).contents;
+  const browser = await chromium.launch({ headless: true });
+  t.after(() => browser.close());
+  const page = await browser.newPage();
+  await page.setContent("<iframe title=\"Pea planting plan result\"></iframe>");
+  await page.evaluate(() => {
+    window.addEventListener("message", (event) => {
+      if (event.data?.method === "ui/initialize") {
+        event.source.postMessage({ jsonrpc: "2.0", id: event.data.id, result: {
+          protocolVersion: "2026-01-26",
+          hostInfo: { name: "test-host", version: "1.0.0" },
+          hostCapabilities: {},
+          hostContext: {},
+        } }, "*");
+      }
+      if (event.data?.method === "ui/notifications/initialized") {
+        event.source.postMessage({
+          jsonrpc: "2.0",
+          method: "ui/notifications/tool-result",
+          params: { structuredContent: {
+            matchingCount: 1,
+            varieties: [{ name: "Highland Snap" }],
+          } },
+        }, "*");
+      }
+    });
+  });
+  const frame = page.frames()[1];
+  await frame.setContent(content.text);
+  await frame.waitForFunction(() => document.querySelector("#status")?.textContent === "1 sample variety matches.");
+  assert.equal(await frame.locator("li").textContent(), "Highland Snap");
 });
 
 test("the same UI template composes protected access and observability", async (t) => {

@@ -212,7 +212,7 @@ npm init @emseepea/progress-streaming-server -- my-server
 
 [Read the progress-streaming server example](https://github.com/emseepea/emseepea/tree/main/examples/progress-streaming-server).
 
-## Add a web form
+## Add a web form or MCP App
 
 The native HTML and React examples show the same pea planting-plan form. Choose native
 HTML for fewer dependencies, or React to fit an existing React application.
@@ -234,6 +234,18 @@ npm init @emseepea/react-ui-server -- my-server
 
 [Read the HTML UI server example](https://github.com/emseepea/emseepea/tree/main/examples/html-ui-server)
 or [the React UI server example](https://github.com/emseepea/emseepea/tree/main/examples/react-ui-server).
+
+The React initializer also publishes the preview result as an MCP Apps resource.
+It links the tool with `_meta.ui.resourceUri`, returns a versioned `ui://`
+resource using `text/html;profile=mcp-app`, listens for
+`ui/notifications/tool-result` after the MCP Apps initialization handshake,
+and declares empty `_meta.ui.csp` allowlists because the card loads no external
+content. The tool remains useful in clients that do not render UI.
+
+The example also includes `openai/outputTemplate` and `openai/widgetCSP` as
+compatibility aliases for existing ChatGPT Apps integrations. New integrations
+should use the standard `ui` fields. Add only the domains the component
+actually connects to or loads resources from.
 
 ## Share a report store between server instances
 

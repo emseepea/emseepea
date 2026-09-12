@@ -27,6 +27,8 @@ const outputSchema = z.strictObject({
   notice: z.literal("No report was sent or stored.").describe("Reminder that the preview caused no external effect."),
 });
 
+export const plantingPlanAppResourceUri = "ui://pea-planting-plan/v1.html";
+
 const varieties = [
   { name: "Harbour Gem", growthHabit: "bush" as const, peaType: "shelling" as const, tips: ["compact", "harvest when pods feel full"] },
   { name: "Highland Snap", growthHabit: "climbing" as const, peaType: "snap" as const, tips: ["provide support", "pick pods young"] },
@@ -45,12 +47,19 @@ export function previewPlantingPlan(input: z.output<typeof inputSchema>) {
   };
 }
 
-export function createPreviewPlantingPlanTool(access: AccessPolicy = { access: "public" }) {
+export function createPreviewPlantingPlanTool(
+  access: AccessPolicy = { access: "public" },
+  appResource = false,
+) {
   return defineTool({
     name: "preview-planting-plan",
     ...access,
     title: "Preview a Pea Planting Plan",
     description: "Preview a sample pea planting plan without sending, storing, or changing anything.",
+    ...(appResource ? { _meta: {
+      ui: { resourceUri: plantingPlanAppResourceUri },
+      "openai/outputTemplate": plantingPlanAppResourceUri,
+    } } : {}),
     inputSchema,
     outputSchema,
     handler: (input) => ({ data: previewPlantingPlan(input) }),

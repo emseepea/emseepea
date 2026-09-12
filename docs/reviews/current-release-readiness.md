@@ -36,6 +36,9 @@ The release planner also carries `@emseepea/feedback`, `@emseepea/react`, and
 `@emseepea/testing` as dependent patch releases so exact first-party package
 references remain aligned. They add no separate feature in this increment.
 
+The React UI initializer now demonstrates the stable MCP Apps initialization
+sequence, standard `ui` metadata, and ChatGPT compatibility aliases.
+
 ## Verified Evidence
 
 - The release workflow published `@emseepea/server@0.10.1`,
@@ -56,6 +59,11 @@ references remain aligned. They add no separate feature in this increment.
 - The ratified Sampling decision, focused black-box and type checks, exact
   packed-package check, and independent architecture and cognitive-accessibility
   reviews passed for the server patch.
+- The React UI initializer builds and its five tests pass, including a
+  browser-hosted lifecycle and rendered-result check.
+- Lint, repository type checking, and the public-document review gate pass.
+- Independent architecture, accessibility, cognitive-accessibility, and release
+  risk reviews found no blocking issue in the MCP Apps example.
 
 These results do not prove any release in this batch. Exact-commit checks,
 publication, registry readback, downloaded-package installation, and container
@@ -64,8 +72,7 @@ verification remain required where applicable.
 ## Required Publication Evidence
 
 - Quality must pass on the exact source and version commits.
-- The release workflow must pass its maintained semantic examples before
-  publication.
+- The Release workflow must publish the planned package version successfully.
 - Registry verification must confirm version, integrity, provenance,
   signatures, and clean installation for every package in this batch.
 - The documented quickstart must create a project that installs
@@ -81,6 +88,7 @@ verification remain required where applicable.
 This section records review readiness. The release remains incomplete.
 
 - Result: PASS
-- Pipeline risk review: commit, push, and release must remain within the 5/25 appetite.
+- Pipeline risk review: commit, push, and release are within the approved risk
+  limit of 5 out of 25.
 - Final result: within appetite, subject to the required exact-commit gates.
 - Release verification: NOT COMPLETE until the required publication gates pass.

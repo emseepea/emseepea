@@ -107,3 +107,22 @@ no new image, table, diagram, or code-block accessibility concerns.
 
 Scope: Changed public Markdown for the Sampling omission only. Runtime and
 registry verification remain separate evidence.
+
+## MCP Apps UI Resource Example
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+release note and public guidance. The wording is direct, task-oriented, and
+distinguishes the standard MCP Apps fields from ChatGPT compatibility aliases.
+No blocking accessibility finding remains.
+
+- `.changeset/fuzzy-peas-render.md`
+  SHA-256: `88f95857a5152bd601638023638fccacfdbc4ee0a81421ee5735fc707f286d53`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `02f2a787d210c6f9f99c71e4ec80fbc7284e36614a496db6566a61e8df6090e5`
+- `examples/react-ui-server/README.md`
+  SHA-256: `bba6dcff6744d1935b7b961488fff68a82a4c42c80f00de180a9f8a34c2ede07`
+- `website/src/content/docs/examples.md`
+  SHA-256: `915663dda4518e7c823a127bad21e262a6da65ccf9f5ffc1608dc3df0c8c34f6`
+
+Scope: Public guidance and release prose only. Runtime and host integration
+evidence remains separate.
