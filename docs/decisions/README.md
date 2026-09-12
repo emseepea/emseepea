@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 77 decisions: 42 current and 35 historical.
+This project has 78 decisions: 43 current and 35 historical.
 
 ## Quick Index
 
@@ -53,6 +53,7 @@ This project has 77 decisions: 42 current and 35 historical.
 - [ADR-0077: Digest-Pinned Official Node Builder and Distroless Runtime](0077-digest-pinned-official-node-builder-and-distroless-runtime.proposed.md): Proposed; human review confirmed.
 - [ADR-0078: Example-Owned Production Containers Behind Trusted Proxies](0078-example-owned-production-containers-behind-trusted-proxies.proposed.md): Proposed; human review confirmed.
 - [ADR-0079: Opt-In Checked Client Roots](0079-opt-in-checked-client-roots.proposed.md): Proposed; human review confirmed.
+- [ADR-0080: Immutable Capability Catalogues Through Redeployment](0080-immutable-capability-catalogues-through-redeployment.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -1721,3 +1722,23 @@ Chosen option: **"Checked bounded roots through existing input-required rounds"*
 - Mapped tools, streaming tools, completions, lists, subscriptions, legacy requests, observability, and disabled applications retain their existing behaviour.
 - Type tests cover the roots helper and accessor and reject raw or wrong-kind client responses.
 - Packed-package and published documentation checks exercise the released API.
+
+### [ADR-0080: Immutable Capability Catalogues Through Redeployment](0080-immutable-capability-catalogues-through-redeployment.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0080 Decision
+
+Chosen option: **"Immutable catalogues through redeployment"**, because Em See Pea has no demonstrated need to mutate a checked capability catalogue inside a running process.
+
+#### ADR-0080 Checks
+
+- Capability catalogues are compiled once at startup and cannot be replaced through a public or MCP API.
+- Modern discovery advertises `listChanged: false`; no tools, resources, or prompts list-change notifications are emitted.
+- Two separately started deployments with different checked definitions expose their respective catalogues only after fresh MCP initialization and listing.
+- The old process retains its original catalogue until shutdown.
+- Rolling deployments may temporarily expose different catalogues across processes.
+- Existing subscriptions end with their process; no reconnect, replay, or recovery guarantee is introduced.
+- Raw HTTP, official-client, protected-discovery, pagination, legacy, packed-package, documentation, and released-package checks preserve these boundaries.
+- Documentation states that catalogue changes require redeployment and fresh MCP initialization.

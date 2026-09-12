@@ -66,3 +66,22 @@ remaining initializer publication and downloaded-package checks.
 
 Scope: Public recovery changeset and release-readiness evidence boundaries.
 Publication verification remains separate.
+
+## Immutable Capability Catalogues Through Redeployment
+
+Result: PASS. Independent cognitive-accessibility and Markdown accessibility
+reviews covered the ratified decision and its generated compendium entry. The
+decision states the problem, chosen option, rejected alternatives, operational
+consequences, and checks in predictable sections. It clearly preserves
+`listChanged: false`, omits runtime catalogue replacement and list-change
+notifications, and separates redeployment from replay, reconnect recovery, and
+cross-process guarantees.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `docs/decisions/0080-immutable-capability-catalogues-through-redeployment.proposed.md` | `21086b1ef5433502556c8c45835802cb0d8823491156e39151631792bc122e20` |
+| `docs/decisions/README.md` | `bace9576d69471790c4178f94f990647d9d9f3e8cf0c9f6ce320c970641a82a0` |
+
+Scope: ADR-0080 and its generated index and detail entries only. Runtime,
+rendered documentation, link-check, and reader-comprehension evidence remain
+separate.
