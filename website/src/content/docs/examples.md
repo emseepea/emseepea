@@ -237,7 +237,9 @@ or [the React UI server example](https://github.com/emseepea/emseepea/tree/main/
 
 The React initializer also publishes the preview result as an MCP Apps resource.
 It links the tool with `_meta.ui.resourceUri`, returns a versioned `ui://`
-resource using `text/html;profile=mcp-app`, listens for
+resource using `text/html;profile=mcp-app`.
+
+It listens for
 `ui/notifications/tool-result` after the MCP Apps initialization handshake,
 and declares empty `_meta.ui.csp` allowlists because the card loads no external
 content. The tool remains useful in clients that do not render UI.

@@ -124,7 +124,7 @@ No blocking accessibility finding remains.
 - `examples/react-ui-server/README.md`
   SHA-256: `bba6dcff6744d1935b7b961488fff68a82a4c42c80f00de180a9f8a34c2ede07`
 - `website/src/content/docs/examples.md`
-  SHA-256: `915663dda4518e7c823a127bad21e262a6da65ccf9f5ffc1608dc3df0c8c34f6`
+  SHA-256: `f6cb1f9dcd45c4c84293a347662f6f2a252db33342f18dfe90301c4a279d8310`
 
 Scope: Public guidance and release prose only. Runtime and host integration
 evidence remains separate.
