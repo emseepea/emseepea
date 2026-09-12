@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-database-schema-server",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Create an Em See Pea server with internal validation generated from a PostgreSQL schema.",
   "license": "MIT",
   "type": "module",
