@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.10.2
+
+### Patch Changes
+
+- [`2c97dfb`](https://github.com/emseepea/emseepea/commit/2c97dfbb4cb0dd422675ea77fbe40ba35cbf2e54) Thanks [@tompahoward](https://github.com/tompahoward)! - Document and preserve the intentional rejection of deprecated MCP Sampling.
+
 ## 0.10.1
 
 ### Patch Changes

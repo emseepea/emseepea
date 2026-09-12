@@ -1,5 +1,13 @@
 # @emseepea/create-react-ui-server
 
+## 0.0.25
+
+### Patch Changes
+
+- [`838035f`](https://github.com/emseepea/emseepea/commit/838035facadce82e0ae762b7ab50abd8597e6c87) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an MCP Apps standard resource and ChatGPT compatibility metadata to the React UI initializer.
+
+- [`2c97dfb`](https://github.com/emseepea/emseepea/commit/2c97dfbb4cb0dd422675ea77fbe40ba35cbf2e54) Thanks [@tompahoward](https://github.com/tompahoward)! - Document and preserve the intentional rejection of deprecated MCP Sampling.
+
 ## 0.0.24
 
 ### Patch Changes
