@@ -16,6 +16,36 @@ The package is pre-alpha. See the
 [repository README](https://github.com/emseepea/emseepea#readme) for what the
 package supports and what it does not support.
 
+## Render a bounded result view
+
+`@emseepea/server/ui` exports `defineResultView`, `parseResultView`, and
+`renderResultView`. They validate a bounded presentation model and render
+unstyled native HTML for headings, persistent status, metrics, lists,
+disclosures, actions, and disclaimers. Use `ResultCard` from `@emseepea/react`
+when the adopter already uses React. Pass a unique `idPrefix` to
+`renderResultView` for each result rendered into one document.
+
+## Choose a result-card package
+
+For a self-contained MCP App resource that does not already use either
+framework, choose `@emseepea/svelte`. In this equivalent production comparison,
+Svelte was 27.9% smaller with gzip and 27.1% smaller with Brotli, exceeding the
+20% threshold for both formats. If the application already uses React, choose
+`@emseepea/react` to avoid adding another framework.
+
+Run `npm run measure:result-cards` in the repository to reproduce the
+comparison. It uses esbuild `0.28.2`, React and React DOM `19.2.8`, and Svelte
+`5.57.0`, with minified ES modules targeting ES2022 and no source maps.
+
+| Renderer | Raw | gzip level 9 | Brotli quality 11 |
+|---|---:|---:|---:|
+| React | 534,121 bytes | 129,181 bytes | 108,927 bytes |
+| Svelte | 406,619 bytes | 93,075 bytes | 79,414 bytes |
+| Reduction | 23.9% | 27.9% | 27.1% |
+
+These measurements apply only to this comparison fixture and these dependency
+versions. They are not a general claim about framework bundle sizes.
+
 ## Public Tool
 
 ```ts

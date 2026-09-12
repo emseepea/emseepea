@@ -31,6 +31,7 @@ test("the public package list and built initializers are complete", async () => 
     "@emseepea/feedback",
     "@emseepea/testing",
     "@emseepea/react",
+    "@emseepea/svelte",
     "@emseepea/tailwind",
     "@emseepea/create-tool-server",
     "@emseepea/create-api-backed-server",

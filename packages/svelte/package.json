@@ -1,0 +1,44 @@
+{
+  "name": "@emseepea/svelte",
+  "version": "0.0.1",
+  "private": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emseepea/emseepea.git",
+    "directory": "packages/svelte"
+  },
+  "homepage": "https://emseepea.github.io/emseepea/examples/",
+  "bugs": "https://github.com/emseepea/emseepea/issues",
+  "publishConfig": { "access": "public", "provenance": true },
+  "type": "module",
+  "svelte": "./src/index.js",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "svelte": "./src/index.js",
+      "import": "./src/index.js"
+    }
+  },
+  "files": ["src", "LICENSE", "README.md"],
+  "scripts": {
+    "build": "node test/compile.test.mjs",
+    "prepack": "npm run build",
+    "test": "npm run build && npm run test:built",
+    "test:built": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@emseepea/server": "0.10.3"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "playwright": "1.62.1",
+    "svelte": "5.57.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

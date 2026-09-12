@@ -1,7 +1,8 @@
 ---
 name: mcp-server-developer
 description: A developer who uses Em See Pea to create and test a Model Context Protocol server.
-human-oversight: unconfirmed
+human-oversight: confirmed
+oversight-date: 2026-09-12
 ---
 
 # Model Context Protocol Server Developer

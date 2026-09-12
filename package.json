@@ -18,6 +18,7 @@
     "website:build": "npm run build -w @emseepea/website",
     "benchmark": "npm run build && npm run benchmark:built",
     "benchmark:built": "node --expose-gc benchmarks/json-boundary.mjs && node --expose-gc benchmarks/json-boundary.mjs --observability && node --expose-gc benchmarks/production-boundary.mjs",
+    "measure:result-cards": "node scripts/measure-result-card-bundles.mjs",
     "test:load:streaming": "node --expose-gc --test tests/load/proxy-progress.test.mjs",
     "test:load:logging": "node --expose-gc --test tests/load/client-logging.test.mjs",
     "build": "npm run build -w @emseepea/server -w @emseepea/example-ui-shared && npm run build --workspaces --if-present",

@@ -292,6 +292,41 @@ test("the packed React renderer installs and preserves embedded form semantics",
   }
 });
 
+test("the packed Svelte renderer installs with a compilable result card", { timeout: 180_000 }, async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "emseepea-packed-svelte-"));
+  try {
+    const server = await packPackage("./packages/framework", directory);
+    const svelte = await packPackage("./packages/svelte", directory);
+    run("npm", ["init", "--yes"], directory);
+    run("npm", [
+      "install",
+      "--ignore-scripts",
+      "--prefer-offline",
+      "--no-audit",
+      "--no-fund",
+      "--userconfig", "/dev/null",
+      server,
+      svelte,
+      "svelte@5.57.0",
+    ], directory);
+    await writeFile(path.join(directory, "check.mjs"), `
+      import { readFile } from "node:fs/promises";
+      import { compile } from "svelte/compiler";
+
+      const entry = new URL(import.meta.resolve("@emseepea/svelte"));
+      const index = await readFile(entry, "utf8");
+      const component = await readFile(new URL("./ResultCard.svelte", entry), "utf8");
+      if (!index.includes("ResultCard") || !index.includes("createMcpApp")) throw new Error("missing public exports");
+      for (const generate of ["client", "server"]) {
+        if (!compile(component, { filename: "ResultCard.svelte", generate }).js.code) throw new Error("component did not compile");
+      }
+    `);
+    run(process.execPath, ["check.mjs"], directory);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("the packed Tailwind stylesheet installs with its accessibility states and limits", { timeout: 180_000 }, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-packed-tailwind-"));
   try {
@@ -334,6 +369,7 @@ test("every packed initializer creates a standalone checked project", {
       ["@emseepea/feedback", "./packages/feedback"],
       ["@emseepea/testing", "./packages/testing"],
       ["@emseepea/react", "./packages/react"],
+      ["@emseepea/svelte", "./packages/svelte"],
       ["@emseepea/tailwind", "./packages/tailwind"],
       ...selectedInitializers.map(({ name, path: packagePath }) => [name, `./${packagePath}`]),
     ].map(async ([name, packagePath]) => [name, await packPackage(packagePath, directory)])));

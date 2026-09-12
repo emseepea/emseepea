@@ -4,11 +4,14 @@ import test from "node:test";
 import { gzipSync } from "node:zlib";
 
 import { elicitationFixtures } from "@emseepea/example-ui-shared";
-import { ElicitationForm } from "@emseepea/react";
+import { ElicitationForm, ResultCard } from "@emseepea/react";
 import {
   defineElicitationView,
+  defineResultView,
   parseElicitationView,
+  parseResultView,
   renderElicitationForm,
+  renderResultView,
 } from "@emseepea/server";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -99,24 +102,114 @@ test("native and React renderers preserve the same semantic fixture contract", (
   }
 });
 
+const resultView = defineResultView({
+  id: "estimate",
+  heading: "Your estimate",
+  headline: "$640,000",
+  summary: "An indicative borrowing estimate.",
+  metrics: [{ label: "Monthly income", value: "$9,100" }],
+  reasons: { label: "Why this estimate", items: ["Income exceeds assessed expenses."] },
+  disclosure: { label: "What's behind this number", items: ["A thirty-year term."] },
+  disclaimer: "This is an estimate, not a lending decision.",
+  actionsLabel: "Explore another estimate",
+  actions: [{ id: "without-card", label: "Without the credit card", accessibleName: "Recalculate without the credit card" }],
+  state: { kind: "ready", status: "Borrowing estimate ready: $640,000.", focusTarget: "none" },
+});
+
+test("the result contract is strict, bounded, and preserves label in name", () => {
+  assert.throws(() => parseResultView({ ...resultView, destination: "https://attacker.example" }), /unrecognized|unknown/i);
+  assert.throws(() => parseResultView({ ...resultView, headline: "x".repeat(161) }), /too_big|too big/i);
+  assert.throws(() => parseResultView({
+    ...resultView,
+    actions: [{ id: "without-card", label: "Without the credit card", accessibleName: "Try another scenario" }],
+  }), /accessible name must contain/i);
+  assert.throws(() => parseResultView({ ...resultView, actionsLabel: undefined, actions: resultView.actions }), /group label/i);
+});
+
+test("native and React result renderers preserve semantics and escape hostile text", () => {
+  const hostile = defineResultView({
+    ...resultView,
+    heading: '<script>alert("heading")</script>',
+    metrics: [{ label: "Value", value: '"><img src=x onerror=alert("value")>' }],
+  });
+  const native = renderResultView(hostile, { headingLevel: 2, idPrefix: "native-result" });
+  const react = renderToStaticMarkup(createElement(ResultCard, {
+    view: hostile,
+    headingLevel: 2,
+    idPrefix: "react-result",
+  }));
+  for (const html of [native, react]) {
+    assert.match(html, /data-emseepea-part="result-view"/);
+    assert.match(html, /role="status"[^>]+aria-live="polite"/);
+    assert.match(html, /<dl[^>]*>.*<dt>Value<\/dt><dd>/);
+    assert.match(html, /<details[^>]*><summary>/);
+    assert.match(html, /<ul[^>]+aria-labelledby="[^"]+--reasons-label"/);
+    assert.match(html, /<button[^>]+type="button"|<button type="button"/);
+    assert.doesNotMatch(html, /<script|<img|<html|<head|<body|<main|<h1/i);
+    assert.match(html, /&lt;script&gt;/);
+    assert.match(html, /&quot;&gt;&lt;img/);
+  }
+});
+
+test("native and React result renderers share every result state", () => {
+  for (const kind of ["loading", "ready", "updated", "empty", "sending", "sent", "error"]) {
+    const focusTarget = ["sending", "sent", "error"].includes(kind) ? "status" : "none";
+    const view = defineResultView({
+      ...resultView,
+      state: { kind, status: `Result ${kind}.`, focusTarget },
+    });
+    for (const html of [
+      renderResultView(view, { headingLevel: 2, idPrefix: `native-${kind}` }),
+      renderToStaticMarkup(createElement(ResultCard, { view, headingLevel: 2, idPrefix: `react-${kind}` })),
+    ]) {
+      assert.match(html, new RegExp(`data-emseepea-state="${kind}"`));
+      assert.match(html, new RegExp(`data-emseepea-part="status"[^>]*>Result ${kind}\\.<`));
+      if (focusTarget === "status") assert.match(html, /data-emseepea-part="status"[^>]*autofocus/);
+    }
+  }
+});
+
+test("the native result action focus target stays in the tab order", () => {
+  const html = renderResultView({
+    ...resultView,
+    actions: [
+      { id: "disabled", label: "Unavailable", disabled: true },
+      ...resultView.actions,
+    ],
+    state: { kind: "ready", status: "Choose an action.", focusTarget: "actions" },
+  }, { headingLevel: 2, idPrefix: "native-actions" });
+  assert.match(html, /data-emseepea-action="without-card"[^>]+autofocus/);
+  assert.doesNotMatch(html, /<button[^>]+tabindex="-1"/);
+  assert.throws(() => defineResultView({
+    ...resultView,
+    actions: [{ id: "disabled", label: "Unavailable", disabled: true }],
+    state: { kind: "ready", status: "Choose an action.", focusTarget: "actions" },
+  }), /enabled action/);
+  assert.throws(() => renderResultView(resultView, { headingLevel: 2, idPrefix: "bad prefix" }), /valid identifier/);
+});
+
 test("UI package boundaries keep frontend and Tailwind dependencies out of core", async () => {
   const server = JSON.parse(await readFile(new URL("../../packages/framework/package.json", import.meta.url), "utf8"));
   const react = JSON.parse(await readFile(new URL("../../packages/react/package.json", import.meta.url), "utf8"));
+  const svelte = JSON.parse(await readFile(new URL("../../packages/svelte/package.json", import.meta.url), "utf8"));
   const tailwind = JSON.parse(await readFile(new URL("../../packages/tailwind/package.json", import.meta.url), "utf8"));
   const reactSource = await readFile(new URL("../../packages/react/src/index.tsx", import.meta.url), "utf8");
   const exampleSource = await readFile(new URL("../../examples/react-ui-server/src/client.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../../packages/tailwind/dist/emseepea.css", import.meta.url), "utf8");
 
   assert.equal(react.private, false);
+  assert.equal(svelte.private, false);
   assert.equal(tailwind.private, false);
   assert.equal(server.dependencies.react, undefined);
   assert.equal(server.dependencies["react-dom"], undefined);
+  assert.equal(server.dependencies.svelte, undefined);
   assert.equal(server.dependencies.tailwindcss, undefined);
   assert.deepEqual(server.exports["./ui"], {
     types: "./dist/ui.d.ts",
     import: "./dist/ui.js",
   });
   assert.equal(react.dependencies["@emseepea/server"], server.version);
+  assert.equal(svelte.dependencies["@emseepea/server"], server.version);
   assert.equal(react.peerDependencies.react, "^19.0.0");
   assert.deepEqual(tailwind.exports, { "./styles.css": "./dist/emseepea.css" });
   assert.equal(tailwind.dependencies, undefined);

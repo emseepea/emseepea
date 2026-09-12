@@ -7,7 +7,7 @@
   "starterDependencies": ["@emseepea/react", "@emseepea/server", "@emseepea/tailwind", "react", "react-dom"],
   "scripts": {
     "build": "npm run build:example && npm run build:initializer",
-    "build:example": "tsc -p tsconfig.json && esbuild src/client.tsx --bundle --minify --format=esm --platform=browser --outfile=dist/client.js",
+    "build:example": "tsc -p tsconfig.json && esbuild src/client.tsx --bundle --minify --format=esm --platform=browser --outfile=dist/client.js && esbuild src/mcp-app.tsx --bundle --minify --format=esm --platform=browser --outfile=dist/mcp-app-client.js",
     "build:initializer": "node ../../scripts/build-initializer.mjs",
     "start": "node dist/server.js",
     "test": "npm run build && npm run test:built",

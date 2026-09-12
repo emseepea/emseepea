@@ -72,6 +72,10 @@ The MCP endpoint also publishes an opt-in MCP Apps result card for the preview
 tool. See the [UI example guide](https://emseepea.github.io/emseepea/examples/#add-a-web-form-or-mcp-app)
 for the resource contract and ChatGPT compatibility fields.
 
+The result card maps the tool's domain output into the shared bounded result
+model, renders it with `ResultCard`, and uses `useMcpApp` for the MCP Apps host
+lifecycle. The example keeps only its domain parser, mapping, and action text.
+
 The page previews a sample pea planting plan only. It does not send or store a report.
 
 ## Build a production container

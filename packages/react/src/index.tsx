@@ -1,9 +1,14 @@
-import { parseElicitationView } from "@emseepea/server/ui";
-import { useEffect, useRef, type ElementType, type FormEvent } from "react";
+import { createMcpAppController, parseElicitationView, parseResultView } from "@emseepea/server/ui";
+import { useEffect, useId, useMemo, useRef, useSyncExternalStore, type ElementType, type FormEvent } from "react";
 import type {
   ElicitationField,
   ElicitationHeadingLevel,
   ElicitationView,
+  McpAppControllerOptions,
+  McpAppHostContext,
+  McpAppState,
+  ResultAction,
+  ResultView as ResultViewModel,
 } from "@emseepea/server/ui";
 
 export interface ElicitationFormProps {
@@ -118,6 +123,159 @@ export function ElicitationForm({ view: candidate, headingLevel, onSubmit }: Eli
       )}
     </section>
   );
+}
+
+export interface ResultCardProps {
+  readonly view: ResultViewModel;
+  readonly headingLevel: ElicitationHeadingLevel;
+  readonly onAction?: (action: ResultAction) => void;
+  readonly idPrefix?: string;
+}
+
+export function ResultCard({ view: candidate, headingLevel, onAction, idPrefix }: ResultCardProps) {
+  const view = parseResultView(candidate);
+  const reactId = useId().replaceAll(":", "");
+  const prefix = idPrefix === undefined ? `${view.id}-${reactId}` : checkedIdentifier("idPrefix", idPrefix);
+  const Heading = heading(`h${checkedHeadingLevel(headingLevel)}`);
+  const result = useRef<HTMLElement>(null);
+  const status = useRef<HTMLDivElement>(null);
+  const firstAction = useRef<HTMLButtonElement>(null);
+  const lastFocusKey = useRef("");
+  const firstEnabledAction = view.actions.findIndex((action) => !action.disabled);
+
+  useEffect(() => {
+    if (view.state.focusTarget === "none") {
+      lastFocusKey.current = "";
+      return;
+    }
+    const focusKey = `${view.state.kind}\u0000${view.state.focusTarget}\u0000${view.state.status}`;
+    if (lastFocusKey.current === focusKey) return;
+    lastFocusKey.current = focusKey;
+    const target = view.state.focusTarget === "result"
+      ? result.current
+      : view.state.focusTarget === "status"
+        ? status.current
+        : view.state.focusTarget === "actions"
+          ? firstAction.current
+          : undefined;
+    target?.focus();
+  }, [view.state.focusTarget, view.state.kind, view.state.status]);
+
+  const headingId = `${prefix}--heading`;
+  return (
+    <section
+      ref={result}
+      data-emseepea-part="result-view"
+      data-emseepea-state={view.state.kind}
+      aria-labelledby={headingId}
+      tabIndex={view.state.focusTarget === "result" ? -1 : undefined}
+      autoFocus={view.state.focusTarget === "result"}
+    >
+      <Heading id={headingId}>{view.heading}</Heading>
+      <div
+        ref={status}
+        data-emseepea-part="status"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        aria-relevant="additions text"
+        tabIndex={view.state.focusTarget === "status" ? -1 : undefined}
+        autoFocus={view.state.focusTarget === "status"}
+      >
+        {view.state.status}
+      </div>
+      {view.headline && <p data-emseepea-part="headline">{view.headline}</p>}
+      {view.summary && <p data-emseepea-part="summary">{view.summary}</p>}
+      {view.metrics.length > 0 && (
+        <dl data-emseepea-part="metrics">
+          {view.metrics.map((metric) => (
+            <div key={`${metric.label}:${metric.value}`} data-emseepea-part="metric">
+              <dt>{metric.label}{metric.hint && <> <span data-emseepea-part="hint">({metric.hint})</span></>}</dt>
+              <dd>{metric.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {view.reasons ? <ResultList part="reasons" group={view.reasons} prefix={prefix} /> : null}
+      {view.assumptions ? <ResultList part="assumptions" group={view.assumptions} prefix={prefix} /> : null}
+      {view.disclosure && (
+        <details data-emseepea-part="disclosure">
+          <summary>{view.disclosure.label}</summary>
+          <ul>{view.disclosure.items.map((item) => <li key={item}>{item}</li>)}</ul>
+        </details>
+      )}
+      {view.actions.length > 0 && (
+        <div data-emseepea-part="actions" role="group" aria-label={view.actionsLabel}>
+          {view.actions.map((action, index) => (
+            <button
+              key={action.id}
+              ref={index === firstEnabledAction ? firstAction : undefined}
+              type="button"
+              data-emseepea-part="action"
+              data-emseepea-action={action.id}
+              aria-label={action.accessibleName}
+              disabled={action.disabled}
+              autoFocus={index === firstEnabledAction && view.state.focusTarget === "actions"}
+              onClick={onAction ? () => onAction(action) : undefined}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+      )}
+      <p data-emseepea-part="disclaimer">{view.disclaimer}</p>
+    </section>
+  );
+}
+
+function ResultList({ part, group, prefix }: {
+  readonly part: "reasons" | "assumptions";
+  readonly group: { readonly label: string; readonly items: readonly string[] };
+  readonly prefix: string;
+}) {
+  const labelId = `${prefix}--${part}-label`;
+  return (
+    <div data-emseepea-part={part}>
+      <p id={labelId} data-emseepea-part={`${part}-label`}>{group.label}</p>
+      <ul aria-labelledby={labelId}>{group.items.map((item) => <li key={item}>{item}</li>)}</ul>
+    </div>
+  );
+}
+
+export type McpAppOptions<Result> = Omit<McpAppControllerOptions<Result>, "requestId">;
+
+export interface McpAppConnection<Result> extends McpAppState<Result> {
+  readonly sendMessage: (text: string) => Promise<void>;
+}
+
+export type { McpAppHostContext };
+
+export function useMcpApp<Result>(options: McpAppOptions<Result>): McpAppConnection<Result> {
+  const parser = useRef(options.parseResult);
+  parser.current = options.parseResult;
+  const initializeId = useId();
+  const controller = useMemo(() => createMcpAppController({
+    name: options.name,
+    version: options.version,
+    timeoutMs: options.timeoutMs,
+    requestId: initializeId,
+    parseResult: (value) => parser.current(value),
+  }), [initializeId, options.name, options.timeoutMs, options.version]);
+  const connection = useSyncExternalStore(controller.subscribe, controller.getState, controller.getState);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    return controller.connect(window);
+  }, [controller]);
+
+  return { ...connection, sendMessage: controller.sendMessage };
+}
+
+function checkedIdentifier(field: string, value: unknown): string {
+  if (typeof value !== "string" || !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(value)) {
+    throw new TypeError(`${field} must be a valid identifier`);
+  }
+  return value;
 }
 
 function Field({ viewId, field }: { readonly viewId: string; readonly field: ElicitationField }) {

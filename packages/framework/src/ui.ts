@@ -5,6 +5,259 @@ const labelSchema = z.string().trim().min(1).max(160);
 const proseSchema = z.string().trim().min(1).max(1_000);
 const fieldErrorSchema = z.string().trim().min(1).max(300);
 
+const resultStateSchema = z.strictObject({
+  kind: z.enum(["loading", "ready", "updated", "empty", "sending", "sent", "error"]),
+  status: proseSchema,
+  focusTarget: z.enum(["none", "status", "result", "actions"]),
+});
+
+const resultActionSchema = z.strictObject({
+  id: identifierSchema,
+  label: labelSchema,
+  accessibleName: labelSchema.optional(),
+  disabled: z.boolean().optional(),
+});
+
+export const resultViewSchema = z.strictObject({
+  id: identifierSchema,
+  heading: labelSchema,
+  headline: labelSchema.optional(),
+  summary: proseSchema.optional(),
+  metrics: z.array(z.strictObject({
+    label: labelSchema,
+    value: labelSchema,
+    hint: labelSchema.optional(),
+  })).max(32).default([]),
+  reasons: z.strictObject({ label: labelSchema, items: z.array(proseSchema).min(1).max(16) }).optional(),
+  assumptions: z.strictObject({ label: labelSchema, items: z.array(proseSchema).min(1).max(16) }).optional(),
+  disclosure: z.strictObject({
+    label: labelSchema,
+    items: z.array(proseSchema).min(1).max(16),
+  }).optional(),
+  disclaimer: proseSchema,
+  actionsLabel: labelSchema.optional(),
+  actions: z.array(resultActionSchema).max(8).default([]),
+  state: resultStateSchema,
+}).superRefine((view, context) => {
+  if (["ready", "updated", "sending", "sent"].includes(view.state.kind) && !view.headline) {
+    context.addIssue({ code: "custom", message: "Result content requires a headline", path: ["headline"] });
+  }
+  if (view.actions.length > 0 && !view.actionsLabel) {
+    context.addIssue({ code: "custom", message: "Result actions require a group label", path: ["actionsLabel"] });
+  }
+  if (view.state.focusTarget === "actions" && !view.actions.some((action) => !action.disabled)) {
+    context.addIssue({ code: "custom", message: "The actions focus target requires an enabled action", path: ["state", "focusTarget"] });
+  }
+  const ids = new Set<string>();
+  for (const [index, action] of view.actions.entries()) {
+    if (ids.has(action.id)) {
+      context.addIssue({ code: "custom", message: "Result action IDs must be unique", path: ["actions", index, "id"] });
+    }
+    ids.add(action.id);
+    if (action.accessibleName && !action.accessibleName.toLocaleLowerCase().includes(action.label.toLocaleLowerCase())) {
+      context.addIssue({ code: "custom", message: "An action accessible name must contain its visible label", path: ["actions", index, "accessibleName"] });
+    }
+  }
+});
+
+export type ResultView = z.output<typeof resultViewSchema>;
+export type ResultAction = z.output<typeof resultActionSchema>;
+
+export function parseResultView(value: unknown): ResultView {
+  return resultViewSchema.parse(value);
+}
+
+export function defineResultView(value: z.input<typeof resultViewSchema>): ResultView {
+  return parseResultView(value);
+}
+
+export interface McpAppHostContext {
+  readonly theme?: "light" | "dark";
+  readonly displayMode?: "inline" | "fullscreen" | "pip";
+  readonly locale?: string;
+  readonly timeZone?: string;
+  readonly platform?: "web" | "desktop" | "mobile";
+}
+
+export interface McpAppState<Result> {
+  readonly status: "connecting" | "ready" | "result" | "cancelled" | "error";
+  readonly result: Result | null;
+  readonly resultRevision: number;
+  readonly hostContext: McpAppHostContext;
+  readonly error?: string;
+}
+
+export interface McpAppController<Result> {
+  readonly getState: () => McpAppState<Result>;
+  readonly subscribe: (listener: () => void) => () => void;
+  readonly connect: (channel?: Window) => () => void;
+  readonly sendMessage: (text: string) => Promise<void>;
+}
+
+export interface McpAppControllerOptions<Result> {
+  readonly name: string;
+  readonly version: string;
+  readonly parseResult: (value: unknown) => Result;
+  readonly requestId?: string;
+  readonly timeoutMs?: number;
+}
+
+interface PendingRequest {
+  readonly resolve: () => void;
+  readonly reject: (error: Error) => void;
+  readonly timer: ReturnType<typeof setTimeout>;
+}
+
+export function createMcpAppController<Result>(options: McpAppControllerOptions<Result>): McpAppController<Result> {
+  const timeoutMs = checkedTimeout(options.timeoutMs ?? 10_000);
+  const requestId = options.requestId ?? `emseepea-${globalThis.crypto.randomUUID()}`;
+  const listeners = new Set<() => void>();
+  const pending = new Map<string, PendingRequest>();
+  let sequence = 0;
+  let channel: Window | undefined;
+  let ready = false;
+  let disconnectCurrent: (() => void) | undefined;
+  let state: McpAppState<Result> = { status: "connecting", result: null, resultRevision: 0, hostContext: {} };
+
+  const update = (next: McpAppState<Result>) => {
+    state = next;
+    for (const listener of listeners) listener();
+  };
+  const getState = () => state;
+  const subscribe = (listener: () => void) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  };
+  const connect = (nextChannel: Window = window) => {
+    disconnectCurrent?.();
+    channel = nextChannel;
+    ready = false;
+    update({ ...state, status: "connecting", error: undefined });
+    const initializeTimer = setTimeout(() => {
+      update({ ...state, status: "error", error: "The result could not connect to its host." });
+    }, timeoutMs);
+    const disconnect = () => {
+      clearTimeout(initializeTimer);
+      nextChannel.removeEventListener("message", receive);
+      ready = false;
+      if (channel === nextChannel) channel = undefined;
+      for (const request of pending.values()) {
+        clearTimeout(request.timer);
+        request.reject(new Error("The app was disconnected."));
+      }
+      pending.clear();
+      if (disconnectCurrent === disconnect) disconnectCurrent = undefined;
+    };
+    const receive = (event: MessageEvent<unknown>) => {
+      if (event.source !== nextChannel.parent || !record(event.data) || event.data.jsonrpc !== "2.0") return;
+      const message = event.data;
+      if (message.id === requestId) {
+        clearTimeout(initializeTimer);
+        if (record(message.error) || !record(message.result) || message.result.protocolVersion !== "2026-01-26") {
+          update({ ...state, status: "error", error: "The result could not connect to its host." });
+          return;
+        }
+        ready = true;
+        update({ ...state, status: "ready", hostContext: checkedHostContext(message.result.hostContext), error: undefined });
+        nextChannel.parent.postMessage({ jsonrpc: "2.0", method: "ui/notifications/initialized" }, "*");
+        return;
+      }
+      if (typeof message.id === "string" && pending.has(message.id)) {
+        const request = pending.get(message.id)!;
+        clearTimeout(request.timer);
+        pending.delete(message.id);
+        if (record(message.error)) request.reject(new Error("The host rejected the message."));
+        else request.resolve();
+        return;
+      }
+      if (!ready || typeof message.method !== "string") return;
+      if (message.method === "ui/resource-teardown" && (typeof message.id === "string" || typeof message.id === "number")) {
+        nextChannel.parent.postMessage({ jsonrpc: "2.0", id: message.id, result: {} }, "*");
+        update({ ...state, status: "cancelled", error: undefined });
+        disconnect();
+        return;
+      }
+      if (message.method === "ui/notifications/host-context-changed") {
+        update({ ...state, hostContext: { ...state.hostContext, ...checkedHostContext(message.params) } });
+        return;
+      }
+      if (message.method === "ui/notifications/tool-cancelled") {
+        update({ ...state, status: "cancelled", error: undefined });
+        return;
+      }
+      if (message.method !== "ui/notifications/tool-result" || !record(message.params)) return;
+      try {
+        update({
+          ...state,
+          status: "result",
+          result: options.parseResult(message.params.structuredContent),
+          resultRevision: state.resultRevision + 1,
+          error: undefined,
+        });
+      } catch {
+        update({ ...state, status: "error", error: "The result could not be displayed." });
+      }
+    };
+    nextChannel.addEventListener("message", receive);
+    disconnectCurrent = disconnect;
+    nextChannel.parent.postMessage({
+      jsonrpc: "2.0",
+      id: requestId,
+      method: "ui/initialize",
+      params: {
+        protocolVersion: "2026-01-26",
+        appInfo: { name: options.name, version: options.version },
+        appCapabilities: { availableDisplayModes: ["inline"] },
+      },
+    }, "*");
+    return disconnect;
+  };
+  const sendMessage = (text: string) => {
+    if (!text.trim()) return Promise.reject(new TypeError("Message text must not be empty"));
+    if (!ready || !channel || !disconnectCurrent) return Promise.reject(new Error("The app is not connected."));
+    const id = `${requestId}-message-${++sequence}`;
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        pending.delete(id);
+        reject(new Error("The host did not answer the message."));
+      }, timeoutMs);
+      pending.set(id, { resolve, reject, timer });
+      channel!.parent.postMessage({
+        jsonrpc: "2.0",
+        id,
+        method: "ui/message",
+        params: { role: "user", content: [{ type: "text", text }] },
+      }, "*");
+    });
+  };
+
+  return { getState, subscribe, connect, sendMessage };
+}
+
+function checkedHostContext(value: unknown): McpAppHostContext {
+  if (!record(value)) return {};
+  return {
+    ...(value.theme === "light" || value.theme === "dark" ? { theme: value.theme } : {}),
+    ...(value.displayMode === "inline" || value.displayMode === "fullscreen" || value.displayMode === "pip"
+      ? { displayMode: value.displayMode } : {}),
+    ...(typeof value.locale === "string" && value.locale.length <= 100 ? { locale: value.locale } : {}),
+    ...(typeof value.timeZone === "string" && value.timeZone.length <= 100 ? { timeZone: value.timeZone } : {}),
+    ...(value.platform === "web" || value.platform === "desktop" || value.platform === "mobile"
+      ? { platform: value.platform } : {}),
+  };
+}
+
+function checkedTimeout(value: number): number {
+  if (!Number.isSafeInteger(value) || value < 100 || value > 60_000) {
+    throw new TypeError("timeoutMs must be an integer from 100 to 60000");
+  }
+  return value;
+}
+
+function record(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
 const commonFieldShape = {
   id: identifierSchema,
   name: identifierSchema,
@@ -218,6 +471,53 @@ export function renderElicitationForm(
   return parts.join("");
 }
 
+export function renderResultView(
+  value: unknown,
+  options: { readonly headingLevel: ElicitationHeadingLevel; readonly idPrefix: string },
+): string {
+  const view = parseResultView(value);
+  const headingLevel = checkedHeadingLevel(options.headingLevel);
+  const prefix = checkedIdentifier("idPrefix", options.idPrefix);
+  const headingId = `${prefix}--heading`;
+  const focused = (target: ResultView["state"]["focusTarget"]) =>
+    view.state.focusTarget === target ? ' tabindex="-1" autofocus' : "";
+  const parts = [
+    `<section data-emseepea-part="result-view" data-emseepea-state="${view.state.kind}" aria-labelledby="${headingId}"${focused("result")}>`,
+    `<h${headingLevel} id="${headingId}">${escapeHtml(view.heading)}</h${headingLevel}>`,
+    `<div data-emseepea-part="status" role="status" aria-live="polite" aria-atomic="true" aria-relevant="additions text"${focused("status")}>${escapeHtml(view.state.status)}</div>`,
+  ];
+  if (view.headline) parts.push(`<p data-emseepea-part="headline">${escapeHtml(view.headline)}</p>`);
+  if (view.summary) parts.push(`<p data-emseepea-part="summary">${escapeHtml(view.summary)}</p>`);
+  if (view.metrics.length) {
+    parts.push(`<dl data-emseepea-part="metrics">${view.metrics.map((metric) =>
+      `<div data-emseepea-part="metric"><dt>${escapeHtml(metric.label)}${metric.hint ? ` <span data-emseepea-part="hint">(${escapeHtml(metric.hint)})</span>` : ""}</dt><dd>${escapeHtml(metric.value)}</dd></div>`
+    ).join("")}</dl>`);
+  }
+  if (view.reasons) parts.push(renderResultList("reasons", view.reasons, prefix));
+  if (view.assumptions) parts.push(renderResultList("assumptions", view.assumptions, prefix));
+  if (view.disclosure) {
+    parts.push(`<details data-emseepea-part="disclosure"><summary>${escapeHtml(view.disclosure.label)}</summary><ul>${view.disclosure.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></details>`);
+  }
+  if (view.actions.length) {
+    const firstEnabled = view.actions.findIndex((action) => !action.disabled);
+    parts.push(`<div data-emseepea-part="actions" role="group" aria-label="${escapeAttribute(view.actionsLabel!)}">${view.actions.map((action, index) =>
+      `<button type="button" data-emseepea-part="action" data-emseepea-action="${escapeAttribute(action.id)}"${action.accessibleName ? ` aria-label="${escapeAttribute(action.accessibleName)}"` : ""}${action.disabled ? " disabled" : ""}${index === firstEnabled && view.state.focusTarget === "actions" ? " autofocus" : ""}>${escapeHtml(action.label)}</button>`
+    ).join("")}</div>`);
+  }
+  parts.push(`<p data-emseepea-part="disclaimer">${escapeHtml(view.disclaimer)}</p>`, "</section>");
+  return parts.join("");
+}
+
+function renderResultList(
+  part: "reasons" | "assumptions",
+  group: { readonly label: string; readonly items: readonly string[] },
+  prefix: string,
+): string {
+  const labelId = `${prefix}--${part}-label`;
+  return `<div data-emseepea-part="${part}"><p id="${labelId}" data-emseepea-part="${part}-label">${escapeHtml(group.label)}</p>` +
+    `<ul aria-labelledby="${labelId}">${group.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>`;
+}
+
 function renderStatus(view: ElicitationView, statusId: string): string {
   const text = view.state.kind === "ready"
     ? view.state.status ?? ""
@@ -291,6 +591,12 @@ function checkedHeadingLevel(value: unknown): ElicitationHeadingLevel {
     throw new TypeError("headingLevel must be an integer from 2 to 6");
   }
   return value;
+}
+
+function checkedIdentifier(field: string, value: unknown): string {
+  const result = identifierSchema.safeParse(value);
+  if (!result.success) throw new TypeError(`${field} must be a valid identifier`);
+  return result.data;
 }
 
 function escapeHtml(value: string): string {

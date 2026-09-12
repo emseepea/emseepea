@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 80 decisions: 45 current and 35 historical.
+This project has 82 decisions: 46 current and 36 historical.
 
 ## Quick Index
 
@@ -56,6 +56,7 @@ This project has 80 decisions: 45 current and 35 historical.
 - [ADR-0080: Immutable Capability Catalogues Through Redeployment](0080-immutable-capability-catalogues-through-redeployment.proposed.md): Proposed; human review confirmed.
 - [ADR-0081: Application-Owned Model Provider Integration Instead of Deprecated MCP Sampling](0081-application-owned-model-provider-integration-instead-of-deprecated-mcp-sampling.proposed.md): Proposed; human review confirmed.
 - [ADR-0082: Checked Protocol-Native Tool Results](0082-checked-protocol-native-tool-results.proposed.md): Proposed; human review confirmed.
+- [ADR-0084: Parallel React and Svelte Result Cards with Measured Bundle Guidance](0084-parallel-react-and-svelte-result-cards-with-measured-bundle-guidance.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -94,6 +95,7 @@ This project has 80 decisions: 45 current and 35 historical.
 - [ADR-0061: MongoDB JSON Schema Generated Internal Validation](0061-mongodb-json-schema-generated-internal-validation.superseded.md): Superseded; human review confirmed.
 - [ADR-0069: Atomic Runtime Activation of Startup-Compiled Capabilities](0069-atomic-runtime-activation-of-startup-compiled-capabilities.rejected.md): Rejected; human review confirmed.
 - [ADR-0070: OpenAPI-Generated Backend Types and Runtime Validation](0070-openapi-generated-backend-types-and-runtime-validation.superseded.md): Superseded; human review confirmed.
+- [ADR-0083: Canonical Accessible Tool Result Views and MCP Apps Lifecycle](0083-canonical-accessible-tool-result-views-and-mcp-apps-lifecycle.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -1788,3 +1790,47 @@ Chosen option: **"Checked protocol-native results plus structured convenience"**
 - Modern and legacy protocol journeys preserve their documented behavior.
 - Packed-package and released-package journeys exercise both result forms.
 - Registry readback verifies the released package and public types separately from source and CI evidence.
+
+### [ADR-0083: Canonical Accessible Tool Result Views and MCP Apps Lifecycle](0083-canonical-accessible-tool-result-views-and-mcp-apps-lifecycle.superseded.md)
+
+- Status: Superseded
+- Human review: Confirmed
+- Replaced by: [ADR-0084: Parallel React and Svelte Result Cards with Measured Bundle Guidance](0084-parallel-react-and-svelte-result-cards-with-measured-bundle-guidance.proposed.md)
+
+#### ADR-0083 Decision
+
+Chosen option: **"Canonical result view, native and React renderers, and a standards-first lifecycle hook"**.
+
+#### ADR-0083 Checks
+
+- Strict parsing rejects unknown, oversized, inconsistent, and authority-bearing result data.
+- Native and React renderers pass shared fixtures for every result state.
+- Hostile text cannot execute markup in either renderer.
+- Embedded renderers emit no document shell, main landmark, or H1.
+- Labelled values, lists, disclosure, disclaimer, and buttons retain native semantics with the stylesheet absent.
+- The polite live region exists before updates and remains the same React node.
+- Keyboard, focus, label-in-name, axe, forced-colors, reduced-motion, 320-pixel reflow, and target-size checks pass for the maintained example.
+- The lifecycle hook completes initialization before accepting tool results, rejects malformed or foreign-source messages, applies checked theme and display changes, reports cancellation, and cleans up on teardown.
+- The published packages and initializer pass fresh-install verification.
+- A cited adopter replaces its generic result-presentation and host-lifecycle code while retaining only domain mapping, actions, and styles.
+
+### [ADR-0084: Parallel React and Svelte Result Cards with Measured Bundle Guidance](0084-parallel-react-and-svelte-result-cards-with-measured-bundle-guidance.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0083: Canonical Accessible Tool Result Views and MCP Apps Lifecycle](0083-canonical-accessible-tool-result-views-and-mcp-apps-lifecycle.superseded.md)
+
+#### ADR-0084 Decision
+
+Chosen option: **"Parallel React and Svelte result cards with measured guidance"**, because it preserves a normal React integration for existing adopters while testing whether a compiled Svelte implementation materially reduces the cost of a self-contained MCP App resource.
+
+#### ADR-0084 Checks
+
+- React and Svelte export `ResultCard` against the same parsed `ResultView`.
+- Both renderers preserve the native semantic, ARIA, keyboard, focus, hostile input, live-region, forced-colors, reduced-motion, reflow, and target-size contracts.
+- Both lifecycle bindings use one dependency-free checked MCP Apps controller and clean up listeners, timeouts, and pending requests.
+- A checked script builds equivalent production fixtures and reports raw, gzip-9, and Brotli-11 sizes with exact versions and commands.
+- Documentation applies the 20% dual-compression threshold and scopes any recommendation to self-contained MCP App resources.
+- React and Svelte remain absent from the server package's required dependency closure.
+- Both public packages pass pack, fresh-install, provenance, and registry verification.
+- The cited React adopter replaces its generic result presentation and host lifecycle code while retaining its domain mapping, actions, and styles.

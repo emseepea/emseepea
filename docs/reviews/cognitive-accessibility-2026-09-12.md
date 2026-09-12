@@ -181,3 +181,30 @@ Markdown accessibility review also passed.
 Scope: Changed public Markdown for the ADR-0082 implementation only. Runtime,
 publication, registry readback, downloaded-package behavior, and rendered-site
 accessibility remain separate evidence.
+
+## React and Svelte Result Cards
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+exact public documentation, decisions, Jobs To Be Done and persona updates,
+example guidance, package guidance, and release note. The wording is
+task-oriented, consistently distinguishes React from Svelte guidance, scopes
+the size recommendation to self-contained MCP App resources, and avoids
+unsupported general framework claims. Headings and tables are predictable, and
+the guidance does not add unnecessary memory burden for adopters.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `.changeset/quiet-peas-render.md` | `51ebb9064844117902a8dea668be71580833226d32429c38c5beb5ee7965aa60` |
+| `docs/decisions/0083-canonical-accessible-tool-result-views-and-mcp-apps-lifecycle.superseded.md` | `0f9f806e81f8a46138ee02a352315f8c568338a26839848301d8d1461de553d2` |
+| `docs/decisions/0084-parallel-react-and-svelte-result-cards-with-measured-bundle-guidance.proposed.md` | `1dc39006a2efad40a349345fbefde6c400dab9a3a497f09076def06e58e552e2` |
+| `docs/decisions/README.md` | `36d1845a27c077b300ca39afa576eeb78d06946e564c098321e0a271adb42ad4` |
+| `docs/jtbd/mcp-server-developer/JTBD-002-add-optional-capabilities.proposed.md` | `98903f31c1244b2b1429f1f6cfea6798ffb62bff60fe23913ad5f9fec5932729` |
+| `docs/jtbd/mcp-server-developer/persona.md` | `c1869ca21559000b42db21cc669c73be586ff25ec7556a8fc7dbab2c7501cd57` |
+| `docs/reviews/current-release-readiness.md` | `54769c2e6ea50d4654a7d5f251073600561c753565d365aeafc8372835b1d018` |
+| `examples/react-ui-server/README.md` | `10e06f0cbf7ef2213c4256b4ea3a9624268b825d30aa2d4f6196db6e39e09a88` |
+| `packages/framework/README.md` | `fc78be7ec2e8e8e9ec914cfad6d8cd50786b5e56a1a93978f119b2b4f8eccf11` |
+| `packages/react/README.md` | `dee6ebbb83fb8a5f8d38e6adf2c843498ee0343f0079fd9119e94c974444d9e4` |
+| `packages/svelte/README.md` | `87ec28a9233b5ae60cb4a95b84d43585564f5eb16f34c2b2c21b7c78c670eb93` |
+
+Scope: Public prose only. Runtime assistive-technology verification,
+publication, and registry evidence remain separate.

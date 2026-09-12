@@ -11,6 +11,7 @@ export const publicPackages = [
   { name: "@emseepea/feedback", path: "packages/feedback", key: "feedback" },
   { name: "@emseepea/testing", path: "packages/testing", key: "testing" },
   { name: "@emseepea/react", path: "packages/react", key: "react" },
+  { name: "@emseepea/svelte", path: "packages/svelte", key: "svelte" },
   { name: "@emseepea/tailwind", path: "packages/tailwind", key: "tailwind" },
   {
     name: "@emseepea/create-tool-server",

@@ -3,7 +3,8 @@ status: proposed
 job-id: add-optional-capabilities
 persona: mcp-server-developer
 date-created: 2026-08-29
-human-oversight: unconfirmed
+human-oversight: confirmed
+oversight-date: 2026-09-12
 screens:
   - examples/
 ---
