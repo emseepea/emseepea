@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.10.3
+
+### Patch Changes
+
+- [`34bd2b3`](https://github.com/emseepea/emseepea/commit/34bd2b3ca147cd359bc22ac06aa8a78f9044d69c) Thanks [@tompahoward](https://github.com/tompahoward)! - Add checked protocol-native MCP tool results while preserving existing structured convenience handlers.
+
 ## 0.10.2
 
 ### Patch Changes
