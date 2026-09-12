@@ -26,3 +26,15 @@ published package verification remains separate.
 | `packages/framework/src/index.ts` | `c23f567ae3dfc23c459860ed2319ca87f2efebde56d2d560e8c8a3857437bc36` |
 | `tests/types/tool-context.ts` | `6634456419dd2c0ff47de86ff9e8b3fefe2f3d44f87fdbde8666335d7419c0a1` |
 | `tests/docs/large-tool-schema-typecheck.test.mjs` | `7d3d3db6397ba422ca09c413fa46a3a991a5e1fb8877ec759fae517d518dafba` |
+
+## Feedback testing-server readiness
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+public release note. It states the change directly, uses consistent terms, and
+does not rely on visual position or colour.
+
+- `.changeset/quiet-rivers-ready.md`
+  SHA-256: `8b58032e32d326b4fc4e7ed12542fcf983de92a4679c0dae98fc5d09aced1383`
+
+Scope: Public changeset text only. Runtime interfaces were not part of this
+review.

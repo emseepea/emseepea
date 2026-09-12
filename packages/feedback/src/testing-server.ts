@@ -31,7 +31,6 @@ const closeProvider = "closeProvider" in created && typeof created.closeProvider
 const running = await serveEmseepea(app as Parameters<typeof serveEmseepea>[0], {
   port: Number.parseInt(process.env.PORT ?? "3000", 10),
 });
-console.log(`Feedback-enabled example eval server listening at ${running.url}`);
 
 async function shutdown() {
   try {
@@ -43,3 +42,4 @@ async function shutdown() {
 
 process.once("SIGINT", () => void shutdown());
 process.once("SIGTERM", () => void shutdown());
+console.log(`Feedback-enabled example eval server listening at ${running.url}`);
