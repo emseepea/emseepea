@@ -148,15 +148,15 @@ separate.
 ## Checked Protocol-Native Tool Results
 
 Result: PASS. An independent cognitive-accessibility specialist reviewed the
-proposed decision and its generated compendium entry. Consistent headings
-separate the decision, checks, consequences, and reassessment criteria. The
-technical vocabulary is appropriate for framework maintainers, and the concrete
-checklist reduces memory load during review.
+ratified decision and its generated compendium entry. The confirmation metadata
+is clear and consistent, and removing the pending capture note reduces cognitive
+load without changing the decision. Consistent headings separate the decision,
+checks, consequences, and reassessment criteria.
 
 | Reviewed file | SHA-256 |
 | --- | --- |
-| `docs/decisions/0082-checked-protocol-native-tool-results.proposed.md` | `970f460b40c88367bf54c00588000961e9f4de8a6c57600423b9488adb9bc7a4` |
-| `docs/decisions/README.md` | `b571e1a65f1415d37891fb1f0fcceba63bf924efe525603835de8a2782059a1b` |
+| `docs/decisions/0082-checked-protocol-native-tool-results.proposed.md` | `b397255f51b7a6e1e43d46cd9dd85ccde568708f492970155be5604be12e928e` |
+| `docs/decisions/README.md` | `59b71ab34df3573981c435beb35a5f9234ea6c8e8c2cf9084e250f4909022e50` |
 
 Scope: ADR-0082 and its generated index and detail entries only. Runtime,
 package publication, registry evidence, and runtime accessibility behavior

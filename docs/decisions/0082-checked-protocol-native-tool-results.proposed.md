@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-09-12
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-09-12
 decision-makers: ["Tom Howard"]
 consulted: ["Architecture review"]
 informed: []
@@ -9,8 +10,6 @@ reassessment-date: 2026-12-12
 ---
 
 # Checked Protocol-Native Tool Results
-
-> Captured via /wr-architect:capture-adr (foreground-lightweight aside-invocation per ADR-032, derived-substance amendment 2026-07-06 / RFC-045). Section content was derived by the capturing agent from the in-session decision context; human-oversight: pending until ratified at the /wr-architect:review-decisions drain.
 
 ## Context and Problem Statement
 

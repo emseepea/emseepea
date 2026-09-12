@@ -55,7 +55,7 @@ This project has 80 decisions: 45 current and 35 historical.
 - [ADR-0079: Opt-In Checked Client Roots](0079-opt-in-checked-client-roots.proposed.md): Proposed; human review confirmed.
 - [ADR-0080: Immutable Capability Catalogues Through Redeployment](0080-immutable-capability-catalogues-through-redeployment.proposed.md): Proposed; human review confirmed.
 - [ADR-0081: Application-Owned Model Provider Integration Instead of Deprecated MCP Sampling](0081-application-owned-model-provider-integration-instead-of-deprecated-mcp-sampling.proposed.md): Proposed; human review confirmed.
-- [ADR-0082: Checked Protocol-Native Tool Results](0082-checked-protocol-native-tool-results.proposed.md): Proposed; human review pending.
+- [ADR-0082: Checked Protocol-Native Tool Results](0082-checked-protocol-native-tool-results.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -1766,7 +1766,7 @@ Chosen option: **"Application-owned model-provider integration without MCP Sampl
 ### [ADR-0082: Checked Protocol-Native Tool Results](0082-checked-protocol-native-tool-results.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
+- Human review: Confirmed
 
 #### ADR-0082 Decision
 
