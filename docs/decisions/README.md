@@ -55,7 +55,7 @@ This project has 80 decisions: 45 current and 35 historical.
 - [ADR-0079: Opt-In Checked Client Roots](0079-opt-in-checked-client-roots.proposed.md): Proposed; human review confirmed.
 - [ADR-0080: Immutable Capability Catalogues Through Redeployment](0080-immutable-capability-catalogues-through-redeployment.proposed.md): Proposed; human review confirmed.
 - [ADR-0081: Application-Owned Model Provider Integration Instead of Deprecated MCP Sampling](0081-application-owned-model-provider-integration-instead-of-deprecated-mcp-sampling.proposed.md): Proposed; human review confirmed.
-- [ADR-0082: Checked MCP Content Blocks for Tool Results](0082-checked-mcp-content-blocks-for-tool-results.proposed.md): Proposed; human review pending.
+- [ADR-0082: Checked Protocol-Native Tool Results](0082-checked-protocol-native-tool-results.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -1763,24 +1763,28 @@ Chosen option: **"Application-owned model-provider integration without MCP Sampl
 - Source, type, black-box, packed-package, and released-package checks preserve the same rejection boundary.
 - Registry verification confirms that the released package exposes neither Sampling types nor runtime behavior.
 
-### [ADR-0082: Checked MCP Content Blocks for Tool Results](0082-checked-mcp-content-blocks-for-tool-results.proposed.md)
+### [ADR-0082: Checked Protocol-Native Tool Results](0082-checked-protocol-native-tool-results.proposed.md)
 
 - Status: Proposed
 - Human review: Pending
 
 #### ADR-0082 Decision
 
-Chosen option: **"Checked MCP content blocks alongside structured data"**, because it completes the standard unstructured result union without handing applications an unchecked protocol-output escape hatch.
+Chosen option: **"Checked protocol-native results plus structured convenience"**, because it preserves Em See Pea's safe framework boundary without narrowing the responses that protocol-compliant applications can return.
 
 #### ADR-0082 Checks
 
-- Type checks accept all five content-block variants for direct, mapped, and streaming tools.
-- Type checks reject `text` together with `content` and reject malformed content shapes.
-- Black-box checks prove all five blocks reach an MCP 2026-07-28 client unchanged after validation.
-- Malformed or extra content fields produce the existing safe tool error and no partial rich result.
-- Structured `data` continues to validate independently against `outputSchema`.
-- The existing result-size limit covers the final combined `content` and `structuredContent` result.
-- Existing explicit-text and generated-text behavior remains unchanged when `content` is omitted.
-- Legacy requests retain their current behavior.
-- Packed-package and released-package journeys exercise the public rich-result contract.
-- Registry readback verifies the released package and its public types.
+- Type checks accept the existing `{ data, text? }` result only when an `outputSchema` is declared.
+- Type checks accept protocol-native results with all five content-block variants, `isError`, `_meta`, and every JSON-valid structured-content shape.
+- Type and runtime checks reject mixed convenience and protocol-native forms.
+- Successful protocol-native results with an `outputSchema` require conforming `structuredContent`.
+- Error results with `isError: true` do not require structured content, even when an output schema exists.
+- Tools without an `outputSchema` can return content-only, deliberate-error, and safely checked structured results.
+- Unsafe JSON, malformed blocks, unknown framework-owned metadata, and oversized results produce the existing generic safe tool error with no partial result.
+- Application `isError: true` reaches the client, while thrown exceptions, cancellation, and deadlines retain generic redaction.
+- Resource links and embedded resources grant no registration, dereference, or authorization authority.
+- Direct, mapped, and streaming tools use the same checked result path.
+- Existing convenience handlers preserve their explicit-text and generated-text behavior.
+- Modern and legacy protocol journeys preserve their documented behavior.
+- Packed-package and released-package journeys exercise both result forms.
+- Registry readback verifies the released package and public types separately from source and CI evidence.
