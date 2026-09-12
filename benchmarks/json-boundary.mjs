@@ -7,9 +7,9 @@ import { fileURLToPath } from "node:url";
 const concurrency = 16;
 const durationMs = 1_000;
 const runs = 3;
-const cpuMeasuredRequests = 400;
 const cpuBatchCount = 40;
-const cpuRequestsPerBatch = 10;
+const cpuRequestsPerBatch = 20;
+const cpuMeasuredRequests = cpuBatchCount * cpuRequestsPerBatch;
 const allocationSamples = 40;
 const modernRequestBody = JSON.stringify({
   jsonrpc: "2.0",
