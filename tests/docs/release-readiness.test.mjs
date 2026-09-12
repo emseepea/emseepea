@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
   assertPlannedReleaseReadiness,
   assertReleasePullRequestPlan,
   assertReleaseReadiness,
+  readPlannedReleaseStatus,
 } from "../../scripts/verify-release-readiness.mjs";
-import { initializerPackages } from "../../scripts/public-packages.mjs";
+import { initializerPackages, publicPackages } from "../../scripts/public-packages.mjs";
 
 const registry = { packages: [
   { name: "@emseepea/server", version: "1.0.0", present: true },
@@ -78,6 +80,69 @@ test("release readiness covers every package planned by Changesets", () => {
   );
 });
 
+test("untagged packages drive initializer dependency closure without expanding the readiness batch", () => {
+  const untaggedReleases = [
+    { name: "@emseepea/server", newVersion: "0.10.1" },
+    { name: "@emseepea/feedback", newVersion: "0.2.7" },
+    { name: "@emseepea/testing", newVersion: "0.9.11" },
+    { name: "@emseepea/react", newVersion: "0.0.20" },
+  ];
+  const releases = initializerPackages.map(({ name }, index) => ({
+    name,
+    type: "patch",
+    newVersion: `0.0.${index + 1}`,
+  }));
+  const initializers = initializerPackages.map(({ name }) => ({
+    name,
+    starterDependencies: [{ name: "@emseepea/server", version: "0.10.1" }],
+  }));
+  const review = `${releases
+    .map(({ name, newVersion }) => `- \`${name}@${newVersion}\``)
+    .join("\n")}
+
+- Result: PASS
+- Final result: within appetite.
+`;
+  const status = { releases, untaggedReleases, initializers };
+  assert.doesNotThrow(() => assertPlannedReleaseReadiness(status, review));
+  assert.throws(
+    () => assertPlannedReleaseReadiness({ ...status, releases: releases.slice(1) }, review),
+    /must be released with its updated starter dependencies/,
+  );
+  assert.throws(
+    () => assertPlannedReleaseReadiness(
+      status,
+      `- \`@emseepea/feedback@0.2.7\`\n${review}`,
+    ),
+    /package set/,
+  );
+  assert.throws(
+    () => assertPlannedReleaseReadiness({
+      ...status,
+      initializers: initializers.map((initializer, index) => index === 0
+        ? { ...initializer, starterDependencies: [{ name: "@emseepea/server", version: "0.10.0" }] }
+        : initializer),
+    }, review),
+    /stale @emseepea\/server starter dependency/,
+  );
+});
+
+test("planned status trusts the exact origin tag inventory", async () => {
+  const server = publicPackages.find(({ name }) => name === "@emseepea/server");
+  const serverVersion = JSON.parse(await readFile(
+    new URL(`../../${server.path}/package.json`, import.meta.url),
+    "utf8",
+  )).version;
+  const calls = [];
+  const status = await readPlannedReleaseStatus(process.cwd(), async (command, args) => {
+    calls.push([command, ...args]);
+    return { stdout: `${"a".repeat(40)}\trefs/tags/${server.name}@${serverVersion}\n` };
+  });
+  assert.deepEqual(calls, [["git", "ls-remote", "--tags", "--refs", "origin"]]);
+  assert.equal(status.untaggedReleases.some(({ name }) => name === server.name), false);
+  assert.equal(status.untaggedReleases.some(({ name }) => name === "@emseepea/tailwind"), true);
+});
+
 test("release readiness binds the Changesets plan to the release pull request", () => {
   const status = { releases: [{ name: "@emseepea/server", type: "patch", newVersion: "1.0.1" }] };
   const baseLock = { packages: { "packages/server": { name: "@emseepea/server", version: "1.0.0" } } };
@@ -92,6 +157,67 @@ test("release readiness binds the Changesets plan to the release pull request", 
       head: { name: "@emseepea/server", version: "1.0.1" },
     }],
   ));
+
+  const initializerStatus = {
+    releases: [
+      ...status.releases,
+      { name: "@emseepea/create-tool-server", type: "patch", newVersion: "0.0.2" },
+    ],
+    initializers: [{
+      name: "@emseepea/create-tool-server",
+      starterDependencies: [{ name: "@emseepea/server", version: "1.0.0" }],
+    }],
+  };
+  const initializerBaseLock = { packages: {
+    ...baseLock.packages,
+    "examples/tool-server": { name: "@emseepea/create-tool-server", version: "0.0.1" },
+  } };
+  const initializerHeadLock = { packages: {
+    ...headLock.packages,
+    "examples/tool-server": { name: "@emseepea/create-tool-server", version: "0.0.2" },
+  } };
+  const initializerManifests = [
+    {
+      base: { name: "@emseepea/server", version: "1.0.0" },
+      head: { name: "@emseepea/server", version: "1.0.1" },
+    },
+    {
+      base: { name: "@emseepea/create-tool-server", version: "0.0.1" },
+      head: {
+        name: "@emseepea/create-tool-server",
+        version: "0.0.2",
+        starterDependencies: ["@emseepea/server"],
+        devDependencies: { "@emseepea/server": "1.0.1" },
+      },
+    },
+  ];
+  const initializerFiles = [
+    "package-lock.json",
+    "packages/server/package.json",
+    "examples/tool-server/package.json",
+  ];
+  assert.doesNotThrow(() => assertReleasePullRequestPlan(
+    initializerStatus,
+    initializerBaseLock,
+    initializerHeadLock,
+    initializerFiles,
+    initializerManifests,
+  ));
+  assert.throws(
+    () => assertReleasePullRequestPlan(
+      initializerStatus,
+      initializerBaseLock,
+      initializerHeadLock,
+      initializerFiles,
+      initializerManifests.map(({ base, head }) => ({
+        base,
+        head: head.name === "@emseepea/create-tool-server"
+          ? { ...head, devDependencies: { "@emseepea/server": "1.0.0" } }
+          : head,
+      })),
+    ),
+    /stale @emseepea\/server starter dependency/,
+  );
   assert.throws(
     () => assertReleasePullRequestPlan(status, baseLock, headLock, ["packages/server/src/index.ts"], []),
     /non-generated files/,
