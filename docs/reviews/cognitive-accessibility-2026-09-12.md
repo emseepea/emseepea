@@ -144,3 +144,21 @@ and legacy stateless path consistently.
 Scope: Public testing-helper README and changeset text only. Runtime behavior,
 published-package verification, and unsupported-version diagnostics remain
 separate.
+
+## Checked MCP Content Blocks for Tool Results
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+proposed decision and its generated compendium entry. The title names the
+outcome, the pending ratification state is explicit, and short sections separate
+the chosen contract, exclusions, consequences, and confirmation checks. The
+technical vocabulary is appropriate for framework maintainers, and the concrete
+checklist reduces memory load during review.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `docs/decisions/0082-checked-mcp-content-blocks-for-tool-results.proposed.md` | `819440b0b79c2d9d90288865d8d8fa3bab9208596b6b6f4ce427a8bcc8922be0` |
+| `docs/decisions/README.md` | `77e035e386b50531ba59f688630c3b76a3272033ed6b16a0b81c5330d1ed31e2` |
+
+Scope: ADR-0082 and its generated index and detail entries only. Runtime,
+rendered mobile documentation, package publication, and registry evidence
+remain separate.

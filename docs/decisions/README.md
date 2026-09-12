@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 79 decisions: 44 current and 35 historical.
+This project has 80 decisions: 45 current and 35 historical.
 
 ## Quick Index
 
@@ -55,6 +55,7 @@ This project has 79 decisions: 44 current and 35 historical.
 - [ADR-0079: Opt-In Checked Client Roots](0079-opt-in-checked-client-roots.proposed.md): Proposed; human review confirmed.
 - [ADR-0080: Immutable Capability Catalogues Through Redeployment](0080-immutable-capability-catalogues-through-redeployment.proposed.md): Proposed; human review confirmed.
 - [ADR-0081: Application-Owned Model Provider Integration Instead of Deprecated MCP Sampling](0081-application-owned-model-provider-integration-instead-of-deprecated-mcp-sampling.proposed.md): Proposed; human review confirmed.
+- [ADR-0082: Checked MCP Content Blocks for Tool Results](0082-checked-mcp-content-blocks-for-tool-results.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -1761,3 +1762,25 @@ Chosen option: **"Application-owned model-provider integration without MCP Sampl
 - Protocol coverage and published framework guidance identify Sampling as intentionally unsupported and recommend model-provider APIs.
 - Source, type, black-box, packed-package, and released-package checks preserve the same rejection boundary.
 - Registry verification confirms that the released package exposes neither Sampling types nor runtime behavior.
+
+### [ADR-0082: Checked MCP Content Blocks for Tool Results](0082-checked-mcp-content-blocks-for-tool-results.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### ADR-0082 Decision
+
+Chosen option: **"Checked MCP content blocks alongside structured data"**, because it completes the standard unstructured result union without handing applications an unchecked protocol-output escape hatch.
+
+#### ADR-0082 Checks
+
+- Type checks accept all five content-block variants for direct, mapped, and streaming tools.
+- Type checks reject `text` together with `content` and reject malformed content shapes.
+- Black-box checks prove all five blocks reach an MCP 2026-07-28 client unchanged after validation.
+- Malformed or extra content fields produce the existing safe tool error and no partial rich result.
+- Structured `data` continues to validate independently against `outputSchema`.
+- The existing result-size limit covers the final combined `content` and `structuredContent` result.
+- Existing explicit-text and generated-text behavior remains unchanged when `content` is omitted.
+- Legacy requests retain their current behavior.
+- Packed-package and released-package journeys exercise the public rich-result contract.
+- Registry readback verifies the released package and its public types.
