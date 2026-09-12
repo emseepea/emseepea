@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.10.1
+
+### Patch Changes
+
+- [`60e987a`](https://github.com/emseepea/emseepea/commit/60e987aec3796f248f29760e2a7eac0a4984564a) Thanks [@tompahoward](https://github.com/tompahoward)! - Keep type inference responsive when `defineTool`, `defineStreamingTool`, or `defineMappedTool` use large Zod output schemas. Handler output checks remain unchanged.
+
 ## 0.10.0
 
 ### Minor Changes
