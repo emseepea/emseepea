@@ -43,7 +43,7 @@ their individual entries are omitted, as covered by the
 
 ### `tools/list`
 
-**Status: Partial.** Lists visible tools with public input and output schemas,
+**Status: Partial.** Lists visible tools with public input schemas and optional output schemas,
 titles, icons, annotations, access policy, and public application metadata. Changing
 the list while the server is running is not supported. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
@@ -57,8 +57,14 @@ callable tools are covered by the
 **Status: Partial.** Supports checked public, protected, mapped, and
 progress-reporting tools. A direct tool may ask a capable client for more input
 before returning its final result. Mapped and progress-reporting tools cannot.
-See the
+Handlers may keep the checked `{ data, text? }` convenience form or return a
+checked protocol-native result. Protocol-native results support text, image,
+audio, resource-link, and embedded-resource content, safely representable JSON
+structured content, deliberate application errors, and client-visible metadata.
+Declared output schemas remain mandatory for the convenience form and are
+enforced on successful protocol-native structured content. See the
 [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
+[protocol-native result tests](../tests/black-box/rich-tool-results.test.mjs),
 [mapped backend tests](../tests/black-box/mapped-adapter.test.mjs),
 [progress tests](../tests/black-box/streaming-progress.test.mjs), and
 [client-input tests](../tests/black-box/input-required.test.mjs). Direct calls to

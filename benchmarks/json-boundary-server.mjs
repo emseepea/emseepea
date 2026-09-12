@@ -1,5 +1,5 @@
 import { Session } from "node:inspector";
-import { createEmseepea, defineMappedTool, openTelemetry, serveEmseepea } from "@emseepea/server";
+import { createEmseepea, defineMappedTool, defineTool, openTelemetry, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
 const tool = defineMappedTool({
@@ -14,9 +14,20 @@ const tool = defineMappedTool({
   adapter: ({ id }) => ({ id, value: "synthetic" }),
   mapOutput: (data) => ({ text: "synthetic", data }),
 });
+const richTool = defineTool({
+  name: "synthetic-rich-read",
+  access: "public",
+  description: "Return one protocol-native synthetic record.",
+  inputSchema: z.object({ id: z.string().meta({ "x-mcp-header": "Id" }) }),
+  handler: ({ id }) => ({
+    content: [{ type: "text", text: "synthetic" }],
+    structuredContent: [id, "synthetic"],
+    _meta: { "benchmark/kind": "protocol-native" },
+  }),
+});
 const productionClass = process.argv.find((argument) => argument.startsWith("--production-class="))?.split("=")[1];
 const app = createEmseepea({
-  name: "emseepea-benchmark", version: "0.0.0", tools: [tool],
+  name: "emseepea-benchmark", version: "0.0.0", tools: [tool, richTool],
   observability: process.argv.includes("--observability") ? [openTelemetry()] : undefined,
   deployment: productionClass ? {
     mode: "production-behind-proxy",

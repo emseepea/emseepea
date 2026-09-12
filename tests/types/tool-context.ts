@@ -10,6 +10,7 @@ import {
   type CapabilityModuleFactory,
   type ClientInputRequest,
   type MappedToolDefinition,
+  type ProtocolToolResult,
   type RequestState,
   type ToolPrincipal,
 } from "../../packages/framework/src/index.js";
@@ -23,6 +24,87 @@ const inputMapperArity: 1 = null as unknown as Parameters<MappedDefinition["mapI
 const outputMapperArity: 1 = null as unknown as Parameters<MappedDefinition["mapOutput"]>["length"];
 void inputMapperArity;
 void outputMapperArity;
+
+defineTool({
+  name: "protocol-result-without-output-schema",
+  access: "public",
+  description: "Compile-time protocol-native result check.",
+  inputSchema: z.object({}),
+  handler: () => ({
+    content: [
+      { type: "text", text: "ready" },
+      { type: "image", data: "AA==", mimeType: "image/png" },
+      { type: "audio", data: "AA==", mimeType: "audio/wav" },
+      { type: "resource_link", name: "record", uri: "test://record/1" },
+      { type: "resource", resource: { uri: "test://record/1", text: "record" } },
+    ],
+    structuredContent: ["ready", 1, true, null],
+    _meta: { "example/detail": "client-visible" },
+  }),
+});
+
+const structuredRoots: readonly ProtocolToolResult[] = [
+  { content: [], structuredContent: { value: "object" } },
+  { content: [], structuredContent: ["array"] },
+  { content: [], structuredContent: "string" },
+  { content: [], structuredContent: 1 },
+  { content: [], structuredContent: true },
+  { content: [], structuredContent: null },
+];
+void structuredRoots;
+
+defineTool({
+  name: "array-output-schema",
+  access: "public",
+  description: "Compile-time non-object output check.",
+  inputSchema: z.object({}),
+  outputSchema: z.array(z.string()),
+  handler: () => ({ data: ["ready"] }),
+});
+
+defineStreamingTool({
+  name: "protocol-error-result",
+  access: "public",
+  description: "Compile-time domain-error result check.",
+  inputSchema: z.object({}),
+  handler: () => ({
+    content: [{ type: "text", text: "Not available" }],
+    isError: true,
+  }),
+});
+
+defineMappedTool({
+  name: "mapped-protocol-result-without-output-schema",
+  access: "public",
+  description: "Compile-time mapped protocol-native result check.",
+  inputSchema: z.object({}),
+  backendInputSchema: z.object({}),
+  backendOutputSchema: z.object({ value: z.string() }),
+  mapInput: () => ({}),
+  adapter: () => ({ value: "ready" }),
+  mapOutput: ({ value }): ProtocolToolResult => ({
+    content: [{ type: "text", text: value }],
+  }),
+});
+
+// @ts-expect-error Convenience data requires an output schema.
+defineTool({
+  name: "unchecked-convenience-result",
+  access: "public",
+  description: "Compile-time unchecked convenience rejection check.",
+  inputSchema: z.object({}),
+  handler: () => ({ data: { value: "unchecked" } }),
+});
+
+// @ts-expect-error Convenience and protocol-native result fields cannot be mixed.
+defineTool({
+  name: "mixed-result-form",
+  access: "public",
+  description: "Compile-time mixed result rejection check.",
+  inputSchema: z.object({}),
+  outputSchema: z.object({ value: z.string() }),
+  handler: () => ({ data: { value: "mixed" }, content: [] }),
+});
 
 const discoveredFactory = ((context) => defineTool({
   name: "discovered-type-check",

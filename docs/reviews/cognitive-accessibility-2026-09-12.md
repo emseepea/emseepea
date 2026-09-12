@@ -161,3 +161,23 @@ checks, consequences, and reassessment criteria.
 Scope: ADR-0082 and its generated index and detail entries only. Runtime,
 package publication, registry evidence, and runtime accessibility behavior
 remain separate.
+
+## Checked Protocol-Native Tool Results Implementation
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+changed public guidance, protocol coverage, release note, and release-readiness
+record. Predictable headings introduce the capability before its constraints,
+preserve the existing handler path, and keep local qualification separate from
+publication, registry readback, and downloaded-package evidence. A focused
+Markdown accessibility review also passed.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `.changeset/green-peas-return.md` | `a0e68d063575001f38c09eb59ec44fd7883f8ee76c1aa052169bedbade584a00` |
+| `docs/protocol-coverage.md` | `0a04753e428ed2666cbf9c9c2718f371608a5e718c0037e9d74ba402f9cde542` |
+| `docs/reviews/current-release-readiness.md` | `aa77ec32c20484fc945b2fadda82a045b7195d3547d2f2672ec50a8cf7de1179` |
+| `packages/framework/README.md` | `ed80ee3ebe421be4fe83f0d96a25fce582b8da1ee7b1c7854ea28032c1372eff` |
+
+Scope: Changed public Markdown for the ADR-0082 implementation only. Runtime,
+publication, registry readback, downloaded-package behavior, and rendered-site
+accessibility remain separate evidence.

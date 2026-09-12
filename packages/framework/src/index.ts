@@ -51,6 +51,7 @@ import {
   type ReadResourceResult,
   type Resource as McpResource,
   type ResourceTemplateType,
+  type StandardSchemaWithJSON,
   type StandardSchemaV1,
   type ServerOptions,
   type ServerEvent,
@@ -303,6 +304,11 @@ export interface ToolResult<Output> {
   readonly text?: string;
   readonly data: Output;
 }
+/** A complete MCP tool result checked by the framework before emission. */
+export type ProtocolToolResult = CallToolResult & {
+  readonly data?: never;
+  readonly text?: never;
+};
 export interface BackendAdapterContext {
   readonly signal: AbortSignal;
   readonly deadlineMs: number;
@@ -334,7 +340,7 @@ interface ProtectedCapabilityAccess {
   readonly requiredScopes: readonly string[];
 }
 export type ToolAccess = "public" | "protected";
-interface ToolDefinitionBase<Input, Output> {
+interface ToolDefinitionCommon<Input> {
   readonly name: string;
   readonly discoverable?: boolean;
   readonly title?: string;
@@ -343,17 +349,25 @@ interface ToolDefinitionBase<Input, Output> {
   readonly annotations?: Readonly<ToolAnnotations>;
   readonly _meta?: Readonly<MetaObject>;
   readonly inputSchema: Input;
-  readonly outputSchema: Output;
 }
-type ZodObjectLike = StandardSchemaV1 & {
+type ZodObjectLike = StandardSchemaWithJSON & {
   readonly type: "object";
   readonly shape: Readonly<Record<string, StandardSchemaV1>>;
   readonly safeParseAsync: (value: unknown) => Promise<{ readonly success: boolean }>;
   readonly toJSONSchema: () => unknown;
 };
+type ToolDefinitionBase<Input, Output extends StandardSchemaWithJSON | undefined> =
+  ToolDefinitionCommon<Input> & (Output extends StandardSchemaWithJSON
+    ? { readonly outputSchema: Output }
+    : { readonly outputSchema?: never });
+type OutputInput<Output> = Output extends StandardSchemaV1
+  ? Readonly<StandardSchemaV1.InferInput<Output>>
+  : never;
+type CheckedToolResult<Output> = ProtocolToolResult |
+  (Output extends StandardSchemaV1 ? ToolResult<OutputInput<Output>> : never);
 type InferredToolDefinition<
   Input extends ZodObjectLike,
-  Output extends ZodObjectLike,
+  Output extends StandardSchemaWithJSON | undefined,
   Access extends ToolAccess,
   Result,
 > =
@@ -367,7 +381,7 @@ type InferredToolDefinition<
     : { readonly access: Access; readonly requiredScopes: readonly string[] });
 type InferredStreamingToolDefinition<
   Input extends ZodObjectLike,
-  Output extends ZodObjectLike,
+  Output extends StandardSchemaWithJSON | undefined,
   Access extends ToolAccess,
   Result,
 > = ToolDefinitionBase<Input, Output> & {
@@ -380,7 +394,7 @@ type InferredStreamingToolDefinition<
   : { readonly access: Access; readonly requiredScopes: readonly string[] });
 type InferredMappedToolDefinition<
   Input extends ZodObjectLike,
-  Output extends ZodObjectLike,
+  Output extends StandardSchemaWithJSON | undefined,
   BackendInput extends ZodObjectLike,
   BackendOutput extends ZodObjectLike,
   Access extends ToolAccess,
@@ -400,29 +414,36 @@ type InferredMappedToolDefinition<
 } & (Access extends "public"
   ? { readonly access: Access; readonly requiredScopes?: never }
   : { readonly access: Access; readonly requiredScopes: readonly string[] });
-type ShapeInput<Shape extends Readonly<Record<string, StandardSchemaV1>>> = {
-  -readonly [Key in keyof Shape as undefined extends StandardSchemaV1.InferInput<Shape[Key]> ? never : Key]:
-    StandardSchemaV1.InferInput<Shape[Key]>;
-} & {
-  -readonly [Key in keyof Shape as undefined extends StandardSchemaV1.InferInput<Shape[Key]> ? Key : never]?:
-    StandardSchemaV1.InferInput<Shape[Key]>;
-};
-type InferredToolHandlerResult = ToolResult<object> | InputRequiredResult;
-type ResultDataKeys<Result> = Result extends ToolResult<infer Data> ? keyof Data : never;
+type InferredToolHandlerResult = ToolResult<unknown> | ProtocolToolResult | InputRequiredResult;
+type ResultDataKeys<Result> = Result extends ToolResult<infer Data>
+  ? Data extends object ? keyof Data : never
+  : never;
 type ExactToolResult<
   Result,
-  Output extends ZodObjectLike,
+  Output extends StandardSchemaWithJSON | undefined,
   ErrorMessage extends string,
-> = [Exclude<ResultDataKeys<Awaited<Result>>, keyof Output["shape"]>] extends [never]
+> = Output extends ZodObjectLike
+  ? [Exclude<ResultDataKeys<Awaited<Result>>, keyof Output["shape"]>] extends [never]
+    ? object
+    : { readonly [Key in ErrorMessage]: never }
+  : object;
+type MixedToolResult<Result> = Result extends PromiseLike<infer Value>
+  ? MixedToolResult<Value>
+  : Result extends { readonly data: unknown }
+    ? Extract<keyof Result, "content" | "structuredContent" | "isError" | "_meta"> extends never
+      ? never
+      : Result
+    : never;
+type ExactToolResultForm<Result, ErrorMessage extends string> = [MixedToolResult<Result>] extends [never]
   ? object
   : { readonly [Key in ErrorMessage]: never };
 export type ToolDefinition<
   Input extends z.ZodObject,
-  Output extends z.ZodObject,
-  Result extends ToolResult<ShapeInput<Output["shape"]>> | InputRequiredResult |
-    Promise<ToolResult<ShapeInput<Output["shape"]>> | InputRequiredResult> =
-    ToolResult<ShapeInput<Output["shape"]>> | InputRequiredResult |
-    Promise<ToolResult<ShapeInput<Output["shape"]>> | InputRequiredResult>,
+  Output extends StandardSchemaWithJSON | undefined = undefined,
+  Result extends CheckedToolResult<Output> | InputRequiredResult |
+    Promise<CheckedToolResult<Output> | InputRequiredResult> =
+    CheckedToolResult<Output> | InputRequiredResult |
+    Promise<CheckedToolResult<Output> | InputRequiredResult>,
 > =
   ToolDefinitionBase<Input, Output> & (
     | {
@@ -438,10 +459,10 @@ export type ToolDefinition<
   );
 export type StreamingToolDefinition<
   Input extends z.ZodObject,
-  Output extends z.ZodObject,
-  Result extends ToolResult<ShapeInput<Output["shape"]>> |
-    Promise<ToolResult<ShapeInput<Output["shape"]>>> =
-    ToolResult<ShapeInput<Output["shape"]>> | Promise<ToolResult<ShapeInput<Output["shape"]>>>,
+  Output extends StandardSchemaWithJSON | undefined = undefined,
+  Result extends CheckedToolResult<Output> |
+    Promise<CheckedToolResult<Output>> =
+    CheckedToolResult<Output> | Promise<CheckedToolResult<Output>>,
 > =
   ToolDefinitionBase<Input, Output> & (
     | {
@@ -455,13 +476,13 @@ export type StreamingToolDefinition<
         readonly handler: (input: z.output<Input>, context: StreamingToolContext<"protected">) => Result;
       }
   );
-interface MappedToolDefinitionBase<
+type MappedToolDefinitionBase<
   Input extends z.ZodObject,
-  Output extends z.ZodObject,
+  Output extends StandardSchemaWithJSON | undefined,
   BackendInput extends z.ZodObject,
   BackendOutput extends z.ZodObject,
-  Result extends ToolResult<ShapeInput<Output["shape"]>> = ToolResult<ShapeInput<Output["shape"]>>,
-> extends ToolDefinitionBase<Input, Output> {
+  Result extends CheckedToolResult<Output> = CheckedToolResult<Output>,
+> = ToolDefinitionBase<Input, Output> & {
   readonly backendInputSchema: BackendInput;
   readonly backendOutputSchema: BackendOutput;
   /** Side-effect-free provider check. The tool stays listed while unavailable. */
@@ -477,10 +498,10 @@ interface MappedToolDefinitionBase<
 }
 export type MappedToolDefinition<
   Input extends z.ZodObject,
-  Output extends z.ZodObject,
+  Output extends StandardSchemaWithJSON | undefined,
   BackendInput extends z.ZodObject,
   BackendOutput extends z.ZodObject,
-  Result extends ToolResult<ShapeInput<Output["shape"]>> = ToolResult<ShapeInput<Output["shape"]>>,
+  Result extends CheckedToolResult<Output> = CheckedToolResult<Output>,
 > =
   | MappedToolDefinitionBase<Input, Output, BackendInput, BackendOutput, Result> & {
       readonly access: "public";
@@ -791,46 +812,73 @@ interface NormalizedOAuth {
 
 export function defineTool<
   Input extends ZodObjectLike,
-  Output extends ZodObjectLike,
   const Access extends ToolAccess,
   const Result extends
-    | ToolResult<ShapeInput<Output["shape"]>>
+    | ProtocolToolResult
     | InputRequiredResult
-    | Promise<ToolResult<ShapeInput<Output["shape"]>> | InputRequiredResult>,
+    | Promise<ProtocolToolResult | InputRequiredResult>,
+>(definition: InferredToolDefinition<Input, undefined, Access, Result>): EmseepeaTool;
+export function defineTool<
+  Input extends ZodObjectLike,
+  Output extends StandardSchemaWithJSON,
+  const Access extends ToolAccess,
+  const Result extends CheckedToolResult<Output> | InputRequiredResult |
+    Promise<CheckedToolResult<Output> | InputRequiredResult>,
 >(definition: InferredToolDefinition<Input, Output, Access, Result> & ExactToolResult<
   Result,
   Output,
   "ERROR: handler data contains keys absent from outputSchema"
->): EmseepeaTool {
-  const handler = definition.handler as unknown as (
+> & ExactToolResultForm<Result, "ERROR: handler mixes convenience and protocol result fields">): EmseepeaTool;
+export function defineTool(definition: unknown): EmseepeaTool {
+  const checkedDefinition = definition as CheckedToolDefinition & { handler: CheckedToolExecutor };
+  const handler = checkedDefinition.handler as unknown as (
     input: unknown,
     context: ToolContext,
   ) => InferredToolHandlerResult | Promise<InferredToolHandlerResult>;
-  return createCheckedTool(definition as unknown as CheckedToolDefinition, handler as CheckedToolExecutor, false, true);
+  return createCheckedTool(checkedDefinition, handler as CheckedToolExecutor, false, true);
 }
 
 export function defineStreamingTool<
   Input extends ZodObjectLike,
-  Output extends ZodObjectLike,
   const Access extends ToolAccess,
-  const Result extends ToolResult<ShapeInput<Output["shape"]>> |
-    Promise<ToolResult<ShapeInput<Output["shape"]>>>,
+  const Result extends ProtocolToolResult | Promise<ProtocolToolResult>,
+>(definition: InferredStreamingToolDefinition<Input, undefined, Access, Result>): EmseepeaTool;
+export function defineStreamingTool<
+  Input extends ZodObjectLike,
+  Output extends StandardSchemaWithJSON,
+  const Access extends ToolAccess,
+  const Result extends CheckedToolResult<Output> | Promise<CheckedToolResult<Output>>,
 >(definition: InferredStreamingToolDefinition<Input, Output, Access, Result> & ExactToolResult<
   Result,
   Output,
   "ERROR: handler data contains keys absent from outputSchema"
->): EmseepeaTool {
-  const handler = definition.handler as unknown as CheckedToolExecutor;
-  return createCheckedTool(definition as unknown as CheckedToolDefinition, handler, true, false);
+> & ExactToolResultForm<Result, "ERROR: handler mixes convenience and protocol result fields">): EmseepeaTool;
+export function defineStreamingTool(definition: unknown): EmseepeaTool {
+  const checkedDefinition = definition as CheckedToolDefinition & { handler: CheckedToolExecutor };
+  return createCheckedTool(checkedDefinition, checkedDefinition.handler, true, false);
 }
 
 export function defineMappedTool<
   Input extends ZodObjectLike,
-  Output extends ZodObjectLike,
   BackendInput extends ZodObjectLike,
   BackendOutput extends ZodObjectLike,
   const Access extends ToolAccess,
-  const Result extends ToolResult<ShapeInput<Output["shape"]>>,
+  const Result extends ProtocolToolResult,
+>(definition: InferredMappedToolDefinition<
+  Input,
+  undefined,
+  BackendInput,
+  BackendOutput,
+  Access,
+  Result
+>): EmseepeaTool;
+export function defineMappedTool<
+  Input extends ZodObjectLike,
+  Output extends StandardSchemaWithJSON,
+  BackendInput extends ZodObjectLike,
+  BackendOutput extends ZodObjectLike,
+  const Access extends ToolAccess,
+  const Result extends CheckedToolResult<Output>,
 >(
   definition: InferredMappedToolDefinition<
     Input,
@@ -843,11 +891,12 @@ export function defineMappedTool<
     Result,
     Output,
     "ERROR: mapOutput data contains keys absent from outputSchema"
-  >
-): EmseepeaTool {
+  > & ExactToolResultForm<Result, "ERROR: mapOutput mixes convenience and protocol result fields">
+): EmseepeaTool;
+export function defineMappedTool(definition: unknown): EmseepeaTool {
   const checkedDefinition = definition as unknown as MappedToolDefinition<
     z.ZodObject,
-    z.ZodObject,
+    StandardSchemaWithJSON | undefined,
     z.ZodObject,
     z.ZodObject
   >;
@@ -1286,7 +1335,7 @@ interface CheckedToolDefinition {
   readonly annotations?: Readonly<ToolAnnotations>;
   readonly _meta?: Readonly<MetaObject>;
   readonly inputSchema: z.ZodObject;
-  readonly outputSchema: z.ZodObject;
+  readonly outputSchema?: StandardSchemaWithJSON;
   readonly access: ToolAccess;
   readonly requiredScopes?: readonly string[];
 }
@@ -1312,7 +1361,7 @@ function createCheckedTool(
   assertValidMcpHeaderAnnotations(inputSchema);
   const access = normalizeCapabilityAccess("Tool", definition.access, definition.requiredScopes);
   const sdkInputSchema = sdkMetadataSchema(inputSchema);
-  const sdkOutputSchema = sdkMetadataSchema(outputSchema);
+  const sdkOutputSchema = outputSchema ? sdkOutputMetadataSchema(outputSchema) : undefined;
   const listing = checkedProtocolValue<Tool>("Tool", {
     name,
     title: definition.title,
@@ -1320,7 +1369,7 @@ function createCheckedTool(
     icons: definition.icons,
     annotations: definition.annotations,
     inputSchema: jsonMetadataSchema(inputSchema, "input"),
-    outputSchema: jsonMetadataSchema(outputSchema, "output"),
+    ...(outputSchema ? { outputSchema: standardJsonSchema(outputSchema, "output") } : {}),
     _meta: accessMetadata(definition._meta, access),
   });
   const metadata = Object.freeze({
@@ -1329,7 +1378,7 @@ function createCheckedTool(
     icons: listing.icons,
     annotations: listing.annotations,
     inputSchema: sdkInputSchema,
-    outputSchema: sdkOutputSchema,
+    ...(sdkOutputSchema ? { outputSchema: sdkOutputSchema } : {}),
     _meta: listing._meta,
   });
   const registration: EmseepeaTool = {
@@ -1400,21 +1449,10 @@ function createCheckedTool(
                   assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
                   return result as InputRequiredResult;
                 }
-                if (!isRecord(result) ||
-                    (result.text !== undefined && typeof result.text !== "string") ||
-                    !("data" in result)) {
+                if (!isRecord(result)) {
                   throw new Error("Tool returned an invalid result");
                 }
-                signal.throwIfAborted();
-                const parsedOutput = await outputSchema.safeParseAsync(result.data);
-                if (!parsedOutput.success) {
-                  throw new Error("Tool returned output that does not match its schema");
-                }
-                const publicResult = {
-                  content: [{ type: "text" as const, text: result.text ?? JSON.stringify(parsedOutput.data) }],
-                  structuredContent: parsedOutput.data as Record<string, unknown>,
-                  isError: false,
-                };
+                const publicResult = await checkedToolResult(result, outputSchema, signal);
                 assertResultSize(publicResult, maxApplicationResultBytes, deadlineMs, signal);
                 return publicResult;
               },
@@ -1427,6 +1465,52 @@ function createCheckedTool(
     },
   };
   return Object.freeze(registration);
+}
+
+async function checkedToolResult(
+  result: Record<string, unknown>,
+  outputSchema: StandardSchemaWithJSON | undefined,
+  signal: AbortSignal,
+): Promise<Readonly<CallToolResult>> {
+  const convenience = Object.hasOwn(result, "data") || Object.hasOwn(result, "text");
+  const protocol = ["content", "structuredContent", "isError", "_meta"]
+    .some((field) => Object.hasOwn(result, field));
+  if (convenience) {
+    if (protocol || !outputSchema || !Object.hasOwn(result, "data") ||
+        (result.text !== undefined && typeof result.text !== "string")) {
+      throw new Error("Tool returned an invalid result");
+    }
+    signal.throwIfAborted();
+    const parsedOutput = await outputSchema["~standard"].validate(result.data);
+    if ("issues" in parsedOutput) {
+      throw new Error("Tool returned output that does not match its schema");
+    }
+    return checkedProtocolValue<CallToolResult>("CallToolResult", {
+      content: [{ type: "text", text: result.text ?? JSON.stringify(parsedOutput.value) }],
+      structuredContent: parsedOutput.value,
+      isError: false,
+    });
+  }
+
+  if (isRecord(result._meta) && Object.hasOwn(result._meta, "io.modelcontextprotocol/serverInfo")) {
+    throw new Error("Tool result metadata contains a framework-owned field");
+  }
+  let checked = checkedProtocolValue<CallToolResult>("CallToolResult", result);
+  if (outputSchema && checked.isError !== true) {
+    if (!Object.hasOwn(checked, "structuredContent")) {
+      throw new Error("Tool result is missing structured content");
+    }
+    signal.throwIfAborted();
+    const parsedOutput = await outputSchema["~standard"].validate(checked.structuredContent);
+    if ("issues" in parsedOutput) {
+      throw new Error("Tool returned output that does not match its schema");
+    }
+    checked = checkedProtocolValue<CallToolResult>("CallToolResult", {
+      ...checked,
+      structuredContent: parsedOutput.value,
+    });
+  }
+  return checked;
 }
 
 type ProgressReporter = ReturnType<typeof progressReporter>;
@@ -2988,7 +3072,7 @@ function checkedInputResponses(
 }
 
 function checkedProtocolValue<T>(
-  type: "Implementation" | "Prompt" | "Resource" | "ResourceTemplate" | "Tool",
+  type: "CallToolResult" | "Implementation" | "Prompt" | "Resource" | "ResourceTemplate" | "Tool",
   value: unknown,
 ): Readonly<T> {
   let copy: unknown;
@@ -3041,7 +3125,7 @@ function assertJsonValue(
   }
   for (const child of Object.values(value)) {
     if (child === undefined && allowUndefinedProperties) continue;
-    assertJsonValue(child, seen);
+    assertJsonValue(child, seen, allowUndefinedProperties);
   }
   seen.delete(value);
 }
@@ -3053,10 +3137,17 @@ function deepFreeze<T>(value: T): T {
 }
 
 function jsonMetadataSchema(
-  schema: z.ZodObject,
+  schema: z.ZodType,
   io: "input" | "output",
 ): Record<string, unknown> {
   return { ...z.toJSONSchema(schema, { target: "draft-2020-12", io }) };
+}
+
+function standardJsonSchema(
+  schema: StandardSchemaWithJSON,
+  io: "input" | "output",
+): Record<string, unknown> {
+  return { ...schema["~standard"].jsonSchema[io]({ target: "draft-2020-12" }) };
 }
 
 function promptArguments(schema: z.ZodObject): readonly Readonly<Record<string, unknown>>[] {
@@ -3072,7 +3163,7 @@ function promptArguments(schema: z.ZodObject): readonly Readonly<Record<string, 
   })));
 }
 
-function sdkMetadataSchema(schema: z.ZodObject): z.ZodObject {
+function sdkMetadataSchema<Schema extends z.ZodType>(schema: Schema): Schema {
   return {
     "~standard": {
       version: 1,
@@ -3083,7 +3174,21 @@ function sdkMetadataSchema(schema: z.ZodObject): z.ZodObject {
         output: () => jsonMetadataSchema(schema, "output"),
       },
     },
-  } as unknown as z.ZodObject;
+  } as unknown as Schema;
+}
+
+function sdkOutputMetadataSchema(schema: StandardSchemaWithJSON): StandardSchemaWithJSON {
+  return {
+    "~standard": {
+      version: 1,
+      vendor: "emseepea",
+      validate: (value: unknown) => ({ value }),
+      jsonSchema: {
+        input: () => standardJsonSchema(schema, "input"),
+        output: () => standardJsonSchema(schema, "output"),
+      },
+    },
+  };
 }
 
 const MCP_HEADER_NAME = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;

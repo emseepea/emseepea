@@ -142,7 +142,18 @@ test("the packed public packages pass fresh-install and getting-started checks",
         outputSchema: value,
         handler: ({ value }) => ({ data: { value } }),
       });
-      const app = createEmseepea({ name: "packed-check", version: "0.0.0", tools: [tool] });
+      const richTool = defineTool({
+        name: "rich-value",
+        access: "public",
+        description: "Return one protocol-native result.",
+        inputSchema: z.object({}),
+        handler: () => ({
+          content: [{ type: "text", text: "rich package works" }],
+          structuredContent: ["rich", true],
+          _meta: { "packed/check": "visible" },
+        }),
+      });
+      const app = createEmseepea({ name: "packed-check", version: "0.0.0", tools: [tool, richTool] });
       await registerRoutes(app, new URL("./routes/", import.meta.url));
       const running = await serveEmseepea(app, { port: 0 });
       try {
@@ -180,6 +191,36 @@ test("the packed public packages pass fresh-install and getting-started checks",
         if (body.result?.content?.[0]?.text !== JSON.stringify(body.result.structuredContent)) {
           throw new Error("packed package did not return the structured result as JSON text");
         }
+        const richResponse = await fetch(running.url, {
+          method: "POST",
+          headers: {
+            Accept: "application/json, text/event-stream",
+            "Content-Type": "application/json",
+            "MCP-Protocol-Version": "2026-07-28",
+            "Mcp-Method": "tools/call",
+            "Mcp-Name": "rich-value",
+          },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: "packed-rich-check",
+            method: "tools/call",
+            params: {
+              name: "rich-value",
+              arguments: {},
+              _meta: {
+                "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                "io.modelcontextprotocol/clientInfo": { name: "packed-check", version: "0.0.0" },
+                "io.modelcontextprotocol/clientCapabilities": {},
+              },
+            },
+          }),
+        });
+        const richBody = await richResponse.json();
+        if (!richResponse.ok || richBody.result?.content?.[0]?.text !== "rich package works"
+            || richBody.result?.structuredContent?.[0] !== "rich"
+            || richBody.result?._meta?.["packed/check"] !== "visible") {
+          throw new Error("packed package did not return the checked protocol-native result");
+        }
       } finally {
         await running.close();
       }
@@ -192,6 +233,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
     assert.equal(installed.name, "@emseepea/server");
     const installedReadme = await readFile(path.join(directory, "node_modules/@emseepea/server/README.md"), "utf8");
     assert.match(installedReadme, /intentionally does not support.*sampling\/createMessage/s);
+    assert.match(installedReadme, /Protocol-Native Tool Results/);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

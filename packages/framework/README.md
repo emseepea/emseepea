@@ -62,6 +62,43 @@ The handler returns structured data. Em See Pea validates it, sends it as MCP
 do not consume structured content. Add `text` only when a client genuinely
 needs a separate human-readable representation.
 
+## Protocol-Native Tool Results
+
+Existing `{ data, text? }` handlers still work. A handler may instead return a
+checked `ProtocolToolResult` when it needs protocol-native content, a deliberate
+domain error, or client-visible metadata:
+
+```ts
+import { defineTool, type ProtocolToolResult } from "@emseepea/server";
+import { z } from "zod";
+
+const previewPea = defineTool({
+  name: "preview-pea",
+  access: "public",
+  description: "Preview a pea variety.",
+  inputSchema: z.object({ name: z.string() }),
+  handler: ({ name }): ProtocolToolResult => ({
+    content: [{ type: "text", text: `Preview ready for ${name}` }],
+    structuredContent: [name, "ready"],
+    _meta: { "example/view": "preview" },
+  }),
+});
+```
+
+Without `outputSchema`, a tool may return content-only results, `isError`
+results, or any safely representable JSON value as `structuredContent`. With
+`outputSchema`, every successful protocol-native result must include matching
+`structuredContent`; error results may omit it.
+
+The checked result supports text, image, audio, resource-link, and
+embedded-resource content blocks. Result `_meta` is visible to the client, must
+not contain secrets or unauthorized data, and cannot set the reserved
+`io.modelcontextprotocol/serverInfo` field.
+
+Resource links and embedded resources do not grant access or authorization.
+Deliberate `isError` results reach the client, while thrown, malformed,
+cancelled, and expired operations retain the generic framework error.
+
 ## Discover Capability Modules at Startup
 
 Explicit registration still works. If you prefer one file per capability, put

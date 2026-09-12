@@ -33,8 +33,31 @@ const modernHeaders = {
   "Mcp-Name": "synthetic-read",
   "Mcp-Param-Id": "bench",
 };
+const richRequestBody = modernRequestBody.replaceAll("synthetic-read", "synthetic-rich-read");
+const richHeaders = {
+  ...modernHeaders,
+  "Mcp-Name": "synthetic-rich-read",
+};
+const convenienceApplicationBytes = Buffer.byteLength(JSON.stringify({ id: "bench", value: "synthetic" })) +
+  Buffer.byteLength("synthetic") + Buffer.byteLength(JSON.stringify({ id: "bench" }));
 const profiles = [
-  { name: "modern-2026-07-28", requestBody: modernRequestBody, headers: modernHeaders },
+  {
+    name: "modern-2026-07-28",
+    requestBody: modernRequestBody,
+    headers: modernHeaders,
+    applicationBytes: convenienceApplicationBytes,
+    note: "server process only; mapped synthetic adapter",
+  },
+  {
+    name: "modern-2026-07-28-protocol-native-result",
+    requestBody: richRequestBody,
+    headers: richHeaders,
+    applicationBytes: Buffer.byteLength(JSON.stringify([{ type: "text", text: "synthetic" }])) +
+      Buffer.byteLength(JSON.stringify(["bench", "synthetic"])) +
+      Buffer.byteLength(JSON.stringify({ "benchmark/kind": "protocol-native" })) +
+      Buffer.byteLength(JSON.stringify({ id: "bench" })),
+    note: "server process only; checked protocol-native result",
+  },
   {
     name: "legacy-2025-11-25",
     requestBody: JSON.stringify({
@@ -49,6 +72,8 @@ const profiles = [
       "Content-Type": "application/json",
       "MCP-Protocol-Version": "2025-11-25",
     },
+    applicationBytes: convenienceApplicationBytes,
+    note: "server process only; mapped synthetic adapter",
   },
 ];
 let nextMessageId = 0;
@@ -151,7 +176,7 @@ async function measureProfile(profile) {
   return {
     requestBytes: Buffer.byteLength(profile.requestBody),
     throughputRequestsPerSecond: summary(throughput),
-    frameworkProcessCpuMsPerRequest: { ...summary(cpuMs), note: "server process only; mapped synthetic adapter" },
+    frameworkProcessCpuMsPerRequest: { ...summary(cpuMs), note: profile.note },
     sampledTransientAllocationBytesPerRequest: summary(allocations),
     addedProtocolBytesPerRequest: summary(overheadBytes),
     invalidInputPostGcHeapBytes: invalidHeap,
@@ -188,9 +213,8 @@ async function measureAddedBytes(profile) {
   const requestHeaderBytes = Object.entries(profile.headers).reduce(
     (sum, [name, value]) => sum + Buffer.byteLength(`${name}: ${value}\r\n`), 0,
   );
-  const applicationBytes = Buffer.byteLength(JSON.stringify({ id: "bench", value: "synthetic" })) +
-    Buffer.byteLength("synthetic") + Buffer.byteLength(JSON.stringify({ id: "bench" }));
-  return requestHeaderBytes + Buffer.byteLength(profile.requestBody) + responseHeaderBytes + bodyBytes - applicationBytes;
+  return requestHeaderBytes + Buffer.byteLength(profile.requestBody) + responseHeaderBytes + bodyBytes -
+    profile.applicationBytes;
 }
 
 function ask(type) {
