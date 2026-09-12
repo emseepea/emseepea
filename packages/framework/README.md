@@ -452,9 +452,11 @@ or automatically logs them. Mapped and streaming tools do not request roots.
 Em See Pea intentionally does not support the deprecated MCP 2026-07-28
 `sampling/createMessage` feature. The framework exposes no Sampling request
 helper or response accessor, and rejects hand-built Sampling requests at the
-checked client-input boundary. Applications that need model generation should
-integrate directly with their chosen model provider and own the credentials,
-model selection, cost controls, approval, and data-disclosure policy.
+checked client-input boundary.
+
+Applications that need model generation should integrate directly with their
+chosen model provider and own the credentials, model selection, cost controls,
+approval, and data-disclosure policy.
 
 ### Carry Signed Request State
 

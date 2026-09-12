@@ -105,7 +105,7 @@ no new image, table, diagram, or code-block accessibility concerns.
 | `docs/decisions/README.md` | `f3ae4bfb3739d5cd983c49dcb8cadd4f1a9801f5afae5575fe70d55b625d57fa` |
 | `docs/protocol-coverage.md` | `a5cb654f2e28f8a6979e452b20c3d78bbdac1c3067431f9e7635ba262f8e57ee` |
 | `docs/reviews/current-release-readiness.md` | `8769573ac85926a8c486708a5defb4e99cc674a928d9eefdf7817869b0cf626e` |
-| `packages/framework/README.md` | `82c7542abde710c4d867a2c7c313c7562ac6a62eb68391f0695a01b88eea89c3` |
+| `packages/framework/README.md` | `81fff03e3345d4eb6df0e86063cee8ac18cd49521c5b0b6a2ac7ccdb13f8f514` |
 
 Scope: Changed public Markdown for the Sampling omission only. Runtime and
 registry verification remain separate evidence.
