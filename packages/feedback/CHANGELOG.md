@@ -1,5 +1,13 @@
 # @emseepea/feedback
 
+## 0.2.7
+
+### Patch Changes
+
+- [`e9bdc75`](https://github.com/emseepea/emseepea/commit/e9bdc756d9b54525fe33bc8a730bb1c49088a0ac) Thanks [@tompahoward](https://github.com/tompahoward)! - Make the testing server report readiness only after its shutdown handlers are active.
+- Updated dependencies [[`60e987a`](https://github.com/emseepea/emseepea/commit/60e987aec3796f248f29760e2a7eac0a4984564a)]:
+  - @emseepea/server@0.10.1
+
 ## 0.2.6
 
 ### Patch Changes
