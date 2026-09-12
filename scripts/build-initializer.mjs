@@ -88,6 +88,13 @@ async function addUiSupport(example, destination, generatedManifest) {
     "@emseepea/example-ui-shared",
     "../ui-shared.js",
   );
+  if (example === "react-ui-server") {
+    await replace(
+      join(destination, "src/capabilities/resource.pea-planting-plan-app.ts"),
+      "@emseepea/example-ui-shared",
+      "../ui-shared.js",
+    );
+  }
   await replace(
     join(destination, "test/accessibility.test.mjs"),
     "@emseepea/example-ui-shared/testing",
