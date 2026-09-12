@@ -39,6 +39,11 @@ references remain aligned. They add no separate feature in this increment.
 The React UI initializer now demonstrates the stable MCP Apps initialization
 sequence, standard `ui` metadata, and ChatGPT compatibility aliases.
 
+`@emseepea/testing@0.9.12` also lets `startEmseepea` and `startMcpServer`
+select any protocol revision supported by the server. They keep MCP
+`2026-07-28` as the default and can exercise the documented stateless legacy
+path, including MCP `2025-11-25`.
+
 ## Verified Evidence
 
 - The release workflow published `@emseepea/server@0.10.1`,
@@ -64,6 +69,17 @@ sequence, standard `ui` metadata, and ChatGPT compatibility aliases.
 - Lint, repository type checking, and the public-document review gate pass.
 - Independent architecture, accessibility, cognitive-accessibility, and release
   risk reviews found no blocking issue in the MCP Apps example.
+- Independent architecture review classified issue 37 as a defect and confirmed
+  that the testing change implements ratified ADR-0074 without a new decision or
+  job.
+- The focused `@emseepea/testing` suite passed 14 tests. The exact helper journey
+  proved the unchanged MCP `2026-07-28` default and MCP `2025-11-25` selection
+  through both public lifecycle helpers.
+- The repository build, typecheck, lint, and changed-public-content review
+  passed locally. The full local suite reached its Docker-backed PostgreSQL
+  service check, where an existing Docker Compose cleanup prevented startup.
+- Independent cognitive-accessibility review passed for the exact testing README
+  and changeset content.
 
 These results do not prove any release in this batch. Exact-commit checks,
 publication, registry readback, downloaded-package installation, and container
@@ -82,6 +98,8 @@ verification remain required where applicable.
 - Registry verification for `@emseepea/server@0.10.2` must confirm that the
   package exposes no Sampling helper, rejects hand-built Sampling requests, and
   includes the model-provider guidance.
+- A clean installation of the published package must prove MCP `2025-11-25`
+  selection and the unchanged MCP `2026-07-28` default through its public helper.
 
 ## Review Status, Not Release Status
 

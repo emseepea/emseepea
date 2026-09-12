@@ -42,11 +42,13 @@ review.
 ## Current release readiness
 
 Result: PASS. An independent cognitive-accessibility specialist reviewed the
-exact four-package release record. It is short, scannable, and clearly
-separates local evidence from required publication evidence.
+exact combined MCP Sampling, MCP Apps UI example, and
+`@emseepea/testing@0.9.12` release record. It is short, scannable, distinguishes
+the three changes, and clearly separates local evidence from required
+publication evidence.
 
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `f8bf3905ce22f7f7bfa821d00c45de4e9fd1eb1326f71d19b3cf5622ef1e43f6`
+  SHA-256: `c9aedd4ffc4d5223bfd810bc0d5965fa79c105407f121435745ea44df56169cf`
 
 Scope: Public release-readiness text and evidence boundaries only. Publication
 verification remains separate.
