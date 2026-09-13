@@ -32,6 +32,7 @@ export interface StartMcpServerOptions {
 }
 
 export interface RunningMcpServer {
+  close(): Promise<void>;
   connect(token?: string): Promise<Client>;
   output(): Readonly<{ stdout: string; stderr: string }>;
   url: URL;
@@ -68,19 +69,34 @@ export function insecureTestAuthentication(
   };
 }
 
-export async function startEmseepea(
+type StartEmseepeaOptions = Pick<StartMcpServerOptions, "clientName" | "protocolVersion" | "token">;
+type EmseepeaApp = Parameters<typeof serveEmseepea>[0];
+
+export function startEmseepea(
+  app: EmseepeaApp,
+  options?: StartEmseepeaOptions,
+): Promise<RunningMcpServer>;
+export function startEmseepea(
   test: TestCleanup,
-  app: Parameters<typeof serveEmseepea>[0],
-  options: Pick<StartMcpServerOptions, "clientName" | "protocolVersion" | "token"> = {},
+  app: EmseepeaApp,
+  options?: StartEmseepeaOptions,
+): Promise<RunningMcpServer>;
+export async function startEmseepea(
+  testOrApp: TestCleanup | EmseepeaApp,
+  appOrOptions: EmseepeaApp | StartEmseepeaOptions = {},
+  explicitOptions: StartEmseepeaOptions = {},
 ): Promise<RunningMcpServer> {
+  const usesTestHook = typeof (appOrOptions as { listen?: unknown }).listen === "function";
+  const test = usesTestHook ? testOrApp as TestCleanup : undefined;
+  const app = usesTestHook ? appOrOptions as EmseepeaApp : testOrApp as EmseepeaApp;
+  const options = usesTestHook ? explicitOptions : appOrOptions as StartEmseepeaOptions;
   const running = await serveEmseepea(app, { port: 0 });
   const clients: Client[] = [];
-  test.after(async () => {
-    await Promise.allSettled(clients.map((client) => client.close()));
-    await running.close();
-  });
+  const close = closeServer(clients, running.close);
+  test?.after(close);
   return {
     ...running,
+    close,
     output: () => Object.freeze({ stdout: "", stderr: "" }),
     connect: (token = options.token) => connect(
       running.url,
@@ -92,11 +108,24 @@ export async function startEmseepea(
   };
 }
 
-export async function startMcpServer(
+export function startMcpServer(
+  serverUrl: URL,
+  options?: StartMcpServerOptions,
+): Promise<RunningMcpServer>;
+export function startMcpServer(
   test: TestCleanup,
   serverUrl: URL,
-  options: StartMcpServerOptions = {},
+  options?: StartMcpServerOptions,
+): Promise<RunningMcpServer>;
+export async function startMcpServer(
+  testOrServerUrl: TestCleanup | URL,
+  serverUrlOrOptions: URL | StartMcpServerOptions = {},
+  explicitOptions: StartMcpServerOptions = {},
 ): Promise<RunningMcpServer> {
+  const usesTestHook = !(testOrServerUrl instanceof URL);
+  const test = usesTestHook ? testOrServerUrl as TestCleanup : undefined;
+  const serverUrl = usesTestHook ? serverUrlOrOptions as URL : testOrServerUrl;
+  const options = usesTestHook ? explicitOptions : serverUrlOrOptions as StartMcpServerOptions;
   const child = spawn(process.execPath, [fileURLToPath(serverUrl)], {
     env: {
       ...process.env,
@@ -140,12 +169,11 @@ export async function startMcpServer(
     throw error;
   });
 
-  test.after(async () => {
-    await Promise.allSettled(clients.map((client) => client.close()));
-    await stopProcess(child);
-  });
+  const close = closeServer(clients, () => stopProcess(child));
+  test?.after(close);
 
   return {
+    close,
     url,
     output: () => Object.freeze({ stdout: output, stderr: errors }),
     connect: (token = options.token) => connect(
@@ -171,12 +199,25 @@ async function connect(
       ? { versionNegotiation: { mode: { pin: protocolVersion } } }
       : { supportedProtocolVersions: [protocolVersion], versionNegotiation: { mode: "legacy" } },
   );
-  await client.connect(new StreamableHTTPClientTransport(
-    url,
-    token ? { authProvider: { token: async () => token } } : undefined,
-  ));
   clients.push(client);
-  return client;
+  try {
+    await client.connect(new StreamableHTTPClientTransport(
+      url,
+      token ? { authProvider: { token: async () => token } } : undefined,
+    ));
+    return client;
+  } catch (error) {
+    await client.close().catch(() => undefined);
+    throw error;
+  }
+}
+
+function closeServer(clients: Client[], stop: () => Promise<void>): () => Promise<void> {
+  let closing: Promise<void> | undefined;
+  return () => closing ??= (async () => {
+    await Promise.allSettled(clients.map((client) => client.close()));
+    await stop();
+  })();
 }
 
 async function stopProcess(child: ReturnType<typeof spawn>): Promise<void> {

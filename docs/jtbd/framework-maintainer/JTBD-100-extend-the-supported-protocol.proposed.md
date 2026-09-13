@@ -3,7 +3,8 @@ status: proposed
 job-id: extend-the-supported-protocol
 persona: framework-maintainer
 date-created: 2026-08-29
-human-oversight: unconfirmed
+human-oversight: confirmed
+oversight-date: 2026-09-13
 screens:
   - packages/framework/
   - tests/black-box/

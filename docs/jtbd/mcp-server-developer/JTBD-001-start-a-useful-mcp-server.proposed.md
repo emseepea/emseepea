@@ -3,7 +3,8 @@ status: proposed
 job-id: start-a-useful-mcp-server
 persona: mcp-server-developer
 date-created: 2026-08-29
-human-oversight: unconfirmed
+human-oversight: confirmed
+oversight-date: 2026-09-13
 screens:
   - README.md
   - docs/guides/getting-started.md

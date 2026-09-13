@@ -75,6 +75,22 @@ const running = await startEmseepea(t, await createApp({
 const client = await running.connect();
 ```
 
+The test context is optional. Use explicit cleanup with Vitest, Jest, another
+runner, or a plain script:
+
+```js
+const running = await startEmseepea(await createApp());
+try {
+  const client = await running.connect();
+  // assertions
+} finally {
+  await running.close();
+}
+```
+
+Passing a test context with an `after` hook, as in the first example, registers
+that same idempotent `close()` operation automatically.
+
 Set `protocolVersion` on `startEmseepea` or `startMcpServer` to test one of the
 server's documented protocol revisions. Omitting it keeps the `2026-07-28`
 default; for example, `{ protocolVersion: "2025-11-25" }` exercises the legacy

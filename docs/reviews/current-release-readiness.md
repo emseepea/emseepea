@@ -2,86 +2,65 @@
 
 Date: 2026-09-13
 
-Release verification is not complete. This cumulative release includes the
-pending MCP Apps host simulator for `@emseepea/testing`, the generated
-initializer manifest releases needed to carry that updated test helper, plus
-the issue 85 React theme helper and React UI initializer update.
+Release verification is not complete for the runner-neutral server cleanup.
+That change is planned for `@emseepea/testing@0.11.0`, following the separate
+cumulative release that published the MCP Apps host simulator and React theme
+helper.
 
 ## Planned Release Batch
 
-- `@emseepea/react@0.2.0`
-- `@emseepea/create-react-ui-server@0.0.28`
-- `@emseepea/testing@0.10.0`
-- `@emseepea/create-tool-server@0.0.30`
-- `@emseepea/create-api-backed-server@0.0.28`
-- `@emseepea/create-openapi-backed-server@0.0.10`
-- `@emseepea/create-resources-and-prompts-server@0.0.27`
-- `@emseepea/create-progress-streaming-server@0.0.28`
-- `@emseepea/create-html-ui-server@0.0.29`
-- `@emseepea/create-multi-instance-postgres-server@0.0.18`
-- `@emseepea/create-database-schema-server@0.0.15`
-- `@emseepea/create-mongodb-backed-server@0.0.15`
-- `@emseepea/create-soap-backed-server@0.0.15`
+- `@emseepea/testing@0.11.0`
 
-## Change for Users
+## Change for MCP Developers
 
-MCP Apps authors get the pending deterministic, framework-neutral host simulator
-in `@emseepea/testing`, and generated initializer manifests carry the matching
-test-helper dependency. React MCP Apps can also call
-`useMcpTheme(app.hostContext.theme)` to get the host theme when present, or a
-reactive browser colour-scheme fallback when running outside a host. The hook
-only returns `"light"` or `"dark"`; it does not mutate the document or own
-application styling. The React UI initializer now uses the hook and applies the
-returned value to its own document dataset in an effect.
+MCP developers can start an Em See Pea server or child-process server without a
+test context and close it explicitly in Vitest, Jest, another runner, or a plain
+script. Existing `{ after }` cleanup remains available and registers the same
+public `close()` operation automatically.
 
 ## Evidence So Far
 
-- ADR-0086 was ratified. Architecture, JTBD, accessibility,
-  cognitive-accessibility, and Markdown accessibility reviews passed for the
-  source increment and public guidance.
-- The pending `@emseepea/testing@0.10.0` readiness evidence remains from the
-  existing `calm-apps-simulate` changeset and is carried in this cumulative
-  release plan.
-- The generated initializer manifest releases are included because their
-  published manifests will carry the updated `@emseepea/testing@0.10.0`
-  development dependency.
-- `npm test -w @emseepea/react` passed for `@emseepea/react@0.2.0`: 6 tests,
-  including host precedence, server fallback, system preference change,
-  listener cleanup, and legacy media-query listener cleanup.
-- `npm test -w @emseepea/create-react-ui-server` passed: 5 tests, including
-  existing browser accessibility checks and the MCP Apps card theme fallback,
-  preference-change, and host-override path.
-- `node --test --test-name-pattern="the packed React renderer installs"
-  tests/docs/packed-getting-started.test.mjs` passed.
-- `npm run decisions:check`, `npm run lint`, and `npm run typecheck` passed.
-- `GITHUB_BASE_REF=main node --test
-  tests/docs/published-content-review.test.mjs` passed.
+- Confirmed JTBD-001 and JTBD-100 align explicit lifetime ownership with tests
+  through the real public boundary. No new ADR or job is needed.
+- Independent architecture, JTBD, cognitive-accessibility, and source reviews
+  passed for the server-cleanup increment and public guidance.
+- The complete `@emseepea/testing` package suite passed locally: 20 tests,
+  including the host simulator, explicit and automatic cleanup, repeated and
+  concurrent close, port refusal after close, and failure-path cleanup.
+- The package build, typecheck, Oxlint, package dry-run, public-content review,
+  focused protocol suite, and staged diff checks passed locally.
 - Pipeline risk is 5 out of 25 for commit, push, and release.
 
-These are source and local checks. They do not prove exact-commit CI,
-publication, registry state, provenance, downloaded-package behavior, or an
-exact journey in ChatGPT, Claude, or another adopter host.
+These are source and local checks. They do not prove exact-commit continuous
+integration, publication, registry state, provenance, downloaded-package
+behavior, or an exact journey in ChatGPT, Claude, or another adopter host.
+
+## Prior Cumulative Release Boundary
+
+The preceding cumulative release published `@emseepea/testing@0.10.0`,
+`@emseepea/react@0.2.0`, `@emseepea/create-react-ui-server@0.0.28`, and ten
+initializer patch releases. Quality runs `34745003015` and `34745474030`
+passed, and release run `34745860395` completed publication, registry checks,
+and downloaded-package verification for merge `dcd1829b`. That evidence covers
+the host simulator and React theme helper. It does not cover this pending
+runner-neutral cleanup.
 
 ## Required Publication Evidence
 
-- The Quality workflow must pass on the exact source commit.
-- The Changesets release pull request must contain only the planned generated
-  version, dependency, and changelog changes for `@emseepea/react@0.2.0`,
-  `@emseepea/create-react-ui-server@0.0.28`, the pending
-  `@emseepea/testing@0.10.0` release, and the generated initializer manifest
-  releases listed above.
+- The Quality workflow must pass on the exact cleanup source commit.
+- The Changesets release pull request must contain only the generated version
+  and changelog changes for `@emseepea/testing@0.11.0`.
 - The Quality and Release workflows must pass on the exact version commit.
-- Registry readback must confirm both versions and the `latest` tag, integrity,
+- Registry readback must confirm version `0.11.0`, the `latest` tag, integrity,
   signature, provenance, and exact release-commit binding.
-- The published React package must expose `useMcpTheme` from its public root
-  entry point and pass a downloaded clean-install render journey.
-- The published React UI initializer must install with the updated React helper
-  dependency and pass its generated-project checks.
+- The downloaded published package must expose the public server starters and
+  return handles whose `close()` operation passes clean-install lifecycle and
+  failure-path cleanup journeys.
 
 ## Review Status, Not Release Status
 
 This document records readiness only. It makes no `PUBLISHED`, registry-
-verified, or adopter `PROD_VERIFIED` claim.
+verified, exact-host, or adopter `PROD_VERIFIED` claim for the cleanup change.
 
 - Result: PASS
 - Pipeline risk review: commit, push, and release are within the approved risk

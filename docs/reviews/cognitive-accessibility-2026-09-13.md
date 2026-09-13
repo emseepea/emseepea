@@ -102,3 +102,31 @@ No blocking cognitive-accessibility or Markdown accessibility finding remains.
 |---|---|
 | `.changeset/green-initializers-testing.md` | `3bafbc0e7b23dd06b2affec0cab24d7ee1b8d7de1f46ab321ced6a44f425b03b` |
 | `docs/reviews/current-release-readiness.md` | `1d2496106ff5f78e83bccb68e1e928e840bde177a2644624c259aa5dbb1d3b02` |
+
+## Runner-Neutral Server Cleanup Guidance
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+integrated package guide, release note, release-readiness record, and the two
+ratification-only job updates. The guide gives MCP developers one explicit
+cleanup action and keeps automatic cleanup visible. The readiness record keeps
+local tests, continuous integration, publication, registry verification,
+downloaded-package behavior, exact-host qualification, and adopter production
+verification separate. No blocking finding remains in scope.
+
+The reviewed source files and matching SHA-256 digests are:
+
+- `.changeset/clean-testing-cleanup.md`
+  SHA-256: `cb5feb2ef11f013c0527a1aa75bb098ba135690294f31ee2622c72b0b3e93535`
+- `docs/jtbd/framework-maintainer/JTBD-100-extend-the-supported-protocol.proposed.md`
+  SHA-256: `7c31ce24e0e3890e486cc82bdb297e25715d598b4f1154d8efadc849e09a6b19`
+- `docs/jtbd/mcp-server-developer/JTBD-001-start-a-useful-mcp-server.proposed.md`
+  SHA-256: `0abcfecb9a9dab24e1b57d98198decb5b386e1352cb3bdd18ee1ac24cc0f3f71`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `cc2b341657e2884fa0efb200f2149c3bbebee36b9739c816ddd63091b74f40a9`
+- `packages/testing/README.md`
+  SHA-256: `ddbe80bbb5e3b10d3dab3243d0d3a5392e1216f35f63d711d28d7f110bd70a53`
+
+Scope: Source Markdown clarity and cognitive accessibility only. This review
+does not establish test results, continuous-integration status, npm
+publication, registry verification, downloaded-package behavior, exact-host
+qualification, or adopter production verification.
