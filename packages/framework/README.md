@@ -31,7 +31,7 @@ when the adopter already uses React. Pass a unique `idPrefix` to
 
 For a self-contained MCP App resource that does not already use either
 framework, choose `@emseepea/svelte`. In this equivalent production comparison,
-Svelte was 27.9% smaller with gzip and 27.1% smaller with Brotli, exceeding the
+Svelte was 27.9% smaller with gzip and 27.2% smaller with Brotli, exceeding the
 20% threshold for both formats. If the application already uses React, choose
 `@emseepea/react` to avoid adding another framework.
 
@@ -41,9 +41,9 @@ comparison. It uses esbuild `0.28.2`, React and React DOM `19.2.8`, and Svelte
 
 | Renderer | Raw | gzip level 9 | Brotli quality 11 |
 |---|---:|---:|---:|
-| React | 534,121 bytes | 129,181 bytes | 108,927 bytes |
+| React | 534,121 bytes | 129,181 bytes | 109,052 bytes |
 | Svelte | 406,619 bytes | 93,075 bytes | 79,414 bytes |
-| Reduction | 23.9% | 27.9% | 27.1% |
+| Reduction | 23.9% | 27.9% | 27.2% |
 
 These measurements apply only to this comparison fixture and these dependency
 versions. They are not a general claim about framework bundle sizes.

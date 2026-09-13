@@ -73,10 +73,10 @@ qualification, or adopter production verification.
 
 Result: PASS. Independent cognitive-accessibility and Markdown accessibility
 review covered the exact changed public Markdown for the host-aware React theme
-helper and ADR-0086 ratification. The changes use plain headings, short
-paragraphs, descriptive API wording, and no new images, diagrams, or ambiguous
-links. The changeset summary is brief and does not overclaim production
-adopter verification.
+helper, ADR-0086 ratification, release-readiness evidence, and measured bundle
+guidance. The changes use plain headings, short paragraphs, descriptive API
+wording, and no new images, diagrams, or ambiguous links. The changeset summary
+is brief and does not overclaim production adopter verification.
 
 | Reviewed file | SHA-256 of reviewed content |
 |---|---|
@@ -85,4 +85,5 @@ adopter verification.
 | `docs/decisions/0086-application-owned-styling-with-public-host-aware-theme-resolution.proposed.md` | `dfc0c0a2e49ad8a871aed895a09ce2cd7d6325603d43ae4c48caeb5872f0960b` |
 | `docs/decisions/README.md` | `545a65b8a887647c21aef47785b70c7f52c1fae3ab065bc72498458bda16de81` |
 | `docs/reviews/current-release-readiness.md` | `40f99ef0635aae885db06b4f2bd867c6fe2bfce0e96d6794641e5991c53fda83` |
+| `packages/framework/README.md` | `4433b0d6e02eb6d1fc9a8cf4c625896f8491d33dbccf3d9800624ded65729c99` |
 | `packages/react/README.md` | `38b5364d507f31effb651c97265ee090aa3053d508a94e88c081764e80a17fbe` |
