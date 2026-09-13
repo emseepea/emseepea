@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 82 decisions: 46 current and 36 historical.
+This project has 83 decisions: 47 current and 36 historical.
 
 ## Quick Index
 
@@ -57,6 +57,7 @@ This project has 82 decisions: 46 current and 36 historical.
 - [ADR-0081: Application-Owned Model Provider Integration Instead of Deprecated MCP Sampling](0081-application-owned-model-provider-integration-instead-of-deprecated-mcp-sampling.proposed.md): Proposed; human review confirmed.
 - [ADR-0082: Checked Protocol-Native Tool Results](0082-checked-protocol-native-tool-results.proposed.md): Proposed; human review confirmed.
 - [ADR-0084: Parallel React and Svelte Result Cards with Measured Bundle Guidance](0084-parallel-react-and-svelte-result-cards-with-measured-bundle-guidance.proposed.md): Proposed; human review confirmed.
+- [ADR-0085: Checked Multi-Content Resource Read Results](0085-checked-multi-content-resource-read-results.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -1834,3 +1835,26 @@ Chosen option: **"Parallel React and Svelte result cards with measured guidance"
 - React and Svelte remain absent from the server package's required dependency closure.
 - Both public packages pass pack, fresh-install, provenance, and registry verification.
 - The cited React adopter replaces its generic result presentation and host lifecycle code while retaining its domain mapping, actions, and styles.
+
+### [ADR-0085: Checked Multi-Content Resource Read Results](0085-checked-multi-content-resource-read-results.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### ADR-0085 Decision
+
+Chosen option: **"Checked multi-content resource reads"**, because it admits the standard result shape while preserving the requested resource as the sole framework authority boundary.
+
+#### ADR-0085 Checks
+
+- Static-resource and resource-template handlers can each return multiple text and blob contents with URIs different from the requested URI.
+- The official MCP client pinned to `2026-07-28` receives every content intact.
+- Protected reads authenticate and authorize the requested capability before the handler runs.
+- A returned URI gains no listing entry or direct-read authority.
+- SDK-invalid and oversized results retain the generic safe resource error.
+- Cancellation, deadlines, cache instructions, discovery suppression, and existing unknown-resource behavior remain unchanged.
+- Legacy clients preserve their documented resource-read behavior.
+- Source, type, black-box, packed-package, and benchmark checks pass from clean checkouts, with the measured benchmark inside ADR-0014's budget.
+- A released-package journey exercises both static and template multi-content reads, separately from publication and registry-integrity evidence.
+- Registry readback verifies the released package version, integrity, signatures, provenance, and public types.
+- Protocol coverage and package guidance document the authority and cache boundaries.
