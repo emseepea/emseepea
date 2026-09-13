@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.10.0
+
+### Minor Changes
+
+- [`aefcb59`](https://github.com/emseepea/emseepea/commit/aefcb5957d8460735a97811a12fe814dcf4ff69e) Thanks [@tompahoward](https://github.com/tompahoward)! - Add a deterministic, framework-neutral MCP Apps host simulator for testing initialization, tool results, host context, messages, cancellation, teardown, and untrusted input through the existing controller boundary.
+
 ## 0.9.14
 
 ### Patch Changes

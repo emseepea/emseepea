@@ -1,5 +1,11 @@
 # @emseepea/create-soap-backed-server
 
+## 0.0.15
+
+### Patch Changes
+
+- [`681095e`](https://github.com/emseepea/emseepea/commit/681095ee11d5bb4343d7b0c1230c63242abaefac) Thanks [@tompahoward](https://github.com/tompahoward)! - Release initializer manifests with the updated MCP Apps host simulator testing dependency.
+
 ## 0.0.14
 
 ### Patch Changes
