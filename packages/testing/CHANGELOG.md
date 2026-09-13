@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.11.0
+
+### Minor Changes
+
+- [`f6dd0b4`](https://github.com/emseepea/emseepea/commit/f6dd0b453bca199a8b9fc0513ff5bd7bf73e23b0) Thanks [@tompahoward](https://github.com/tompahoward)! - Add public idempotent cleanup to running test servers and allow both server starters to run without a test-runner context, while keeping automatic after-hook cleanup.
+
 ## 0.10.0
 
 ### Minor Changes
