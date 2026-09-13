@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 83 decisions: 47 current and 36 historical.
+This project has 84 decisions: 47 current and 37 historical.
 
 ## Quick Index
 
@@ -15,7 +15,6 @@ This project has 83 decisions: 47 current and 36 historical.
 - [ADR-0007: Deterministic Execution Kernel and Checked Boundaries](0007-deterministic-execution-kernel-and-checked-boundaries.proposed.md): Proposed; human review confirmed.
 - [ADR-0009: Capability-Scoped Reliability, Effects, and State](0009-capability-scoped-reliability-effects-and-state.proposed.md): Proposed; human review confirmed.
 - [ADR-0010: POST-Scoped Streaming, Progress, and Subscriptions](0010-post-scoped-streaming-progress-and-subscriptions.proposed.md): Proposed; human review confirmed.
-- [ADR-0011: Framework-Neutral Accessible Elicitation and Approval UI](0011-framework-neutral-accessible-elicitation-and-approval-ui.proposed.md): Proposed; human review confirmed.
 - [ADR-0014: Performance Budget for the Initial JSON HTTP Boundary](0014-performance-budget-initial-json-http-boundary.proposed.md): Proposed; human review confirmed.
 - [ADR-0023: Mandatory Cognitive-Accessibility Review for Published Content](0023-mandatory-cognitive-accessibility-review-for-published-content.proposed.md): Proposed; human review confirmed.
 - [ADR-0025: Astro Starlight Documentation Generator](0025-static-documentation-website-with-astro-starlight.proposed.md): Proposed; human review confirmed.
@@ -58,6 +57,7 @@ This project has 83 decisions: 47 current and 36 historical.
 - [ADR-0082: Checked Protocol-Native Tool Results](0082-checked-protocol-native-tool-results.proposed.md): Proposed; human review confirmed.
 - [ADR-0084: Parallel React and Svelte Result Cards with Measured Bundle Guidance](0084-parallel-react-and-svelte-result-cards-with-measured-bundle-guidance.proposed.md): Proposed; human review confirmed.
 - [ADR-0085: Checked Multi-Content Resource Read Results](0085-checked-multi-content-resource-read-results.proposed.md): Proposed; human review confirmed.
+- [ADR-0086: Application-Owned Styling with Public Host-Aware Theme Resolution](0086-application-owned-styling-with-public-host-aware-theme-resolution.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -67,6 +67,7 @@ This project has 83 decisions: 47 current and 36 historical.
 - [ADR-0004: Fastify-First TypeScript Framework Foundation](0004-fastify-first-typescript-foundation.superseded.md): Superseded; human review confirmed.
 - [ADR-0005: Active Streamable HTTP Scope and Adaptive Delivery](0005-active-streamable-http-scope-and-adaptive-delivery.superseded.md): Superseded; human review confirmed.
 - [ADR-0008: Public and OAuth Protected Resource Security](0008-public-and-oauth-protected-resource-security.superseded.md): Superseded; human review confirmed.
+- [ADR-0011: Framework-Neutral Accessible Elicitation and Approval UI](0011-framework-neutral-accessible-elicitation-and-approval-ui.superseded.md): Superseded; human review confirmed.
 - [ADR-0012: Typed Operations and OpenTelemetry Boundary](0012-typed-operations-and-opentelemetry-boundary.superseded.md): Superseded; human review confirmed.
 - [ADR-0015: Ordinary Evidence and Exact Release Claims](0015-ordinary-evidence-and-exact-release-claims.superseded.md): Superseded; human review confirmed.
 - [ADR-0016: Em See Pea Product npm Scope with Server-Named Runtime](0016-em-see-pea-product-npm-scope-and-server-package.superseded.md): Superseded; human review confirmed.
@@ -284,10 +285,11 @@ Chosen option: **"POST-scoped SSE with bounded state"**.
 - Progress cannot appear after a terminal result or error.
 - Local subscriptions are never described as cross-instance or replayable.
 
-### [ADR-0011: Framework-Neutral Accessible Elicitation and Approval UI](0011-framework-neutral-accessible-elicitation-and-approval-ui.proposed.md)
+### [ADR-0011: Framework-Neutral Accessible Elicitation and Approval UI](0011-framework-neutral-accessible-elicitation-and-approval-ui.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0086: Application-Owned Styling with Public Host-Aware Theme Resolution](0086-application-owned-styling-with-public-host-aware-theme-resolution.proposed.md)
 
 #### ADR-0011 Decision
 
@@ -1858,3 +1860,23 @@ Chosen option: **"Checked multi-content resource reads"**, because Model Context
 - A released-package journey exercises both static and template multi-content reads, separately from publication and registry-integrity evidence.
 - Registry readback verifies the released package version, integrity, signatures, provenance, and public types.
 - Protocol coverage and package guidance document the authority and cache boundaries.
+
+### [ADR-0086: Application-Owned Styling with Public Host-Aware Theme Resolution](0086-application-owned-styling-with-public-host-aware-theme-resolution.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0011: Framework-Neutral Accessible Elicitation and Approval UI](0011-framework-neutral-accessible-elicitation-and-approval-ui.superseded.md)
+
+#### ADR-0086 Decision
+
+Chosen option: **"Public `useMcpTheme` resolver hook"**, because it centralises the repeated reactive and server-rendering-safe browser boundary while keeping the existing MCP Apps connection and application styling boundaries separate.
+
+#### ADR-0086 Checks
+
+- Package tests prove the host theme wins over either system preference.
+- Browser tests prove an absent host theme follows system preference changes.
+- Tests prove preference listeners are removed on cleanup.
+- Server rendering completes without a `window` global and returns `"light"`.
+- Documentation shows an application applying the returned value without prescribing a styling system.
+- The hook and its dependencies remain confined to `@emseepea/react`.
+- Existing MCP Apps lifecycle, renderer, accessibility, pack, and fresh-install checks pass.

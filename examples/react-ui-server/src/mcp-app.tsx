@@ -1,4 +1,4 @@
-import { ResultCard, useMcpApp } from "@emseepea/react";
+import { ResultCard, useMcpApp, useMcpTheme } from "@emseepea/react";
 import { defineResultView, type ResultView as ResultViewModel } from "@emseepea/server/ui";
 import { useEffect, useState } from "react";
 import { hydrateRoot } from "react-dom/client";
@@ -16,11 +16,12 @@ interface PlantingPlanResult {
 
 export function ResultApp() {
   const app = useMcpApp({ name: "Pea planting plan result", version: "1.0.0", parseResult: parsePlantingPlan });
+  const theme = useMcpTheme(app.hostContext.theme);
   const [action, setAction] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   useEffect(() => {
-    if (app.hostContext.theme) document.documentElement.dataset.emseepeaTheme = app.hostContext.theme;
-  }, [app.hostContext.theme]);
+    document.documentElement.dataset.emseepeaTheme = theme;
+  }, [theme]);
 
   const view = resultView(app, action);
   const act = async () => {

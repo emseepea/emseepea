@@ -83,7 +83,7 @@ test("the MCP Apps card completes initialization before rendering a result", asy
           protocolVersion: "2026-01-26",
           hostInfo: { name: "test-host", version: "1.0.0" },
           hostCapabilities: {},
-          hostContext: { theme: "light", displayMode: "inline" },
+          hostContext: { displayMode: "inline" },
         } }, "*");
       }
       if (event.data?.method === "ui/notifications/initialized") {
@@ -104,6 +104,7 @@ test("the MCP Apps card completes initialization before rendering a result", asy
     });
   });
   const frame = page.frames()[1];
+  await page.emulateMedia({ colorScheme: "dark" });
   await frame.setContent(content.text);
   const status = frame.locator("[data-emseepea-part='status']");
   await status.filter({ hasText: "1 sample pea variety matches." }).waitFor();
@@ -113,6 +114,9 @@ test("the MCP Apps card completes initialization before rendering a result", asy
   assert.match(await frame.locator("details li").textContent(), /Highland Snap, climbing snap pea/);
   assert.equal(await frame.locator("button").getAttribute("type"), "button");
   assert.equal(await frame.locator("button").getAttribute("aria-label"), "Ask for growing tips for these varieties");
+  assert.equal(await frame.locator("html").getAttribute("data-emseepea-theme"), "dark");
+  await page.emulateMedia({ colorScheme: "light" });
+  await frame.locator("html[data-emseepea-theme='light']").waitFor();
   await frame.addScriptTag({ path: require.resolve("axe-core/axe.min.js") });
   const accessibility = await frame.evaluate(() => window.axe.run(document));
   assert.deepEqual(accessibility.violations.map(({ id }) => id), []);

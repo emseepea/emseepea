@@ -1,5 +1,6 @@
 import { createMcpAppController, parseElicitationView, parseResultView } from "@emseepea/server/ui";
 import { useEffect, useId, useMemo, useRef, useSyncExternalStore, type ElementType, type FormEvent } from "react";
+import { subscribeSystemTheme, systemTheme, type McpTheme } from "./theme.js";
 import type {
   ElicitationField,
   ElicitationHeadingLevel,
@@ -249,6 +250,12 @@ export interface McpAppConnection<Result> extends McpAppState<Result> {
 }
 
 export type { McpAppHostContext };
+export type { McpTheme };
+
+export function useMcpTheme(hostTheme?: McpTheme): McpTheme {
+  const browserTheme = useSyncExternalStore<McpTheme>(subscribeSystemTheme, systemTheme, () => "light");
+  return hostTheme === "light" || hostTheme === "dark" ? hostTheme : browserTheme;
+}
 
 export function useMcpApp<Result>(options: McpAppOptions<Result>): McpAppConnection<Result> {
   const parser = useRef(options.parseResult);
