@@ -41,3 +41,30 @@ The reviewed source files and matching SHA-256 digests are:
 Scope: Source Markdown clarity and cognitive accessibility only. This review
 does not establish rendered mobile layout, publication, or adopter production
 verification.
+
+## MCP Apps Host Simulator Guidance
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+package guide, release note, release-readiness record, and existing job's screen
+mapping. The guide leads with the adopter task, presents one ordered lifecycle
+example, and states the boundary between deterministic simulation and exact-host
+qualification. The release-readiness record separates local checks from CI,
+publication, registry, downloaded-package, and adopter evidence. The release
+note makes one bounded capability claim. The mapping changes no job substance.
+No blocking cognitive-accessibility finding remains in scope.
+
+The reviewed source files and matching SHA-256 digests are:
+
+- `.changeset/calm-apps-simulate.md`
+  SHA-256: `aca1dfdd21af245719b8a8e4f101a993c9aedb9c659beaf7478c5b21e7c9d29d`
+- `docs/jtbd/mcp-server-developer/JTBD-002-add-optional-capabilities.proposed.md`
+  SHA-256: `ec0fa7b8277a06fa7652c350cc76b60cf2e7e4b46f794bf2c39b0c214a6bcca4`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `c37b7d5beb21a5c08f030c5710e38a584959b269bbf2df55a93f6bfa4cb4a204`
+- `packages/testing/README.md`
+  SHA-256: `4ff355ff2ca021e8ad4266ff7d01ed09cfa8131c30da638baa08ea7c90895569`
+
+Scope: Source Markdown clarity and cognitive accessibility only. This review
+does not establish test results, continuous-integration status, npm
+publication, registry verification, downloaded-package behavior, exact-host
+qualification, or adopter production verification.

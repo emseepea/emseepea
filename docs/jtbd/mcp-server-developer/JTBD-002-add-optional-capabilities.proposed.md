@@ -7,6 +7,7 @@ human-oversight: confirmed
 oversight-date: 2026-09-12
 screens:
   - examples/
+  - packages/testing/
 ---
 
 # JTBD-002: Add Optional Capabilities

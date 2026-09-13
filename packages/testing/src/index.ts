@@ -4,6 +4,13 @@ import { fileURLToPath } from "node:url";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { serveEmseepea, type AuthenticationOptions } from "@emseepea/server";
 
+export {
+  createMcpAppHostSimulator,
+  type McpAppHostSimulator,
+  type McpAppHostSimulatorOptions,
+  type McpAppMessageRequest,
+} from "./mcp-app-host.js";
+
 export type SupportedProtocolVersion =
   | "2026-07-28"
   | "2025-11-25"

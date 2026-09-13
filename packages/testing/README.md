@@ -93,6 +93,62 @@ For ordinary integration tests, `startMcpServer(...).output()` returns the
 server's captured `stdout` and `stderr`. Use it to prove that logs do not expose
 credentials or provider details.
 
+## Simulate an MCP Apps Host
+
+Use `createMcpAppHostSimulator` to test an app controller without creating a
+fake parent window or JSON-RPC dispatcher. The simulator has no React, Svelte,
+or test-runner dependency.
+
+```js
+import assert from "node:assert/strict";
+import { createMcpAppController } from "@emseepea/server/ui";
+import { createMcpAppHostSimulator } from "@emseepea/testing";
+
+const host = createMcpAppHostSimulator({
+  hostContext: { theme: "light", displayMode: "inline" },
+});
+const controller = createMcpAppController({
+  name: "Order result",
+  version: "1.0.0",
+  parseResult: parseOrderResult,
+});
+
+controller.connect(host.channel);
+host.deliverToolResult({ orderId: "example-123", status: "ready" });
+host.changeHostContext({ theme: "dark" });
+
+const sent = controller.sendMessage("Show the delivery details.");
+host.messageRequests()[0].succeed();
+await sent;
+
+const rejected = controller.sendMessage("Change the delivery address.");
+host.messageRequests()[1].reject("The action needs confirmation.");
+await assert.rejects(rejected, /host rejected/i);
+
+host.cancel("user cancelled");
+await host.teardown("test complete");
+
+function parseOrderResult(value) {
+  if (!value || typeof value !== "object" ||
+      typeof value.orderId !== "string" || value.status !== "ready") {
+    throw new TypeError("Invalid order result");
+  }
+  return { orderId: value.orderId, status: value.status };
+}
+```
+
+Initialization is automatic. `initialized()` shows whether the controller sent
+`ui/notifications/initialized`. The app's `parseResult` function remains the
+validation boundary for delivered structured content. Use `dispatch()` for a
+malformed trusted-parent message and `dispatchUntrusted()` for a message from a
+different source when testing that the controller ignores unsafe input.
+
+This deterministic simulation proves the lifecycle behavior that the test
+drives, including initialization, result validation, context changes, message
+responses, cancellation, and teardown. It does not prove behavior in ChatGPT,
+Claude, or another exact host. Qualify each supported host separately through
+its real public journey before making a host-specific production claim.
+
 ## Diagnose Failures
 
 The evidence file contains readable test prompts, assistant responses,
