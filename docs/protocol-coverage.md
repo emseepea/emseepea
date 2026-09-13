@@ -100,7 +100,18 @@ Lifecycle-hidden resource-template listing is covered by the
 
 **Status: Partial.** Reads registered public or protected resources and checks their result.
 A resource may ask a capable client for more input before returning its final
-result. Resource update subscriptions are covered separately below. See the
+result. A resource read may return several text or binary content items. Each
+returned URI identifies one item. It does not need to match the URI that the
+client requested. Em See Pea still authorizes the resource that the client
+requested. Any cache instructions apply to the complete response.
+
+Returning an item URI does not, by itself, register a resource or let a client
+read that URI through Em See Pea. A client may still read it if the URI
+separately identifies an already registered static resource or matches an
+already registered resource template, and the client satisfies that
+capability's access policy.
+
+Resource update subscriptions are covered separately below. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs) and
 [client-input tests](../tests/black-box/input-required.test.mjs). Reads of known
 lifecycle-hidden resources and templates, followed by removal, are covered by

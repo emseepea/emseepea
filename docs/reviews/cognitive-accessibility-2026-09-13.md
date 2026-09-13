@@ -15,7 +15,7 @@ The following table lists each reviewed file and its SHA-256 hash.
 | Reviewed file | SHA-256 |
 | --- | --- |
 | `docs/decisions/0085-checked-multi-content-resource-read-results.proposed.md` | `5bb9190179c1b8e42396b53b41c0d6c9ea871d0f42c679a348f611b11a5ca093` |
-| `docs/decisions/README.md` | `3c0b02651d08a9600d5d7c338d7cc5255872b7232435f84bae7752f2f58472b7` |
+| `docs/decisions/README.md` | `545a65b8a887647c21aef47785b70c7f52c1fae3ab065bc72498458bda16de81` |
 
 Scope: ADR-0085 and its generated index and detail entries only. This review is
 not ratification, implementation evidence, release evidence, or rendered-site
@@ -42,7 +42,7 @@ Scope: Source Markdown clarity and cognitive accessibility only. This review
 does not establish rendered mobile layout, publication, or adopter production
 verification.
 
-## MCP Apps Host Simulator Guidance
+## MCP Apps Host Simulator Guidance from commit aefcb595
 
 Result: PASS. An independent cognitive-accessibility specialist reviewed the
 package guide, release note, release-readiness record, and existing job's screen
@@ -78,6 +78,9 @@ guidance. The changes use plain headings, short paragraphs, descriptive API
 wording, and no new images, diagrams, or ambiguous links. The changeset summary
 is brief and does not overclaim production adopter verification.
 
+The following table lists each reviewed file and the SHA-256 hash of the
+reviewed content.
+
 | Reviewed file | SHA-256 of reviewed content |
 |---|---|
 | `.changeset/cool-peas-theme.md` | `fa9ed6c4f439db9e75d65cdf095ea71ba501be777e5b7cbb01ffc824124e63aa` |
@@ -97,6 +100,9 @@ changeset is short and bounded to manifest publication. The release-readiness
 record names each generated initializer release, separates the plan from
 publication evidence, and keeps adopter production verification out of scope.
 No blocking cognitive-accessibility or Markdown accessibility finding remains.
+
+The following table lists each reviewed file and the SHA-256 hash of the
+reviewed content.
 
 | Reviewed file | SHA-256 of reviewed content |
 |---|---|
@@ -125,6 +131,53 @@ The reviewed source files and matching SHA-256 digests are:
   SHA-256: `cc2b341657e2884fa0efb200f2149c3bbebee36b9739c816ddd63091b74f40a9`
 - `packages/testing/README.md`
   SHA-256: `ddbe80bbb5e3b10d3dab3243d0d3a5392e1216f35f63d711d28d7f110bd70a53`
+
+Scope: Source Markdown clarity and cognitive accessibility only. This review
+does not establish test results, continuous-integration status, npm
+publication, registry verification, downloaded-package behavior, exact-host
+qualification, or adopter production verification.
+
+## Multi-Content Resource Reads
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+framework guidance, protocol coverage entry, and release note. The text
+explains that one resource read may return several items and that each returned
+URI identifies one item. Returning a URI does not, by itself, register a
+resource or give a client permission to read it. A client may still read it if
+the URI separately identifies an already registered static resource or matches
+an already registered resource template, and the client satisfies that
+capability's access policy. The review found no remaining
+cognitive-accessibility issues in these files.
+
+The following table lists each reviewed file and its SHA-256 hash.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `packages/framework/README.md` | `779fd394fefb452aa704109b50287059b75a6d94849c517dcfea95faebe2fa7d` |
+| `docs/protocol-coverage.md` | `2bc79352f6a427c142368b4b9609552205ea78d8be49830478603016b937b377` |
+| `.changeset/multi-content-resource-reads.md` | `940d9d6aa1da891a65f050debdcfffbb29c9864323977327a78d238ca9bff6c5` |
+| `docs/reviews/current-release-readiness.md` | `00e1d5f900ddbf32bc0c852abb2da9a499a980b95d41ad935830bd2e9782fc49` |
+
+Scope: This review covers only the cognitive accessibility of the four
+Markdown files listed above. It does not provide evidence of implementation,
+testing, release, registry verification, or the rendered site.
+
+## Combined Release Plan
+
+Result: PASS. Independent cognitive-accessibility, Markdown accessibility, and
+voice and tone reviews covered the initializer dependency changeset and the
+combined release-readiness record. The record distinguishes two feature
+packages, three dependency-only packages, and eleven manifest-only initializer
+packages. It also keeps local checks, continuous integration, publication,
+registry verification, downloaded-package behavior, exact-host qualification,
+and adopter production verification separate. No blocking finding remains.
+
+The reviewed source files and matching SHA-256 digests are:
+
+- `.changeset/server-initializer-dependencies.md`
+  SHA-256: `36acfc1e1a38dbf280dc2a1f1337821f234662b090a99e9b299331815fd365cd`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `3074f9edb2ef36f5f9f81a2ae9fc1fd135f30fa31862730e1894c528e25af4c2`
 
 Scope: Source Markdown clarity and cognitive accessibility only. This review
 does not establish test results, continuous-integration status, npm

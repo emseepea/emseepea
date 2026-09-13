@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { request as httpRequest } from "node:http";
 import test from "node:test";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
-import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
+import { createEmseepea, defineResource, defineTool, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
 const legacyVersions = [
@@ -15,6 +15,7 @@ const legacyVersions = [
 
 test("the same stateless POST endpoint serves the exact legacy protocol subset", async () => {
   let handlerCalls = 0;
+  let resourceCalls = 0;
   const app = createEmseepea({
     name: "legacy-protocol-test",
     version: "0.0.0",
@@ -27,6 +28,18 @@ test("the same stateless POST endpoint serves the exact legacy protocol subset",
       handler({ value }) {
         handlerCalls += 1;
         return { data: { value } };
+      },
+    })],
+    resources: [defineResource({
+      access: "public",
+      name: "legacy-resource",
+      uri: "legacy://resource/aggregate",
+      handler() {
+        resourceCalls += 1;
+        return { contents: [
+          { uri: "returned://legacy/summary", text: "legacy summary" },
+          { uri: "returned://legacy/data", mimeType: "application/octet-stream", blob: "BAU=" },
+        ] };
       },
     })],
   });
@@ -46,12 +59,20 @@ test("the same stateless POST endpoint serves the exact legacy protocol subset",
         assert.deepEqual((await client.listTools()).tools.map(({ name }) => name), ["echo-version"]);
         const result = await client.callTool({ name: "echo-version", arguments: { value: version } });
         assert.deepEqual(result.structuredContent, { value: version });
+        assert.deepEqual(
+          (await client.readResource({ uri: "legacy://resource/aggregate" })).contents,
+          [
+            { uri: "returned://legacy/summary", text: "legacy summary" },
+            { uri: "returned://legacy/data", mimeType: "application/octet-stream", blob: "BAU=" },
+          ],
+        );
         assert.equal(transport.sessionId, undefined);
       } finally {
         await client.close();
       }
     }));
     assert.equal(handlerCalls, legacyVersions.length);
+    assert.equal(resourceCalls, legacyVersions.length);
 
     const conflictingHeaders = await rawRequest(running.url, {
       "MCP-Protocol-Version": ["2025-11-25", "2024-11-05"],

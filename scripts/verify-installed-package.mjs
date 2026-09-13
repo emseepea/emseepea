@@ -100,14 +100,20 @@ const resource = defineResource({
   access: "public",
   name: "smoke-resource",
   uri: resourceUri,
-  handler: () => ({ contents: [{ uri: resourceUri, text: "value" }] }),
+  handler: () => ({ contents: [
+    { uri: resourceUri, text: "value" },
+    { uri: "returned://installed/static", text: "static child" },
+  ] }),
 });
 const resourceTemplate = defineResourceTemplate({
   access: "public",
   name: "smoke-resource-template",
   uriTemplate: "smoke://resource/{value}",
   complete: { value: (partial) => ["checked"].filter((value) => value.startsWith(partial)) },
-  handler: ({ uri }) => ({ contents: [{ uri, text: "value" }] }),
+  handler: ({ uri }) => ({ contents: [
+    { uri, text: "value" },
+    { uri: "returned://installed/template", text: "template child" },
+  ] }),
 });
 const prompt = definePrompt({
   access: "public",
@@ -289,9 +295,15 @@ try {
   if (templates.result.resourceTemplates[0]?.uriTemplate !== "smoke://resource/{value}") {
     throw new Error("installed package did not expose its resource template");
   }
-  const read = await request("resources/read", { uri: "smoke://resource/checked" });
-  if (read.result.contents[0]?.uri !== "smoke://resource/checked") {
-    throw new Error("installed package did not dispatch its resource template");
+  const staticRead = await request("resources/read", { uri: resourceUri });
+  if (staticRead.result.contents[0]?.uri !== resourceUri
+      || staticRead.result.contents[1]?.uri !== "returned://installed/static") {
+    throw new Error("installed package did not return static multi-content resources");
+  }
+  const templateRead = await request("resources/read", { uri: "smoke://resource/checked" });
+  if (templateRead.result.contents[0]?.uri !== "smoke://resource/checked"
+      || templateRead.result.contents[1]?.uri !== "returned://installed/template") {
+    throw new Error("installed package did not return template multi-content resources");
   }
   for (const params of [
     {

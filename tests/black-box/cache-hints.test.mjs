@@ -53,13 +53,25 @@ test("cache instructions reach every cacheable result through raw HTTP and the c
     ]);
     for (const [method, [ttlMs, cacheScope]] of expected) {
       const params = method === "resources/read" ? { uri: "cache://beans/report" } : {};
-      assertHint((await rpc(running.url, method, params)).body.result, ttlMs, cacheScope);
+      const result = (await rpc(running.url, method, params)).body.result;
+      assertHint(result, ttlMs, cacheScope);
+      if (method === "resources/read") {
+        assert.deepEqual(result.contents.map(({ uri }) => uri), [
+          "cache://beans/report/summary",
+          "cache://beans/report/data",
+        ]);
+      }
     }
-    assertHint(
-      (await rpc(running.url, "resources/read", { uri: "cache://origins/kenya" })).body.result,
-      60,
-      "public",
-    );
+    const templateResult = (await rpc(
+      running.url,
+      "resources/read",
+      { uri: "cache://origins/kenya" },
+    )).body.result;
+    assertHint(templateResult, 60, "public");
+    assert.deepEqual(templateResult.contents.map(({ uri }) => uri), [
+      "returned://cache/template-summary",
+      "returned://cache/template-data",
+    ]);
 
     const toolResult = (await rpc(running.url, "tools/call", {
       name: "bean-count",
@@ -91,8 +103,18 @@ test("cache instructions reach every cacheable result through raw HTTP and the c
       assertHint(await client.listResources(), 30, "private");
       assertHint(await client.listResourceTemplates(), 40, "public");
       assertHint(await client.listPrompts(), 50, "private");
-      assertHint(await client.readResource({ uri: "cache://beans/report" }), 70, "private");
-      assertHint(await client.readResource({ uri: "cache://origins/kenya" }), 60, "public");
+      const resourceResult = await client.readResource({ uri: "cache://beans/report" });
+      assertHint(resourceResult, 70, "private");
+      assert.deepEqual(resourceResult.contents.map(({ uri }) => uri), [
+        "cache://beans/report/summary",
+        "cache://beans/report/data",
+      ]);
+      const templateResourceResult = await client.readResource({ uri: "cache://origins/kenya" });
+      assertHint(templateResourceResult, 60, "public");
+      assert.deepEqual(templateResourceResult.contents.map(({ uri }) => uri), [
+        "returned://cache/template-summary",
+        "returned://cache/template-data",
+      ]);
     } finally {
       await client.close();
     }
@@ -229,14 +251,20 @@ function completeDefinitions(calls, staticHint, templateHint) {
         name: "bean-report",
         uri: "cache://beans/report",
         cacheHint: staticHint,
-        handler: () => ({ contents: [{ uri: "cache://beans/report", text: "Three beans" }] }),
+        handler: () => ({ contents: [
+          { uri: "cache://beans/report/summary", text: "Three beans" },
+          { uri: "cache://beans/report/data", text: "3" },
+        ] }),
       }),
       defineResourceTemplate({
         access: "public",
         name: "bean-detail",
         uriTemplate: "cache://origins/{origin}",
         cacheHint: templateHint,
-        handler: ({ uri }) => ({ contents: [{ uri, text: "Bean detail" }] }),
+        handler: () => ({ contents: [
+          { uri: "returned://cache/template-summary", text: "Bean detail" },
+          { uri: "returned://cache/template-data", text: "3" },
+        ] }),
       }),
     ],
     prompts: [definePrompt({

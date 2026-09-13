@@ -444,8 +444,14 @@ test("public resources and prompts stay checked and identity-free", async () => 
           throw error;
         }
       }
-      if (resourceMode === "wrong-uri") {
-        return { contents: [{ uri: "guide://private/secret", text: "must-not-leak" }] };
+      if (resourceMode === "invalid-result") {
+        return { contents: [{ uri }] };
+      }
+      if (resourceMode === "multi-content") {
+        return { contents: [
+          { uri, mimeType: "text/markdown", text: "# Brew safely" },
+          { uri: "returned://static/beans.bin", mimeType: "application/octet-stream", blob: "AAE=" },
+        ] };
       }
       if (resourceMode === "oversized") {
         return { contents: [{ uri, text: "x".repeat(1_000) }] };
@@ -630,10 +636,22 @@ test("public resources and prompts stay checked and identity-free", async () => 
     const resourceSecret = await rpc(running.url, "resources/read", { uri });
     assertGenericError(resourceSecret, "Resource read failed");
     assert.doesNotMatch(JSON.stringify(resourceSecret.body), /resource-secret-sentinel/);
-    resourceMode = "wrong-uri";
-    const wrongUri = await rpc(running.url, "resources/read", { uri });
-    assertGenericError(wrongUri, "Resource read failed");
-    assert.doesNotMatch(JSON.stringify(wrongUri.body), /must-not-leak|private\/secret/);
+    resourceMode = "invalid-result";
+    const invalidResource = await rpc(running.url, "resources/read", { uri });
+    assertGenericError(invalidResource, "Resource read failed");
+    assert.doesNotMatch(JSON.stringify(invalidResource.body), /contents|invalid-result/);
+    resourceMode = "multi-content";
+    const multiContent = await rpc(running.url, "resources/read", { uri });
+    assert.deepEqual(multiContent.body.result.contents, [
+      { uri, mimeType: "text/markdown", text: "# Brew safely" },
+      { uri: "returned://static/beans.bin", mimeType: "application/octet-stream", blob: "AAE=" },
+    ]);
+    const returnedUriRead = await rpc(
+      running.url,
+      "resources/read",
+      { uri: "returned://static/beans.bin" },
+    );
+    assert.equal(returnedUriRead.body.error.code, -32602);
     resourceMode = "oversized";
     const oversizedResource = await rpc(running.url, "resources/read", { uri });
     assertGenericError(oversizedResource, "Resource read failed");
@@ -647,7 +665,7 @@ test("public resources and prompts stay checked and identity-free", async () => 
     assert.equal(slowPromptCalls, 0);
     assert.equal(verifierCalls, 0);
 
-    resourceMode = "valid";
+    resourceMode = "multi-content";
     const client = new Client(
       { name: "resources-prompts-independent-client", version: "0.0.0" },
       { versionNegotiation: { mode: { pin: "2026-07-28" } } },
@@ -657,7 +675,10 @@ test("public resources and prompts stay checked and identity-free", async () => 
       assert.deepEqual((await client.listResources()).resources.map(({ name }) => name), [
         "getting-started",
       ]);
-      assert.equal((await client.readResource({ uri })).contents[0].text, "# Brew safely");
+      assert.deepEqual((await client.readResource({ uri })).contents, [
+        { uri, mimeType: "text/markdown", text: "# Brew safely" },
+        { uri: "returned://static/beans.bin", mimeType: "application/octet-stream", blob: "AAE=" },
+      ]);
       assert.deepEqual((await client.listPrompts()).prompts.map(({ name }) => name), [
         "brew-guide",
         "slow-prompt-schema",
@@ -691,8 +712,14 @@ test("public resource templates stay checked and identity-free", async () => {
       const topic = variables.topic;
       assert.equal(typeof topic, "string");
       if (topic === "secret") throw new Error("template-secret-sentinel");
-      if (topic === "wrong-uri") {
-        return { contents: [{ uri: "guide://private/secret", text: "must-not-leak" }] };
+      if (topic === "invalid-result") {
+        return { contents: [{ uri: requestedUri }] };
+      }
+      if (topic === "multi-content") {
+        return { contents: [
+          { uri: requestedUri, mimeType: "text/markdown", text: "# multi-content" },
+          { uri: "returned://template/beans.bin", mimeType: "application/octet-stream", blob: "AgM=" },
+        ] };
       }
       if (topic === "oversized") {
         return { contents: [{ uri: requestedUri, text: "x".repeat(1_000) }] };
@@ -781,13 +808,32 @@ test("public resource templates stay checked and identity-free", async () => {
     const secret = await rpc(running.url, "resources/read", { uri: "guide://coffee/secret" });
     assertGenericError(secret, "Resource read failed");
     assert.doesNotMatch(JSON.stringify(secret.body), /template-secret-sentinel/);
-    const wrongUri = await rpc(
+    const invalidResult = await rpc(
       running.url,
       "resources/read",
-      { uri: "guide://coffee/wrong-uri" },
+      { uri: "guide://coffee/invalid-result" },
     );
-    assertGenericError(wrongUri, "Resource read failed");
-    assert.doesNotMatch(JSON.stringify(wrongUri.body), /private\/secret|must-not-leak/);
+    assertGenericError(invalidResult, "Resource read failed");
+    assert.doesNotMatch(JSON.stringify(invalidResult.body), /contents|invalid-result/);
+    const multiContent = await rpc(
+      running.url,
+      "resources/read",
+      { uri: "guide://coffee/multi-content" },
+    );
+    assert.deepEqual(multiContent.body.result.contents, [
+      {
+        uri: "guide://coffee/multi-content",
+        mimeType: "text/markdown",
+        text: "# multi-content",
+      },
+      { uri: "returned://template/beans.bin", mimeType: "application/octet-stream", blob: "AgM=" },
+    ]);
+    const returnedUriRead = await rpc(
+      running.url,
+      "resources/read",
+      { uri: "returned://template/beans.bin" },
+    );
+    assert.equal(returnedUriRead.body.error.code, -32602);
     const oversized = await rpc(
       running.url,
       "resources/read",
@@ -808,9 +854,20 @@ test("public resource templates stay checked and identity-free", async () => {
         (await client.listResourceTemplates()).resourceTemplates.map(({ name }) => name),
         ["topic-guide"],
       );
-      assert.equal(
-        (await client.readResource({ uri: "guide://coffee/espresso" })).contents[0].text,
-        "# espresso",
+      assert.deepEqual(
+        (await client.readResource({ uri: "guide://coffee/multi-content" })).contents,
+        [
+          {
+            uri: "guide://coffee/multi-content",
+            mimeType: "text/markdown",
+            text: "# multi-content",
+          },
+          {
+            uri: "returned://template/beans.bin",
+            mimeType: "application/octet-stream",
+            blob: "AgM=",
+          },
+        ],
       );
     } finally {
       await client.close();
@@ -1302,7 +1359,10 @@ test("protected discovery and invocation cover resources, templates, prompts, an
     uri: protectedUri,
     handler(context) {
       checkPrincipal(context);
-      return { contents: [{ uri: protectedUri, text: "protected" }] };
+      return { contents: [
+        { uri: protectedUri, text: "protected" },
+        { uri: "returned://protected/static", text: "protected child" },
+      ] };
     },
   });
   const template = defineResourceTemplate({
@@ -1319,7 +1379,10 @@ test("protected discovery and invocation cover resources, templates, prompts, an
     },
     handler({ uri: requestedUri }, context) {
       checkPrincipal(context);
-      return { contents: [{ uri: requestedUri, text: "protected" }] };
+      return { contents: [
+        { uri: requestedUri, text: "protected" },
+        { uri: "returned://protected/template", text: "protected child" },
+      ] };
     },
   });
   const prompt = definePrompt({
@@ -1397,8 +1460,26 @@ test("protected discovery and invocation cover resources, templates, prompts, an
     assert.equal(handlerCalls, 0);
     assert.equal(completionCalls, 0);
 
-    await rpc(running.url, "resources/read", { uri: protectedUri }, "permitted");
-    await rpc(running.url, "resources/read", { uri: "guide://protected/peas" }, "permitted");
+    const protectedStatic = await rpc(
+      running.url,
+      "resources/read",
+      { uri: protectedUri },
+      "permitted",
+    );
+    assert.equal(protectedStatic.body.result.contents[1].uri, "returned://protected/static");
+    const protectedTemplate = await rpc(
+      running.url,
+      "resources/read",
+      { uri: "guide://protected/peas" },
+      "permitted",
+    );
+    assert.equal(protectedTemplate.body.result.contents[1].uri, "returned://protected/template");
+    for (const returnedUri of ["returned://protected/static", "returned://protected/template"]) {
+      assert.equal(
+        (await rpc(running.url, "resources/read", { uri: returnedUri }, "permitted")).body.error.code,
+        -32602,
+      );
+    }
     await rpc(
       running.url,
       "prompts/get",

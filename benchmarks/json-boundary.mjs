@@ -38,6 +38,31 @@ const richHeaders = {
   ...modernHeaders,
   "Mcp-Name": "synthetic-rich-read",
 };
+const resourceUri = "benchmark://resource/aggregate";
+const resourceContents = [
+  { uri: "returned://benchmark/summary", text: "synthetic" },
+  { uri: "returned://benchmark/data", mimeType: "application/octet-stream", blob: "AAE=" },
+];
+const resourceRequest = {
+  jsonrpc: "2.0",
+  id: "benchmark",
+  method: "resources/read",
+  params: {
+    uri: resourceUri,
+    _meta: {
+      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+      "io.modelcontextprotocol/clientInfo": { name: "emseepea-benchmark", version: "0.0.0" },
+      "io.modelcontextprotocol/clientCapabilities": {},
+    },
+  },
+};
+const resourceHeaders = {
+  Accept: "application/json, text/event-stream",
+  "Content-Type": "application/json",
+  "MCP-Protocol-Version": "2026-07-28",
+  "Mcp-Method": "resources/read",
+  "Mcp-Name": resourceUri,
+};
 const convenienceApplicationBytes = Buffer.byteLength(JSON.stringify({ id: "bench", value: "synthetic" })) +
   Buffer.byteLength("synthetic") + Buffer.byteLength(JSON.stringify({ id: "bench" }));
 const profiles = [
@@ -57,6 +82,21 @@ const profiles = [
       Buffer.byteLength(JSON.stringify({ "benchmark/kind": "protocol-native" })) +
       Buffer.byteLength(JSON.stringify({ id: "bench" })),
     note: "server process only; checked protocol-native result",
+  },
+  {
+    name: "modern-2026-07-28-multi-content-resource",
+    requestBody: JSON.stringify(resourceRequest),
+    headers: resourceHeaders,
+    invalidRequestBody: JSON.stringify({
+      ...resourceRequest,
+      params: { ...resourceRequest.params, uri: 42 },
+    }),
+    invalidHeaders: resourceHeaders,
+    invalidStatus: 400,
+    assertInvalidHandlerNotCalled: true,
+    applicationBytes: Buffer.byteLength(JSON.stringify(resourceContents)) +
+      Buffer.byteLength(JSON.stringify({ uri: resourceUri })),
+    note: "server process only; checked multi-content resource result",
   },
   {
     name: "legacy-2025-11-25",
@@ -161,9 +201,15 @@ async function measureProfile(profile) {
   const overheadBytes = [];
   for (let index = 0; index < 10; index += 1) overheadBytes.push(await measureAddedBytes(profile));
   const invalidHeap = [];
+  const resourceCallsBeforeInvalid = profile.assertInvalidHandlerNotCalled
+    ? (await ask("resource-calls")).value
+    : undefined;
   for (let batch = 0; batch < 3; batch += 1) {
     for (let index = 0; index < 100; index += 1) await invalidRequest(profile);
     invalidHeap.push((await ask("heap")).value);
+  }
+  if (profile.assertInvalidHandlerNotCalled) {
+    assert.equal((await ask("resource-calls")).value, resourceCallsBeforeInvalid);
   }
   assert.ok(Math.min(...throughput) >= 100, `${profile.name} throughput fell below 100 requests/second`);
   assert.ok(percentile(cpuMs, 0.95) <= 5, `${profile.name} p95 process CPU exceeded 5 ms/request`);
@@ -195,14 +241,21 @@ async function validRequest(profile) {
 }
 
 async function invalidRequest(profile) {
-  const body = profile.requestBody.replace('"id":"bench"', '"id":42');
+  const body = profile.invalidRequestBody ?? profile.requestBody.replace('"id":"bench"', '"id":42');
   const response = await fetch(serverUrl, {
     method: "POST",
-    headers: { ...profile.headers, ...(profile.name.startsWith("modern") ? { "Mcp-Param-Id": "42" } : {}) },
+    headers: profile.invalidHeaders ?? {
+      ...profile.headers,
+      ...(profile.name.startsWith("modern") ? { "Mcp-Param-Id": "42" } : {}),
+    },
     body,
   });
-  assert.equal(response.status, 200);
-  await response.arrayBuffer();
+  assert.equal(response.status, profile.invalidStatus ?? 200);
+  if (profile.assertInvalidHandlerNotCalled) {
+    assert.ok((await response.json()).error, `${profile.name}: invalid request was accepted`);
+  } else {
+    await response.arrayBuffer();
+  }
 }
 
 async function measureAddedBytes(profile) {

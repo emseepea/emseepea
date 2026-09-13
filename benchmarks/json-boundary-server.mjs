@@ -1,5 +1,12 @@
 import { Session } from "node:inspector";
-import { createEmseepea, defineMappedTool, defineTool, openTelemetry, serveEmseepea } from "@emseepea/server";
+import {
+  createEmseepea,
+  defineMappedTool,
+  defineResource,
+  defineTool,
+  openTelemetry,
+  serveEmseepea,
+} from "@emseepea/server";
 import { z } from "zod";
 
 const tool = defineMappedTool({
@@ -25,9 +32,22 @@ const richTool = defineTool({
     _meta: { "benchmark/kind": "protocol-native" },
   }),
 });
+let resourceCalls = 0;
+const resource = defineResource({
+  access: "public",
+  name: "synthetic-resource",
+  uri: "benchmark://resource/aggregate",
+  handler: () => {
+    resourceCalls += 1;
+    return { contents: [
+      { uri: "returned://benchmark/summary", text: "synthetic" },
+      { uri: "returned://benchmark/data", mimeType: "application/octet-stream", blob: "AAE=" },
+    ] };
+  },
+});
 const productionClass = process.argv.find((argument) => argument.startsWith("--production-class="))?.split("=")[1];
 const app = createEmseepea({
-  name: "emseepea-benchmark", version: "0.0.0", tools: [tool, richTool],
+  name: "emseepea-benchmark", version: "0.0.0", tools: [tool, richTool], resources: [resource],
   observability: process.argv.includes("--observability") ? [openTelemetry()] : undefined,
   deployment: productionClass ? {
     mode: "production-behind-proxy",
@@ -64,6 +84,8 @@ process.on("message", async ({ id, type }) => {
     } else if (type === "heap") {
       globalThis.gc();
       value = process.memoryUsage().heapUsed;
+    } else if (type === "resource-calls") {
+      value = resourceCalls;
     } else if (type === "shutdown") {
       await running.close();
     }

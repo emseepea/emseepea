@@ -995,7 +995,7 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
                 return result as InputRequiredResult;
               }
               const parsed = await ReadResourceResultSchema.safeParseAsync(result);
-              if (!parsed.success || parsed.data.contents.some((content) => content.uri !== uri)) {
+              if (!parsed.success) {
                 throw new Error("Resource returned an invalid result");
               }
               signal.throwIfAborted();
@@ -1110,8 +1110,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
                 return result as InputRequiredResult;
               }
               const parsed = await ReadResourceResultSchema.safeParseAsync(result);
-              if (!parsed.success ||
-                  parsed.data.contents.some((content) => content.uri !== requestedUri.href)) {
+              if (!parsed.success) {
                 throw new Error("Resource template returned an invalid result");
               }
               signal.throwIfAborted();

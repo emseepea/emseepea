@@ -858,6 +858,17 @@ const app = createEmseepea({
 });
 ```
 
+A resource read may return several text or binary content items. Each returned
+URI identifies one item. It does not need to match the URI that the client
+requested. Em See Pea still authorizes the resource that the client requested.
+Any cache instructions apply to the complete response.
+
+Returning an item URI does not, by itself, register a resource or let a client
+read that URI through Em See Pea. A client may still read it if the URI
+separately identifies an already registered static resource or matches an
+already registered resource template, and the client satisfies that
+capability's access policy.
+
 The `resources` definitions populate the catalogues of static resources and
 resource templates. `resources/list` and `resources/templates/list` do not
 query application records or return resource contents. See
