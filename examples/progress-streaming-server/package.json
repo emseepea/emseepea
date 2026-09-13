@@ -21,7 +21,7 @@
     "@emseepea/feedback": "0.2.10",
     "@emseepea/server": "0.11.0",
     "zod": "4.4.3",
-    "@emseepea/testing": "0.10.0",
+    "@emseepea/testing": "0.11.0",
     "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",
