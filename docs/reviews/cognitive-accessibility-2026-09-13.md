@@ -87,3 +87,18 @@ is brief and does not overclaim production adopter verification.
 | `docs/reviews/current-release-readiness.md` | `40f99ef0635aae885db06b4f2bd867c6fe2bfce0e96d6794641e5991c53fda83` |
 | `packages/framework/README.md` | `4433b0d6e02eb6d1fc9a8cf4c625896f8491d33dbccf3d9800624ded65729c99` |
 | `packages/react/README.md` | `38b5364d507f31effb651c97265ee090aa3053d508a94e88c081764e80a17fbe` |
+
+## Initializer Testing Dependency Release Plan
+
+Result: PASS. Cognitive-accessibility and Markdown accessibility review covered
+the release-plan repair after the generated release pull request showed
+initializer manifests carrying the updated testing dependency. The added
+changeset is short and bounded to manifest publication. The release-readiness
+record names each generated initializer release, separates the plan from
+publication evidence, and keeps adopter production verification out of scope.
+No blocking cognitive-accessibility or Markdown accessibility finding remains.
+
+| Reviewed file | SHA-256 of reviewed content |
+|---|---|
+| `.changeset/green-initializers-testing.md` | `3bafbc0e7b23dd06b2affec0cab24d7ee1b8d7de1f46ab321ced6a44f425b03b` |
+| `docs/reviews/current-release-readiness.md` | `1d2496106ff5f78e83bccb68e1e928e840bde177a2644624c259aa5dbb1d3b02` |

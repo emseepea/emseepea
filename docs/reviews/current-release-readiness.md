@@ -3,19 +3,31 @@
 Date: 2026-09-13
 
 Release verification is not complete. This cumulative release includes the
-pending MCP Apps host simulator for `@emseepea/testing`, plus the issue 85
-React theme helper and React UI initializer update.
+pending MCP Apps host simulator for `@emseepea/testing`, the generated
+initializer manifest releases needed to carry that updated test helper, plus
+the issue 85 React theme helper and React UI initializer update.
 
 ## Planned Release Batch
 
 - `@emseepea/react@0.2.0`
 - `@emseepea/create-react-ui-server@0.0.28`
 - `@emseepea/testing@0.10.0`
+- `@emseepea/create-tool-server@0.0.30`
+- `@emseepea/create-api-backed-server@0.0.28`
+- `@emseepea/create-openapi-backed-server@0.0.10`
+- `@emseepea/create-resources-and-prompts-server@0.0.27`
+- `@emseepea/create-progress-streaming-server@0.0.28`
+- `@emseepea/create-html-ui-server@0.0.29`
+- `@emseepea/create-multi-instance-postgres-server@0.0.18`
+- `@emseepea/create-database-schema-server@0.0.15`
+- `@emseepea/create-mongodb-backed-server@0.0.15`
+- `@emseepea/create-soap-backed-server@0.0.15`
 
 ## Change for Users
 
 MCP Apps authors get the pending deterministic, framework-neutral host simulator
-in `@emseepea/testing`. React MCP Apps can also call
+in `@emseepea/testing`, and generated initializer manifests carry the matching
+test-helper dependency. React MCP Apps can also call
 `useMcpTheme(app.hostContext.theme)` to get the host theme when present, or a
 reactive browser colour-scheme fallback when running outside a host. The hook
 only returns `"light"` or `"dark"`; it does not mutate the document or own
@@ -30,6 +42,9 @@ returned value to its own document dataset in an effect.
 - The pending `@emseepea/testing@0.10.0` readiness evidence remains from the
   existing `calm-apps-simulate` changeset and is carried in this cumulative
   release plan.
+- The generated initializer manifest releases are included because their
+  published manifests will carry the updated `@emseepea/testing@0.10.0`
+  development dependency.
 - `npm test -w @emseepea/react` passed for `@emseepea/react@0.2.0`: 6 tests,
   including host precedence, server fallback, system preference change,
   listener cleanup, and legacy media-query listener cleanup.
@@ -51,9 +66,10 @@ exact journey in ChatGPT, Claude, or another adopter host.
 
 - The Quality workflow must pass on the exact source commit.
 - The Changesets release pull request must contain only the planned generated
-  version, dependency, and changelog changes for `@emseepea/react@0.2.0` and
-  `@emseepea/create-react-ui-server@0.0.28`, plus the pending
-  `@emseepea/testing@0.10.0` release.
+  version, dependency, and changelog changes for `@emseepea/react@0.2.0`,
+  `@emseepea/create-react-ui-server@0.0.28`, the pending
+  `@emseepea/testing@0.10.0` release, and the generated initializer manifest
+  releases listed above.
 - The Quality and Release workflows must pass on the exact version commit.
 - Registry readback must confirm both versions and the `latest` tag, integrity,
   signature, provenance, and exact release-commit binding.
