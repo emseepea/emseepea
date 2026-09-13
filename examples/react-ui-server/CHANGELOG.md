@@ -1,5 +1,12 @@
 # @emseepea/create-react-ui-server
 
+## 0.0.28
+
+### Patch Changes
+
+- [`1b6855b`](https://github.com/emseepea/emseepea/commit/1b6855b14c476dc2dac42f77e084a0b3ed61bbd7) Thanks [@tompahoward](https://github.com/tompahoward)! - Add a host-aware React theme hook with a reactive browser preference fallback,
+  and update the React UI initializer to apply the resolved theme in the app.
+
 ## 0.0.27
 
 ### Patch Changes
