@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-09-13
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-09-13
 decision-makers: ["Tom Howard"]
 consulted: ["Architecture review"]
 informed: []
@@ -14,35 +15,52 @@ reassessment-date: 2026-12-13
 > section content from the in-session decision context. Human oversight remains
 > pending until ratification.
 
+## Plain English Summary
+
+When a client asks to read one resource, Model Context Protocol (MCP) allows the
+server to answer with several pieces of content. For example, reading a
+folder-like resource may return several files.
+
+Em See Pea should allow that response shape. One authorized Em See Pea read can
+return many content items. Their URIs identify those items but do not create
+readable Em See Pea resources.
+
 ## Context and Problem Statement
 
-Model Context Protocol (MCP) 2026-07-28 permits one `resources/read` result to
-contain multiple text or blob contents. Their URIs may differ from the requested
-URI, for example when a directory-like resource returns several files.
+Model Context Protocol (MCP) 2026-07-28 allows one `resources/read` request to
+return more than one content item. Each returned item may have its own URI.
 
-Em See Pea validates resource results with the installed MCP software
-development kit (SDK) schema, but it also rejects every content whose URI
-differs from the requested URI. That extra restriction excludes a standard
-result shape. This decision determines how to admit multi-content resource
-results without broadening discovery, access, or dereferencing authority.
+A typical example is a folder-like resource. A client asks to read
+`file:///docs/`. The server may answer with content for `file:///docs/a.md` and
+`file:///docs/b.md` in the same response.
+
+Em See Pea already validates the response with the installed MCP software
+development kit (SDK) schema. It then adds one extra rule of its own: every
+returned content URI must exactly match the requested URI. That extra rule
+rejects valid MCP responses.
+
+This decision removes only that extra equality rule. Returning a URI does not
+register a resource, grant Em See Pea access, trigger framework fetching, or
+make the URI directly readable through Em See Pea.
 
 ## Decision Drivers
 
-- Accept the complete MCP 2026-07-28 `ReadResourceResult` shape.
-- Keep authentication and authorization attached to the requested capability.
-- Preserve checked SDK validation, bounded results, cancellation, deadlines,
-  and generic failure redaction.
-- Avoid treating returned content URIs as registered or independently callable
-  resources.
-- Apply one rule to static resources and resource templates.
-- Avoid unrelated catalogue mutation, sampling, retries, replay, persistence,
-  or reconnect recovery.
+- Allow MCP-valid `resources/read` responses that contain several content items.
+- Authorize the read against the originally requested resource, not against each
+  returned URI.
+- Treat returned URIs as content identifiers that do not create readable Em See
+  Pea resources.
+- Keep existing SDK validation, size limits, cancellation, deadlines, and
+  generic safe errors.
+- Use the same rule for static resources and resource templates.
+- Do not add dynamic resource registration, catalogue mutation, sampling,
+  retries, replay, persistence, or reconnect recovery.
 
 ## Considered Options
 
 1. **Checked multi-content resource reads (chosen)**: accept multiple SDK-valid
    text or blob contents whose URIs may differ from the requested URI, without
-   granting those URIs framework authority.
+   making those URIs directly readable through Em See Pea.
 2. **Keep exact requested-URI equality**: continue rejecting every returned
    content whose URI differs from the request.
 3. **Register returned URIs dynamically**: treat each returned content URI as a
@@ -50,29 +68,30 @@ results without broadening discovery, access, or dereferencing authority.
 
 ## Decision Outcome
 
-Chosen option: **"Checked multi-content resource reads"**, because it admits
-the standard result shape while preserving the requested resource as the sole
-framework authority boundary.
+Chosen option: **"Checked multi-content resource reads"**, because Model Context
+Protocol (MCP) allows one resource read to return several content items. Em See
+Pea will still treat the originally requested resource as the only authorized
+read.
 
-Static-resource and resource-template handlers may return multiple installed-
-SDK-valid text or blob contents. A returned content URI does not need to equal
-the requested URI. The framework removes only that equality restriction.
+Static-resource and resource-template handlers may return more than one valid
+text or blob content item. A returned content URI does not need to equal the URI
+the client requested.
 
-Authentication, authorization, discovery suppression, and lifecycle checks
-remain attached to the requested registered capability and finish before its
-handler runs. Response-level cache instructions also remain attached to that
-capability and apply to the complete multi-content response, not independently
-to each returned URI.
+Authorization still happens before the handler runs, and it is still based on
+the resource the client requested. Cache instructions apply to the whole
+response.
 
-Returned content URIs carry client-facing identity only. They do not register a
-resource, make it directly callable, grant authorization, or cause server-side
-dereferencing. Unknown direct resource reads retain their existing safe error.
+Returned content URIs identify items in the response. Returning them does not
+register new resources, make those URIs directly readable through Em See Pea,
+grant new access, or make Em See Pea fetch anything from those URIs. A later
+direct read of an unknown URI still returns the existing safe error.
 
-The existing installed-SDK schema validation and schema-produced copying,
-generic failure redaction, cancellation, deadlines, whole-result byte limits,
-cache instructions, and unknown-resource handling remain in force. This
-increment does not add the framework's separate safe-JSON copy or deep-freeze
-boundary to resource results.
+The existing SDK schema validation, copied validated result, generic safe
+errors, cancellation, deadlines, whole-result byte limits, cache instructions,
+and unknown-resource handling remain in force.
+
+This increment does not add any new resource-result immutability mechanism
+beyond the existing SDK-validated copy.
 
 ## Consequences
 
@@ -92,30 +111,42 @@ boundary to resource results.
 
 ### Bad
 
-- Applications must avoid implying that a returned URI is directly callable
-  when it is only an identity inside the aggregate result.
-- One authorized read can disclose several contents, so application handlers
-  remain responsible for returning only data authorized through the requested
-  capability.
+- Application documentation must not describe returned content URIs as links
+  that can be read later through Em See Pea unless those resources are
+  registered separately.
+- Handler authors must treat one authorized read as permission to return only
+  the content that belongs to that requested resource.
 
 ## Confirmation
+
+### Protocol Behavior
 
 - Static-resource and resource-template handlers can each return multiple text
   and blob contents with URIs different from the requested URI.
 - The official MCP client pinned to `2026-07-28` receives every content intact.
+- Legacy clients preserve their documented resource-read behavior.
+
+### Access Boundary
+
 - Protected reads authenticate and authorize the requested capability before
   the handler runs.
 - A returned URI gains no listing entry or direct-read authority.
-- SDK-invalid and oversized results retain the generic safe resource error.
+- Results invalid under the software development kit (SDK) schema and oversized
+  results retain the generic safe resource error.
 - Cancellation, deadlines, cache instructions, discovery suppression, and
   existing unknown-resource behavior remain unchanged.
-- Legacy clients preserve their documented resource-read behavior.
+
+### Qualification
+
 - Source, type, black-box, packed-package, and benchmark checks pass from clean
   checkouts, with the measured benchmark inside ADR-0014's budget.
 - A released-package journey exercises both static and template multi-content
   reads, separately from publication and registry-integrity evidence.
 - Registry readback verifies the released package version, integrity,
   signatures, provenance, and public types.
+
+### Documentation
+
 - Protocol coverage and package guidance document the authority and cache
   boundaries.
 
