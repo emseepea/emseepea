@@ -24,7 +24,7 @@ returned value to its own document dataset in an effect.
 
 ## Evidence So Far
 
-- ADR-0086 was ratified. Architecture, JTBD, accessibility, style-guide,
+- ADR-0086 was ratified. Architecture, JTBD, accessibility,
   cognitive-accessibility, and Markdown accessibility reviews passed for the
   source increment and public guidance.
 - The pending `@emseepea/testing@0.10.0` readiness evidence remains from the
@@ -41,7 +41,7 @@ returned value to its own document dataset in an effect.
 - `npm run decisions:check`, `npm run lint`, and `npm run typecheck` passed.
 - `GITHUB_BASE_REF=main node --test
   tests/docs/published-content-review.test.mjs` passed.
-- Pipeline risk is 4 out of 25 for commit, push, and release.
+- Pipeline risk is 5 out of 25 for commit, push, and release.
 
 These are source and local checks. They do not prove exact-commit CI,
 publication, registry state, provenance, downloaded-package behavior, or an
