@@ -1,92 +1,76 @@
 # Current Release Readiness
 
-Date: 2026-09-13
+Date: 2026-09-14
 
 Release verification is not complete. This review covers one planned
-16-package batch. The batch contains two packages with feature changes, three
-packages with dependency-only updates, and eleven initializer packages with
-manifest-only dependency updates.
+16-package batch. The server package contains the only feature change. Four
+packages receive dependency-only updates. Eleven initializer packages receive
+manifest-only updates.
 
 ## Planned Release Batch
 
-- `@emseepea/server@0.11.1`
-- `@emseepea/testing@0.11.1`
-- `@emseepea/feedback@0.2.11`
-- `@emseepea/react@0.2.1`
-- `@emseepea/svelte@0.1.1`
-- `@emseepea/create-tool-server@0.0.31`
-- `@emseepea/create-api-backed-server@0.0.29`
-- `@emseepea/create-openapi-backed-server@0.0.11`
-- `@emseepea/create-resources-and-prompts-server@0.0.28`
-- `@emseepea/create-progress-streaming-server@0.0.29`
-- `@emseepea/create-html-ui-server@0.0.30`
-- `@emseepea/create-react-ui-server@0.0.29`
-- `@emseepea/create-multi-instance-postgres-server@0.0.19`
-- `@emseepea/create-database-schema-server@0.0.16`
-- `@emseepea/create-mongodb-backed-server@0.0.16`
-- `@emseepea/create-soap-backed-server@0.0.16`
+- `@emseepea/server@0.11.2`
+- `@emseepea/testing@0.11.2`
+- `@emseepea/feedback@0.2.12`
+- `@emseepea/react@0.2.2`
+- `@emseepea/svelte@0.1.2`
+- `@emseepea/create-tool-server@0.0.32`
+- `@emseepea/create-api-backed-server@0.0.30`
+- `@emseepea/create-openapi-backed-server@0.0.12`
+- `@emseepea/create-resources-and-prompts-server@0.0.29`
+- `@emseepea/create-progress-streaming-server@0.0.30`
+- `@emseepea/create-html-ui-server@0.0.31`
+- `@emseepea/create-react-ui-server@0.0.30`
+- `@emseepea/create-multi-instance-postgres-server@0.0.20`
+- `@emseepea/create-database-schema-server@0.0.17`
+- `@emseepea/create-mongodb-backed-server@0.0.17`
+- `@emseepea/create-soap-backed-server@0.0.17`
 
-The server package contains the validated multi-content resource-read change.
-The testing package contains the independently governed runner-neutral cleanup
-change and also receives the updated server dependency. The feedback, React,
-and Svelte packages update dependency versions and add no separate feature.
-Each initializer package updates its manifest to use
-`@emseepea/server@0.11.1`. These releases add no separate initializer feature.
+The server package adds bounded request-scoped progress for static resources,
+resource templates, and prompts. The other four packages update their server
+dependency and add no separate feature. Each initializer package updates its
+embedded manifest to use `@emseepea/server@0.11.2`. These releases add no
+separate initializer feature. This batch does not add or expand deprecated
+client logging or any other deprecated functionality.
 
-## Multi-Content Resource Reads
+## Resource and Prompt Progress
 
-The server package allows one authorized resource read to return several
-validated text or binary items. A returned item URI may differ from the
-requested URI. Returning it does not, by itself, register a resource or give a
-client permission to read it. A client may still read the URI if it separately
-identifies an already registered static resource or matches an already
-registered resource template, and the client satisfies that capability's
-access policy. Cache instructions apply to the complete response.
-
-## Runner-Neutral Server Cleanup
-
-Model Context Protocol (MCP) developers can start an Em See Pea server or
-child-process server without a test context and close it explicitly in Vitest,
-Jest, another runner, or a plain script. Existing `{ after }` cleanup remains
-available and registers the same public `close()` operation automatically.
+When a request using Model Context Protocol (MCP) version 2026-07-28 supplies a
+progress token, resource and prompt handlers receive an optional
+`reportProgress` operation. Progress uses only that request's token and finishes
+before its terminal result. Existing event-count, event-size, authentication,
+authorization, deadline, cancellation, result-validation, and safe-error
+controls remain in force. Legacy handlers, direct and mapped tools, and
+completion handlers do not gain this operation.
 
 ## Evidence So Far
 
-- Architecture Decision Record (ADR) 0085 was ratified. Independent
-  architecture, voice and tone, cognitive-accessibility, and Markdown
-  accessibility reviews passed for its exact public source content.
-- Focused source, package, black-box, legacy-protocol, cache, malformed-input,
-  documentation, and packed-package checks passed locally for the validated
-  multi-content resource-read change.
-- The JSON boundary benchmark's multi-content resource profile passed the
-  existing throughput, CPU, allocation, framework-added-byte, malformed-input
-  retained-heap, and handler-isolation limits with and without observability.
-- Confirmed Jobs To Be Done (JTBD) records `JTBD-001` and `JTBD-100` align
-  explicit lifetime ownership with tests through the real public boundary. No
-  new ADR or job is needed.
-- Independent architecture, JTBD, cognitive-accessibility, and source reviews
-  passed for the runner-neutral cleanup increment and public guidance.
-- The complete `@emseepea/testing` package suite passed locally before the
-  rebase: 20 tests, including the host simulator, explicit and automatic
-  cleanup, repeated and concurrent close, port refusal after close, and
-  failure-path cleanup.
-- Combined post-rebase local qualification passed, and pipeline risk is 5 out
-  of 25 for commit, push, and release.
+- Architecture Decision Record (ADR) 0087 was explicitly ratified. Final
+  architecture and Jobs To Be Done reviews passed.
+- Source build, typecheck, lint, decision, documentation, modern and legacy
+  black-box, packed-public-package, and benchmark checks passed locally.
+- Behavioral tests cover official-client and raw HTTP progress, token
+  isolation, fresh input-required rounds, authorization before execution, event
+  limits, late reporting, terminal ordering, and the legacy boundary.
+- The full local suite passed 221 of 224 Docker-independent tests before the
+  final legacy guard. The affected modern and legacy tests passed after that
+  guard. Three existing PostgreSQL and MongoDB fixtures, plus the
+  all-initializer packed journey, could not run because the local Docker daemon
+  was unavailable.
+- Independent architecture, JTBD, cognitive-accessibility, Markdown
+  accessibility, voice and tone, and test-quality reviews passed.
+- Pipeline risk is 5 out of 25 for commit, push, and release.
 
 These are source and local checks. They do not prove exact-commit continuous
 integration, publication, registry state, provenance, downloaded-package
-behavior, exact-host qualification (running the journey in a named adopter
-host), or production use by an adopter.
+behavior, exact-host qualification, or production use by an adopter.
 
-## Prior Cumulative Release Boundary
+## Current Base Boundary
 
-The preceding cumulative release published `@emseepea/testing@0.10.0`,
-`@emseepea/react@0.2.0`, `@emseepea/create-react-ui-server@0.0.28`, and ten
-initializer patch releases. Quality runs `34745003015` and `34745474030`
-passed, and release run `34745860395` completed publication, registry checks,
-and downloaded-package verification for merge `dcd1829b`. That evidence covers
-the host simulator and React theme helper. It does not cover either pending
-feature in this batch.
+Release pull request `88` merged as `51a67c03`. Quality run `34810098699`
+passed for that merge. Release run `34810729547` then passed its publication,
+registry, provenance, and downloaded-package checks for the base batch. That
+evidence does not cover this planned batch.
 
 ## Required Publication Evidence
 
@@ -99,12 +83,11 @@ feature in this batch.
 - Every registry package must pass its applicable downloaded clean-install and
   public-entry-point checks.
 - Every initializer package must install with its manifest rewritten to the
-  exact `@emseepea/server@0.11.1` dependency and pass its applicable checks.
-- The downloaded server package must pass static and template multi-content
-  resource reads through its public entry point.
-- The downloaded testing package must expose the public server starters and
-  return handles whose `close()` operation passes clean-install lifecycle and
-  failure-path cleanup journeys.
+  exact `@emseepea/server@0.11.2` dependency and pass its applicable checks.
+- The downloaded server package must verify resource and prompt progress,
+  current-request token isolation, fresh input-required rounds, limit
+  enforcement, terminal ordering, protected authorization, and legacy
+  exclusion through its public entry point.
 - Production use by an adopter requires separate, cited journey evidence.
 
 ## Evidence Boundaries

@@ -41,17 +41,19 @@ verification.
 ## Resource and Prompt Progress
 
 Result: PASS. An independent cognitive-accessibility specialist reviewed
-ADR-0087, its generated index, the release note, protocol coverage, and package
-guidance for bounded request-scoped resource and prompt progress. The text
-states when the optional reporter exists, preserves its limits, and does not
-restore deprecated client-logging guidance. No cognitive-accessibility findings
-remain in scope.
+ADR-0087, its generated index, the release-readiness record, release notes,
+protocol coverage, and package guidance for bounded request-scoped resource and
+prompt progress. The text states when the optional reporter exists, preserves
+its limits, and does not restore deprecated client-logging guidance. No
+cognitive-accessibility findings remain in scope.
 
 | Reviewed file | SHA-256 |
 | --- | --- |
 | `docs/decisions/0087-bounded-request-scoped-progress-for-resources-and-prompts.proposed.md` | `8a27c432fac2bf67204f4bf2f46bf5986462456d1bac142843f312a87eed6d9e` |
 | `docs/decisions/README.md` | `48bac6aab97a997dc7ccfe83d1832bc9b2c0f10d3415065d5e60984c4a179929` |
+| `docs/reviews/current-release-readiness.md` | `9f9e72e31256bd6aefbadd8bce84b2e376c42ae086e4b79ec7fb038cbf2c55ea` |
 | `.changeset/resource-prompt-progress.md` | `e862548a79685d83835a3f9f5e3520646307f05b78e768448752dc6fdb156f0d` |
+| `.changeset/resource-prompt-progress-initializers.md` | `4e6e4b1cdc2f28f15d9384813fda7bbf76fcec421e5c875977c241a9940813bb` |
 | `docs/protocol-coverage.md` | `ced12f0dda9b6fa64e97cd0cd1c057f18320598c0e3e1b7f3de1e7b1c9544ba5` |
 | `packages/framework/README.md` | `afc5c8d625446941edc2175d45c98ced1510914a854e96a6ae695a5598f5c907` |
 
