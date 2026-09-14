@@ -35,3 +35,19 @@ contradictory-status, memory-demand, or unclear-instruction findings remain.
 Scope: Source Markdown clarity and cognitive accessibility only. This review
 does not establish implementation, test results, continuous integration,
 publication, registry verification, or adopter production verification.
+
+## Deprecated Client-Logging Guidance Removal
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+README implementation of ADR-0090. Removing the two deprecated client-logging
+promotion bullets leaves the surrounding lists coherent and scannable while
+preserving the boundary between current adoption guidance and retained
+compatibility or historical coverage.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `README.md` | `71af4ee467a68f9c841e88759e26546d41c598413fc58219a35decd2bc01923f` |
+
+Scope: Source Markdown clarity and cognitive accessibility only. This review
+does not establish tests, continuous integration, publication, registry
+verification, or adopter production verification.
