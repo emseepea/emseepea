@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 84 decisions: 47 current and 37 historical.
+This project has 85 decisions: 48 current and 37 historical.
 
 ## Quick Index
 
@@ -58,6 +58,7 @@ This project has 84 decisions: 47 current and 37 historical.
 - [ADR-0084: Parallel React and Svelte Result Cards with Measured Bundle Guidance](0084-parallel-react-and-svelte-result-cards-with-measured-bundle-guidance.proposed.md): Proposed; human review confirmed.
 - [ADR-0085: Checked Multi-Content Resource Read Results](0085-checked-multi-content-resource-read-results.proposed.md): Proposed; human review confirmed.
 - [ADR-0086: Application-Owned Styling with Public Host-Aware Theme Resolution](0086-application-owned-styling-with-public-host-aware-theme-resolution.proposed.md): Proposed; human review confirmed.
+- [ADR-0087: Bounded Request-Scoped Progress for Resources and Prompts](0087-bounded-request-scoped-progress-for-resources-and-prompts.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -1880,3 +1881,26 @@ Chosen option: **"Public `useMcpTheme` resolver hook"**, because it centralises 
 - Documentation shows an application applying the returned value without prescribing a styling system.
 - The hook and its dependencies remain confined to `@emseepea/react`.
 - Existing MCP Apps lifecycle, renderer, accessibility, pack, and fresh-install checks pass.
+
+### [ADR-0087: Bounded Request-Scoped Progress for Resources and Prompts](0087-bounded-request-scoped-progress-for-resources-and-prompts.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### ADR-0087 Decision
+
+Chosen option: **"Bounded progress for resources and prompts"**, because it closes the smallest independent non-deprecated protocol gap by reusing an existing request-scoped mechanism.
+
+#### ADR-0087 Checks
+
+- Static-resource, resource-template, and prompt handlers can report progress when the official MCP client pinned to `2026-07-28` supplies a progress token.
+- Requests without a progress token expose no reporter and send no progress notification.
+- Progress notifications use only the current request's token and arrive before its terminal result.
+- Every fresh input-required round is isolated from earlier progress tokens.
+- Authentication and authorization occur before protected handlers run.
+- Existing cancellation, deadline, result-validation, event-count, event-size, and generic safe-error behavior remains unchanged.
+- Direct and mapped tool contexts, completion handlers, notification POST behavior, and legacy-client behavior remain unchanged.
+- Source, type, black-box, packed-package, and benchmark checks pass from clean checkouts.
+- A released-package journey independently verifies resource and prompt progress, token isolation, limit enforcement, and terminal ordering.
+- Registry readback independently verifies the released package version, integrity, signatures, provenance, and public types.
+- Protocol coverage and package guidance describe the new optional behavior and its limits without restoring deprecated client-logging guidance.
