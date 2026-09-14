@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 85 decisions: 48 current and 37 historical.
+This project has 86 decisions: 49 current and 37 historical.
 
 ## Quick Index
 
@@ -59,6 +59,7 @@ This project has 85 decisions: 48 current and 37 historical.
 - [ADR-0085: Checked Multi-Content Resource Read Results](0085-checked-multi-content-resource-read-results.proposed.md): Proposed; human review confirmed.
 - [ADR-0086: Application-Owned Styling with Public Host-Aware Theme Resolution](0086-application-owned-styling-with-public-host-aware-theme-resolution.proposed.md): Proposed; human review confirmed.
 - [ADR-0087: Bounded Request-Scoped Progress for Resources and Prompts](0087-bounded-request-scoped-progress-for-resources-and-prompts.proposed.md): Proposed; human review confirmed.
+- [ADR-0088: Always-Available Checked Model Context Protocol (MCP) Ping](0088-always-available-checked-mcp-ping.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -1904,3 +1905,28 @@ Chosen option: **"Bounded progress for resources and prompts"**, because it clos
 - A released-package journey independently verifies resource and prompt progress, token isolation, limit enforcement, and terminal ordering.
 - Registry readback independently verifies the released package version, integrity, signatures, provenance, and public types.
 - Protocol coverage and package guidance describe the new optional behavior and its limits without restoring deprecated client-logging guidance.
+
+### [ADR-0088: Always-Available Checked Model Context Protocol (MCP) Ping](0088-always-available-checked-mcp-ping.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### ADR-0088 Decision
+
+Chosen option: **"Always admit the official MCP ping handler"**, because one framework admission change exposes behavior already implemented by the pinned official dependency without creating another public abstraction.
+
+#### ADR-0088 Checks
+
+- A raw MCP `2026-07-28` `ping` request returns the official handler's checked empty result.
+- Two independent clients using the official package pinned to MCP 2026-07-28 complete the same operation.
+- Ping succeeds when an application registers no tools, resources, or prompts.
+- Protected-discovery configuration causes zero verifier, authorization, and application-handler calls for ping.
+- Invalid origin, protocol version, `Accept`, content type, custom headers, JSON-RPC envelope, and oversized body remain rejected by their existing checks.
+- Ping emits no progress, logging, or cache activity and mutates no application state.
+- Explicit qualification records the unchanged behavior of every supported legacy protocol revision.
+- No deprecated or speculative protocol capability is added.
+- Source, black-box, packed-package, and measured MCP `2026-07-28` performance checks pass from clean checkouts.
+- A released-package journey independently verifies MCP `2026-07-28` `ping`, zero application and verifier calls, boundary rejection, and legacy behavior.
+- Registry readback independently verifies the released package version, integrity, signatures, provenance, and downloaded-package behavior.
+- Protocol coverage and package guidance describe ping as a core request, not as application health or a configurable capability.
+- Deprecated client-logging, roots, and sampling guidance remains absent.
