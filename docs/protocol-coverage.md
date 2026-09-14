@@ -437,13 +437,20 @@ input/output transport.
 **Status: Partial.** Applications can opt into structured logging,
 OpenTelemetry, or both through the same framework-redacted event contract.
 Each `/mcp` request produces a bounded event containing only known protocol and
-capability names, HTTP method and status, completion outcome, and duration.
+capability names, HTTP method and status, transport `outcome`, bounded
+`protocolOutcome`, and duration. Transport outcome remains `finished` or
+`disconnected`. Protocol outcome is `success`, `tool_error`, `protocol_error`,
+or `disconnected`.
 
 The [observability HTTP tests](../tests/black-box/telemetry.test.mjs) cover two
-adapters, stable order, redaction, unknown names, adapter failures, and bounded
-delivery and flush. HTTP completion is not treated as tool success. The CI
-benchmark compares disabled and enabled built-in OpenTelemetry adapters without
-an exporter; it does not measure an adopter's exporter or log destination.
+adapters, JSON and Server-Sent Events (SSE) requests, stable order, redaction,
+unknown names, adapter failures, and bounded delivery and flush. The framework
+classifies outcomes at known protocol boundaries without inspecting serialized
+response bodies.
+OpenTelemetry records transport and protocol outcomes separately as
+`emseepea.transport.outcome` and `emseepea.protocol.outcome`. The CI benchmark
+compares disabled and enabled built-in OpenTelemetry adapters without an
+exporter; it does not measure an adopter's exporter or log destination.
 
 ### Dependency Readiness and Shutdown Flushing
 

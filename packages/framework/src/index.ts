@@ -77,7 +77,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { z } from "zod";
 import {
   installObservability,
+  observabilityState,
   type ObservabilityAdapter,
+  type ObservabilityState,
 } from "./telemetry.js";
 
 export {
@@ -87,6 +89,7 @@ export {
   type ObservabilityEvent,
   type ObservedHttpMethod,
   type ObservedMcpMethod,
+  type ObservedProtocolOutcome,
 } from "./telemetry.js";
 
 export * from "./ui.js";
@@ -211,6 +214,7 @@ interface RequestOperation {
   readonly capability?: string;
   readonly legacy: boolean;
   readonly maxClientRoots?: number;
+  readonly observability?: ObservabilityState;
 }
 const requestOperations = new AsyncLocalStorage<RequestOperation>();
 interface RequestStateRuntime {
@@ -1494,11 +1498,13 @@ function createCheckedTool(
                   throw new Error("Tool returned an invalid result");
                 }
                 const publicResult = await checkedToolResult(result, outputSchema, signal);
+                if (publicResult.isError === true) markCurrentProtocolOutcome("tool_error");
                 assertResultSize(publicResult, maxApplicationResultBytes, deadlineMs, signal);
                 return publicResult;
               },
             );
           } catch {
+            markCurrentProtocolOutcome("tool_error");
             return { content: [{ type: "text", text: "Tool execution failed" }], isError: true };
           }
         },
@@ -2187,6 +2193,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     if (pagination) installListPagination(server, pagination);
     return server;
   }, {
+    onerror: () => markCurrentProtocolOutcome("protocol_error"),
     responseMode: hasProgress || resourceSubscriptions || clientLogging ? "auto" : "json",
     keepAliveMs: 0,
   });
@@ -2249,6 +2256,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       supportedProtocolVersions: [PROTOCOL_VERSION],
     }), {
       legacy: "reject",
+      onerror: () => markObservabilityProtocolError(request),
       responseMode: "sse",
       bus: boundedBus,
       maxSubscriptions: 1,
@@ -2391,6 +2399,9 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       resourceTemplates,
       promptsByName,
     );
+    if (isCapabilityInvocation(request.body) && access === undefined) {
+      markObservabilityProtocolError(request);
+    }
     let authInfo: AuthInfo | undefined;
     if (authentication && (protectsCatalogue || access && access !== "public")) {
       try {
@@ -2447,6 +2458,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
           capability,
           legacy,
           maxClientRoots,
+          observability: observabilityState(request),
         },
         () => nodeHandler(request.raw, reply.raw, request.body),
       );
@@ -2753,11 +2765,23 @@ async function sendRpcError(
   id: string | number | null = null,
   data?: Readonly<Record<string, unknown>>,
 ): Promise<void> {
+  markObservabilityProtocolError(reply.request);
   await reply.code(status).send({
     jsonrpc: "2.0",
     id,
     error: { code, message, ...(data ? { data } : {}) },
   });
+}
+
+function markCurrentProtocolOutcome(outcome: "tool_error" | "protocol_error"): void {
+  const state = requestOperations.getStore()?.observability;
+  if (!state || state.protocolOutcome === "protocol_error") return;
+  state.protocolOutcome = outcome;
+}
+
+function markObservabilityProtocolError(request: FastifyRequest): void {
+  const state = observabilityState(request);
+  if (state) state.protocolOutcome = "protocol_error";
 }
 function isFastifyError(error: unknown): error is FastifyError {
   return error instanceof Error && "code" in error;

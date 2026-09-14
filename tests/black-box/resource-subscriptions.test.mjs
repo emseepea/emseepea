@@ -67,7 +67,7 @@ test("resource subscriptions cover static and concrete template URIs", { timeout
     assert.equal(subscriptionEvents.length, 2);
     assert.ok(subscriptionEvents.every((event) => event.capability && event.outcome === "finished"));
     assert.deepEqual(Object.keys(subscriptionEvents[0]).sort(), [
-      "capability", "durationMs", "httpMethod", "method", "outcome", "statusCode", "type",
+      "capability", "durationMs", "httpMethod", "method", "outcome", "protocolOutcome", "statusCode", "type",
     ]);
     assert.doesNotMatch(JSON.stringify(subscriptionEvents), /guide:\/\/|invoice:\/\/|subscription-client/);
   } finally {

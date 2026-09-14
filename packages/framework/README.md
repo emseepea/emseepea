@@ -297,7 +297,14 @@ callbacks, or backend calls.
 
 Each observability adapter receives one immutable, framework-created event per
 MCP request. Its bounded fields are the known MCP method, known capability name
-when applicable, HTTP method and status, completion outcome, and duration.
+when applicable, HTTP method and status, transport outcome, protocol outcome,
+and duration.
+
+`outcome` remains `finished` or `disconnected` for transport compatibility.
+`protocolOutcome` is `success`, `tool_error`, `protocol_error`, or
+`disconnected`, so adapters can count MCP failures without reading encoded JSON
+or Server-Sent Events (SSE) bodies. The OpenTelemetry adapter reports the same
+classification as `emseepea.protocol.outcome`.
 
 Adapters never receive request or response objects, bodies, headers, arguments,
 results, tokens, URLs, raw errors, or provider claims. Adapter failures do not

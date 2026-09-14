@@ -1,5 +1,5 @@
 import { metrics, SpanKind, trace } from "@opentelemetry/api";
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 
 const methods = new Set<string>([
   "server/discover", "tools/list", "tools/call", "resources/list",
@@ -14,6 +14,13 @@ export type ObservedMcpMethod =
   | "completion/complete" | "subscriptions/listen" | "_OTHER";
 export type ObservedHttpMethod =
   | "POST" | "GET" | "HEAD" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "_OTHER";
+export type ObservedProtocolOutcome = "success" | "tool_error" | "protocol_error" | "disconnected";
+
+export interface ObservabilityState {
+  protocolOutcome: Exclude<ObservedProtocolOutcome, "disconnected">;
+}
+
+const requestStates = new WeakMap<FastifyRequest, ObservabilityState>();
 
 export interface ObservabilityEvent {
   readonly type: "mcp.request";
@@ -22,6 +29,7 @@ export interface ObservabilityEvent {
   readonly httpMethod: ObservedHttpMethod;
   readonly statusCode: number;
   readonly outcome: "finished" | "disconnected";
+  readonly protocolOutcome: ObservedProtocolOutcome;
   readonly durationMs: number;
 }
 
@@ -51,6 +59,7 @@ export function openTelemetry(): ObservabilityAdapter {
         ...(event.capability ? { "mcp.capability.name": event.capability } : {}),
         "http.request.method": event.httpMethod,
         "http.response.status_code": event.statusCode,
+        "emseepea.protocol.outcome": event.protocolOutcome,
         "emseepea.transport.outcome": event.outcome,
       };
       const span = tracer.startSpan("mcp.request", { kind: SpanKind.SERVER });
@@ -72,6 +81,8 @@ export function installObservability(
 
   app.addHook("onRequest", (request, reply, done) => {
     if (request.routeOptions.url !== "/mcp") { done(); return; }
+    const state: ObservabilityState = { protocolOutcome: "success" };
+    requestStates.set(request, state);
     const started = performance.now();
     let ended = false;
     const finish = () => end(reply.raw.destroyed || reply.raw.socket?.destroyed ? "disconnected" : "finished");
@@ -85,15 +96,21 @@ export function installObservability(
       const method = body && typeof body === "object" && "method" in body ? body.method : undefined;
       const capability = capabilityName(body);
       const status = reply.raw.statusCode;
+      const statusCode = reply.raw.headersSent && Number.isInteger(status) && status >= 100 && status <= 599
+        ? status
+        : 0;
       const event = Object.freeze({
         type: "mcp.request" as const,
         method: (typeof method === "string" && methods.has(method) ? method : "_OTHER") as ObservedMcpMethod,
         ...(capability ? { capability } : {}),
         httpMethod: (httpMethods.has(request.method) ? request.method : "_OTHER") as ObservedHttpMethod,
-        statusCode: reply.raw.headersSent && Number.isInteger(status) && status >= 100 && status <= 599
-          ? status
-          : 0,
+        statusCode,
         outcome,
+        protocolOutcome: outcome === "disconnected"
+          ? "disconnected"
+          : state.protocolOutcome === "success" && statusCode >= 400
+            ? "protocol_error"
+            : state.protocolOutcome,
         durationMs: Math.min(3_600_000, Math.max(0, performance.now() - started)),
       });
       for (const adapter of adapters) {
@@ -120,6 +137,10 @@ export function installObservability(
       catch { /* Every adapter gets an independent bounded flush opportunity. */ }
     }));
   };
+}
+
+export function observabilityState(request: FastifyRequest): ObservabilityState | undefined {
+  return requestStates.get(request);
 }
 
 async function bounded(work: Promise<unknown>, timeoutMs: number): Promise<void> {

@@ -1,6 +1,6 @@
 # Current Release Readiness
 
-Date: 2026-09-14
+Date: 2026-09-15
 
 Release verification is not complete. This review covers one planned
 16-package batch. The server package contains the only feature change. Four
@@ -9,56 +9,55 @@ manifest-only updates.
 
 ## Planned Release Batch
 
-- `@emseepea/server@0.11.2`
-- `@emseepea/testing@0.11.2`
-- `@emseepea/feedback@0.2.12`
-- `@emseepea/react@0.2.2`
-- `@emseepea/svelte@0.1.2`
-- `@emseepea/create-tool-server@0.0.32`
-- `@emseepea/create-api-backed-server@0.0.30`
-- `@emseepea/create-openapi-backed-server@0.0.12`
-- `@emseepea/create-resources-and-prompts-server@0.0.29`
-- `@emseepea/create-progress-streaming-server@0.0.30`
-- `@emseepea/create-html-ui-server@0.0.31`
-- `@emseepea/create-react-ui-server@0.0.30`
-- `@emseepea/create-multi-instance-postgres-server@0.0.20`
-- `@emseepea/create-database-schema-server@0.0.17`
-- `@emseepea/create-mongodb-backed-server@0.0.17`
-- `@emseepea/create-soap-backed-server@0.0.17`
+- `@emseepea/server@0.12.0`
+- `@emseepea/testing@0.11.3`
+- `@emseepea/feedback@0.2.13`
+- `@emseepea/react@0.2.3`
+- `@emseepea/svelte@0.1.3`
+- `@emseepea/create-tool-server@0.0.33`
+- `@emseepea/create-api-backed-server@0.0.31`
+- `@emseepea/create-openapi-backed-server@0.0.13`
+- `@emseepea/create-resources-and-prompts-server@0.0.30`
+- `@emseepea/create-progress-streaming-server@0.0.31`
+- `@emseepea/create-html-ui-server@0.0.32`
+- `@emseepea/create-react-ui-server@0.0.31`
+- `@emseepea/create-multi-instance-postgres-server@0.0.21`
+- `@emseepea/create-database-schema-server@0.0.18`
+- `@emseepea/create-mongodb-backed-server@0.0.18`
+- `@emseepea/create-soap-backed-server@0.0.18`
 
-The server package adds bounded request-scoped progress for static resources,
-resource templates, and prompts. The other four packages update their server
-dependency and add no separate feature. Each initializer package updates its
-embedded manifest to use `@emseepea/server@0.11.2`. These releases add no
-separate initializer feature. This batch does not add or expand deprecated
-client logging or any other deprecated functionality.
+The server package adds bounded protocol outcomes to its existing redacted
+observability events. The other four packages update their server dependency
+and add no separate feature. Each initializer package updates its embedded
+manifest to use `@emseepea/server@0.12.0`. These releases add no separate
+initializer feature.
 
-## Resource and Prompt Progress
+## Bounded Protocol Outcomes
 
-When a request using Model Context Protocol (MCP) version 2026-07-28 supplies a
-progress token, resource and prompt handlers receive an optional
-`reportProgress` operation. Progress uses only that request's token and finishes
-before its terminal result. Existing event-count, event-size, authentication,
-authorization, deadline, cancellation, result-validation, and safe-error
-controls remain in force. Legacy handlers, direct and mapped tools, and
-completion handlers do not gain this operation.
+Each redacted observability event now reports a bounded `protocolOutcome` of
+`success`, `tool_error`, `protocol_error`, or `disconnected`. Existing
+transport `outcome` remains separate and compatible. The framework classifies
+the value at known execution boundaries for JSON and Server-Sent Events (SSE).
+It does not inspect serialized response bodies or expose request arguments,
+results, headers, tokens, or raw errors. OpenTelemetry records the bounded value
+as `emseepea.protocol.outcome`.
 
 ## Evidence So Far
 
-- Architecture Decision Record (ADR) 0087 was explicitly ratified. Final
-  architecture and Jobs To Be Done reviews passed.
+- Confirmed ADR 0065 already governs this additive redacted observability
+  contract. Final architecture and Jobs To Be Done reviews passed, and no new
+  decision or job was required.
 - Source build, typecheck, lint, decision, documentation, modern and legacy
   black-box, packed-public-package, and benchmark checks passed locally.
-- Behavioral tests cover official-client and raw HTTP progress, token
-  isolation, fresh input-required rounds, authorization before execution, event
-  limits, late reporting, terminal ordering, and the legacy boundary.
-- The full local suite passed 221 of 224 Docker-independent tests before the
-  final legacy guard. The affected modern and legacy tests passed after that
-  guard. Three existing PostgreSQL and MongoDB fixtures, plus the
-  all-initializer packed journey, could not run because the local Docker daemon
-  was unavailable.
+- Behavioral tests cover all four outcomes, JSON and SSE paths, the distinct
+  transport outcome, OpenTelemetry attributes, event-size bounds, and leakage
+  canaries.
+- The complete local suite passed 226 of 226 tests, including PostgreSQL and
+  MongoDB fixtures after the local Docker daemon was started.
+- Two consecutive observability-enabled benchmark suites passed the throughput,
+  CPU, allocation, event-size, and retained-heap limits.
 - Independent architecture, JTBD, cognitive-accessibility, Markdown
-  accessibility, voice and tone, and test-quality reviews passed.
+  accessibility, and voice and tone reviews passed.
 - Pipeline risk is 5 out of 25 for commit, push, and release.
 
 These are source and local checks. They do not prove exact-commit continuous
@@ -83,11 +82,10 @@ evidence does not cover this planned batch.
 - Every registry package must pass its applicable downloaded clean-install and
   public-entry-point checks.
 - Every initializer package must install with its manifest rewritten to the
-  exact `@emseepea/server@0.11.2` dependency and pass its applicable checks.
-- The downloaded server package must verify resource and prompt progress,
-  current-request token isolation, fresh input-required rounds, limit
-  enforcement, terminal ordering, protected authorization, and legacy
-  exclusion through its public entry point.
+  exact `@emseepea/server@0.12.0` dependency and pass its applicable checks.
+- The downloaded server package must verify bounded protocol outcomes through
+  JSON and SSE, preserve the distinct transport outcome, emit the separate
+  OpenTelemetry attribute, and retain the redaction and event-size boundaries.
 - Production use by an adopter requires separate, cited journey evidence.
 
 ## Evidence Boundaries
