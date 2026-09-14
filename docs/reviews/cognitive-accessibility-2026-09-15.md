@@ -72,3 +72,24 @@ Markdown publication findings remain in scope.
 Scope: Source Markdown clarity and cognitive accessibility only. This review
 does not establish tests, continuous integration, publication, registry
 verification, exact-host behavior, or adopter production verification.
+
+## Protocol Coverage Status Wording
+
+Result: PASS. The protocol coverage page uses plain-language status labels,
+separates known optional MCP gaps from deprecated and transport boundaries, and
+gives each partially implemented row a consistent "What works / Not supported /
+Why / If you need it" structure. The observability row keeps bounded transport
+and protocol outcomes inside "What works" while preserving the limit that Em
+See Pea does not guarantee delivery to an external exporter or log destination.
+The "Known Optional MCP Gaps" section avoids a full-completeness overclaim and
+states that a full claim still requires a fresh comparison with the pinned
+public specification plus two independent client checks for every row.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `docs/protocol-coverage.md` | `51000b945a551c899b7307393ad74e869f122fb8e1ef85b51987e219d2e9375e` |
+
+Scope: Source Markdown clarity and cognitive accessibility only. This review
+does not establish implementation, test results, continuous integration,
+publication, registry verification, exact-host behavior, or adopter production
+verification.

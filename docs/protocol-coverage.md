@@ -4,7 +4,7 @@ This page shows how much of the active Model Context Protocol (MCP) server
 surface Em See Pea supports today.
 
 The active target remains MCP `2026-07-28`. The same stateless `POST /mcp`
-endpoint also provides a checked compatibility subset for `2025-11-25`,
+endpoint also provides a verified compatibility subset for `2025-11-25`,
 `2025-06-18`, `2025-03-26`, `2024-11-05`, and `2024-10-07`. For each legacy
 revision, an independent SDK client completes initialization, tool listing,
 and tool invocation. See the
@@ -17,23 +17,62 @@ and the matching
 
 ## What the Statuses Mean
 
-- **Checked**: automated tests cover the behaviour described in this row.
-- **Partial**: the common path works, but active protocol behaviour is missing.
-- **Not built**: the framework does not advertise or accept this capability.
-- **Not checked**: the dependency may handle it, but Em See Pea has no exact
-  test and makes no claim.
-- **Legacy-only**: supported compatibility revisions retain it, but the active
-  protocol revision does not define it.
-- **Not used on HTTP**: the protocol uses a different HTTP mechanism.
+- **Fully implemented and verified**: Em See Pea implements this behaviour and
+  has exact automated tests for it.
+- **Fully implemented for compatibility revisions**: Em See Pea supports this
+  behaviour for older MCP revisions. MCP `2026-07-28` removed or replaced it.
+- **Partially implemented**: one part is ready, and one part is intentionally
+  not supported or still missing. These rows use the same shape:
+  **What works**, **Not supported**, **Why**, and **If you need it**.
+- **Not implemented**: Em See Pea does not advertise or accept this capability.
+- **Intentionally unsupported**: Em See Pea deliberately omits the feature.
+- **Not applicable to Streamable HTTP**: this protocol behaviour belongs to a
+  different transport.
+- **Application capability, not an MCP protocol claim**: the feature is useful,
+  tested application code, but it is not part of the MCP server surface.
 
-A checked row is not a claim that the whole protocol is complete.
+One fully implemented row is not a claim that the whole protocol is complete.
 Evidence links point to executable tests in this repository.
+
+## Known Optional MCP Gaps
+
+The known non-deprecated MCP `2026-07-28` gaps on this page are optional
+capabilities:
+
+- Em See Pea does not support tool, resource, resource-template, or prompt
+  list-change notifications inside one running process. Catalogue changes are
+  delivered by redeploying and reconnecting. See
+  [ADR-0080: Immutable Capability Catalogues Through Redeployment](decisions/0080-immutable-capability-catalogues-through-redeployment.proposed.md).
+- Em See Pea does not offer a generic extension-notification registration point
+  for client notification `POST` requests.
+
+This is not a full protocol-completeness claim. A full claim still requires a
+fresh comparison with the pinned public specification and two independent
+client checks for every row.
+
+Several other limits on this page are not missing MCP features. They are
+transport boundaries, deprecated-feature boundaries, operational guarantees
+outside MCP, or deployment-specific checks that each application must qualify.
+
+## If You Need an Unsupported Capability
+
+Use the alternative named in the relevant row when one fits. An application
+event service can notify every server process, and each process can call
+`notifyResourceUpdated` for its connected clients.
+
+If you must add an MCP method or notification that Em See Pea does not expose,
+there is no supported Em See Pea extension hook for that today. Build that
+server path directly with `@modelcontextprotocol/server`,
+`@modelcontextprotocol/fastify`, and `@modelcontextprotocol/node`, or keep the
+existing MCP server alongside Em See Pea during migration. The application then
+owns validation, authentication, limits, cancellation, and shutdown for that
+path. Do not depend on Em See Pea's private internals.
 
 ## Requests From Clients
 
 ### `server/discover`
 
-**Status: Checked.** Lists the pinned version and only the capabilities
+**Status: Fully implemented and verified.** Lists the pinned version and only the capabilities
 registered by the application. Discovery remains open by default when
 capabilities require authentication. Applications may explicitly protect
 discovery and filter it by principal permissions. See the
@@ -45,34 +84,43 @@ their individual entries are omitted, as covered by the
 
 ### `ping`
 
-**Status: Legacy-only.** MCP `2026-07-28` excludes `ping` from its
-version-specific request registry, so Em See Pea does not admit it as an MCP
-`2026-07-28` request. The generic SDK retains `ping` for supported 2025-era compatibility.
-This is a protocol-version boundary, not an unfinished active capability. See
+**Status: Fully implemented for compatibility revisions.** Supported 2025-era
+compatibility revisions retain `ping`, and the generic SDK still handles it on
+those paths. MCP `2026-07-28` removed `ping` from its version-specific request
+registry, so Em See Pea does not admit it as an MCP `2026-07-28` request.
+
+This is a protocol-version boundary, not an unfinished active capability. If an
+application needs a current health check, use the non-MCP `/healthz` endpoint.
+See
 [ADR-0089: No `ping` in Model Context Protocol (MCP) `2026-07-28` Beyond Existing Legacy Compatibility](decisions/0089-no-modern-ping-beyond-existing-legacy-compatibility.proposed.md).
 
 ### `tools/list`
 
-**Status: Partial.** Lists visible tools with public input schemas and optional output schemas,
-titles, icons, annotations, access policy, and public application metadata. Changing
-the list while the server is running is not supported. See the
+**Status: Fully implemented and verified.** Em See Pea lists visible tools with public input schemas,
+optional output schemas, titles, icons, annotations, access policy, and public
+application metadata. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
 [list-pagination tests](../tests/black-box/list-pagination.test.mjs). Hidden but
 callable tools are covered by the
 [discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
+The catalogue is immutable after startup and advertises `listChanged: false`.
+Deploy a new server version and let clients reconnect when the tool list
+changes.
+
 ### `tools/call`
 
-**Status: Partial.** Supports checked public, protected, mapped, and
+**Status: Fully implemented and verified.** Em See Pea supports validated
+public, protected, mapped, and
 progress-reporting tools. A direct tool may ask a capable client for more input
-before returning its final result. Mapped and progress-reporting tools cannot.
-Handlers may keep the checked `{ data, text? }` convenience form or return a
-checked protocol-native result. Protocol-native results support text, image,
-audio, resource-link, and embedded-resource content, safely representable JSON
-structured content, deliberate application errors, and client-visible metadata.
-Declared output schemas remain mandatory for the convenience form and are
-enforced on successful protocol-native structured content. See the
+before returning its final result. Handlers may keep the validated
+`{ data, text? }` convenience form or return a validated protocol-native result. Protocol-native
+results support text, image, audio, resource-link, embedded-resource content,
+safely representable JSON structured content, deliberate application errors, and
+client-visible metadata. Declared output schemas remain mandatory for the
+convenience form and are enforced on successful protocol-native structured
+content. See the
 [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
 [protocol-native result tests](../tests/black-box/rich-tool-results.test.mjs),
 [mapped backend tests](../tests/black-box/mapped-adapter.test.mjs),
@@ -81,10 +129,14 @@ enforced on successful protocol-native structured content. See the
 known lifecycle-hidden tools and their later removal are covered by the
 [discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
+Mapped and progress-reporting tool helpers do not support multi-round client
+input. Use a direct tool for that interaction, or split the operation into
+separate explicit tools.
+
 ### `resources/list`
 
-**Status: Partial.** Lists visible public and protected resources. Changing the list while
-the server is running is not supported. See the
+**Status: Fully implemented and verified.** Em See Pea lists visible public and
+protected static resources. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
 [list-pagination tests](../tests/black-box/list-pagination.test.mjs).
@@ -93,11 +145,13 @@ resource contents, query application records, or expand resource templates.
 Lifecycle-hidden resource listing is covered by the
 [discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
+The catalogue is immutable after startup. Deploy a new server version and let
+clients reconnect when the resource list changes.
+
 ### `resources/templates/list`
 
-**Status: Partial.** Lists visible public and protected resource templates.
-Each template is a registered URI pattern. Changing the list while the server
-is running is not supported. See the
+**Status: Fully implemented and verified.** Em See Pea lists visible public and protected resource
+templates. Each template is a registered URI pattern. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
 [list-pagination tests](../tests/black-box/list-pagination.test.mjs).
@@ -106,14 +160,19 @@ resource contents, query application records, or list matching concrete URIs.
 Lifecycle-hidden resource-template listing is covered by the
 [discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
+The catalogue is immutable after startup. Deploy a new server version for
+catalogue changes. A template describes an address pattern; put dynamic lookup
+inside its resource read handler.
+
 ### `resources/read`
 
-**Status: Partial.** Reads registered public or protected resources and checks their result.
-A resource may ask a capable client for more input before returning its final
-result. A resource read may return several text or binary content items. Each
-returned URI identifies one item. It does not need to match the URI that the
-client requested. Em See Pea still authorizes the resource that the client
-requested. Any cache instructions apply to the complete response.
+**Status: Fully implemented and verified.** Em See Pea reads registered public
+or protected resources and validates their result. A resource may ask a capable client for more input before
+returning its final result. A resource read may return several text or binary
+content items. Each returned URI identifies one item. It does not need to match
+the URI that the client requested. Em See Pea still authorizes the resource
+that the client requested. Any cache instructions apply to the complete
+response.
 
 Returning an item URI does not, by itself, register a resource or let a client
 read that URI through Em See Pea. A client may still read it if the URI
@@ -132,22 +191,30 @@ Resource update subscriptions are covered separately below. See the
 lifecycle-hidden resources and templates, followed by removal, are covered by
 the [discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
+Returned item URIs do not dynamically register new readable resources. Register
+a static resource or resource template for each URI shape the client may read
+later. This keeps authorization bound to a declared resource.
+
 ### `prompts/list`
 
-**Status: Partial.** Lists visible public and protected prompts. Changing the list while
-the server is running is not supported. See the
+**Status: Fully implemented and verified.** Em See Pea lists visible public and
+protected prompts. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Opt-in bounded pages are covered by the
 [list-pagination tests](../tests/black-box/list-pagination.test.mjs).
 Lifecycle-hidden prompt listing is covered by the
 [discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
 
+The catalogue is immutable after startup. Deploy a new server version and let
+clients reconnect when the prompt list changes.
+
 ### `prompts/get`
 
-**Status: Partial.** Gets a registered public or protected prompt and checks its result. A
-prompt may ask a capable client for more input before returning its final
-result. A prompt can send bounded progress when the current request asks for
-it. See the [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs),
+**Status: Fully implemented and verified.** Em See Pea gets a registered public
+or protected prompt and validates its result. A prompt may ask a capable client for more input before
+returning its final result. A prompt can send bounded progress when the current
+request asks for it. See the
+[resource and prompt tests](../tests/black-box/resources-prompts.test.mjs),
 [resource and prompt progress tests](../tests/black-box/resource-prompt-progress.test.mjs), and
 [client-input tests](../tests/black-box/input-required.test.mjs). Known
 lifecycle-hidden prompts remain callable until removal, as covered by the
@@ -155,8 +222,8 @@ lifecycle-hidden prompts remain callable until removal, as covered by the
 
 ### `completion/complete`
 
-**Status: Checked.** Suggests bounded, checked values for registered prompt
-arguments and resource fields. Completion inherits the referenced prompt or
+**Status: Fully implemented and verified.** Suggests bounded, validated values
+for registered prompt arguments and resource fields. Completion inherits the referenced prompt or
 resource-template access policy. See the
 [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs).
 Completion for known lifecycle-hidden prompts and templates, authorization
@@ -165,22 +232,31 @@ failure, and later removal are covered by the
 
 ### `subscriptions/listen`
 
-**Status: Partial.** An application can opt into resource-update subscriptions.
-Each request listens to one registered static resource URI or one concrete URI
-that matches a registered resource template. The framework authenticates
-access to a protected resource before opening the stream and bounds active streams, stream
+**Status: Partially implemented.**
+
+**What works:** An application can opt into resource-update subscriptions. Each
+request listens to one registered static resource URI or one concrete URI that
+matches a registered resource template. The framework authenticates access to a
+protected resource before opening the stream and bounds active streams, stream
 lifetime, event count, event size, and total event bytes. Overflow closes only
 the affected stream. See the
 [resource subscription tests](../tests/black-box/resource-subscriptions.test.mjs).
 
-Subscriptions and notifications are process-local. There is no replay,
-reconnect recovery, or tool, resource, or prompt list-change subscription.
+**Not supported:** Replay, reconnect recovery, cross-process subscriptions, or
+tool, resource, template, or prompt list-change subscriptions.
+
+**Why:** Subscriptions and notifications are process-local.
+
+**If you need it:** For cross-process resource updates, let each process consume
+the same application event service and call `notifyResourceUpdated` locally.
+Clients can re-read the resource after reconnecting when they need current
+state. For catalogue changes, redeploy and let clients reconnect.
 
 ## HTTP and Shared Behaviour
 
 ### One `POST /mcp` Endpoint
 
-**Status: Checked.** Raw HTTP tests and the official MCP client cover JSON
+**Status: Fully implemented and verified.** Raw HTTP tests and the official MCP client cover JSON
 requests in both protocol eras. Common non-POST methods are rejected with
 `Allow: POST`; legacy sessions, GET streams, replay, and resumption are not
 supported. See the [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs)
@@ -188,7 +264,7 @@ and [legacy protocol tests](../tests/black-box/legacy-protocol.test.mjs).
 
 ### Protocol Version
 
-**Status: Checked.** Modern discovery and calls use the pinned `2026-07-28`
+**Status: Fully implemented and verified.** Modern discovery and calls use the pinned `2026-07-28`
 version. Legacy initialization is limited to the five compatibility revisions
 listed above. Missing, unsupported, malformed, and mixed-era versions are
 rejected before authentication or application work. See the
@@ -198,7 +274,7 @@ rejected before authentication or application work. See the
 
 ### Result Envelopes
 
-**Status: Checked.** Every enabled successful operation returns
+**Status: Fully implemented and verified.** Every enabled successful operation returns
 `resultType: "complete"`. Discovery, list, and resource-reading results also
 tell clients not to reuse the response and not to share it between callers by
 returning `ttlMs: 0` and `cacheScope: "private"`.
@@ -212,7 +288,7 @@ successfully reads all nine results. The separately tested
 
 ### Advertised Names, Icons, and Hints
 
-**Status: Checked.** Applications can give the server a website address. They
+**Status: Fully implemented and verified.** Applications can give the server a website address. They
 can give the server and its tools, resources, resource address patterns, and
 prompts human-friendly titles, descriptions, and icons. Tools can provide
 standard usage hints. Resources can provide audience, importance, and
@@ -229,7 +305,7 @@ description. See the
 
 ### Cache Instructions
 
-**Status: Checked.** Applications can tell clients how long they may reuse
+**Status: Fully implemented and verified.** Applications can tell clients how long they may reuse
 discovery details, lists, and resource content. They can also say whether a
 shared cache may keep the result. An individual resource or reusable resource
 address can override either part of the resource-reading instruction.
@@ -243,7 +319,7 @@ changes to caller-owned configuration objects have no effect. See the
 
 ### List Pagination
 
-**Status: Checked.** Applications can opt in to bounded pages for tool,
+**Status: Fully implemented and verified.** Applications can opt in to bounded pages for tool,
 resource, resource-address, and prompt catalogues. Page size is limited to 100,
 and a separate byte limit stops oversized catalogue pages.
 
@@ -256,7 +332,7 @@ three pages. Catalogues remain fixed for the lifetime of the server. See the
 
 ### Accepted Response Types
 
-**Status: Checked.** Clients must offer both JSON and server-sent events.
+**Status: Fully implemented and verified.** Clients must offer both JSON and server-sent events.
 Tests reject missing, wildcard-only, and single-type `Accept` values before authentication
 or application work. They accept both tested orders and parameters. This is a
 narrow framework check, not a claim of complete HTTP content negotiation. See
@@ -266,7 +342,7 @@ the [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs),
 
 ### Request Headers
 
-**Status: Checked.** Tests cover the protocol version, method, name, and tool
+**Status: Fully implemented and verified.** Tests cover the protocol version, method, name, and tool
 values copied into custom HTTP headers. They cover string, integer, and boolean
 values, safe encoding, optional values, unknown headers, and rejection of
 invalid declarations or missing, different, and malformed values before the
@@ -279,25 +355,32 @@ classified legacy requests use their revision's standard header rules. See the
 
 ### Notification `POST` Requests
 
-**Status: Not built.** MCP 2026-07-28 defines the HTTP response mechanics for
-notifications but defines no core client notification for Streamable HTTP.
-Em See Pea does not yet offer an extension-notification registration point.
+**Status: Not implemented.** MCP 2026-07-28 defines HTTP response mechanics for
+notifications, but defines no core client notification for Streamable HTTP.
+Em See Pea does not yet offer a generic extension-notification registration
+point.
+
+**If you need it:** Use ordinary tools, resources, prompts, or
+`subscriptions/listen` when those fit. Otherwise, use the direct SDK path
+described in [If You Need an Unsupported Capability](#if-you-need-an-unsupported-capability).
+An integrated Em See Pea extension point would need an ADR and exact wire tests
+before Em See Pea could claim support.
 
 ### Origin Checks
 
-**Status: Checked.** Disallowed browser origins are rejected before application
+**Status: Fully implemented and verified.** Disallowed browser origins are rejected before application
 work starts. See the [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs)
 and [deployment-boundary tests](../tests/black-box/production-boundary.test.mjs).
 
 ### Request Limits and Safe Errors
 
-**Status: Checked.** Tests cover malformed and oversized input, oversized
+**Status: Fully implemented and verified.** Tests cover malformed and oversized input, oversized
 output, invalid application output, time limits, and redacted failures. See the
 [basic HTTP tests](../tests/black-box/basic-no-ui.test.mjs).
 
 ### Cancellation
 
-**Status: Checked.** Closing a request's response stream cancels cooperating
+**Status: Fully implemented and verified.** Closing a request's response stream cancels cooperating
 tools, adapters, resources, resource patterns, prompts, suggestions, and
 progress work. See the
 [mapped backend tests](../tests/black-box/mapped-adapter.test.mjs),
@@ -306,11 +389,13 @@ progress work. See the
 
 ### Progress Updates
 
-**Status: Partial.** Public and protected tools, resources, and prompts can send
-bounded progress through a trusted proxy on the same POST response. Resource
-and prompt handlers receive a reporter only when the current request includes a
-progress token. The framework authenticates and authorizes protected calls
-before application code or the event stream begins.
+**Status: Partially implemented.**
+
+**What works:** Public and protected tools, resources, and prompts can send bounded
+progress through a trusted proxy on the same POST response. Resource and prompt
+handlers receive a reporter only when the current request includes a progress
+token. The framework authenticates and authorizes protected calls before
+application code or the event stream begins.
 Independent requests can reach different server processes without requiring
 the client to stay with one process. Public proxy progress was first published in
 `@emseepea/server` 0.0.3.
@@ -330,20 +415,25 @@ at revision `0178dc802c52e395f4907b90b2fbd2bfc324cb9c`. The tested setup uses
 two independent processes behind an HTTP proxy that supplies forwarded HTTPS
 metadata. It does not test a real TLS terminator or every proxy product.
 
-There is no throughput or load-balancing fairness guarantee. Rate limits remain
-per server, and application state is not shared. Paused-reader memory checks
-do not prove that a slow reader slows the producer. Recovery and replay remain
-unsupported for progress streams.
+**Not supported:** Throughput guarantees, load-balancing fairness, shared
+application state, replay, or reconnect recovery for progress streams.
+
+**Why:** Progress is request-scoped and process-local. The tests prove bounded
+delivery in the supported path, not every proxy or deployment topology.
+
+**If you need it:** Keep progress request-scoped, use your deployment layer for
+routing guarantees, and add application-level recovery for work that must
+survive reconnects.
 
 ### Server-Sent Event Completion
 
-**Status: Checked.** A progress stream ends with one checked final response and
-then closes. See the
+**Status: Fully implemented and verified.** A progress stream ends with one
+validated final response and then closes. See the
 [progress tests](../tests/black-box/streaming-progress.test.mjs).
 
 ### Client-Visible Log Messages
 
-**Status: Checked.** Applications can opt into the deprecated MCP 2026-07-28
+**Status: Fully implemented and verified.** Applications can opt into the deprecated MCP 2026-07-28
 request-scoped logging channel. Named direct handlers receive a bounded
 `reportLog` function. A client receives `notifications/message` only when that
 request supplies `io.modelcontextprotocol/logLevel`, and the installed MCP SDK
@@ -362,7 +452,7 @@ separate JSON-boundary performance budget.
 
 ### Proxy Buffering Header
 
-**Status: Checked.** Streamed responses include `X-Accel-Buffering: no`, which
+**Status: Fully implemented and verified.** Streamed responses include `X-Accel-Buffering: no`, which
 asks compatible proxies not to hold progress updates. It is not a guarantee
 that every proxy obeys. The
 [progress tests](../tests/black-box/streaming-progress.test.mjs) check the header;
@@ -371,14 +461,14 @@ the final response in the tested proxy setup.
 
 ### Stream Resumption
 
-**Status: Checked.** MCP 2026-07-28 does not support resuming a stream with
+**Status: Fully implemented and verified.** MCP 2026-07-28 does not support resuming a stream with
 `Last-Event-ID`. Tests prove that a stale header starts a fresh progress stream
 without replay. See the
 [progress tests](../tests/black-box/streaming-progress.test.mjs).
 
 ### Requests for More Client Input
 
-**Status: Checked.** Application authors can create direct tools, resources,
+**Status: Fully implemented and verified.** Application authors can create direct tools, resources,
 resource address patterns, and prompts that pause and ask a capable client for
 form input or URL-mode elicitation. Each reply reaches a fresh request and is
 treated as untrusted input.
@@ -397,7 +487,7 @@ Signing does not provide encryption, single use, or replay prevention. See the
 
 ### Client Workspace Roots
 
-**Status: Checked.** Applications opt in with `clientRoots`. Direct tools,
+**Status: Fully implemented and verified.** Applications opt in with `clientRoots`. Direct tools,
 static resources, resource templates, and prompts can request `roots/list`
 through `input_required`. The framework validates roots before invoking the
 continuation handler, bounds their count and request size, and preserves
@@ -414,19 +504,31 @@ This deprecated MCP feature does not add roots-change notifications or sessions.
 recommends direct integration with model-provider APIs. Em See Pea exposes no
 Sampling request helper, response accessor, or accepted client-input request
 type. Applications that need model generation integrate with their chosen
-provider directly. A hand-built Sampling request is rejected by the checked
+provider directly. A hand-built Sampling request is rejected by the validated
 client-input boundary before delivery or continuation work.
 
 ### Long-Lived Change Notifications
 
-**Status: Partial.** Applications can publish an update for a registered
-resource URI with `notifyResourceUpdated`. Matching `subscriptions/listen`
-streams receive `notifications/resources/updated`. Tool, resource, and prompt
-list-change notifications are not supported.
+**Status: Partially implemented.**
+
+**What works:** Applications can publish an update for a registered resource URI
+with `notifyResourceUpdated`. Matching `subscriptions/listen` streams receive
+`notifications/resources/updated`.
+
+**Not supported:** Tool, resource, resource-template, and prompt list-change
+notifications.
+
+**Why:** Catalogue changes require redeployment, and modern discovery advertises
+`listChanged: false`.
+
+**If you need it:** Redeploy with the new catalogue and let clients reconnect
+and list again. If catalogue changes must happen within one running process,
+use the direct SDK path described above. Reassess ADR-0080 before adding this
+behaviour to Em See Pea.
 
 ### `notifications/cancelled` From a Client
 
-**Status: Not used on HTTP.** MCP 2026-07-28 uses response-stream closure as the
+**Status: Not applicable to Streamable HTTP.** MCP 2026-07-28 uses response-stream closure as the
 cancellation signal for Streamable HTTP. The notification is for the standard
 input/output transport.
 
@@ -434,13 +536,14 @@ input/output transport.
 
 ### Observability Adapters
 
-**Status: Partial.** Applications can opt into structured logging,
-OpenTelemetry, or both through the same framework-redacted event contract.
-Each `/mcp` request produces a bounded event containing only known protocol and
-capability names, HTTP method and status, transport `outcome`, bounded
-`protocolOutcome`, and duration. Transport outcome remains `finished` or
-`disconnected`. Protocol outcome is `success`, `tool_error`, `protocol_error`,
-or `disconnected`.
+**Status: Partially implemented.**
+
+**What works:** Applications can opt into structured logging, OpenTelemetry, or
+both through the same framework-redacted event contract. Each `/mcp` request
+produces a bounded event containing only known protocol and capability names,
+HTTP method and status, transport `outcome`, bounded `protocolOutcome`, and
+duration. Transport outcome remains `finished` or `disconnected`. Protocol
+outcome is `success`, `tool_error`, `protocol_error`, or `disconnected`.
 
 The [observability HTTP tests](../tests/black-box/telemetry.test.mjs) cover two
 adapters, JSON and Server-Sent Events (SSE) requests, stable order, redaction,
@@ -452,11 +555,21 @@ OpenTelemetry records transport and protocol outcomes separately as
 compares disabled and enabled built-in OpenTelemetry adapters without an
 exporter; it does not measure an adopter's exporter or log destination.
 
+**Not supported:** A guarantee that an adopter's exporter, log store, or external
+observability service receives every event.
+
+**Why:** Em See Pea controls the bounded framework event and adapter call, not the
+external destination.
+
+**If you need it:** Qualify your chosen exporter and destination in your own
+deployment, including failure and flush behaviour.
+
 ### Dependency Readiness and Shutdown Flushing
 
-**Status: Partial.** The server includes an optional dependency-readiness
-callback. Configured observability adapters may provide a shutdown-flush
-callback.
+**Status: Partially implemented.**
+
+**What works:** The server includes an optional dependency-readiness callback.
+Configured observability adapters may provide a shutdown-flush callback.
 
 Readiness uses fixed responses without dependency details. Tests cover failure,
 recovery, timeouts, late callback results, cancellation, and one unfinished
@@ -469,18 +582,24 @@ bounded flush opportunity. Tests cover forced stream closure, stalled close
 hooks, flusher failures, expired budgets, and repeated close calls. See the
 [operations HTTP tests](../tests/black-box/operations.test.mjs).
 
-An uncooperative callback can outlive the framework's wait. Successful shutdown
-does not prove delivery to an external observability service. This limit keeps
-the operations claim partial.
+**Not supported:** Detailed dependency diagnostics, disabling independent tool calls
+when readiness is unhealthy, forcing uncooperative callbacks to stop, or proving
+delivery to an external observability service.
+
+**Why:** Readiness and shutdown are bounded framework hooks. They do not own the
+application's dependency client or external telemetry destination.
+
+**If you need it:** Put detailed diagnostics and external delivery checks in your
+application or deployment health system.
 
 ## Optional Feedback Package
 
-**Status: Checked application capability, not an MCP protocol claim.**
+**Status: Application capability, not an MCP protocol claim.**
 `@emseepea/feedback` composes ordinary tools through `additionalTools`. Tests
 cover bounded detailed submissions, protected append-only conversations,
 client-scoped access, first-offer receipts, deadlines, cancellation, minimal
 events, PostgreSQL, Firestore, and deterministic GitHub and Zendesk HTTP
-contracts. Checked webhook boundaries authenticate, validate, scope, bound, and
+contracts. Webhook tests verify authentication, validation, scoping, bounds, and
 deduplicate provider changes.
 
 GitHub and Zendesk checks do not prove behavior in a live customer account.
@@ -489,21 +608,21 @@ notifications, and email require deployment-specific qualification. Feedback
 performance is not claimed. See the
 [`@emseepea/feedback` guide](../packages/feedback/README.md).
 
-## Why Full Coverage Is Not Claimed
+## Why Every Optional Capability Is Not Claimed
 
-Em See Pea supports useful parts of the active server surface, but it does not
-yet support every active request, result shape, notification, and transport
-rule. In particular, it lacks list-change subscriptions and several partial
-capabilities listed above.
+Em See Pea fully implements and verifies the behaviour labelled that way on
+this page. It does not claim every optional MCP capability. In particular, it
+does not implement list-change notifications or generic extension-notification
+registration.
 
 The full active server-surface claim stays withdrawn until a fresh comparison
 with the pinned public specification proves that this page lists every active
-server rule. Every partial, not-built, and not-checked row must then have exact
-tests from clean checkouts with two independent MCP clients.
+server rule. Every partially implemented or not implemented row must then have
+exact tests from clean checkouts with two independent MCP clients.
 
-## Next Proof
+## How Support Claims Change
 
-Work should close one row at a time:
+Maintainers update one row at a time:
 
 1. compare this page with every active server rule in the pinned specification
 2. select the smallest independent missing standard server behaviour
