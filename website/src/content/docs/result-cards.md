@@ -1,10 +1,11 @@
 ---
 title: Render an accessible result card
-description: Use the native HTML, React, or Svelte renderer with one checked result model.
+description: Map current domain results into accessible native HTML, React, or Svelte cards.
 ---
 
-Create one checked result model for a Model Context Protocol (MCP) application,
-then pass it to the renderer that fits your application. Em See Pea supplies
+Create a checked result model from the current result in a Model Context
+Protocol (MCP) application, then pass it to the renderer that fits your
+application. Em See Pea supplies
 the result structure and accessibility semantics. Your application keeps
 ownership of domain parsing, calculations, wording, effects, action
 authorization, and styles.
@@ -25,35 +26,55 @@ npm install @emseepea/server
 For React, also install `@emseepea/react`, React, and React DOM. For Svelte,
 also install `@emseepea/svelte` and Svelte. All three renderers are unstyled.
 
-## Define one result model
+## Map each current result
 
-Map your checked domain result into `ResultView`. Do not put domain parsing,
-calculations, effect authorization, or styling in the renderer.
+Create a new `ResultView` from the current checked domain result whenever the
+result or relevant UI state changes. Put the mapping function in
+`result-view.ts` beside the client or widget component that renders the card.
+
+Runtime parsing happens before this adapter. The adapter formats already
+checked data for presentation; domain parsing, calculations, permissions,
+effect authorization, and styling stay outside it. This example declares a
+small domain type so it can run on its own. In an application, import the
+equivalent post-parse type from your domain layer.
 
 ```ts title="result-view.ts"
-import { defineResultView } from "@emseepea/server/ui";
+import { defineResultView, type ResultView } from "@emseepea/server/ui";
 
-export const resultView = defineResultView({
-  id: "pea-result",
-  heading: "Pea planting plan",
-  headline: "3 varieties match",
-  metrics: [{ label: "Matching varieties", value: "3" }],
-  reasons: {
-    label: "Why these varieties match",
-    items: ["They suit the selected growing conditions."],
-  },
-  disclaimer: "Check local growing advice before planting.",
-  state: {
-    kind: "ready",
-    status: "Pea planting plan ready: 3 varieties match.",
-    focusTarget: "none",
-  },
-});
+export interface PlantingPlanResult {
+  readonly title: string;
+  readonly matchingCount: number;
+  readonly notice: string;
+}
+
+export function toResultView(result: PlantingPlanResult): ResultView {
+  const count = result.matchingCount;
+  const headline = `${count} ${
+    count === 1 ? "variety matches" : "varieties match"
+  }`;
+
+  return defineResultView({
+    id: "pea-result",
+    heading: result.title,
+    headline,
+    metrics: [{ label: "Matching varieties", value: String(count) }],
+    reasons: {
+      label: "Why these varieties match",
+      items: ["They suit the selected growing conditions."],
+    },
+    disclaimer: result.notice,
+    state: {
+      kind: count === 0 ? "empty" : "ready",
+      status: `Pea planting plan ready: ${headline}.`,
+      focusTarget: "none",
+    },
+  });
+}
 ```
 
-The result is bounded and validated before rendering. It has a contextual
-heading, a definition list for the metric, a labelled reasons list, a
-disclaimer, and one persistent polite status message.
+Each returned view is bounded and validated before rendering. It has a
+contextual heading, a definition list for the metric, a labelled reasons list,
+a disclaimer, and one persistent polite status message.
 
 ## Render native HTML
 
@@ -63,23 +84,29 @@ for every result in the document.
 
 ```ts title="native.ts"
 import { renderResultView } from "@emseepea/server/ui";
-import { resultView } from "./result-view.js";
+import {
+  toResultView,
+  type PlantingPlanResult,
+} from "./result-view.js";
 
 const target = document.querySelector<HTMLElement>("#result");
 if (!target) throw new Error("Missing #result host element");
 
-target.innerHTML = renderResultView(resultView, {
-  headingLevel: 2,
-  idPrefix: "pea-result-card",
-});
+export function renderInitialPlantingPlan(result: PlantingPlanResult): void {
+  target.innerHTML = renderResultView(toResultView(result), {
+    headingLevel: 2,
+    idPrefix: "pea-result-card",
+  });
+}
 ```
 
 The host element now contains native headings, lists, and status semantics. The
 renderer escapes result text and does not create the page shell.
 
-This snippet is for the initial native render. For later state changes, keep the
+Call `renderInitialPlantingPlan` once when the first checked result arrives. This
+snippet is for the initial native render. For later state changes, keep the
 status element mounted and update its `textContent`. Use React or Svelte when
-the rest of the card also changes dynamically.
+the rest of the card also changes.
 
 ## Render with React
 
@@ -91,19 +118,27 @@ npm install @emseepea/react react react-dom
 
 ```tsx title="react.tsx"
 import { ResultCard } from "@emseepea/react";
-import { createRoot } from "react-dom/client";
-import { resultView } from "./result-view.js";
+import {
+  toResultView,
+  type PlantingPlanResult,
+} from "./result-view.js";
 
-const target = document.querySelector<HTMLElement>("#result");
-if (!target) throw new Error("Missing #result host element");
+export function PlantingPlanCard({
+  result,
+}: {
+  readonly result: PlantingPlanResult;
+}) {
+  const view = toResultView(result);
 
-createRoot(target).render(
-  <ResultCard view={resultView} headingLevel={2} idPrefix="pea-result-card" />,
-);
+  return (
+    <ResultCard view={view} headingLevel={2} idPrefix="pea-result-card" />
+  );
+}
 ```
 
-`ResultCard` renders the same checked result structure as the native renderer.
-It does not parse domain data, perform effects, or apply styles.
+The parent component passes its latest checked result as `result`. React calls
+the adapter during each render, so the card receives a current `ResultView`.
+`ResultCard` does not parse domain data, perform effects, or apply styles.
 
 ## Render with Svelte
 
@@ -117,15 +152,22 @@ npm install @emseepea/svelte svelte
 ```svelte title="SvelteApp.svelte"
 <script lang="ts">
   import { ResultCard } from "@emseepea/svelte";
-  import { resultView } from "./result-view.js";
+  import {
+    toResultView,
+    type PlantingPlanResult,
+  } from "./result-view.js";
+
+  let { result }: { result: PlantingPlanResult } = $props();
+  const view = $derived(toResultView(result));
 </script>
 
-<ResultCard view={resultView} headingLevel={2} idPrefix="pea-result-card" />
+<ResultCard {view} headingLevel={2} idPrefix="pea-result-card" />
 ```
 
-`ResultCard` renders the same names, semantics, heading level, and status as the
-native and React renderers. Em See Pea does not provide a Svelte initializer or
-bundled styling.
+The parent component passes its latest checked result as `result`. Svelte
+recomputes `view` when that prop changes. `ResultCard` renders the same names,
+semantics, heading level, and status as the native and React renderers. Em See
+Pea does not provide a Svelte initializer or bundled styling.
 
 This recommendation is based on the maintained equivalent production fixture.
 Svelte measured 27.9% smaller with gzip and 27.2% smaller with Brotli. The
