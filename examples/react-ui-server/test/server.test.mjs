@@ -157,6 +157,7 @@ test("the MCP Apps card completes initialization before rendering a result", asy
   await frame.locator("button").press("Enter");
   await status.filter({ hasText: "Asking ChatGPT: Show me growing tips for these pea varieties." }).waitFor();
   assert.equal(await frame.locator("button").isDisabled(), true);
+  await page.waitForFunction(() => window.receivedAppMessages.some((message) => message?.method === "ui/message"));
   const sent = await page.evaluate(() => window.receivedAppMessages.find((message) => message?.method === "ui/message"));
   assert.equal(sent.params.content[0].text, "Show me growing tips for these pea varieties.");
   await page.evaluate(() => window.pendingAppMessage.source.postMessage({
