@@ -1,5 +1,12 @@
 # @emseepea/create-mongodb-backed-server
 
+## 0.0.17
+
+### Patch Changes
+
+- [`df98a2a`](https://github.com/emseepea/emseepea/commit/df98a2a1d63ecf57a48f45fe528af757fd05a635) Thanks [@tompahoward](https://github.com/tompahoward)! - Release the initializer packages with manifests that use
+  `@emseepea/server@0.11.2`.
+
 ## 0.0.16
 
 ### Patch Changes
