@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 86 decisions: 49 current and 37 historical.
+This project has 87 decisions: 49 current and 38 historical.
 
 ## Quick Index
 
@@ -59,7 +59,7 @@ This project has 86 decisions: 49 current and 37 historical.
 - [ADR-0085: Checked Multi-Content Resource Read Results](0085-checked-multi-content-resource-read-results.proposed.md): Proposed; human review confirmed.
 - [ADR-0086: Application-Owned Styling with Public Host-Aware Theme Resolution](0086-application-owned-styling-with-public-host-aware-theme-resolution.proposed.md): Proposed; human review confirmed.
 - [ADR-0087: Bounded Request-Scoped Progress for Resources and Prompts](0087-bounded-request-scoped-progress-for-resources-and-prompts.proposed.md): Proposed; human review confirmed.
-- [ADR-0088: Always-Available Checked Model Context Protocol (MCP) Ping](0088-always-available-checked-mcp-ping.proposed.md): Proposed; human review confirmed.
+- [ADR-0089: No `ping` in Model Context Protocol (MCP) `2026-07-28` Beyond Existing Legacy Compatibility](0089-no-modern-ping-beyond-existing-legacy-compatibility.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -100,6 +100,7 @@ This project has 86 decisions: 49 current and 37 historical.
 - [ADR-0069: Atomic Runtime Activation of Startup-Compiled Capabilities](0069-atomic-runtime-activation-of-startup-compiled-capabilities.rejected.md): Rejected; human review confirmed.
 - [ADR-0070: OpenAPI-Generated Backend Types and Runtime Validation](0070-openapi-generated-backend-types-and-runtime-validation.superseded.md): Superseded; human review confirmed.
 - [ADR-0083: Canonical Accessible Tool Result Views and MCP Apps Lifecycle](0083-canonical-accessible-tool-result-views-and-mcp-apps-lifecycle.superseded.md): Superseded; human review confirmed.
+- [ADR-0088: Always-Available Checked Model Context Protocol (MCP) Ping](0088-always-available-checked-mcp-ping.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -1906,10 +1907,11 @@ Chosen option: **"Bounded progress for resources and prompts"**, because it clos
 - Registry readback independently verifies the released package version, integrity, signatures, provenance, and public types.
 - Protocol coverage and package guidance describe the new optional behavior and its limits without restoring deprecated client-logging guidance.
 
-### [ADR-0088: Always-Available Checked Model Context Protocol (MCP) Ping](0088-always-available-checked-mcp-ping.proposed.md)
+### [ADR-0088: Always-Available Checked Model Context Protocol (MCP) Ping](0088-always-available-checked-mcp-ping.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0089: No `ping` in Model Context Protocol (MCP) `2026-07-28` Beyond Existing Legacy Compatibility](0089-no-modern-ping-beyond-existing-legacy-compatibility.proposed.md)
 
 #### ADR-0088 Decision
 
@@ -1930,3 +1932,26 @@ Chosen option: **"Always admit the official MCP ping handler"**, because one fra
 - Registry readback independently verifies the released package version, integrity, signatures, provenance, and downloaded-package behavior.
 - Protocol coverage and package guidance describe ping as a core request, not as application health or a configurable capability.
 - Deprecated client-logging, roots, and sampling guidance remains absent.
+
+### [ADR-0089: No `ping` in Model Context Protocol (MCP) `2026-07-28` Beyond Existing Legacy Compatibility](0089-no-modern-ping-beyond-existing-legacy-compatibility.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0088: Always-Available Checked Model Context Protocol (MCP) Ping](0088-always-available-checked-mcp-ping.superseded.md)
+
+#### ADR-0089 Decision
+
+Chosen option: **"Keep MCP `2026-07-28` `ping` absent and preserve legacy behavior"**, because exact protocol support is safer than inferring support from generic cross-version package exports.
+
+#### ADR-0089 Checks
+
+- Raw MCP `2026-07-28` `ping` receives method-not-found.
+- Two independent official clients pinned to MCP `2026-07-28` observe the same rejection.
+- Every supported 2025-era revision retains its existing official SDK `ping` behavior.
+- No application handler or authentication verifier runs for rejected MCP `2026-07-28` `ping`.
+- No progress, logging, cache, state, capability, or public API is added.
+- Client logging, roots, sampling, tasks, sessions, replay, reconnect, and runtime catalogue mutation remain outside this decision.
+- The pinned dependency's version-specific request registries are checked directly rather than inferred from generic exports.
+- Existing source, black-box, packed-package, and released-package behavior remains unchanged; no package release is required for this documentation-only correction.
+- Protocol coverage states that `ping` is absent from MCP `2026-07-28` and remains legacy-only.
+- ADR-0088 is retained as superseded history rather than rewritten.

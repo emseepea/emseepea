@@ -40,20 +40,22 @@ verification.
 
 ## Model Context Protocol Ping Decision
 
-Result: PASS. An independent cognitive-accessibility specialist reviewed
-ADR-0088 and its generated index. The decision expands Model Context Protocol
-(MCP), defines modern and legacy protocol terminology, separates unmeasured
-planning assumptions from required evidence, excludes deprecated scope, and
-makes the ratification choice understandable. No cognitive-accessibility
-findings remain in scope.
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+superseded ADR-0088, replacement ADR-0089, their generated index, and protocol
+coverage. The current decision expands Model Context Protocol (MCP), states the
+active-versus-legacy boundary, distinguishes generic SDK exports from
+version-specific wire support, and makes the no-runtime-change outcome clear.
+No cognitive-accessibility findings remain in scope.
 
 | Reviewed file | SHA-256 |
 | --- | --- |
-| `docs/decisions/0088-always-available-checked-mcp-ping.proposed.md` | `348ab9201d5839fc34d398d2b600d7251352328e0d10878706ef566bcb1e9789` |
-| `docs/decisions/README.md` | `29a3bef64e1933afb6889a50d79bca544c631960820fc461a064d090ed6146aa` |
+| `docs/decisions/0088-always-available-checked-mcp-ping.superseded.md` | `348ab9201d5839fc34d398d2b600d7251352328e0d10878706ef566bcb1e9789` |
+| `docs/decisions/0089-no-modern-ping-beyond-existing-legacy-compatibility.proposed.md` | `e6a396431fc8ee6726e0325a06caabd3349e98c7fc429c665d5d18f8bad2fd77` |
+| `docs/decisions/README.md` | `8d2c49cfa25b6f718a3aac688467e1502558355d7beea3bd17cd7865c006a742` |
+| `docs/protocol-coverage.md` | `2dcd6cf4aac441f1ca6cdfb9daf9384035a3aca7c2201e97361c7411fbf28225` |
 
 Scope: Source Markdown clarity and cognitive accessibility only. This review
-does not establish ratification, implementation, test results, continuous
+does not establish implementation, test results, continuous
 integration, publication, registry verification, or adopter production
 verification.
 

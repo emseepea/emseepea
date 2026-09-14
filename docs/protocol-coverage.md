@@ -22,6 +22,8 @@ and the matching
 - **Not built**: the framework does not advertise or accept this capability.
 - **Not checked**: the dependency may handle it, but Em See Pea has no exact
   test and makes no claim.
+- **Legacy-only**: supported compatibility revisions retain it, but the active
+  protocol revision does not define it.
 - **Not used on HTTP**: the protocol uses a different HTTP mechanism.
 
 A checked row is not a claim that the whole protocol is complete.
@@ -40,6 +42,14 @@ discovery and filter it by principal permissions. See the
 Lifecycle-hidden capabilities remain advertised as callable categories while
 their individual entries are omitted, as covered by the
 [discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
+
+### `ping`
+
+**Status: Legacy-only.** MCP `2026-07-28` excludes `ping` from its
+version-specific request registry, so Em See Pea does not admit it as an MCP
+`2026-07-28` request. The generic SDK retains `ping` for supported 2025-era compatibility.
+This is a protocol-version boundary, not an unfinished active capability. See
+[ADR-0089: No `ping` in Model Context Protocol (MCP) `2026-07-28` Beyond Existing Legacy Compatibility](decisions/0089-no-modern-ping-beyond-existing-legacy-compatibility.proposed.md).
 
 ### `tools/list`
 
