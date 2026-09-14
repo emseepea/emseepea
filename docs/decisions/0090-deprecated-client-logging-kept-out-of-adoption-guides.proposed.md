@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-09-15
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-09-15
 decision-makers: ["Tom Howard"]
 consulted: ["Architecture review", "JTBD review", "Voice and tone review"]
 informed: []
@@ -11,8 +12,8 @@ reassessment-date: 2026-12-15
 # Deprecated Client Logging Kept Out of Adoption Guides
 
 > Captured via `/wr-architect:capture-adr`. The section content was derived
-> from the in-session decision context. Human oversight remains pending
-> until Tom Howard ratifies this decision.
+> from the in-session decision context. Tom Howard confirmed human oversight
+> on 2026-09-15.
 
 ## Plain English Summary
 

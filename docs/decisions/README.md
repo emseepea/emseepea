@@ -60,7 +60,7 @@ This project has 88 decisions: 50 current and 38 historical.
 - [ADR-0086: Application-Owned Styling with Public Host-Aware Theme Resolution](0086-application-owned-styling-with-public-host-aware-theme-resolution.proposed.md): Proposed; human review confirmed.
 - [ADR-0087: Bounded Request-Scoped Progress for Resources and Prompts](0087-bounded-request-scoped-progress-for-resources-and-prompts.proposed.md): Proposed; human review confirmed.
 - [ADR-0089: No `ping` in Model Context Protocol (MCP) `2026-07-28` Beyond Existing Legacy Compatibility](0089-no-modern-ping-beyond-existing-legacy-compatibility.proposed.md): Proposed; human review confirmed.
-- [ADR-0090: Deprecated Client Logging Kept Out of Adoption Guides](0090-deprecated-client-logging-kept-out-of-adoption-guides.proposed.md): Proposed; human review pending.
+- [ADR-0090: Deprecated Client Logging Kept Out of Adoption Guides](0090-deprecated-client-logging-kept-out-of-adoption-guides.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -1960,7 +1960,7 @@ Chosen option: **"Keep MCP `2026-07-28` `ping` absent and preserve legacy behavi
 ### [ADR-0090: Deprecated Client Logging Kept Out of Adoption Guides](0090-deprecated-client-logging-kept-out-of-adoption-guides.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
+- Human review: Confirmed
 
 #### ADR-0090 Decision
 
