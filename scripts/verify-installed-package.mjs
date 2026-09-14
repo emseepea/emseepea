@@ -14,6 +14,7 @@ import {
   serveEmseepea,
 } from "@emseepea/server";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import { OAuthError, OAuthErrorCode } from "@modelcontextprotocol/server";
 import { defineFeedbackSubmission } from "@emseepea/feedback";
 import { z } from "zod";
 
@@ -100,29 +101,76 @@ const resource = defineResource({
   access: "public",
   name: "smoke-resource",
   uri: resourceUri,
-  handler: () => ({ contents: [
-    { uri: resourceUri, text: "value" },
-    { uri: "returned://installed/static", text: "static child" },
-  ] }),
+  async handler({ reportProgress }) {
+    await reportProgress?.({ progress: 1, total: 1, message: "static" });
+    return { contents: [
+      { uri: resourceUri, text: "value" },
+      { uri: "returned://installed/static", text: "static child" },
+    ] };
+  },
 });
 const resourceTemplate = defineResourceTemplate({
   access: "public",
   name: "smoke-resource-template",
   uriTemplate: "smoke://resource/{value}",
   complete: { value: (partial) => ["checked"].filter((value) => value.startsWith(partial)) },
-  handler: ({ uri }) => ({ contents: [
-    { uri, text: "value" },
-    { uri: "returned://installed/template", text: "template child" },
-  ] }),
+  async handler({ uri }, context) {
+    const state = value.safeParse(context.requestState);
+    const round = state.success ? 2 : 1;
+    await context.reportProgress?.({ progress: round, total: uri.endsWith("/rounds") ? 2 : 1, message: "template" });
+    if (uri.endsWith("/rounds") && !state.success) {
+      return inputRequired({ requestState: await context.mintRequestState({ value: "resumed" }) });
+    }
+    return { contents: [
+      { uri, text: "value" },
+      { uri: "returned://installed/template", text: "template child" },
+    ] };
+  },
 });
 const prompt = definePrompt({
   access: "public",
   name: "smoke-prompt",
   argsSchema: value,
   complete: { value: (partial) => ["checked"].filter((value) => value.startsWith(partial)) },
-  handler: ({ value }) => ({
-    messages: [{ role: "user", content: { type: "text", text: value } }],
-  }),
+  async handler({ value: promptValue }, context) {
+    const state = value.safeParse(context.requestState);
+    const round = state.success ? 2 : 1;
+    await context.reportProgress?.({
+      progress: round,
+      total: promptValue === "rounds" ? 2 : 1,
+      message: promptValue === "byte-limit" ? "x".repeat(300) : "prompt",
+    });
+    if (promptValue === "event-limit") {
+      await context.reportProgress?.({ progress: 2, total: 2, message: "overflow" });
+    }
+    if (promptValue === "rounds" && !state.success) {
+      return inputRequired({ requestState: await context.mintRequestState({ value: "resumed" }) });
+    }
+    return { messages: [{ role: "user", content: { type: "text", text: promptValue } }] };
+  },
+});
+let protectedCalls = 0;
+const protectedResource = defineResource({
+  access: "protected",
+  requiredScopes: ["smoke:read"],
+  name: "smoke-protected-resource",
+  uri: "smoke://protected/resource",
+  async handler({ reportProgress }) {
+    protectedCalls += 1;
+    await reportProgress?.({ progress: 1, total: 1 });
+    return { contents: [{ uri: "smoke://protected/resource", text: "protected" }] };
+  },
+});
+const protectedPrompt = definePrompt({
+  access: "protected",
+  requiredScopes: ["smoke:read"],
+  name: "smoke-protected-prompt",
+  argsSchema: z.object({}),
+  async handler(_args, { reportProgress }) {
+    protectedCalls += 1;
+    await reportProgress?.({ progress: 1, total: 1 });
+    return { messages: [] };
+  },
 });
 const rootsTool = defineTool({
   name: "smoke-roots", access: "public", description: "Check client roots after installation.",
@@ -139,16 +187,38 @@ const app = createEmseepea({
   version: "0.0.0",
   tools: [tool, statefulTool, rootsTool, mapped, streaming],
   additionalTools: [feedback],
-  resources: [resource, resourceTemplate],
-  prompts: [prompt],
+  resources: [resource, resourceTemplate, protectedResource],
+  prompts: [prompt, protectedPrompt],
+  maxProgressEvents: 1,
+  maxProgressEventBytes: 256,
   resourceSubscriptions: { maxLifetimeMs: 5_000 },
   requestState: {
     key: "0123456789abcdef0123456789abcdef",
     ttlSeconds: 60,
     maxBytes: 4 * 1024,
   },
+  authentication: {
+    verifier: { verifyAccessToken: () => { throw new OAuthError(OAuthErrorCode.InvalidToken, "invalid"); } },
+    metadata: {
+      resourceServerUrl: new URL("https://api.example/mcp"),
+      oauthMetadata: {
+        issuer: "https://auth.example",
+        authorization_endpoint: "https://auth.example/authorize",
+        token_endpoint: "https://auth.example/token",
+        response_types_supported: ["code"],
+      },
+    },
+  },
   clientLogging: {},
   clientRoots: {},
+});
+const progressTokens = [];
+app.addHook("preHandler", async (request) => {
+  const body = request.body;
+  if (!body || Array.isArray(body) || typeof body !== "object") return;
+  const token = body.params?._meta?.progressToken;
+  if (body.params?._meta?.["io.modelcontextprotocol/protocolVersion"] === "2026-07-28"
+      && token !== undefined && token !== "denied-token") progressTokens.push(token);
 });
 const running = await serveEmseepea(app, { port: 0 });
 const subscriptionController = new AbortController();
@@ -210,6 +280,14 @@ try {
       if (result.structuredContent?.value !== protocolVersion || transport.sessionId !== undefined) {
         throw new Error(`installed package did not call a tool statelessly for MCP ${protocolVersion}`);
       }
+      await client.readResource(
+        { uri: resourceUri },
+        { onprogress: () => { throw new Error(`legacy resource emitted progress for MCP ${protocolVersion}`); } },
+      );
+      await client.getPrompt(
+        { name: "smoke-prompt", arguments: { value: protocolVersion } },
+        { onprogress: () => { throw new Error(`legacy prompt emitted progress for MCP ${protocolVersion}`); } },
+      );
     } finally {
       await client.close();
     }
@@ -305,6 +383,69 @@ try {
       || templateRead.result.contents[1]?.uri !== "returned://installed/template") {
     throw new Error("installed package did not return template multi-content resources");
   }
+  const progressClient = new Client(
+    { name: "installed-resource-prompt-progress", version: "0.0.0" },
+    {
+      inputRequired: { maxRounds: 2 },
+      versionNegotiation: { mode: { pin: "2026-07-28" } },
+    },
+  );
+  try {
+    await progressClient.connect(new StreamableHTTPClientTransport(running.url));
+    const order = [];
+    for (const [name, call] of [
+      ["static", (options) => progressClient.readResource({ uri: resourceUri }, options)],
+      ["template", (options) => progressClient.readResource({ uri: "smoke://resource/checked" }, options)],
+      ["prompt", (options) => progressClient.getPrompt({ name: "smoke-prompt", arguments: { value: "checked" } }, options)],
+    ]) {
+      await call({ onprogress: ({ message }) => order.push(`${name}:progress:${message}`) });
+      order.push(`${name}:complete`);
+    }
+    if (order.join(",") !== [
+      "static:progress:static", "static:complete",
+      "template:progress:template", "template:complete",
+      "prompt:progress:prompt", "prompt:complete",
+    ].join(",")) {
+      throw new Error("installed package did not isolate resource and prompt progress before terminal results");
+    }
+    for (const [name, call] of [
+      ["template", (options) => progressClient.readResource({ uri: "smoke://resource/rounds" }, options)],
+      ["prompt", (options) => progressClient.getPrompt({ name: "smoke-prompt", arguments: { value: "rounds" } }, options)],
+    ]) {
+      const rounds = [];
+      await call({ onprogress: ({ progress }) => rounds.push(progress) });
+      if ([...new Set(rounds)].join(",") !== "1,2") {
+        throw new Error(`installed package did not issue fresh ${name} progress rounds`);
+      }
+    }
+    const eventLimitUpdates = [];
+    await expectFailure(() => progressClient.getPrompt(
+      { name: "smoke-prompt", arguments: { value: "event-limit" } },
+      { onprogress: (update) => eventLimitUpdates.push(update) },
+    ), /Prompt rendering failed/, "progress event limit");
+    if (eventLimitUpdates.length !== 1) throw new Error("installed package did not fail at its progress event limit");
+    const byteLimitUpdates = [];
+    await expectFailure(() => progressClient.getPrompt(
+      { name: "smoke-prompt", arguments: { value: "byte-limit" } },
+      { onprogress: (update) => byteLimitUpdates.push(update) },
+    ), /Prompt rendering failed/, "progress event byte limit");
+    if (byteLimitUpdates.length !== 0) throw new Error("installed package emitted an oversized progress event");
+    if (new Set(progressTokens).size !== progressTokens.length) {
+      throw new Error("installed package reused a resource or prompt progress token");
+    }
+  } finally {
+    await progressClient.close();
+  }
+  for (const [method, params] of [
+    ["resources/read", { uri: "smoke://protected/resource" }],
+    ["prompts/get", { name: "smoke-protected-prompt", arguments: {} }],
+  ]) {
+    const denied = await progressRequest(running.url, method, params, "denied-token", "invalid");
+    if (denied.status !== 401 || denied.body.includes("notifications/progress")) {
+      throw new Error(`installed package did not authorize ${method} before progress`);
+    }
+  }
+  if (protectedCalls !== 0) throw new Error("installed package ran a protected handler before authorization");
   for (const params of [
     {
       ref: { type: "ref/prompt", name: "smoke-prompt" },
@@ -406,4 +547,43 @@ async function nextSseMessage(reader) {
     if (data) return JSON.parse(data.slice(6));
     pending = pending.slice(boundary + 2);
   }
+}
+
+async function expectFailure(call, expected, description) {
+  try {
+    await call();
+  } catch (error) {
+    if (expected.test(String(error))) return;
+    throw error;
+  }
+  throw new Error(`installed package did not enforce its ${description}`);
+}
+
+async function progressRequest(url, method, params, progressToken, bearerToken) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Accept: "application/json, text/event-stream",
+      Authorization: `Bearer ${bearerToken}`,
+      "Content-Type": "application/json",
+      "MCP-Protocol-Version": "2026-07-28",
+      "Mcp-Method": method,
+      "Mcp-Name": method === "resources/read" ? params.uri : params.name,
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: crypto.randomUUID(),
+      method,
+      params: {
+        ...params,
+        _meta: {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientInfo": { name: "release-smoke", version: "0.0.0" },
+          "io.modelcontextprotocol/clientCapabilities": {},
+          progressToken,
+        },
+      },
+    }),
+  });
+  return { status: response.status, body: await response.text() };
 }
