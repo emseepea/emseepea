@@ -88,8 +88,27 @@ try {
 }
 ```
 
+`running.close()` is idempotent. It closes every client created by
+`running.connect()`, then closes the server or child process. You do not need to
+call `client.close()` separately.
+
+In Vitest, register cleanup with `onTestFinished`:
+
+```js
+import { startEmseepea } from "@emseepea/testing";
+import { it, onTestFinished } from "vitest";
+
+it("serves the expected tools", async () => {
+  const running = await startEmseepea(await createApp());
+  onTestFinished(() => running.close());
+
+  const client = await running.connect();
+  // assertions
+});
+```
+
 Passing a test context with an `after` hook, as in the first example, registers
-that same idempotent `close()` operation automatically.
+the same `close()` operation automatically.
 
 Set `protocolVersion` on `startEmseepea` or `startMcpServer` to test one of the
 server's documented protocol revisions. Omitting it keeps the `2026-07-28`

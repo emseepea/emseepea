@@ -158,6 +158,19 @@ Result actions are native buttons. An action callback reports the selected
 presentation action; it does not authorize a server effect. Check identity,
 permissions, current state, and request data again at the effect boundary.
 
+For an action that continues the conversation, set the state to `sending`
+before awaiting `app.sendMessage(prompt)`. This sends a `ui/message` request.
+While it is pending, set `action.disabled` to `true` and update the existing
+status to ongoing text such as `Asking ChatGPT: Show me growing tips.`
+
+After the host accepts the message, use completion text such as
+`Asked ChatGPT: Show me growing tips.` If the request fails, show a short error.
+Tell the user how to continue in the chat.
+
+The
+[maintained React result example](https://github.com/emseepea/emseepea/blob/main/examples/react-ui-server/src/mcp-app.tsx)
+implements this sequence without making the action a server-side effect.
+
 Update the existing `state.status` text for loading, completion, cancellation,
 and errors. Keep one persistent polite status instead of adding another live
 region. Use `focusTarget` only when focus must move after a meaningful update.

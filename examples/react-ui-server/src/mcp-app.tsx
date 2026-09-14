@@ -78,9 +78,9 @@ function resultView(
     disabled: action !== "idle",
   }];
   const actionState = action === "sending"
-    ? { kind: "sending" as const, status: "Asking for growing tips.", focusTarget: "status" as const }
+    ? { kind: "sending" as const, status: "Asking ChatGPT: Show me growing tips for these pea varieties.", focusTarget: "status" as const }
     : action === "sent"
-      ? { kind: "sent" as const, status: "Asked for growing tips in the chat.", focusTarget: "status" as const }
+      ? { kind: "sent" as const, status: "Asked ChatGPT: Show me growing tips for these pea varieties.", focusTarget: "status" as const }
       : action === "error"
         ? { kind: "error" as const, status: "Growing tips could not be requested. Ask in the chat instead.", focusTarget: "status" as const }
         : {

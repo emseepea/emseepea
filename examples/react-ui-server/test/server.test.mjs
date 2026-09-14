@@ -99,7 +99,7 @@ test("the MCP Apps card completes initialization before rendering a result", asy
         }, "*");
       }
       if (event.data?.method === "ui/message") {
-        event.source.postMessage({ jsonrpc: "2.0", id: event.data.id, result: {} }, "*");
+        window.pendingAppMessage = { source: event.source, id: event.data.id };
       }
     });
   });
@@ -155,10 +155,15 @@ test("the MCP Apps card completes initialization before rendering a result", asy
   assert.equal(await frame.evaluate((node) => node === document.querySelector("[data-emseepea-part='status']"), statusNode), true);
 
   await frame.locator("button").press("Enter");
-  await status.filter({ hasText: "Asked for growing tips in the chat." }).waitFor();
-  assert.equal(await frame.locator("[data-emseepea-part='status']").evaluate((element) => element === document.activeElement), true);
+  await status.filter({ hasText: "Asking ChatGPT: Show me growing tips for these pea varieties." }).waitFor();
+  assert.equal(await frame.locator("button").isDisabled(), true);
   const sent = await page.evaluate(() => window.receivedAppMessages.find((message) => message?.method === "ui/message"));
   assert.equal(sent.params.content[0].text, "Show me growing tips for these pea varieties.");
+  await page.evaluate(() => window.pendingAppMessage.source.postMessage({
+    jsonrpc: "2.0", id: window.pendingAppMessage.id, result: {},
+  }, "*"));
+  await status.filter({ hasText: "Asked ChatGPT: Show me growing tips for these pea varieties." }).waitFor();
+  assert.equal(await frame.locator("[data-emseepea-part='status']").evaluate((element) => element === document.activeElement), true);
 
   await page.evaluate(() => document.querySelector("iframe").contentWindow.postMessage({
     jsonrpc: "2.0", id: "teardown", method: "ui/resource-teardown",

@@ -38,6 +38,26 @@ does not establish rendered accessibility, test results, continuous
 integration, publication, registry verification, or adopter production
 verification.
 
+## Result Card Action and Test Cleanup Follow-up
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+testing cleanup guidance and the generic Result Card action sequence. The text
+uses ongoing wording while `ui/message` is pending, completion wording only
+after the host accepts the message, a disabled action while pending, and a
+short recovery path after failure. The testing guidance states the cleanup
+owner directly and includes a concrete Vitest example.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `packages/testing/README.md` | `7c7f37052a2b931baece0e7e8905d23c83b2424cb7051ea25748711203ce1317` |
+| `website/src/content/docs/result-cards.md` | `f4c8cd56ca7e8f4e3fe7931b5eca68b0814c5bd7096319c940dc36753dac91b7` |
+| `examples/react-ui-server/src/mcp-app.tsx` | `b7b9b5b8e84ca02af4e8360993eacd280b9b7a831a5845e38c7a19cfc3413c94` |
+
+Scope: Cognitive accessibility and content clarity only. This review does not
+establish rendered accessibility, test results, continuous integration,
+publication, registry verification, exact-host behavior, or adopter production
+verification.
+
 ## Model Context Protocol Ping Decision
 
 Result: PASS. An independent cognitive-accessibility specialist reviewed the
