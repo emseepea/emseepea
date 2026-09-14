@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-09-14
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-09-14
 decision-makers: ["Tom Howard"]
 consulted: ["Architecture review", "JTBD review"]
 informed: []
@@ -11,8 +12,8 @@ reassessment-date: 2026-12-14
 # Always-Available Checked Model Context Protocol (MCP) Ping
 
 > Captured with `/wr-architect:capture-adr`. The capturing agent derived the
-> section content from the in-session decision context. Human oversight remains
-> pending until ratification.
+> section content from the in-session decision context. Human oversight was
+> confirmed by Tom Howard on 2026-09-14.
 
 ## Plain English Summary
 
