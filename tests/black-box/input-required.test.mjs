@@ -28,8 +28,11 @@ const stateSchema = z.object({ value: z.string() });
 
 test("signed request state resumes every direct handler", async () => {
   const calls = { prompt: 0, resource: 0, template: 0, tool: 0 };
+  const progress = { prompt: [], resource: [], template: [] };
+  const roundTokens = new Map();
   const resume = async (kind, context, finish) => {
     calls[kind] += 1;
+    await context.reportProgress?.({ progress: calls[kind], total: 2, message: kind });
     const state = stateSchema.safeParse(context.requestState);
     if (state.success) return finish(state.data.value);
     assert.equal(typeof context.mintRequestState, "function");
@@ -86,7 +89,7 @@ test("signed request state resumes every direct handler", async () => {
       messages: [{ role: "user", content: { type: "text", text: value } }],
     })),
   });
-  const running = await serveEmseepea(createEmseepea({
+  const app = createEmseepea({
     name: "request-state-test",
     version: "0.0.0",
     tools: [tool],
@@ -97,7 +100,18 @@ test("signed request state resumes every direct handler", async () => {
       ttlSeconds: 60,
       maxBytes: 4 * 1024,
     },
-  }), { port: 0 });
+  });
+  app.addHook("preHandler", async (request) => {
+    const body = request.body;
+    if (!body || Array.isArray(body) || typeof body !== "object" ||
+        (body.method !== "resources/read" && body.method !== "prompts/get")) return;
+    const token = body.params?._meta?.progressToken;
+    if (token === undefined) return;
+    const tokens = roundTokens.get(body.method) ?? [];
+    tokens.push(token);
+    roundTokens.set(body.method, tokens);
+  });
+  const running = await serveEmseepea(app, { port: 0 });
   const client = new Client(
     { name: "request-state-client", version: "0.0.0" },
     {
@@ -115,11 +129,27 @@ test("signed request state resumes every direct handler", async () => {
     await client.connect(new StreamableHTTPClientTransport(running.url));
     assert.equal((await client.callTool({ name: "stateful-tool", arguments: {} }))
       .structuredContent.value, "resumed:Ada");
-    assert.equal((await client.readResource({ uri: "state://static" })).contents[0].text, "resumed");
-    assert.equal((await client.readResource({ uri: "state://template/1" })).contents[0].text, "resumed");
-    assert.equal((await client.getPrompt({ name: "stateful-prompt", arguments: {} }))
+    assert.equal((await client.readResource(
+      { uri: "state://static" },
+      { onprogress: (update) => progress.resource.push(update.progress) },
+    )).contents[0].text, "resumed");
+    assert.equal((await client.readResource(
+      { uri: "state://template/1" },
+      { onprogress: (update) => progress.template.push(update.progress) },
+    )).contents[0].text, "resumed");
+    assert.equal((await client.getPrompt(
+      { name: "stateful-prompt", arguments: {} },
+      { onprogress: (update) => progress.prompt.push(update.progress) },
+    ))
       .messages[0].content.text, "resumed");
     assert.deepEqual(calls, { prompt: 2, resource: 2, template: 2, tool: 2 });
+    for (const updates of Object.values(progress)) {
+      assert.deepEqual([...new Set(updates)], [1, 2]);
+    }
+    assert.equal(roundTokens.get("resources/read").length, 4);
+    assert.equal(new Set(roundTokens.get("resources/read")).size, 4);
+    assert.equal(roundTokens.get("prompts/get").length, 2);
+    assert.equal(new Set(roundTokens.get("prompts/get")).size, 2);
   } finally {
     await client.close();
     await running.close();

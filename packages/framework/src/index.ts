@@ -326,6 +326,11 @@ export interface ClientInputContext<Access extends CapabilityAccess = Capability
   /** Sends a client-visible MCP log message when client logging is configured. */
   readonly reportLog?: (message: ClientLogMessage) => Promise<void>;
 }
+export interface ResourcePromptContext<Access extends CapabilityAccess = CapabilityAccess>
+  extends ClientInputContext<Access> {
+  /** Reports bounded progress when the current request supplies a progress token. */
+  readonly reportProgress?: (update: ProgressUpdate) => Promise<void>;
+}
 export interface CompletionContext<Access extends CapabilityAccess = CapabilityAccess>
   extends OperationContext {
   readonly principal: Access extends "public" ? undefined : Principal;
@@ -542,10 +547,10 @@ interface ResourceDefinitionBase {
 }
 export type ResourceDefinition = ResourceDefinitionBase & (
   | { readonly access: "public"; readonly requiredScopes?: never;
-      readonly handler: (context: ClientInputContext<"public">) =>
+      readonly handler: (context: ResourcePromptContext<"public">) =>
         ReadResourceResult | InputRequiredResult | Promise<ReadResourceResult | InputRequiredResult> }
   | { readonly access: "protected"; readonly requiredScopes: readonly string[];
-      readonly handler: (context: ClientInputContext<"protected">) =>
+      readonly handler: (context: ResourcePromptContext<"protected">) =>
         ReadResourceResult | InputRequiredResult | Promise<ReadResourceResult | InputRequiredResult> }
 );
 interface ResourceTemplateDefinitionBase {
@@ -566,7 +571,7 @@ type ResourceTemplateHandler<Access extends CapabilityAccess> = (
     readonly uri: string;
     readonly variables: Readonly<Record<string, string | readonly string[]>>;
   },
-  context: ClientInputContext<Access>,
+  context: ResourcePromptContext<Access>,
 ) => ReadResourceResult | InputRequiredResult | Promise<ReadResourceResult | InputRequiredResult>;
 export type ResourceTemplateDefinition = ResourceTemplateDefinitionBase & (
   | { readonly access: "public"; readonly requiredScopes?: never;
@@ -596,6 +601,8 @@ export interface EmseepeaResource {
     server: McpServer,
     timeoutMs: number,
     maxApplicationResultBytes: number,
+    maxProgressEvents: number,
+    maxProgressEventBytes: number,
     requestState?: RequestStateRuntime,
     clientLogging?: NormalizedClientLogging,
   ) => void;
@@ -621,10 +628,10 @@ type PromptDefinitionBase<Args extends z.ZodObject> = {
 };
 export type PromptDefinition<Args extends z.ZodObject> = PromptDefinitionBase<Args> & (
   | { readonly access: "public"; readonly requiredScopes?: never;
-      readonly handler: (args: z.output<Args>, context: ClientInputContext<"public">) =>
+      readonly handler: (args: z.output<Args>, context: ResourcePromptContext<"public">) =>
         GetPromptResult | InputRequiredResult | Promise<GetPromptResult | InputRequiredResult> }
   | { readonly access: "protected"; readonly requiredScopes: readonly string[];
-      readonly handler: (args: z.output<Args>, context: ClientInputContext<"protected">) =>
+      readonly handler: (args: z.output<Args>, context: ResourcePromptContext<"protected">) =>
         GetPromptResult | InputRequiredResult | Promise<GetPromptResult | InputRequiredResult> }
 ) & PromptInputConstraint<Args>;
 export interface EmseepeaPrompt {
@@ -637,6 +644,8 @@ export interface EmseepeaPrompt {
     server: McpServer,
     timeoutMs: number,
     maxApplicationResultBytes: number,
+    maxProgressEvents: number,
+    maxProgressEventBytes: number,
     requestState?: RequestStateRuntime,
     clientLogging?: NormalizedClientLogging,
   ) => void;
@@ -965,7 +974,15 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
       value: listing,
     }),
     [HAS_COMPLETION]: false,
-    [REGISTER](server, timeoutMs, maxApplicationResultBytes, requestState, clientLogging) {
+    [REGISTER](
+      server,
+      timeoutMs,
+      maxApplicationResultBytes,
+      maxProgressEvents,
+      maxProgressEventBytes,
+      requestState,
+      clientLogging,
+    ) {
       server.registerResource(
         name,
         uri,
@@ -975,17 +992,20 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
               signal.throwIfAborted();
-              const result = await withClientLogReporter(
+              const result = await withClientReporters(
                 context,
                 signal,
                 clientLogging,
-                (reportLog) => handler(directHandlerContext(
+                maxProgressEvents,
+                maxProgressEventBytes,
+                (reportLog, reportProgress) => handler(directHandlerContext(
                   access,
                   context,
                   signal,
                   deadlineMs,
                   requestState,
                   reportLog,
+                  reportProgress,
                 )),
               );
               signal.throwIfAborted();
@@ -1062,7 +1082,15 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
       value: listing,
     }),
     [HAS_COMPLETION]: completions.size > 0,
-    [REGISTER](server, timeoutMs, maxApplicationResultBytes, requestState, clientLogging) {
+    [REGISTER](
+      server,
+      timeoutMs,
+      maxApplicationResultBytes,
+      maxProgressEvents,
+      maxProgressEventBytes,
+      requestState,
+      clientLogging,
+    ) {
       const registeredTemplate = completions.size === 0
         ? template
         : new ResourceTemplate(uriTemplate, {
@@ -1087,11 +1115,13 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
             const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
               signal.throwIfAborted();
-              const result = await withClientLogReporter(
+              const result = await withClientReporters(
                 context,
                 signal,
                 clientLogging,
-                (reportLog) => handler(
+                maxProgressEvents,
+                maxProgressEventBytes,
+                (reportLog, reportProgress) => handler(
                   { uri: requestedUri.href, variables },
                   directHandlerContext(
                     access,
@@ -1100,6 +1130,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
                     deadlineMs,
                     requestState,
                     reportLog,
+                    reportProgress,
                   ),
                 ),
               );
@@ -1155,7 +1186,15 @@ export function definePrompt<Args extends z.ZodObject>(
     [PROMPT_ACCESS]: access,
     [HAS_COMPLETION]: completions.size > 0,
     [PROMPT_LISTING]: listing,
-    [REGISTER](server, timeoutMs, maxApplicationResultBytes, requestState, clientLogging) {
+    [REGISTER](
+      server,
+      timeoutMs,
+      maxApplicationResultBytes,
+      maxProgressEvents,
+      maxProgressEventBytes,
+      requestState,
+      clientLogging,
+    ) {
       server.registerPrompt(
         name,
         {
@@ -1175,11 +1214,13 @@ export function definePrompt<Args extends z.ZodObject>(
               const parsedArgs = await argsSchema.safeParseAsync(args);
               if (!parsedArgs.success) throw new Error("Prompt received invalid arguments");
               signal.throwIfAborted();
-              const result = await withClientLogReporter(
+              const result = await withClientReporters(
                 context,
                 signal,
                 clientLogging,
-                (reportLog) => handler(
+                maxProgressEvents,
+                maxProgressEventBytes,
+                (reportLog, reportProgress) => handler(
                   parsedArgs.data,
                   directHandlerContext(
                     access,
@@ -1188,6 +1229,7 @@ export function definePrompt<Args extends z.ZodObject>(
                     deadlineMs,
                     requestState,
                     reportLog,
+                    reportProgress,
                   ),
                 ),
               );
@@ -1703,21 +1745,30 @@ function clientLogReporter(
   };
 }
 
-async function withClientLogReporter<Result>(
-  context: Parameters<typeof clientLogReporter>[0],
+async function withClientReporters<Result>(
+  context: ServerContext,
   signal: AbortSignal,
-  options: NormalizedClientLogging | undefined,
-  run: (report?: (message: ClientLogMessage) => Promise<void>) => Promise<Result> | Result,
+  logging: NormalizedClientLogging | undefined,
+  maxProgressEvents: number,
+  maxProgressEventBytes: number,
+  run: (
+    reportLog?: (message: ClientLogMessage) => Promise<void>,
+    reportProgress?: (update: ProgressUpdate) => Promise<void>,
+  ) => Promise<Result> | Result,
 ): Promise<Result> {
-  const reporter = options
-    ? clientLogReporter(context, signal, options.maxEvents, options.maxEventBytes)
+  const logReporter = logging
+    ? clientLogReporter(context, signal, logging.maxEvents, logging.maxEventBytes)
     : undefined;
+  const reporter = requestOperations.getStore()?.legacy || context.mcpReq._meta?.progressToken === undefined
+    ? undefined
+    : progressReporter(context, signal, maxProgressEvents, maxProgressEventBytes);
   let result: Result;
   try {
-    result = await run(reporter?.report);
+    result = await run(logReporter?.report, reporter?.report);
   } finally {
-    await reporter?.finish();
+    await Promise.all([logReporter?.finish(), reporter?.finish()]);
   }
+  logReporter?.throwIfFailed();
   reporter?.throwIfFailed();
   return result;
 }
@@ -1992,6 +2043,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     ? normalizeAuthentication(options.authentication)
     : undefined;
   const hasStreaming = tools.some((tool) => tool[TOOL_STREAMING]);
+  const hasProgress = hasStreaming || resources.length > 0 || prompts.length > 0;
   if ([
     ...tools.map((tool) => tool[TOOL_ACCESS]),
     ...resources.map((resource) => resource[RESOURCE_ACCESS]),
@@ -2096,6 +2148,8 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         server,
         operationTimeoutMs,
         maxApplicationResultBytes,
+        maxProgressEvents,
+        maxProgressEventBytes,
         requestState,
         activeClientLogging,
       );
@@ -2105,6 +2159,8 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         server,
         operationTimeoutMs,
         maxApplicationResultBytes,
+        maxProgressEvents,
+        maxProgressEventBytes,
         requestState,
         activeClientLogging,
       );
@@ -2131,7 +2187,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     if (pagination) installListPagination(server, pagination);
     return server;
   }, {
-    responseMode: hasStreaming || resourceSubscriptions || clientLogging ? "auto" : "json",
+    responseMode: hasProgress || resourceSubscriptions || clientLogging ? "auto" : "json",
     keepAliveMs: 0,
   });
   const nodeHandler = toNodeHandler(sdkHandler);
@@ -3529,7 +3585,8 @@ function directHandlerContext(
   deadlineMs: number,
   requestState: RequestStateRuntime | undefined,
   reportLog?: (message: ClientLogMessage) => Promise<void>,
-): ClientInputContext<"public"> & ClientInputContext<"protected"> {
+  reportProgress?: (update: ProgressUpdate) => Promise<void>,
+): ResourcePromptContext<"public"> & ResourcePromptContext<"protected"> {
   return {
     signal,
     deadlineMs,
@@ -3540,7 +3597,8 @@ function directHandlerContext(
       mintRequestState: (payload: unknown) => requestState.mint(payload, context),
     } : {}),
     ...(reportLog ? { reportLog } : {}),
-  } as ClientInputContext<"public"> & ClientInputContext<"protected">;
+    ...(reportProgress ? { reportProgress } : {}),
+  } as ResourcePromptContext<"public"> & ResourcePromptContext<"protected">;
 }
 
 async function assertInputRequired(

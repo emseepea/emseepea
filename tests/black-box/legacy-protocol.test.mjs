@@ -16,6 +16,7 @@ const legacyVersions = [
 test("the same stateless POST endpoint serves the exact legacy protocol subset", async () => {
   let handlerCalls = 0;
   let resourceCalls = 0;
+  let legacyProgressReporters = 0;
   const app = createEmseepea({
     name: "legacy-protocol-test",
     version: "0.0.0",
@@ -34,8 +35,9 @@ test("the same stateless POST endpoint serves the exact legacy protocol subset",
       access: "public",
       name: "legacy-resource",
       uri: "legacy://resource/aggregate",
-      handler() {
+      handler({ reportProgress }) {
         resourceCalls += 1;
+        if (reportProgress) legacyProgressReporters += 1;
         return { contents: [
           { uri: "returned://legacy/summary", text: "legacy summary" },
           { uri: "returned://legacy/data", mimeType: "application/octet-stream", blob: "BAU=" },
@@ -60,7 +62,10 @@ test("the same stateless POST endpoint serves the exact legacy protocol subset",
         const result = await client.callTool({ name: "echo-version", arguments: { value: version } });
         assert.deepEqual(result.structuredContent, { value: version });
         assert.deepEqual(
-          (await client.readResource({ uri: "legacy://resource/aggregate" })).contents,
+          (await client.readResource(
+            { uri: "legacy://resource/aggregate" },
+            { onprogress: () => assert.fail("legacy resource emitted progress") },
+          )).contents,
           [
             { uri: "returned://legacy/summary", text: "legacy summary" },
             { uri: "returned://legacy/data", mimeType: "application/octet-stream", blob: "BAU=" },
@@ -73,6 +78,7 @@ test("the same stateless POST endpoint serves the exact legacy protocol subset",
     }));
     assert.equal(handlerCalls, legacyVersions.length);
     assert.equal(resourceCalls, legacyVersions.length);
+    assert.equal(legacyProgressReporters, 0);
 
     const conflictingHeaders = await rawRequest(running.url, {
       "MCP-Protocol-Version": ["2025-11-25", "2024-11-05"],

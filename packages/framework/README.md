@@ -672,7 +672,7 @@ progress, the official MCP library sends progress events over the same POST
 request. Otherwise the call returns one JSON response.
 
 ```ts
-import { createEmseepea, defineStreamingTool } from "@emseepea/server";
+import { createEmseepea, defineResource, defineStreamingTool } from "@emseepea/server";
 import { z } from "zod";
 
 const germination = defineStreamingTool({
@@ -687,21 +687,36 @@ const germination = defineStreamingTool({
     return { data: { status: "complete" } };
   },
 });
+
+const guide = defineResource({
+  name: "growing-guide",
+  access: "public",
+  uri: "guide://peas/growing",
+  async handler({ reportProgress }) {
+    await reportProgress?.({ progress: 1, total: 1, message: "ready" });
+    return { contents: [{ uri: "guide://peas/growing", text: "Plant in spring." }] };
+  },
+});
 ```
+
+Resource and prompt handlers receive the same reporter as an optional
+`reportProgress` property, as shown by `guide`. It is present only when the
+current client request asks for progress. Check it before reporting.
 
 Progress is strictly increasing and defaults to at most 32 small notification
 payloads, measured before protocol encoding.
 
 Set `maxProgressEvents` and `maxProgressEventBytes` on `createEmseepea` to
-change those positive bounds. The reporter closes with the tool call.
+change those positive bounds. The reporter closes with the resource read,
+prompt retrieval, or tool call.
 Heartbeats are disabled. Invalid, oversized, late, or extra updates are
 rejected.
 
 ### Use Progress Behind a Proxy
 
-Public and protected tools can also report progress behind a trusted HTTPS
-proxy. The framework authenticates and authorizes a protected call before it
-starts the event stream or calls application code.
+Public and protected tools, resources, and prompts can also report progress
+behind a trusted HTTPS proxy. The framework authenticates and authorizes a
+protected call before it starts the event stream or calls application code.
 
 Using the `germination` tool above, configure the proxy's exact address and the public
 host and origin your clients use:

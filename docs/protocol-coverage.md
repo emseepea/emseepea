@@ -111,8 +111,13 @@ separately identifies an already registered static resource or matches an
 already registered resource template, and the client satisfies that
 capability's access policy.
 
+Resource handlers can send bounded progress when the current request asks for
+it. Progress uses only that request's token and finishes before the resource
+result.
+
 Resource update subscriptions are covered separately below. See the
-[resource and prompt tests](../tests/black-box/resources-prompts.test.mjs) and
+[resource and prompt tests](../tests/black-box/resources-prompts.test.mjs),
+[resource and prompt progress tests](../tests/black-box/resource-prompt-progress.test.mjs), and
 [client-input tests](../tests/black-box/input-required.test.mjs). Reads of known
 lifecycle-hidden resources and templates, followed by removal, are covered by
 the [discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
@@ -131,8 +136,9 @@ Lifecycle-hidden prompt listing is covered by the
 
 **Status: Partial.** Gets a registered public or protected prompt and checks its result. A
 prompt may ask a capable client for more input before returning its final
-result. See the
-[resource and prompt tests](../tests/black-box/resources-prompts.test.mjs) and
+result. A prompt can send bounded progress when the current request asks for
+it. See the [resource and prompt tests](../tests/black-box/resources-prompts.test.mjs),
+[resource and prompt progress tests](../tests/black-box/resource-prompt-progress.test.mjs), and
 [client-input tests](../tests/black-box/input-required.test.mjs). Known
 lifecycle-hidden prompts remain callable until removal, as covered by the
 [discovery-suppression tests](../tests/black-box/discovery-suppression.test.mjs).
@@ -290,9 +296,11 @@ progress work. See the
 
 ### Progress Updates
 
-**Status: Partial.** Public and protected tools can send bounded progress through
-a trusted proxy on the same POST response. The framework authenticates and
-authorizes protected calls before application code or the event stream begins.
+**Status: Partial.** Public and protected tools, resources, and prompts can send
+bounded progress through a trusted proxy on the same POST response. Resource
+and prompt handlers receive a reporter only when the current request includes a
+progress token. The framework authenticates and authorizes protected calls
+before application code or the event stream begins.
 Independent requests can reach different server processes without requiring
 the client to stay with one process. Public proxy progress was first published in
 `@emseepea/server` 0.0.3.
@@ -301,6 +309,9 @@ See the [release evidence](https://github.com/emseepea/emseepea/releases/tag/%40
 The [proxy tests](../tests/black-box/proxy-progress.test.mjs) check authentication
 failures, incremental delivery through the official client and raw HTTP,
 cross-process isolation, cancellation, and configured limits. The
+[resource and prompt progress tests](../tests/black-box/resource-prompt-progress.test.mjs)
+check official-client delivery, per-request token isolation, terminal ordering,
+late reporting, and configured event limits. The
 [CI load test](../tests/load/proxy-progress.test.mjs) adds concurrent protected
 calls and paused readers, with fixed memory limits.
 

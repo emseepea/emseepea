@@ -37,3 +37,25 @@ Scope: Source Markdown clarity and cognitive accessibility only. This review
 does not establish rendered accessibility, test results, continuous
 integration, publication, registry verification, or adopter production
 verification.
+
+## Resource and Prompt Progress
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed
+ADR-0087, its generated index, the release note, protocol coverage, and package
+guidance for bounded request-scoped resource and prompt progress. The text
+states when the optional reporter exists, preserves its limits, and does not
+restore deprecated client-logging guidance. No cognitive-accessibility findings
+remain in scope.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `docs/decisions/0087-bounded-request-scoped-progress-for-resources-and-prompts.proposed.md` | `8a27c432fac2bf67204f4bf2f46bf5986462456d1bac142843f312a87eed6d9e` |
+| `docs/decisions/README.md` | `48bac6aab97a997dc7ccfe83d1832bc9b2c0f10d3415065d5e60984c4a179929` |
+| `.changeset/resource-prompt-progress.md` | `e862548a79685d83835a3f9f5e3520646307f05b78e768448752dc6fdb156f0d` |
+| `docs/protocol-coverage.md` | `ced12f0dda9b6fa64e97cd0cd1c057f18320598c0e3e1b7f3de1e7b1c9544ba5` |
+| `packages/framework/README.md` | `afc5c8d625446941edc2175d45c98ced1510914a854e96a6ae695a5598f5c907` |
+
+Scope: Source Markdown clarity and cognitive accessibility only. This review
+does not establish rendered accessibility, test results, continuous
+integration, publication, registry verification, or adopter production
+verification.

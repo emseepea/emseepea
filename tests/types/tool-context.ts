@@ -122,12 +122,15 @@ defineTool({
   description: "Compile-time public context check.",
   inputSchema: schema,
   outputSchema: schema,
-  handler: async ({ value }, { deadlineMs, inputResponses, principal, reportLog }) => {
+  handler: async ({ value }, context) => {
+    const { deadlineMs, inputResponses, principal, reportLog } = context;
     const publicPrincipal: undefined = principal;
     const deadline: number = deadlineMs;
     void publicPrincipal;
     void deadline;
     await reportLog?.({ level: "info", logger: "type-check", data: { value } });
+    // @ts-expect-error Direct tools cannot report progress.
+    void context.reportProgress;
     const answer = acceptedContent(inputResponses, "answer", schema);
     return answer
       ? { text: answer.value, data: answer }
@@ -190,6 +193,7 @@ defineResource({
     void deadline;
     void signal;
     void context.reportLog?.({ level: "notice", data: "resource" });
+    void context.reportProgress?.({ progress: 1, total: 1, message: "resource" });
     return { contents: [{ uri: "type-check://resource/value", text: "value" }] };
   },
 });
@@ -220,6 +224,8 @@ defineResourceTemplate({
       void context.inputResponses;
       // @ts-expect-error Completion handlers cannot emit client-visible logs.
       void context.reportLog;
+      // @ts-expect-error Completion handlers cannot report progress.
+      void context.reportProgress;
       void deadline;
       void signal;
       void siblings;
@@ -238,6 +244,7 @@ defineResourceTemplate({
     void deadline;
     void signal;
     void context.reportLog?.({ level: "info", data: requestedUri });
+    void context.reportProgress?.({ progress: 1, total: 1, message: requestedUri });
     return { contents: [{ uri: requestedUri, text: "value" }] };
   },
 });
@@ -252,6 +259,8 @@ definePrompt({
       const siblings: Readonly<Record<string, string>> = context.arguments;
       // @ts-expect-error Completion handlers cannot emit client-visible logs.
       void context.reportLog;
+      // @ts-expect-error Completion handlers cannot report progress.
+      void context.reportProgress;
       return [candidate, ...Object.values(siblings)];
     },
   },
@@ -264,6 +273,7 @@ definePrompt({
     void deadline;
     void signal;
     void context.reportLog?.({ level: "warning", data: value });
+    void context.reportProgress?.({ progress: 1, total: 1, message: value });
     return { messages: [{ role: "user", content: { type: "text", text: value } }] };
   },
 });
