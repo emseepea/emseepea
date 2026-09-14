@@ -52,6 +52,12 @@ test("every built page has accessible light/dark mobile and desktop output", { t
           } else {
             assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"), publicOrigin + route);
           }
+          if (route.endsWith("result-cards/")) {
+            const copyNames = await page.locator(".expressive-code .copy button").evaluateAll((buttons) =>
+              buttons.map((button) => button.getAttribute("aria-label")));
+            assert.equal(new Set(copyNames).size, copyNames.length, "result-card copy buttons need unique names");
+            assert.ok(copyNames.every((name) => name?.startsWith("Copy code: ")));
+          }
         }
         await page.goto(origin + base);
         await page.screenshot({ path: fileURLToPath(new URL(`home-${colorScheme}-${width}.png`, screenshots)), fullPage: true });
@@ -125,6 +131,7 @@ test("keyboard users can skip navigation and search the local index", async () =
     await page.keyboard.press("Enter");
     await page.waitForURL((url) => url.hash === "#_top");
     assert.equal(new URL(page.url()).hash, "#_top");
+    assert.equal(await page.locator(":focus").getAttribute("id"), "_top");
     await page.keyboard.press("Tab");
     assert.ok(await page.locator(":focus").evaluate((element) => Boolean(element.closest("main"))), "skip link must move the keyboard starting point into the content");
     const search = page.getByRole("button", { name: /^Search/ }).first();

@@ -1,0 +1,17 @@
+---
+import DefaultSkipLink from '@astrojs/starlight/components/SkipLink.astro';
+---
+
+<DefaultSkipLink />
+
+<script>
+  document.querySelector<HTMLAnchorElement>('.sl-skip-link')?.addEventListener('click', (event) => {
+    const link = event.currentTarget as HTMLAnchorElement;
+    const target = document.querySelector<HTMLElement>(link.hash);
+    if (!target) return;
+    event.preventDefault();
+    location.hash = link.hash;
+    target.tabIndex = -1;
+    target.focus();
+  });
+</script>

@@ -327,6 +327,45 @@ test("the packed Svelte renderer installs with a compilable result card", { time
   }
 });
 
+test("the published result-card examples build outside the monorepo", { timeout: 300_000 }, async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "emseepea-result-card-guide-"));
+  try {
+    const server = await packPackage("./packages/framework", directory);
+    const react = await packPackage("./packages/react", directory);
+    const svelte = await packPackage("./packages/svelte", directory);
+    run("npm", ["init", "--yes"], directory);
+    run("npm", [
+      "install",
+      "--ignore-scripts",
+      "--prefer-offline",
+      "--no-audit",
+      "--no-fund",
+      "--userconfig", "/dev/null",
+      server,
+      react,
+      svelte,
+      "esbuild@0.28.2",
+      "react@19.2.8",
+      "react-dom@19.2.8",
+      "svelte@5.57.0",
+    ], directory);
+    await cp(new URL("../fixtures/result-card-guide/build.mjs", import.meta.url), path.join(directory, "build.mjs"));
+    await cp(new URL("../fixtures/result-card-guide/svelte.ts", import.meta.url), path.join(directory, "svelte.ts"));
+    const guide = await readFile(new URL("../../website/src/content/docs/result-cards.md", import.meta.url), "utf8");
+    for (const file of ["result-view.ts", "native.ts", "react.tsx", "SvelteApp.svelte"]) {
+      await writeFile(path.join(directory, file), guideSnippet(guide, file));
+    }
+    run(process.execPath, ["build.mjs"], directory);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+function guideSnippet(guide, file) {
+  const match = guide.match(new RegExp("```[^\\n]+ title=\\\"" + file + "\\\"\\n([\\s\\S]*?)\\n```"));
+  return `${match?.[1] ?? "@"}\n`;
+}
+
 test("the packed Tailwind stylesheet installs with its accessibility states and limits", { timeout: 180_000 }, async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "emseepea-packed-tailwind-"));
   try {
