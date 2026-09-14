@@ -58,7 +58,7 @@ This project has 85 decisions: 48 current and 37 historical.
 - [ADR-0084: Parallel React and Svelte Result Cards with Measured Bundle Guidance](0084-parallel-react-and-svelte-result-cards-with-measured-bundle-guidance.proposed.md): Proposed; human review confirmed.
 - [ADR-0085: Checked Multi-Content Resource Read Results](0085-checked-multi-content-resource-read-results.proposed.md): Proposed; human review confirmed.
 - [ADR-0086: Application-Owned Styling with Public Host-Aware Theme Resolution](0086-application-owned-styling-with-public-host-aware-theme-resolution.proposed.md): Proposed; human review confirmed.
-- [ADR-0087: Bounded Request-Scoped Progress for Resources and Prompts](0087-bounded-request-scoped-progress-for-resources-and-prompts.proposed.md): Proposed; human review pending.
+- [ADR-0087: Bounded Request-Scoped Progress for Resources and Prompts](0087-bounded-request-scoped-progress-for-resources-and-prompts.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -1885,7 +1885,7 @@ Chosen option: **"Public `useMcpTheme` resolver hook"**, because it centralises 
 ### [ADR-0087: Bounded Request-Scoped Progress for Resources and Prompts](0087-bounded-request-scoped-progress-for-resources-and-prompts.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
+- Human review: Confirmed
 
 #### ADR-0087 Decision
 
