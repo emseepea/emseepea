@@ -10,7 +10,7 @@ manifest-only dependency updates.
 ## Planned Release Batch
 
 - `@emseepea/server@0.11.1`
-- `@emseepea/testing@0.11.0`
+- `@emseepea/testing@0.11.1`
 - `@emseepea/feedback@0.2.11`
 - `@emseepea/react@0.2.1`
 - `@emseepea/svelte@0.1.1`
