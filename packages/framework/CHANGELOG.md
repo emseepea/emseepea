@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.12.0
+
+### Minor Changes
+
+- [`2e1258e`](https://github.com/emseepea/emseepea/commit/2e1258ea3eb04bd2b7cbf048e8056654f065a797) Thanks [@tompahoward](https://github.com/tompahoward)! - Add bounded protocol outcomes to redacted observability events.
+
 ## 0.11.2
 
 ### Patch Changes
