@@ -1,5 +1,11 @@
 # @emseepea/create-soap-backed-server
 
+## 0.0.16
+
+### Patch Changes
+
+- [`aba65fa`](https://github.com/emseepea/emseepea/commit/aba65faf63b00b62ab4503fdeecc42120be88667) Thanks [@tompahoward](https://github.com/tompahoward)! - Release the initializer packages with manifests that use `@emseepea/server@0.11.1`.
+
 ## 0.0.15
 
 ### Patch Changes
