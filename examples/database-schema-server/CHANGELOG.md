@@ -1,5 +1,12 @@
 # @emseepea/create-database-schema-server
 
+## 0.0.18
+
+### Patch Changes
+
+- [`2e1258e`](https://github.com/emseepea/emseepea/commit/2e1258ea3eb04bd2b7cbf048e8056654f065a797) Thanks [@tompahoward](https://github.com/tompahoward)! - Release the initializer packages with manifests that use
+  `@emseepea/server@0.12.0`.
+
 ## 0.0.17
 
 ### Patch Changes
