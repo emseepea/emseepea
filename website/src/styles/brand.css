@@ -15,3 +15,13 @@
   --sl-color-bg-nav: #e8f6ed;
   --sl-color-bg-sidebar: #e8f6ed;
 }
+
+@media (scripting: none) {
+  starlight-tabs[data-sync-key="result-card-renderer"] .tablist-wrapper {
+    display: none;
+  }
+
+  starlight-tabs[data-sync-key="result-card-renderer"] > [role="tabpanel"][hidden] {
+    display: block !important;
+  }
+}

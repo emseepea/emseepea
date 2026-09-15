@@ -351,7 +351,7 @@ test("the published result-card examples build outside the monorepo", { timeout:
     ], directory);
     await cp(new URL("../fixtures/result-card-guide/build.mjs", import.meta.url), path.join(directory, "build.mjs"));
     await cp(new URL("../fixtures/result-card-guide/svelte.ts", import.meta.url), path.join(directory, "svelte.ts"));
-    const guide = await readFile(new URL("../../website/src/content/docs/result-cards.md", import.meta.url), "utf8");
+    const guide = await readFile(new URL("../../website/src/content/docs/result-cards.mdx", import.meta.url), "utf8");
     for (const file of ["result-view.ts", "native.ts", "react.tsx", "SvelteApp.svelte"]) {
       await writeFile(path.join(directory, file), guideSnippet(guide, file));
     }
@@ -362,8 +362,12 @@ test("the published result-card examples build outside the monorepo", { timeout:
 });
 
 function guideSnippet(guide, file) {
-  const match = guide.match(new RegExp("```[^\\n]+ title=\\\"" + file + "\\\"\\n([\\s\\S]*?)\\n```"));
-  return `${match?.[1] ?? "@"}\n`;
+  const match = guide.match(new RegExp("```[^\\n]+ title=\\\"" + file + "\\\"\\n([\\s\\S]*?)\\n\\s*```"));
+  const snippet = match?.[1] ?? "@";
+  const indentation = Math.min(...snippet.split("\n")
+    .filter((line) => line.trim())
+    .map((line) => line.match(/^\s*/)[0].length));
+  return `${snippet.split("\n").map((line) => line.slice(indentation)).join("\n")}\n`;
 }
 
 test("the packed Tailwind stylesheet installs with its accessibility states and limits", { timeout: 180_000 }, async () => {

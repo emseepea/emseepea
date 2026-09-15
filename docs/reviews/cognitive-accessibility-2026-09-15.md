@@ -93,3 +93,22 @@ Scope: Source Markdown clarity and cognitive accessibility only. This review
 does not establish implementation, test results, continuous integration,
 publication, registry verification, exact-host behavior, or adopter production
 verification.
+
+## Synchronized Result Card Renderer Tabs
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+Result Card guide after its Native HTML, React, and Svelte instructions moved
+into synchronized tabs. The renderer selection appears before optional bundle
+background. Every tab group uses the same labels and order. Shared mapping,
+actions, accessibility checks, bundle evidence, and styling guidance remain
+visible outside the tabs. The Tailwind limitation remains separate from the
+renderer choice. No cognitive-accessibility findings remain in scope.
+
+The reviewed source file and matching SHA-256 digest are:
+
+- `website/src/content/docs/result-cards.mdx`
+  SHA-256: `6721ad68c2435c608ab34b136256e39ce6b5ca10ab2822b0a1e75a4b32a4a75d`
+
+Scope: Source MDX clarity and cognitive accessibility only. This review does
+not establish rendered accessibility, test results, continuous integration,
+publication, exact-host behaviour, or adopter production verification.

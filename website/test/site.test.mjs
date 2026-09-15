@@ -68,6 +68,42 @@ test("every built page has accessible light/dark mobile and desktop output", { t
   }
 });
 
+test("result-card renderer tabs synchronize, persist, and keep focus local", async () => {
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage();
+    await page.goto(origin + base + "result-cards/");
+    const tablists = page.getByRole("tablist");
+    assert.equal(await tablists.count(), 3);
+    assert.equal(await page.getByRole("group", { name: "Install the renderer" }).count(), 1);
+    assert.equal(await page.getByRole("group", { name: "Render the current result" }).count(), 1);
+    assert.equal(await page.getByRole("group", { name: "Connect MCP Apps lifecycle only when needed" }).count(), 1);
+
+    const firstReact = tablists.nth(0).getByRole("tab", { name: "React", exact: true });
+    await firstReact.click();
+    for (let index = 0; index < 3; index += 1) {
+      assert.equal(await tablists.nth(index).getByRole("tab", { name: "React", exact: true }).getAttribute("aria-selected"), "true");
+    }
+    assert.equal(await page.locator(":focus").getAttribute("id"), await firstReact.getAttribute("id"));
+
+    await page.keyboard.press("End");
+    for (let index = 0; index < 3; index += 1) {
+      assert.equal(await tablists.nth(index).getByRole("tab", { name: "Svelte", exact: true }).getAttribute("aria-selected"), "true");
+      assert.equal(await page.locator('starlight-tabs[data-sync-key="result-card-renderer"]').nth(index).locator(':scope > [role="tabpanel"]:not([hidden])').count(), 1);
+    }
+    assert.equal(await page.locator(":focus").getAttribute("id"), await tablists.nth(0).getByRole("tab", { name: "Svelte", exact: true }).getAttribute("id"));
+
+    await page.reload();
+    for (let index = 0; index < 3; index += 1) {
+      assert.equal(await tablists.nth(index).getByRole("tab", { name: "Svelte", exact: true }).getAttribute("aria-selected"), "true");
+    }
+    assert.equal(await page.getByRole("tab", { selected: true }).count(), 3);
+    assert.equal(await page.locator(':focus:is([role="tab"])').count(), 0);
+  } finally {
+    await context.close();
+  }
+});
+
 test("built links, fragments, images and search assets resolve under the Pages base", async () => {
   const page = await browser.newPage();
   const targets = new Set();
@@ -114,6 +150,13 @@ test("readers can use core content without JavaScript", async () => {
     assert.ok(await page.getByRole("heading", { name: "Run your first server", exact: true }).isVisible());
     await page.getByRole("link", { name: "Browse the examples", exact: true }).click();
     assert.equal(new URL(page.url()).pathname, base + "examples/");
+
+    await page.goto(origin + base + "result-cards/");
+    assert.equal(await page.getByRole("tablist").count(), 0);
+    assert.equal(await page.getByRole("tabpanel").count(), 9);
+    assert.equal(await page.locator('starlight-tabs[data-sync-key="result-card-renderer"] > [role="tabpanel"]:visible').count(), 9);
+    assert.ok(await page.getByText("npm install @emseepea/server @emseepea/react react react-dom", { exact: true }).isVisible());
+    assert.ok(await page.getByText("npm install @emseepea/server @emseepea/svelte svelte", { exact: true }).isVisible());
   } finally {
     await context.close();
   }
