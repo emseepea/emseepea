@@ -1,19 +1,19 @@
 ---
 status: "proposed"
 date: 2026-09-15
-oversight-date: 2026-09-15
-human-oversight: confirmed
+human-oversight: pending
 decision-makers: ["Tom Howard"]
 consulted: ["Architecture review", "JTBD review"]
 informed: ["GitHub issue 93 customer voice"]
 reassessment-date: 2026-12-15
 ---
 
-# Framework-Owned Model Context Protocol App Resource Packaging
+# Corrected Ratification Boundary for Framework-Owned Model Context Protocol App Resource Packaging
 
-> Tom Howard explicitly ratified the chosen option and its canonical
-> documentation requirement on 2026-09-15. This records the architecture
-> decision only; implementation and delivery remain separate.
+> ADR-0092 records Tom Howard's ratification of this decision substance, but
+> its body retained contradictory pre-ratification wording. This corrected
+> record is intended to supersede ADR-0092 only after Tom explicitly ratifies
+> ADR-0093. Until then, ADR-0092 remains the confirmed current decision.
 
 ## Context and Problem Statement
 
@@ -35,6 +35,10 @@ Issue 38 proved the generic runtime can support MCP Apps. Issue 93 asks whether
 the repeated packaging boundary should now become a small public framework
 helper without moving application content, behaviour, or build tooling into the
 framework.
+
+ADR-0093 preserves ADR-0092's decision substance. It corrects only the
+ratification-state contradictions and is intended to supersede ADR-0092 after
+Tom explicitly ratifies this record.
 
 ## Decision Drivers
 
@@ -67,12 +71,12 @@ Chosen option: **"One composite server helper"**, because one existing
 framework boundary can remove the repeated security-sensitive assembly while
 leaving the application-specific work outside the framework.
 
-If Tom Howard ratifies this proposal, `@emseepea/server` will add
-`defineMcpAppResource`. The helper will return an ordinary `EmseepeaResource`
-registration with URI-aligned tool metadata available for a tool definition.
-It will call `defineResource` rather than create another registration path.
-The existing access, discovery, validation, deadline, cancellation, progress,
-logging, and result-size behaviour will remain authoritative.
+The implementation will add `defineMcpAppResource` to `@emseepea/server`. The
+helper will return an ordinary `EmseepeaResource` registration with URI-aligned
+tool metadata available for a tool definition. It will call `defineResource`
+rather than create another registration path. The existing access, discovery,
+validation, deadline, cancellation, progress, logging, and result-size
+behaviour will remain authoritative.
 
 The definition will require:
 
@@ -127,15 +131,14 @@ Reader guidance will have one maintained source in
 - aligned tool metadata; and
 - the limits of source, release, website, and adopter evidence.
 
-The
-`@emseepea/server` README will provide a concise orientation and descriptive
+The `@emseepea/server` README will provide a concise orientation and descriptive
 link instead of copying the guide or its runnable code. The maintained React
 example will be the executable source referenced by the guide and exercised by
 ordinary and packed-initializer checks.
 
 ## Consequences
 
-If ratified and implemented, this decision will have these consequences.
+If implemented, this decision will have these consequences.
 
 ### Good
 
@@ -168,7 +171,7 @@ If ratified and implemented, this decision will have these consequences.
 
 ## Confirmation
 
-If ratified, implementation and delivery will require all of these checks:
+Implementation and delivery require all of these checks:
 
 - Public type checks must accept public and protected definitions and reject mixed
   access forms.
