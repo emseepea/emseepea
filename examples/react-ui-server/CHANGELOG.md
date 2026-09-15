@@ -1,5 +1,11 @@
 # @emseepea/create-react-ui-server
 
+## 0.0.32
+
+### Patch Changes
+
+- [`879edfb`](https://github.com/emseepea/emseepea/commit/879edfbebce0e1fe12f4ce62b7a7eb0ba0cb8f0b) Thanks [@tompahoward](https://github.com/tompahoward)! - The optional stylesheet now styles Native HTML, React, and Svelte Result Cards. The UI initializers use the released stylesheet.
+
 ## 0.0.31
 
 ### Patch Changes
