@@ -107,7 +107,7 @@ renderer choice. No cognitive-accessibility findings remain in scope.
 The reviewed source file and matching SHA-256 digest are:
 
 - `website/src/content/docs/result-cards.mdx`
-  SHA-256: `6721ad68c2435c608ab34b136256e39ce6b5ca10ab2822b0a1e75a4b32a4a75d`
+  SHA-256: `a54e74098993a3f7b9522af006452ad922d0a8b319319eb55fdfe95bdef9def6`
 
 Scope: Source MDX clarity and cognitive accessibility only. This review does
 not establish rendered accessibility, test results, continuous integration,

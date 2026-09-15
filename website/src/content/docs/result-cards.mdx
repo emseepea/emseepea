@@ -213,22 +213,26 @@ does not provide a Svelte initializer.
       `@emseepea/server/ui` directly. Call `connect()` after the document is
       ready, subscribe to checked state changes, and run the cleanup function
       returned by `connect()` during teardown.
+
     </TabItem>
     <TabItem label="React">
       Use `useMcpApp` only when the React card needs the MCP Apps host
       lifecycle. The hook connects during mounting and disconnects during
       cleanup.
+
     </TabItem>
     <TabItem label="Svelte">
       Use `createMcpApp` only when the Svelte card needs the MCP Apps host
       lifecycle. The binding connects during mounting and disconnects when the
       component is destroyed.
+
     </TabItem>
   </Tabs>
 </div>
 
 The lifecycle bindings handle initialization, host context, tool results,
 cancellation, teardown, and `ui/message` through the shared checked controller.
+
 The maintained [React result-card fixture](https://github.com/emseepea/emseepea/blob/main/tests/fixtures/result-card-bundles/react.tsx)
 and [Svelte result-card fixture](https://github.com/emseepea/emseepea/blob/main/tests/fixtures/result-card-bundles/SvelteApp.svelte)
 show the framework bindings. Treat every host message as untrusted input.
