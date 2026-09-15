@@ -69,7 +69,7 @@ test("every built page has accessible light/dark mobile and desktop output", { t
 });
 
 test("result-card renderer tabs synchronize, persist, and keep focus local", async () => {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ viewport: { width: 320, height: 900 } });
   try {
     const page = await context.newPage();
     await page.goto(origin + base + "result-cards/");
@@ -78,6 +78,17 @@ test("result-card renderer tabs synchronize, persist, and keep focus local", asy
     assert.equal(await page.getByRole("group", { name: "Install the renderer" }).count(), 1);
     assert.equal(await page.getByRole("group", { name: "Render the current result" }).count(), 1);
     assert.equal(await page.getByRole("group", { name: "Connect MCP Apps lifecycle only when needed" }).count(), 1);
+    assert.equal(await page.getByRole("group", { name: "Render the current result" })
+      .locator(".expressive-code .header:visible").count(), 0);
+    assert.equal(await page.locator(".renderer-variant-label:visible").count(), 0);
+    const copyNames = await page.locator(".renderer-tabs--source .expressive-code .copy button").evaluateAll((buttons) =>
+      buttons.map((button) => button.getAttribute("aria-label")));
+    for (const filename of ["native.ts", "react.tsx", "SvelteApp.svelte"]) {
+      assert.ok(copyNames.includes(`Copy code: ${filename}`), `missing copy name for ${filename}`);
+    }
+    for (const tab of await page.getByRole("tab").all()) {
+      assert.ok((await tab.boundingBox()).height >= 44, "renderer tabs need a 44 CSS pixel target");
+    }
 
     const firstReact = tablists.nth(0).getByRole("tab", { name: "React", exact: true });
     await firstReact.click();
@@ -85,6 +96,13 @@ test("result-card renderer tabs synchronize, persist, and keep focus local", asy
       assert.equal(await tablists.nth(index).getByRole("tab", { name: "React", exact: true }).getAttribute("aria-selected"), "true");
     }
     assert.equal(await page.locator(":focus").getAttribute("id"), await firstReact.getAttribute("id"));
+    const selectedStyle = await firstReact.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { borderTopStyle: style.borderTopStyle, borderTopWidth: style.borderTopWidth, fontWeight: style.fontWeight };
+    });
+    assert.equal(selectedStyle.borderTopStyle, "solid");
+    assert.equal(selectedStyle.borderTopWidth, "3px");
+    assert.equal(selectedStyle.fontWeight, "600");
 
     await page.keyboard.press("End");
     for (let index = 0; index < 3; index += 1) {
@@ -155,8 +173,49 @@ test("readers can use core content without JavaScript", async () => {
     assert.equal(await page.getByRole("tablist").count(), 0);
     assert.equal(await page.getByRole("tabpanel").count(), 9);
     assert.equal(await page.locator('starlight-tabs[data-sync-key="result-card-renderer"] > [role="tabpanel"]:visible').count(), 9);
+    assert.equal(await page.locator(".renderer-variant-label:visible").count(), 9);
+    for (const renderer of ["Native HTML", "React", "Svelte"]) {
+      assert.equal(await page.locator(".renderer-variant-label", { hasText: renderer }).count(), 3);
+    }
+    assert.ok(await page.locator(".renderer-tabs--source .expressive-code .header").first().isVisible());
     assert.ok(await page.getByText("npm install @emseepea/server @emseepea/react react react-dom", { exact: true }).isVisible());
     assert.ok(await page.getByText("npm install @emseepea/server @emseepea/svelte svelte", { exact: true }).isVisible());
+  } finally {
+    await context.close();
+  }
+});
+
+test("result-card renderer variants remain available in print", async () => {
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage();
+    await page.goto(origin + base + "result-cards/");
+    await page.emulateMedia({ media: "print" });
+    assert.equal(await page.locator('.renderer-tabs [role="tablist"]').count(), 3);
+    assert.equal(await page.locator('.renderer-tabs [role="tablist"]:visible').count(), 0);
+    assert.equal(await page.locator('starlight-tabs[data-sync-key="result-card-renderer"] > [role="tabpanel"]:visible').count(), 9);
+    assert.equal(await page.locator(".renderer-variant-label:visible").count(), 9);
+    assert.ok(await page.locator(".renderer-tabs--source .expressive-code .header").first().isVisible());
+  } finally {
+    await context.close();
+  }
+});
+
+test("result-card renderer tabs expose a forced-colours focus indicator", async () => {
+  const context = await browser.newContext({ forcedColors: "active", viewport: { width: 320, height: 900 } });
+  try {
+    const page = await context.newPage();
+    await page.goto(origin + base + "result-cards/");
+    const tab = page.getByRole("tab", { name: "React", exact: true }).first();
+    await tab.focus();
+    const focusStyle = await tab.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth };
+    });
+    assert.equal(focusStyle.outlineStyle, "solid");
+    assert.equal(focusStyle.outlineWidth, "2px");
+    assert.ok((await tab.boundingBox()).height >= 44);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
   } finally {
     await context.close();
   }

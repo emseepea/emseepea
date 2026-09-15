@@ -16,12 +16,240 @@
   --sl-color-bg-sidebar: #e8f6ed;
 }
 
-@media (scripting: none) {
-  starlight-tabs[data-sync-key="result-card-renderer"] .tablist-wrapper {
+.renderer-tabs > starlight-tabs[data-sync-key="result-card-renderer"] {
+  display: block;
+  border: 1px solid var(--sl-color-gray-3);
+  border-radius: 0.5rem;
+  background: var(--sl-color-bg);
+}
+
+.renderer-tabs > starlight-tabs[data-sync-key="result-card-renderer"] > .tablist-wrapper {
+  overflow-x: auto;
+  border-radius: 0.5rem 0.5rem 0 0;
+  background: var(--sl-color-gray-6);
+  scrollbar-width: thin;
+}
+
+:root[data-theme="light"]
+  .renderer-tabs
+  > starlight-tabs[data-sync-key="result-card-renderer"]
+  > .tablist-wrapper {
+  background: var(--sl-color-gray-7);
+}
+
+.renderer-tabs
+  > starlight-tabs[data-sync-key="result-card-renderer"]
+  > .tablist-wrapper
+  > [role="tablist"] {
+  min-width: max-content;
+  margin: 0;
+  padding: 0 0.5rem;
+  border-bottom: 1px solid var(--sl-color-gray-3);
+}
+
+.renderer-tabs
+  > starlight-tabs[data-sync-key="result-card-renderer"]
+  > .tablist-wrapper
+  .tab
+  > [role="tab"] {
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-top-width: 3px;
+  box-shadow: none;
+  color: var(--sl-color-gray-2);
+  font-family: inherit;
+  font-size: var(--sl-text-sm);
+}
+
+.renderer-tabs
+  > starlight-tabs[data-sync-key="result-card-renderer"]
+  > .tablist-wrapper
+  .tab
+  > [role="tab"][aria-selected="true"] {
+  margin-bottom: -1px;
+  border-color: var(--sl-color-gray-3);
+  border-top-color: var(--sl-color-text-accent);
+  border-bottom-color: var(--sl-color-bg);
+  background: var(--sl-color-bg);
+  color: var(--sl-color-white);
+  font-weight: 600;
+}
+
+.renderer-tabs
+  > starlight-tabs[data-sync-key="result-card-renderer"]
+  > .tablist-wrapper
+  .tab
+  > [role="tab"]:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--sl-color-text-accent);
+  outline-offset: var(--sl-outline-offset-inside);
+}
+
+.renderer-tabs
+  > starlight-tabs[data-sync-key="result-card-renderer"]
+  > .tablist-wrapper
+  ~ [role="tabpanel"] {
+  margin-top: 0;
+  padding: 1rem;
+}
+
+.renderer-tabs
+  > starlight-tabs[data-sync-key="result-card-renderer"]
+  .renderer-variant-label {
+  display: none;
+}
+
+@media (scripting: enabled) {
+  .renderer-tabs.renderer-tabs--source
+    > starlight-tabs[data-sync-key="result-card-renderer"]
+    > [role="tabpanel"]
+    .expressive-code
+    .frame.has-title:not(.is-terminal) {
+    --button-spacing: 0.4rem;
+  }
+
+  .renderer-tabs.renderer-tabs--source
+    > starlight-tabs[data-sync-key="result-card-renderer"]
+    > [role="tabpanel"]
+    .expressive-code
+    .frame.has-title:not(.is-terminal)
+    .header {
     display: none;
   }
 
-  starlight-tabs[data-sync-key="result-card-renderer"] > [role="tabpanel"][hidden] {
+  .renderer-tabs.renderer-tabs--source
+    > starlight-tabs[data-sync-key="result-card-renderer"]
+    > [role="tabpanel"]
+    .expressive-code
+    .frame.has-title:not(.is-terminal)
+    pre {
+    border-top: var(--ec-brdWd) solid var(--ec-brdCol);
+    border-radius: calc(var(--ec-brdRad) + var(--ec-brdWd));
+  }
+}
+
+@media (forced-colors: active) {
+  .renderer-tabs > starlight-tabs[data-sync-key="result-card-renderer"] {
+    border-color: CanvasText;
+    background: Canvas;
+  }
+
+  .renderer-tabs > starlight-tabs[data-sync-key="result-card-renderer"] > .tablist-wrapper {
+    background: Canvas;
+  }
+
+  .renderer-tabs
+    > starlight-tabs[data-sync-key="result-card-renderer"]
+    > .tablist-wrapper
+    > [role="tablist"] {
+    border-color: CanvasText;
+  }
+
+  .renderer-tabs
+    > starlight-tabs[data-sync-key="result-card-renderer"]
+    > .tablist-wrapper
+    .tab
+    > [role="tab"] {
+    color: CanvasText;
+  }
+
+  .renderer-tabs
+    > starlight-tabs[data-sync-key="result-card-renderer"]
+    > .tablist-wrapper
+    .tab
+    > [role="tab"][aria-selected="true"] {
+    border-color: CanvasText;
+    border-top-color: Highlight;
+    border-bottom-color: Canvas;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .renderer-tabs
+    > starlight-tabs[data-sync-key="result-card-renderer"]
+    > .tablist-wrapper
+    .tab
+    > [role="tab"]:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+@media (scripting: none) {
+  .renderer-tabs > starlight-tabs[data-sync-key="result-card-renderer"] {
+    border: 0;
+    background: transparent;
+  }
+
+  .renderer-tabs > starlight-tabs[data-sync-key="result-card-renderer"] > .tablist-wrapper {
+    display: none;
+  }
+
+  .renderer-tabs > starlight-tabs[data-sync-key="result-card-renderer"] > [role="tabpanel"] {
+    margin-top: 1rem;
+    border: 1px solid var(--sl-color-gray-3);
+    border-radius: 0.5rem;
+  }
+
+  .renderer-tabs > starlight-tabs[data-sync-key="result-card-renderer"] > [role="tabpanel"][hidden] {
     display: block !important;
+  }
+
+  .renderer-tabs
+    > starlight-tabs[data-sync-key="result-card-renderer"]
+    .renderer-variant-label {
+    display: block;
+    margin: 0 0 0.75rem;
+    color: var(--sl-color-white);
+    font-weight: 600;
+  }
+}
+
+@media print {
+  .renderer-tabs > starlight-tabs[data-sync-key="result-card-renderer"] {
+    border: 0;
+    background: transparent;
+    break-inside: auto;
+  }
+
+  .renderer-tabs > starlight-tabs[data-sync-key="result-card-renderer"] > .tablist-wrapper {
+    display: none;
+  }
+
+  .renderer-tabs > starlight-tabs[data-sync-key="result-card-renderer"] > [role="tabpanel"] {
+    display: block !important;
+    margin-top: 1rem;
+    border: 1px solid var(--sl-color-gray-3);
+    border-radius: 0.5rem;
+  }
+
+  .renderer-tabs
+    > starlight-tabs[data-sync-key="result-card-renderer"]
+    .renderer-variant-label {
+    display: block;
+    margin: 0 0 0.75rem;
+    color: var(--sl-color-white);
+    font-weight: 600;
+  }
+
+  .renderer-tabs.renderer-tabs--source
+    > starlight-tabs[data-sync-key="result-card-renderer"]
+    > [role="tabpanel"]
+    .expressive-code
+    .frame.has-title:not(.is-terminal)
+    .header {
+    display: flex;
+  }
+
+  .renderer-tabs.renderer-tabs--source
+    > starlight-tabs[data-sync-key="result-card-renderer"]
+    > [role="tabpanel"]
+    .expressive-code
+    .frame.has-title:not(.is-terminal)
+    pre {
+    border-top: 0;
+    border-radius: 0 0 calc(var(--ec-brdRad) + var(--ec-brdWd))
+      calc(var(--ec-brdRad) + var(--ec-brdWd));
   }
 }

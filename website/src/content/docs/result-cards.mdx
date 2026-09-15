@@ -86,9 +86,11 @@ Context Protocol Apps (MCP Apps) resource.
 
 ## Install the renderer
 
-<div class="renderer-tabs" role="group" aria-labelledby="install-the-renderer">
+<div class="renderer-tabs renderer-tabs--source" role="group" aria-labelledby="install-the-renderer">
   <Tabs syncKey="result-card-renderer">
     <TabItem label="Native HTML">
+      <p class="renderer-variant-label">Native HTML</p>
+
       Install the checked model and native HTML renderer.
 
       ```sh title="Install Native HTML packages"
@@ -96,6 +98,8 @@ Context Protocol Apps (MCP Apps) resource.
       ```
     </TabItem>
     <TabItem label="React">
+      <p class="renderer-variant-label">React</p>
+
       Install the checked model, React renderer, React, and React DOM.
 
       ```sh title="Install React packages"
@@ -103,6 +107,8 @@ Context Protocol Apps (MCP Apps) resource.
       ```
     </TabItem>
     <TabItem label="Svelte">
+      <p class="renderer-variant-label">Svelte</p>
+
       Install the checked model, Svelte renderer, and Svelte.
 
       ```sh title="Install Svelte packages"
@@ -114,12 +120,14 @@ Context Protocol Apps (MCP Apps) resource.
 
 ## Render the current result
 
-<div class="renderer-tabs" role="group" aria-labelledby="render-the-current-result">
+<div class="renderer-tabs renderer-tabs--source" role="group" aria-labelledby="render-the-current-result">
   <Tabs syncKey="result-card-renderer">
     <TabItem label="Native HTML">
-      Use `renderResultView` when the application does not need a framework
-      renderer. Pass the heading level that fits the surrounding page and a
-      unique `idPrefix` for every result in the document.
+      <p class="renderer-variant-label">Native HTML</p>
+
+      In `native.ts`, use `renderResultView` when the application does not need
+      a framework renderer. Pass the heading level that fits the surrounding
+      page and a unique `idPrefix` for every result in the document.
 
       ```ts title="native.ts"
       import { renderResultView } from "@emseepea/server/ui";
@@ -146,7 +154,9 @@ Context Protocol Apps (MCP Apps) resource.
       shell.
     </TabItem>
     <TabItem label="React">
-      Use React when the application already uses React.
+      <p class="renderer-variant-label">React</p>
+
+      In `react.tsx`, use React when the application already uses React.
 
       ```tsx title="react.tsx"
       import { ResultCard } from "@emseepea/react";
@@ -173,8 +183,10 @@ Context Protocol Apps (MCP Apps) resource.
       `ResultView`.
     </TabItem>
     <TabItem label="Svelte">
-      Use Svelte when the application already uses Svelte or you choose it for
-      a self-contained MCP Apps resource.
+      <p class="renderer-variant-label">Svelte</p>
+
+      In `SvelteApp.svelte`, use Svelte when the application already uses
+      Svelte or you choose it for a self-contained MCP Apps resource.
 
       ```svelte title="SvelteApp.svelte"
       <script lang="ts">
@@ -206,6 +218,8 @@ does not provide a Svelte initializer.
 <div class="renderer-tabs" role="group" aria-labelledby="connect-mcp-apps-lifecycle-only-when-needed">
   <Tabs syncKey="result-card-renderer">
     <TabItem label="Native HTML">
+      <p class="renderer-variant-label">Native HTML</p>
+
       Call `renderInitialPlantingPlan` once when the first checked result
       arrives. For later status changes, keep the status element mounted and
       update its `textContent`. Use React or Svelte when the rest of the card
@@ -218,12 +232,16 @@ does not provide a Svelte initializer.
 
     </TabItem>
     <TabItem label="React">
+      <p class="renderer-variant-label">React</p>
+
       Use `useMcpApp` only when the React card needs the MCP Apps host
       lifecycle. The hook connects during mounting and disconnects during
       cleanup.
 
     </TabItem>
     <TabItem label="Svelte">
+      <p class="renderer-variant-label">Svelte</p>
+
       Use `createMcpApp` only when the Svelte card needs the MCP Apps host
       lifecycle. The binding connects during mounting and disconnects when the
       component is destroyed.
