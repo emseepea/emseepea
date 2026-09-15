@@ -1,7 +1,7 @@
 @import "tailwindcss" source(none);
 
 @layer components {
-  [data-emseepea-part="view"] {
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]) {
     --emseepea-bg: #ffffff;
     --emseepea-surface: #e8f6ed;
     --emseepea-text: #18231e;
@@ -21,7 +21,11 @@
     line-height: 1.5;
   }
 
-  [data-emseepea-theme="dark"] [data-emseepea-part="view"] {
+  [data-emseepea-part="result-view"] {
+    overflow-wrap: anywhere;
+  }
+
+  [data-emseepea-theme="dark"] :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]) {
     --emseepea-bg: #101a15;
     --emseepea-surface: #18231e;
     --emseepea-text: #f5faf7;
@@ -32,18 +36,13 @@
     --emseepea-error: #ffb4ab;
   }
 
-  [data-emseepea-part="view"] *,
-  [data-emseepea-part="view"] *::before,
-  [data-emseepea-part="view"] *::after {
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]) *,
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]) *::before,
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]) *::after {
     box-sizing: border-box;
   }
 
-  [data-emseepea-part="view"] h2,
-  [data-emseepea-part="view"] h3,
-  [data-emseepea-part="view"] h4,
-  [data-emseepea-part="view"] h5,
-  [data-emseepea-part="view"] h6,
-  [data-emseepea-part="view"] p {
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]) :is(h2, h3, h4, h5, h6, p) {
     margin-block: 0 1rem;
   }
 
@@ -91,9 +90,7 @@
     font-weight: 650;
   }
 
-  [data-emseepea-part="view"] input,
-  [data-emseepea-part="view"] select,
-  [data-emseepea-part="view"] button {
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]) :is(input, select, button) {
     min-block-size: 2.75rem;
     max-inline-size: 100%;
     color: var(--emseepea-text);
@@ -157,15 +154,75 @@
     text-underline-offset: 0.18em;
   }
 
-  [data-emseepea-part="view"] :focus-visible {
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]):focus-visible,
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]) :focus-visible {
     outline: 0.2rem solid var(--emseepea-focus-inner);
     box-shadow: 0 0 0 0.4rem var(--emseepea-focus-outer);
     outline-offset: 0.1rem;
   }
+
+  [data-emseepea-part="result-view"] > :is([data-emseepea-part="metrics"], [data-emseepea-part="reasons"], [data-emseepea-part="assumptions"], [data-emseepea-part="disclosure"], [data-emseepea-part="actions"]) {
+    margin-block: 0 1rem;
+  }
+
+  [data-emseepea-part="result-view"] :is([data-emseepea-part="headline"], [data-emseepea-part="metric"] dd, [data-emseepea-part="reasons-label"], [data-emseepea-part="assumptions-label"]) {
+    font-weight: 700;
+  }
+
+  [data-emseepea-part="result-view"] [data-emseepea-part="metrics"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+    gap: 1rem;
+  }
+
+  [data-emseepea-part="result-view"] :is([data-emseepea-part="metric"], [data-emseepea-part="disclosure"]) {
+    min-inline-size: 0;
+    padding: 1rem;
+    background: var(--emseepea-surface);
+    border: 0.125rem solid var(--emseepea-border);
+    border-radius: 0.35rem;
+  }
+
+  [data-emseepea-part="result-view"] [data-emseepea-part="metric"] dd {
+    margin-inline-start: 0;
+    overflow-wrap: anywhere;
+  }
+
+  [data-emseepea-part="result-view"] [data-emseepea-part="disclosure"] summary {
+    min-inline-size: 1.5rem;
+    min-block-size: 1.5rem;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  [data-emseepea-part="result-view"] [data-emseepea-part="actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  [data-emseepea-part="result-view"] [data-emseepea-part="action"] {
+    min-inline-size: 2.75rem;
+    padding-inline: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  [data-emseepea-part="result-view"] [data-emseepea-part="action"]:disabled {
+    cursor: not-allowed;
+    border-style: dashed;
+    opacity: 0.65;
+  }
+
+  [data-emseepea-part="result-view"] a {
+    color: inherit;
+    text-decoration-thickness: 0.12em;
+    text-underline-offset: 0.18em;
+  }
 }
 
 @media (max-width: 20rem) {
-  [data-emseepea-part="view"] {
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]) {
     inline-size: 100%;
     padding: 1rem;
     border-inline: 0;
@@ -174,10 +231,10 @@
 }
 
 @media (forced-colors: active) {
-  [data-emseepea-part="view"],
-  [data-emseepea-part="view"] input,
-  [data-emseepea-part="view"] select,
-  [data-emseepea-part="view"] button,
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]),
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]) :is(input, select, button),
+  [data-emseepea-part="result-view"] [data-emseepea-part="metric"],
+  [data-emseepea-part="result-view"] [data-emseepea-part="disclosure"],
   [data-emseepea-part="error-summary"],
   [data-emseepea-part="terminal"] {
     color: CanvasText;
@@ -185,14 +242,15 @@
     border-color: CanvasText;
   }
 
-  [data-emseepea-part="view"] :focus-visible {
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]):focus-visible,
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]) :focus-visible {
     outline: 0.2rem solid Highlight;
     box-shadow: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-emseepea-part="view"] * {
+  :is([data-emseepea-part="view"], [data-emseepea-part="result-view"]) * {
     scroll-behavior: auto;
     transition-duration: 0.001ms;
     animation-duration: 0.001ms;

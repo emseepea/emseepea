@@ -35,11 +35,33 @@ test("the browser component preserves accessibility and focus on updates", async
   await page.addScriptTag({ content: bundle.outputFiles[0].text });
   await page.locator("[data-emseepea-part='result-view']").first().waitFor();
 
+  const card = page.locator("[data-emseepea-part='result-view']").first();
+  const semanticMarkup = await card.evaluate((node) => node.outerHTML);
+  assert.equal(await card.evaluate((node) => getComputedStyle(node).backgroundColor), "rgba(0, 0, 0, 0)");
+  await page.addStyleTag({ content: await readFile(new URL("../../tailwind/dist/emseepea.css", import.meta.url), "utf8") });
+  assert.equal(await card.evaluate((node) => node.outerHTML), semanticMarkup);
+  assert.equal(await card.evaluate((node) => getComputedStyle(node).backgroundColor), "rgb(255, 255, 255)");
+  await page.locator("html").evaluate((node) => node.setAttribute("data-emseepea-theme", "dark"));
+  assert.equal(await card.evaluate((node) => getComputedStyle(node).backgroundColor), "rgb(16, 26, 21)");
+  await page.locator("html").evaluate((node) => node.setAttribute("data-emseepea-theme", "light"));
+
   const labelledBy = await page.locator("[data-emseepea-part='result-view']").evaluateAll((cards) => cards.map((card) => card.getAttribute("aria-labelledby")));
   assert.equal(new Set(labelledBy).size, 2);
   assert.equal(await page.locator("h2").count(), 1);
   assert.equal(await page.locator("h3").count(), 1);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true);
+  await page.addStyleTag({ content: "*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-block-end:2em!important}" });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true);
+  for (const selector of ["summary", "[data-emseepea-part='action']"]) {
+    const boxes = await page.locator(selector).evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect()).map(({ width, height }) => ({ width, height })));
+    assert.ok(boxes.every(({ width, height }) => width >= 24 && height >= 24), `${selector} target is too small`);
+  }
+  assert.equal(await page.locator("[data-emseepea-part='action']:disabled").first().evaluate((node) => getComputedStyle(node).borderStyle), "dashed");
+  await page.emulateMedia({ forcedColors: "active", reducedMotion: "reduce" });
+  await page.locator("[data-emseepea-part='action']:not(:disabled)").first().focus();
+  assert.notEqual(await page.locator("[data-emseepea-part='action']:not(:disabled)").first().evaluate((node) => getComputedStyle(node).outlineStyle), "none");
+  assert.equal(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches), true);
+  await page.emulateMedia({ forcedColors: "none", reducedMotion: "no-preference" });
   await page.addScriptTag({ path: require.resolve("axe-core/axe.min.js") });
   assert.deepEqual((await page.evaluate(() => window.axe.run(document.querySelector("[data-emseepea-part='result-view']")))).violations.map(({ id }) => id), []);
 
@@ -57,6 +79,11 @@ test("the browser component preserves accessibility and focus on updates", async
   await action.focus();
   await page.evaluate(() => window.emseepeaUpdate({ headline: "$651,000" }));
   assert.equal(await action.evaluate((element) => element === document.activeElement), true);
+  await page.evaluate(() => window.emseepeaUpdate({
+    state: { kind: "updated", status: "Result updated.", focusTarget: "result" },
+  }));
+  assert.equal(await card.evaluate((element) => element === document.activeElement), true);
+  assert.notEqual(await card.evaluate((element) => getComputedStyle(element).outlineStyle), "none");
   await page.evaluate(() => window.emseepeaUpdate({
     state: { kind: "ready", status: "Choose an action.", focusTarget: "actions" },
   }));

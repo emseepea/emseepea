@@ -61,7 +61,9 @@ export function toResultView(result: PlantingPlanResult): ResultView {
     disclaimer: result.notice,
     state: {
       kind: count === 0 ? "empty" : "ready",
-      status: `Pea planting plan ready: ${headline}.`,
+      status: count === 0
+        ? "No pea varieties match the selected conditions."
+        : `Pea planting plan ready: ${headline}.`,
       focusTarget: "none",
     },
   });
@@ -255,15 +257,32 @@ These measurements apply only to this fixture and dependency set. They do not
 establish a general performance or bundle-size advantage. Run
 `npm run measure:result-cards` in the repository to reproduce them.
 
-## Add styles separately
+## Add the optional shared styles
 
 Renderer choice does not add styles. All three renderers are unstyled unless
 your application imports styles.
 
-`@emseepea/tailwind/styles.css` currently styles form views. It does not style
-Result Cards. Add CSS in your application for
-`[data-emseepea-part="result-view"]` and the Result Card parts you need to
-style.
+Install the optional stylesheet package, then import its one CSS file from your
+application entry point:
+
+```sh title="Install the optional stylesheet"
+npm install @emseepea/tailwind
+```
+
+```ts title="Import the optional stylesheet"
+import "@emseepea/tailwind/styles.css";
+```
+
+The same import styles native `renderResultView`, React `ResultCard`, and
+Svelte `ResultCard`. Set `data-emseepea-theme="light"` or
+`data-emseepea-theme="dark"` on an ancestor. In React, pass the checked host
+theme to `useMcpTheme` and apply its result. Native HTML and Svelte applications
+resolve and apply the checked host value themselves. The renderers do not
+choose or apply that theme.
+
+Your application still owns domain mapping, wording, business policy, actions,
+effect authorization, the page shell, theme application, branding, and style
+overrides. Removing the import changes presentation only.
 
 ## Add actions and state updates
 
@@ -293,7 +312,7 @@ Do not make the whole card clickable or add custom card roles, positive
 ## Check the result
 
 The documentation test suite builds these examples outside the monorepo against
-packed public packages. The cross-renderer contract tests
+packed packages. The cross-renderer contract tests
 also check hostile text escaping, names, semantics, heading levels, status
 updates, focus targets, native buttons, mobile reflow, forced colours, reduced
 motion, and contrast-related states.
@@ -301,6 +320,11 @@ motion, and contrast-related states.
 After adapting the model, run your application build and keyboard checks.
 Confirm that the card reflows at 320 CSS pixels, visible focus remains clear,
 and status changes are announced once without moving focus unnecessarily.
+
+Source and package checks do not prove publication. `PUBLISHED` does not prove
+that an adopter uses the package successfully. Adopter `PROD_VERIFIED` requires
+independent evidence from the adopter's exact production revision and Result
+Card journey.
 
 For the complete checked behaviour, read:
 

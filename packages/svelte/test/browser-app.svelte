@@ -6,6 +6,7 @@
     heading: "Your estimate",
     headline: "$640,000",
     metrics: [{ label: "Monthly income", value: "$9,100" }],
+    disclosure: { label: "What's behind this number", items: ["A thirty-year term."] },
     disclaimer: "This is an estimate, not a lending decision.",
     actionsLabel: "Explore another estimate",
     actions: [

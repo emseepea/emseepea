@@ -194,6 +194,8 @@ test("UI package boundaries keep frontend and Tailwind dependencies out of core"
   const svelte = JSON.parse(await readFile(new URL("../../packages/svelte/package.json", import.meta.url), "utf8"));
   const tailwind = JSON.parse(await readFile(new URL("../../packages/tailwind/package.json", import.meta.url), "utf8"));
   const reactSource = await readFile(new URL("../../packages/react/src/index.tsx", import.meta.url), "utf8");
+  const svelteSource = await readFile(new URL("../../packages/svelte/src/ResultCard.svelte", import.meta.url), "utf8");
+  const nativeSource = await readFile(new URL("../../packages/framework/src/ui.ts", import.meta.url), "utf8");
   const exampleSource = await readFile(new URL("../../examples/react-ui-server/src/client.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../../packages/tailwind/dist/emseepea.css", import.meta.url), "utf8");
 
@@ -214,9 +216,14 @@ test("UI package boundaries keep frontend and Tailwind dependencies out of core"
   assert.deepEqual(tailwind.exports, { "./styles.css": "./dist/emseepea.css" });
   assert.equal(tailwind.dependencies, undefined);
   assert.doesNotMatch(reactSource, /fetch\(|dangerouslySetInnerHTML|tailwind/i);
+  assert.doesNotMatch(svelteSource, /tailwind|styles\.css/i);
+  assert.doesNotMatch(nativeSource, /tailwind|styles\.css/i);
   assert.match(reactSource, /@emseepea\/server\/ui/);
   assert.match(exampleSource, /fetch\("\/"/);
   assert.match(css, /:focus-visible/);
+  for (const part of ["result-view", "headline", "metrics", "metric", "reasons", "assumptions", "disclosure", "actions", "action", "status"]) {
+    assert.match(css, new RegExp(`\\[data-emseepea-part=${part}\\]`));
+  }
   assert.match(css, /\[aria-invalid/);
   assert.match(css, /\[aria-busy/);
   assert.match(css, /forced-colors:\s*active/);

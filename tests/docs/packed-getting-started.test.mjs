@@ -389,7 +389,7 @@ test("the packed Tailwind stylesheet installs with its accessibility states and 
       import { gzipSync } from "node:zlib";
 
       const css = await readFile(new URL(import.meta.resolve("@emseepea/tailwind/styles.css")), "utf8");
-      for (const pattern of [":focus-visible", ":required", "[aria-invalid=true]", "[aria-busy=true]", "forced-colors:active", "prefers-reduced-motion:reduce"]) {
+      for (const pattern of ["[data-emseepea-part=result-view]", "[data-emseepea-part=metrics]", "[data-emseepea-part=actions]", ":focus-visible", ":required", "[aria-invalid=true]", "[aria-busy=true]", "forced-colors:active", "prefers-reduced-motion:reduce"]) {
         if (!css.includes(pattern)) throw new Error(\`missing stylesheet state: \${pattern}\`);
       }
       if (Buffer.byteLength(css) > 10 * 1024) throw new Error("raw stylesheet limit exceeded");
