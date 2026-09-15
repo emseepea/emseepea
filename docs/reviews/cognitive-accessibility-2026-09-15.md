@@ -112,3 +112,22 @@ The reviewed source file and matching SHA-256 digest are:
 Scope: Source MDX clarity and cognitive accessibility only. This review does
 not establish rendered accessibility, test results, continuous integration,
 publication, exact-host behaviour, or adopter production verification.
+
+## Shared Result Card Styles Decision
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+complete proposed ADR-0091 and its regenerated decision index. The decision
+states the selector gap first, compares three choices, separates framework and
+adopter responsibilities, and distinguishes future acceptance criteria from
+completed evidence. Its ratification scope explicitly excludes implementation,
+release, publication, website verification, and adopter `PROD_VERIFIED`.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `docs/decisions/0091-shared-result-card-styles-in-the-existing-optional-stylesheet.proposed.md` | `61ed3982634bb385f2c4565aad932ab6fa66b130fe972ee796a9401d85b8360a` |
+| `docs/decisions/README.md` | `c1cdc1b8a2690eb1641165df6f62b3516a5bc1a877a88d74a5b38a85a7c65f94` |
+
+Scope: Source Markdown clarity and cognitive accessibility only. This review
+does not establish ratification, implementation, test results, continuous
+integration, publication, registry verification, website verification, or
+adopter production verification.

@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 88 decisions: 50 current and 38 historical.
+This project has 89 decisions: 51 current and 38 historical.
 
 ## Quick Index
 
@@ -61,6 +61,7 @@ This project has 88 decisions: 50 current and 38 historical.
 - [ADR-0087: Bounded Request-Scoped Progress for Resources and Prompts](0087-bounded-request-scoped-progress-for-resources-and-prompts.proposed.md): Proposed; human review confirmed.
 - [ADR-0089: No `ping` in Model Context Protocol (MCP) `2026-07-28` Beyond Existing Legacy Compatibility](0089-no-modern-ping-beyond-existing-legacy-compatibility.proposed.md): Proposed; human review confirmed.
 - [ADR-0090: Deprecated Client Logging Kept Out of Adoption Guides](0090-deprecated-client-logging-kept-out-of-adoption-guides.proposed.md): Proposed; human review confirmed.
+- [ADR-0091: Shared Result Card Styles in the Existing Optional Stylesheet](0091-shared-result-card-styles-in-the-existing-optional-stylesheet.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -1976,3 +1977,27 @@ Chosen option: **"Remove client-logging adoption guidance while keeping factual 
 - Runtime source, public API declarations, and protocol tests are unchanged.
 - Documentation, cognitive-accessibility, website-build, and website-size gates pass.
 - The published website is fetched independently and contains no removed deprecated-feature adoption guide.
+
+### [ADR-0091: Shared Result Card Styles in the Existing Optional Stylesheet](0091-shared-result-card-styles-in-the-existing-optional-stylesheet.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### ADR-0091 Decision
+
+Chosen option: **"Extend the existing optional stylesheet"**, because the existing public stylesheet already owns the checked optional presentation baseline and one import avoids copied CSS, selector mapping, and a second package entry point.
+
+#### ADR-0091 Checks
+
+- The built stylesheet must target both `view` and `result-view` without changing either public hook.
+- Native, React, and Svelte must render the same Result Card parts and receive the same styles from one public stylesheet import.
+- Renderers must not import CSS, and non-UI servers must acquire no React, Svelte, Tailwind, or browser dependency.
+- With the stylesheet absent, names, roles, states, order, focus, status announcements, action dispatch, and authority must remain unchanged.
+- Light and dark text, surface, border, error, state, and focus colour pairs must meet the stated contrast thresholds.
+- Keyboard, focus, text-spacing, forced-colours, reduced-motion, 320-pixel reflow, and target-size checks must pass for shared Result Card fixtures.
+- Metrics, labelled lists, disclosure, actions, status, hints, and disclaimers must remain understandable without colour or motion.
+- The existing 10 KiB raw and 3 KiB gzip stylesheet budgets must continue to pass.
+- Narrow product UI guidance must record the accepted Result Card style contract; the identity-only brand guide is not treated as a product UI system.
+- The canonical Result Card guide must document the optional import, theme application, renderer parity, and adopter boundary and pass cognitive accessibility review.
+- Exact-commit source and CI, packed-package, anonymous exact-version registry, and exact deployed-website checks must each pass and remain separately reported.
+- A package may be called `PUBLISHED` only after release and registry evidence; adopter `PROD_VERIFIED` requires independent exact-production adopter evidence.
