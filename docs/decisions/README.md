@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 89 decisions: 51 current and 38 historical.
+This project has 90 decisions: 52 current and 38 historical.
 
 ## Quick Index
 
@@ -62,6 +62,7 @@ This project has 89 decisions: 51 current and 38 historical.
 - [ADR-0089: No `ping` in Model Context Protocol (MCP) `2026-07-28` Beyond Existing Legacy Compatibility](0089-no-modern-ping-beyond-existing-legacy-compatibility.proposed.md): Proposed; human review confirmed.
 - [ADR-0090: Deprecated Client Logging Kept Out of Adoption Guides](0090-deprecated-client-logging-kept-out-of-adoption-guides.proposed.md): Proposed; human review confirmed.
 - [ADR-0091: Shared Result Card Styles in the Existing Optional Stylesheet](0091-shared-result-card-styles-in-the-existing-optional-stylesheet.proposed.md): Proposed; human review confirmed.
+- [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -2001,3 +2002,25 @@ Chosen option: **"Extend the existing optional stylesheet"**, because the existi
 - The canonical Result Card guide must document the optional import, theme application, renderer parity, and adopter boundary and pass cognitive accessibility review.
 - Exact-commit source and CI, packed-package, anonymous exact-version registry, and exact deployed-website checks must each pass and remain separately reported.
 - A package may be called `PUBLISHED` only after release and registry evidence; adopter `PROD_VERIFIED` requires independent exact-production adopter evidence.
+
+### [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### ADR-0092 Decision
+
+Chosen option: **"One composite server helper"**, because one existing framework boundary can remove the repeated security-sensitive assembly while leaving the application-specific work outside the framework.
+
+#### ADR-0092 Checks
+
+- Public type checks must accept public and protected definitions and reject mixed access forms.
+- Definition tests must reject a non-`ui://` URI, malformed Content Security Policy origins, excessive origin lists, and definitions that provide both or neither of the supported script sources.
+- A black-box modern and legacy client check must observe one URI and the MCP Apps MIME type across listing, resource read, and tool metadata.
+- The resource listing and read content must carry equivalent modern and legacy Content Security Policy and border metadata.
+- A mixed-case inline `</script` fixture must not end the generated script element, while language and title are HTML-escaped.
+- The maintained React example must use the helper and retain its browser, keyboard, focus, status, contrast, reflow, and host-lifecycle checks.
+- The canonical website guide must document the inputs, trust boundary, metadata compatibility, startup behaviour, and evidence limits. Its runnable path must use the maintained React example and pass the guide and packed-initializer checks.
+- The `@emseepea/server` README must link to the canonical guide without duplicating its runnable snippet.
+- Changed public guidance must pass cognitive-accessibility and voice-and-tone review bound to the reviewed content.
+- Package, packed-initializer, exact-commit continuous integration, publication, anonymous registry, website, and adopter production evidence must remain reported separately.

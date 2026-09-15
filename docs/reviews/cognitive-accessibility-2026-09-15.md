@@ -173,3 +173,22 @@ Scope: Source Markdown clarity and cognitive accessibility only. This review
 does not establish implementation, test results, continuous integration,
 publication, registry verification, website verification, or adopter
 production verification.
+
+## Model Context Protocol App Resource Packaging Decision
+
+Result: PASS. Independent cognitive-accessibility and voice-and-tone reviewers
+checked proposed ADR-0092 and its generated decision-index entry. The decision
+uses scan-friendly lists, expands abbreviations, separates framework and
+application responsibilities, and makes Tom Howard's pending ratification a
+condition before implementation. No cognitive-accessibility, Markdown, voice,
+or tone findings remain in scope.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `docs/decisions/0092-framework-owned-mcp-app-resource-packaging.proposed.md` | `38631880f764b7a63bb8a3801bc93af463103a49f44b1280489e42574a796c04` |
+| `docs/decisions/README.md` | `5764b4333bef763c6196d6d6936a1bd9dcba7918f60551eeacf84735ce94afb9` |
+
+Scope: Source Markdown clarity, cognitive accessibility, and voice and tone
+only. This review does not establish ratification, implementation, test
+results, continuous integration, publication, registry verification, website
+verification, exact-host behaviour, or adopter production verification.
