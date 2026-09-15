@@ -154,3 +154,22 @@ Scope: Source Markdown and MDX clarity and cognitive accessibility only. This
 review does not establish implementation, test results, continuous
 integration, publication, registry verification, website verification, or
 adopter production verification.
+
+## Published MCP Contract Evolution Job
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+ratified job and its index entry. Headings and labels are descriptive,
+abbreviations are expanded where they affect comprehension, link text is
+meaningful, and the job is short, structured, and consistent with the
+surrounding documentation. No cognitive-accessibility findings remain in
+scope.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `docs/jtbd/README.md` | `c8c154c01396e4f596802078f7f547a3a3103f9dc563b66b63bf5ade981d5316` |
+| `docs/jtbd/mcp-server-developer/JTBD-006-evolve-a-published-mcp-contract-safely.proposed.md` | `98736a8e7cd55f301a00a9acf45631e8fca4ffad98170b5b9121d1de7d7cf195` |
+
+Scope: Source Markdown clarity and cognitive accessibility only. This review
+does not establish implementation, test results, continuous integration,
+publication, registry verification, website verification, or adopter
+production verification.
