@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-09-15
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-09-15
 decision-makers: ["Tom Howard"]
 consulted: ["Architecture review", "JTBD review", "Accessibility review", "Design-system review", "Contrast review", "Style-guide review", "Voice and tone review", "Cognitive-accessibility review"]
 informed: []
@@ -10,13 +11,16 @@ reassessment-date: 2026-12-15
 
 # Shared Result Card Styles in the Existing Optional Stylesheet
 
+> Tom Howard explicitly ratified the chosen option on 2026-09-15. This records
+> the architecture decision only; implementation and delivery remain separate.
+
 ## Plain English Summary
 
 The optional `@emseepea/tailwind` stylesheet styles form views rooted at
 `data-emseepea-part="view"`. Native, React, and Svelte Result Cards use
 `data-emseepea-part="result-view"`, so the stylesheet does not style them.
 
-This decision would extend the existing optional stylesheet to give all three
+This decision extends the existing optional stylesheet to give all three
 Result Card renderers the same accessible baseline. The renderers would remain
 unstyled until an adopter imports the stylesheet. Adopters would keep control
 of their domain content, actions, page structure, branding, and overrides.
@@ -275,6 +279,6 @@ justifies a separate entry point or broader product UI design system.
 
 ## Ratification Scope
 
-Ratification approves this architecture decision only. It does not authorise
-implementation, release, publication, website verification, or an adopter
-`PROD_VERIFIED` claim.
+Tom Howard explicitly ratified this architecture decision on 2026-09-15.
+Ratification does not authorise implementation, release, publication, website
+verification, or an adopter `PROD_VERIFIED` claim.
