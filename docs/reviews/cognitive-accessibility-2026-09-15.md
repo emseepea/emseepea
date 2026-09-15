@@ -147,7 +147,7 @@ application, and uses consistent empty-state wording.
 | `website/src/content/docs/result-cards.mdx` | `371c1cffe8f36bd5d10bd2aa1503ba990c9fff84508e8fac399fbbd0d7625640` |
 | `packages/tailwind/README.md` | `448bc43990abb9ee4bceb2b8a0255cdc2fc94d4c558dfc7936c89e78f616a022` |
 | `.changeset/calm-peas-style.md` | `307e7638e3221883ad0edd8ca76654097f1d33d345c0faa538215b967bcf519b` |
-| `docs/reviews/current-release-readiness.md` | `d3be5a3e0a87b69c533e837618bd6369d2c315127e78cee7bf8ac74f0313b969` |
+| `docs/reviews/current-release-readiness.md` | `e4cb0ae23bde08075e059ad1a09d965715943502f408fdc8802e4644162648aa` |
 
 Scope: Source Markdown and MDX clarity and cognitive accessibility only. This
 review does not establish implementation, test results, continuous

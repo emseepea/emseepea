@@ -26,9 +26,8 @@ manifest to the exact released stylesheet version and add no separate feature.
   text-spacing, and 320-pixel reflow checks passed locally.
 - The built stylesheet is 10,160 raw bytes and 2,602 gzip bytes, within its
   10 KiB raw and 3 KiB gzip limits.
-- The complete local suite reached its Docker-backed fixtures, which could not
-  run because the local Docker daemon was unavailable. Exact-commit continuous
-  integration remains the required complete-suite evidence.
+- The complete local suite passed 226 of 226 tests, including its Docker-backed
+  PostgreSQL and MongoDB fixtures.
 
 These checks do not prove exact-commit continuous integration, publication,
 registry state, provenance, downloaded-package behavior, website deployment,
@@ -58,6 +57,6 @@ checks do not establish adopter production verification.
 
 - Result: PASS
 - Pipeline risk review: commit, push, and release are within the approved risk
-  limit at 4 out of 25.
+  limit at 5 out of 25.
 - Final result: within appetite, subject to the required exact-commit gates.
 - Release verification: NOT COMPLETE until the required publication gates pass.
