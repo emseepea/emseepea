@@ -1,74 +1,81 @@
-# Release Evidence for Published MCP Contract Compatibility
+# Prepublication Review for the Result Action Lifecycle Hook
 
 Date: 2026-09-16
 
-The package changes for issue #91 are published. `@emseepea/testing` now
-provides deterministic published Model Context Protocol (MCP) contract
-baselines and direction-aware breaking-change checks. The initializer releases
-only align their embedded testing dependency; they add no separate feature.
+This record covers these planned releases to npm's default `latest` channel:
 
-## Exact Published Package Set
+- `@emseepea/react@0.3.0`
+- `@emseepea/create-react-ui-server@0.0.35`
 
-- `@emseepea/testing@0.12.0`
-- `@emseepea/create-tool-server@0.0.35`
-- `@emseepea/create-api-backed-server@0.0.33`
-- `@emseepea/create-openapi-backed-server@0.0.15`
-- `@emseepea/create-resources-and-prompts-server@0.0.32`
-- `@emseepea/create-progress-streaming-server@0.0.33`
-- `@emseepea/create-html-ui-server@0.0.35`
-- `@emseepea/create-react-ui-server@0.0.34`
-- `@emseepea/create-multi-instance-postgres-server@0.0.23`
-- `@emseepea/create-database-schema-server@0.0.20`
-- `@emseepea/create-mongodb-backed-server@0.0.20`
-- `@emseepea/create-soap-backed-server@0.0.20`
+Publication is pending.
 
-## Source Evidence
+## What Changes
 
-- Implementation commit `6d47e72ce797e12b2348268a63f00d8753d2980d`
-  added the contract extraction, baseline, comparison, documentation, and
-  focused built-package tests.
-- Release-plan commit `e29c48e690eed353af6388bc6304e92b25e0b039`
-  added the 11 dependency-only initializer patches required by the generated
-  manifest changes.
-- Exact source Quality passed in
-  [source Quality run 35083831726](https://github.com/emseepea/emseepea/actions/runs/35083831726).
-- Exact source Release preparation passed in
-  [source Release preparation run 35084664415](https://github.com/emseepea/emseepea/actions/runs/35084664415).
+`@emseepea/react` adds `useMcpAction`, a companion to `useMcpApp`. It tracks one
+result action through the `idle`, `sending`, `sent`, and `error` states. The hook
+reports the active action ID and message text. It suppresses duplicate sends
+while a request is pending, resets when a new tool result arrives, and ignores
+stale request completion after that reset.
 
-## Version and Publication Evidence
+The application still chooses the message text, decides whether each action may
+change external state, and maps the hook state to visible status text, focus,
+and disabled actions. The React UI initializer now demonstrates that boundary
+instead of repeating the lifecycle state machine.
 
-- [Changesets pull request #99](https://github.com/emseepea/emseepea/pull/99)
-  had exact base `e29c48e690eed353af6388bc6304e92b25e0b039`, exact generated head
-  `782ba0b67cb272b8485fd76eca38d39ff455af84`, and merged as version commit
-  `1c886acc576c57b7d05ff02ce8692220109634ad`.
-- Exact version-commit Quality passed in
-  [version-commit Quality run 35084883274](https://github.com/emseepea/emseepea/actions/runs/35084883274).
-- Release attempt 1 stopped before publication when the feedback semantic
-  evaluation reported an unexpected tool-call order. Attempt 2 stopped before
-  publication when the progress-streaming and resources-and-prompts semantic
-  evaluations reported response-meaning failures. The release inputs did not
-  change between attempts. [Release attempt 3](https://github.com/emseepea/emseepea/actions/runs/35085792500/attempts/3)
-  passed.
-- The successful Release attempt verified provenance, integrity, clean
-  installation, public imports, and the published initializer contents.
-- Anonymous npm readback confirmed every listed version as `latest`, with
-  `gitHead` equal to `1c886acc576c57b7d05ff02ce8692220109634ad`.
-- Anonymous npm readback for `@emseepea/testing@0.12.0` reported integrity
-  `sha512-qk2KjC6cAQhwtq6JMllznh7+MXOFCMamYxoe0XeK6n0x/Fq0Drj/w7lryUz5Ok5S/WRqT/FRBDovIdFnT4TaLQ==`.
-- Git tag `@emseepea/testing@0.12.0` resolves to the exact version commit. The
-  [GitHub release for `@emseepea/testing@0.12.0`](https://github.com/emseepea/emseepea/releases/tag/%40emseepea/testing%400.12.0)
-  refers to the same release.
+## Evidence Available Before Publication
 
-## Evidence Boundaries
+- ADR-0084 and ADR-0086 already govern the React lifecycle and application
+  ownership boundary. The independent architecture review passed without
+  requiring a new decision.
+- JTBD-002 (Add Optional Capabilities) is confirmed. The independent Jobs To Be
+  Done review passed without a new job or user decision.
+- Independent accessibility, style-guide, voice-and-tone, cognitive-
+  accessibility, Markdown-accessibility, and test-quality reviews passed.
+- The browser test covers duplicate-send suppression, sending, rejection,
+  success, reset on a new result, stale-completion isolation, disabled action
+  state, status announcements, and status focus. The React example passed all
+  five built tests, including its axe and browser accessibility contract.
+- The React package passed all six built tests. Workspace lint, typecheck,
+  decision checks, builds, and the changed-content evidence check passed.
+- The packed-package and initializer suite passed all three checks, including
+  fresh installation, public imports, and standalone initialized projects.
+- The full functional test run passed 227 tests. Its only initial failure was
+  the required hash-bound cognitive-accessibility evidence for the two changed
+  Markdown files; that evidence was added and the focused three-test evidence
+  suite then passed.
+- The required local benchmarks passed on an unchanged retry after a transient
+  local port-allocation failure.
+- The final pipeline risk review rated cumulative residual risk at 5/25, within the
+  repository's 5/25 appetite.
 
-- Package publication and anonymous registry verification are complete:
-  **PUBLISHED** and **REGISTRY_VERIFIED**.
-- This release changed no website content, so website production verification
-  is not applicable.
-- Production use by an adopter was not tested: **NOT VERIFIED**.
+## Required After This Record Is Committed
+
+- Exact-commit Quality and Release workflows for the source commit.
+- A generated Changesets release pull request based on that exact source
+  commit.
+- Exact-head merge of the release pull request followed by exact-commit Quality
+  and Release workflows for the version commit.
+
+## Required After npm Publication
+
+The release workflow must verify both planned versions on npm's default
+`latest` channel, including provenance, integrity, the expected Git revision,
+clean installation, public imports, and initialized project contents. Git tags
+and GitHub releases must refer to the same version commit.
+
+## Evidence Boundary
+
+- Local builds, tests, and reviews do not prove exact-commit continuous
+  integration.
+- This record does not prove npm publication, registry verification, a Git tag,
+  a GitHub release, or adopter production use.
+- No website content changes in this release, so website production
+  verification is not applicable.
 
 ## Review Status
 
 - Result: PASS
-- Reviewed source and generated release changes: passed.
-- Release verification: COMPLETE for the exact package set above.
+- Reviewed source change: passed locally.
+- Final result: within appetite, subject to the required exact-commit gates.
+- Release verification: NOT COMPLETE; source CI, release pull request, npm
+  publication, and registry verification remain pending.

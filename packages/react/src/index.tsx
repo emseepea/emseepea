@@ -1,5 +1,15 @@
 import { createMcpAppController, parseElicitationView, parseResultView } from "@emseepea/server/ui";
-import { useEffect, useId, useMemo, useRef, useSyncExternalStore, type ElementType, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ElementType,
+  type FormEvent,
+} from "react";
 import { subscribeSystemTheme, systemTheme, type McpTheme } from "./theme.js";
 import type {
   ElicitationField,
@@ -249,6 +259,20 @@ export interface McpAppConnection<Result> extends McpAppState<Result> {
   readonly sendMessage: (text: string) => Promise<void>;
 }
 
+export type McpActionStatus = "idle" | "sending" | "sent" | "error";
+
+export type McpActionState =
+  | { readonly status: "idle"; readonly activeActionId?: never; readonly activePrompt?: never }
+  | {
+      readonly status: Exclude<McpActionStatus, "idle">;
+      readonly activeActionId: string;
+      readonly activePrompt: string;
+    };
+
+export type McpActionLifecycle = McpActionState & {
+  readonly send: (actionId: string, prompt: string) => Promise<void>;
+};
+
 export type { McpAppHostContext };
 export type { McpTheme };
 
@@ -276,6 +300,51 @@ export function useMcpApp<Result>(options: McpAppOptions<Result>): McpAppConnect
   }, [controller]);
 
   return { ...connection, sendMessage: controller.sendMessage };
+}
+
+export function useMcpAction(
+  connection: Pick<McpAppConnection<unknown>, "resultRevision" | "sendMessage">,
+): McpActionLifecycle {
+  const [state, setState] = useState<McpActionState>({ status: "idle" });
+  const sendMessage = useRef(connection.sendMessage);
+  const revision = useRef(connection.resultRevision);
+  const lifecycle = useRef({ generation: 0, pending: false });
+  sendMessage.current = connection.sendMessage;
+
+  useEffect(() => {
+    if (revision.current !== connection.resultRevision) {
+      revision.current = connection.resultRevision;
+      lifecycle.current.generation += 1;
+      lifecycle.current.pending = false;
+      setState({ status: "idle" });
+    }
+    return () => {
+      lifecycle.current.generation += 1;
+      lifecycle.current.pending = false;
+    };
+  }, [connection.resultRevision]);
+
+  const send = useCallback(async (candidateId: string, prompt: string) => {
+    if (lifecycle.current.pending) return;
+    const activeActionId = checkedIdentifier("actionId", candidateId);
+    lifecycle.current.pending = true;
+    const generation = ++lifecycle.current.generation;
+    setState({ status: "sending", activeActionId, activePrompt: prompt });
+    try {
+      await sendMessage.current(prompt);
+      if (lifecycle.current.generation === generation) {
+        setState({ status: "sent", activeActionId, activePrompt: prompt });
+      }
+    } catch {
+      if (lifecycle.current.generation === generation) {
+        setState({ status: "error", activeActionId, activePrompt: prompt });
+      }
+    } finally {
+      if (lifecycle.current.generation === generation) lifecycle.current.pending = false;
+    }
+  }, []);
+
+  return { ...state, send };
 }
 
 function checkedIdentifier(field: string, value: unknown): string {

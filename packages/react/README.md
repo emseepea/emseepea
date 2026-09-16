@@ -23,3 +23,24 @@ for the checked model, React renderer, Model Context Protocol Apps (MCP Apps)
 lifecycle, and framework choice.
 
 This package is open source under MIT and remains pre-alpha while its version is below 1.0.
+
+## Manage a result action
+
+`useMcpAction` tracks one `sendMessage` request at a time. It resets when
+`resultRevision` changes.
+
+Pass the selected action ID and the message text defined by your application.
+Use the returned `status`, `activeActionId`, and `activePrompt` values to set the
+status text, focus target, and disabled actions in your `ResultView`.
+
+```tsx
+const action = useMcpAction(app);
+
+await action.send("growing-tips", "Show me growing tips for these pea varieties.");
+
+const disabled = action.status !== "idle";
+const prompt = action.activePrompt;
+```
+
+The hook does not choose message text, decide whether an action may change
+external state, or provide visible status text.

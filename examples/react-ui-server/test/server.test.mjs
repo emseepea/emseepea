@@ -82,6 +82,7 @@ test("the MCP Apps card completes initialization before rendering a result", asy
   await page.setContent("<iframe title=\"Pea planting plan result\"></iframe>");
   await page.evaluate(() => {
     window.receivedAppMessages = [];
+    window.pendingAppMessages = [];
     window.addEventListener("message", (event) => {
       window.receivedAppMessages.push(event.data);
       if (event.data?.method === "ui/initialize") {
@@ -105,7 +106,7 @@ test("the MCP Apps card completes initialization before rendering a result", asy
         }, "*");
       }
       if (event.data?.method === "ui/message") {
-        window.pendingAppMessage = { source: event.source, id: event.data.id };
+        window.pendingAppMessages.push({ source: event.source, id: event.data.id });
       }
     });
   });
@@ -160,14 +161,60 @@ test("the MCP Apps card completes initialization before rendering a result", asy
   assert.equal(await frame.locator("html").getAttribute("data-emseepea-theme"), "dark");
   assert.equal(await frame.evaluate((node) => node === document.querySelector("[data-emseepea-part='status']"), statusNode), true);
 
-  await frame.locator("button").press("Enter");
+  await frame.locator("button").evaluate((button) => {
+    button.click();
+    button.click();
+  });
   await status.filter({ hasText: "Asking ChatGPT: Show me growing tips for these pea varieties." }).waitFor();
   assert.equal(await frame.locator("button").isDisabled(), true);
   await page.waitForFunction(() => window.receivedAppMessages.some((message) => message?.method === "ui/message"));
-  const sent = await page.evaluate(() => window.receivedAppMessages.find((message) => message?.method === "ui/message"));
-  assert.equal(sent.params.content[0].text, "Show me growing tips for these pea varieties.");
-  await page.evaluate(() => window.pendingAppMessage.source.postMessage({
-    jsonrpc: "2.0", id: window.pendingAppMessage.id, result: {},
+  const sent = await page.evaluate(() => window.receivedAppMessages.filter((message) => message?.method === "ui/message"));
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].params.content[0].text, "Show me growing tips for these pea varieties.");
+
+  await page.evaluate(() => document.querySelector("iframe").contentWindow.postMessage({
+    jsonrpc: "2.0", method: "ui/notifications/tool-result", params: { structuredContent: {
+      title: "Autumn peas",
+      matchingCount: 1,
+      varieties: [
+        { name: "Early Onward", growthHabit: "climbing", peaType: "shelling" },
+      ],
+      notice: "No report was sent or stored.",
+    } },
+  }, "*"));
+  await status.filter({ hasText: "Preview updated: 1 sample pea variety matches." }).waitFor();
+  assert.equal(await frame.locator("button").isDisabled(), false);
+  await page.evaluate(() => window.pendingAppMessages[0].source.postMessage({
+    jsonrpc: "2.0", id: window.pendingAppMessages[0].id, result: {},
+  }, "*"));
+  await page.waitForTimeout(50);
+  assert.equal(await status.textContent(), "Preview updated: 1 sample pea variety matches.");
+
+  await frame.locator("button").press("Enter");
+  await page.waitForFunction(() => window.pendingAppMessages.length === 2);
+  await page.evaluate(() => window.pendingAppMessages[1].source.postMessage({
+    jsonrpc: "2.0", id: window.pendingAppMessages[1].id, error: { code: -32603, message: "Rejected" },
+  }, "*"));
+  await status.filter({ hasText: "Growing tips could not be requested. Ask in the chat instead." }).waitFor();
+  assert.equal(await frame.locator("[data-emseepea-part='status']").evaluate((element) => element === document.activeElement), true);
+
+  await page.evaluate(() => document.querySelector("iframe").contentWindow.postMessage({
+    jsonrpc: "2.0", method: "ui/notifications/tool-result", params: { structuredContent: {
+      title: "Winter peas",
+      matchingCount: 1,
+      varieties: [
+        { name: "Meteor", growthHabit: "bush", peaType: "shelling" },
+      ],
+      notice: "No report was sent or stored.",
+    } },
+  }, "*"));
+  await status.filter({ hasText: "Preview updated: 1 sample pea variety matches." }).waitFor();
+  await frame.locator("button").press("Enter");
+  await page.waitForFunction(() => window.pendingAppMessages.length === 3);
+  const finalSent = await page.evaluate(() => window.receivedAppMessages.filter((message) => message?.method === "ui/message").at(-1));
+  assert.equal(finalSent.params.content[0].text, "Show me growing tips for these pea varieties.");
+  await page.evaluate(() => window.pendingAppMessages[2].source.postMessage({
+    jsonrpc: "2.0", id: window.pendingAppMessages[2].id, result: {},
   }, "*"));
   await status.filter({ hasText: "Asked ChatGPT: Show me growing tips for these pea varieties." }).waitFor();
   assert.equal(await frame.locator("[data-emseepea-part='status']").evaluate((element) => element === document.activeElement), true);

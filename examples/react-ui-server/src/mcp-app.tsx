@@ -1,6 +1,6 @@
-import { ResultCard, useMcpApp, useMcpTheme } from "@emseepea/react";
+import { ResultCard, useMcpAction, useMcpApp, useMcpTheme, type McpActionLifecycle } from "@emseepea/react";
 import { defineResultView, type ResultView as ResultViewModel } from "@emseepea/server/ui";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { hydrateRoot } from "react-dom/client";
 
 interface PlantingPlanResult {
@@ -17,35 +17,30 @@ interface PlantingPlanResult {
 export function ResultApp() {
   const app = useMcpApp({ name: "Pea planting plan result", version: "1.0.0", parseResult: parsePlantingPlan });
   const theme = useMcpTheme(app.hostContext.theme);
-  const [action, setAction] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const action = useMcpAction(app);
 
   useEffect(() => {
     document.documentElement.dataset.emseepeaTheme = theme;
   }, [theme]);
 
   const view = resultView(app, action);
-  const act = async () => {
-    if (action !== "idle") return;
-    setAction("sending");
-    try {
-      await app.sendMessage("Show me growing tips for these pea varieties.");
-      setAction("sent");
-    } catch {
-      setAction("error");
-    }
-  };
 
   return (
     <>
       <h1>Pea planting plan result</h1>
-      <ResultCard view={view} headingLevel={2} idPrefix="pea-result" onAction={() => void act()} />
+      <ResultCard
+        view={view}
+        headingLevel={2}
+        idPrefix="pea-result"
+        onAction={({ id }) => void action.send(id, "Show me growing tips for these pea varieties.")}
+      />
     </>
   );
 }
 
 function resultView(
   app: ReturnType<typeof useMcpApp<PlantingPlanResult>>,
-  action: "idle" | "sending" | "sent" | "error",
+  action: McpActionLifecycle,
 ): ResultViewModel {
   const base = {
     id: "pea-planting-plan-result",
@@ -75,13 +70,13 @@ function resultView(
     id: "growing-tips",
     label: "Ask for growing tips",
     accessibleName: "Ask for growing tips for these varieties",
-    disabled: action !== "idle",
+    disabled: action.status !== "idle",
   }];
-  const actionState = action === "sending"
-    ? { kind: "sending" as const, status: "Asking ChatGPT: Show me growing tips for these pea varieties.", focusTarget: "status" as const }
-    : action === "sent"
-      ? { kind: "sent" as const, status: "Asked ChatGPT: Show me growing tips for these pea varieties.", focusTarget: "status" as const }
-      : action === "error"
+  const actionState = action.status === "sending"
+    ? { kind: "sending" as const, status: `Asking ChatGPT: ${action.activePrompt}`, focusTarget: "status" as const }
+    : action.status === "sent"
+      ? { kind: "sent" as const, status: `Asked ChatGPT: ${action.activePrompt}`, focusTarget: "status" as const }
+      : action.status === "error"
         ? { kind: "error" as const, status: "Growing tips could not be requested. Ask in the chat instead.", focusTarget: "status" as const }
         : {
             kind: app.resultRevision > 1 ? "updated" as const : count === 0 ? "empty" as const : "ready" as const,
