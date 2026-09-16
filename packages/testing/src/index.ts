@@ -21,6 +21,7 @@ export {
   type PublishedMcpContractClient,
   type PublishedMcpResource,
 } from "./published-contract.js";
+export { assertWcagContrast, wcagContrastRatio } from "./contrast.js";
 
 export type SupportedProtocolVersion =
   | "2026-07-28"

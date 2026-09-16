@@ -163,6 +163,28 @@ Keep the capture version, release policy, baseline location, and retention in
 the application repository. Run capture only for a contract that has actually
 been published or submitted for review.
 
+## Check Static Color Contrast
+
+Use `wcagContrastRatio` to measure one opaque solid sRGB color pair. Use
+`assertWcagContrast` when a test should fail below its required ratio.
+
+```js
+import { assertWcagContrast } from "@emseepea/testing";
+
+assertWcagContrast("#0d0d0d", "#ffffff", 4.5, "body text");
+assertWcagContrast("#006a8e", "#ffffff", 3, "focus indicator");
+```
+
+For Web Content Accessibility Guidelines (WCAG) 2.2, normal text commonly
+requires 4.5:1 under Success Criterion 1.4.3. Large text and non-text boundaries
+commonly require 3:1 under Success Criteria 1.4.3 and 1.4.11. Pass the threshold
+that applies to the content and state you are testing.
+
+Applications still choose their colors and tested pairs. These helpers accept
+opaque `#RRGGBB` colors only. They do not inspect rendered CSS, transparency,
+gradients, component states, focus geometry, or forced-colors mode, and they do
+not establish WCAG conformance. Test the rendered interface separately.
+
 When a conversation writes to external state, pass an `environment` function
 that returns a separate test database connection for each trial. The trial
 number selects infrastructure only. It is never sent to the model or MCP
