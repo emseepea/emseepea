@@ -251,7 +251,7 @@ test("keyboard users can skip navigation and search the local index", async () =
     assert.equal(await status.count(), 1);
     assert.equal(await status.getAttribute("aria-live"), "polite");
     assert.equal(await status.getAttribute("aria-atomic"), "true");
-    await input.fill("zzzzzz-no-result-token");
+    await input.fill("qzxvnmplkjhgfdsawrtyuio");
     await page.waitForFunction(() => /no results/i.test(document.querySelector('dialog [role="status"]')?.textContent ?? ""));
     await page.keyboard.press("Escape");
     assert.equal(await search.evaluate((element) => element === document.activeElement), true);

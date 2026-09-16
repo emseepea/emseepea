@@ -170,7 +170,7 @@ async function measure() {
                 await page.locator("dialog").getByRole("link", { name: /Run your first server/ }).first().waitFor();
               },
               noResults: async () => {
-                await page.getByRole("textbox", { name: /Search/ }).fill("zzzzzz-no-result-token");
+                await page.getByRole("textbox", { name: /Search/ }).fill("qzxvnmplkjhgfdsawrtyuio");
                 await page.waitForFunction(() => /no results/i.test(document.querySelector('dialog [role="status"]')?.textContent ?? ""));
               },
             };

@@ -1,62 +1,76 @@
 # Current Release Readiness
 
-Date: 2026-09-15
+Date: 2026-09-16
 
-Release verification is not complete. This review covers the planned shared
-Result Card stylesheet release and the two initializers that embed its exact
-version.
+Issue #93 adds a framework-owned Model Context Protocol (MCP) App resource
+packaging helper. This is a planned release, not a published capability. The
+previous Result Card review remains in
+[its dated record](./result-card-release-readiness-2026-09-15.md).
 
-## Planned Release Batch
+## Exact Planned Package Set
 
-- `@emseepea/tailwind@0.1.0`
-- `@emseepea/create-html-ui-server@0.0.33`
-- `@emseepea/create-react-ui-server@0.0.32`
+The Changesets plan currently contains these 16 patch releases:
 
-The Tailwind package extends its existing optional stylesheet to Native HTML,
-React, and Svelte Result Cards. The initializer releases update their embedded
-manifest to the exact released stylesheet version and add no separate feature.
+- `@emseepea/server@0.12.1`
+- `@emseepea/create-tool-server@0.0.34`
+- `@emseepea/create-api-backed-server@0.0.32`
+- `@emseepea/create-openapi-backed-server@0.0.14`
+- `@emseepea/create-resources-and-prompts-server@0.0.31`
+- `@emseepea/create-progress-streaming-server@0.0.32`
+- `@emseepea/create-html-ui-server@0.0.34`
+- `@emseepea/create-react-ui-server@0.0.33`
+- `@emseepea/create-multi-instance-postgres-server@0.0.22`
+- `@emseepea/create-database-schema-server@0.0.19`
+- `@emseepea/create-mongodb-backed-server@0.0.19`
+- `@emseepea/create-soap-backed-server@0.0.19`
+- `@emseepea/feedback@0.2.14`
+- `@emseepea/react@0.2.4`
+- `@emseepea/svelte@0.1.4`
+- `@emseepea/testing@0.11.4`
 
-## Evidence So Far
+The server adds `defineMcpAppResource`. Only the React UI starter changes its
+template to use the helper. The other ten starters update their embedded server
+dependency; feedback, React, Svelte, and testing receive dependency-only patch
+bumps. Those packages do not add a separate MCP App feature.
 
-- Ratified ADR 0091 governs the shared optional presentation contract.
-- Final architecture, JTBD, accessibility, design-system, contrast,
-  style-guide, voice and tone, and cognitive-accessibility reviews passed.
-- Source build, typecheck, lint, decision, documentation, browser, semantic,
-  packed-package, contrast, forced-colours, reduced-motion, target-size,
-  text-spacing, and 320-pixel reflow checks passed locally.
-- The built stylesheet is 10,160 raw bytes and 2,602 gzip bytes, within its
-  10 KiB raw and 3 KiB gzip limits.
-- The complete local suite passed 226 of 226 tests, including its Docker-backed
-  PostgreSQL and MongoDB fixtures.
+## Local Evidence and Pending Checks
 
-These checks do not prove exact-commit continuous integration, publication,
-registry state, provenance, downloaded-package behavior, website deployment,
-exact-host qualification, or production use by an adopter.
+- Ratified ADR-0093 governs the packaging boundary.
+- The server and React starter builds passed after the helper migration.
+- Public typecheck passed; focused helper tests passed for modern and legacy
+  clients, invalid definitions, metadata alignment, and a startup-read bundle.
+- The maintained React browser suite passed five of five tests, including its
+  accessibility and MCP App resource checks.
+- The packed package and initializer suite passed all three checks on this
+  checkout, including fresh-install and standalone-starter checks.
+- The website built with the current guide. Its built-page accessibility, link,
+  and search suite passed all 13 tests.
+- Two local Quality test commands passed on this checkout:
+  `EMSEEPEA_SKIP_PACKED_INITIALIZERS=true npm test` passed 226 tests with zero
+  failures and two intentional packed-initializer skips, and
+  `npm run test:initializers:packed` passed all three packed checks.
+
+The workflow's container matrix and exact-commit Quality run remain unverified.
+Local checks still do not prove continuous integration or publication.
 
 ## Required Publication Evidence
 
-- The Quality workflow must pass on the exact combined source commit.
-- The Changesets release pull request must contain only the planned generated
-  version, dependency, lockfile, changelog, and changeset-removal changes.
-- The Quality and Release workflows must pass on the exact version commit.
-- Anonymous registry readback must confirm each planned version and `latest`
-  tag, integrity, provenance, and exact release-commit binding.
-- The downloaded stylesheet must contain the expected Result Card selectors
-  and remain within its size limits.
-- Exact website verification must bind the deployed revision and URL and check
-  the documented Result Card journeys.
-- Production use by an adopter requires separate, cited journey evidence.
-
-## Evidence Boundaries
-
-Each release stage requires separate evidence. Source checks do not prove
-publication. Registry readback does not prove the website. Em See Pea website
-checks do not establish adopter production verification.
+- Quality must pass on the exact source commit.
+- The Changesets release pull request must contain only the generated version,
+  dependency, lockfile, changelog, and changeset-removal changes for this plan.
+- Quality and Release must pass on the exact version commit.
+- Anonymous registry readback must confirm every planned version, `latest`
+  tag, integrity, provenance, and binding to the release commit.
+- Packed/downloaded starter checks must confirm the new server version and the
+  React MCP App helper path.
+- Exact deployed-website revision and URL checks must show the canonical guide.
+- Any adopter production-client rendering claim needs separate journey evidence.
 
 ## Review Status, Not Release Status
 
 - Result: PASS
-- Pipeline risk review: commit, push, and release are within the approved risk
-  limit at 5 out of 25.
+- Pipeline risk review: 5/25, within the repository's appetite.
 - Final result: within appetite, subject to the required exact-commit gates.
-- Release verification: NOT COMPLETE until the required publication gates pass.
+- Release verification: NOT COMPLETE. No exact continuous integration,
+  publication, registry, deployed website, or adopter production verification
+  has been established for issue #93.

@@ -557,6 +557,37 @@ export type ResourceDefinition = ResourceDefinitionBase & (
       readonly handler: (context: ResourcePromptContext<"protected">) =>
         ReadResourceResult | InputRequiredResult | Promise<ReadResourceResult | InputRequiredResult> }
 );
+export interface McpAppCsp {
+  readonly connectDomains?: readonly string[];
+  readonly resourceDomains?: readonly string[];
+  readonly frameDomains?: readonly string[];
+  readonly baseUriDomains?: readonly string[];
+}
+interface McpAppResourceDefinitionBase {
+  readonly name: string;
+  readonly discoverable?: boolean;
+  readonly uri: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly language: string;
+  /** Trusted application-owned HTML inside the document body. */
+  readonly bodyMarkup: string;
+  /** Trusted application-owned CSS. */
+  readonly styles?: string;
+  readonly csp?: McpAppCsp;
+  readonly prefersBorder?: boolean;
+}
+export type McpAppResourceDefinition = McpAppResourceDefinitionBase & (
+  | { readonly access: "public"; readonly requiredScopes?: never }
+  | { readonly access: "protected"; readonly requiredScopes: readonly string[] }
+) & (
+  | { readonly script: string; readonly bundleUrl?: never }
+  | { readonly script?: never; readonly bundleUrl: URL }
+);
+export interface McpAppResource {
+  readonly resource: EmseepeaResource;
+  readonly toolMetadata: Readonly<MetaObject>;
+}
 interface ResourceTemplateDefinitionBase {
   readonly name: string;
   readonly discoverable?: boolean;
@@ -1034,6 +1065,117 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
     },
   };
   return Object.freeze(registration);
+}
+
+/** Packages one startup-built MCP App without owning its markup, styling, or behavior. */
+export function defineMcpAppResource(definition: McpAppResourceDefinition): McpAppResource {
+  const uri = canonicalResourceUri(definition.uri);
+  if (!uri.startsWith("ui://")) throw new TypeError("MCP App resource URI must start with ui://");
+  const hasScript = Object.hasOwn(definition, "script");
+  const hasBundleUrl = Object.hasOwn(definition, "bundleUrl");
+  if (hasScript === hasBundleUrl) throw new TypeError("MCP App resource needs exactly one script or bundleUrl");
+  if (hasScript && typeof definition.script !== "string") throw new TypeError("MCP App script must be a string");
+  if (hasBundleUrl && (!(definition.bundleUrl instanceof URL) || definition.bundleUrl.protocol !== "file:"
+    || definition.bundleUrl.search || definition.bundleUrl.hash)) {
+    throw new TypeError("MCP App bundleUrl must be a local file URL without a query or fragment");
+  }
+  if (typeof definition.language !== "string" || !definition.language.trim()) {
+    throw new TypeError("MCP App language must be a non-empty language tag");
+  }
+  let languages: string[];
+  try {
+    languages = Intl.getCanonicalLocales(definition.language.trim());
+  } catch {
+    throw new TypeError("MCP App language must be a valid language tag");
+  }
+  const [language] = languages;
+  if (!language) throw new TypeError("MCP App language must be a valid language tag");
+  if (typeof definition.title !== "string" || !definition.title.trim()) {
+    throw new TypeError("MCP App title must be a non-empty string");
+  }
+  if (typeof definition.bodyMarkup !== "string" || (definition.styles !== undefined && typeof definition.styles !== "string")) {
+    throw new TypeError("MCP App bodyMarkup and styles must be strings");
+  }
+  if (definition.prefersBorder !== undefined && typeof definition.prefersBorder !== "boolean") {
+    throw new TypeError("MCP App prefersBorder must be a boolean");
+  }
+  const validatedCsp = normalizeMcpAppCsp(definition.csp);
+  const csp = Object.freeze({
+    connectDomains: validatedCsp.connectDomains,
+    resourceDomains: validatedCsp.resourceDomains,
+    ...(validatedCsp.frameDomains.length ? { frameDomains: validatedCsp.frameDomains } : {}),
+    ...(validatedCsp.baseUriDomains.length ? { baseUriDomains: validatedCsp.baseUriDomains } : {}),
+  });
+  const legacyCsp = Object.freeze({
+    connect_domains: csp.connectDomains,
+    resource_domains: csp.resourceDomains,
+  });
+  const resourceMetadata = Object.freeze({
+    ui: Object.freeze({ csp, ...(definition.prefersBorder === undefined ? {} : { prefersBorder: definition.prefersBorder }) }),
+    "openai/widgetCSP": legacyCsp,
+    ...(definition.prefersBorder === undefined ? {} : { "openai/widgetPrefersBorder": definition.prefersBorder }),
+  });
+  const script = hasScript ? definition.script! : readFileSync(definition.bundleUrl!, "utf8");
+  const html = `<!doctype html><html lang="${escapeMcpAppText(language)}"><head>` +
+    `<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">` +
+    `<title>${escapeMcpAppText(definition.title)}</title>` +
+    (definition.styles === undefined ? "" : `<style>${definition.styles}</style>`) +
+    `</head><body>${definition.bodyMarkup}<script type="module">${script.replace(/<\/script/gi, "<\\/script")}</script></body></html>`;
+  const mimeType = "text/html;profile=mcp-app";
+  const resource = defineResource({
+    name: definition.name,
+    discoverable: definition.discoverable,
+    access: definition.access,
+    ...(definition.access === "protected" ? { requiredScopes: definition.requiredScopes } : {}),
+    uri,
+    title: definition.title,
+    description: definition.description,
+    mimeType,
+    _meta: resourceMetadata,
+    handler: () => ({ contents: [{ uri, mimeType, text: html, _meta: resourceMetadata }] }),
+  } as ResourceDefinition);
+  return Object.freeze({
+    resource,
+    toolMetadata: Object.freeze({
+      ui: Object.freeze({ resourceUri: uri }),
+      "openai/outputTemplate": uri,
+    }),
+  });
+}
+
+function normalizeMcpAppCsp(input: McpAppCsp | undefined): Readonly<Required<McpAppCsp>> {
+  if (input !== undefined && (typeof input !== "object" || input === null || Array.isArray(input))) {
+    throw new TypeError("MCP App csp must be an object of origin lists");
+  }
+  const allowed = ["connectDomains", "resourceDomains", "frameDomains", "baseUriDomains"] as const;
+  if (input && Object.keys(input).some((key) => !allowed.includes(key as typeof allowed[number]))) {
+    throw new TypeError("MCP App csp has an unsupported field");
+  }
+  let total = 0;
+  const result = Object.fromEntries(allowed.map((key) => {
+    const domains = input?.[key] ?? [];
+    if (!Array.isArray(domains) || domains.length > 32) throw new TypeError(`MCP App ${key} must contain at most 32 origins`);
+    total += domains.length;
+    const checked = domains.map((origin) => {
+      if (typeof origin !== "string") throw new TypeError(`MCP App ${key} must contain exact origins`);
+      let parsed: URL;
+      try { parsed = new URL(origin); } catch { throw new TypeError(`MCP App ${key} must contain exact origins`); }
+      const loopback = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1" || parsed.hostname === "[::1]";
+      if (parsed.origin !== origin || (parsed.protocol !== "https:" && !(parsed.protocol === "http:" && loopback))) {
+        throw new TypeError(`MCP App ${key} must contain HTTPS origins or HTTP loopback origins`);
+      }
+      return origin;
+    });
+    if (new Set(checked).size !== checked.length) throw new TypeError(`MCP App ${key} has repeated origins`);
+    return [key, Object.freeze(checked)];
+  })) as unknown as Required<McpAppCsp>;
+  if (total > 64) throw new TypeError("MCP App csp must contain at most 64 origins in total");
+  return Object.freeze(result);
+}
+
+function escapeMcpAppText(value: string): string {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 }
 
 export function defineResourceTemplate(definition: ResourceTemplateDefinition): EmseepeaResource {

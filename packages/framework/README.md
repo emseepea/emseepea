@@ -21,6 +21,12 @@ package supports and what it does not support.
 Follow [Render an accessible result card](https://emseepea.github.io/emseepea/result-cards/)
 to use the checked result model with native HTML, React, or Svelte.
 
+## Package an MCP App resource
+
+Use `defineMcpAppResource` to package one Model Context Protocol (MCP) App.
+Register `app.resource` and put `app.toolMetadata` on the tool that opens it.
+[Package an MCP App resource in the examples guide](https://emseepea.github.io/emseepea/examples/#package-an-mcp-app-resource).
+
 ## Public Tool
 
 ```ts

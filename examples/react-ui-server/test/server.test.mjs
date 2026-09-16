@@ -51,6 +51,7 @@ test("publishes the standards-first MCP Apps resource contract", async (t) => {
   assert.equal(resource.mimeType, "text/html;profile=mcp-app");
   const [content] = (await client.readResource({ uri: resource.uri })).contents;
   assert.equal(content.mimeType, "text/html;profile=mcp-app");
+  assert.deepEqual(resource._meta.ui, content._meta.ui);
   assert.deepEqual(content._meta.ui, {
     prefersBorder: true,
     csp: { connectDomains: [], resourceDomains: [] },
@@ -63,6 +64,11 @@ test("publishes the standards-first MCP Apps resource contract", async (t) => {
   assert.match(content.text, /ui\/notifications\/initialized/);
   assert.match(content.text, /ui\/notifications\/tool-result/);
   assert.match(content.text, /ui\/notifications\/tool-cancelled/);
+  assert.match(content.text, /<html lang="en">/);
+  assert.match(content.text, /<title>Pea planting plan result<\/title>/);
+  assert.match(content.text, /<meta name="viewport"/);
+  assert.match(content.text, /<main id="app">/);
+  assert.match(content.text, /<h1>/);
 });
 
 test("the MCP Apps card completes initialization before rendering a result", async (t) => {

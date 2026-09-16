@@ -49,17 +49,14 @@ export function previewPlantingPlan(input: z.output<typeof inputSchema>) {
 
 export function createPreviewPlantingPlanTool(
   access: AccessPolicy = { access: "public" },
-  appResource = false,
+  appResourceMetadata?: Readonly<Record<string, unknown>>,
 ) {
   return defineTool({
     name: "preview-planting-plan",
     ...access,
     title: "Preview a Pea Planting Plan",
     description: "Preview a sample pea planting plan without sending, storing, or changing anything.",
-    ...(appResource ? { _meta: {
-      ui: { resourceUri: plantingPlanAppResourceUri },
-      "openai/outputTemplate": plantingPlanAppResourceUri,
-    } } : {}),
+    ...(appResourceMetadata ? { _meta: appResourceMetadata } : {}),
     inputSchema,
     outputSchema,
     handler: (input) => ({ data: previewPlantingPlan(input) }),

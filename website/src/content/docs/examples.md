@@ -249,6 +249,94 @@ compatibility aliases for existing ChatGPT Apps integrations. New integrations
 should use the standard `ui` fields. Add only the domains the component
 actually connects to or loads resources from.
 
+### Package an MCP App resource
+
+Use `defineMcpAppResource` when a tool opens a Model Context Protocol (MCP)
+App. Register the returned `resource` and pass the returned `toolMetadata` to
+that tool.
+
+The maintained
+[React UI server source](https://github.com/emseepea/emseepea/tree/main/examples/react-ui-server/src)
+and its [packed initializer](https://github.com/emseepea/emseepea/tree/main/examples/react-ui-server)
+exercise this path.
+
+`bodyMarkup` and `styles` are trusted, application-owned inputs. Do not
+interpolate untrusted input directly into these strings. Escape dynamic text
+before rendering it. The helper does not sanitize them or create
+landmarks, headings, accessible controls, themes, or host lifecycle behavior.
+Your app owns those parts.
+
+The following example assumes `./mcp-app-client.js` is a local bundle built
+before the server starts. The React starter builds this file for you.
+
+```ts
+import { createEmseepea, defineMcpAppResource, defineTool } from "@emseepea/server";
+import { z } from "zod";
+
+const app = defineMcpAppResource({
+  name: "pea-preview",
+  access: "public",
+  uri: "ui://pea/preview",
+  title: "Pea planting plan",
+  language: "en",
+  bodyMarkup: '<main id="app"><h1>Pea planting plan</h1></main>',
+  styles: "main { color: currentColor; }",
+  bundleUrl: new URL("./mcp-app-client.js", import.meta.url),
+  csp: { connectDomains: [], resourceDomains: [] },
+  prefersBorder: true,
+});
+
+const openingTool = defineTool({
+  name: "open-pea-preview",
+  access: "public",
+  description: "Open the pea planting plan preview.",
+  inputSchema: z.object({}),
+  _meta: app.toolMetadata,
+  handler: () => ({ text: "Pea planting plan available" }),
+});
+const server = createEmseepea({
+  name: "pea-preview-server", version: "1.0.0",
+  tools: [openingTool], resources: [app.resource],
+});
+```
+
+### Inputs and safety boundaries
+
+The helper requires a canonical `ui://` URI, a non-empty title, a valid
+language tag, and exactly one `script` string or local-file `bundleUrl`.
+It reads a local bundle once when the resource is defined, not on each read.
+
+It builds a UTF-8 HTML document with a viewport, escaped title and a validated,
+escaped language tag on `<html lang>`. It neutralizes `</script` inside an
+inline script. The app still owns its markup and CSS; use the `script` option
+only with trusted code.
+
+The content security policy (`csp`) lists are `connectDomains`,
+`resourceDomains`, `frameDomains`, and `baseUriDomains`. Each entry must be an
+exact HTTPS origin, or an HTTP origin
+on `localhost`, `127.0.0.1`, or `[::1]`. Paths, wildcards, duplicate origins,
+and other fields are rejected.
+
+Each list may contain at most 32 origins, with
+at most 64 across all lists. Omitted lists default to empty lists. Declare only
+origins the app needs. An empty list
+allows no external origin in that category.
+
+### Metadata and evidence
+
+The resource listing and read use `text/html;profile=mcp-app` and the same
+canonical URI. Resource metadata includes standard `ui.csp` and
+`ui.prefersBorder` plus the `openai/widgetCSP` and
+`openai/widgetPrefersBorder` compatibility aliases. `toolMetadata` carries
+both `ui.resourceUri` and `openai/outputTemplate` from that URI. Public and
+protected access rules remain those of ordinary resources.
+
+Local source tests check the helper; packed initializer checks exercise the
+starter. Neither proves publication. Anonymous registry readback proves package
+publication; an exact
+deployed website revision proves this guide reached the website. None of those
+checks proves that an adopter's production client rendered or used the app.
+
 ## Share a report store between server instances
 
 Interchangeable server instances use the same PostgreSQL store. Save a complete
