@@ -2,9 +2,20 @@
 
 Date: 2026-09-16
 
-This record covers this planned release to npm's default `latest` channel:
+This record covers these planned releases to npm's default `latest` channel:
 
 - `@emseepea/testing@0.12.0`
+- `@emseepea/create-tool-server@0.0.35`
+- `@emseepea/create-api-backed-server@0.0.33`
+- `@emseepea/create-openapi-backed-server@0.0.15`
+- `@emseepea/create-resources-and-prompts-server@0.0.32`
+- `@emseepea/create-progress-streaming-server@0.0.33`
+- `@emseepea/create-html-ui-server@0.0.35`
+- `@emseepea/create-react-ui-server@0.0.34`
+- `@emseepea/create-multi-instance-postgres-server@0.0.23`
+- `@emseepea/create-database-schema-server@0.0.20`
+- `@emseepea/create-mongodb-backed-server@0.0.20`
+- `@emseepea/create-soap-backed-server@0.0.20`
 
 Publication is pending.
 
@@ -20,6 +31,10 @@ enumerations and constraints, MIME type changes, user interface metadata,
 output-template changes, and Content Security Policy widening. Unknown schema
 changes fail closed. The application still owns release policy and baseline
 retention.
+
+The 11 initializer releases contain no separate feature. Their generated
+manifests keep the embedded `@emseepea/testing` dependency aligned with the
+library release.
 
 ## Evidence Available Before Publication
 
@@ -51,10 +66,11 @@ retention.
 
 ## Required After npm Publication
 
-The release workflow must verify `@emseepea/testing@0.12.0` on npm's default
+The release workflow must verify all 12 planned versions on npm's default
 `latest` channel, including provenance, integrity, the expected Git revision,
-clean installation, and public imports. The Git tag and GitHub release must
-refer to the same version commit.
+clean installation, and public imports. The initializer checks must verify the
+embedded testing dependency. Every Git tag and GitHub release must refer to the
+same version commit.
 
 ## Evidence Boundary
 

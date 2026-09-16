@@ -49,9 +49,9 @@ The reviewed files and matching SHA-256 digests are:
 - `packages/testing/README.md`
   SHA-256: `edee515ccaa90bef6d6eb16a344e18579ca48fa28047ca02e338493d61b09839`
 - `.changeset/published-contract-compatibility.md`
-  SHA-256: `3ec0990015ff2679c851347734bed162d714d608de8a37fa4c2aee38a1c87aad`
+  SHA-256: `ba2cc53143457c1ba924aea17f4fd6996cc31eae2974ff27afddce53a3ada736`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `02a3cb85bf9ecce678c3064a2e2d016d152c22c46d41d9357d5cab7ee81b66ed`
+  SHA-256: `8115fdcb6a1614989fd2630e3076622daeea11253370c83000db3ac3c6028695`
 
 Scope: source Markdown clarity and cognitive accessibility only. This review
 does not establish tests, exact-commit continuous integration, package
