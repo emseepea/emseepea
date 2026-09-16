@@ -1,5 +1,12 @@
 # @emseepea/svelte
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [[`4d2c4c5`](https://github.com/emseepea/emseepea/commit/4d2c4c5e2df1c7bf626f704b6fe2a0d7cfd92174)]:
+  - @emseepea/server@0.12.1
+
 ## 0.1.3
 
 ### Patch Changes
