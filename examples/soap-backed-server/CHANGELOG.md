@@ -1,5 +1,16 @@
 # @emseepea/create-soap-backed-server
 
+## 0.0.19
+
+### Patch Changes
+
+- [`4d2c4c5`](https://github.com/emseepea/emseepea/commit/4d2c4c5e2df1c7bf626f704b6fe2a0d7cfd92174) Thanks [@tompahoward](https://github.com/tompahoward)! - Add `defineMcpAppResource` to package a Model Context Protocol (MCP) App HTML
+  resource with matching MCP Apps `ui` metadata and ChatGPT Apps compatibility
+  aliases. The helper validates the URI, script, language, and content security
+  policy (CSP) when the resource is defined. Update the React UI starter to use
+  the helper; keep the other starters' embedded server dependency aligned with
+  this release.
+
 ## 0.0.18
 
 ### Patch Changes
