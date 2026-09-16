@@ -1,5 +1,14 @@
 # @emseepea/create-progress-streaming-server
 
+## 0.0.34
+
+### Patch Changes
+
+- [`9214959`](https://github.com/emseepea/emseepea/commit/9214959269de548f39c9de4d35aa2212ab3ec17a) Thanks [@tompahoward](https://github.com/tompahoward)! - Add reusable WCAG contrast-ratio and assertion helpers so applications can test
+  their own opaque sRGB color pairs without reimplementing the WCAG luminance and
+  contrast calculations. This release also aligns the embedded
+  `@emseepea/testing` dependency in all 11 initializers.
+
 ## 0.0.33
 
 ### Patch Changes
