@@ -3,13 +3,13 @@
 Date: 2026-09-16
 
 Issue #93 adds a framework-owned Model Context Protocol (MCP) App resource
-packaging helper. This is a planned release, not a published capability. The
-previous Result Card review remains in
+packaging helper. The helper, maintained React adoption, and canonical guide
+are released. The previous Result Card review remains in
 [its dated record](./result-card-release-readiness-2026-09-15.md).
 
-## Exact Planned Package Set
+## Exact Published Package Set
 
-The Changesets plan currently contains these 16 patch releases:
+The release contains these 16 patch versions:
 
 - `@emseepea/server@0.12.1`
 - `@emseepea/create-tool-server@0.0.34`
@@ -33,7 +33,7 @@ template to use the helper. The other ten starters update their embedded server
 dependency; feedback, React, Svelte, and testing receive dependency-only patch
 bumps. Those packages do not add a separate MCP App feature.
 
-## Local Evidence and Pending Checks
+## Verification Evidence
 
 - Ratified ADR-0093 governs the packaging boundary.
 - The server and React starter builds passed after the helper migration.
@@ -49,28 +49,36 @@ bumps. Those packages do not add a separate MCP App feature.
   `EMSEEPEA_SKIP_PACKED_INITIALIZERS=true npm test` passed 226 tests with zero
   failures and two intentional packed-initializer skips, and
   `npm run test:initializers:packed` passed all three packed checks.
+- Source Quality run
+  [35052807021](https://github.com/emseepea/emseepea/actions/runs/35052807021)
+  passed on `d0747f00707193f94d909ebc882f6bae3f0d12e2`.
+- Release pull request
+  [#98](https://github.com/emseepea/emseepea/pull/98) merged the generated
+  version changes as `a76ade0207537d764f1bfa792e7dd0d92aef674b`.
+- Version Quality run
+  [35053615953](https://github.com/emseepea/emseepea/actions/runs/35053615953)
+  passed on attempt 3. Attempts 1 and 2 failed the same stochastic CPU budget;
+  no source changed before the successful rerun.
+- Release run
+  [35055551215](https://github.com/emseepea/emseepea/actions/runs/35055551215)
+  passed on attempt 2. Attempt 1 published the packages but encountered a
+  transient registry 404 during downloaded-package verification. Attempt 2
+  passed publication, provenance, integrity, and downloaded-package checks.
+- Anonymous npm readback confirmed every version above is the `latest` tag,
+  exposes an integrity digest, and has `gitHead` equal to the version commit.
+- GitHub Pages deployment `6473743550` succeeded for the version commit at
+  [the deployed examples guide](https://emseepea.github.io/emseepea/examples/).
+  Live readback found “Package an MCP App resource”, “Inputs and safety
+  boundaries”, “Metadata and evidence”, and `defineMcpAppResource`.
 
-The workflow's container matrix and exact-commit Quality run remain unverified.
-Local checks still do not prove continuous integration or publication.
+## Outcomes
 
-## Required Publication Evidence
-
-- Quality must pass on the exact source commit.
-- The Changesets release pull request must contain only the generated version,
-  dependency, lockfile, changelog, and changeset-removal changes for this plan.
-- Quality and Release must pass on the exact version commit.
-- Anonymous registry readback must confirm every planned version, `latest`
-  tag, integrity, provenance, and binding to the release commit.
-- Packed/downloaded starter checks must confirm the new server version and the
-  React MCP App helper path.
-- Exact deployed-website revision and URL checks must show the canonical guide.
-- Any adopter production-client rendering claim needs separate journey evidence.
-
-## Review Status, Not Release Status
-
-- Result: PASS
+- Packages: **PUBLISHED; REGISTRY_VERIFIED**.
+- Canonical website guide: **PROD_VERIFIED**.
+- Adopter production-client rendering: **NOT VERIFIED**. Package publication,
+  the maintained browser fixture, and the deployed guide do not establish an
+  independent adopter journey.
 - Pipeline risk review: 5/25, within the repository's appetite.
-- Final result: within appetite, subject to the required exact-commit gates.
-- Release verification: NOT COMPLETE. No exact continuous integration,
-  publication, registry, deployed website, or adopter production verification
-  has been established for issue #93.
+- Release verification: **COMPLETE** for package publication and the canonical
+  deployed guide. The separate adopter production-client outcome remains
+  **NOT VERIFIED**.

@@ -8,9 +8,11 @@ changeset, current issue #93 readiness record, and preserved dated Result Card
 readiness record. The guide explains the task, runnable registration, trusted
 markup boundary, content security policy limits, and separate evidence states.
 The release notes distinguish the React template change from dependency-only
-bumps. The current readiness record is plainly pending and does not borrow the
-earlier Result Card checks. No cognitive-accessibility findings remain in this
-source-Markdown scope.
+bumps. The post-release readiness record separates successful runs from
+superseded attempts, package publication from deployed-guide verification, and
+unavailable adopter production evidence. It does not borrow the earlier Result
+Card checks. No cognitive-accessibility findings remain in this source-Markdown
+scope.
 
 The reviewed files and matching SHA-256 digests are:
 
@@ -21,11 +23,11 @@ The reviewed files and matching SHA-256 digests are:
 - `.changeset/issue-93-mcp-app-resource.md`
   SHA-256: `fd3ddb5f8dbbcc88a04cf623139443e6fe6051d407ca5f4d6b8b587c2db56f43`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `392010320798d29bd29c06188296af9fde6f6aacbcb2219ae0f9890fe826ba07`
+  SHA-256: `dac9eb430922a98a89798cac50238e4815369831a8e4b55e0d5b821705fa4158`
 - `docs/reviews/result-card-release-readiness-2026-09-15.md`
   SHA-256: `bcc5a8570f631455ce07b3aec71987db5f399f361c8b8763e25d816e57bceaca`
 - `docs/reviews/voice-and-tone-2026-09-16.md`
-  SHA-256: `9009bac14a9165c67223d5586b8a53f679d47069d029fde783529a8aaae354e3`
+  SHA-256: `fa71369598e20664d1bb63b9dae83344a2906ccc65b6fe1ced9ff676c1031529`
 
 Scope: source Markdown clarity and cognitive accessibility only. This review
 does not establish rendered accessibility, tests, exact-commit continuous

@@ -4,11 +4,10 @@
 
 **Voice & Tone Review: PASS**
 
-The final public copy is clear, direct, calm, and technically precise. It
-states the task and prerequisites, names trust and content security policy
-boundaries, uses descriptive links, and keeps local checks, exact-commit
-continuous integration, registry publication, website deployment, and adopter
-production evidence distinct.
+The final public copy is clear, direct, calm, and technically precise. The
+post-release readiness record names exact commits, workflow attempts, registry
+and website evidence, and keeps package publication, deployed-guide
+verification, and unavailable adopter production-client evidence distinct.
 
 Reviewed exact SHA-256 content:
 
@@ -19,7 +18,7 @@ Reviewed exact SHA-256 content:
 - `.changeset/issue-93-mcp-app-resource.md`:
   `fd3ddb5f8dbbcc88a04cf623139443e6fe6051d407ca5f4d6b8b587c2db56f43`
 - `docs/reviews/current-release-readiness.md`:
-  `392010320798d29bd29c06188296af9fde6f6aacbcb2219ae0f9890fe826ba07`
+  `dac9eb430922a98a89798cac50238e4815369831a8e4b55e0d5b821705fa4158`
 
 Scope: source-prose voice and tone only. This review does not establish tests,
 exact-commit continuous integration, package publication, registry
