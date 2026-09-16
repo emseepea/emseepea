@@ -119,6 +119,50 @@ Never deploy `insecureTestAuthentication`. It accepts any supplied bearer token
 and exists only to keep ordinary tests focused on composition and authorization
 flow. Test a real verifier separately against its provider contract.
 
+## Check a Published MCP Contract
+
+Use the connected client to capture the public contract available with that
+client's access. The snapshot includes tool schemas and UI metadata, plus each
+listed resource's URI, MIME type, UI metadata, and Content Security Policy
+(CSP). Resource bodies are excluded.
+
+```js
+import { readFile } from "node:fs/promises";
+import {
+  assertPublishedMcpContractCompatible,
+  extractPublishedMcpContract,
+  startEmseepea,
+  writePublishedMcpContractBaseline,
+} from "@emseepea/testing";
+import { createApp } from "./app.js";
+
+const running = await startEmseepea(await createApp());
+try {
+  const current = await extractPublishedMcpContract(await running.connect());
+  if (process.argv.includes("--capture")) {
+    await writePublishedMcpContractBaseline("contract-baselines/1.0.0.json", {
+      version: "1.0.0",
+      contract: current,
+    });
+  } else {
+    const baseline = JSON.parse(await readFile("contract-baselines/1.0.0.json", "utf8"));
+    assertPublishedMcpContractCompatible(current, [baseline]);
+  }
+} finally {
+  await running.close();
+}
+```
+
+`assertPublishedMcpContractCompatible` throws with every concrete breaking or
+unclassified change, so an ordinary Node script exits non-zero. Input changes
+must continue accepting prior callers. Output changes must remain within the
+prior consumer contract. CSP allow-list additions are breaking; removals are
+safe. Unknown JSON Schema changes fail closed for review.
+
+Keep the capture version, release policy, baseline location, and retention in
+the application repository. Run capture only for a contract that has actually
+been published or submitted for review.
+
 When a conversation writes to external state, pass an `environment` function
 that returns a separate test database connection for each trial. The trial
 number selects infrastructure only. It is never sent to the model or MCP

@@ -10,6 +10,17 @@ export {
   type McpAppHostSimulatorOptions,
   type McpAppMessageRequest,
 } from "./mcp-app-host.js";
+export {
+  assertPublishedMcpContractCompatible,
+  comparePublishedMcpContracts,
+  extractPublishedMcpContract,
+  writePublishedMcpContractBaseline,
+  type PublishedMcpContract,
+  type PublishedMcpContractBaseline,
+  type PublishedMcpContractBreak,
+  type PublishedMcpContractClient,
+  type PublishedMcpResource,
+} from "./published-contract.js";
 
 export type SupportedProtocolVersion =
   | "2026-07-28"

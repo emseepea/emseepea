@@ -33,3 +33,26 @@ Scope: source Markdown clarity and cognitive accessibility only. This review
 does not establish rendered accessibility, tests, exact-commit continuous
 integration, package publication, registry verification, deployed-website
 behavior, or adopter production verification.
+
+## Issue #91 Published MCP Contract Compatibility
+
+Result: PASS. An independent cognitive-accessibility review checked the testing
+package guide and release note. The guide identifies the contract-capture task,
+shows capture and comparison as separate branches in one runnable example,
+explains input and output compatibility in plain language, and states that
+unknown schema changes fail closed. It keeps application release policy and
+baseline retention outside the package. No cognitive-accessibility findings
+block this source-Markdown scope.
+
+The reviewed files and matching SHA-256 digests are:
+
+- `packages/testing/README.md`
+  SHA-256: `edee515ccaa90bef6d6eb16a344e18579ca48fa28047ca02e338493d61b09839`
+- `.changeset/published-contract-compatibility.md`
+  SHA-256: `3ec0990015ff2679c851347734bed162d714d608de8a37fa4c2aee38a1c87aad`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `02a3cb85bf9ecce678c3064a2e2d016d152c22c46d41d9357d5cab7ee81b66ed`
+
+Scope: source Markdown clarity and cognitive accessibility only. This review
+does not establish tests, exact-commit continuous integration, package
+publication, registry verification, or adopter production verification.
