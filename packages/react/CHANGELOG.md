@@ -1,5 +1,11 @@
 # @emseepea/react
 
+## 0.3.0
+
+### Minor Changes
+
+- [`e414741`](https://github.com/emseepea/emseepea/commit/e4147419b0923faa7a9b7665423d54b24bb38eb5) Thanks [@tompahoward](https://github.com/tompahoward)! - Add a reusable React result-action lifecycle hook with duplicate-send suppression and result-revision reset, and use it in the React UI server initializer.
+
 ## 0.2.4
 
 ### Patch Changes
