@@ -1,5 +1,11 @@
 # @emseepea/create-resources-and-prompts-server
 
+## 0.0.32
+
+### Patch Changes
+
+- [`6d47e72`](https://github.com/emseepea/emseepea/commit/6d47e72ce797e12b2348268a63f00d8753d2980d) Thanks [@tompahoward](https://github.com/tompahoward)! - Add deterministic published MCP contract baselines and direction-aware compatibility checks for tools, schemas, resources, UI metadata, MIME types, and Content Security Policy. Keep the initializers' embedded testing dependency aligned with this release.
+
 ## 0.0.31
 
 ### Patch Changes
