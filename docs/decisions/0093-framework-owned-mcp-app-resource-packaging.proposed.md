@@ -1,19 +1,22 @@
 ---
 status: "proposed"
 date: 2026-09-15
-human-oversight: pending
+oversight-date: 2026-09-16
+human-oversight: confirmed
+supersedes: ["ADR-0092"]
 decision-makers: ["Tom Howard"]
-consulted: ["Architecture review", "JTBD review"]
+consulted: ["Architecture review", "Jobs To Be Done review"]
 informed: ["GitHub issue 93 customer voice"]
 reassessment-date: 2026-12-15
 ---
 
-# Corrected Ratification Boundary for Framework-Owned Model Context Protocol App Resource Packaging
+# Framework-Owned Model Context Protocol App Resource Packaging
 
-> ADR-0092 records Tom Howard's ratification of this decision substance, but
-> its body retained contradictory pre-ratification wording. This corrected
-> record is intended to supersede ADR-0092 only after Tom explicitly ratifies
-> ADR-0093. Until then, ADR-0092 remains the confirmed current decision.
+> Tom Howard ratified the one-composite-helper decision, including its
+> canonical documentation requirement, on 2026-09-16. This record replaces the
+> earlier architecture decision record (ADR-0092), which retained contradictory
+> pre-ratification wording. Ratification records the architecture decision
+> only; implementation and delivery remain separate.
 
 ## Context and Problem Statement
 
@@ -28,7 +31,7 @@ must:
 - declare modern resource and Content Security Policy metadata; and
 - preserve legacy OpenAI metadata for compatible hosts.
 
-The existing generic `defineResource` and `defineTool` APIs can carry these
+The existing generic `defineResource` and `defineTool` programming interfaces can carry these
 contracts, but they deliberately do not own this MCP App-specific assembly.
 
 Issue 38 proved the generic runtime can support MCP Apps. Issue 93 asks whether
@@ -36,9 +39,8 @@ the repeated packaging boundary should now become a small public framework
 helper without moving application content, behaviour, or build tooling into the
 framework.
 
-ADR-0093 preserves ADR-0092's decision substance. It corrects only the
-ratification-state contradictions and is intended to supersede ADR-0092 after
-Tom explicitly ratifies this record.
+This record (ADR-0093) preserves the earlier packaging decision's substance
+and corrects only its ratification-state contradictions.
 
 ## Decision Drivers
 
@@ -156,7 +158,8 @@ If implemented, this decision will have these consequences.
   read content so hosts can review it before fetching and obtain the same value
   when they fetch.
 - For the maintained empty-Content-Security-Policy fixture, the additional
-  resource-list metadata is approximately 186 UTF-8 JSON bytes. Resource reads
+  resource-list metadata is approximately 186 bytes in UTF-8 (Unicode text
+  encoding) JSON (JavaScript Object Notation) data. Resource reads
   add no response bytes, transient allocation, or per-request file work when
   compared with the existing manually packaged response.
 

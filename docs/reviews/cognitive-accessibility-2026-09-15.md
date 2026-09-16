@@ -177,20 +177,21 @@ production verification.
 ## Model Context Protocol App Resource Packaging Decisions
 
 Result: PASS. Independent cognitive-accessibility and voice-and-tone reviewers
-checked confirmed ADR-0092, proposed corrective ADR-0093, and their generated
-decision-index entries. The package clearly distinguishes ADR-0092 as the
-confirmed current record and ADR-0093 as the pending corrected superseding
-candidate. No cognitive-accessibility, Markdown, voice, or tone findings remain
-in scope.
+checked the final ratification of ADR-0093, the unchanged retired ADR-0092,
+and the changed generated decision-index and detail projections. The package
+clearly distinguishes confirmed human approval from a Proposed decision
+status, identifies ADR-0093 as current and ADR-0092 as superseded, and makes
+the architecture-only evidence boundary explicit. No cognitive-accessibility,
+Markdown, voice, or tone findings remain in scope.
 
 | Reviewed file | SHA-256 |
 | --- | --- |
-| `docs/decisions/0092-framework-owned-mcp-app-resource-packaging.proposed.md` | `cceb77e52951686f46654fd5688f30732473d5bd16c92f520181cd4d67565c4f` |
-| `docs/decisions/0093-framework-owned-mcp-app-resource-packaging.proposed.md` | `4252b4a6d17563be23bd60cf3d7ea43ea2191bf39e000efcd56803d19b5cb557` |
-| `docs/decisions/README.md` | `b85e4e6b9b89205c3d55b8dd0eb6aa228db94dd73a8dbb18f544e2c5775f30e9` |
+| `docs/decisions/0092-framework-owned-mcp-app-resource-packaging.superseded.md` | `cceb77e52951686f46654fd5688f30732473d5bd16c92f520181cd4d67565c4f` |
+| `docs/decisions/0093-framework-owned-mcp-app-resource-packaging.proposed.md` | `d4bf7ba7c4a1849ea5188a852a983ad04162e071a263e338f7c44adedc25ea38` |
+| `docs/decisions/README.md` | `43a351f662c02139cf972fc8aa3e9afdc2e74ba7cb0ecd228125073c8c81d90c` |
 
 Scope: Source Markdown clarity, cognitive accessibility, and voice and tone
-only. This review establishes ADR-0092's recorded ratification but not
-ADR-0093 ratification, implementation, test results, continuous integration,
-publication, registry verification, website verification, exact-host
-behaviour, or adopter production verification.
+only. ADR-0093 ratification is recorded separately by the oversight marker;
+this review does not establish implementation, test results, continuous
+integration, publication, registry verification, website verification,
+exact-host behaviour, or adopter production verification.

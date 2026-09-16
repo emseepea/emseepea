@@ -5,7 +5,11 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 91 decisions: 53 current and 38 historical.
+This project has 91 decisions: 52 current and 39 historical.
+
+Human review confirmed means the decision's substance was explicitly approved.
+Proposed means production validation has not yet promoted the decision to
+Accepted; it does not mean human approval is pending.
 
 ## Quick Index
 
@@ -62,8 +66,7 @@ This project has 91 decisions: 53 current and 38 historical.
 - [ADR-0089: No `ping` in Model Context Protocol (MCP) `2026-07-28` Beyond Existing Legacy Compatibility](0089-no-modern-ping-beyond-existing-legacy-compatibility.proposed.md): Proposed; human review confirmed.
 - [ADR-0090: Deprecated Client Logging Kept Out of Adoption Guides](0090-deprecated-client-logging-kept-out-of-adoption-guides.proposed.md): Proposed; human review confirmed.
 - [ADR-0091: Shared Result Card Styles in the Existing Optional Stylesheet](0091-shared-result-card-styles-in-the-existing-optional-stylesheet.proposed.md): Proposed; human review confirmed.
-- [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.proposed.md): Proposed; human review confirmed.
-- [ADR-0093: Corrected Ratification Boundary for Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.proposed.md): Proposed; human review pending.
+- [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -105,6 +108,7 @@ This project has 91 decisions: 53 current and 38 historical.
 - [ADR-0070: OpenAPI-Generated Backend Types and Runtime Validation](0070-openapi-generated-backend-types-and-runtime-validation.superseded.md): Superseded; human review confirmed.
 - [ADR-0083: Canonical Accessible Tool Result Views and MCP Apps Lifecycle](0083-canonical-accessible-tool-result-views-and-mcp-apps-lifecycle.superseded.md): Superseded; human review confirmed.
 - [ADR-0088: Always-Available Checked Model Context Protocol (MCP) Ping](0088-always-available-checked-mcp-ping.superseded.md): Superseded; human review confirmed.
+- [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -2004,10 +2008,11 @@ Chosen option: **"Extend the existing optional stylesheet"**, because the existi
 - Exact-commit source and CI, packed-package, anonymous exact-version registry, and exact deployed-website checks must each pass and remain separately reported.
 - A package may be called `PUBLISHED` only after release and registry evidence; adopter `PROD_VERIFIED` requires independent exact-production adopter evidence.
 
-### [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.proposed.md)
+### [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.proposed.md)
 
 #### ADR-0092 Decision
 
@@ -2026,10 +2031,11 @@ Chosen option: **"One composite server helper"**, because one existing framework
 - Changed public guidance must pass cognitive-accessibility and voice-and-tone review bound to the reviewed content.
 - Package, packed-initializer, exact-commit continuous integration, publication, anonymous registry, website, and adopter production evidence must remain reported separately.
 
-### [ADR-0093: Corrected Ratification Boundary for Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.proposed.md)
+### [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
+- Human review: Confirmed
+- Replaces: [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.superseded.md)
 
 #### ADR-0093 Decision
 
