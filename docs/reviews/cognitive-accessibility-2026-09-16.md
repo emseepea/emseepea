@@ -51,7 +51,7 @@ The reviewed files and matching SHA-256 digests are:
 - `.changeset/published-contract-compatibility.md`
   SHA-256: `ba2cc53143457c1ba924aea17f4fd6996cc31eae2974ff27afddce53a3ada736`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `8115fdcb6a1614989fd2630e3076622daeea11253370c83000db3ac3c6028695`
+  SHA-256: `50e053c3aa481fad57169a36fe26b0f003d8797534e8078866a402ca2d0b5d91`
 
 Scope: source Markdown clarity and cognitive accessibility only. This review
 does not establish tests, exact-commit continuous integration, package
