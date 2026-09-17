@@ -16,6 +16,11 @@ export type ObservedHttpMethod =
   | "POST" | "GET" | "HEAD" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "_OTHER";
 export type ObservedProtocolOutcome = "success" | "tool_error" | "protocol_error" | "disconnected";
 
+export interface CallerClassification {
+  readonly id: string;
+  readonly userAgentPrefix: string;
+}
+
 export interface ObservabilityState {
   protocolOutcome: Exclude<ObservedProtocolOutcome, "disconnected">;
 }
@@ -30,6 +35,7 @@ export interface ObservabilityEvent {
   readonly statusCode: number;
   readonly outcome: "finished" | "disconnected";
   readonly protocolOutcome: ObservedProtocolOutcome;
+  readonly callerClass?: string;
   readonly durationMs: number;
 }
 
@@ -61,6 +67,7 @@ export function openTelemetry(): ObservabilityAdapter {
         "http.response.status_code": event.statusCode,
         "emseepea.protocol.outcome": event.protocolOutcome,
         "emseepea.transport.outcome": event.outcome,
+        ...(event.callerClass ? { "emseepea.caller.class": event.callerClass } : {}),
       };
       const span = tracer.startSpan("mcp.request", { kind: SpanKind.SERVER });
       span.setAttributes(attributes);
@@ -75,6 +82,7 @@ export function installObservability(
   app: FastifyInstance,
   adapters: readonly ObservabilityAdapter[],
   capabilityName: (body: unknown) => string | undefined,
+  callerClassifications: readonly CallerClassification[] | undefined,
   limits: { deliveryTimeoutMs: number },
 ): (timeoutMs: number) => Promise<void> {
   const pending = new Set<Promise<void>>();
@@ -99,6 +107,7 @@ export function installObservability(
       const statusCode = reply.raw.headersSent && Number.isInteger(status) && status >= 100 && status <= 599
         ? status
         : 0;
+      const callerClass = classifyCaller(request.headers["user-agent"], callerClassifications);
       const event = Object.freeze({
         type: "mcp.request" as const,
         method: (typeof method === "string" && methods.has(method) ? method : "_OTHER") as ObservedMcpMethod,
@@ -111,6 +120,7 @@ export function installObservability(
           : state.protocolOutcome === "success" && statusCode >= 400
             ? "protocol_error"
             : state.protocolOutcome,
+        ...(callerClass ? { callerClass } : {}),
         durationMs: Math.min(3_600_000, Math.max(0, performance.now() - started)),
       });
       for (const adapter of adapters) {
@@ -137,6 +147,15 @@ export function installObservability(
       catch { /* Every adapter gets an independent bounded flush opportunity. */ }
     }));
   };
+}
+
+function classifyCaller(
+  userAgent: string | undefined,
+  classifications: readonly CallerClassification[] | undefined,
+): string | undefined {
+  if (!classifications) return undefined;
+  if (!userAgent || userAgent.length > 512) return "_OTHER";
+  return classifications.find(({ userAgentPrefix }) => userAgent.startsWith(userAgentPrefix))?.id ?? "_OTHER";
 }
 
 export function observabilityState(request: FastifyRequest): ObservabilityState | undefined {

@@ -1,93 +1,121 @@
-# Prepublication Review for the Browser MCP App Development Host
+# Current Release Readiness
 
-Date: 2026-09-17
+Date: 2026-09-18
 
-This record covers this planned release to npm's default `latest` channel:
+Release verification is not complete. This review covers one planned
+16-package batch. The server package contains the only feature change. Four
+packages receive dependency-only updates. Eleven initializer packages receive
+manifest-only updates.
 
-- `@emseepea/testing@0.14.0`
-- `@emseepea/create-tool-server@0.0.38`
-- `@emseepea/create-api-backed-server@0.0.36`
-- `@emseepea/create-openapi-backed-server@0.0.18`
-- `@emseepea/create-resources-and-prompts-server@0.0.35`
-- `@emseepea/create-progress-streaming-server@0.0.36`
-- `@emseepea/create-html-ui-server@0.0.38`
-- `@emseepea/create-react-ui-server@0.0.38`
-- `@emseepea/create-multi-instance-postgres-server@0.0.26`
-- `@emseepea/create-database-schema-server@0.0.23`
-- `@emseepea/create-mongodb-backed-server@0.0.23`
-- `@emseepea/create-soap-backed-server@0.0.23`
+## Planned Release Batch
 
-The initializer patch releases are dependency-closure releases only. They
-update a development-only `@emseepea/testing` dependency for repository checks;
-generated applications do not gain a runtime dependency, and these releases do
-not prove public-host compatibility.
+- `@emseepea/server@0.14.0`
+- `@emseepea/testing@0.14.1`
+- `@emseepea/feedback@0.2.16`
+- `@emseepea/react@0.3.2`
+- `@emseepea/svelte@0.1.6`
+- `@emseepea/create-tool-server@0.0.39`
+- `@emseepea/create-api-backed-server@0.0.37`
+- `@emseepea/create-openapi-backed-server@0.0.19`
+- `@emseepea/create-resources-and-prompts-server@0.0.36`
+- `@emseepea/create-progress-streaming-server@0.0.37`
+- `@emseepea/create-html-ui-server@0.0.39`
+- `@emseepea/create-react-ui-server@0.0.39`
+- `@emseepea/create-multi-instance-postgres-server@0.0.27`
+- `@emseepea/create-database-schema-server@0.0.24`
+- `@emseepea/create-mongodb-backed-server@0.0.24`
+- `@emseepea/create-soap-backed-server@0.0.24`
 
-Publication is pending.
+The server package adds privacy-bounded caller classification to its existing
+redacted observability events. The other four packages update their server
+dependency and add no separate feature. Each initializer package updates its
+embedded manifest to use `@emseepea/server@0.14.0`. These releases add no
+separate initializer feature.
 
-## What Changes
+## Privacy-Bounded Caller Classification
 
-`@emseepea/testing/browser` adds `createMcpAppDevelopmentHost`. A local
-development page supplies a compiled widget entry point, root element ID, and
-application fixtures. The host runs the widget in an iframe and reuses the
-protocol engine behind `createMcpAppHostSimulator`.
+Applications may configure 1 to 16 non-overlapping `User-Agent` prefixes. Each
+observability event then reports only the matching configured `callerClass` or
+the fixed `_OTHER` fallback. OpenTelemetry uses the same value in
+`emseepea.caller.class`.
 
-URL parameters select a fixture and initial theme, constrain the iframe width,
-simulate reduced motion, and choose successful or rejected `ui/message`
-responses. The returned host can deliver another fixture, change host context,
-resize the iframe, inspect captured messages, and remove the preview.
+Identifiers, prefixes, and the incoming `User-Agent` length have fixed bounds.
+Invalid, duplicate, overlapping, or out-of-range configuration fails startup.
+Missing, oversized, and unmatched values map to `_OTHER`. Raw headers, `User-Agent`
+values, bodies, arguments, results, tokens, IP addresses, and unbounded client
+strings never reach an observability adapter.
 
-Application fixtures, styles, screenshot policy, and assertions remain outside
-the package.
+`User-Agent` classification is spoofable telemetry. It is not authenticated
+identity and must not control authentication or authorization. When the option
+is omitted, the event has no `callerClass` field and keeps its previous shape.
 
-## Evidence Available Before Publication
+## Evidence So Far
 
-- Architecture and Jobs To Be Done reviews passed. The implementation reuses
-  the existing protocol behavior, serves confirmed JTBD-002, and requires no
-  new Architecture Decision Record or job.
-- Cognitive-accessibility review passed for the package guide and corrected
-  release note. Voice-and-tone review passed for the release note.
-- A real Chromium check loaded a compiled fixture widget, selected a fixture,
-  delivered results, changed theme and width, simulated reduced motion,
-  captured an action, and exercised rejected and successful message responses.
-- The complete testing-package suite passed all 30 tests, including the new
-  browser check and the existing host-simulator checks.
-- The testing package build, changed-file Oxlint check, and package dry-run
-  passed. The dry-run includes the browser JavaScript and type declarations.
-- Pipeline risk is 5/25 for the staged commit, within the repository's risk
-  appetite. Push and release remain unscored until an origin-backed commit
-  exists.
+- The architecture review confirmed that ADR-0065, Typed Operations with
+  Framework-Redacted Observability Adapters, governs this additive field. No
+  new decision is required.
+- The Jobs To Be Done review confirmed alignment with JTBD-002, Add Optional
+  Capabilities; JTBD-005, Migrate an Established MCP Server Safely; and
+  JTBD-006, Evolve a Published MCP Contract Safely. No new job is required.
+- The complete Node.js 24 local suite passed after Docker-backed PostgreSQL and
+  MongoDB fixtures were made available. The root black-box and documentation
+  phase passed 229 tests.
+- Behavioral tests cover configured, spoofed, missing, oversized, unmatched,
+  invalid, duplicate, and overlapping values. They verify `_OTHER`, raw-value
+  exclusion, unchanged unconfigured events, and the OpenTelemetry attribute.
+- Two consecutive benchmark suites passed with the OpenTelemetry adapter, no
+  exporter, 16 configured caller classes, and worst-case last-prefix matching.
+- Build, typecheck, lint, decision-compendium, initializer, packed-package,
+  browser, documentation, and database-backed checks passed locally.
 
-These are local source checks. Exact-commit Quality must still pass before
-publication.
+These are source and local checks. They do not prove exact-commit continuous
+integration, publication, registry state, provenance, downloaded-package
+behavior, exact-host qualification, or production use by an adopter.
 
-## Required After This Record Is Committed
+## Current Base Boundary
 
-- Exact-commit Quality must pass for the source commit.
-- The Changesets release pull request must contain the planned testing-package
-  version and changelog change based on that exact source commit.
-- The release pull request must merge through the governed release watcher.
-- Exact-commit Quality and Release must pass for the version commit.
+Release pull request `107` merged as `7457b526a3a53256a2d64274f1d3b6eb423cb71c`.
+Quality run `35227022361` passed for that merge. Release run `35228142605`
+passed on attempt 2 for the base batch. That evidence does not cover this
+planned release.
 
-## Required After npm Publication
+## Required Publication Evidence
 
-Registry readback must verify `@emseepea/testing@0.14.0` on the default
-`latest` channel, including provenance, integrity, the expected Git revision,
-clean installation, the browser subpath export, the Git tag, and the GitHub
-release.
+- The Quality workflow must pass on the exact combined source commit.
+- The Changesets release pull request must contain only the planned generated
+  version, dependency, lockfile, and changelog changes for this batch.
+- The Quality and Release workflows must pass on the exact version commit.
+- Registry readback must confirm every planned version and `latest` tag,
+  integrity, signature, provenance, and exact release-commit binding.
+- Every registry package must pass its applicable downloaded clean-install and
+  public-entry-point checks.
+- Every initializer package must install with its manifest rewritten to the
+  exact `@emseepea/server@0.14.0` dependency and pass its applicable checks.
+- The downloaded server package must verify bounded caller classification,
+  `_OTHER` fallbacks, unconfigured compatibility, OpenTelemetry output, and
+  raw-value exclusion through its public entry point.
+- Production use by the cited adopter requires separate journey evidence.
 
-## Evidence Boundary
+## Evidence Boundaries
 
-The development host proves only the browser lifecycle that is run. Local
-checks, continuous integration, npm publication, and registry verification do
-not establish compatibility with ChatGPT, Claude, or another public host. Each
-supported host still requires its real public journey.
+Each release stage requires separate evidence. Exact-commit continuous
+integration proves that the tested commit passed its checks. Publication proves
+that npm accepted a package version. Registry readback proves what npm serves.
+Provenance proves the package's build and source binding. Downloaded-package
+checks prove that a clean consumer can install and use the registry artifact.
+Exact-host qualification and adopter production verification require their own
+direct evidence. Evidence from one stage does not prove any other stage.
 
-This record does not make a `PUBLISHED`, registry-verified, or adopter
-`PROD_VERIFIED` claim.
+## Review Status, Not Release Status
 
-## Review Status
+This document records readiness. It does not claim that publication, registry
+verification, downloaded-package verification, exact-host qualification, or
+adopter production verification is complete unless the corresponding evidence
+appears above.
 
 - Result: PASS
+- Source-readiness review: PASS
+- Pipeline risk review: commit, push, and release are within the approved risk
+  limit of 5 out of 25.
 - Final result: within appetite, subject to the required exact-commit gates.
-- Scope: Reviewed source change and targeted local checks.
-- Release verification: NOT COMPLETE.
+- Release verification: NOT COMPLETE until the required publication gates pass.

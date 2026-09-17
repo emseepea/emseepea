@@ -39,18 +39,19 @@ function tool(handler = ({ value }) => ({ data: { value } })) {
   });
 }
 
-async function start(t, observability = [], handler) {
+async function start(t, observability = [], handler, callerClassifications) {
   const running = await serveEmseepea(createEmseepea({
     name: "observability-test",
     version: "0.0.0",
     tools: [tool(handler)],
     observability,
+    callerClassifications,
   }), { port: 0, shutdownTimeoutMs: 100, observabilityFlushTimeoutMs: 40 });
   t.after(() => running.close());
   return running;
 }
 
-async function call(url, name = "echo", value = secret, signal) {
+async function call(url, name = "echo", value = secret, signal, userAgent) {
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -60,6 +61,7 @@ async function call(url, name = "echo", value = secret, signal) {
       "MCP-Protocol-Version": "2026-07-28",
       "Mcp-Method": "tools/call",
       "Mcp-Name": name,
+      ...(userAgent === undefined ? {} : { "User-Agent": userAgent }),
     },
     body: JSON.stringify({
       jsonrpc: "2.0",
@@ -90,6 +92,22 @@ test("observability is optional, typed, and rejects duplicate adapters", async (
     () => createEmseepea({ name: "duplicate", version: "0", observability: [adapter, adapter] }),
     /Duplicate observability adapter id: log/,
   );
+  for (const callerClassifications of [
+    null,
+    [],
+    Array.from({ length: 17 }, (_, index) => ({ id: `class-${index}`, userAgentPrefix: `agent-${index}/` })),
+    [{ id: "_OTHER", userAgentPrefix: "other/" }],
+    [{ id: "invalid id", userAgentPrefix: "agent/" }],
+    [{ id: "agent", userAgentPrefix: "" }],
+    [{ id: "agent", userAgentPrefix: "x".repeat(129) }],
+    [{ id: "agent", userAgentPrefix: "agent/" }, { id: "agent", userAgentPrefix: "other/" }],
+    [{ id: "agent", userAgentPrefix: "agent/" }, { id: "specific", userAgentPrefix: "agent/specific/" }],
+  ]) {
+    assert.throws(
+      () => createEmseepea({ name: "invalid", version: "0", callerClassifications }),
+      /caller classifications|callerClassifications/,
+    );
+  }
   const running = await start(t);
   assert.equal((await call(running.url)).body.result.structuredContent.value, secret);
 });
@@ -124,6 +142,56 @@ test("two adapters receive the same immutable redacted event in stable order", a
   await delay(0);
   assert.equal(deliveries[0][1].capability, undefined);
   assert.doesNotMatch(JSON.stringify(deliveries), /unknown/);
+});
+
+test("caller classification emits only a bounded configured class or _OTHER", async (t) => {
+  const events = [];
+  const classifications = [
+    { id: "openai", userAgentPrefix: "openai-mcp/" },
+    { id: "probe", userAgentPrefix: "curl/" },
+  ];
+  const running = await start(
+    t,
+    [structuredLogging("callers", (event) => events.push(event))],
+    undefined,
+    classifications,
+  );
+
+  await call(running.url, "echo", "spoofed", undefined, `openai-mcp/${secret}`);
+  await call(running.url, "echo", "unmatched", undefined, `unknown-${secret}`);
+  await call(running.url, "echo", "oversized", undefined, secret.repeat(80));
+  await delay(0);
+  assert.deepEqual(events.map((event) => event.callerClass), ["openai", "_OTHER", "_OTHER"]);
+  assert.doesNotMatch(JSON.stringify(events), new RegExp(secret));
+
+  const missing = [];
+  const app = createEmseepea({
+    name: "missing-user-agent",
+    version: "0.0.0",
+    tools: [tool()],
+    callerClassifications: classifications,
+    observability: [structuredLogging("missing", (event) => missing.push(event))],
+  });
+  t.after(() => app.close());
+  await app.inject({
+    method: "POST",
+    url: "/mcp",
+    headers: {
+      Accept: "application/json, text/event-stream",
+      "Content-Type": "application/json",
+      "MCP-Protocol-Version": "2026-07-28",
+      "Mcp-Method": "tools/call",
+      "Mcp-Name": "echo",
+    },
+    payload: {
+      jsonrpc: "2.0",
+      id: "missing",
+      method: "tools/call",
+      params: { name: "echo", arguments: { value: "missing" }, _meta: requestMeta },
+    },
+  });
+  await delay(0);
+  assert.equal(missing[0].callerClass, "_OTHER");
 });
 
 test("events distinguish bounded protocol outcomes without inspecting encoded bodies", async (t) => {
@@ -283,12 +351,18 @@ test("the OpenTelemetry adapter records only the safe event contract", async (t)
     await Promise.all([tracing.shutdown(), metering.shutdown()]);
   });
 
-  const running = await start(t, [openTelemetry()]);
-  assert.equal((await call(running.url)).response.status, 200);
+  const running = await start(
+    t,
+    [openTelemetry()],
+    undefined,
+    [{ id: "openai", userAgentPrefix: "openai-mcp/" }],
+  );
+  assert.equal((await call(running.url, "echo", secret, undefined, "openai-mcp/1.0")).response.status, 200);
   await delay(0);
   assert.equal(spans.getFinishedSpans().length, 1);
   const attributes = spans.getFinishedSpans()[0].attributes;
   assert.deepEqual(Object.keys(attributes).sort(), [
+    "emseepea.caller.class",
     "emseepea.protocol.outcome",
     "emseepea.transport.outcome",
     "http.request.method",
@@ -296,6 +370,7 @@ test("the OpenTelemetry adapter records only the safe event contract", async (t)
     "mcp.capability.name",
     "mcp.method",
   ]);
+  assert.equal(attributes["emseepea.caller.class"], "openai");
   await metering.forceFlush();
   assert.doesNotMatch(JSON.stringify({ attributes, metrics: metricExport.getMetrics() }), new RegExp(secret));
 });

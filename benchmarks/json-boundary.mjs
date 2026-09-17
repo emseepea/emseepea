@@ -32,6 +32,7 @@ const modernHeaders = {
   "Mcp-Method": "tools/call",
   "Mcp-Name": "synthetic-read",
   "Mcp-Param-Id": "bench",
+  "User-Agent": "benchmark-agent-15/1.0",
 };
 const richRequestBody = modernRequestBody.replaceAll("synthetic-read", "synthetic-rich-read");
 const richHeaders = {
@@ -132,7 +133,9 @@ try {
   }
   const result = {
     profile: {
-      observability: observabilityEnabled ? "OpenTelemetry adapter, no exporter" : "disabled",
+      observability: observabilityEnabled
+        ? "OpenTelemetry adapter, no exporter, 16 caller classifications"
+        : "disabled",
       node: process.version,
       profileName: process.env.EMSEEPEA_BENCHMARK_PROFILE ?? "local",
       platform: `${process.platform}-${process.arch}`,

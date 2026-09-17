@@ -49,6 +49,9 @@ const productionClass = process.argv.find((argument) => argument.startsWith("--p
 const app = createEmseepea({
   name: "emseepea-benchmark", version: "0.0.0", tools: [tool, richTool], resources: [resource],
   observability: process.argv.includes("--observability") ? [openTelemetry()] : undefined,
+  callerClassifications: process.argv.includes("--observability")
+    ? Array.from({ length: 16 }, (_, index) => ({ id: `class-${index}`, userAgentPrefix: `benchmark-agent-${index}/` }))
+    : undefined,
   deployment: productionClass ? {
     mode: "production-behind-proxy",
     allowedAuthorities: ["mcp.example.com"],

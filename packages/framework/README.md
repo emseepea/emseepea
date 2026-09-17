@@ -291,6 +291,10 @@ const app = createEmseepea({
     structuredLogging("application-log", (event) => logger.info(event)),
     openTelemetry(),
   ],
+  callerClassifications: [
+    { id: "openai", userAgentPrefix: "openai-mcp/" },
+    { id: "probe", userAgentPrefix: "curl/" },
+  ],
 });
 ```
 
@@ -311,6 +315,19 @@ and duration.
 `disconnected`, so adapters can count MCP failures without reading encoded JSON
 or Server-Sent Events (SSE) bodies. The OpenTelemetry adapter reports the same
 classification as `emseepea.protocol.outcome`.
+
+`callerClassifications` can classify known `User-Agent` prefixes without exposing
+the header. Configure 1 to 16 entries. Identifiers use 1 to 64 letters, numbers,
+dots, underscores, or hyphens. Prefixes use 1 to 128 characters and must not
+overlap.
+
+When configured, `callerClass` and the OpenTelemetry
+`emseepea.caller.class` attribute contain only a configured identifier or
+`_OTHER`. Missing, unmatched, or `User-Agent` values longer than 512 characters
+map to `_OTHER`.
+
+`User-Agent` values can be spoofed. Use `callerClass` only for telemetry grouping,
+not for authentication, authorization, or trusted identity.
 
 Adapters never receive request or response objects, bodies, headers, arguments,
 results, tokens, URLs, raw errors, or provider claims. Adapter failures do not

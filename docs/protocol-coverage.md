@@ -542,18 +542,24 @@ input/output transport.
 both through the same framework-redacted event contract. Each `/mcp` request
 produces a bounded event containing only known protocol and capability names,
 HTTP method and status, transport `outcome`, bounded `protocolOutcome`, and
-duration. Transport outcome remains `finished` or `disconnected`. Protocol
-outcome is `success`, `tool_error`, `protocol_error`, or `disconnected`.
+duration. Applications may also configure up to 16 non-overlapping `User-Agent`
+prefixes. The event then includes only the matching configured `callerClass` or
+`_OTHER`; raw headers never reach an adapter. Transport outcome remains
+`finished` or `disconnected`. Protocol outcome is `success`, `tool_error`,
+`protocol_error`, or `disconnected`.
 
 The [observability HTTP tests](../tests/black-box/telemetry.test.mjs) cover two
 adapters, JSON and Server-Sent Events (SSE) requests, stable order, redaction,
 unknown names, adapter failures, and bounded delivery and flush. The framework
 classifies outcomes at known protocol boundaries without inspecting serialized
-response bodies.
+response bodies. Caller-classification tests cover spoofed, missing, oversized,
+and unmatched `User-Agent` values without recording them. Caller classification is spoofable
+telemetry, not authenticated identity.
 OpenTelemetry records transport and protocol outcomes separately as
-`emseepea.transport.outcome` and `emseepea.protocol.outcome`. The CI benchmark
-compares disabled and enabled built-in OpenTelemetry adapters without an
-exporter; it does not measure an adopter's exporter or log destination.
+`emseepea.transport.outcome` and `emseepea.protocol.outcome`, and records a
+configured caller class as `emseepea.caller.class`. The CI benchmark compares
+disabled and enabled built-in OpenTelemetry adapters without an exporter; it
+does not measure an adopter's exporter or log destination.
 
 **Not supported:** A guarantee that an adopter's exporter, log store, or external
 observability service receives every event.

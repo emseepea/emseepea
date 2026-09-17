@@ -78,6 +78,7 @@ import { z } from "zod";
 import {
   installObservability,
   observabilityState,
+  type CallerClassification,
   type ObservabilityAdapter,
   type ObservabilityState,
 } from "./telemetry.js";
@@ -85,6 +86,7 @@ import {
 export {
   openTelemetry,
   structuredLogging,
+  type CallerClassification,
   type ObservabilityAdapter,
   type ObservabilityEvent,
   type ObservedHttpMethod,
@@ -708,6 +710,7 @@ export interface AuthenticationOptions {
 export type OAuthResourceServerOptions = AuthenticationOptions;
 export interface EmseepeaOptions {
   readonly observability?: readonly ObservabilityAdapter[];
+  readonly callerClassifications?: readonly CallerClassification[];
   readonly readiness?: (context: { readonly signal: AbortSignal }) => boolean | Promise<boolean>;
   readonly readinessTimeoutMs?: number;
   readonly name: string;
@@ -760,6 +763,7 @@ export type EmseepeaExtensions = Pick<
   EmseepeaOptions,
   | "authentication"
   | "observability"
+  | "callerClassifications"
   | "additionalTools"
   | "deployment"
 >;
@@ -2094,6 +2098,7 @@ function installListPagination(server: McpServer, pagination: CompiledListPagina
 
 export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   const observability = normalizeObservability(options.observability);
+  const callerClassifications = normalizeCallerClassifications(options.callerClassifications);
   const readiness = options.readiness;
   const readinessTimeoutMs = callbackTimeout("readiness", readiness, "readinessTimeoutMs", options.readinessTimeoutMs);
   const stopping = new AbortController();
@@ -2434,7 +2439,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         resourcesByUri,
         resourceTemplates,
         promptsByName,
-      ), observabilityLimits)
+      ), callerClassifications, observabilityLimits)
     : undefined;
   const limiter = deployment.mode === "production-behind-proxy"
     ? new FixedWindowRateLimiter(deployment.rateLimit)
@@ -3084,6 +3089,33 @@ function normalizeObservability(
       ...(adapter.flush ? { flush: adapter.flush } : {}),
     });
   }));
+}
+
+function normalizeCallerClassifications(
+  classifications: readonly CallerClassification[] | undefined,
+): readonly CallerClassification[] | undefined {
+  if (classifications === undefined) return undefined;
+  if (!Array.isArray(classifications) || classifications.length < 1 || classifications.length > 16) {
+    throw new TypeError("callerClassifications must contain 1 to 16 entries");
+  }
+  const normalized = classifications.map((classification) => {
+    if (!classification || typeof classification !== "object" ||
+        typeof classification.id !== "string" || classification.id === "_OTHER" ||
+        !/^[A-Za-z0-9_.-]{1,64}$/.test(classification.id) ||
+        typeof classification.userAgentPrefix !== "string" ||
+        classification.userAgentPrefix.length < 1 || classification.userAgentPrefix.length > 128) {
+      throw new TypeError("caller classifications require a valid id and 1 to 128 character user-agent prefix");
+    }
+    return Object.freeze({ id: classification.id, userAgentPrefix: classification.userAgentPrefix });
+  });
+  for (const [index, classification] of normalized.entries()) {
+    if (normalized.some((other, otherIndex) => otherIndex !== index && (
+      other.id === classification.id || other.userAgentPrefix.startsWith(classification.userAgentPrefix)
+    ))) {
+      throw new TypeError("caller classifications require unique ids and non-overlapping prefixes");
+    }
+  }
+  return Object.freeze(normalized);
 }
 
 function isLoopbackUrl(url: URL): boolean {
