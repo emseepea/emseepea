@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.15.0
+
+### Minor Changes
+
+- [`36444b4`](https://github.com/emseepea/emseepea/commit/36444b4eca8554ecb56033676e980f317500a01d) Thanks [@tompahoward](https://github.com/tompahoward)! - Add the `emseepea-contract` command for explicit application factories or MCP URLs. Capture a version-labelled baseline or check every baseline in a directory with the existing compatibility API. Bearer tokens stay out of command arguments, output, and baseline files. Compatibility failures and command errors use different exit statuses.
+
 ## 0.14.1
 
 ### Patch Changes
