@@ -2,9 +2,21 @@
 
 Date: 2026-09-18
 
-Release verification is not complete. This review covers one planned package:
+Release verification is not complete. This review covers the published-contract
+command and its dependency-closed initializer releases:
 
 - `@emseepea/testing@0.15.0`
+- `@emseepea/create-api-backed-server@0.0.38`
+- `@emseepea/create-database-schema-server@0.0.25`
+- `@emseepea/create-html-ui-server@0.0.40`
+- `@emseepea/create-mongodb-backed-server@0.0.25`
+- `@emseepea/create-multi-instance-postgres-server@0.0.28`
+- `@emseepea/create-openapi-backed-server@0.0.20`
+- `@emseepea/create-progress-streaming-server@0.0.38`
+- `@emseepea/create-react-ui-server@0.0.40`
+- `@emseepea/create-resources-and-prompts-server@0.0.37`
+- `@emseepea/create-soap-backed-server@0.0.25`
+- `@emseepea/create-tool-server@0.0.40`
 
 ## Published Contract Command
 
@@ -34,6 +46,10 @@ baseline retention, approvals, capture timing, and deployment policy.
   diagnostics, token exclusion, and exit behavior.
 - Existing published-contract API tests pass without changed comparison
   semantics.
+- The generated release pull request changed all 11 public initializer
+  manifests to use `@emseepea/testing@0.15.0` as a development dependency. The
+  release verifier correctly rejected those manifest changes until each
+  initializer received an explicit patch release.
 - Package build, lint, documentation evidence checks, and an npm package dry
   run pass. The packed file list contains the executable command.
 - Independent cognitive-accessibility review passed for the package guide and
@@ -56,7 +72,7 @@ planned release.
 
 - The Quality workflow must pass on the exact source commit.
 - The Changesets release pull request must contain only generated version,
-  lockfile, and changelog changes for `@emseepea/testing@0.15.0`.
+  lockfile, manifest, and changelog changes for the exact package set above.
 - Quality and Release must pass on the exact version commit.
 - Registry readback must confirm the version and `latest` tag, integrity,
   signature, provenance, and exact release-commit binding.

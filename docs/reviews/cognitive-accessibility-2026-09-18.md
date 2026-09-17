@@ -26,10 +26,12 @@ verification.
 ## Published Contract Command Public Content Review
 
 Result: PASS. An independent cognitive-accessibility specialist reviewed the
-package guide and release note. The guide provides project-local commands,
-explains authentication without exposing token values, and distinguishes
-compatibility failures from command errors. It keeps application-specific
-normalization, retention, approvals, and deployment policy outside the command.
+package guide, release notes, and dependency-closed release-readiness record.
+The guide provides project-local commands, explains authentication without
+exposing token values, and distinguishes compatibility failures from command
+errors. It keeps application-specific normalization, retention, approvals, and
+deployment policy outside the command. The release record names the exact
+initializer patch releases required by the generated dependency update.
 
 Reviewed content:
 
@@ -37,8 +39,10 @@ Reviewed content:
   SHA-256: `b24c892be5ba7f51ee72863dd9310239911ac9483c746062ac89296aa74dd259`
 - `.changeset/thin-contract-command.md`
   SHA-256: `1b071752b1357a2cdf7931b97cc48c915b4e7f4b557486c3668837d1def7d814`
+- `.changeset/dependency-closed-initializers.md`
+  SHA-256: `1782dfe8185dd0c13058430e2b43dbb382652f74fccaaf2c6e015e4351c925cd`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `43550a54c57a2acc7031314aa552ece744399e36da9fce98e4482dd2de30b9eb`
+  SHA-256: `4c8fcdf472ab351ca832bdaa741941088b86efd98503409da920303351ede314`
 
 Scope: source Markdown clarity and cognitive accessibility only. This review
 does not establish command correctness, compatibility, package publication,
