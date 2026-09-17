@@ -41,9 +41,9 @@ Reviewed content:
 - `website/src/content/docs/examples.md`
   SHA-256: `1c414a9e1d5f696acbe92800e0da9304851ab90e77221696a2be2ef75013edca`
 - `.changeset/tall-peas-skybridge.md`
-  SHA-256: `1ccf80511e6a13375763c7105813f4d0fde8372d86c8a0188fc1531bdf40809a`
+  SHA-256: `abfe22fc06953cc67dbae8d35a4196d1875fda0ccc983a028cb791bcf3e47e4f`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `36e9e361745950e7846d1766e705cb5c65bed607d283a91dbffd7bebd9a57beb`
+  SHA-256: `d5f1797aed2f6ca0c13777608b717f1f094e65c77834a648030a53a471ef78ec`
 
 Scope: source Markdown clarity, cognitive accessibility, and voice and tone.
 This review does not establish implementation correctness, rendered website

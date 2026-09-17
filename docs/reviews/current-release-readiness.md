@@ -9,9 +9,20 @@ This record covers these planned releases to npm's default `latest` channel:
 - `@emseepea/react@0.3.1`
 - `@emseepea/svelte@0.1.5`
 - `@emseepea/testing@0.13.1`
+- `@emseepea/create-tool-server@0.0.37`
+- `@emseepea/create-api-backed-server@0.0.35`
+- `@emseepea/create-openapi-backed-server@0.0.17`
+- `@emseepea/create-resources-and-prompts-server@0.0.34`
+- `@emseepea/create-progress-streaming-server@0.0.35`
+- `@emseepea/create-html-ui-server@0.0.37`
+- `@emseepea/create-react-ui-server@0.0.37`
+- `@emseepea/create-multi-instance-postgres-server@0.0.25`
+- `@emseepea/create-database-schema-server@0.0.22`
+- `@emseepea/create-mongodb-backed-server@0.0.22`
+- `@emseepea/create-soap-backed-server@0.0.22`
 
-Publication is pending. The four patch releases align their dependency on the
-new server version.
+Publication is pending. Four package patches and 11 initializer patches align
+their dependency on the new server version.
 
 ## What Changes
 
@@ -42,8 +53,9 @@ helper still owns the resource handler, including its returned HTML content.
   `text/html+skybridge` through modern and legacy listing/read operations. Its
   typecheck, all 109 tests, and three published-contract schema baselines
   passed. The production adopter was not changed.
-- The Changesets plan contains the server minor release and four required
-  dependent patch releases.
+- The Changesets plan contains the server minor release, four dependent package
+  patches, and all 11 initializer patches required to embed the new server
+  version.
 - The pipeline risk review rated cumulative residual risk at 5/25, within the
   repository's 5/25 appetite.
 
@@ -58,7 +70,7 @@ helper still owns the resource handler, including its returned HTML content.
 
 ## Required After npm Publication
 
-The release workflow must verify all five planned versions on npm's default
+The release workflow must verify all 16 planned versions on npm's default
 `latest` channel, including provenance, integrity, the expected Git revision,
 clean installation, public imports, tags, and GitHub releases.
 
