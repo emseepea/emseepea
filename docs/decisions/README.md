@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 91 decisions: 52 current and 39 historical.
+This project has 92 decisions: 52 current and 40 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -66,7 +66,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0089: No `ping` in Model Context Protocol (MCP) `2026-07-28` Beyond Existing Legacy Compatibility](0089-no-modern-ping-beyond-existing-legacy-compatibility.proposed.md): Proposed; human review confirmed.
 - [ADR-0090: Deprecated Client Logging Kept Out of Adoption Guides](0090-deprecated-client-logging-kept-out-of-adoption-guides.proposed.md): Proposed; human review confirmed.
 - [ADR-0091: Shared Result Card Styles in the Existing Optional Stylesheet](0091-shared-result-card-styles-in-the-existing-optional-stylesheet.proposed.md): Proposed; human review confirmed.
-- [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.proposed.md): Proposed; human review confirmed.
+- [ADR-0094: Checked Dual MIME Compatibility for MCP App Resources](0094-checked-dual-mime-compatibility-for-mcp-app-resources.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -109,6 +109,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0083: Canonical Accessible Tool Result Views and MCP Apps Lifecycle](0083-canonical-accessible-tool-result-views-and-mcp-apps-lifecycle.superseded.md): Superseded; human review confirmed.
 - [ADR-0088: Always-Available Checked Model Context Protocol (MCP) Ping](0088-always-available-checked-mcp-ping.superseded.md): Superseded; human review confirmed.
 - [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.superseded.md): Superseded; human review confirmed.
+- [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -2012,7 +2013,7 @@ Chosen option: **"Extend the existing optional stylesheet"**, because the existi
 
 - Status: Superseded
 - Human review: Confirmed
-- Replaced by: [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.proposed.md)
+- Replaced by: [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.superseded.md)
 
 #### ADR-0092 Decision
 
@@ -2031,11 +2032,12 @@ Chosen option: **"One composite server helper"**, because one existing framework
 - Changed public guidance must pass cognitive-accessibility and voice-and-tone review bound to the reviewed content.
 - Package, packed-initializer, exact-commit continuous integration, publication, anonymous registry, website, and adopter production evidence must remain reported separately.
 
-### [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.proposed.md)
+### [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.superseded.md)
+- Replaced by: [ADR-0094: Checked Dual MIME Compatibility for MCP App Resources](0094-checked-dual-mime-compatibility-for-mcp-app-resources.proposed.md)
 
 #### ADR-0093 Decision
 
@@ -2053,3 +2055,23 @@ Chosen option: **"One composite server helper"**, because one existing framework
 - The `@emseepea/server` README must link to the canonical guide without duplicating its runnable snippet.
 - Changed public guidance must pass cognitive-accessibility and voice-and-tone review bound to the reviewed content.
 - Package, packed-initializer, exact-commit continuous integration, publication, anonymous registry, website, and adopter production evidence must remain reported separately.
+
+### [ADR-0094: Checked Dual MIME Compatibility for MCP App Resources](0094-checked-dual-mime-compatibility-for-mcp-app-resources.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.superseded.md)
+
+#### ADR-0094 Decision
+
+Chosen option: **"Checked two-value MIME selection"**, because it preserves the modern contract by default while allowing the one evidenced legacy contract to adopt the existing packaging boundary without a breaking MIME change.
+
+#### ADR-0094 Checks
+
+- Public type checks accept an omitted `mimeType`, `text/html;profile=mcp-app`, and `text/html+skybridge`, while rejecting any other literal.
+- Definition-time runtime checks reject unsupported MIME values received across an untyped JavaScript or data boundary.
+- Black-box modern and legacy MCP client checks observe `text/html;profile=mcp-app` in both `resources/list` and `resources/read` when the option is omitted or explicitly modern.
+- Equivalent black-box checks observe `text/html+skybridge` in both operations when that value is selected.
+- Existing URI, metadata, Content Security Policy, access, document, script-escaping, startup-loading, example, guide, and package checks continue to pass for both supported values where applicable.
+- A migration or published-contract check for the evidenced adopter preserves `text/html+skybridge` without weakening its existing baseline.
+- ADR-0094 must be ratified before implementation begins. Until then, ADR-0093 remains the authoritative decision and is not replaced.

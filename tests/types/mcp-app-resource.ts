@@ -6,6 +6,7 @@ const base = {
 };
 
 defineMcpAppResource({ ...base, access: "public", script: "" });
+defineMcpAppResource({ ...base, access: "public", script: "", mimeType: "text/html+skybridge" });
 defineMcpAppResource({ ...base, access: "protected", requiredScopes: ["app:read"], bundleUrl: new URL("file:///app.js") });
 
 // @ts-expect-error Protected resources need scopes.
@@ -16,7 +17,10 @@ const publicScopes = { ...base, access: "public", requiredScopes: ["app:read"], 
 const mixedSources = { ...base, access: "public", script: "", bundleUrl: new URL("file:///app.js") } satisfies McpAppResourceDefinition;
 // @ts-expect-error One script source is required.
 const missingSource = { ...base, access: "public" } satisfies McpAppResourceDefinition;
+// @ts-expect-error MCP App resources support only the modern and Skybridge MIME values.
+const unsupportedMimeType = { ...base, access: "public", script: "", mimeType: "text/html" } satisfies McpAppResourceDefinition;
 void missingScopes;
 void publicScopes;
 void mixedSources;
 void missingSource;
+void unsupportedMimeType;

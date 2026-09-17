@@ -306,6 +306,11 @@ The helper requires a canonical `ui://` URI, a non-empty title, a valid
 language tag, and exactly one `script` string or local-file `bundleUrl`.
 It reads a local bundle once when the resource is defined, not on each read.
 
+The optional `mimeType` defaults to `text/html;profile=mcp-app`. Use
+`text/html+skybridge` only when preserving an established compatibility
+contract. The helper uses the selected value for both the resource listing and
+returned content, and rejects every other MIME value.
+
 It builds a UTF-8 HTML document with a viewport, escaped title and a validated,
 escaped language tag on `<html lang>`. It neutralizes `</script` inside an
 inline script. The app still owns its markup and CSS; use the `script` option
@@ -324,8 +329,8 @@ allows no external origin in that category.
 
 ### Metadata and evidence
 
-The resource listing and read use `text/html;profile=mcp-app` and the same
-canonical URI. Resource metadata includes standard `ui.csp` and
+The resource listing and read use the selected MIME type and the same canonical
+URI. Resource metadata includes standard `ui.csp` and
 `ui.prefersBorder` plus the `openai/widgetCSP` and
 `openai/widgetPrefersBorder` compatibility aliases. `toolMetadata` carries
 both `ui.resourceUri` and `openai/outputTemplate` from that URI. Public and

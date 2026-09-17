@@ -31,6 +31,7 @@ test("MCP App definitions reject invalid input at startup", () => {
     [{ csp: { connectDomains: Array.from({ length: 22 }, (_, i) => `https://connect-${i}.example.com`), resourceDomains: Array.from({ length: 22 }, (_, i) => `https://resource-${i}.example.com`), frameDomains: Array.from({ length: 21 }, (_, i) => `https://frame-${i}.example.com`) } }, /at most 64/],
     [{ csp: { unknownDomains: [] } }, /unsupported field/],
     [{ prefersBorder: "yes" }, /must be a boolean/],
+    [{ mimeType: "text/html" }, /mimeType must be/],
   ];
   for (const [change, error] of invalid) {
     assert.throws(() => defineMcpAppResource({ ...definition, ...change }), error);
@@ -45,9 +46,17 @@ test("one packaged app aligns resource, tool, modern and legacy metadata", async
   writeFileSync(bundlePath, "window.started = true;", "utf8");
   const { script: _script, ...bundleDefinition } = definition;
   const app = defineMcpAppResource({ ...bundleDefinition, bundleUrl: pathToFileURL(bundlePath) });
+  const legacyUri = "ui://pea/legacy-preview";
+  const legacyApp = defineMcpAppResource({
+    ...bundleDefinition,
+    name: "legacy-pea-preview",
+    uri: legacyUri,
+    mimeType: "text/html+skybridge",
+    bundleUrl: pathToFileURL(bundlePath),
+  });
   rmSync(directory, { recursive: true }); // Bundle is read once, not on each resource read.
   const server = createEmseepea({
-    name: "mcp-app-resource-test", version: "0.0.0", resources: [app.resource],
+    name: "mcp-app-resource-test", version: "0.0.0", resources: [app.resource, legacyApp.resource],
     tools: [defineTool({
       name: "open-pea-preview", access: "public", description: "Open the pea plan.",
       inputSchema: z.object({}), _meta: app.toolMetadata,
@@ -65,13 +74,20 @@ test("one packaged app aligns resource, tool, modern and legacy metadata", async
       );
       await client.connect(new StreamableHTTPClientTransport(running.url));
       try {
-        const listed = (await client.listResources()).resources[0];
+        const resources = (await client.listResources()).resources;
+        const listed = resources.find((resource) => resource.uri === uri);
+        const legacyListed = resources.find((resource) => resource.uri === legacyUri);
+        assert.ok(listed);
+        assert.ok(legacyListed);
         const content = (await client.readResource({ uri })).contents[0];
+        const legacyContent = (await client.readResource({ uri: legacyUri })).contents[0];
         const tool = (await client.listTools()).tools[0];
         assert.equal(listed.uri, uri);
         assert.equal(listed.mimeType, "text/html;profile=mcp-app");
         assert.equal(content.uri, uri);
         assert.equal(content.mimeType, listed.mimeType);
+        assert.equal(legacyListed.mimeType, "text/html+skybridge");
+        assert.equal(legacyContent.mimeType, legacyListed.mimeType);
         assert.match(content.text, /<html lang="en">/);
         assert.match(content.text, /<title>Pea &amp; &lt;plan&gt;<\/title>/);
         assert.match(content.text, /<main id="app"><h1>Plan<\/h1><\/main>/);

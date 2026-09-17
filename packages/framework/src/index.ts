@@ -569,6 +569,7 @@ interface McpAppResourceDefinitionBase {
   readonly uri: string;
   readonly title: string;
   readonly description?: string;
+  readonly mimeType?: "text/html;profile=mcp-app" | "text/html+skybridge";
   readonly language: string;
   /** Trusted application-owned HTML inside the document body. */
   readonly bodyMarkup: string;
@@ -1071,6 +1072,10 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
 export function defineMcpAppResource(definition: McpAppResourceDefinition): McpAppResource {
   const uri = canonicalResourceUri(definition.uri);
   if (!uri.startsWith("ui://")) throw new TypeError("MCP App resource URI must start with ui://");
+  const mimeType = definition.mimeType ?? "text/html;profile=mcp-app";
+  if (mimeType !== "text/html;profile=mcp-app" && mimeType !== "text/html+skybridge") {
+    throw new TypeError("MCP App mimeType must be text/html;profile=mcp-app or text/html+skybridge");
+  }
   const hasScript = Object.hasOwn(definition, "script");
   const hasBundleUrl = Object.hasOwn(definition, "bundleUrl");
   if (hasScript === hasBundleUrl) throw new TypeError("MCP App resource needs exactly one script or bundleUrl");
@@ -1121,7 +1126,6 @@ export function defineMcpAppResource(definition: McpAppResourceDefinition): McpA
     `<title>${escapeMcpAppText(definition.title)}</title>` +
     (definition.styles === undefined ? "" : `<style>${definition.styles}</style>`) +
     `</head><body>${definition.bodyMarkup}<script type="module">${script.replace(/<\/script/gi, "<\\/script")}</script></body></html>`;
-  const mimeType = "text/html;profile=mcp-app";
   const resource = defineResource({
     name: definition.name,
     discoverable: definition.discoverable,
