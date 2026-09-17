@@ -190,6 +190,7 @@ when the server requires a supported older protocol revision.
 Capture exits 0 after writing the requested baseline. Check exits 0 when every
 JSON baseline in the directory is compatible, 1 for compatibility failures,
 and 2 for invalid options, extraction failures, or invalid baseline files.
+
 Custom normalization, legacy migration, stricter comparison rules, baseline
 retention, approvals, and deployment policy stay in application code using the
 lower-level API above.

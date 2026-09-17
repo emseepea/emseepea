@@ -34,7 +34,7 @@ normalization, retention, approvals, and deployment policy outside the command.
 Reviewed content:
 
 - `packages/testing/README.md`
-  SHA-256: `459c7bc2c7478f01142d58196d41b9bad925c0df9d48a74bf9233fb89c3594f7`
+  SHA-256: `b24c892be5ba7f51ee72863dd9310239911ac9483c746062ac89296aa74dd259`
 - `.changeset/thin-contract-command.md`
   SHA-256: `1b071752b1357a2cdf7931b97cc48c915b4e7f4b557486c3668837d1def7d814`
 - `docs/reviews/current-release-readiness.md`
