@@ -37,6 +37,8 @@ Reviewed content:
   SHA-256: `459c7bc2c7478f01142d58196d41b9bad925c0df9d48a74bf9233fb89c3594f7`
 - `.changeset/thin-contract-command.md`
   SHA-256: `1b071752b1357a2cdf7931b97cc48c915b4e7f4b557486c3668837d1def7d814`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `43550a54c57a2acc7031314aa552ece744399e36da9fce98e4482dd2de30b9eb`
 
 Scope: source Markdown clarity and cognitive accessibility only. This review
 does not establish command correctness, compatibility, package publication,

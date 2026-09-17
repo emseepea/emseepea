@@ -2,116 +2,81 @@
 
 Date: 2026-09-18
 
-Release verification is not complete. This review covers one planned
-16-package batch. The server package contains the only feature change. Four
-packages receive dependency-only updates. Eleven initializer packages receive
-manifest-only updates.
+Release verification is not complete. This review covers one planned package:
 
-## Planned Release Batch
+- `@emseepea/testing@0.15.0`
 
-- `@emseepea/server@0.14.0`
-- `@emseepea/testing@0.14.1`
-- `@emseepea/feedback@0.2.16`
-- `@emseepea/react@0.3.2`
-- `@emseepea/svelte@0.1.6`
-- `@emseepea/create-tool-server@0.0.39`
-- `@emseepea/create-api-backed-server@0.0.37`
-- `@emseepea/create-openapi-backed-server@0.0.19`
-- `@emseepea/create-resources-and-prompts-server@0.0.36`
-- `@emseepea/create-progress-streaming-server@0.0.37`
-- `@emseepea/create-html-ui-server@0.0.39`
-- `@emseepea/create-react-ui-server@0.0.39`
-- `@emseepea/create-multi-instance-postgres-server@0.0.27`
-- `@emseepea/create-database-schema-server@0.0.24`
-- `@emseepea/create-mongodb-backed-server@0.0.24`
-- `@emseepea/create-soap-backed-server@0.0.24`
+## Published Contract Command
 
-The server package adds privacy-bounded caller classification to its existing
-redacted observability events. The other four packages update their server
-dependency and add no separate feature. Each initializer package updates its
-embedded manifest to use `@emseepea/server@0.14.0`. These releases add no
-separate initializer feature.
+`emseepea-contract` captures a version-labelled public MCP contract from an
+explicit application factory or MCP URL. Its check mode discovers every JSON
+baseline in an explicit directory and delegates compatibility semantics and
+diagnostics to the existing published-contract API.
 
-## Privacy-Bounded Caller Classification
+Protected discovery reads a bearer token only from the environment variable
+named by `--token-env`. The command does not accept token values as arguments.
+Tests verify that token values do not appear in command output or baseline
+files. Capture, compatibility failure, and command failure use exit statuses
+0, 1, and 2 respectively.
 
-Applications may configure 1 to 16 non-overlapping `User-Agent` prefixes. Each
-observability event then reports only the matching configured `callerClass` or
-the fixed `_OTHER` fallback. OpenTelemetry uses the same value in
-`emseepea.caller.class`.
-
-Identifiers, prefixes, and the incoming `User-Agent` length have fixed bounds.
-Invalid, duplicate, overlapping, or out-of-range configuration fails startup.
-Missing, oversized, and unmatched values map to `_OTHER`. Raw headers, `User-Agent`
-values, bodies, arguments, results, tokens, IP addresses, and unbounded client
-strings never reach an observability adapter.
-
-`User-Agent` classification is spoofable telemetry. It is not authenticated
-identity and must not control authentication or authorization. When the option
-is omitted, the event has no `callerClass` field and keeps its previous shape.
+Applications continue to own normalization, legacy migration, stricter rules,
+baseline retention, approvals, capture timing, and deployment policy.
 
 ## Evidence So Far
 
-- The architecture review confirmed that ADR-0065, Typed Operations with
-  Framework-Redacted Observability Adapters, governs this additive field. No
-  new decision is required.
-- The Jobs To Be Done review confirmed alignment with JTBD-002, Add Optional
-  Capabilities; JTBD-005, Migrate an Established MCP Server Safely; and
-  JTBD-006, Evolve a Published MCP Contract Safely. No new job is required.
-- The complete Node.js 24 local suite passed after Docker-backed PostgreSQL and
-  MongoDB fixtures were made available. The root black-box and documentation
-  phase passed 229 tests.
-- Behavioral tests cover configured, spoofed, missing, oversized, unmatched,
-  invalid, duplicate, and overlapping values. They verify `_OTHER`, raw-value
-  exclusion, unchanged unconfigured events, and the OpenTelemetry attribute.
-- Two consecutive benchmark suites passed with the OpenTelemetry adapter, no
-  exporter, 16 configured caller classes, and worst-case last-prefix matching.
-- Build, typecheck, lint, decision-compendium, initializer, packed-package,
-  browser, documentation, and database-backed checks passed locally.
+- The architecture review found no new decision. The command orchestrates the
+  existing extractor, baseline writer, and compatibility assertion within the
+  established public testing package.
+- The Jobs To Be Done review confirmed alignment with JTBD-006, Evolve a
+  Published MCP Contract Safely. No new job is required.
+- Focused Node.js 24 tests pass for application-factory capture, protected MCP
+  URL capture, environment-only authentication, baseline discovery, concrete
+  diagnostics, token exclusion, and exit behavior.
+- Existing published-contract API tests pass without changed comparison
+  semantics.
+- Package build, lint, documentation evidence checks, and an npm package dry
+  run pass. The packed file list contains the executable command.
+- Independent cognitive-accessibility review passed for the package guide and
+  release note.
+- Commit, push, and release risk are each within the approved limit of 5 out
+  of 25.
 
 These are source and local checks. They do not prove exact-commit continuous
 integration, publication, registry state, provenance, downloaded-package
-behavior, exact-host qualification, or production use by an adopter.
+behavior, or adopter production use.
 
 ## Current Base Boundary
 
-Release pull request `107` merged as `7457b526a3a53256a2d64274f1d3b6eb423cb71c`.
-Quality run `35227022361` passed for that merge. Release run `35228142605`
-passed on attempt 2 for the base batch. That evidence does not cover this
+Release pull request `108` merged as
+`27e012af79d2d9c6d447c5df76377f6ae4692dc3`. Quality run `35242365541` and
+Release run `35243403489` passed for that base. This evidence does not cover the
 planned release.
 
 ## Required Publication Evidence
 
-- The Quality workflow must pass on the exact combined source commit.
-- The Changesets release pull request must contain only the planned generated
-  version, dependency, lockfile, and changelog changes for this batch.
-- The Quality and Release workflows must pass on the exact version commit.
-- Registry readback must confirm every planned version and `latest` tag,
-  integrity, signature, provenance, and exact release-commit binding.
-- Every registry package must pass its applicable downloaded clean-install and
-  public-entry-point checks.
-- Every initializer package must install with its manifest rewritten to the
-  exact `@emseepea/server@0.14.0` dependency and pass its applicable checks.
-- The downloaded server package must verify bounded caller classification,
-  `_OTHER` fallbacks, unconfigured compatibility, OpenTelemetry output, and
-  raw-value exclusion through its public entry point.
-- Production use by the cited adopter requires separate journey evidence.
+- The Quality workflow must pass on the exact source commit.
+- The Changesets release pull request must contain only generated version,
+  lockfile, and changelog changes for `@emseepea/testing@0.15.0`.
+- Quality and Release must pass on the exact version commit.
+- Registry readback must confirm the version and `latest` tag, integrity,
+  signature, provenance, and exact release-commit binding.
+- The downloaded package must pass clean installation and verify the public
+  command through its packed entry point.
+- Adopter production use requires separate journey evidence.
 
 ## Evidence Boundaries
 
-Each release stage requires separate evidence. Exact-commit continuous
-integration proves that the tested commit passed its checks. Publication proves
-that npm accepted a package version. Registry readback proves what npm serves.
-Provenance proves the package's build and source binding. Downloaded-package
-checks prove that a clean consumer can install and use the registry artifact.
-Exact-host qualification and adopter production verification require their own
-direct evidence. Evidence from one stage does not prove any other stage.
+Exact-commit continuous integration proves only that the tested commit passed
+its checks. Publication proves only that npm accepted a package version.
+Registry readback proves what npm serves. Provenance proves the package's build
+and source binding. Downloaded-package checks prove that a clean consumer can
+install and use the registry artifact. Adopter production verification requires
+its own direct evidence.
 
 ## Review Status, Not Release Status
 
-This document records readiness. It does not claim that publication, registry
-verification, downloaded-package verification, exact-host qualification, or
-adopter production verification is complete unless the corresponding evidence
-appears above.
+This document records readiness. It does not claim publication, registry
+verification, downloaded-package verification, or adopter production use.
 
 - Result: PASS
 - Source-readiness review: PASS
