@@ -1,5 +1,16 @@
 # @emseepea/testing
 
+## 0.14.0
+
+### Minor Changes
+
+- [`ae20176`](https://github.com/emseepea/emseepea/commit/ae201764d723949ee66e6f3c11860651c726d731) Thanks [@tompahoward](https://github.com/tompahoward)! - Add a browser-ready MCP Apps development host that reuses the deterministic
+  host simulator protocol. It loads a compiled widget with application-owned
+  fixtures and supports URL controls for theme, width, reduced motion, and
+  successful or rejected action messages. This development host proves only the
+  browser lifecycle that you run; it does not prove ChatGPT, Claude, or other
+  public-host compatibility.
+
 ## 0.13.1
 
 ### Patch Changes

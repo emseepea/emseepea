@@ -1,5 +1,14 @@
 # @emseepea/create-html-ui-server
 
+## 0.0.38
+
+### Patch Changes
+
+- [`95c2f05`](https://github.com/emseepea/emseepea/commit/95c2f054af1b38560f65489641d9c92782df0430) Thanks [@tompahoward](https://github.com/tompahoward)! - Update the initializer's development dependency on `@emseepea/testing` to
+  `0.14.0`. This changes repository checks only; generated applications do not
+  gain a runtime dependency, and the update does not prove public-host
+  compatibility.
+
 ## 0.0.37
 
 ### Patch Changes
