@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-mongodb-backed-server",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "description": "Create an Em See Pea server with schema-enforced and schemaless MongoDB collections.",
   "license": "MIT",
   "type": "module",
@@ -22,13 +22,13 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/feedback": "0.2.15",
-    "@emseepea/server": "0.13.0",
+    "@emseepea/feedback": "0.2.16",
+    "@emseepea/server": "0.14.0",
     "ajv": "8.20.0",
     "json-schema-to-ts": "3.1.1",
     "mongodb": "7.6.0",
     "zod": "4.4.3",
-    "@emseepea/testing": "0.14.0",
+    "@emseepea/testing": "0.14.1",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",
     "oxlint": "1.80.0"
