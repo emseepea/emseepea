@@ -163,6 +163,37 @@ Keep the capture version, release policy, baseline location, and retention in
 the application repository. Run capture only for a contract that has actually
 been published or submitted for review.
 
+For the same comparison without a custom wrapper, add project-local commands:
+
+```json
+{
+  "scripts": {
+    "contract:capture": "emseepea-contract capture --factory ./dist/app.js --factory-export createApp",
+    "contract:check": "emseepea-contract check --factory ./dist/app.js --factory-export createApp --baselines contract-baselines"
+  }
+}
+```
+
+Capture a version only when your application policy says it is published:
+
+```sh
+npm run contract:capture -- --version 1.0.0 --baseline contract-baselines/1.0.0.json
+npm run contract:check
+```
+
+Use `--url https://example.com/mcp` instead of `--factory` to inspect an MCP
+endpoint. For protected discovery, set the token in an environment variable
+and pass its name with `--token-env`; the token value is not accepted as a
+command argument or written to output or baselines. Use `--protocol-version`
+when the server requires a supported older protocol revision.
+
+Capture exits 0 after writing the requested baseline. Check exits 0 when every
+JSON baseline in the directory is compatible, 1 for compatibility failures,
+and 2 for invalid options, extraction failures, or invalid baseline files.
+Custom normalization, legacy migration, stricter comparison rules, baseline
+retention, approvals, and deployment policy stay in application code using the
+lower-level API above.
+
 ## Check Static Color Contrast
 
 Use `wcagContrastRatio` to measure one opaque solid sRGB color pair. Use

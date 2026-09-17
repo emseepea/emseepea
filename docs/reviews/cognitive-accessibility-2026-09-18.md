@@ -22,3 +22,22 @@ Scope: Source Markdown clarity and cognitive accessibility only. This review
 does not establish implementation, test results, continuous integration,
 publication, registry verification, exact-host behavior, or adopter production
 verification.
+
+## Published Contract Command Public Content Review
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+package guide and release note. The guide provides project-local commands,
+explains authentication without exposing token values, and distinguishes
+compatibility failures from command errors. It keeps application-specific
+normalization, retention, approvals, and deployment policy outside the command.
+
+Reviewed content:
+
+- `packages/testing/README.md`
+  SHA-256: `459c7bc2c7478f01142d58196d41b9bad925c0df9d48a74bf9233fb89c3594f7`
+- `.changeset/thin-contract-command.md`
+  SHA-256: `1b071752b1357a2cdf7931b97cc48c915b4e7f4b557486c3668837d1def7d814`
+
+Scope: source Markdown clarity and cognitive accessibility only. This review
+does not establish command correctness, compatibility, package publication,
+registry verification, or adopter production use.

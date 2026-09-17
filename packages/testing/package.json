@@ -30,10 +30,12 @@
     }
   },
   "bin": {
+    "emseepea-contract": "./published-contract/cli.mjs",
     "emseepea-test": "./semantic/cli.mjs"
   },
   "files": [
     "dist",
+    "published-contract",
     "semantic",
     "LICENSE",
     "README.md"
