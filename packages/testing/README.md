@@ -250,6 +250,45 @@ responses, cancellation, and teardown. It does not prove behavior in ChatGPT,
 Claude, or another exact host. Qualify each supported host separately through
 its real public journey before making a host-specific production claim.
 
+## Run a Compiled MCP App in a Browser
+
+Use `createMcpAppDevelopmentHost` from `@emseepea/testing/browser` in a local
+development page. The host creates an iframe, loads the compiled widget, and
+uses the same protocol engine as `createMcpAppHostSimulator`.
+
+```js
+import { createMcpAppDevelopmentHost } from "@emseepea/testing/browser";
+
+const host = createMcpAppDevelopmentHost({
+  container: document.querySelector("#preview"),
+  entryPoint: "../dist/order-result.js",
+  rootElementId: "order-result-root",
+  fixtures: {
+    ready: { orderId: "example-123", status: "ready" },
+    delayed: { orderId: "example-456", status: "delayed" },
+  },
+  hostContext: { theme: "light", platform: "web" },
+});
+```
+
+The first fixture is the default. These URL parameters override it for a local
+browser run:
+
+- `fixture=delayed` selects a named fixture.
+- `theme=dark` selects the initial light or dark host theme.
+- `width=288` constrains the iframe from 200 to 2,000 pixels.
+- `motion=reduce` makes the iframe match `prefers-reduced-motion`.
+- `message=reject` rejects `ui/message`; the default succeeds.
+
+Use `deliverFixture()`, `changeHostContext()`, and `setContainerWidth()` for
+changes without reloading. `messageRequests()` exposes captured action text.
+Call `destroy()` when the preview is no longer needed.
+
+Keep fixtures, widget styles, screenshot policy, and assertions in the
+application. This development host proves only the browser lifecycle that you
+run. It does not establish compatibility with ChatGPT, Claude, or another
+public host. Qualify each supported host through its real public journey.
+
 ## Diagnose Failures
 
 The evidence file contains readable test prompts, assistant responses,

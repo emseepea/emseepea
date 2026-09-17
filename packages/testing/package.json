@@ -20,6 +20,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js"
+    },
     "./semantic": {
       "types": "./semantic/test.d.mts",
       "import": "./semantic/test.mjs"
@@ -43,6 +47,9 @@
   "dependencies": {
     "@emseepea/server": "0.13.0",
     "@modelcontextprotocol/client": "2.0.0"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
   },
   "engines": {
     "node": ">=22"
