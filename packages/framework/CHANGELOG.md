@@ -1,5 +1,12 @@
 # @emseepea/server
 
+## 0.14.0
+
+### Minor Changes
+
+- [`9eed174`](https://github.com/emseepea/emseepea/commit/9eed174d916de6280eae9f5f52467fb7d6a18769) Thanks [@tompahoward](https://github.com/tompahoward)! - Add opt-in caller classification that reports configured IDs instead of raw
+  `User-Agent` headers.
+
 ## 0.13.0
 
 ### Minor Changes
