@@ -53,19 +53,23 @@ adopter production use.
 ## Browser MCP App Development Host
 
 Result: PASS. An independent cognitive-accessibility specialist reviewed the
-package guide, corrected release note, and prepublication record. The guide
-keeps setup and URL controls scannable. Each surface states that the development
-host proves only the browser lifecycle that is run and does not prove ChatGPT,
-Claude, or other public-host compatibility.
+package guide, both release notes, and prepublication record. The guide keeps
+setup and URL controls scannable. The package guide, browser-host release note,
+and prepublication record state that the development host proves only the
+browser lifecycle that is run. The initializer dependency release note and
+prepublication record state that generated applications do not gain a runtime
+dependency. None of the reviewed content claims public-host compatibility.
 
 Reviewed content:
 
 - `packages/testing/README.md`
   SHA-256: `b4ca463e59834eb43e422b2dbd7bee9472d938466370831917b6e515776917c5`
 - `docs/reviews/current-release-readiness.md`
-  SHA-256: `2c55192c9ad139de91b552ddbfdf627ec7c9aaece652aaf8ef45b92fa1e2eb1d`
+  SHA-256: `72800481d11681fb23d5d1355d2a69eed17d2f83376b64cf769bc5e700b3bb4b`
 - `.changeset/bright-peas-browser-host.md`
   SHA-256: `4d36cef80e3db6b01c968b587ede0fc684d19f9678c52e249b05fa05828c91ad`
+- `.changeset/calm-host-fixtures.md`
+  SHA-256: `6915f61106d5e8c834b38fc444ab4fbc07c4df305213983ee04bad34b736bc0b`
 
 Scope: source Markdown clarity and cognitive accessibility only. This review
 does not establish implementation correctness, exact-commit continuous

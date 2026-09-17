@@ -5,6 +5,22 @@ Date: 2026-09-17
 This record covers this planned release to npm's default `latest` channel:
 
 - `@emseepea/testing@0.14.0`
+- `@emseepea/create-tool-server@0.0.38`
+- `@emseepea/create-api-backed-server@0.0.36`
+- `@emseepea/create-openapi-backed-server@0.0.18`
+- `@emseepea/create-resources-and-prompts-server@0.0.35`
+- `@emseepea/create-progress-streaming-server@0.0.36`
+- `@emseepea/create-html-ui-server@0.0.38`
+- `@emseepea/create-react-ui-server@0.0.38`
+- `@emseepea/create-multi-instance-postgres-server@0.0.26`
+- `@emseepea/create-database-schema-server@0.0.23`
+- `@emseepea/create-mongodb-backed-server@0.0.23`
+- `@emseepea/create-soap-backed-server@0.0.23`
+
+The initializer patch releases are dependency-closure releases only. They
+update a development-only `@emseepea/testing` dependency for repository checks;
+generated applications do not gain a runtime dependency, and these releases do
+not prove public-host compatibility.
 
 Publication is pending.
 
