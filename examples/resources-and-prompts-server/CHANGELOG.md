@@ -1,5 +1,14 @@
 # @emseepea/create-resources-and-prompts-server
 
+## 0.0.34
+
+### Patch Changes
+
+- [`12f06ce`](https://github.com/emseepea/emseepea/commit/12f06ce22fc320e9008ff67434eb72119c84c72b) Thanks [@tompahoward](https://github.com/tompahoward)! - Allow `defineMcpAppResource` callers to preserve an established
+  `text/html+skybridge` contract. The existing `text/html;profile=mcp-app`
+  default remains unchanged, and the selected value is used for both resource
+  listing and returned content.
+
 ## 0.0.33
 
 ### Patch Changes
