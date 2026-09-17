@@ -1,5 +1,11 @@
 # @emseepea/create-resources-and-prompts-server
 
+## 0.0.37
+
+### Patch Changes
+
+- [`3d27143`](https://github.com/emseepea/emseepea/commit/3d27143d184ede761763bcd267fe650df9bad013) Thanks [@tompahoward](https://github.com/tompahoward)! - Release each public initializer with its generated `@emseepea/testing@0.15.0` development dependency so every affected package is included in the release and can be verified.
+
 ## 0.0.36
 
 ### Patch Changes
