@@ -47,3 +47,25 @@ Reviewed content:
 Scope: source Markdown clarity and cognitive accessibility only. This review
 does not establish command correctness, compatibility, package publication,
 registry verification, or adopter production use.
+
+## Opt-In Contract Policy Public Content Review
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+ratified decision, generated decision compendium entry, package guide, and the
+exact proposed release-note body. The guidance introduces the fixed policy
+export next to a complete example, distinguishes compatibility failures from
+command failures, and states the trusted-code and token-redaction limits in
+plain language. It keeps retention, approval, capture timing, release, and
+deployment decisions outside the command. No cognitive-accessibility findings
+remain in scope.
+
+| Reviewed content | SHA-256 |
+| --- | --- |
+| `docs/decisions/0095-opt-in-check-policy-modules-for-adopter-contracts.proposed.md` | `2b736d8934abae15c3c278ecc24f9ceeb581b79eee3cd2286b47e602676c513c` |
+| `docs/decisions/README.md` | `be60c42c1270a3df6418f683dd9a006e817ce0fea77be01288f55336e6caa245` |
+| `packages/testing/README.md` | `bfdd66284f38e90d51f6ebb87e687d6ba8f3e62c33d2323ff8791416d6867013` |
+| `.changeset/puny-trains-find.md` | `1a76a6c07eeb2e55924238ab7f400907bba8270ed9c724bdc25dd4000bde831a` |
+
+Scope: source Markdown clarity and cognitive accessibility only. This review
+does not establish implementation correctness, test results, continuous
+integration, publication, registry verification, or adopter production use.

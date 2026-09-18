@@ -25,6 +25,20 @@ export interface PublishedMcpContractBreak {
   readonly detail: string;
 }
 
+export interface PublishedMcpContractBaselineInput {
+  readonly file: string;
+  readonly value: unknown;
+}
+
+export interface PublishedMcpContractCheckPolicyInput {
+  readonly current: PublishedMcpContract;
+  readonly baselines: readonly PublishedMcpContractBaselineInput[];
+}
+
+export type PublishedMcpContractCheckPolicy = (
+  input: PublishedMcpContractCheckPolicyInput,
+) => readonly PublishedMcpContractBreak[] | Promise<readonly PublishedMcpContractBreak[]>;
+
 export interface PublishedMcpContractClient {
   listTools(params?: { cursor?: string }): Promise<{ tools: unknown[]; nextCursor?: string }>;
   listResources(params?: { cursor?: string }): Promise<{ resources: unknown[]; nextCursor?: string }>;

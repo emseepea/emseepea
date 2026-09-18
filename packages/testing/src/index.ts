@@ -17,7 +17,10 @@ export {
   writePublishedMcpContractBaseline,
   type PublishedMcpContract,
   type PublishedMcpContractBaseline,
+  type PublishedMcpContractBaselineInput,
   type PublishedMcpContractBreak,
+  type PublishedMcpContractCheckPolicy,
+  type PublishedMcpContractCheckPolicyInput,
   type PublishedMcpContractClient,
   type PublishedMcpResource,
 } from "./published-contract.js";

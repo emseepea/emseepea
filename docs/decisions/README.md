@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 92 decisions: 52 current and 40 historical.
+This project has 93 decisions: 53 current and 40 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -67,6 +67,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0090: Deprecated Client Logging Kept Out of Adoption Guides](0090-deprecated-client-logging-kept-out-of-adoption-guides.proposed.md): Proposed; human review confirmed.
 - [ADR-0091: Shared Result Card Styles in the Existing Optional Stylesheet](0091-shared-result-card-styles-in-the-existing-optional-stylesheet.proposed.md): Proposed; human review confirmed.
 - [ADR-0094: Checked Dual MIME Compatibility for MCP App Resources](0094-checked-dual-mime-compatibility-for-mcp-app-resources.proposed.md): Proposed; human review confirmed.
+- [ADR-0095: Opt-In Check Policy Modules for Adopter Contracts](0095-opt-in-check-policy-modules-for-adopter-contracts.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2075,3 +2076,26 @@ Chosen option: **"Checked two-value MIME selection"**, because it preserves the 
 - Existing URI, metadata, Content Security Policy, access, document, script-escaping, startup-loading, example, guide, and package checks continue to pass for both supported values where applicable.
 - A migration or published-contract check for the evidenced adopter preserves `text/html+skybridge` without weakening its existing baseline.
 - ADR-0094 must be ratified before implementation begins. Until then, ADR-0093 remains the authoritative decision and is not replaced.
+
+### [ADR-0095: Opt-In Check Policy Modules for Adopter Contracts](0095-opt-in-check-policy-modules-for-adopter-contracts.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0095 Decision
+
+Chosen option: **"One opt-in check policy module"**, because one structured boundary removes the duplicated command lifecycle while leaving each adopter's compatibility meaning in its own executable code.
+
+#### ADR-0095 Checks
+
+- Running `check` without `--policy` preserves the existing accepted inputs, sorted discovery, baseline validation, comparison results, diagnostics, and exit statuses.
+- `--policy` is accepted only by `check`, resolves one local module, and requires the fixed `checkPublishedMcpContracts` export.
+- A focused policy fixture receives an extracted current contract and ordered `{ file, value }` entries, migrates a legacy baseline envelope, normalizes both sides, and applies custom comparison semantics without reading the baseline directory or controlling the process.
+- An empty structured result returns exit 0. Valid break records use the command's compatibility diagnostic format and return exit 1.
+- Import failure, a missing export, a thrown error, or any malformed result is reported as a command failure and returns exit 2.
+- Token-sentinel tests prove the command does not pass the token to the policy input and redacts it from every error the command formats, including a policy error. Documentation states that direct output from trusted module code is outside that guarantee.
+- Capture behavior and baseline files remain unchanged; no migration result is written automatically.
+- Public documentation keeps baseline retention, approvals, capture timing, release decisions, and deployment policy application-owned.
+- The evidenced adopter can replace its command-lifecycle wrapper while keeping its local migration, normalization, exact-type, additive-output, retention, approval, and deployment rules.
+- Source and package checks confirm the module contract separately from npm publication or adopter deployment. Those later outcomes require their own named evidence and make no production-verification claim by themselves.
+- This decision must be ratified before implementation begins.

@@ -191,9 +191,48 @@ Capture exits 0 after writing the requested baseline. Check exits 0 when every
 JSON baseline in the directory is compatible, 1 for compatibility failures,
 and 2 for invalid options, extraction failures, or invalid baseline files.
 
+When retained baselines need application-owned migration, normalization, or
+comparison rules, add one trusted local policy module to `check`:
+
+```json
+{
+  "scripts": {
+    "contract:check": "emseepea-contract check --factory ./dist/app.js --factory-export createApp --baselines contract-baselines --policy ./dist/published-contract-policy.js"
+  }
+}
+```
+
+The module must export `checkPublishedMcpContracts`. It receives the extracted
+current contract and each sorted baseline as `{ file, value }`, where `value`
+is parsed JSON before the standard baseline-envelope validation. Return
+`PublishedMcpContractBreak` records for incompatibilities:
+
+```js
+import { comparePublishedMcpContracts } from "@emseepea/testing";
+
+export async function checkPublishedMcpContracts({ current, baselines }) {
+  const migrated = baselines.map(({ file, value }) => migrateLegacyBaseline(file, value));
+  return comparePublishedMcpContracts(normalize(current), migrated)
+    .filter(({ kind }) => kind !== "output-field-added");
+}
+```
+
+The CLI still discovers and parses baseline files, extracts the current
+contract, formats diagnostics, redacts command-managed errors, and chooses exit
+status 0, 1, or 2. It validates the returned break records. Without `--policy`,
+the existing baseline validation and comparison behavior is unchanged. Capture
+does not accept a policy and never rewrites a legacy baseline automatically.
+
+Policy modules are trusted application code, not a sandbox. They run with the
+same process authority as the command and can read environment variables,
+write files, or write directly to output. The CLI does not pass the bearer
+token to the policy input and redacts errors it formats, but it cannot redact
+output written directly by policy code.
+
 Custom normalization, legacy migration, stricter comparison rules, baseline
-retention, approvals, and deployment policy stay in application code using the
-lower-level API above.
+retention, approvals, capture timing, and deployment policy stay in application
+code. The policy hook covers only migration, normalization, and comparison;
+retention and release decisions remain outside the CLI.
 
 ## Check Static Color Contrast
 
