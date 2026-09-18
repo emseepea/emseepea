@@ -2,58 +2,60 @@
 
 Date: 2026-09-18
 
-Release verification is not complete. This review covers the published-contract
-command and its dependency-closed initializer releases:
+Release verification is not complete. This review covers the opt-in
+published-contract policy module and its dependency-closed initializer
+releases:
 
-- `@emseepea/testing@0.15.0`
-- `@emseepea/create-api-backed-server@0.0.38`
-- `@emseepea/create-database-schema-server@0.0.25`
-- `@emseepea/create-html-ui-server@0.0.40`
-- `@emseepea/create-mongodb-backed-server@0.0.25`
-- `@emseepea/create-multi-instance-postgres-server@0.0.28`
-- `@emseepea/create-openapi-backed-server@0.0.20`
-- `@emseepea/create-progress-streaming-server@0.0.38`
-- `@emseepea/create-react-ui-server@0.0.40`
-- `@emseepea/create-resources-and-prompts-server@0.0.37`
-- `@emseepea/create-soap-backed-server@0.0.25`
-- `@emseepea/create-tool-server@0.0.40`
+- `@emseepea/testing@0.16.0`
+- `@emseepea/create-api-backed-server@0.0.39`
+- `@emseepea/create-database-schema-server@0.0.26`
+- `@emseepea/create-html-ui-server@0.0.41`
+- `@emseepea/create-mongodb-backed-server@0.0.26`
+- `@emseepea/create-multi-instance-postgres-server@0.0.29`
+- `@emseepea/create-openapi-backed-server@0.0.21`
+- `@emseepea/create-progress-streaming-server@0.0.39`
+- `@emseepea/create-react-ui-server@0.0.41`
+- `@emseepea/create-resources-and-prompts-server@0.0.38`
+- `@emseepea/create-soap-backed-server@0.0.26`
+- `@emseepea/create-tool-server@0.0.41`
 
 ## Published Contract Command
 
-`emseepea-contract` captures a version-labelled public MCP contract from an
-explicit application factory or MCP URL. Its check mode discovers every JSON
-baseline in an explicit directory and delegates compatibility semantics and
-diagnostics to the existing published-contract API.
+`emseepea-contract check` can load one explicit trusted local policy module.
+The fixed `checkPublishedMcpContracts` export receives the extracted current
+contract and each sorted parsed baseline. Application code can migrate legacy
+values, normalize both sides, and apply its own comparison semantics before it
+returns structured compatibility breaks.
 
-Protected discovery reads a bearer token only from the environment variable
-named by `--token-env`. The command does not accept token values as arguments.
-Tests verify that token values do not appear in command output or baseline
-files. Capture, compatibility failure, and command failure use exit statuses
-0, 1, and 2 respectively.
+The command continues to own discovery, extraction, command-managed token
+redaction, diagnostics, and exit statuses. Checks without `--policy` retain the
+existing validation, comparison, diagnostic order, and exit behavior. Capture
+rejects `--policy` and does not rewrite baselines.
 
-Applications continue to own normalization, legacy migration, stricter rules,
-baseline retention, approvals, capture timing, and deployment policy.
+Policy modules are trusted application code with the same process authority as
+the command. The command does not pass its bearer token to the policy input and
+redacts errors it formats, but it cannot redact output written directly by the
+module. Applications continue to own migration, normalization, comparison,
+baseline retention, approvals, capture timing, release, and deployment policy.
 
 ## Evidence So Far
 
-- The architecture review found no new decision. The command orchestrates the
-  existing extractor, baseline writer, and compatibility assertion within the
-  established public testing package.
-- The Jobs To Be Done review confirmed alignment with JTBD-006, Evolve a
-  Published MCP Contract Safely. No new job is required.
-- Focused Node.js 24 tests pass for application-factory capture, protected MCP
-  URL capture, environment-only authentication, baseline discovery, concrete
-  diagnostics, token exclusion, and exit behavior.
-- Existing published-contract API tests pass without changed comparison
-  semantics.
-- The generated release pull request changed all 11 public initializer
-  manifests to use `@emseepea/testing@0.15.0` as a development dependency. The
-  release verifier correctly rejected those manifest changes until each
-  initializer received an explicit patch release.
-- Package build, lint, documentation evidence checks, and an npm package dry
-  run pass. The packed file list contains the executable command.
-- Independent cognitive-accessibility review passed for the package guide and
-  release note.
+- ADR-0095 was ratified before implementation. Post-implementation architecture
+  review passed after a RED-first regression test restored the default path's
+  sequential baseline-validation diagnostics.
+- Jobs To Be Done review confirmed alignment with JTBD-005, Migrate an
+  Established MCP Server Safely, and JTBD-006, Evolve a Published MCP Contract
+  Safely.
+- Six focused Node.js 24 command tests pass for unchanged default behavior,
+  sorted raw policy inputs, migration, normalization, custom comparison,
+  structured diagnostics, failure handling, token redaction, and capture
+  rejection.
+- The full Node.js 24 repository check passes, including build, lint, type
+  checking, package tests, initializer checks, and 229 repository tests.
+- The Changeset explicitly includes `@emseepea/testing` and all 11 public
+  initializer packages that embed its generated development dependency.
+- Independent cognitive-accessibility review passed for the exact decision,
+  compendium entry, package guide, and release note.
 - Commit, push, and release risk are each within the approved limit of 5 out
   of 25.
 
@@ -63,9 +65,9 @@ behavior, or adopter production use.
 
 ## Current Base Boundary
 
-Release pull request `108` merged as
-`27e012af79d2d9c6d447c5df76377f6ae4692dc3`. Quality run `35242365541` and
-Release run `35243403489` passed for that base. This evidence does not cover the
+Release pull request `109` merged as
+`c972b8eefcec2b125ae3c7cd6426db26969dbc3c`. Quality run `35271966082` and
+Release run `35272964832` passed for that base. This evidence does not cover the
 planned release.
 
 ## Required Publication Evidence

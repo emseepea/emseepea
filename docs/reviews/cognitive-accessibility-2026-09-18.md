@@ -65,6 +65,7 @@ remain in scope.
 | `docs/decisions/README.md` | `be60c42c1270a3df6418f683dd9a006e817ce0fea77be01288f55336e6caa245` |
 | `packages/testing/README.md` | `bfdd66284f38e90d51f6ebb87e687d6ba8f3e62c33d2323ff8791416d6867013` |
 | `.changeset/puny-trains-find.md` | `1a76a6c07eeb2e55924238ab7f400907bba8270ed9c724bdc25dd4000bde831a` |
+| `docs/reviews/current-release-readiness.md` | `d1b5600a1355928f27febbede3ab33113804037fce5ed70aeaea9c7f0ff19fc4` |
 
 Scope: source Markdown clarity and cognitive accessibility only. This review
 does not establish implementation correctness, test results, continuous
