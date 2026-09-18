@@ -1,5 +1,13 @@
 # @emseepea/create-multi-instance-postgres-server
 
+## 0.0.29
+
+### Patch Changes
+
+- [`6af8aca`](https://github.com/emseepea/emseepea/commit/6af8aca9c33f54753c31c31c6170f0c3afb82383) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an opt-in `check` policy module to `emseepea-contract` for application-owned legacy baseline migration, normalization, and comparison. The CLI keeps discovery, extraction, redaction, diagnostics, and exit codes, while existing checks without a policy keep their current behavior.
+
+  Release every affected public initializer package together with the generated `@emseepea/testing` package it uses for development. This ensures that all affected packages are included in the release and can be verified.
+
 ## 0.0.28
 
 ### Patch Changes
