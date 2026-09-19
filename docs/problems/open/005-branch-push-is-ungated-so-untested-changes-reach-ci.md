@@ -29,9 +29,18 @@ Not run: `npm test`. It adds:
 - the `tests/docs` suite
 - the `tests/llm` suite
 
-Two tests in `tests/docs` fail on the change: the packed-getting-started test
-and the packed-initializer standalone test. Those are the same failures CI
-reported.
+None of those twelve failures was caused by the change. All twelve carried the
+same assertion — a fresh install resolved a dependency version that the
+committed lockfile does not contain — and all twelve named the same dependency.
+Two surfaced locally as `tests/docs` cases, the packed-getting-started test and
+the packed-initializer standalone test; the other ten were the per-initializer
+jobs, which each perform the same fresh install.
+
+The cause was committed-lockfile drift. The dependency published a new patch
+version, so a fresh install resolved outside the lockfile. The same dependency
+had been refreshed on the trunk two days earlier for the same reason. The drift
+is fixed as of the lockfile refresh that precedes this ticket's correction, and
+the full test chain then passed.
 
 ### Why the gap was easy to fall into
 
@@ -44,10 +53,16 @@ kinds to be a pre-existing condition of the environment, and did not investigate
 either.
 
 Running `npm ci` separated them. The typecheck errors disappeared, so they were
-install staleness. The packed-package failures remained, so they were real and
-caused by the change.
+install staleness. The packed-package failures remained.
 
-A stale install made a real failure look like ambient noise.
+The author then drew the wrong conclusion a second time: that because the
+failures survived a clean install, they must be caused by the change. They were
+not. Reading the assertion message would have shown lockfile drift immediately,
+and naming the dependency. Both conclusions — first "environment", then "my
+change" — were reached without reading the failure output.
+
+A stale install made a real failure look like ambient noise. Not reading the
+failure output kept it misattributed afterwards.
 
 ## Rating note
 

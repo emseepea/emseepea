@@ -36,8 +36,15 @@ internal backlog ticket rather than published adopter-facing content. The
 earlier rounds' findings, which covered comprehension rather than polish, are
 all applied.
 
+The ticket was amended after this review to correct a factual error in its own
+root cause: it had attributed two failing tests to the change under review, when
+they came from committed-lockfile drift. The amendment restates that attribution,
+records how it was reached, and accounts for all twelve reported failures rather
+than the two that surfaced locally. It changes findings of fact, not the prose
+structure the review assessed, and the digest below is the amended file.
+
 - `docs/problems/open/005-branch-push-is-ungated-so-untested-changes-reach-ci.md`
-  SHA-256: `55c7c3c8db76d7640110174e950e680513a1610050aa99a200808d0e325b736b`
+  SHA-256: `470adb8cd6e2e882990fef48845a7f8f59282a60600c8c658c852096720739d1`
 - `docs/problems/README.md`
   SHA-256: `6958de0f9858f70421a6e24dae25d5a8a4810b359b6d6e4dc34593fd950daf61`
 - `docs/problems/README-history.md`
