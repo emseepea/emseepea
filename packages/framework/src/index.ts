@@ -3404,11 +3404,62 @@ function jsonMetadataSchema(
   return { ...z.toJSONSchema(schema, { target: "draft-2020-12", io }) };
 }
 
+const SCHEMA_VALUE_KEYWORDS = new Set([
+  "items", "contains", "additionalProperties", "unevaluatedProperties",
+  "unevaluatedItems", "propertyNames", "not", "if", "then", "else",
+]);
+const SCHEMA_LIST_KEYWORDS = new Set(["prefixItems", "oneOf", "anyOf", "allOf"]);
+const SCHEMA_MAP_KEYWORDS = new Set([
+  "properties", "patternProperties", "dependentSchemas", "$defs", "definitions",
+]);
+
+/**
+ * Drops a closure the declaration applied to the output direction alone, so adding
+ * a result field later does not break a client pinned to an older published schema.
+ * A declaration closed in both directions keeps its closure, and so does a node with
+ * no input counterpart: an unverifiable node fails closed rather than opening.
+ * Builds new objects throughout and never mutates the supplied documents.
+ */
+function openOutputOnlyClosures(output: unknown, input: unknown): unknown {
+  if (!isRecord(output)) return output;
+  const peer = isRecord(input) ? input : undefined;
+  const opened: Record<string, unknown> = {};
+  for (const [keyword, value] of Object.entries(output)) {
+    if (keyword === "additionalProperties" && value === false) {
+      // Drop the closure only when the counterpart is itself an object node that
+      // stays open. A missing counterpart, or one of a different kind -- which a
+      // transform between the two directions produces -- cannot confirm the
+      // author closed the output direction alone, so the closure is kept.
+      const counterpartIsOpenObject = peer !== undefined
+        && (peer.type === "object" || isRecord(peer.properties))
+        && peer.additionalProperties !== false;
+      if (!counterpartIsOpenObject) opened[keyword] = value;
+      continue;
+    }
+    const peerValue = peer?.[keyword];
+    if (SCHEMA_VALUE_KEYWORDS.has(keyword)) {
+      opened[keyword] = openOutputOnlyClosures(value, peerValue);
+    } else if (SCHEMA_LIST_KEYWORDS.has(keyword) && Array.isArray(value)) {
+      opened[keyword] = value.map((member, index) =>
+        openOutputOnlyClosures(member, Array.isArray(peerValue) ? peerValue[index] : undefined));
+    } else if (SCHEMA_MAP_KEYWORDS.has(keyword) && isRecord(value)) {
+      opened[keyword] = Object.fromEntries(Object.entries(value).map(([name, member]) =>
+        [name, openOutputOnlyClosures(member, isRecord(peerValue) ? peerValue[name] : undefined)]));
+    } else {
+      opened[keyword] = value;
+    }
+  }
+  return opened;
+}
+
 function standardJsonSchema(
   schema: StandardSchemaWithJSON,
   io: "input" | "output",
 ): Record<string, unknown> {
-  return { ...schema["~standard"].jsonSchema[io]({ target: "draft-2020-12" }) };
+  const document = { ...schema["~standard"].jsonSchema[io]({ target: "draft-2020-12" }) };
+  if (io !== "output") return document;
+  const input = schema["~standard"].jsonSchema.input({ target: "draft-2020-12" });
+  return openOutputOnlyClosures(document, input) as Record<string, unknown>;
 }
 
 function promptArguments(schema: z.ZodObject): readonly Readonly<Record<string, unknown>>[] {
@@ -3439,14 +3490,20 @@ function sdkMetadataSchema<Schema extends z.ZodType>(schema: Schema): Schema {
 }
 
 function sdkOutputMetadataSchema(schema: StandardSchemaWithJSON): StandardSchemaWithJSON {
+  // Built once per tool at registration. These accessors are read on every
+  // tools/list request, and the underlying conversion is not memoised.
+  // Cloned before freezing: the conversion copies only the top level, so
+  // freezing in place would reach into a document the supplying schema owns.
+  const input = deepFreeze(structuredClone(standardJsonSchema(schema, "input")));
+  const output = deepFreeze(structuredClone(standardJsonSchema(schema, "output")));
   return {
     "~standard": {
       version: 1,
       vendor: "emseepea",
       validate: (value: unknown) => ({ value }),
       jsonSchema: {
-        input: () => standardJsonSchema(schema, "input"),
-        output: () => standardJsonSchema(schema, "output"),
+        input: () => input,
+        output: () => output,
       },
     },
   };
