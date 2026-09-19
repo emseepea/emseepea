@@ -3,7 +3,8 @@ status: proposed
 job-id: prove-an-ai-understands-the-result
 persona: mcp-server-developer
 date-created: 2026-08-29
-human-oversight: unconfirmed
+human-oversight: confirmed
+oversight-date: 2026-09-19
 screens:
   - examples/*/eval/*.test.mjs
 ---
