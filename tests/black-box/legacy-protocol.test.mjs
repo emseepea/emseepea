@@ -191,3 +191,62 @@ function rawRequest(url, extraHeaders, bodyValue) {
     outgoing.end(body);
   });
 }
+
+test("rejecting the modern revision on the legacy handshake names only the legacy subset", async () => {
+  let handlerCalls = 0;
+  const app = createEmseepea({
+    name: "legacy-rejection-test",
+    version: "0.0.0",
+    tools: [defineTool({
+      name: "echo-version",
+      access: "public",
+      description: "Echo a protocol test value.",
+      inputSchema: z.object({ value: z.string() }),
+      outputSchema: z.object({ value: z.string() }),
+      handler({ value }) {
+        handlerCalls += 1;
+        return { data: { value } };
+      },
+    })],
+  });
+  const running = await serveEmseepea(app, { port: 0 });
+
+  try {
+    const response = await fetch(running.url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json, text/event-stream",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "modern-version-on-legacy-handshake",
+        method: "initialize",
+        params: {
+          protocolVersion: "2026-07-28",
+          capabilities: {},
+          clientInfo: { name: "curl", version: "0" },
+        },
+      }),
+    });
+    const { error } = await response.json();
+
+    assert.equal(error.data.requested, "2026-07-28");
+    // The rejected revision must never appear in the list of revisions this
+    // handshake accepts, and the legacy handshake accepts exactly the legacy subset.
+    assert.deepEqual(error.data.supported, legacyVersions);
+    assert.ok(
+      !error.data.supported.includes(error.data.requested),
+      "the rejected revision must not be listed as supported",
+    );
+    // The message must name the constraint, not just the refusal. It must not imply
+    // that the header alone satisfies the modern path, which also requires the
+    // matching _meta protocol version.
+    assert.match(error.message, /initialize/);
+    assert.match(error.message, /MCP-Protocol-Version/);
+    assert.match(error.message, /_meta/);
+    assert.equal(handlerCalls, 0);
+  } finally {
+    await running.close();
+  }
+});

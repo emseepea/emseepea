@@ -2512,9 +2512,13 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         reply,
         400,
         ProtocolErrorCode.UnsupportedProtocolVersion,
-        `Unsupported protocol version: ${classification.requestedVersion}`,
+        `Unsupported protocol version for the initialize handshake: ` +
+          `${classification.requestedVersion}. The initialize handshake accepts only the ` +
+          `legacy revisions listed in data.supported. MCP ${PROTOCOL_VERSION} does not use ` +
+          `initialize: send each request with the MCP-Protocol-Version header and a matching ` +
+          `_meta protocol version instead.`,
         requestId(isRecord(request.body) ? request.body.id : undefined),
-        { requested: classification.requestedVersion, supported: [...SUPPORTED_PROTOCOLS] },
+        { requested: classification.requestedVersion, supported: [...LEGACY_PROTOCOL_VERSIONS] },
       );
       return;
     }
