@@ -40,6 +40,46 @@ the warning no longer describes anything true.
 - `.changeset/open-by-default-output-schemas.md`
   SHA-256: `0d0357fe1b24d04ba2ff2dac94112ae25906514e83c880cc45d634939b3ce385`
 
+## Beta Maturity Decision
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+maturity and coverage-claim decision across three rounds before ratification.
+All findings were applied.
+
+The first round found the protocol abbreviation never expanded although it
+carried the whole coverage claim, a ninety-word sentence holding the four claims
+ratification commits to, an endpoint property named before the endpoint itself,
+exit conditions stacked in prose where every other rule used a list, and a
+withdrawal the reader first met in the exit criteria without ever being told it
+happened. The second round found the word "surface" carrying three different
+meanings, numbered points referenced by position instead of content, and one
+transport name left unglossed inside the list readers are asked to check against
+evidence. The third round found a two-item commitment delivered as running
+prose, an idiom in a heading-weight line, a sentence about wrongly merged facts
+that was itself merged, a definite reference to a rule the record never
+describes, and a double-negative confirmation step that could not be run as one
+check.
+
+The record now defines its two senses of "surface" before using either, states
+the ratification commitment as a list, expands the protocol abbreviation and
+glosses both the transport and the deprecated sampling mechanism, restates each
+numbered point's content where it is referenced, and splits the merged Node
+sentence and the double-negative check into separate statements.
+
+One point was confirmed against the protocol records before adoption, because
+the reviewer flagged it as changing substance if wrong: the gloss describing
+sampling as the mechanism by which a server asks the client to run a model
+completion on its behalf.
+
+The generated decisions index is covered by the same review, because its entry
+for this decision is derived from the reviewed record rather than written
+separately.
+
+- `docs/decisions/0097-beta-maturity-with-a-bounded-support-claim.proposed.md`
+  SHA-256: `a5ceb96222d61d9551841ac5510be8f7a6721314e1a9954e1732bc90e0286085`
+- `docs/decisions/README.md`
+  SHA-256: `2dbc21e9223983cfbc2ccb660c5ffe38260fe5f4571b98928b2715ea17c9a586`
+
 ## Open-by-Default Published Output Schemas Decision
 
 Result: PASS. An independent cognitive-accessibility specialist reviewed the
