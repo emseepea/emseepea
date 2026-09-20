@@ -717,3 +717,75 @@ marker-aware pass and the result verified word-for-word identical to its input.
   SHA-256: `c05277bd578b82da4cbb009099b957774cee1075908ebb7bd1081bf689cb0243`
 - `docs/decisions/README.md`
   SHA-256: `17ab0391650a83ebd99df31782c780d4381d10f01113c74724a9429de64226f0`
+
+## ADR-0099, ADR-0100 and ADR-0101, the three prerequisite supersessions
+
+Three short records, written because ADR-0098 commits to superseding three
+ratified decisions and a ratified decision cannot be amended in place. Eleven
+findings across the batch, and the pattern in them is worth more than any one.
+
+Each record claimed continuity it had not earned. The scanning record said the
+guarantee was "the same" and that the mechanism expressing it had merely
+changed. It was not the same. The decision it supersedes bound the scan and the
+publication to one commit; under the new shape the scan covers the trunk commit
+and publication happens from that commit plus a version bump, and the bump
+rewrites the very lockfile the scan reads. The record had the honest version
+available to it — its own reassessment trigger asks what happens "if a version
+bump is shown to change the resolved dependency set" — and stated the confident
+version where the reader decides. It now says the narrowing plainly, as a
+consequence with its own heading, and does not claim a bump is harmless. That
+question is left open on purpose, because settling it belongs with the decision
+that declined to settle it.
+
+The push-and-watch record could not say what it had chosen. It offered deriving
+the watched set against keeping a list, and then wrote a benefit that only holds
+if derived, a reassessment trigger that only makes sense if a list, and a
+confirmation criterion using the verb for a list. A reader could not tell which
+was ratified, and an implementer would have picked one and produced a record
+that contradicted itself either way. Architecture review then found the
+derivation rule could not see a workflow that runs because another workflow
+finished — which is exactly what the retired release workflow is — so it would
+have watched less while reporting the same success. The record now keeps a list
+and adds a test that fails when the list and the workflow files disagree, and
+the rejected option carries that finding as its stated reason.
+
+The website record listed two costs and omitted the one its own decision
+creates. Deploying inside the step that publishes the packages means a failed
+deploy blocks the merge back. The parent record says so at length; this one
+decided the trigger that causes it and did not mention it, in the record that
+will be read on its own once its predecessor is retired.
+
+All three also inherited their ratification: each opened by saying its substance
+was ratified with the parent, which is how they came to carry a confirmed marker
+without anyone reading them. For two of the three that was defensible, because
+every load-bearing sentence restated ratified text. For the third it was not:
+its rejection of an alternative rested on reasoning the parent explicitly
+refuses to supply, so the marker asserted a confirmation of something never put
+in front of anyone. The maintainer asked for the three records directly, read
+them, and ratified each on its own terms. The inherited-ratification sentence is
+gone from all three.
+
+The common shape across all eleven findings is a record asserting continuity at
+the point of decision and disclosing the discontinuity somewhere else, or not at
+all. A supersession is exactly where that is most tempting and least
+affordable: the whole reason to supersede rather than amend is so a reader can
+see what changed.
+
+- `docs/decisions/0098-publish-on-merge-to-a-publish-branch.proposed.md`
+  SHA-256: `ec26a554989edea0de749eb4808eb12f75f80a57f56c728bfbfb6ba80011d2ce`
+- `docs/decisions/0099-website-deploys-with-the-release.proposed.md`
+  SHA-256: `6105fd0e3381e97e2ad7ab8ff821b89e3674378f649091128048f9db120ac98a`
+- `docs/decisions/0100-trunk-push-and-watch-under-a-publish-branch.proposed.md`
+  SHA-256: `d3e6489643127da5c96522d49e620994b09a3887ca9072ef4d6d6f6a6fdd7b8f`
+- `docs/decisions/0101-vulnerability-scanning-without-a-release-workflow.proposed.md`
+  SHA-256: `6001e09d944b29acc6a6c9b517dd2da18798ca4cefb88831cb9b4d429a7e2941`
+- `docs/decisions/README.md`
+  SHA-256: `ff02dff2f9cb2d497365bb7fd8f5af202bef591a79bb1712e1a602194a08e6fb`
+- `docs/decisions/0033-github-pages-website-hosting.superseded.md`
+  SHA-256: `44938ffb51987789e6fede30df0742edc6d647db13bc641a540c4a02c73bf3aa`
+- `docs/decisions/0044-exact-commit-trunk-push-and-pipeline-watch.superseded.md`
+  SHA-256: `3c329dd1dddfcfecf6eda6fa56f3275616b399ac0ab9f69b88c4629ccf6021d0`
+- `docs/decisions/0047-pinned-osv-lockfile-vulnerability-scanning.superseded.md`
+  SHA-256: `1f64ae9fad165f2fee11bc2a41044b392360cf7099063218edace26d9d237c4e`
+- `docs/decisions/0049-exact-commit-release-pr-merge-and-pipeline-watch.superseded.md`
+  SHA-256: `b1a3a02c26d7fabd68b7b01f590ede9d7b5c193d3cb899bb570c7eb32a53b560`

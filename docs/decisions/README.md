@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 96 decisions: 56 current and 40 historical.
+This project has 99 decisions: 55 current and 44 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -25,16 +25,12 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0028: Example-Owned Oxlint with Root Orchestration](0028-example-owned-oxlint-with-root-orchestration.proposed.md): Proposed; human review confirmed.
 - [ADR-0031: Website Workspace in the Existing Monorepo](0031-website-workspace-in-the-existing-monorepo.proposed.md): Proposed; human review confirmed.
 - [ADR-0032: Static-Only Website Runtime](0032-static-only-website-runtime.proposed.md): Proposed; human review confirmed.
-- [ADR-0033: GitHub Pages Website Hosting](0033-github-pages-website-hosting.proposed.md): Proposed; human review confirmed.
 - [ADR-0034: One Source for Reader Guides](0034-one-source-for-reader-guides.proposed.md): Proposed; human review confirmed.
 - [ADR-0036: One Current Documentation Set](0036-one-current-documentation-set.proposed.md): Proposed; human review confirmed.
 - [ADR-0037: Local Website Search](0037-local-website-search.proposed.md): Proposed; human review confirmed.
 - [ADR-0038: Measured Website Performance Before Publication](0038-measured-website-performance-before-publication.proposed.md): Proposed; human review confirmed.
 - [ADR-0041: Em See Pea GitHub Organisation Ownership](0041-em-see-pea-github-organisation-ownership.proposed.md): Proposed; human review confirmed.
-- [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
-- [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md): Proposed; human review confirmed.
 - [ADR-0048: Optional Deterministic Filesystem Discovery](0048-optional-deterministic-filesystem-discovery.proposed.md): Proposed; human review confirmed.
-- [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md): Proposed; human review confirmed.
 - [ADR-0050: Schema-Declared Pass-Through by Default](0050-schema-declared-pass-through-by-default.proposed.md): Proposed; human review confirmed.
 - [ADR-0052: Optional Deterministic HTTP Route Discovery](0052-optional-deterministic-http-route-discovery.proposed.md): Proposed; human review confirmed.
 - [ADR-0057: Inspectable Semantic Evidence by Default](0057-inspectable-semantic-evidence-by-default.proposed.md): Proposed; human review confirmed.
@@ -70,7 +66,10 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0095: Opt-In Check Policy Modules for Adopter Contracts](0095-opt-in-check-policy-modules-for-adopter-contracts.proposed.md): Proposed; human review confirmed.
 - [ADR-0096: Open-by-Default Published Output Schemas](0096-open-by-default-published-output-schemas.proposed.md): Proposed; human review confirmed.
 - [ADR-0097: Beta Maturity with a Bounded Support Claim](0097-beta-maturity-with-a-bounded-support-claim.proposed.md): Proposed; human review confirmed.
-- [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.proposed.md): Proposed; human review pending.
+- [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.proposed.md): Proposed; human review confirmed.
+- [ADR-0099: Website Deploys with the Release](0099-website-deploys-with-the-release.proposed.md): Proposed; human review confirmed.
+- [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.proposed.md): Proposed; human review confirmed.
+- [ADR-0101: Vulnerability Scanning Without a Release Workflow](0101-vulnerability-scanning-without-a-release-workflow.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -95,13 +94,17 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0027: Public Semantic Testing Package](0027-public-semantic-testing-package.superseded.md): Superseded; human review confirmed.
 - [ADR-0029: Code-First Semantic Tests](0029-code-first-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0030: Public POST Progress Behind a Trusted Proxy](0030-public-post-progress-behind-a-trusted-proxy.superseded.md): Superseded; human review confirmed.
+- [ADR-0033: GitHub Pages Website Hosting](0033-github-pages-website-hosting.superseded.md): Superseded; human review confirmed.
 - [ADR-0035: Verified Guides Before Website Publication](0035-verified-guides-before-website-publication.superseded.md): Superseded; human review confirmed.
 - [ADR-0039: Website Performance Budget](0039-website-performance-budget.superseded.md): Superseded; human review confirmed.
 - [ADR-0040: Model-Selected Tool Semantic Tests](0040-model-selected-tool-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0042: Separate Example Initializer Packages](0042-separate-example-initializer-packages.superseded.md): Superseded; human review confirmed.
 - [ADR-0043: Single Full Initializer Qualification Per Continuous Integration Event](0043-single-full-initializer-qualification-per-ci-event.superseded.md): Superseded; human review confirmed.
+- [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.superseded.md): Superseded; human review confirmed.
 - [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.superseded.md): Superseded; human review confirmed.
 - [ADR-0046: Lockfile-Constrained Dependency Verification](0046-lockfile-constrained-dependency-verification.superseded.md): Superseded; human review confirmed.
+- [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.superseded.md): Superseded; human review confirmed.
+- [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.superseded.md): Superseded; human review confirmed.
 - [ADR-0051: Latest as the Default Public npm Channel](0051-latest-as-default-public-npm-channel.superseded.md): Superseded; human review confirmed.
 - [ADR-0053: Conversation-Style Semantic Tests](0053-conversation-style-semantic-tests.superseded.md): Superseded; human review confirmed.
 - [ADR-0054: Provider-Native MCP Semantic Conversations](0054-provider-native-mcp-semantic-conversations.superseded.md): Superseded; human review confirmed.
@@ -759,10 +762,11 @@ Chosen option: **"Static files"**, because the initial website does not need app
 - The site has no server adapter, API route, runtime secret, analytics, or cookies.
 - Core guide content and navigation remain usable with JavaScript disabled.
 
-### [ADR-0033: GitHub Pages Website Hosting](0033-github-pages-website-hosting.proposed.md)
+### [ADR-0033: GitHub Pages Website Hosting](0033-github-pages-website-hosting.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0099: Website Deploys with the Release](0099-website-deploys-with-the-release.proposed.md)
 
 #### ADR-0033 Decision
 
@@ -965,10 +969,11 @@ Chosen option: **"Fast Node matrix plus one full Node 24 initializer job"**, bec
 - Automated accessibility checks pass in light and dark themes.
 - Named manual accessibility evidence and cognitive-accessibility review remain required.
 
-### [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.proposed.md)
+### [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.proposed.md)
 
 #### ADR-0044 Decision
 
@@ -1014,7 +1019,7 @@ Chosen option: **"Quality-gated release continuation"**, because Quality can rem
 - Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0045: Quality-Gated Exact-Commit Release Continuation](0045-quality-gated-exact-commit-release-continuation.superseded.md)
-- Replaced by: [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md)
+- Replaced by: [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.superseded.md)
 
 #### ADR-0046 Decision
 
@@ -1028,11 +1033,12 @@ Chosen option: **"Lockfile-constrained verification"**, because the committed lo
 - Registry verification retains integrity, provenance, signature, and clean-install checks.
 - Quality and Release remain bound to the same exact commit.
 
-### [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.proposed.md)
+### [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0046: Lockfile-Constrained Dependency Verification](0046-lockfile-constrained-dependency-verification.superseded.md)
+- Replaced by: [ADR-0101: Vulnerability Scanning Without a Release Workflow](0101-vulnerability-scanning-without-a-release-workflow.proposed.md)
 
 #### ADR-0047 Decision
 
@@ -1068,9 +1074,9 @@ Chosen option: **"Optional deterministic startup discovery"**, because it remove
 - Every maintained example and generated initializer uses the convention and retains its existing lint, ordinary, semantic, and accessibility tests.
 - Explicit registration remains supported and filesystem discovery remains opt-in.
 
-### [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md)
+### [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaced by: [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.proposed.md)
 
@@ -2144,8 +2150,8 @@ Chosen option: **"Beta, with the support boundary stated wherever the label appe
 ### [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
-- Replaces: [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md)
+- Human review: Confirmed
+- Replaces: [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.superseded.md)
 
 #### ADR-0098 Decision
 
@@ -2177,3 +2183,65 @@ Chosen option: **publish on merge to a publish branch**, because it is the only 
 - The website is versioned only by a changeset naming it, never as a dependent.
 - What is deployed is the build the performance gate measured, not a rebuild.
 - A push to `main` that changes the website without a changeset does not deploy it.
+
+### [ADR-0099: Website Deploys with the Release](0099-website-deploys-with-the-release.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0033: GitHub Pages Website Hosting](0033-github-pages-website-hosting.superseded.md)
+
+#### ADR-0099 Decision
+
+Chosen option: **name the measured revision as the selected one**, because the measurement is the thing ADR-0033 protects and a rebuild would deploy bytes no gate had seen.
+
+#### ADR-0099 Checks
+
+- Only checked static output is deployed, and it is the output the performance gate measured.
+- The deployed artifact comes from the passing quality run for the `main` commit the release pull request head derives from, not from a rebuild.
+- Workflow actions are pinned and permissions are limited to their tasks.
+- Pull requests cannot access deployment credentials.
+- Guide checks and the website performance gate pass before publication.
+- A push to `main` without a website changeset deploys nothing.
+
+### [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.superseded.md)
+
+#### ADR-0100 Decision
+
+Chosen option: **keep the watched set as a list guarded by a drift test, and allow a named automated actor**, because what broke was a list nobody updated, and a test that catches that is smaller and more honest than a rule that infers the set and can infer it short.
+
+#### ADR-0100 Checks
+
+- `npm run push:watch` performs a non-force push of committed `HEAD` to `origin/main`.
+- The command rejects a repository other than `emseepea/emseepea`.
+- After the push, remote `main` contains the captured local SHA. A merge back landing in that window advances the trunk without failing the command.
+- Runs are selected by workflow identity and exact SHA, never by branch recency.
+- The watched list names every workflow a push to `main` causes to run, whether triggered directly or by another workflow completing, and an ordinary push completes its watch.
+- A test fails when the watched list and the workflow files disagree.
+- Every matching rerun is watched and must succeed.
+- Missing, timed-out, cancelled, or failed runs return a nonzero status.
+- The merge back is the only automated push to `main`, and branch protection admits no other automated actor.
+- Behavioral tests prove exact-SHA selection, rerun handling, and failure propagation.
+
+### [ADR-0101: Vulnerability Scanning Without a Release Workflow](0101-vulnerability-scanning-without-a-release-workflow.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.superseded.md)
+
+#### ADR-0101 Decision
+
+Chosen option: **bind publication to the passing quality run for the originating commit**, because it keeps the property that matters most against the shape that exists, and it costs nothing. It is not the same guarantee ADR-0047 gave, and the Consequences below say how it is narrower.
+
+#### ADR-0101 Checks
+
+- Quality scans only the root `package-lock.json` with OSV Scanner.
+- Scanner and reporter actions are fixed to specific commits.
+- The reporter fails the job when the scan reports a vulnerability.
+- The scan job has a ten-minute timeout.
+- Standalone initializer qualification requires the scan to pass.
+- Publication retains package signature, integrity, provenance, and clean-install checks.
+- No release pull request is opened, and nothing is published, for a commit whose scan did not pass.

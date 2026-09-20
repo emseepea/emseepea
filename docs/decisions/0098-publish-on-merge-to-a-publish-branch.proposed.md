@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-09-20
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-09-21
 supersedes: ["ADR-0049"]
 decision-makers: ["Tom Howard"]
 consulted: ["Architecture review"]
