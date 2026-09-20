@@ -549,3 +549,101 @@ score, which the reviewer said plainly it would not pretend was well argued.
   SHA-256: `eb6b2348fe37384e4f806d456772da210badeeceaefb6a2dbc06b48c2f16c96d`
 - `docs/problems/README-history.md`
   SHA-256: `28ae9f0b2ec761488c7be284cd537b0cf1b63e1703581740352b2d873e15fc92`
+
+## Two release tickets captured after the 0.16.0 release
+
+Reviewed: Problem 010 and Problem 011, both captured immediately after the
+release that exposed them, and the backlog index and its history.
+
+Two rounds. The first returned sixteen findings and the second, on a rewritten
+Problem 010, returned eleven. All were applied. Both rounds were worth more than
+the wording they corrected, because both found the tickets wrong about facts
+that were checkable in minutes.
+
+The first round overturned Problem 010's diagnosis entirely. The ticket said the
+publishing tool and the registry had disagreed, and that the cause lay outside
+this project. The reviewer pulled the registry's own timestamps and the run
+logs: the tool had reported the truth, every version did appear, and this
+project's verifier had simply stopped waiting after three minutes when the last
+package took five. The ticket had also credited a re-run with fixing it; the
+re-run published nothing and said so in its log, twenty-seven minutes after the
+gap had closed on its own. And it counted three affected packages where twelve
+pin the missing version. The ticket was rewritten, its title changed, and its
+effort dropped from medium to small, because the fix turned out to be a number
+rather than a design.
+
+The second round found the rewrite still wrong about who was hurt. It rested
+the impact on twelve packages pinning the missing version, without noticing that
+in all twelve it is a development dependency an ordinary consumer never fetches.
+Meanwhile the one genuine consumer-facing failure was absent: the feedback
+package depends on the server package at runtime, and was served a minute and a
+half before it. That install could not resolve, and the ticket had not mentioned
+it. The reviewer also measured the window from the wrong event, making it about
+half its real length, and flagged that the quoted source was a paraphrase in a
+ticket whose previous version had failed on that same kind of slippage.
+
+Problem 011 needed corrections of a different kind. Its symptoms described a
+sequence its own stated mechanism could not produce, it attributed the behaviour
+to the wrong function, its proposed fix reproduced the staleness it was meant to
+remove, and it pointed a reader at files that do not contain the text it quoted.
+All corrected. Its account of the control being bypassed was left untouched:
+both reviewers said it states that plainly and should not be softened.
+
+A third round, by risk review rather than accessibility review, found the same
+class again. The rewrite had gone from twelve wrongly-counted packages to one
+correctly-counted one, and one was still wrong: the React and Svelte packages
+carry the identical exact runtime pin on the server package and were both served
+before it. Checking exhaustively rather than by sample found four packages with
+that pin, three of which were briefly unresolvable — the fourth was published
+after the dependency and never was. Three drafts, three wrong answers to the
+same question, each one closer. The ticket now states the method as exhaustive
+so the next reader can check it rather than trust it, and marks which figures
+are deduced from manifests and timestamps rather than observed.
+
+That round also found the starter-install reasoning derived from the wrong file:
+it argued from the published initializer's manifest rather than from the
+template manifest a created project actually installs, which is built by a
+script that moves dependencies between the two. The conclusion held, the
+argument did not, and it missed that the generated project's runtime dependency
+was also briefly missing.
+
+On Problem 011 it found the ticket leaning on "the score was within appetite" to
+carry an implication it had not earned. A score bound to a different checkout is
+not weak evidence that the released tree was assessed; it is the absence of that
+evidence, which is the whole point of the binding check. The ticket now says the
+release went outside both authorised bypass paths, and its workaround no longer
+presents the ungated terminal as a fallback option. It also claimed the branch
+check adds nothing over the commit check, which is not quite true — it excludes
+a detached HEAD and a coincidentally-equal branch.
+
+A fourth round found the corrections applied to one section and not the rest.
+The Description had the right numbers; the priority rationale, the impact
+assessment and the cross-reference to the release risk still carried the figures
+from before the correction, and each of those is a section a triage reader
+reaches first. It also found the generated-project enumeration short again — the
+template build carries non-starter development dependencies through, so a
+created project needed four missing versions rather than two — and two places in
+Problem 011 where a remediation had been reported as applied while the original
+sentence was still in the file.
+
+Four drafts of one ticket, each understating the same thing in the same
+direction, each caught by someone else. The pattern is worth more than the
+ticket: nothing in this repository checks whether a problem record's
+enumeration is complete, so the only control is a reader who goes and counts.
+
+A fifth round found one more of the same: both user-interface starters list the
+Tailwind package as a runtime dependency of the project they create, and the
+enumeration did not name it — while a sentence one paragraph below foreclosed
+the check by saying the starters declare no runtime dependencies of their own,
+which is true of the published starter and not of what it generates. That
+package was not in this release, so no figure was wrong, but it is named now
+because the list is meant to be re-checkable.
+
+- `docs/problems/open/010-the-release-gives-up-waiting-before-the-registry-catches-up.md`
+  SHA-256: `b6c77014cade1cc2d6729fe4ec665a3dbcce2cb0f5ac35ee5fb873355483cd08`
+- `docs/problems/open/011-the-release-risk-gate-cannot-be-satisfied-from-a-worktree.md`
+  SHA-256: `d03acf5164260d8da3b1356eb3e4fa2c996701a906ca227d708d51b275e4f831`
+- `docs/problems/README.md`
+  SHA-256: `a2cd3f9b029d4776c9634a59394a17adc9a873f904dcad720e55070ab9300968`
+- `docs/problems/README-history.md`
+  SHA-256: `82d293ec9f1600762a38ce1d1ca5b1e85a00e12048ff6b46cee0a1307b9f12ab`
