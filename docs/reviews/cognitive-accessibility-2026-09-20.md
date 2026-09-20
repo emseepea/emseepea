@@ -411,42 +411,141 @@ changes to a sentence that the applied findings had already replaced.
 
 The maintainer directed that the feedback package should not carry both a strict
 schema for checking what an adapter returns and a separate open schema for
-publishing the same result. The submission schema is now open, and the tool's
-published result is that schema rather than a second copy kept in step with it.
-
-That falsified a sentence in the release note, and the two attempts to repair it
-failed in turn. Recording all three, because the pattern is the point.
+publishing the same result, and then directed a fix for a defect an earlier
+review had surfaced. Both changed what this note had to say, and the note was
+wrong four times before it was right. Recording every attempt, because the
+pattern is the point and the final wording is not the interesting part.
 
 The original sentence said the schemas checking an adapter's return were still
 strict at the top level. The simplification made that false for a submission
 backend. The first repair said anything unexpected from a submission backend was
-dropped quietly. Risk review found that false too: every event is still checked
-strictly, because the event schema derives from a strict one. The second repair
-enumerated four cases. A further specialist review ran the code and found the
-enumeration still incomplete — the page and thread schemas opened in this
-release as well, so a list backend loses checks the sentence did not mention.
+dropped quietly; risk review found every event was still checked strictly, so
+that was false too. The second repair enumerated four cases; a specialist review
+ran the compiled package and found the enumeration incomplete, because the page
+and thread schemas had opened in this release as well. The third repair stopped
+enumerating losses and stated only what survived, which was sound.
 
-Three wrong sentences in a row, each true of the rule and false of a case, which
-is the same fault this release exists to own. The fix was to stop enumerating
-what was lost. The section now states the two checks that survive and says
-everything else is dropped. A catch-all cannot be incomplete.
+Then the defect fix changed the behaviour underneath it, and the fourth failure
+was the most instructive. The note claimed events could no longer fail a
+recorded submission. The reviewer did not take that on trust: it built the
+package, started a real server, and probed cases the note did not mention. Two
+of them still failed a recorded submission — a backend returning more than a
+hundred events, and one returning something that was not a list. The list's
+shape and size were still being checked at the fatal point. So the note was
+describing a fix that was not finished, and the defect was in the code, not only
+in the prose.
 
-Two further findings were applied. The remedy told backends to validate against
-their own strict schema, which is exactly what this package already does and
-exactly why the nested check disappeared — a strict wrapper around the schemas
-this package exports reproduces the hole. It now says the schema has to be
-strict at every level, and warns against that specific wrong move. The opening
-line said "a check" while the remedy said "those checks", and its pronoun could
-be read as the check not reaching the client rather than the data.
+Hook dispatch is now total: its whole body runs inside one guard, so nothing an
+adapter returns in the event position can fail a call for work it has already
+committed. Eight tests in
+`packages/feedback/test/durable-record-survives-bad-event.test.mjs` pin that
+across the four tools that dispatch hooks, covering what is in an event, whether
+a list was sent at all, how many, and a container that throws when it is read. A
+ninth test in the same file pins that a submission backend's stray top-level key
+is dropped, which is a different property.
 
-Both behaviours the section now claims are pinned by a test rather than asserted:
-a stray top-level key from a submission backend is dropped, and a stray key
-inside an event is rejected. The claim rested on strictness being inherited
-through an omit, which is the kind of unpinned derivation Problem 006 was about.
+That paragraph has now been corrected twice, and the corrections are more
+instructive than the final wording. It first claimed six tests where five
+existed. Risk review caught it, after the wrong number had already been repeated
+into a briefing. The fix was to add the missing test rather than lower the
+claim, because the gap was real: every test then drove the submission tool, so a
+change scoped to a conversation result schema could have brought the defect back
+on a durable-write path with the suite green.
 
-One adjacent finding was applied: the same incomplete enumeration had been
-written into the source comment, where it would have re-seeded the error for the
-next person to touch the file.
+The next round caught the repaired sentence twice more. The count was now true of
+the file but reached by counting a test that pins something else. And the new
+test covered two of the four tools that dispatch hooks — thread creation and
+reading — leaving the one that appends a message unpinned. A test for that path
+was added rather than the claim narrowed, for the same reason as before.
+
+A fourth round found the same thing once more, and that is what finally changed
+the approach. The guard had been moved outward a statement at a time across
+three rounds, and each round left exactly one read outside it — most recently the
+loop itself, which a subclass can make throw by overriding how it is iterated.
+Guarding statement by statement was the wrong shape. The whole body now runs
+inside one guard, which makes the property true by construction rather than by
+enumeration, and a test drives a container built to throw when read. That test
+was watched failing against the previous version before being kept.
+
+A fifth round found one more, and it was the one that stopped the loop. The
+guard is total within hook dispatch, but `events` is a declared key of the result
+schemas, so the parse reads the property before the guarded code runs. A backend
+exposing it as a getter that throws still fails a call for committed work. The
+obvious repair collides with a check this project deliberately keeps, so it was
+not attempted under release pressure — attempting intricate repairs under
+pressure is how the previous five defects arrived. The claim in the release note
+was narrowed to what the code actually does, the open case is stated there for
+adopters rather than left to be discovered, and it is captured as Problem 009
+along with the two neighbouring cases the reviews surfaced.
+
+Two further defects were fixed in those rounds. The line that builds an event
+for a hook spreads a value an adapter handed us, and a spread runs getters, so a
+value with a throwing getter could have failed a call for committed work. That
+was guarded — and then the following round found the guard was placed one level
+too deep: reading the length of the value, and taking a copy of it, run before
+the guard, and neither is safe on a proxy wrapping an array or on a subclass
+that overrides how it is copied. Both reads are now inside the guard.
+
+
+Four other findings were applied. The remedy pointed readers at a strict wrapper
+around this package's exported schemas, which is exactly what the package itself
+does and exactly why the check disappeared. The surviving-check sentence
+undercounted. The catch-all conflated losing a key with losing a whole event,
+which cost the reader more. And the phrase "checked where a failure is
+survivable" was the author's own reasoning leaking into text meant for someone
+else, describing a call site rather than anything a reader could observe.
+
+Three optional findings were applied: the backend returns a receipt rather than
+the feedback, the fix covers the conversation tools too, and a hook may now
+silently never run — which is the one consequence a backend implementer should
+act on and the note had not stated.
+
+One was not applied. The surviving strict check is pinned for one of the four
+conversation methods rather than all four. The claim is true of all four by
+reading, and one is pinned by test; widening the coverage is worth doing and is
+not worth holding the release for.
 
 - `.changeset/open-feedback-result-schemas.md`
-  SHA-256: `68117940635e321fcacc38cd3f7f561c3ee460c26c619c5038287d7e81ba529d`
+  SHA-256: `a7405293da84b643b9e280c66c3e73cbe352e2df7aec53fa465481de62e9ee69`
+
+## Problem 009 and the narrowed event claim
+
+Reviewed: the newly captured Problem 009, the section of the feedback release
+note that describes the durable-write fix, and the backlog index and its history.
+
+Nine findings, five to fix before release and four optional. All five and three
+of the four optional ones were applied. The one left is a heading that announces
+a submission fix while the section also covers the conversation tools; changing
+it would break the reference by which this section has been identified across
+seven review rounds, and the section names all four tools in its body.
+
+This was the first round on that section to find no factual error. The reviewer
+probed the schema library directly to confirm the one open case is real and is
+the only remaining one, rather than reading the code and inferring.
+
+What it did find was a scope defect and an actionability defect. The note
+disclosed the open case in terms only someone who had read our parser would
+recognise — "the events property throws when we read it" — where a backend
+author can only check their own code for a getter or a proxy. And the sentence
+bounding what the fix covers gave two examples drawn from the submission
+receipt, immediately after a paragraph saying the behaviour applies to the three
+conversation tools as well, where far more can still fail a call after a durable
+write. Both are corrected.
+
+The ticket had the same fault in a different place. Its summary said everything
+about events was handled, which contradicted the first of the three cases it
+then describes. And its third case had inherited the framing of the first two: it
+was described as needing an unusual adapter and as causing duplicate work on
+retry, when it needs only a support thread that grows past two hundred messages,
+and retrying never helps because every read fails from then on. The priority
+rationale carried the same wrong claim and was corrected without moving the
+score, which the reviewer said plainly it would not pretend was well argued.
+
+- `docs/problems/open/009-a-tool-call-can-fail-after-the-backend-has-recorded-the-work.md`
+  SHA-256: `e6fc7b54ce00da45d69847d4b021d3c714130cd7a7219b16c40807e645274686`
+- `.changeset/open-feedback-result-schemas.md`
+  SHA-256: `0f4fa6abfcfb3961d500397b91d3865867944c9eb942faafcb31fcc431eee7ba`
+- `docs/problems/README.md`
+  SHA-256: `eb6b2348fe37384e4f806d456772da210badeeceaefb6a2dbc06b48c2f16c96d`
+- `docs/problems/README-history.md`
+  SHA-256: `28ae9f0b2ec761488c7be284cd537b0cf1b63e1703581740352b2d873e15fc92`

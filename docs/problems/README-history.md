@@ -14,3 +14,4 @@
 > Last reviewed: 2026-09-20 **P006 captured** — A strict result schema opens when it is piped from an open object (lightweight aside via /wr-itil:capture-problem)
 > Last reviewed: 2026-09-20 **P007 captured** — The shipped package guide is silent on open-by-default result schemas (lightweight aside via /wr-itil:capture-problem)
 > Last reviewed: 2026-09-20 **P002 verification pending** — `npm test` now checks that the live release-readiness record still carries both marker labels
+> Last reviewed: 2026-09-20 **P008 captured** — The release package list is transcribed by hand into the readiness record (lightweight aside via /wr-itil:capture-problem)

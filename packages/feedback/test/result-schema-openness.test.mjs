@@ -64,35 +64,32 @@ test("every feedback conversation tool publishes an open result schema", async (
   }
 });
 
-// Pins the two checks the release note says survive. The note's truth otherwise
-// rests on strictness being inherited through `.omit()`, which is exactly the
-// kind of unpinned derivation Problem 006 was about.
-test("a submission backend's stray top-level key is dropped but a stray event key is rejected", async (t) => {
+// Pins the one strict check the release note says survives. Its truth rests on
+// the conversation wrappers staying strict at their top level while everything
+// they contain is open, which is exactly the kind of per-level distinction
+// Problem 006 shows is easy to get wrong.
+test("a conversation backend's stray top-level key is still rejected", async (t) => {
   const now = "2026-09-20T00:00:00.000Z";
-  const event = {
-    id: "e-1", type: "feedback.message.added", occurredAt: now,
-    threadId: "t-1", messageId: "m-1", author: "user",
-  };
-  const start = async (result) => {
-    const running = await startEmseepea(t, createEmseepea({
-      name: "submission-strictness-test",
-      version: "0.0.0",
-      tools: [defineFeedbackSubmission({
-        access: "public",
-        scope: "strictness",
-        backend: { submit: () => result },
-      })],
-    }));
-    return (await running.connect()).callTool({
-      name: "submit-feedback",
-      arguments: { observation: "friction", detail: "The filters were hard to find." },
-    });
-  };
-
-  const dropped = await start({ id: "f-1", recordedAt: now, surprise: "extra" });
-  assert.notEqual(dropped.isError, true);
-  assert.equal(Object.hasOwn(dropped.structuredContent, "surprise"), false);
-
-  const rejected = await start({ id: "f-2", recordedAt: now, events: [{ ...event, surprise: "extra" }] });
-  assert.equal(rejected.isError, true);
+  const thread = { id: "t-1", subject: "s", status: "open", createdAt: now, updatedAt: now };
+  const tools = defineFeedbackConversation({
+    requiredScopes: ["feedback"],
+    backend: {
+      createThread: () => ({ conversation: { ...thread, messages: [] }, surprise: "extra" }),
+      appendMessage: () => ({ message: {} }),
+      listThreads: () => ({ page: { threads: [] } }),
+      getThread: () => ({ conversation: { ...thread, messages: [] } }),
+    },
+  });
+  const running = await startEmseepea(t, createEmseepea({
+    name: "conversation-strictness-test",
+    version: "0.0.0",
+    tools,
+    authentication: insecureTestAuthentication(["feedback"]),
+  }));
+  const client = await running.connect("test-token");
+  const result = await client.callTool({
+    name: "create-feedback-thread",
+    arguments: { subject: "Seed search friction", message: "The filters were hard to find." },
+  });
+  assert.equal(result.isError, true);
 });

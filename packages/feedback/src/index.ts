@@ -30,15 +30,14 @@ export const feedbackObservationSchema = z.enum([
 // them publishes a closed contract, and a tool's published schema is just the
 // schema itself rather than a second copy kept in step with it.
 //
-// Two things an adapter returns are still checked strictly. A conversation
+// One thing an adapter returns is still checked strictly: a conversation
 // backend's wrapper — `createThreadResultSchema` and its siblings — rejects an
-// unexpected key at its top level. And on any backend, an unexpected key inside
-// an event is rejected, because `backendEventSchema` is derived from a strict
-// schema and `dispatchHooks` re-parses each event before a hook sees it.
+// unexpected key at its top level.
 //
-// Everywhere else an unexpected key is dropped rather than reported: anywhere
-// nested inside what an adapter returns, and at the top level of what a
-// submission backend returns. It is never sent to a client either way.
+// Everywhere else an unexpected key no longer fails the call: nested inside what
+// an adapter returns and at the top level of what a submission backend returns
+// it is dropped, and inside an event the whole event is skipped. It is never
+// sent to a client either way.
 export const feedbackMessageSchema = z.object({
   id: identifier.describe("Stable message identifier."),
   threadId: identifier.describe("Stable identifier of the containing feedback thread."),
@@ -111,8 +110,18 @@ export interface FeedbackSubmissionBackend<Context = undefined> {
 }
 
 const backendEventSchema = feedbackEventSchema.omit({ scope: true });
-const backendEventsSchema = z.array(backendEventSchema).max(100).optional();
 export type FeedbackBackendEvent = z.input<typeof backendEventSchema>;
+// Events reach us only after the backend has durably recorded the thing they
+// describe, and they only drive best-effort hooks. Nothing about them is checked
+// here, where any failure would turn a recorded submission into a failed tool
+// call — not their contents, not their shape, not how many there are.
+// `dispatchHooks` applies all three and skips what it cannot use. The exported
+// type still holds an adapter to the event shape at compile time.
+const backendEventsSchema = z.custom<readonly FeedbackBackendEvent[]>(() => true).optional();
+
+// How many events one result may drive hooks for. Past this we stop, rather than
+// rejecting the result: the work it describes is already done.
+const maxDispatchedEvents = 100;
 
 const submissionNextAction =
   "Start your final response by answering every part of the user's original request from earlier tool results. A response that only discusses feedback is incomplete. Then tell the user, \"I recorded feedback about ...\", with a brief, specific summary of the observation.";
@@ -374,31 +383,50 @@ function createAdapterContext(
 
 async function dispatchHooks(
   hooks: readonly FeedbackEventHook[] | undefined,
-  events: readonly z.output<typeof backendEventSchema>[],
+  events: unknown,
   context: FeedbackAdapterContext,
 ): Promise<void> {
-  if (!hooks?.length || events.length === 0) return;
+  if (!hooks?.length) return;
+  try {
+    await dispatchEachEvent(hooks, events, context);
+  } catch {
+    // Total within this call. Hooks are best effort and the work they describe is
+    // already durable, so nothing that happens from here may fail the tool call —
+    // not the list an adapter handed us, not a hook, not a mistake of ours.
+    // Guarding statement by statement was tried and kept leaving one read
+    // outside, which is why the guard wraps the whole body instead.
+    //
+    // One read is still outside it: `events` is a declared key of the result
+    // schemas, so the parse reads the property before we get here. A throwing
+    // getter there still fails the call. See the backlog.
+  }
+}
+
+async function dispatchEachEvent(
+  hooks: readonly FeedbackEventHook[],
+  events: unknown,
+  context: FeedbackAdapterContext,
+): Promise<void> {
+  if (!Array.isArray(events) || events.length === 0) return;
   const hookDeadlineMs = context.deadlineMs - 25;
-  for (const uncheckedEvent of events) {
+  for (const uncheckedEvent of events.slice(0, maxDispatchedEvents)) {
     if (context.signal.aborted || Date.now() >= hookDeadlineMs) return;
-    const event = Object.freeze(feedbackEventSchema.parse({
-      ...uncheckedEvent,
-      scope: context.scope,
-    }));
+    if (typeof uncheckedEvent !== "object" || uncheckedEvent === null) continue;
+    const checked = feedbackEventSchema.safeParse({ ...uncheckedEvent, scope: context.scope });
+    // Skip an event we cannot use rather than throwing.
+    if (!checked.success) continue;
+    const event = Object.freeze(checked.data);
     for (const hook of hooks) {
       if (context.signal.aborted || Date.now() >= hookDeadlineMs) return;
       try {
-        const hookContext = {
-          signal: context.signal,
-          deadlineMs: hookDeadlineMs,
-        };
+        const hookContext = { signal: context.signal, deadlineMs: hookDeadlineMs };
         const signal = deadlineSignal(hookContext);
         await beforeDeadline(Promise.resolve(hook(event, Object.freeze({
           signal,
           deadlineMs: hookContext.deadlineMs,
         }))), hookContext);
       } catch {
-        // Feedback is already durable. Best-effort hooks cannot change the MCP result.
+        // One hook failing must not stop the others.
       }
     }
   }

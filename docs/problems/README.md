@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-09-20 **P008 captured** — The release package list is transcribed by hand into the readiness record (lightweight aside via /wr-itil:capture-problem)
+> Last reviewed: 2026-09-20 **P009 captured** — A tool call can fail after the backend has recorded the work (lightweight aside via /wr-itil:capture-problem)
 > Run `/wr-itil:manage-problem review` to refresh.
 
 ## WSJF Rankings
@@ -16,6 +16,7 @@ Weighted Shortest Job First (WSJF) ranks higher-value, lower-effort work first.
 | 9.0 | P006 | A strict result schema opens when it is piped from an open object | 9 (Medium) | Open | S | 2026-09-20 | internal |
 | 6.0 | P004 | Problem backlog parser couples to an unexplained exact heading | 6 (Medium) | Open | S | 2026-09-11 | internal |
 | 6.0 | P008 | The release package list is transcribed by hand into the readiness record | 12 (High) | Open | M | 2026-09-20 | internal |
+| 6.0 | P009 | A tool call can fail after the backend has recorded the work | 12 (High) | Open | M | 2026-09-20 | internal |
 
 ## Verification Queue
 
