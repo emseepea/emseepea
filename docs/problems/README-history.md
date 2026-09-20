@@ -6,3 +6,7 @@
 > Last reviewed: 2026-09-11 **P001 captured** — Changesets omit initializer bumps when embedded template dependencies change (lightweight aside via /wr-itil:capture-problem)
 > Last reviewed: 2026-09-11 **P002 captured** — Release readiness verifier only tests fixture-like stable PASS marker (lightweight aside via /wr-itil:capture-problem)
 > Last reviewed: 2026-09-11 **P003 captured** — Release workflow lacks first-package trusted-publisher preflight (lightweight aside via /wr-itil:capture-problem)
+
+## 2026-09-20
+
+> Last reviewed: 2026-09-11 **P004 captured** — Problem backlog parser couples to an unexplained exact heading (lightweight aside via /wr-itil:capture-problem)

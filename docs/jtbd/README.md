@@ -2,8 +2,12 @@
 
 These proposed Jobs To Be Done describe who Em See Pea is for and what they
 need to accomplish. Model Context Protocol (MCP) is a way for artificial
-intelligence (AI) apps to call external tools. These jobs still need human
-review.
+intelligence (AI) apps to call external tools.
+
+Every job and persona here has been reviewed and confirmed by a person. Each
+record carries the date that happened. Their status is still "proposed", which
+is a separate thing: it tracks whether the job has been validated against real
+use, not whether a person agreed the job is real.
 
 ## Model Context Protocol Server Developer
 

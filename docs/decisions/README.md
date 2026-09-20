@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 93 decisions: 53 current and 40 historical.
+This project has 95 decisions: 55 current and 40 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -68,6 +68,8 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0091: Shared Result Card Styles in the Existing Optional Stylesheet](0091-shared-result-card-styles-in-the-existing-optional-stylesheet.proposed.md): Proposed; human review confirmed.
 - [ADR-0094: Checked Dual MIME Compatibility for MCP App Resources](0094-checked-dual-mime-compatibility-for-mcp-app-resources.proposed.md): Proposed; human review confirmed.
 - [ADR-0095: Opt-In Check Policy Modules for Adopter Contracts](0095-opt-in-check-policy-modules-for-adopter-contracts.proposed.md): Proposed; human review confirmed.
+- [ADR-0096: Open-by-Default Published Output Schemas](0096-open-by-default-published-output-schemas.proposed.md): Proposed; human review confirmed.
+- [ADR-0097: Beta Maturity with a Bounded Support Claim](0097-beta-maturity-with-a-bounded-support-claim.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2099,3 +2101,40 @@ Chosen option: **"One opt-in check policy module"**, because one structured boun
 - The evidenced adopter can replace its command-lifecycle wrapper while keeping its local migration, normalization, exact-type, additive-output, retention, approval, and deployment rules.
 - Source and package checks confirm the module contract separately from npm publication or adopter deployment. Those later outcomes require their own named evidence and make no production-verification claim by themselves.
 - This decision must be ratified before implementation begins.
+
+### [ADR-0096: Open-by-Default Published Output Schemas](0096-open-by-default-published-output-schemas.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0096 Decision
+
+Chosen option: **"Open by default, opt in to closed"**.
+
+#### ADR-0096 Checks
+
+- Declare a tool with a plain object output schema. Check that the published schema's `additionalProperties` permits unknown fields.
+- Check that the same tool's published input schema also permits unknown fields, so the two directions agree.
+- Write a handler that returns a key the output schema does not list. Check that the framework rejects that key. Check that the response carries only declared fields.
+- Declare a tool with an explicitly closed output contract. Check that it still publishes a closed schema.
+- Compare a baseline captured before this change against the published output schema produced after it. Check that the closed-to-open change is reported, confirming it surfaces as a migration rather than passing unnoticed.
+- Read the release notes for the implementing release. Check that they state the break and the re-capture step.
+
+### [ADR-0097: Beta Maturity with a Bounded Support Claim](0097-beta-maturity-with-a-bounded-support-claim.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0097 Decision
+
+Chosen option: **"Beta, with the support boundary stated wherever the label appears"**.
+
+#### ADR-0097 Checks
+
+- Search the published files for the word pre-alpha. Check that none remains.
+- For every place public wording uses the word beta, check that the four limits appear beside it or one link away. A check fails the build when a published readme states a maturity label without them.
+- Compare the coverage claim in public wording against the coverage ledger. Check that the active revision, the five older revisions, the two unimplemented optional capabilities, and the intentionally absent Sampling all match.
+- Check that every place public wording states a Node version gives the supported floor and the versions continuous integration exercises as two separate facts.
+- Check that public wording states the 22.13.0 floor for the four starters that require it.
+- Check that every published package readme states the maturity boundary.
+- Check that no public wording ties the maturity label to the 1.0 version line.
