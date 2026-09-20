@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-09-20 **P007 captured** — The shipped package guide is silent on open-by-default result schemas (lightweight aside via /wr-itil:capture-problem)
+> Last reviewed: 2026-09-20 **P002 verification pending** — `npm test` now checks that the live release-readiness record still carries both marker labels
 > Run `/wr-itil:manage-problem review` to refresh.
 
 ## WSJF Rankings
@@ -9,7 +9,6 @@ Weighted Shortest Job First (WSJF) ranks higher-value, lower-effort work first.
 
 | WSJF | ID | Title | Severity | Status | Effort | Reported | Origin |
 |------|-----|-------|----------|--------|--------|----------|--------|
-| 16.0 | P002 | Release readiness verifier only tests fixture-like stable PASS marker | 16 (High) | Open | S | 2026-09-11 | internal |
 | 15.0 | P003 | Release workflow lacks first-package trusted-publisher preflight | 15 (High) | Open | S | 2026-09-11 | internal |
 | 15.0 | P005 | Branch push is ungated, so untested changes reach continuous integration | 15 (High) | Open | S | 2026-09-20 | internal |
 | 12.0 | P007 | The shipped package guide is silent on open-by-default result schemas | 12 (High) | Open | S | 2026-09-20 | internal |
@@ -23,8 +22,11 @@ Fix released, awaiting verification. Sorted by release date, oldest first.
 
 | ID | Title | Released | Fix summary | Likely verified? |
 |----|-------|----------|-------------|------------------|
+| P002 | Release readiness verifier only tests fixture-like stable PASS marker | 2026-09-20 | Every `npm test` now checks the live readiness record still has both marker labels. Verdicts are still checked only at release time. | no — not observed |
 
 ## Parked
+
+None parked.
 
 | ID | Title | Reason | Parked since |
 |---|---|---|---|

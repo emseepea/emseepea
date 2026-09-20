@@ -48,6 +48,11 @@ immediately below it.
 - [ ] Decide whether the parser should accept an expanded heading or use a
   separate stable marker that does not constrain reader-facing wording.
 - [ ] Add a focused regression test for the chosen accessible heading contract.
+- [ ] Decide where the repeated `docs/reviews/current-release-readiness.md` path
+  literal should live, or record that repeating it is accepted. (Inherited from
+  Problem 002.)
+- [ ] Capture a ticket for the hand-transcribed release package list, or fold it
+  into whatever decision resolves Problem 004. (Inherited from Problem 002.)
 
 ## Fix Strategy
 
@@ -69,6 +74,20 @@ the stable heading plus adjacent expansion reconciled successfully.
 
 - JTBD-102, Keep Guidance Accurate.
 - `docs/problems/README.md`.
+- Follow-up inherited from Problem 002, recorded here so it outlives that
+  ticket: the path `docs/reviews/current-release-readiness.md` is spelled out as
+  a literal 15 times across 9 files. It is the same family of coupling as this
+  ticket — a value that several tools must agree on, kept as repeated text — and
+  it needs the same decision about where such a value should live.
+- Second follow-up inherited from Problem 002, recorded here for the same
+  reason: the list of packages being published is transcribed by hand into
+  `docs/reviews/current-release-readiness.md` and then checked for exact set
+  equality against the Changesets plan. On 2026-09-19 that check blocked the
+  release because the record still named the previous release's twelve packages
+  while sixteen were being published. Nothing was wrong with the packages: the
+  record was stale, not the release. Same family as this ticket — a machine-read
+  value kept as prose that a person has to retype. It needs its own ticket; this
+  bullet exists so the defect does not leave the backlog before it gets one.
 - Captured via `/wr-itil:capture-problem`; the title-only duplicate check found
   no matching ticket.
 - The duplicate pre-filter found no open or verification-pending ticket sharing

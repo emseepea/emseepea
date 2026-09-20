@@ -188,3 +188,60 @@ holding a release to reword an internal backlog ticket would be the wrong trade.
   SHA-256: `0bc92d3020457c90405d36ae9db621a5e2c22dcd0e973a9861294e6a3eff6a16`
 - `docs/problems/README-history.md`
   SHA-256: `7dc4d2cfdbde2cf005a31255e81f401efd00a79ebd39671fa278c98658ba5b62`
+
+## Problem 002 fix — backlog records, second review of the day
+
+Reviewed: the Problem 002 ticket after its rewrite for the marker-label fix, the
+Problem 004 ticket after one bullet and one task were added to it, the problem
+backlog index, and the backlog index history file.
+
+The reviewer returned 16 findings: 11 to fix before commit and 5 optional. All
+16 were applied.
+
+A Jobs To Be Done review then found three further issues, and fixing two of them
+added new prose these documents had not been reviewed for. Recording a review
+digest over unreviewed text would be the same kind of empty attestation this
+ticket exists to correct, so the new passages went back for a second pass. That
+pass returned ten more findings — five to fix before commit, five optional — and
+all ten were applied. Two were accuracy defects introduced by the first round of
+fixes: the text claimed the release gate requires an exact sentence that the
+regular expression actually makes optional, and it omitted the package lines
+from the list of what the gate still freezes. A third corrected a judgement. The
+text had called the 2026-09-19 release stop "false"; it was not. The record was
+genuinely stale, so the check did its job. What was wrong was the implication
+that the release was broken.
+
+Nothing is outstanding on these four documents.
+
+Four of the findings were about honesty rather than readability, and they are
+worth naming because the ticket under review is itself about a control that
+implied more certainty than it had.
+
+- The ticket claimed a neighbouring defect was "tracked separately" when no
+  ticket covers it. It now says plainly that the defect is not captured yet.
+- The ticket said the fix had "landed on `main`" while it was still uncommitted
+  on a branch. It now describes how to find the commit instead of asserting a
+  state that was not yet true.
+- The ticket counted how many places spell out one file path, and the count was
+  already stale, because this same fix added two more. The count was recounted
+  and corrected in both tickets that carry it.
+- The backlog index summarised the fix as checking "the marker contract" when
+  the fix deliberately checks only the labels. Both the index line and the
+  verification queue entry now say labels.
+
+Two findings were about pre-existing problems rather than this change: an empty
+table that read as a rendering fault, and an archived line filed under the wrong
+date. Both were repaired rather than left for the next reader.
+
+One finding moved a heading. Because this ticket exists because a heading move
+broke a parser, the backlog reconciler was run afterwards rather than trusted to
+be unaffected. It exited cleanly.
+
+- `docs/problems/verifying/002-release-readiness-verifier-only-tests-fixture-like-stable-pass-marker.md`
+  SHA-256: `facbf90b58da628acd462fefcc823211d22feac22fdc977259346b98a3d04966`
+- `docs/problems/open/004-problem-backlog-parser-couples-to-an-unexplained-exact-heading.md`
+  SHA-256: `c4a0680df4765d417e67e2d1b3e8423a7367e4ab5c0aab1a7cc1b6cb3cd90be1`
+- `docs/problems/README.md`
+  SHA-256: `55739e1292b81bfe93148a7dd479b7fb5cfb573f71c957a3083450412ae34a4d`
+- `docs/problems/README-history.md`
+  SHA-256: `af75b6f71106546768ba7f05a2331c26e71f0e1ce0eecc3fc76a10c214aa29a6`

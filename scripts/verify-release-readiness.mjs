@@ -15,17 +15,38 @@ import { initializerPackages, publicPackages } from "./public-packages.mjs";
 
 const exec = promisify(execFile);
 
+// The release-readiness record carries two machine-read labels. Their presence
+// is an always-true contract; the verdicts after them are only constrained when
+// something is actually being published.
+export function assertReadinessMarkerLabels(review) {
+  assert.match(
+    review,
+    /^- Result: /m,
+    "docs/reviews/current-release-readiness.md must keep its `- Result: ` label line; the release verifier reads it",
+  );
+  assert.match(
+    review,
+    /^- Final result: /m,
+    "docs/reviews/current-release-readiness.md must keep its `- Final result: ` label line; the release verifier reads it",
+  );
+}
+
+export function assertReadinessMarkers(review) {
+  assertReadinessMarkerLabels(review);
+  assert.match(review, /^- Result: PASS$/m);
+  assert.match(
+    review,
+    /^- Final result: within appetite(?:, subject to the required exact-commit gates)?\.$/m,
+  );
+}
+
 export function assertReleaseReadiness(registryBefore, review) {
   const pending = registryBefore.packages
     .filter(({ present }) => !present)
     .map(({ name, version }) => `${name}@${version}`)
     .sort();
   if (pending.length === 0) return;
-  assert.match(review, /^- Result: PASS$/m);
-  assert.match(
-    review,
-    /^- Final result: within appetite(?:, subject to the required exact-commit gates)?\.$/m,
-  );
+  assertReadinessMarkers(review);
   const reviewed = [...new Set([...review.matchAll(/^- `([^`]+@[^`]+)`$/gm)]
     .map(([, spec]) => spec))]
     .sort();

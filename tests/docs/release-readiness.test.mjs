@@ -4,6 +4,8 @@ import test from "node:test";
 
 import {
   assertPlannedReleaseReadiness,
+  assertReadinessMarkerLabels,
+  assertReadinessMarkers,
   assertReleasePullRequestPlan,
   assertReleaseReadiness,
   readPlannedReleaseStatus,
@@ -27,6 +29,30 @@ const retryReview = `
 - Result: PASS
 - Final result: within appetite.
 `;
+
+test("the live release-readiness record keeps the verifier's marker labels", async () => {
+  const record = await readFile(
+    new URL("../../docs/reviews/current-release-readiness.md", import.meta.url),
+    "utf8",
+  );
+  assert.doesNotThrow(() => assertReadinessMarkerLabels(record));
+  // Mutate every occurrence, anchored per line. A single first-match replace
+  // would leave a second label line intact and pass, so the check would go red
+  // on a record that actually satisfies the contract.
+  assert.throws(
+    () => assertReadinessMarkerLabels(record.replace(/^- Result: /gm, "- Review result: ")),
+    /- Result: /,
+  );
+  assert.throws(
+    () => assertReadinessMarkerLabels(record.replace(/^- Final result: /gm, "- Final verdict: ")),
+    /- Final result: /,
+  );
+});
+
+test("the release-time gate still constrains the verdicts, not just the labels", () => {
+  assert.throws(() => assertReadinessMarkers("- Result: FAIL\n- Final result: outside appetite.\n"), /Result: PASS/);
+  assert.doesNotThrow(() => assertReadinessMarkerLabels("- Result: FAIL\n- Final result: outside appetite.\n"));
+});
 
 test("release readiness covers every unpublished package", () => {
   assert.doesNotThrow(() => assertReleaseReadiness(registry, review));
