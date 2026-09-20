@@ -182,9 +182,20 @@ Evidence gathered while writing the fix, all observed in this session:
 - The opposite property was checked too. With the live record set to
   `- Result: FAIL` and its labels intact, all 8 tests passed. The suite does not
   force the record to claim success.
-- Verification still outstanding: that the check runs in continuous integration
-  on the exact commit, and that the next real release run reaches "Prepare
-  package evidence" with the record intact.
+- The first outstanding condition — that the check runs in continuous
+  integration on the exact commit — is now met. The fix landed on `main` as
+  commit `8ed5a0b`. Quality run `35488910660` ran `npm test` on that commit and
+  passed, so the new check does run in continuous integration. Release run
+  `35489286757` also passed on that commit, but it passed by skipping its work,
+  so it is not evidence for this condition.
+- The second condition — that a release run reaches "Prepare package evidence"
+  with the record intact — is not met, and this ticket stays in Verification
+  Pending because of it. On that run the "Update release pull request or
+  publish" job was skipped: it runs only when changesets are pending or a
+  publication is due, and neither was. "Prepare package evidence" never
+  executed, and the release-time gate has not been exercised. That step runs on
+  a publication run, so a publication run is what will settle this. Not having
+  seen the release gate run is not evidence that it works.
 
 ## Dependencies
 

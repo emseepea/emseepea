@@ -51,8 +51,8 @@ immediately below it.
 - [ ] Decide where the repeated `docs/reviews/current-release-readiness.md` path
   literal should live, or record that repeating it is accepted. (Inherited from
   Problem 002.)
-- [ ] Capture a ticket for the hand-transcribed release package list, or fold it
-  into whatever decision resolves Problem 004. (Inherited from Problem 002.)
+- [x] Capture a ticket for the hand-transcribed release package list. Captured
+  as Problem 008. (Inherited from Problem 002.)
 
 ## Fix Strategy
 
@@ -86,8 +86,10 @@ the stable heading plus adjacent expansion reconciled successfully.
   release because the record still named the previous release's twelve packages
   while sixteen were being published. Nothing was wrong with the packages: the
   record was stale, not the release. Same family as this ticket — a machine-read
-  value kept as prose that a person has to retype. It needs its own ticket; this
-  bullet exists so the defect does not leave the backlog before it gets one.
+  value kept as prose that a person has to retype. It now has its own ticket:
+  Problem 008, The Release Package List Is Transcribed by Hand Into the
+  Readiness Record. This bullet stays as the cross-reference so the link from
+  here is not lost.
 - Captured via `/wr-itil:capture-problem`; the title-only duplicate check found
   no matching ticket.
 - The duplicate pre-filter found no open or verification-pending ticket sharing

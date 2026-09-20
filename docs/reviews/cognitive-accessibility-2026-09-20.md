@@ -245,3 +245,60 @@ be unaffected. It exited cleanly.
   SHA-256: `55739e1292b81bfe93148a7dd479b7fb5cfb573f71c957a3083450412ae34a4d`
 - `docs/problems/README-history.md`
   SHA-256: `af75b6f71106546768ba7f05a2331c26e71f0e1ce0eecc3fc76a10c214aa29a6`
+
+## Problem 008 capture — third review of the day
+
+Reviewed: the newly captured Problem 008 ticket in full, the two edited lines in
+Problem 004, the two rewritten bullets in Problem 002, the backlog index, and
+the index history file.
+
+The reviewer returned 19 findings: 17 to fix before commit and 2 optional. All
+19 were applied. Two of them were factual corrections, and both were verified
+against the source before being applied rather than taken on the reviewer's
+word.
+
+- Problem 002 cited two continuous-integration runs as evidence that the new
+  check runs. One of them passed by skipping all its work, so it proved nothing.
+  Only the run that executed the test suite supports the claim, and the record
+  now says so.
+- Problem 002 also gave the wrong reason for that job being skipped. The
+  workflow runs it when changesets are pending or a publication is due; the run
+  had neither. The original wording named only changesets, which would have sent
+  the next reader looking for the wrong thing.
+- Problem 008 described the release check as comparing against the Changesets
+  plan. At release time it compares against the set captured in
+  `release-artifacts/registry-before.json`; the plan comparison is the separate
+  release-pull-request path. This matters because the ticket is about deriving
+  the list instead of retyping it, so naming the wrong source would mislead
+  whoever does the deriving.
+
+Four further findings were about a ticket overstating its own case. Problem 008
+argues that a control claims more certainty than it has, so it cannot itself
+blur judgement into fact. It had generalised a single observation into standing
+practice, asserted that nothing was wrong with the packages when the check had
+assessed nothing about them, settled a question its own investigation task
+leaves open, and called the transcription "not knowledge" — a verdict dressed as
+an observation. All four now mark the reporter's reading as a reading.
+
+One finding concerned a placeholder. The new ticket left its symptoms section
+deferred while the description already recorded the observed failure. For a
+ticket about not claiming more than the evidence supports, understating its own
+evidence is the same fault pointed the other way. The section is now filled.
+
+Two findings proposed splitting the priority and effort header fields across
+several lines. The substance was applied — both now read plainly and neither
+refers forward to a term the reader has not yet met — but they were kept on one
+line each, because the backlog reconciler parses those fields and a multi-line
+value risks the exact breakage Problem 004 records. The reconciler was run
+afterwards and exited cleanly.
+
+- `docs/problems/open/008-release-package-list-is-transcribed-by-hand-into-the-readiness-record.md`
+  SHA-256: `497ced694dd9d751a4ba38d1ff3d6f05de2f7271af9b6e1af6c3c5a9275cd03e`
+- `docs/problems/open/004-problem-backlog-parser-couples-to-an-unexplained-exact-heading.md`
+  SHA-256: `e6cc2a89b05ddbf392d4665cb090956a7448fe519c05aa5a545185a3423d0adc`
+- `docs/problems/verifying/002-release-readiness-verifier-only-tests-fixture-like-stable-pass-marker.md`
+  SHA-256: `fd55a21609a6b35b78c7afbed0a94fbc8ef4a1d4be6d7f9c76a93632d6fc18c9`
+- `docs/problems/README.md`
+  SHA-256: `48b1aad8263bb8ff8a8d7bbdda0c309ee5affdacab7b8793d741d137d0ce7dc6`
+- `docs/problems/README-history.md`
+  SHA-256: `ce49fa73f623ff5270f71ffd85c38e85e018aefdba671071f83393b79ff8e502`
