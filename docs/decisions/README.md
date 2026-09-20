@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 95 decisions: 55 current and 40 historical.
+This project has 96 decisions: 56 current and 40 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -70,6 +70,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0095: Opt-In Check Policy Modules for Adopter Contracts](0095-opt-in-check-policy-modules-for-adopter-contracts.proposed.md): Proposed; human review confirmed.
 - [ADR-0096: Open-by-Default Published Output Schemas](0096-open-by-default-published-output-schemas.proposed.md): Proposed; human review confirmed.
 - [ADR-0097: Beta Maturity with a Bounded Support Claim](0097-beta-maturity-with-a-bounded-support-claim.proposed.md): Proposed; human review confirmed.
+- [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -1071,6 +1072,7 @@ Chosen option: **"Optional deterministic startup discovery"**, because it remove
 
 - Status: Proposed
 - Human review: Confirmed
+- Replaced by: [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.proposed.md)
 
 #### ADR-0049 Decision
 
@@ -2138,3 +2140,40 @@ Chosen option: **"Beta, with the support boundary stated wherever the label appe
 - Check that public wording states the 22.13.0 floor for the four starters that require it.
 - Check that every published package readme states the maturity boundary.
 - Check that no public wording ties the maturity label to the 1.0 version line.
+
+### [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+- Replaces: [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.proposed.md)
+
+#### ADR-0098 Decision
+
+Chosen option: **publish on merge to a publish branch**, because it is the only option that removes the stranded-trunk state rather than shortening or automating it.
+
+#### ADR-0098 Checks
+
+- A push to `main` carrying a changeset opens a release pull request based on `publish`, and publishes nothing.
+- The workflow that publishes under `next` is started by explicit dispatch, and a run exists for the pull request head that is merged.
+- No release pull request is opened, and nothing is published under `next`, for a `main` commit whose quality checks did not pass.
+- Semantic evidence exists for the commit the packages were built and published from.
+- Every published version appears under `next` before it appears under `latest`.
+- The `publish` branch exists and its protection names who may merge to it.
+- Merging the release pull request moves each package's `latest` tag to the version already on `next`, and the merge is not squashed.
+- No tarball is republished at the merge: each package's `latest` resolves to the tarball step 2 published, and its provenance names the pull request head.
+- Nothing is merged back to `main` until everything the release plan names is published.
+- The website deploys in the same step that promotes the packages, after those packages are on `latest` and before anything is merged back.
+- The merge back starts no quality run.
+- After a release, the publish commit is an ancestor of `main` and no consumed changeset remains on `main`. The two branches do not hold the same commit; a merge back creates a new one.
+- A failure between opening the pull request and promoting leaves `main` unchanged and the release retryable without a new release.
+- Every publishable package's npm trusted publisher names the publishing workflow before the first release under this shape.
+- The push watcher names the workflows this shape actually runs, and an ordinary push to `main` completes its watch.
+- Before any promotion, the released packages are read back from the registry and their version, integrity, signatures, provenance and public types are verified, as ADR-0085 requires.
+- Before any promotion, the packages install clean into an empty project, pass `npm audit signatures`, and satisfy the initializer and guide checks against the registry copies rather than the workspace. Those checks name `next` explicitly, so they cannot pass by resolving the previous release.
+- The release pull request's manifests and lockfile are checked against the Changesets plan, and it carries no non-generated files.
+- Every released package ends with a git tag and a GitHub release carrying its bill of materials, checksums and notes.
+- Replaced initializers are retired after promotion.
+- A release whose plan includes the website deploys it; a release whose plan does not leaves the deployed site untouched.
+- The website is versioned only by a changeset naming it, never as a dependent.
+- What is deployed is the build the performance gate measured, not a rebuild.
+- A push to `main` that changes the website without a changeset does not deploy it.

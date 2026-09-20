@@ -647,3 +647,73 @@ because the list is meant to be re-checkable.
   SHA-256: `a2cd3f9b029d4776c9634a59394a17adc9a873f904dcad720e55070ab9300968`
 - `docs/problems/README-history.md`
   SHA-256: `82d293ec9f1600762a38ce1d1ca5b1e85a00e12048ff6b46cee0a1307b9f12ab`
+
+## ADR-0098, Publish on Merge to a Publish Branch
+
+Three cognitive-accessibility rounds on one decision record, and each one changed
+what the record says rather than how it says it.
+
+The first round found the record claiming a mechanism and claiming the benefit
+of not having it. The draft reconciled the release branch onto the trunk before
+publishing, copied from the reference implementation, while also claiming the
+trunk stayed untouched until the packages existed. Both could not be true.
+Reading the reference settled it: its two reconciliation jobs run the same
+script against the same commit, and that script pushes to the trunk. The shape
+was changed to merge back only after publishing, which makes the claim true. The
+same round found the opening sentence asserting that a release publishes every
+publishable package, which the record contradicts four pages later, and found
+the attempt and failure counts not adding up.
+
+The second round found the record's own reframing carried a price it had not
+recorded. Treating the website deploy as part of the publication step means a
+failed deploy blocks the merge back, and the reference implementation keeps
+website deployment separate precisely so a website failure cannot block a
+release. The record named that departure and costed it nowhere.
+
+The third round found a hole in the shape. Step two was dispatched once, when
+the release pull request opened, while the tool that maintains that pull request
+rewrites it on every further push to the trunk. A release could publish packages
+built from a superseded commit, and the confirmation criterion counted one build
+per pull request, which passes in exactly that case.
+
+Across all three the same shape of error recurs: the record asserts a conclusion
+where a reader decides, and supports it somewhere else or not at all. The
+preamble listed three commitments where the body carried seven. The options
+table listed three costs where the consequences carried five. The one-step
+framing was asserted twice and argued neither time, against a reference
+implementation that takes the opposite view for a stated reason. None of these
+is a wrong fact. Each is a place where a maintainer reading for a yes or no
+would decide on less than the record knows.
+
+Architecture review then found the record understating its own scope four times
+over, and the last of those is the one worth carrying forward. Retiring the
+release workflow drops far more than publishing: registry readback, integrity
+and provenance capture, a clean-install smoke test, signature auditing,
+initializer container verification, registry-sourced guide checks, per-package
+tags and per-package releases. A ratified decision requires that readback and it
+exists nowhere else. The record had accounted for three consequences of
+retirement and there were a dozen. Naming a thing as retired is not the same as
+knowing what it did.
+
+The last round of that scope work produced a finding worth stating on its own.
+Two of the rehomed checks install by dist-tag rather than by version, so running
+them before promotion would have fetched the previous release. One of them
+compares the generated project only against itself, so it would have passed
+while verifying nothing. A gate that reports success on the wrong artifact is
+worse than the gap it was added to close, and nothing in the record's own
+confirmation criteria would have shown it: the criterion reads as satisfied
+either way. Re-checkability is not a property of the wording. It is a property
+of what the check resolves.
+
+Two defects in this record were mine and not the author's judgement. A
+line-wrapping script merged two consequence bullets, deleting one as a
+top-level item, and dropped the word "without" from a claim about continuous
+integration runs, reversing its meaning. Neither was caught by the repository's
+checks, because neither the decisions compendium nor its consistency check reads
+list structure. Both were caught by review. The wrapping was redone with a
+marker-aware pass and the result verified word-for-word identical to its input.
+
+- `docs/decisions/0098-publish-on-merge-to-a-publish-branch.proposed.md`
+  SHA-256: `c05277bd578b82da4cbb009099b957774cee1075908ebb7bd1081bf689cb0243`
+- `docs/decisions/README.md`
+  SHA-256: `17ab0391650a83ebd99df31782c780d4381d10f01113c74724a9429de64226f0`
