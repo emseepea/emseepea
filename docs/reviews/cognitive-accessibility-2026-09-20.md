@@ -129,3 +129,62 @@ and a date. The claim is narrowed to nothing, because nothing is unconfirmed.
 
 - `docs/jtbd/README.md`
   SHA-256: `2c0592d72782f57355d48a98b2f8c7a62d4b70a9ed2902d14d42447e39bed111`
+
+## Release Readiness Record
+
+Result: ISSUES FOUND, not applied. An independent cognitive-accessibility
+specialist reviewed the rewritten release readiness record and returned 27
+findings. None were applied.
+
+That is a deliberate choice, recorded rather than hidden. The record was
+rewritten mid-release to correct a false claim: it had described a package set
+from the previous release, and it carried a review-authority framing that
+implied a person had checked the package set when an agent wrote it. Both are
+fixed. The document now states plainly who wrote it, which reviews were separate
+from the author, that those reviewers are also agents rather than people, and
+which of them left a durable file.
+
+The 27 findings concern how readable that account is, not whether it is true.
+The eleven that fall on the two load-bearing sections, Evidence So Far and Known
+Limits of This Review, were then applied: those sections now name an actor for
+each claim, say that two bare identifiers are commits, explain what writing a
+test first and watching it fail proves, state that the risk scale runs to 25
+where lower is better and that this project accepts up to 5, and say plainly
+what an adopter faces from the defect that ships without a fix. The remaining
+sixteen findings, on the surrounding sections, were not applied.
+
+The record was amended after this review. Two disclosure sections were added:
+one naming both cognitive-accessibility records and their separate coverage, and
+one recording these unapplied findings in its limits. The reviewer never saw
+either. The digest below covers the amended file, so it binds the evidence to
+what ships rather than to what was read.
+
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `5e7b3cf928fce036859f0fe7812941671fa0a6070021601fbf560bf227fd3087`
+
+## Two Problem Records From This Release
+
+Result: ISSUES FOUND, not applied. An independent cognitive-accessibility
+specialist reviewed both new problem records and returned 18 findings. None were
+applied.
+
+Both records exist because this release ships with two known gaps that needed a
+home outliving the release readiness record, which is replaced each release. One
+covers a correctness defect: a strict result schema has its closure dropped when
+it is piped from an open object. The other covers a guidance defect: the package
+guide shipped inside the server package does not mention the new default or the
+way to declare a closed contract.
+
+The findings concern how readable the two records are, not whether they are
+accurate. Applying them is owed. The maintainer directed that the release
+proceed through the standard process rather than another review cycle, and
+holding a release to reword an internal backlog ticket would be the wrong trade.
+
+- `docs/problems/open/006-strict-result-schema-opens-when-piped-from-an-open-object.md`
+  SHA-256: `479abc52e158d626a9df28589fbcff9226fd6d6f6bd4061e1267bcd84e4aeb00`
+- `docs/problems/open/007-shipped-package-guide-is-silent-on-open-by-default-result-schemas.md`
+  SHA-256: `e1436f92df0963bd44fa6611c2f7bcdd0270295d0e9b77ab84e0f4fc7813b240`
+- `docs/problems/README.md`
+  SHA-256: `0bc92d3020457c90405d36ae9db621a5e2c22dcd0e973a9861294e6a3eff6a16`
+- `docs/problems/README-history.md`
+  SHA-256: `7dc4d2cfdbde2cf005a31255e81f401efd00a79ebd39671fa278c98658ba5b62`
