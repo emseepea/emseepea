@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 99 decisions: 55 current and 44 historical.
+This project has 100 decisions: 56 current and 44 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -70,6 +70,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0099: Website Deploys with the Release](0099-website-deploys-with-the-release.proposed.md): Proposed; human review confirmed.
 - [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.proposed.md): Proposed; human review confirmed.
 - [ADR-0101: Vulnerability Scanning Without a Release Workflow](0101-vulnerability-scanning-without-a-release-workflow.proposed.md): Proposed; human review confirmed.
+- [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2245,3 +2246,27 @@ Chosen option: **bind publication to the passing quality run for the originating
 - Standalone initializer qualification requires the scan to pass.
 - Publication retains package signature, integrity, provenance, and clean-install checks.
 - No release pull request is opened, and nothing is published, for a commit whose scan did not pass.
+
+### [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0102 Decision
+
+Chosen option: **let the deployment declare its proxy topology**, because it is the only option that keeps the framework making the decision while letting the adopter supply the one fact it cannot observe.
+
+#### ADR-0102 Checks
+
+- A profile with neither `trustedProxyAddresses` nor `proxyBoundary` is refused at construction, and so is one carrying both.
+- A profile declaring `proxyBoundary: "platform-enforced"` starts, serves a request from any peer, and still refuses a disallowed authority, a disallowed origin, a non-HTTPS forwarded protocol and a rate-limited client.
+- `trustedProxyAddresses` still rejects a CIDR at construction.
+- With `forwardedHops` unset, a multi-entry `x-forwarded-for` is refused, exactly as today.
+- With `forwardedHops: 1`, both `<client>, <balancer>` and `<caller-supplied>, <client>, <balancer>` rate-limit on `<client>`, and a caller who varies their own prefix is limited on the same key.
+- With `forwardedHops: 1`, a single-entry header is refused, the response carries the same generic message as every other forwarding refusal, and the server's log record names the hop-count mismatch.
+- A count one higher than the topology reads the caller's own prefix as the client address, and serves the request. That is the accepted silent failure named in Consequences, not a guarded case: refusing an over-long header instead would break the prefix-ignoring this decision depends on. A behavioural test pins the direction, so prose that states it backwards contradicts a passing test rather than standing unchallenged.
+- `forwardedHops` rejects a negative, fractional or non-numeric value at construction.
+- A request carrying `x-forwarded-for` twice is refused at every hop count, so a caller cannot shift the index by repeating the field.
+- A configuration file carrying `proxyBoundary` or `forwardedHops` loads, and one carrying an unknown key is still refused.
+- A server started with `proxyBoundary: "platform-enforced"` records once at startup that the peer check is disabled by declaration.
+- A loaded profile still equals the configuration file it came from, so the hop-count default is not materialized by the loader.

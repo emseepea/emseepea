@@ -89,6 +89,7 @@ export {
   type CallerClassification,
   type ObservabilityAdapter,
   type ObservabilityEvent,
+  type ObservedForwardingRefusal,
   type ObservedHttpMethod,
   type ObservedMcpMethod,
   type ObservedProtocolOutcome,
@@ -778,6 +779,27 @@ export type DeploymentProfile =
       readonly allowedAuthorities: readonly string[];
       readonly allowedOrigins: readonly string[];
       readonly trustedProxyAddresses: readonly string[];
+      /**
+       * How many entries the infrastructure in front appends to
+       * `x-forwarded-for` AFTER the client address. Defaults to 0.
+       *
+       * 0 means the header carries the client and nothing else, so anything
+       * longer is refused: with nothing trustworthy appending, a second entry
+       * can only have been supplied by the caller.
+       *
+       * A load balancer that appends its own address after the client is 1:
+       * the client is then the second-to-last entry, and anything before it
+       * is caller-supplied and ignored. Reading the FIRST entry instead would
+       * let a caller choose their own rate-limit key.
+       *
+       * Set it from what the deployment actually sends, not from what a
+       * platform is assumed to do. Counting from the end keeps a caller out
+       * of the rate-limit key when the count is right; it cannot tell you the
+       * count is wrong. A count higher than the truth reads an entry the
+       * caller supplied, on any request that carries a prefix, and nothing
+       * here detects it.
+       */
+      readonly forwardedHops?: number;
       readonly rateLimit: Readonly<RateLimitOptions>;
     };
 
@@ -801,6 +823,7 @@ export function loadDeploymentProfile(
     allowedAuthorities: z.array(z.string()).min(1),
     allowedOrigins: z.array(z.string()).min(1),
     trustedProxyAddresses: z.array(z.string()).min(1),
+    forwardedHops: z.number().int().nonnegative().optional(),
     rateLimit: z.strictObject({
       maxRequests: z.number().int().positive(),
       windowMs: z.number().int().positive(),
@@ -841,6 +864,7 @@ type NormalizedDeployment =
       readonly allowedAuthorities: ReadonlySet<string>;
       readonly allowedOrigins: ReadonlySet<string>;
       readonly trustedProxyAddresses: ReadonlySet<string>;
+      readonly forwardedHops: number;
       readonly rateLimit: Readonly<RateLimitOptions>;
     };
 interface AppRuntime {
@@ -2948,6 +2972,26 @@ function isJsonParseError(error: unknown): error is SyntaxError & { statusCode: 
        error.code === "FST_ERR_CTP_EMPTY_JSON_BODY"));
 }
 
+/**
+ * The client address out of `x-forwarded-for`, counted from the end.
+ *
+ * Counting from the end is the whole point. Proxies APPEND, so the entries
+ * nearest the end are the ones written by infrastructure and the ones nearest
+ * the start are whatever the caller sent. `hops` says how many of those
+ * trailing entries belong to infrastructure; the client is the one just
+ * before them.
+ *
+ * At 0 nothing trustworthy appends, so a header with more than one entry is
+ * not evidence of anything and is refused rather than read.
+ */
+function forwardedClient(forwardedFor: string | null | undefined, hops: number): string | undefined {
+  if (!forwardedFor) return undefined;
+  const entries = forwardedFor.split(",").map((entry) => entry.trim());
+  if (hops === 0) return entries.length === 1 ? normalizeIp(entries[0]) : undefined;
+  if (entries.length <= hops) return undefined;
+  return normalizeIp(entries[entries.length - 1 - hops]);
+}
+
 function validateProductionRequest(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -2966,8 +3010,19 @@ function validateProductionRequest(
   const forwardedFor = singleHeader(request.raw.rawHeaders, "x-forwarded-for");
   const host = singleHeader(request.raw.rawHeaders, "host");
   const origin = singleHeader(request.raw.rawHeaders, "origin");
-  const client = forwardedFor && !forwardedFor.includes(",") ? normalizeIp(forwardedFor) : undefined;
-  if (proto !== "https" || !client) return reject(403, "Invalid forwarding metadata");
+  const client = forwardedClient(forwardedFor, deployment.forwardedHops);
+  if (proto !== "https" || !client) {
+    // ADR-0102: the operator calibrating forwardedHops needs to know the header
+    // was too short for what was declared; the caller must not be told, because
+    // a refused caller who learns that could add prefix entries until they are
+    // served. The response is the same generic message for every reason.
+    if (forwardedFor !== null && forwardedFor !== undefined
+        && forwardedFor.split(",").length <= deployment.forwardedHops) {
+      const state = observabilityState(request);
+      if (state) state.forwardingRefusal = "hop-count-mismatch";
+    }
+    return reject(403, "Invalid forwarding metadata");
+  }
   if (!host || !deployment.allowedAuthorities.has(normalizeAuthority(host) ?? "")) {
     return reject(403, "Authority is not allowed");
   }
@@ -3143,6 +3198,7 @@ function normalizeDeployment(profile: DeploymentProfile): NormalizedDeployment {
     trustedProxyAddresses: new Set(profile.trustedProxyAddresses.map((value) => requiredNormalized(
       "trusted proxy IP address", value, normalizeIp,
     ))),
+    forwardedHops: nonNegativeInteger("forwardedHops", profile.forwardedHops ?? 0),
     rateLimit: {
       maxRequests: positiveInteger("rateLimit.maxRequests", profile.rateLimit.maxRequests),
       windowMs: positiveInteger("rateLimit.windowMs", profile.rateLimit.windowMs),
@@ -3822,6 +3878,10 @@ function resourceTemplateRoutesOverlap(
 }
 function assertNonEmpty(field: string, value: string): void {
   if (!value.trim()) throw new TypeError(`${field} must not be empty`);
+}
+function nonNegativeInteger(field: string, value: number): number {
+  if (!Number.isSafeInteger(value) || value < 0) throw new TypeError(`${field} must be a non-negative safe integer`);
+  return value;
 }
 function positiveInteger(field: string, value: number): number {
   if (!Number.isSafeInteger(value) || value <= 0) throw new TypeError(`${field} must be a positive safe integer`);

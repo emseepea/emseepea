@@ -38,6 +38,7 @@ The deployment file contains only non-secret policy:
   "allowedAuthorities": ["mcp.example.com"],
   "allowedOrigins": ["https://mcp.example.com"],
   "trustedProxyAddresses": ["10.0.0.10"],
+  "forwardedHops": 0,
   "rateLimit": {
     "maxRequests": 100,
     "windowMs": 60000,
@@ -45,6 +46,25 @@ The deployment file contains only non-secret policy:
   }
 }
 ```
+
+`forwardedHops` says how many entries the infrastructure in front appends to
+`X-Forwarded-For` after the client's address. Leave it at `0` if your proxy
+replaces the header, which means it must carry exactly one entry. If your load
+balancer appends instead, set it to the number of entries it adds.
+
+Set it from a header you have actually seen rather than from documentation. Log
+the raw `X-Forwarded-For` from a request you make yourself and count the entries
+after your own address.
+
+Getting this number too high is the dangerous mistake. A caller can then put
+their own value in the position being read, and the rate limit never catches
+them. Nothing warns you.
+
+Getting it too low is the safe mistake. Every caller ends up on one shared
+limit. That is wrong too, but you see it at once.
+
+[How to set `forwardedHops`](https://github.com/emseepea/emseepea/tree/main/packages/framework#a-proxy-that-appends-instead-of-replacing)
+explains both wrong values in full.
 
 Those values show the shape only. Replace them with your real host, browser
 origin, trusted proxy address, and request limits.
@@ -67,7 +87,9 @@ Run the image with:
 Put the container behind a proxy that:
 
 - terminates TLS
-- forwards exactly one client address
+- sends the client address first in `X-Forwarded-For`, and appends nothing
+  except its own entries
+- has `forwardedHops` set to the number of entries it appends
 - sets HTTPS and authority metadata
 - forwards `Origin` only when the client supplied it
 - leaves `Authorization` unchanged

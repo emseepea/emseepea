@@ -40,10 +40,23 @@ test("deployment environment is loopback by default and fail-closed in productio
     { ...validConfig, trustedProxyAddresses: ["::ffff:127.0.0.1"] },
     { ...validConfig, trustedProxyAddresses: ["127.0.0.1/32"] },
     { ...validConfig, rateLimit: { ...validConfig.rateLimit, maxRequests: 0 } },
+    { ...validConfig, forwardedHops: -1 },
+    { ...validConfig, forwardedHops: 1.5 },
+    { ...validConfig, forwardedHops: "1" },
   ]) {
     await writeFile(configPath, JSON.stringify(invalid));
     assert.throws(() => loadDeploymentProfile(environment));
   }
+
+  // The hop count travels through the config file, not only the API, because
+  // how many proxies sit in front is a fact about the deployment and the
+  // deployment is what writes this file.
+  await writeFile(configPath, JSON.stringify({ ...validConfig, forwardedHops: 1 }));
+  assert.deepEqual(loadDeploymentProfile(environment), {
+    mode: "production-behind-proxy",
+    ...validConfig,
+    forwardedHops: 1,
+  });
 
   await writeFile(configPath, Buffer.from([0xff]));
   assert.throws(() => loadDeploymentProfile(environment));
