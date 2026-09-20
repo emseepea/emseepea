@@ -1,5 +1,24 @@
 # @emseepea/create-html-ui-server
 
+## 0.0.43
+
+### Patch Changes
+
+- [`ed936ec`](https://github.com/emseepea/emseepea/commit/ed936ec494c9c5e5f70f9ee7677b886dcc2354f7) Thanks [@tompahoward](https://github.com/tompahoward)! - Start new projects on the release that publishes result schemas open
+
+  Each starter pins a version of the server package. Projects you create from it
+  use that version. That pin now points at the release that publishes result
+  schemas open. A project you start from one of these starters begins with result
+  schemas that a client can tolerate a new field in.
+
+  Two starters, `@emseepea/create-html-ui-server` and
+  `@emseepea/create-react-ui-server`, also carry a copy of the shared example
+  result schema. That copy is open now too, so the schema you would copy from
+  publishes an open contract rather than a closed one.
+
+  You do not need to do anything. This only affects projects created after this
+  release.
+
 ## 0.0.42
 
 ### Patch Changes
