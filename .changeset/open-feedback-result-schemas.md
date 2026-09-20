@@ -55,31 +55,18 @@ fixed here. It is recorded as Problem 006 in this project's backlog.
 
 #### If you implement a feedback backend
 
-You lose one check. An unexpected key nested inside a conversation or a message
-is now dropped rather than reported. It is still never sent to a client.
+Some of what you return is now checked less closely. Nothing unexpected reaches
+a client either way.
 
-The schemas that check what your adapter returns are still strict at the top
-level, so an unexpected top-level key is still rejected. To keep the nested
-check, validate your adapter's return value against your own strict schema
-before you return it.
+Two checks are unchanged:
 
-#### Will this happen again?
+- If you implement a conversation backend, an unexpected key at the top level of
+  what you return is still rejected.
+- On any backend, an unexpected key inside an event is still rejected.
 
-Not on these surfaces, and you do not have to take our word for it. The shared
-result view and all five feedback tools now publish open, and two tests hold
-them that way. One walks every object in the result view and fails if any of
-them is closed. The other does the same for all five feedback tools and names
-the exact path of any closed node it finds. Closing one of these schemas again
-would fail both tests before it could ship.
+Everywhere else, an unexpected key is now dropped quietly: anywhere nested inside
+what you return, and at the top level of what a submission backend returns.
 
-You can also check this in your own project, without reading our code. After you
-re-capture, open the baseline for one of these tools: an open schema does not
-carry `"additionalProperties": false`.
-
-The two tests are in this project's source repository:
-
-- `tests/black-box/output-schema-openness.test.mjs`
-- `packages/feedback/test/result-schema-openness.test.mjs`
-
-These tests cover the result view and the feedback tools. A result schema added
-somewhere else later is not covered by them.
+To get those checks back, validate your return value before you return it
+against a schema of your own that is strict at every level. A strict wrapper
+around the schemas this package exports will not do it: those are open.

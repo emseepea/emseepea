@@ -406,3 +406,47 @@ changes to a sentence that the applied findings had already replaced.
   SHA-256: `b750fa00544d7c0fad8cdf2471dac68aabcea753680b92656ad446260402779c`
 - `docs/reviews/current-release-readiness.md`
   SHA-256: `e96a51d7abcf265ac8d81b34dea0b44943135ce432a13e99fd1eae45d2c7082e`
+
+## Correction to the feedback release note after a simplification
+
+The maintainer directed that the feedback package should not carry both a strict
+schema for checking what an adapter returns and a separate open schema for
+publishing the same result. The submission schema is now open, and the tool's
+published result is that schema rather than a second copy kept in step with it.
+
+That falsified a sentence in the release note, and the two attempts to repair it
+failed in turn. Recording all three, because the pattern is the point.
+
+The original sentence said the schemas checking an adapter's return were still
+strict at the top level. The simplification made that false for a submission
+backend. The first repair said anything unexpected from a submission backend was
+dropped quietly. Risk review found that false too: every event is still checked
+strictly, because the event schema derives from a strict one. The second repair
+enumerated four cases. A further specialist review ran the code and found the
+enumeration still incomplete — the page and thread schemas opened in this
+release as well, so a list backend loses checks the sentence did not mention.
+
+Three wrong sentences in a row, each true of the rule and false of a case, which
+is the same fault this release exists to own. The fix was to stop enumerating
+what was lost. The section now states the two checks that survive and says
+everything else is dropped. A catch-all cannot be incomplete.
+
+Two further findings were applied. The remedy told backends to validate against
+their own strict schema, which is exactly what this package already does and
+exactly why the nested check disappeared — a strict wrapper around the schemas
+this package exports reproduces the hole. It now says the schema has to be
+strict at every level, and warns against that specific wrong move. The opening
+line said "a check" while the remedy said "those checks", and its pronoun could
+be read as the check not reaching the client rather than the data.
+
+Both behaviours the section now claims are pinned by a test rather than asserted:
+a stray top-level key from a submission backend is dropped, and a stray key
+inside an event is rejected. The claim rested on strictness being inherited
+through an omit, which is the kind of unpinned derivation Problem 006 was about.
+
+One adjacent finding was applied: the same incomplete enumeration had been
+written into the source comment, where it would have re-seeded the error for the
+next person to touch the file.
+
+- `.changeset/open-feedback-result-schemas.md`
+  SHA-256: `68117940635e321fcacc38cd3f7f561c3ee460c26c619c5038287d7e81ba529d`

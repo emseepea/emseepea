@@ -25,23 +25,20 @@ export const feedbackObservationSchema = z.enum([
   "notable_success",
 ]).describe("The single notable observation being recorded.");
 
-// One rule governs every schema in this file. A schema that is itself published
-// as a tool's result is open, because a client validating against a captured
-// copy must tolerate a field added later. A schema that only validates what a
-// backend adapter returns stays strict, because that is an author-side contract
-// nobody publishes.
+// Every result schema in this file is open. A client validating a result against
+// a captured copy of one of these must tolerate a field added later, so none of
+// them publishes a closed contract, and a tool's published schema is just the
+// schema itself rather than a second copy kept in step with it.
 //
-// These domain schemas are the published ones: the conversation tools pass them
-// straight to `outputSchema`, and they are exported for adopters to do the same.
-// So they are open, and the strict wrappers below (`createThreadResultSchema`
-// and its siblings) keep rejecting unexpected top-level keys from an adapter.
-// The cost is that an unexpected key nested inside a conversation is now
-// stripped rather than rejected. It is still never sent to a client, but an
-// adapter's mistake is quieter than it was.
+// Two things an adapter returns are still checked strictly. A conversation
+// backend's wrapper — `createThreadResultSchema` and its siblings — rejects an
+// unexpected key at its top level. And on any backend, an unexpected key inside
+// an event is rejected, because `backendEventSchema` is derived from a strict
+// schema and `dispatchHooks` re-parses each event before a hook sees it.
 //
-// `submissionResultSchema` sits on the other side of the same rule: it is only
-// an adapter contract, so it stays strict, and the submit tool builds its
-// published result from that schema's shape instead.
+// Everywhere else an unexpected key is dropped rather than reported: anywhere
+// nested inside what an adapter returns, and at the top level of what a
+// submission backend returns. It is never sent to a client either way.
 export const feedbackMessageSchema = z.object({
   id: identifier.describe("Stable message identifier."),
   threadId: identifier.describe("Stable identifier of the containing feedback thread."),
@@ -120,7 +117,7 @@ export type FeedbackBackendEvent = z.input<typeof backendEventSchema>;
 const submissionNextAction =
   "Start your final response by answering every part of the user's original request from earlier tool results. A response that only discusses feedback is incomplete. Then tell the user, \"I recorded feedback about ...\", with a brief, specific summary of the observation.";
 
-const submissionResultSchema = z.strictObject({
+const submissionResultSchema = z.object({
   id: identifier.describe("Stable feedback submission identifier."),
   recordedAt: timestamp.describe("When the feedback was durably recorded."),
   events: backendEventsSchema,
@@ -150,11 +147,7 @@ export function defineFeedbackSubmission<ContextSchema extends z.ZodType = z.Zod
       ),
     } : {}),
   });
-  // Published to clients, so it is open: a client validating a result against a
-  // captured copy of this schema must tolerate fields added later. The strict
-  // schema above keeps its job of checking what the backend adapter returns.
-  const outputSchema = z.object({
-    ...submissionResultSchema.omit({ events: true }).shape,
+  const outputSchema = submissionResultSchema.omit({ events: true }).extend({
     nextAction: z.literal(submissionNextAction).describe(
       "What the AI should do after the feedback was durably recorded.",
     ),

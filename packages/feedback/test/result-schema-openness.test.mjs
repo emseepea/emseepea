@@ -63,3 +63,36 @@ test("every feedback conversation tool publishes an open result schema", async (
     assert.deepEqual(closedNodes(listed.outputSchema), [], listed.name);
   }
 });
+
+// Pins the two checks the release note says survive. The note's truth otherwise
+// rests on strictness being inherited through `.omit()`, which is exactly the
+// kind of unpinned derivation Problem 006 was about.
+test("a submission backend's stray top-level key is dropped but a stray event key is rejected", async (t) => {
+  const now = "2026-09-20T00:00:00.000Z";
+  const event = {
+    id: "e-1", type: "feedback.message.added", occurredAt: now,
+    threadId: "t-1", messageId: "m-1", author: "user",
+  };
+  const start = async (result) => {
+    const running = await startEmseepea(t, createEmseepea({
+      name: "submission-strictness-test",
+      version: "0.0.0",
+      tools: [defineFeedbackSubmission({
+        access: "public",
+        scope: "strictness",
+        backend: { submit: () => result },
+      })],
+    }));
+    return (await running.connect()).callTool({
+      name: "submit-feedback",
+      arguments: { observation: "friction", detail: "The filters were hard to find." },
+    });
+  };
+
+  const dropped = await start({ id: "f-1", recordedAt: now, surprise: "extra" });
+  assert.notEqual(dropped.isError, true);
+  assert.equal(Object.hasOwn(dropped.structuredContent, "surprise"), false);
+
+  const rejected = await start({ id: "f-2", recordedAt: now, events: [{ ...event, surprise: "extra" }] });
+  assert.equal(rejected.isError, true);
+});
