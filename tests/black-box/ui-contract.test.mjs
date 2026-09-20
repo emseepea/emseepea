@@ -116,8 +116,21 @@ const resultView = defineResultView({
   state: { kind: "ready", status: "Borrowing estimate ready: $640,000.", focusTarget: "none" },
 });
 
-test("the result contract is strict, bounded, and preserves label in name", () => {
-  assert.throws(() => parseResultView({ ...resultView, destination: "https://attacker.example" }), /unrecognized|unknown/i);
+test("the result contract drops unknown keys, is bounded, and preserves label in name", () => {
+  // The result view is published open, so an unknown key no longer throws. The
+  // property that matters is unchanged and is what this asserts: a key nobody
+  // declared never reaches the rendered view. It is dropped, not carried.
+  const injected = parseResultView({ ...resultView, destination: "https://attacker.example" });
+  assert.equal(Object.hasOwn(injected, "destination"), false);
+  assert.deepEqual(injected, parseResultView(resultView));
+  // Every object in the view is open now, not just the root, so a key injected
+  // into a nested one has to be dropped too.
+  const nested = parseResultView({
+    ...resultView,
+    state: { ...resultView.state, destination: "https://attacker.example" },
+  });
+  assert.equal(Object.hasOwn(nested.state, "destination"), false);
+  assert.deepEqual(nested, parseResultView(resultView));
   assert.throws(() => parseResultView({ ...resultView, headline: "x".repeat(161) }), /too_big|too big/i);
   assert.throws(() => parseResultView({
     ...resultView,

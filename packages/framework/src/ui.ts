@@ -1,36 +1,44 @@
 import { z } from "zod";
 
+// A result view IS a tool result, so every object in it is open: a client
+// holding a captured copy of the schema must tolerate fields added later.
+// The elicitation schemas below stay strict. They are not a weaker case of the
+// same rule — an elicitation view is a form declaration a renderer consumes,
+// not a result a client validates. Both are author-declared and both are
+// exported, so that is not what separates them. Nothing in this repository
+// embeds an elicitation view in a published result; if something ever does, it
+// publishes a closed contract and belongs on the open side.
 const identifierSchema = z.string().min(1).max(64).regex(/^[A-Za-z][A-Za-z0-9_-]*$/);
 const labelSchema = z.string().trim().min(1).max(160);
 const proseSchema = z.string().trim().min(1).max(1_000);
 const fieldErrorSchema = z.string().trim().min(1).max(300);
 
-const resultStateSchema = z.strictObject({
+const resultStateSchema = z.object({
   kind: z.enum(["loading", "ready", "updated", "empty", "sending", "sent", "error"]),
   status: proseSchema,
   focusTarget: z.enum(["none", "status", "result", "actions"]),
 });
 
-const resultActionSchema = z.strictObject({
+const resultActionSchema = z.object({
   id: identifierSchema,
   label: labelSchema,
   accessibleName: labelSchema.optional(),
   disabled: z.boolean().optional(),
 });
 
-export const resultViewSchema = z.strictObject({
+export const resultViewSchema = z.object({
   id: identifierSchema,
   heading: labelSchema,
   headline: labelSchema.optional(),
   summary: proseSchema.optional(),
-  metrics: z.array(z.strictObject({
+  metrics: z.array(z.object({
     label: labelSchema,
     value: labelSchema,
     hint: labelSchema.optional(),
   })).max(32).default([]),
-  reasons: z.strictObject({ label: labelSchema, items: z.array(proseSchema).min(1).max(16) }).optional(),
-  assumptions: z.strictObject({ label: labelSchema, items: z.array(proseSchema).min(1).max(16) }).optional(),
-  disclosure: z.strictObject({
+  reasons: z.object({ label: labelSchema, items: z.array(proseSchema).min(1).max(16) }).optional(),
+  assumptions: z.object({ label: labelSchema, items: z.array(proseSchema).min(1).max(16) }).optional(),
+  disclosure: z.object({
     label: labelSchema,
     items: z.array(proseSchema).min(1).max(16),
   }).optional(),

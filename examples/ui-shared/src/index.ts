@@ -13,12 +13,14 @@ const inputSchema = z.strictObject({
   peaType: peaTypeSchema,
   includeTips: z.boolean().describe("Whether to include sample growing tips."),
 });
-const outputSchema = z.strictObject({
+// Published to clients, so it is open: a client holding a captured copy of
+// this schema must tolerate a field added later. Inputs stay strict.
+const outputSchema = z.object({
   status: z.literal("preview-only").describe("Confirms that this result is only a preview."),
   effectPerformed: z.literal(false).describe("Confirms that nothing was sent, stored, or changed."),
   title: z.string().describe("Title of the planting-plan preview."),
   matchingCount: z.number().int().nonnegative().describe("Number of sample varieties matching the selected pea type."),
-  varieties: z.array(z.strictObject({
+  varieties: z.array(z.object({
     name: z.string().describe("Name of the sample pea variety."),
     growthHabit: z.enum(["bush", "climbing"]).describe("Whether the variety grows as a bush or climbing vine."),
     peaType: z.enum(["shelling", "snap"]).describe("Whether the variety is grown for shelled peas or edible pods."),

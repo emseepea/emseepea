@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
-import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
+import { createEmseepea, defineTool, resultViewSchema, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
 // A recursive schema is what actually forces the converter to emit a $defs entry
@@ -27,6 +27,25 @@ const app = createEmseepea({
       }),
       handler({ value }) {
         return { data: { id: value, nested: { total: 1 }, rows: [{ label: "a" }] } };
+      },
+    }),
+    defineTool({
+      name: "result-view-output",
+      access: "public",
+      description: "Publishes a result that embeds the shared result view.",
+      inputSchema: z.object({ value: z.string() }),
+      outputSchema: z.object({ view: resultViewSchema }),
+      handler({ value }) {
+        return {
+          data: {
+            view: {
+              id: "v1",
+              heading: value,
+              disclaimer: "Not advice.",
+              state: { kind: "ready", status: "Done.", focusTarget: "none" },
+            },
+          },
+        };
       },
     }),
     defineTool({
@@ -94,6 +113,18 @@ test("published output schemas are open by default and strict declarations stay 
     const plain = tools.find(({ name }) => name === "plain-output");
     const recursive = tools.find(({ name }) => name === "recursive-output");
     const strict = tools.find(({ name }) => name === "strict-output");
+    const resultView = tools.find(({ name }) => name === "result-view-output");
+
+    // The shared result view ships inside published results, so every object in
+    // it must be open too -- a client holding a captured copy has to tolerate a
+    // field added later.
+    for (const node of objectNodes(resultView.outputSchema)) {
+      assert.notEqual(
+        node.additionalProperties,
+        false,
+        `the shared result view must not publish a closed node: ${JSON.stringify(node)}`,
+      );
+    }
 
     // An ordinary object result publishes an open contract at EVERY object node --
     // top level, nested, and inside arrays.

@@ -25,7 +25,24 @@ export const feedbackObservationSchema = z.enum([
   "notable_success",
 ]).describe("The single notable observation being recorded.");
 
-export const feedbackMessageSchema = z.strictObject({
+// One rule governs every schema in this file. A schema that is itself published
+// as a tool's result is open, because a client validating against a captured
+// copy must tolerate a field added later. A schema that only validates what a
+// backend adapter returns stays strict, because that is an author-side contract
+// nobody publishes.
+//
+// These domain schemas are the published ones: the conversation tools pass them
+// straight to `outputSchema`, and they are exported for adopters to do the same.
+// So they are open, and the strict wrappers below (`createThreadResultSchema`
+// and its siblings) keep rejecting unexpected top-level keys from an adapter.
+// The cost is that an unexpected key nested inside a conversation is now
+// stripped rather than rejected. It is still never sent to a client, but an
+// adapter's mistake is quieter than it was.
+//
+// `submissionResultSchema` sits on the other side of the same rule: it is only
+// an adapter contract, so it stays strict, and the submit tool builds its
+// published result from that schema's shape instead.
+export const feedbackMessageSchema = z.object({
   id: identifier.describe("Stable message identifier."),
   threadId: identifier.describe("Stable identifier of the containing feedback thread."),
   sequence: z.number().int().positive().describe("Stable one-based position in the thread."),
@@ -38,7 +55,7 @@ export const feedbackMessageSchema = z.strictObject({
   ),
 });
 
-export const feedbackThreadSchema = z.strictObject({
+export const feedbackThreadSchema = z.object({
   id: identifier.describe("Stable feedback thread identifier."),
   subject: z.string().min(1).max(200).describe("Short description of the feedback topic."),
   status: z.string().min(1).max(80).describe("Current backend or support-system status."),
@@ -133,7 +150,11 @@ export function defineFeedbackSubmission<ContextSchema extends z.ZodType = z.Zod
       ),
     } : {}),
   });
-  const outputSchema = submissionResultSchema.omit({ events: true }).extend({
+  // Published to clients, so it is open: a client validating a result against a
+  // captured copy of this schema must tolerate fields added later. The strict
+  // schema above keeps its job of checking what the backend adapter returns.
+  const outputSchema = z.object({
+    ...submissionResultSchema.omit({ events: true }).shape,
     nextAction: z.literal(submissionNextAction).describe(
       "What the AI should do after the feedback was durably recorded.",
     ),
@@ -199,7 +220,7 @@ const listThreadsQuerySchema = z.strictObject({
 const getThreadQuerySchema = z.strictObject({
   threadId: identifier.describe("Exact feedback thread identifier returned by this server."),
 });
-const threadPageSchema = z.strictObject({
+const threadPageSchema = z.object({
   threads: z.array(feedbackThreadSchema).max(50).describe("Feedback threads visible in this scope."),
   nextCursor: z.string().min(1).max(1_000).optional().describe("Cursor for the next page, when more threads exist."),
 });

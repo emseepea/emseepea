@@ -302,3 +302,107 @@ afterwards and exited cleanly.
   SHA-256: `48b1aad8263bb8ff8a8d7bbdda0c309ee5affdacab7b8793d741d137d0ce7dc6`
 - `docs/problems/README-history.md`
   SHA-256: `ce49fa73f623ff5270f71ffd85c38e85e018aefdba671071f83393b79ff8e502`
+
+## Release notes for opening first-party result schemas
+
+Reviewed: the two release notes shipping the change that opens the first-party
+published result schemas.
+
+The reviewer returned 15 findings: 10 to fix before release and 5 optional. All
+15 were applied.
+
+Architecture review then found the pair asymmetric. Both notes needed to disclose
+that a runtime check gets weaker, and only one did. The missing disclosure made
+the other note's "What did not change" section read as a claim that nothing
+behavioural had moved, which was not true: two exported functions that used to
+reject an undeclared key now drop it silently. A section was added, and because
+it was text nobody had reviewed, it went back for a third pass rather than being
+covered by a digest over unread prose. That pass returned three findings, all
+applied. One mattered: the remedy named only one of the two functions its own
+heading invites in, leaving the readers most likely to be handling untrusted
+payloads with a disclosure and no usable instruction.
+
+Four were about the notes failing their own purpose. A heading reading "What did
+not change" sat directly above a paragraph describing a change, which would have
+told a backend implementer to skip the one paragraph written for them. The word
+"open" was never defined, though "closed" was. The sentence carrying the whole
+explanation rested on two words the reader had not been given — "mechanism" and
+"spelling", the second of which reads as orthography to anyone meeting it in a
+second language. And none of the headings named an action, so a reader scanning
+for what to do found only topic labels.
+
+Two concerned the awkward part. These notes have to tell adopters that the
+previous release's note implied this surface was settled, and that it was not.
+The first draft spent its opening sentences establishing that the earlier note
+had been correct before admitting there was a second break waiting. That reads
+as a defence. The section now leads with the consequence and explains
+afterwards.
+
+One finding asked for something the draft had withheld. The note discloses that
+a diagnostic check gets weaker for backend implementers, but gave them nothing
+to do about it. It now names the remedy.
+
+The reviewer also confirmed a gap that turned out not to be one: the change
+touches a copyable example, which ships no release note. That package is private
+and excluded from publication, so none is owed.
+
+- `.changeset/open-first-party-result-schemas.md`
+  SHA-256: `8bd3812f045e2d51c66cb3e5654cc4b7b21c3bc6e06ceb461dfacbfaf8118d4e`
+- `.changeset/open-feedback-result-schemas.md`
+  SHA-256: `4080d5fbddebcebf7eb09332b7134bb64de84ed6e2f0cb4dd55d82b71683197d`
+
+## Release notes and readiness record for opening first-party result schemas
+
+Reviewed: the two amended release notes, the new starter-packages note, and this
+release's readiness record.
+
+The reviewer returned 19 findings, 11 to fix before release and 8 optional, plus
+one raised outside the scope it was given. All 11, six of the optional ones, and
+the out-of-scope finding were applied. The two optional findings left are noted
+at the end.
+
+The out-of-scope finding was the most important thing in the review, and it was
+raised because the reviewer had read a backlog record the brief did not mention.
+Both release notes told adopters that a schema declared strict still publishes
+closed. That is false in one real case: a strict schema fed from an open object
+has its closure dropped and publishes open. It is a known defect, recorded as
+Problem 006 and not fixed here. Shipping that sentence would have repeated the
+exact mistake these notes exist to own — stating a rule that is true of the rule
+and not of a real case, which is what left adopters stranded after 0.15.0. Both
+notes now disclose the exception, and the readiness record lists it as a limit.
+
+Four findings concerned this release's central claim. The notes answer "will
+this happen again" with two tests, and the reviewer verified the tests exist and
+do what the prose says. But the claim was wider than the tests — "every result
+schema this project publishes" against tests covering the result view and five
+tools — and the check it offered was two repository paths an adopter who
+installed a package will never open. The claim is now bounded to the surfaces
+the tests cover, states plainly that a schema added elsewhere later is not
+covered, and adds a check the reader can run against their own captured
+baseline.
+
+Three findings caught this record overstating itself. It said architecture
+review had confirmed no deliberate closed declaration changed meaning, which
+reads as a verified universal and is contradicted by Problem 006. It omitted
+Problem 006 from its limits entirely. And it described the accessibility review
+by naming two findings that were fixed, while that review had also returned
+findings on earlier records that were not applied. All three are corrected.
+
+The reviewer also flagged that the digest recorded for this record in an earlier
+section of this file no longer matched, because the record was rewritten after
+that review. The entry below supersedes it.
+
+Two optional findings were not applied. One asked for the shared paragraph in
+the two release notes to open on a different sentence in each, so each leads
+with the surface its own reader uses; keeping the two notes identical was judged
+the better trade, as the reviewer noted it would be. One asked for wording
+changes to a sentence that the applied findings had already replaced.
+
+- `.changeset/open-first-party-result-schemas.md`
+  SHA-256: `3565a85644fcd6da6aebfd27cc08c8df662623c78903f61d2324ebe849fa0929`
+- `.changeset/open-feedback-result-schemas.md`
+  SHA-256: `772bf4876d78e9bf2f6cffa53d27e559bb38701a9d389b30575ef2c355d8cba5`
+- `.changeset/initializers-follow-open-result-schemas.md`
+  SHA-256: `b750fa00544d7c0fad8cdf2471dac68aabcea753680b92656ad446260402779c`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `e96a51d7abcf265ac8d81b34dea0b44943135ce432a13e99fd1eae45d2c7082e`
