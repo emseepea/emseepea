@@ -1,0 +1,173 @@
+name: Publish
+
+# ADR-0098 steps 3 and 4. Merging the release pull request into `publish`
+# promotes the packages already on `next` to `latest`, deploys the website, and
+# then merges the publish head back into `main`.
+#
+# Nothing is rebuilt and nothing is republished here.
+
+on:
+  push:
+    branches:
+      - publish
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote the release to latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      released: ${{ steps.plan.outputs.released }}
+      website: ${{ steps.plan.outputs.website }}
+      quality_run_id: ${{ steps.plan.outputs.quality_run_id }}
+    steps:
+      - name: Check out the publish head
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24.21.0
+          registry-url: https://registry.npmjs.org
+      - name: Use the recorded npm version
+        run: |
+          corepack enable npm
+          test "$(npm --version)" = "$(node -p 'require("./package.json").packageManager.slice(4)')"
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Read what this release publishes
+        id: plan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/read-release-plan.mjs >> "$GITHUB_OUTPUT"
+      - name: Capture the current npm package state
+        if: steps.plan.outputs.released == 'true'
+        run: node scripts/verify-registry-release.mjs capture release-artifacts/registry-before.json
+      - name: Move each package's next tag to latest
+        # ADR-0098: the tarballs promoted are the ones the release pull request
+        # built and checked. promote-release.mjs refuses a version that is not
+        # already on next, so nothing unchecked can reach latest.
+        if: steps.plan.outputs.released == 'true'
+        run: node scripts/promote-release.mjs
+      - name: Verify latest resolves to the released version
+        if: steps.plan.outputs.released == 'true'
+        run: |
+          node scripts/verify-registry-release.mjs verify \
+            release-artifacts/registry-before.json release-artifacts/registry-after.json --tag latest
+      - name: Upload the promotion evidence
+        if: ${{ always() && steps.plan.outputs.released == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: promotion-${{ github.sha }}
+          path: release-artifacts
+          if-no-files-found: warn
+          retention-days: 14
+
+  deploy-website:
+    name: Publish website
+    # ADR-0099: the website is in a release exactly when a changeset names it,
+    # and what deploys is the build the performance gate measured on the
+    # originating main commit -- downloaded from that run, never rebuilt.
+    needs: promote
+    if: needs.promote.outputs.website == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+      actions: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download the measured website build
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b # v5.0.0
+        with:
+          name: github-pages
+          path: measured-pages
+          run-id: ${{ needs.promote.outputs.quality_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Republish the measured bytes as this run's pages artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: github-pages
+          path: measured-pages/artifact.tar
+          if-no-files-found: error
+          retention-days: 1
+      - name: Deploy the measured website
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+
+  merge-back:
+    name: Merge the publish head back into main
+    # ADR-0098 step 4. Runs after everything in the release is published, which
+    # is what keeps the trunk untouched while a release is in flight. This push
+    # starts no quality run, deliberately; ADR-0098 and ADR-0100 record the cost.
+    needs: [promote, deploy-website]
+    if: ${{ always() && needs.promote.result == 'success' && needs.deploy-website.result != 'failure' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the publish head
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Merge back without fast-forwarding
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          bash scripts/merge-publish-back.sh "$GITHUB_SHA"
+
+  release-records:
+    name: Tag and record each released package
+    needs: [promote, merge-back]
+    if: needs.promote.outputs.released == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the publish head
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24.21.0
+          registry-url: https://registry.npmjs.org
+      - name: Use the recorded npm version
+        run: |
+          corepack enable npm
+          test "$(npm --version)" = "$(node -p 'require("./package.json").packageManager.slice(4)')"
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Download the release artifacts
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b # v5.0.0
+        with:
+          name: promotion-${{ github.sha }}
+          path: release-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tag and publish a record for each package
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/publish-release-records.sh
+      - name: Retire replaced initializers
+        run: npm run release:deprecate-replaced

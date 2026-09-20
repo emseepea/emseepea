@@ -65,7 +65,12 @@ test("the initialized quickstart passes its documented checks", {
         cwd: directory, timeout: 600_000, maxBuffer: 1024 * 1024,
       });
     } else {
-      await exec("npm", ["init", "@emseepea/tool-server", "--", "my-mcp"], {
+      // ADR-0098: name the dist-tag. Resolving `latest` at the release pull
+      // request would install the previous release's initializer, whose pins
+      // do not match the bumped manifest this test compares against -- so it
+      // would fail on every release that bumps the packages it pins.
+      const distTag = process.env.EMSEEPEA_REGISTRY_DIST_TAG ?? "latest";
+      await exec("npm", ["init", `@emseepea/tool-server@${distTag}`, "--", "my-mcp"], {
         cwd: directory, env: { ...process.env, npm_config_yes: "true" }, timeout: 600_000, maxBuffer: 1024 * 1024,
       });
     }

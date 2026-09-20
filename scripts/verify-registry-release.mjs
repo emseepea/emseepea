@@ -30,14 +30,22 @@ export async function waitForPublication(before, read, wait = waitForPropagation
   assert.equal(classifyPublication(before, after), "published", "not all packages appeared after publication");
 }
 
-export function assertRegistryState(before, after) {
+// ADR-0098 publishes under `next` at the release pull request and moves the tag
+// to `latest` on merge, so the same state is correct at one point and wrong at
+// the other. The caller says which tag must name the version; `latest` stays the
+// default so an unqualified check remains the strict one.
+export function assertRegistryState(before, after, { tag = "latest" } = {}) {
   assert.equal(after.packages.length, before.packages.length);
   for (const expected of before.packages) {
     const actual = after.packages.find(({ name }) => name === expected.name);
     assert.ok(actual, `${expected.name} registry metadata is missing`);
     assert.equal(actual.version, expected.version);
     assert.equal(actual.present, true, `${expected.name}@${expected.version} is missing`);
-    assert.equal(actual.latest, expected.version, `${expected.name} latest tag is wrong`);
+    assert.equal(
+      actual.tags?.[tag] ?? actual.latest,
+      expected.version,
+      `${expected.name} ${tag} tag is wrong`,
+    );
     assert.match(actual.integrity, /^sha512-/, `${expected.name} integrity is missing`);
     assert.ok(actual.tarball, `${expected.name} tarball is missing`);
     assert.ok(actual.attestationsUrl, `${expected.name} attestations are missing`);
@@ -94,12 +102,12 @@ async function capture(path) {
   await writeJson(path, { packages });
 }
 
-async function verify(beforePath, afterPath) {
+async function verify(beforePath, afterPath, { tag = "latest" } = {}) {
   const before = JSON.parse(await readFile(beforePath, "utf8"));
   const prior = classifyPublication(before, { packages: before.packages });
   if (prior === "unchanged") {
     const after = { packages: await Promise.all(before.packages.map(readCurrent)) };
-    assertRegistryState(before, after);
+    assertRegistryState(before, after, { tag });
     const statements = await Promise.all(after.packages.map(readProvenance));
     const commits = statements.map(provenanceCommit);
     assertStatements(after, statements, commits);
@@ -113,7 +121,7 @@ async function verify(beforePath, afterPath) {
     before,
     async () => ({ packages: await Promise.all(before.packages.map(readCurrent)) }),
   );
-  assertRegistryState(before, after);
+  assertRegistryState(before, after, { tag });
 
   const statements = await Promise.all(after.packages.map(readProvenance));
   const commits = statements.map(provenanceCommit);
@@ -130,7 +138,9 @@ function assertStatements(after, statements, commits) {
   const expectedRun = {
     ref: process.env.GITHUB_REF,
     repository: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`,
-    workflowPath: ".github/workflows/release.yml",
+    // ADR-0098 retires release.yml; the publishing workflow is the one that
+    // built and published the tarballs, which is the release-pull-request build.
+    workflowPath: process.env.EMSEEPEA_PUBLISH_WORKFLOW_PATH ?? ".github/workflows/release-build.yml",
     invocationPrefix: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/`,
   };
   for (const [index, item] of after.packages.entries()) {
@@ -177,6 +187,7 @@ async function readCurrent(expected) {
     name: expected.name,
     version: expected.version,
     present: Boolean(version),
+    tags: { ...metadata?.["dist-tags"] },
     latest: metadata?.["dist-tags"]?.latest ?? "",
     integrity: version?.dist?.integrity ?? "",
     tarball: version?.dist?.tarball ?? "",
@@ -206,8 +217,19 @@ async function writeOutput(name, value) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  const [command, firstPath, secondPath] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const tagIndex = args.indexOf("--tag");
+  const tag = tagIndex === -1 ? "latest" : args[tagIndex + 1];
+  assert.ok(["latest", "next"].includes(tag), `unknown dist-tag ${tag}`);
+  const positional = tagIndex === -1
+    ? args
+    : args.filter((value, index) => index !== tagIndex && index !== tagIndex + 1);
+  const [command, firstPath, secondPath] = positional;
   if (command === "capture" && firstPath) await capture(firstPath);
-  else if (command === "verify" && firstPath && secondPath) await verify(firstPath, secondPath);
-  else throw new Error("Usage: verify-registry-release capture <before.json> | verify <before.json> <after.json>");
+  else if (command === "verify" && firstPath && secondPath) await verify(firstPath, secondPath, { tag });
+  else {
+    throw new Error(
+      "Usage: verify-registry-release capture <before.json> | verify <before.json> <after.json> [--tag next|latest]",
+    );
+  }
 }

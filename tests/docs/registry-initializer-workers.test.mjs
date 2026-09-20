@@ -32,7 +32,10 @@ test("registry initializer verification uses four workers and preserves every ch
   const initializations = calls.filter(({ command, args }) => command === "npm" && args[0] === "init");
   assert.deepEqual(
     initializations.map(({ args }) => args[1]).sort(),
-    initializers.map(({ name }) => `@emseepea/${name.split("/create-")[1]}`).sort(),
+    // ADR-0098: the spec names a dist-tag so this check cannot resolve the
+    // previous release and pass on it. `latest` is the default outside a
+    // release build.
+    initializers.map(({ name }) => `@emseepea/${name.split("/create-")[1]}@latest`).sort(),
   );
   for (const { cwd: parent } of initializations) {
     const project = join(parent, "my-server");
@@ -98,7 +101,7 @@ test("registry initializer verification can reuse container qualification", asyn
   assert.equal(containerCheck.cwd, "/repo");
   assert.match(containerCheck.args[0], /\/scripts\/verify-container-project\.mjs$/);
   assert.equal(containerCheck.args[1], "tool-server");
-  assert.equal(containerCheck.args[2], calls.find(({ command, args }) => command === "npm" && args[1] === "@emseepea/tool-server").cwd + "/my-server");
+  assert.equal(containerCheck.args[2], calls.find(({ command, args }) => command === "npm" && args[1] === "@emseepea/tool-server@latest").cwd + "/my-server");
   assert.equal(containerCheck.args[3], "-");
   assert.equal(containerCheck.args[4], "--registry-lock");
 });

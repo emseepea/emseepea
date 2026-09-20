@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
+import { parse } from "yaml";
 
-import { pushAndWatch, watchWorkflowRuns } from "../../scripts/push-and-watch.mjs";
+import { pushAndWatch, watchedWorkflows, watchWorkflowRuns } from "../../scripts/push-and-watch.mjs";
 
 const plannedStatus = JSON.stringify({ releases: [
   { name: "@emseepea/server", type: "patch", newVersion: "1.0.1" },
@@ -13,11 +15,10 @@ const releaseReview = `
 - Final result: within appetite.
 `;
 
-test("push and watch binds both pipelines to the pushed commit", async () => {
+test("push and watch binds the quality pipeline to the pushed commit", async () => {
   const sha = "a".repeat(40);
   const calls = [];
   let qualityPolls = 0;
-  let releasePolls = 0;
   const run = async (command, args, options) => {
     calls.push([command, ...args]);
     if (command === process.execPath) assert.equal(options.env.GITHUB_BASE_REF, "main");
@@ -37,14 +38,6 @@ test("push and watch binds both pipelines to the pushed commit", async () => {
         ...secondAttempt,
       ]);
     }
-    if (joined.includes("--workflow release.yml")) {
-      releasePolls += 1;
-      return releasePolls === 1 ? JSON.stringify([
-        { attempt: 1, conclusion: "skipped", databaseId: 4, headSha: sha, url: "https://example.test/skipped" },
-      ]) : JSON.stringify([
-        { attempt: 1, databaseId: 3, headSha: sha, url: "https://example.test/release" },
-      ]);
-    }
     if (joined.startsWith("run view")) return JSON.stringify({ status: "completed", conclusion: "success" });
     return "";
   };
@@ -52,7 +45,7 @@ test("push and watch binds both pipelines to the pushed commit", async () => {
   const result = await pushAndWatch({ run, readStatus: readStatus(), pause: async () => {}, timeoutMs: 10_000 });
   assert.deepEqual(result, {
     sha,
-    urls: ["https://example.test/quality-1", "https://example.test/quality-2", "https://example.test/quality-2-rerun", "https://example.test/release"],
+    urls: ["https://example.test/quality-1", "https://example.test/quality-2", "https://example.test/quality-2-rerun"],
   });
   assert.deepEqual(calls.filter(([command, subcommand]) => command === "git" && subcommand === "push"), [
     ["git", "push", "origin", `${sha}:refs/heads/main`],
@@ -62,7 +55,7 @@ test("push and watch binds both pipelines to the pushed commit", async () => {
   assert.ok(calls.findIndex(([command]) => command === process.execPath)
     < calls.findIndex(([command, operation]) => command === "git" && operation === "push"));
   assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), false);
-  assert.equal(calls.filter(([command, first, second]) => command === "gh" && first === "run" && second === "view").length, 4);
+  assert.equal(calls.filter(([command, first, second]) => command === "gh" && first === "run" && second === "view").length, 3);
 });
 
 test("push and watch rejects missing publication review evidence before pushing", async () => {
@@ -134,7 +127,7 @@ test("push and watch rejects uncommitted review evidence before validation", asy
   assert.equal(calls.some(([command, operation]) => command === "git" && operation === "push"), false);
 });
 
-test("push and watch rejects the wrong remote revision", async () => {
+test("push and watch rejects a trunk that does not contain the pushed commit", async () => {
   const sha = "a".repeat(40);
   const run = async (_command, args) => {
     const joined = args.join(" ");
@@ -143,11 +136,14 @@ test("push and watch rejects the wrong remote revision", async () => {
     if (joined === "exec changeset status -- --output /dev/stdout") return JSON.stringify({ releases: [] });
     if (joined === "show HEAD:docs/reviews/current-release-readiness.md") return "";
     if (joined === "ls-remote origin refs/heads/main") return `${"b".repeat(40)}\trefs/heads/main`;
+    // ADR-0100 allows the trunk to advance past the pushed commit, but not to
+    // move somewhere that does not contain it. git exits nonzero for that.
+    if (joined.startsWith("merge-base --is-ancestor")) throw new Error("Command failed: git merge-base --is-ancestor");
     return "";
   };
   await assert.rejects(
     () => pushAndWatch({ run, readStatus: async () => ({ releases: [] }) }),
-    /origin\/main does not match/,
+    /is-ancestor/,
   );
 });
 
@@ -205,15 +201,15 @@ test("push and watch propagates a failed pipeline", async () => {
 test("push and watch survives transient GitHub read failures", async () => {
   const sha = "a".repeat(40);
   const pauses = [];
-  const listAttempts = { "quality.yml": 0, "release.yml": 0 };
-  const viewAttempts = { 1: 0, 2: 0 };
+  const listAttempts = { "quality.yml": 0 };
+  const viewAttempts = { 1: 0 };
   const run = async (_command, args) => {
     const joined = args.join(" ");
     if (joined.startsWith("run list")) {
       const workflow = args[args.indexOf("--workflow") + 1];
       listAttempts[workflow] += 1;
       if (listAttempts[workflow] === 1) throw new Error("connection reset");
-      const databaseId = workflow === "quality.yml" ? 1 : 2;
+      const databaseId = 1;
       return JSON.stringify([{ attempt: 1, databaseId, headSha: sha, url: `https://example.test/${databaseId}` }]);
     }
     const databaseId = Number(args[2]);
@@ -223,11 +219,11 @@ test("push and watch survives transient GitHub read failures", async () => {
   };
   assert.deepEqual(
     await watchWorkflowRuns({ sha, run, pause: async (milliseconds) => pauses.push(milliseconds), timeoutMs: 10_000 }),
-    ["https://example.test/1", "https://example.test/2"],
+    ["https://example.test/1"],
   );
-  assert.deepEqual(listAttempts, { "quality.yml": 3, "release.yml": 3 });
-  assert.deepEqual(viewAttempts, { 1: 3, 2: 3 });
-  assert.deepEqual(pauses, Array(6).fill(30_000));
+  assert.deepEqual(listAttempts, { "quality.yml": 3 });
+  assert.deepEqual(viewAttempts, { 1: 3 });
+  assert.deepEqual(pauses, Array(3).fill(30_000));
 });
 
 test("push and watch rejects a truncated workflow result set", async () => {
@@ -251,4 +247,87 @@ test("push and watch rejects a truncated workflow result set", async () => {
     /run list reached its safety limit/,
   );
   assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), false);
+});
+
+test("the watched workflow list matches the workflows a push to main causes to run", async () => {
+  // ADR-0100 keeps the watched set as a list and makes this test the guard
+  // against it rotting. The list must name every workflow a push to `main`
+  // starts, whether triggered directly or by another workflow completing.
+  // Workflows started by an explicit dispatch are out of scope: they are
+  // governed by ADR-0098, and a push does not start them on its own.
+  const directory = new URL("../../.github/workflows/", import.meta.url);
+  const files = (await readdir(directory)).filter((name) => /\.ya?ml$/.test(name));
+  assert.notEqual(files.length, 0, "expected workflow files to read");
+
+  const parsed = await Promise.all(files.map(async (file) => [
+    file,
+    parse(await readFile(new URL(file, directory), "utf8")),
+  ]));
+
+  const pushedDirectly = parsed.filter(([, document]) => {
+    const branches = document?.on?.push?.branches;
+    return Array.isArray(branches) && branches.includes("main");
+  });
+  const directNames = new Set(pushedDirectly.map(([, document]) => document.name));
+  const chained = parsed.filter(([, document]) => {
+    const workflows = document?.on?.workflow_run?.workflows;
+    return Array.isArray(workflows) && workflows.some((name) => directNames.has(name));
+  });
+
+  const expected = [...new Set([...pushedDirectly, ...chained].map(([file]) => file))].sort();
+  assert.deepEqual(
+    [...watchedWorkflows].sort(),
+    expected,
+    "watchedWorkflows in scripts/push-and-watch.mjs disagrees with .github/workflows/",
+  );
+});
+
+test("push and watch accepts main advancing past the pushed commit", async () => {
+  // ADR-0100: the merge back can land between the push and this check. The
+  // command must accept a trunk that contains the pushed commit, and still
+  // reject one that does not.
+  const sha = "a".repeat(40);
+  const advanced = "c".repeat(40);
+  const calls = [];
+  const runWith = (ancestor) => async (command, args) => {
+    calls.push([command, ...args]);
+    const joined = args.join(" ");
+    if (joined === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
+    if (joined === "rev-parse HEAD") return sha;
+    if (joined === "exec changeset status -- --output /dev/stdout") return JSON.stringify({ releases: [] });
+    if (joined === "show HEAD:docs/reviews/current-release-readiness.md") return "";
+    if (joined === "ls-remote origin refs/heads/main") return `${advanced}\trefs/heads/main`;
+    if (joined === `merge-base --is-ancestor ${sha} ${advanced}`) {
+      if (ancestor) return "";
+      throw new Error("Command failed: git merge-base --is-ancestor");
+    }
+    if (joined.startsWith("run list")) {
+      return JSON.stringify([{ attempt: 1, databaseId: 1, headSha: sha, url: "https://example.test/quality" }]);
+    }
+    if (joined.startsWith("run view")) return JSON.stringify({ status: "completed", conclusion: "success" });
+    return "";
+  };
+
+  const result = await pushAndWatch({
+    run: runWith(true),
+    readStatus: async () => ({ releases: [] }),
+    pause: async () => {},
+    timeoutMs: 10_000,
+  });
+  assert.equal(result.sha, sha);
+  assert.ok(
+    calls.some(([command, ...args]) => command === "git"
+      && args.join(" ") === `merge-base --is-ancestor ${sha} ${advanced}`),
+    "expected an ancestry check when the trunk advanced",
+  );
+
+  await assert.rejects(
+    () => pushAndWatch({
+      run: runWith(false),
+      readStatus: async () => ({ releases: [] }),
+      pause: async () => {},
+      timeoutMs: 10_000,
+    }),
+    /is-ancestor|does not contain/,
+  );
 });

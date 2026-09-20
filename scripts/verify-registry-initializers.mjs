@@ -31,7 +31,13 @@ export async function verifyRegistryInitializers({
     const parent = await mkdtemp(join(tmpdir(), "emseepea-registry-initializer-"));
     const project = join(parent, "my-server");
     projects.push({ initializer, parent, project });
-    const init = `@emseepea/${initializer.name.split("/create-")[1]}`;
+    // ADR-0098 publishes under `next` and verifies before promoting, so this
+    // must name the tag. Without it npm resolves `latest`, which is still the
+    // previous release -- and because this check only ever compares the
+    // generated project against itself, it would pass while verifying nothing
+    // about the release being published.
+    const distTag = process.env.EMSEEPEA_REGISTRY_DIST_TAG ?? "latest";
+    const init = `@emseepea/${initializer.name.split("/create-")[1]}@${distTag}`;
     await run("npm", ["init", init, "--", "my-server"], parent);
     await run("npm", ["install", "--ignore-scripts", "--userconfig", "/dev/null"], project);
     await run("npm", ["run", "lint"], project);

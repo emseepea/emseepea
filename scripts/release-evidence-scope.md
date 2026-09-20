@@ -1,0 +1,38 @@
+- Supported slice:
+  - Fastify-first MCP 2026-07-28 server
+  - stateless POST compatibility for MCP 2025-11-25, 2025-06-18, 2025-03-26, 2024-11-05, and 2024-10-07
+  - JSON operations
+  - checked, bounded public and protected POST progress through a trusted proxy
+  - opt-in, bounded, request-scoped MCP log messages on the calling POST response
+  - the framework authenticates and authorizes protected calls before application code runs or server-sent events begin
+  - public and protected tools, resources, prompts, and completions
+  - public discovery by default and explicit permission-shaped protected discovery
+  - checked mapped adapters
+  - static-resource and non-enumerating resource-template discovery and reads
+  - opt-in, bounded, process-local resource-update subscriptions
+  - each stream listens to one registered static resource URI or one concrete URI that matches a registered resource template
+  - prompt listing and rendering
+  - opt-in prompt and resource-template completion
+  - opt-in bounded pages for tool, resource, resource-address-pattern, and prompt catalogues with opaque cursors
+  - configurable reuse instructions for discovery, catalogues, and resource reads
+  - public OAuth metadata in every discovery mode
+  - checked request headers and advertised metadata
+  - direct tools, resources, and prompts that request more client input
+  - fixed-origin HTTPS JSON GET client with network-address and response checks
+  - native HTML form rendering
+  - typed authentication, redacted observability adapters, dependency readiness, and bounded shutdown flushing
+  - standalone initializer production containers behind trusted proxies with runtime-only policy and secrets
+  - optional detailed feedback, protected append-only support conversations, typed feedback event hooks, PostgreSQL integration checks, Firestore contract checks, and deterministic GitHub Issues and Zendesk HTTP contract checks
+  - code-first AI understanding tests with three answers and nine judgments per case
+- Excluded:
+  - template enumeration
+  - changing catalogues while a server runs
+  - object or tenant authorization
+  - general or authenticated outbound HTTP policy, retries, or effects
+  - slowing a producer when a client cannot keep up
+  - legacy session identifiers and GET streams; list-change subscriptions, resynchronisation, replay, sessions, or reconnect recovery
+  - durable or cross-process notification delivery
+  - framework-managed shared stream state
+  - website deployment
+  - resource, prompt, template, completion, or streaming performance
+  - full-profile conformance

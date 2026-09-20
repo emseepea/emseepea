@@ -49,8 +49,9 @@
     "test:eval": "npm run build && npm run test:llm:built --workspaces --if-present",
     "test:eval:ci": "npm run test:llm:built --workspaces --if-present -- --provider claude-ci",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p website/tsconfig.json --noEmit",
-    "version-packages": "changeset version && npm install --package-lock-only --ignore-scripts",
-    "lint": "oxlint ."
+    "version-packages": "changeset version && node scripts/record-release-origin.mjs && npm install --package-lock-only --ignore-scripts",
+    "lint": "oxlint .",
+    "release:next": "changeset publish --tag next"
   },
   "devDependencies": {
     "@opentelemetry/context-async-hooks": "2.10.0",

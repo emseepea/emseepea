@@ -218,25 +218,90 @@ jobs:
           path: website/artifacts/performance.json
           if-no-files-found: error
           retention-days: 14
+      # ADR-0099: what deploys is the build this job measured, never a rebuild.
+      # publish.yml downloads this artifact from this run and deploys it, so the
+      # measured bytes and the deployed bytes stay identical across two runs.
       - name: Upload the checked website
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
           path: website/dist
 
-  deploy-website:
-    name: Publish website
+  release-pull-request:
+    name: Open or update the release pull request
+    # ADR-0101: this job depends on the quality jobs, so a release pull request
+    # exists only for a commit whose checks -- including the OSV scan -- passed.
+    # That dependency is what binds publication to a passed scan now that the
+    # Release workflow is gone. Removing it removes the guarantee.
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [initializer-qualification, test, website-performance]
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
+    # ADR-0099 requires permissions limited to their tasks. These are scoped to
+    # this job because the workflow also runs on pull requests, which must not
+    # inherit write access.
     permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      contents: write
+      pull-requests: write
+      actions: write
     steps:
-      - name: Deploy the checked website
-        id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24.21.0
+          cache: npm
+      - name: Use the recorded npm version
+        run: |
+          corepack enable npm
+          test "$(npm --version)" = "$(node -p 'require("./package.json").packageManager.slice(4)')"
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Detect release work
+        id: release-work
+        run: |
+          if find .changeset -maxdepth 1 -type f -name '*.md' ! -name README.md | grep -q .; then
+            echo "has_changesets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changesets=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Ensure the publish branch exists
+        if: steps.release-work.outputs.has_changesets == 'true'
+        run: |
+          if ! git ls-remote --exit-code --heads origin publish >/dev/null 2>&1; then
+            git push origin "$GITHUB_SHA:refs/heads/publish"
+          fi
+      - name: Open or update the release pull request
+        id: changesets
+        if: steps.release-work.outputs.has_changesets == 'true'
+        uses: changesets/action@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
+        with:
+          # ADR-0098 step 1: this run opens the pull request and publishes
+          # nothing. Publication happens at step 2, from the pull request head.
+          publish-script: echo "publication is handled by release-build.yml"
+          version-script: npm run version-packages
+          create-github-releases: false
+          pr-base-branch: publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish the release pull request under next
+        # ADR-0098: GitHub starts no run for a branch the automation token
+        # wrote, so the build cannot be triggered by the push. The dispatch
+        # repeats on every update, so the build always matches the head that
+        # will be merged.
+        if: steps.release-work.outputs.has_changesets == 'true' && steps.changesets.outputs.pullRequestNumber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          head_sha="$(git ls-remote origin refs/heads/changeset-release/publish | cut -f1)"
+          [ -n "$head_sha" ] || { echo "release pull request branch is missing on origin" >&2; exit 1; }
+          gh workflow run release-build.yml \
+            --ref changeset-release/publish \
+            -f head_sha="$head_sha" \
+            -f base_sha="$GITHUB_SHA" \
+            -f quality_run_id="$GITHUB_RUN_ID"

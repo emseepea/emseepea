@@ -13,6 +13,16 @@ const exec = promisify(execFile);
 const repository = "emseepea/emseepea";
 const pollIntervalMs = 30_000;
 
+// Every workflow a push to `main` causes to run, whether triggered directly or
+// by another workflow completing. Workflows started by an explicit dispatch are
+// not here: a push does not start them on its own, and ADR-0098 governs the
+// evidence for those. ADR-0100 keeps this a list rather than inferring it,
+// because a rule reading trigger configuration cannot see a chained workflow
+// and would shrink the watch without failing. The drift test in
+// tests/docs/push-and-watch.test.mjs fails when this list and
+// .github/workflows/ disagree.
+export const watchedWorkflows = ["quality.yml"];
+
 async function execute(command, args, { timeoutMs, env } = {}) {
   const { stdout } = await exec(command, args, { encoding: "utf8", timeout: timeoutMs, env });
   return stdout.trim();
@@ -45,8 +55,12 @@ export async function pushAndWatch({
     await run("git", ["show", "HEAD:docs/reviews/current-release-readiness.md"]),
   );
   await run("git", ["push", "origin", `${sha}:refs/heads/main`]);
-  const remote = await run("git", ["ls-remote", "origin", "refs/heads/main"]);
-  assert.equal(remote.split("\t")[0], sha, "origin/main does not match the pushed commit");
+  const remote = (await run("git", ["ls-remote", "origin", "refs/heads/main"])).split("\t")[0];
+  assert.match(remote, /^[a-f0-9]{40}$/, "origin/main does not match the pushed commit");
+  // A merge back can land between the push and this check (ADR-0100), so the
+  // trunk is allowed to have moved past the pushed commit. It is not allowed to
+  // have moved somewhere that does not contain it.
+  if (remote !== sha) await run("git", ["merge-base", "--is-ancestor", sha, remote]);
 
   return { sha, urls: await watchWorkflowRuns({ sha, run, pause, timeoutMs }) };
 }
@@ -56,10 +70,14 @@ export async function watchWorkflowRuns({
   run = execute,
   pause = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   timeoutMs = 3_600_000,
+  // A trunk push watches `watchedWorkflows`. A release merge watches the
+  // publish workflow instead, which a push to `main` never starts.
+  workflows = watchedWorkflows,
 }) {
   assert.match(sha, /^[a-f0-9]{40}$/);
+  assert.notEqual(workflows.length, 0, "nothing to watch");
   const urls = [];
-  for (const workflow of ["quality.yml", "release.yml"]) {
+  for (const workflow of workflows) {
     const deadline = Date.now() + timeoutMs;
     const watched = new Set();
     while (true) {
@@ -76,7 +94,7 @@ export async function watchWorkflowRuns({
       }
       assert.notEqual(listed.length, 100, `${workflow} run list reached its safety limit`);
       const runs = listed.filter(({ conclusion, headSha }) => headSha === sha
-        && (workflow !== "release.yml" || conclusion !== "skipped"));
+        && conclusion !== "skipped");
       if (runs.length === 0) {
         assert.ok(Date.now() < deadline, `${workflow} did not start for ${sha}`);
         await pause(pollIntervalMs);

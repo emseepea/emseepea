@@ -4,13 +4,8 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
-import { retireReplacedInitializers } from "./retire-replaced-initializers.mjs";
 import { watchWorkflowRuns } from "./push-and-watch.mjs";
-import {
-  assertPlannedReleaseReadiness,
-  assertReleasePullRequestPlan,
-  readPlannedReleaseStatus,
-} from "./verify-release-readiness.mjs";
+import { checkReleasePullRequest } from "./check-release-pull-request.mjs";
 
 const exec = promisify(execFile);
 const repository = "emseepea/emseepea";
@@ -20,9 +15,12 @@ async function execute(command, args, { timeoutMs } = {}) {
   return stdout.trim();
 }
 
+// ADR-0098: a maintainer merges the release pull request into `publish`, and
+// that merge is what promotes the packages already on `next` to `latest`. This
+// command performs that merge and watches the publish workflow.
 export async function releaseAndWatch({
   run = execute,
-  readStatus = readPlannedReleaseStatus,
+  readStatus,
   pause = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   timeoutMs = 3_600_000,
 } = {}) {
@@ -31,45 +29,24 @@ export async function releaseAndWatch({
     /^(?:https:\/\/github\.com\/|git@github\.com:)emseepea\/emseepea(?:\.git)?$/,
   );
   assert.equal(await run("git", ["status", "--porcelain"]), "", "release checkout is not clean");
-  assert.equal(await run("git", ["branch", "--show-current"]), "main", "release checkout is not on main");
-  const baseSha = await run("git", ["rev-parse", "HEAD"]);
-  assert.match(baseSha, /^[a-f0-9]{40}$/);
-
+  // ADR-0098 no longer requires a checkout on `main`: the release pull request
+  // is based on `publish`, and this command does not push from the local tree.
+  // That also unblocks releasing from a worktree (Problem 011).
   const pullRequests = JSON.parse(await run("gh", [
-    "pr", "list", "--repo", repository, "--state", "open", "--base", "main",
-    "--head", "changeset-release/main", "--limit", "2",
+    "pr", "list", "--repo", repository, "--state", "open", "--base", "publish",
+    "--head", "changeset-release/publish", "--limit", "2",
     "--json", "number,headRefOid,baseRefOid,url",
   ]) || "[]");
   assert.equal(pullRequests.length, 1, "expected exactly one open Changesets release pull request");
   const [pullRequest] = pullRequests;
-  assert.equal(pullRequest.baseRefOid, baseSha, "release pull request base does not match local HEAD");
   assert.match(pullRequest.headRefOid, /^[a-f0-9]{40}$/);
+  // The plan gate's base is the trunk commit the head derives from, which is
+  // the merge base of the head and `main`.
+  await run("git", ["fetch", "origin", "main", `pull/${pullRequest.number}/head`]);
+  const baseSha = await run("git", ["merge-base", "origin/main", pullRequest.headRefOid]);
+  assert.match(baseSha, /^[a-f0-9]{40}$/);
 
-  const status = await readStatus();
-  assertPlannedReleaseReadiness(
-    status,
-    await run("git", ["show", "HEAD:docs/reviews/current-release-readiness.md"]),
-    { requireReleases: true },
-  );
-  await run("git", ["fetch", "origin", `pull/${pullRequest.number}/head`]);
-  const changedFiles = (await run("git", ["diff", "--name-only", baseSha, pullRequest.headRefOid]))
-    .split("\n")
-    .filter(Boolean);
-  const manifestPaths = changedFiles.filter((file) => file === "package.json" || file.endsWith("/package.json"));
-  const manifests = [];
-  for (const manifestPath of manifestPaths) {
-    manifests.push({
-      base: JSON.parse(await run("git", ["show", `HEAD:${manifestPath}`])),
-      head: JSON.parse(await run("git", ["show", `${pullRequest.headRefOid}:${manifestPath}`])),
-    });
-  }
-  assertReleasePullRequestPlan(
-    status,
-    JSON.parse(await run("git", ["show", "HEAD:package-lock.json"])),
-    JSON.parse(await run("git", ["show", `${pullRequest.headRefOid}:package-lock.json`])),
-    changedFiles,
-    manifests,
-  );
+  await checkReleasePullRequest(baseSha, pullRequest.headRefOid, { run, readStatus });
 
   await run("gh", [
     "pr", "merge", String(pullRequest.number), "--repo", repository, "--merge",
@@ -83,8 +60,9 @@ export async function releaseAndWatch({
   const sha = merged.mergeCommit?.oid;
   assert.match(sha, /^[a-f0-9]{40}$/);
 
-  const urls = await watchWorkflowRuns({ sha, run, pause, timeoutMs });
-  await retireReplacedInitializers({ run, pause });
+  // The merge lands on `publish`, and publish.yml promotes, deploys and merges
+  // back. Replaced initializers are retired there too.
+  const urls = await watchWorkflowRuns({ sha, run, pause, timeoutMs, workflows: ["publish.yml"] });
   return { pullRequest: merged.url, sha, urls };
 }
 

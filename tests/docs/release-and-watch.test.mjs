@@ -44,26 +44,22 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
     const joined = args.join(" ");
     if (joined === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
     if (joined === "status --porcelain") return "";
-    if (joined === "branch --show-current") return "main";
-    if (joined === "rev-parse HEAD") return baseSha;
     if (joined.startsWith("pr list")) return JSON.stringify([pullRequest]);
+    if (joined.startsWith("merge-base")) return baseSha;
     if (command === "npm" && joined.startsWith("exec changeset status")) return plannedStatus;
-    if (joined === "show HEAD:docs/reviews/current-release-readiness.md") return releaseReview;
-    if (joined === "show HEAD:package-lock.json") return baseLock;
+    if (joined === `show ${baseSha}:docs/reviews/current-release-readiness.md`) return releaseReview;
+    if (joined === `show ${baseSha}:package-lock.json`) return baseLock;
     if (joined === `show ${headSha}:package-lock.json`) return headLock;
-    if (joined === "show HEAD:packages/server/package.json") return baseManifest;
+    if (joined === `show ${baseSha}:packages/server/package.json`) return baseManifest;
     if (joined === `show ${headSha}:packages/server/package.json`) return headManifest;
     if (joined === `diff --name-only ${baseSha} ${headSha}`) return releaseFiles;
     if (joined.startsWith("pr view")) {
       return JSON.stringify({ state: "MERGED", mergeCommit: { oid: mergeSha }, url: pullRequest.url });
     }
-    if (joined.includes("--workflow quality.yml")) {
-      return JSON.stringify([{ attempt: 1, databaseId: 10, headSha: mergeSha, url: "https://example.test/quality" }]);
-    }
-    if (joined.includes("--workflow release.yml")) {
+    if (joined.includes("--workflow publish.yml")) {
       releasePolls += 1;
       return releasePolls === 1 ? "[]" : JSON.stringify([
-        { attempt: 1, databaseId: 11, headSha: mergeSha, url: "https://example.test/release" },
+        { attempt: 1, databaseId: 11, headSha: mergeSha, url: "https://example.test/publish" },
       ]);
     }
     if (joined.startsWith("run view")) return JSON.stringify({ status: "completed", conclusion: "success" });
@@ -83,19 +79,18 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
   assert.deepEqual(await releaseAndWatch({ run, readStatus: readStatus(), pause: async () => {}, timeoutMs: 10_000 }), {
     pullRequest: pullRequest.url,
     sha: mergeSha,
-    urls: ["https://example.test/quality", "https://example.test/release"],
+    urls: ["https://example.test/publish"],
   });
   assert.deepEqual(calls.find(([command, first, second]) => command === "gh" && first === "pr" && second === "list"), [
-    "gh", "pr", "list", "--repo", "emseepea/emseepea", "--state", "open", "--base", "main",
-    "--head", "changeset-release/main", "--limit", "2", "--json", "number,headRefOid,baseRefOid,url",
+    "gh", "pr", "list", "--repo", "emseepea/emseepea", "--state", "open", "--base", "publish",
+    "--head", "changeset-release/publish", "--limit", "2", "--json", "number,headRefOid,baseRefOid,url",
   ]);
   assert.deepEqual(calls.find(([command, first, second]) => command === "gh" && first === "pr" && second === "merge"), [
     "gh", "pr", "merge", "25", "--repo", "emseepea/emseepea", "--merge", "--match-head-commit", headSha,
   ]);
   assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), false);
-  assert.equal(calls.filter(([command, first, second]) => command === "gh" && first === "run" && second === "view").length, 2);
-  assert.equal(calls.some(([command, first, spec]) => command === "npm" && first === "view"
-    && spec === "@emseepea/create-multi-instance-sqlite-server"), true);
+  assert.equal(calls.filter(([command, first, second]) => command === "gh" && first === "run" && second === "view").length, 1);
+  // ADR-0098 retires replaced initializers in the publish workflow, not here.
   assert.equal(calls.some(([command, first]) => command === "npm" && first === "unpublish"), false);
 });
 
@@ -103,10 +98,8 @@ test("release and watch rejects unsafe checkout or pull request state before mer
   for (const [override, message] of [
     [{ remote: "https://github.com/someone/else.git" }, /regular expression/],
     [{ status: " M package.json" }, /not clean/],
-    [{ branch: "feature" }, /not on main/],
     [{ pullRequests: [] }, /exactly one/],
     [{ pullRequests: [pullRequest, { ...pullRequest, number: 26 }] }, /exactly one/],
-    [{ pullRequests: [{ ...pullRequest, baseRefOid: "d".repeat(40) }] }, /does not match/],
   ]) {
     const calls = [];
     const run = checkoutRun(override, calls);
@@ -141,7 +134,7 @@ test("release and watch fails when an exact workflow run does not appear", async
   const run = checkoutRun({ workflowRuns: "[]" });
   await assert.rejects(
     () => releaseAndWatch({ run, readStatus: readStatus(), timeoutMs: -1 }),
-    /quality\.yml did not start/,
+    /publish\.yml did not start/,
   );
 });
 
@@ -152,7 +145,7 @@ test("release and watch propagates a failed exact-commit pipeline", async () => 
     ]),
     conclusion: "failure",
   });
-  await assert.rejects(() => releaseAndWatch({ run, readStatus: readStatus() }), /quality\.yml concluded failure/);
+  await assert.rejects(() => releaseAndWatch({ run, readStatus: readStatus() }), /publish\.yml concluded failure/);
 });
 
 test("release and watch times out after an exact workflow run starts", async () => {
@@ -170,16 +163,15 @@ function checkoutRun(overrides = {}, calls = []) {
     const joined = args.join(" ");
     if (joined === "remote get-url origin") return overrides.remote ?? "https://github.com/emseepea/emseepea.git";
     if (joined === "status --porcelain") return overrides.status ?? "";
-    if (joined === "branch --show-current") return overrides.branch ?? "main";
-    if (joined === "rev-parse HEAD") return baseSha;
     if (joined.startsWith("pr list")) return JSON.stringify(overrides.pullRequests ?? [pullRequest]);
+    if (joined.startsWith("merge-base")) return baseSha;
     if (command === "npm" && joined.startsWith("exec changeset status")) return overrides.plannedStatus ?? plannedStatus;
-    if (joined === "show HEAD:docs/reviews/current-release-readiness.md") {
+    if (joined === `show ${baseSha}:docs/reviews/current-release-readiness.md`) {
       return overrides.releaseReview ?? releaseReview;
     }
-    if (joined === "show HEAD:package-lock.json") return baseLock;
+    if (joined === `show ${baseSha}:package-lock.json`) return baseLock;
     if (joined === `show ${headSha}:package-lock.json`) return headLock;
-    if (joined === "show HEAD:packages/server/package.json") return baseManifest;
+    if (joined === `show ${baseSha}:packages/server/package.json`) return baseManifest;
     if (joined === `show ${headSha}:packages/server/package.json`) return overrides.headManifest ?? headManifest;
     if (joined === `diff --name-only ${baseSha} ${headSha}`) return overrides.releaseFiles ?? releaseFiles;
     if (joined.startsWith("pr view")) {

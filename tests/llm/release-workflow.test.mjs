@@ -24,12 +24,25 @@ import {
 } from "../../scripts/verify-registry-release.mjs";
 import { useRegistryTarballs } from "../../scripts/use-registry-tarballs.mjs";
 
-const workflow = await readFile(new URL("../../.github/workflows/release.yml", import.meta.url), "utf8");
+// ADR-0098 retires release.yml and splits its work across the release-pull-
+// request job in Quality, the build that publishes under `next`, and the
+// promotion on merge to `publish`. These assertions follow the work, not the
+// old file name.
+const releaseBuild = await readFile(new URL("../../.github/workflows/release-build.yml", import.meta.url), "utf8");
+const publish = await readFile(new URL("../../.github/workflows/publish.yml", import.meta.url), "utf8");
 const quality = await readFile(new URL("../../.github/workflows/quality.yml", import.meta.url), "utf8");
+const workflow = `${releaseBuild}\n${publish}`;
 const manifest = JSON.parse(await readFile(new URL("../../package.json", import.meta.url), "utf8"));
 const serverManifest = JSON.parse(await readFile(new URL("../../packages/framework/package.json", import.meta.url), "utf8"));
 const testingManifest = JSON.parse(await readFile(new URL("../../packages/testing/package.json", import.meta.url), "utf8"));
 const installedSmoke = await readFile(new URL("../../scripts/verify-installed-package.mjs", import.meta.url), "utf8");
+// ADR-0098 moves the evidence document and the release records out of the
+// retired workflow and into scripts, so the assertions about their content
+// follow them there.
+const evidenceWriter = await readFile(new URL("../../scripts/write-release-evidence.mjs", import.meta.url), "utf8");
+const evidenceScope = await readFile(new URL("../../scripts/release-evidence-scope.md", import.meta.url), "utf8");
+const releaseRecords = await readFile(new URL("../../scripts/publish-release-records.sh", import.meta.url), "utf8");
+const evidence = `${evidenceWriter}\n${evidenceScope}`;
 const exec = promisify(execFile);
 
 test("every GitHub job uses the recorded npm version", () => {
@@ -57,25 +70,25 @@ test("Quality scans the committed lockfile before initializer qualification", ()
 });
 
 test("the Claude subscription check runs only for the publication revision", () => {
+  // ADR-0098: the semantic evaluation runs in the release build, on the commit
+  // the packages are published from, which is what ADR-0057 requires. That
+  // workflow only runs for a release, so no has_publication gate is needed.
   assert.match(
-    workflow,
-    /- name: Check whether a language model understands every example\n\s+if: steps\.release-state\.outputs\.has_publication == 'true'\n\s+env:\n\s+CLAUDE_CODE_OAUTH_TOKEN: \$\{\{ secrets\.CLAUDE_CODE_OAUTH_TOKEN \}\}\n\s+run: npm run test:eval:ci/,
+    releaseBuild,
+    /- name: Check whether a language model understands every example\n\s+env:\n\s+CLAUDE_CODE_OAUTH_TOKEN: \$\{\{ secrets\.CLAUDE_CODE_OAUTH_TOKEN \}\}\n\s+run: npm run test:eval:ci/,
   );
   assert.match(
-    workflow,
-    /- name: Upload inspectable language-model evidence\n\s+if: \$\{\{ always\(\) && steps\.release-state\.outputs\.has_publication == 'true' \}\}[\s\S]*retention-days: 14/,
+    releaseBuild,
+    /- name: Upload inspectable language-model evidence\n\s+if: \$\{\{ always\(\) \}\}[\s\S]*retention-days: 14/,
   );
-  assert.doesNotMatch(
-    workflow,
-    /copilot-requests|EMSEEPEA_COPILOT|@github\/copilot/,
-  );
-  const job = workflow.match(/  semantic-eval:[\s\S]*?\n  changesets:/)?.[0] ?? "";
+  assert.match(releaseBuild, /name: semantic-eval-\$\{\{ inputs\.head_sha \}\}/);
+  assert.doesNotMatch(workflow, /copilot-requests|EMSEEPEA_COPILOT|@github\/copilot/);
+  const job = releaseBuild.match(/  semantic-eval:[\s\S]*?\n  publish-next:/)?.[0] ?? "";
   assert.match(job, /permissions:\n\s+contents: read/);
   assert.doesNotMatch(job, /contents: write|id-token: write|pull-requests: write|checks: write/);
   assert.equal((job.match(/CLAUDE_CODE_OAUTH_TOKEN/g) ?? []).length, 2);
   assert.equal(manifest.scripts["claude:prepare"], "node node_modules/@anthropic-ai/claude-code/install.cjs");
   const prepare = job.match(/- name: Prepare the pinned Claude CLI[\s\S]*?(?=\n\s+- name:)/)?.[0] ?? "";
-  assert.match(prepare, /if: steps\.release-state\.outputs\.has_publication == 'true'/);
   assert.match(prepare, /2\.1\.248/);
   assert.equal((prepare.match(/npm run claude:prepare/g) ?? []).length, 1);
   assert.match(prepare, /test -x node_modules\/\.bin\/claude/);
@@ -86,63 +99,72 @@ test("the Claude subscription check runs only for the publication revision", () 
 });
 
 test("release preparation and publication do not run when release state is unknown", () => {
-  assert.match(
-    workflow,
-    /needs\.semantic-eval\.outputs\.has_changesets == 'true' \|\| \(needs\.semantic-eval\.outputs\.has_publication == 'true' && needs\.semantic-eval\.result == 'success'\)/,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /needs\.semantic-eval\.outputs\.has_changesets == 'true' \|\| needs\.semantic-eval\.result == 'success'/,
-  );
+  // ADR-0101: the release pull request is opened by a job that depends on the
+  // quality jobs, and the build is dispatched only by that job. That chain is
+  // what binds publication to a passed scan now that Release is retired.
+  const job = quality.match(/  release-pull-request:[\s\S]*/)?.[0] ?? "";
+  assert.match(job, /needs: \[initializer-qualification, test, website-performance\]/);
+  assert.match(job, /if: \$\{\{ github\.event_name == 'push' && github\.ref == 'refs\/heads\/main' \}\}/);
+  assert.match(job, /gh workflow run release-build\.yml/);
+  assert.ok(job.indexOf("changesets/action@") < job.indexOf("gh workflow run release-build.yml"));
+  // Publication waits for the semantic evaluation, and the promotion waits for
+  // the publication having been verified.
+  assert.match(releaseBuild, /  publish-next:\n\s+name: [^\n]*\n\s+needs: semantic-eval/);
+  assert.match(publish, /  deploy-website:[\s\S]*?needs: promote/);
+  assert.match(publish, /  merge-back:[\s\S]*?needs: \[promote, deploy-website\]/);
 });
 
 test("release work is derived from changesets and exact package version tags", async () => {
   const { hasUntaggedPublishablePackage } = await import("../../scripts/public-packages.mjs");
   assert.equal(await hasUntaggedPublishablePackage(undefined, async () => true), false);
   assert.equal(await hasUntaggedPublishablePackage(undefined, async (tag) => !tag.startsWith("@emseepea/server@")), true);
-  assert.match(workflow, /echo "has_changesets=true"[\s\S]*echo "has_publication=false"/);
-  assert.match(workflow, /public-packages\.mjs --has-untagged/);
+  // The release pull request is opened only when a changeset is waiting, and
+  // the promotion reads what to publish from the plan rather than from prose.
+  assert.match(quality, /echo "has_changesets=true"/);
+  assert.match(quality, /find \.changeset -maxdepth 1 -type f -name '\*\.md' ! -name README\.md/);
+  assert.match(publish, /read-release-plan\.mjs/);
 });
 
 test("versioning refreshes the lockfile", () => {
   assert.equal(
     manifest.scripts["version-packages"],
-    "changeset version && npm install --package-lock-only --ignore-scripts",
+    "changeset version && node scripts/record-release-origin.mjs && npm install --package-lock-only --ignore-scripts",
   );
+  // ADR-0099 deploys the build the quality gate measured, which lives in a
+  // different run; the release pull request has to carry a pointer to it.
+  assert.match(publish, /quality_run_id/);
 });
 
 test("publication evidence uses the canonical public package list", () => {
-  assert.match(workflow, /prepare-release-artifacts\.mjs release-artifacts/);
-  assert.match(workflow, /public-packages\.mjs --publishable --tsv/);
-  assert.match(workflow, /release-artifacts\/packages\.json/);
-  assert.match(workflow, /item\.notesFile/);
-  assert.match(workflow, /verify-registry-release\.mjs capture/);
-  assert.match(workflow, /verify-registry-release\.mjs verify/);
-  assert.match(workflow, /verify-release-readiness\.mjs release-artifacts\/registry-before\.json/);
-  assert.match(workflow, /docs\/reviews\/current-release-readiness\.md/);
-  assert.match(workflow, /npm audit signatures/);
-  assert.match(workflow, /registry integrity/);
-  assert.match(workflow, /provenance/);
+  assert.match(releaseBuild, /prepare-release-artifacts\.mjs release-artifacts/);
+  assert.match(releaseBuild, /public-packages\.mjs --publishable --tsv/);
+  assert.match(evidenceWriter, /release-artifacts|\$\{directory\}\/packages\.json/);
+  assert.match(workflow, /release-artifacts/);
+  assert.match(releaseBuild, /verify-registry-release\.mjs capture/);
+  assert.match(releaseBuild, /verify-registry-release\.mjs verify/);
+  assert.match(evidenceWriter, /verify-release-readiness\.mjs/);
+  assert.match(evidenceWriter, /docs\/reviews\/current-release-readiness\.md/);
+  assert.match(releaseBuild, /npm audit signatures/);
+  assert.match(releaseBuild, /registry integrity/);
+  assert.match(releaseBuild, /provenance/);
+  assert.match(releaseRecords, /notes_file/);
   assert.doesNotMatch(workflow, /SERVER_RELEASE_SHA|TESTING_RELEASE_SHA/);
 });
 
 test("publication evidence describes the protected progress boundary", () => {
-  assert.match(
-    workflow,
-    /checked, bounded public and protected POST progress through a trusted proxy/,
-  );
-  assert.match(workflow, /the framework authenticates and authorizes protected calls before application code runs or server-sent events begin/);
-  assert.doesNotMatch(workflow, /deployed protected streaming tools/);
-  assert.match(workflow, /slowing a producer when a client cannot keep up/);
-  assert.match(workflow, /opt-in, bounded, process-local resource-update subscriptions/);
-  assert.match(workflow, /each stream listens to one registered static resource URI or one concrete URI that matches a registered resource template/);
-  assert.match(workflow, /list-change subscriptions, resynchronisation, replay, sessions, or reconnect recovery/);
-  assert.match(workflow, /durable or cross-process notification delivery/);
-  assert.match(workflow, /framework-managed shared stream state/);
-  assert.doesNotMatch(workflow, /resynchronisation, subscriptions, replay/);
-  assert.match(workflow, /Subscription load check: \\`node --expose-gc --test tests\/load\/subscription-sdk\.test\.mjs\\`/);
-  assert.match(workflow, /opt-in, bounded, request-scoped MCP log messages on the calling POST response/);
-  assert.match(workflow, /Request-logging load check: \\`node --expose-gc --test tests\/load\/client-logging\.test\.mjs\\`/);
+  assert.match(evidence, /checked, bounded public and protected POST progress through a trusted proxy/);
+  assert.match(evidence, /the framework authenticates and authorizes protected calls before application code runs or server-sent events begin/);
+  assert.doesNotMatch(evidence, /deployed protected streaming tools/);
+  assert.match(evidence, /slowing a producer when a client cannot keep up/);
+  assert.match(evidence, /opt-in, bounded, process-local resource-update subscriptions/);
+  assert.match(evidence, /each stream listens to one registered static resource URI or one concrete URI that matches a registered resource template/);
+  assert.match(evidence, /list-change subscriptions, resynchronisation, replay, sessions, or reconnect recovery/);
+  assert.match(evidence, /durable or cross-process notification delivery/);
+  assert.match(evidence, /framework-managed shared stream state/);
+  assert.doesNotMatch(evidence, /resynchronisation, subscriptions, replay/);
+  assert.match(evidence, /Subscription load check: `node --expose-gc --test tests\/load\/subscription-sdk\.test\.mjs`/);
+  assert.match(evidence, /opt-in, bounded, request-scoped MCP log messages on the calling POST response/);
+  assert.match(evidence, /Request-logging load check: `node --expose-gc --test tests\/load\/client-logging\.test\.mjs`/);
 });
 
 test("the completed feedback bootstrap cannot remain as a credential fallback", () => {
@@ -176,25 +198,36 @@ test("release notes must exist before publication", () => {
 });
 
 test("publication builds and verifies packages before creating public releases", () => {
-  const job = workflow.match(/  changesets:[\s\S]*/)?.[0] ?? "";
+  // ADR-0098 splits this across two workflows: the build publishes under
+  // `next` and verifies it there, and the promotion moves the tag and writes
+  // the records. The ordering within each still has to hold.
+  const job = releaseBuild.match(/  publish-next:[\s\S]*/)?.[0] ?? "";
   assert.ok(job.indexOf("npm ci --ignore-scripts") < job.indexOf("Build packages for publication"));
   assert.ok(job.indexOf("Build packages for publication") < job.indexOf("prepare-release-artifacts.mjs"));
-  assert.ok(job.indexOf("prepare-release-artifacts.mjs") < job.indexOf("changesets/action@"));
+  assert.ok(job.indexOf("prepare-release-artifacts.mjs") < job.indexOf("npm run release:next"));
+  assert.ok(job.indexOf("npm run release:next") < job.indexOf("verify-registry-release.mjs verify"));
   assert.ok(job.indexOf("verify-registry-release.mjs verify") < job.indexOf("npm audit signatures"));
-  assert.ok(job.indexOf("npm audit signatures") < job.indexOf("gh release create"));
-  assert.match(job, /createGithubReleases: false/);
+  // Nothing reaches `latest` until the packages have been read back and
+  // exercised from the registry under `next`.
+  assert.ok(job.indexOf("npm audit signatures") < job.indexOf("write-release-targets.mjs"));
+  assert.match(quality, /create-github-releases: false/);
+  assert.ok(publish.indexOf("promote-release.mjs") < publish.indexOf("publish-release-records.sh"));
+  assert.ok(releaseRecords.indexOf("npm audit") === -1);
   assert.match(job, /if: steps\.registry-verify\.outputs\.ready == 'true'/);
   assert.match(job, /EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry node --test tests\/docs\/getting-started-references\.test\.mjs/);
   assert.ok(job.indexOf("verify-registry-release.mjs verify") < job.indexOf("EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry"));
   assert.match(job, /use-registry-tarballs\.mjs release-artifacts registry-artifacts/);
-  assert.match(job, /gh release edit/);
-  assert.match(job, /gh release create "\$tag" --draft/);
-  assert.match(job, /gh release edit "\$tag" --draft=false/);
-  assert.match(job, /gh release view "\$tag" --json assets/);
-  assert.match(job, /gh release view "\$tag" --json isDraft/);
-  assert.match(job, /gh release upload "\$tag" "\$@" --clobber/);
-  assert.match(job, /--latest=false/);
-  assert.doesNotMatch(job, /steps\.changesets\.outputs\.published/);
+  // ADR-0098: these checks install by dist-tag, and naming `next` is what
+  // stops them resolving the previous release.
+  assert.match(job, /EMSEEPEA_REGISTRY_DIST_TAG: next/);
+  assert.match(releaseRecords, /gh release edit/);
+  assert.match(releaseRecords, /gh release create "\$tag" --draft/);
+  assert.match(releaseRecords, /gh release edit "\$tag" --draft=false/);
+  assert.match(releaseRecords, /gh release view "\$tag" --json assets/);
+  assert.match(releaseRecords, /gh release view "\$tag" --json isDraft/);
+  assert.match(releaseRecords, /gh release upload "\$tag" "\$@" --clobber/);
+  assert.match(releaseRecords, /--latest=false/);
+  assert.doesNotMatch(workflow, /steps\.changesets\.outputs\.published/);
 });
 
 test("release assets use the exact registry tarballs and matching checksums", async () => {
@@ -434,7 +467,9 @@ test("registry checks require latest and exact provenance", () => {
   const expected = {
     ref: "refs/heads/main",
     repository: "https://github.com/emseepea/emseepea",
-    workflowPath: ".github/workflows/release.yml",
+    // ADR-0098: the publishing workflow is the release build, not the retired
+    // release workflow.
+    workflowPath: ".github/workflows/release-build.yml",
     sha: "abc123",
     invocationPrefix: "https://github.com/emseepea/emseepea/actions/runs/42/",
     subject: "pkg:npm/%40emseepea/server@0.0.2",
