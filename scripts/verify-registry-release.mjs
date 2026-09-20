@@ -138,9 +138,10 @@ function assertStatements(after, statements, commits) {
   const expectedRun = {
     ref: process.env.GITHUB_REF,
     repository: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`,
-    // ADR-0098 retires release.yml; the publishing workflow is the one that
-    // built and published the tarballs, which is the release-pull-request build.
-    workflowPath: process.env.EMSEEPEA_PUBLISH_WORKFLOW_PATH ?? ".github/workflows/release-build.yml",
+    // ADR-0098: the publishing workflow is the one that built and published
+    // the tarballs, which is the release-pull-request build. It keeps the
+    // `release.yml` name so the npm trusted publishers stay valid.
+    workflowPath: process.env.EMSEEPEA_PUBLISH_WORKFLOW_PATH ?? ".github/workflows/release.yml",
     invocationPrefix: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/`,
   };
   for (const [index, item] of after.packages.entries()) {
