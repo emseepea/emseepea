@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 101 decisions: 57 current and 44 historical.
+This project has 101 decisions: 56 current and 45 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -70,8 +70,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0099: Website Deploys with the Release](0099-website-deploys-with-the-release.proposed.md): Proposed; human review confirmed.
 - [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.proposed.md): Proposed; human review confirmed.
 - [ADR-0101: Vulnerability Scanning Without a Release Workflow](0101-vulnerability-scanning-without-a-release-workflow.proposed.md): Proposed; human review confirmed.
-- [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.proposed.md): Proposed; human review confirmed.
-- [ADR-0103: Proved Proxy Boundary for Production Deployments](0103-proved-proxy-boundary-for-production-deployments.proposed.md): Proposed; human review pending.
+- [ADR-0103: Proved Proxy Boundary for Production Deployments](0103-proved-proxy-boundary-for-production-deployments.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -119,6 +118,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0088: Always-Available Checked Model Context Protocol (MCP) Ping](0088-always-available-checked-mcp-ping.superseded.md): Superseded; human review confirmed.
 - [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.superseded.md): Superseded; human review confirmed.
 - [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.superseded.md): Superseded; human review confirmed.
+- [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -2248,9 +2248,9 @@ Chosen option: **bind publication to the passing quality run for the originating
 - Publication retains package signature, integrity, provenance, and clean-install checks.
 - No release pull request is opened, and nothing is published, for a commit whose scan did not pass.
 
-### [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.proposed.md)
+### [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaced by: [ADR-0103: Proved Proxy Boundary for Production Deployments](0103-proved-proxy-boundary-for-production-deployments.proposed.md)
 
@@ -2276,8 +2276,8 @@ Chosen option: **let the deployment declare its proxy topology**, because it is 
 ### [ADR-0103: Proved Proxy Boundary for Production Deployments](0103-proved-proxy-boundary-for-production-deployments.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
-- Replaces: [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.proposed.md)
+- Human review: Confirmed
+- Replaces: [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.superseded.md)
 
 #### ADR-0103 Decision
 
@@ -2286,12 +2286,12 @@ Chosen option: **prove the hop with a secret the proxy injects**, because it tur
 #### ADR-0103 Checks
 
 - A profile with neither `trustedProxyAddresses` nor `proxyBoundary` is refused at construction, and so is one carrying both, on the API path and through the configuration file.
-- A request carrying the right secret is served from any peer address. The server still refuses a disallowed authority, a disallowed origin, a non-HTTPS forwarded protocol and a rate-limited client.
+- A request carrying the right secret is served from any peer address. The server still refuses a disallowed authority, a disallowed origin, a forwarded protocol other than HTTPS (encrypted HTTP) and a rate-limited client.
 - A request with the header absent, empty, wrong, or a prefix or extension of the secret is refused, and so is one sending the header twice.
 - The refusal names neither the header nor any part of the value, and carries the same message as an address failure.
-- The secret reaches no observability adapter, on the served path or the refused one.
-- A secret shorter than 32 characters is refused at construction, as is a header name that is not a valid token, and any `x-forwarded-*` header, `forwarded`, or `host`.
-- The comparison is constant-time over equal-length digests.
+- The secret reaches no logging and monitoring integration (observability adapter), on the served path or the refused one.
+- A secret shorter than 32 characters is refused at construction, as is a header name using characters not allowed by HTTP, and any `x-forwarded-*` header, `forwarded`, or `host`.
+- The comparison uses equal-length digests and is designed not to reveal the secret through timing differences (constant-time comparison).
 - The configuration file names the environment variable holding the secret and is refused when that variable is unset. A loaded profile carries the resolved value.
-- `trustedProxyAddresses` still rejects a CIDR at construction.
+- `trustedProxyAddresses` still rejects an IP address range (CIDR) at construction.
 - Everything ADR-0102 confirmed about `forwardedHops` still holds.
