@@ -288,3 +288,19 @@ or verify a deployed adopter request.
   SHA-256: `1c527722a0fd2d77dc009ed17baa24e23bc74c3388d1769e758242f9bd436c31`
 - `docs/decisions/README.md`
   SHA-256: `28db70f00098eb46244d1b9bcb5a830b6e45b330a927d8e9a960ac02150b3017`
+
+## Feedback Recording Claim and Release Version
+
+Result: PASS. A cognitive-accessibility review found no blocking issue in the
+feedback changeset or the updated release-readiness package list. The
+changeset states the order of the tool call and the condition for saying
+feedback was recorded in plain language. The readiness change names the new
+feedback version without claiming publication or adopter success. The review
+also suggested removing a repeated trigger from the model-facing tool
+description; that suggestion was applied. This review does not replace the
+required exact-commit semantic evaluation.
+
+- `.changeset/feedback-recording-claim.md`
+  SHA-256: `d586b45d1dfbc4423f03fc1af162acc6692a5bd3f61ae72b573ff78cd378b799`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `46280f24466e173188d04040412c10e4d8e3f3511463926749b47c4ed716b051`
