@@ -336,3 +336,15 @@ actual answer.
   SHA-256: `c9bf7507fbd8a9a03ab96344887ccf2b9e2459bc076543a57c7c24cb61722a2f`
 - `examples/mongodb-backed-server/src/capabilities/tool.add-pea-variety.ts`
   SHA-256: `2b68a00fb25c3b8530013f32efabfa0424fc04281000221f264fd2aac3ab7a53`
+
+## Fresh Release Version Plan
+
+Result: PASS. The reviewer checked the exact release-readiness record after the
+version plan advanced beyond already-published npm `next` versions. The list
+names planned versions and does not claim publication. The publication gates
+distinguish the source Quality check, the exact release pull request head,
+registry readback under `next` and `latest`, and direct adopter verification.
+This prose review does not replace those checks.
+
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `a72d0571e96432c8ba8fba15fb4271763b9e1ecf9f83b24386997b4ebbd59cec`

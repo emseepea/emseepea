@@ -8,22 +8,22 @@ address by counting from the end, and proving a proxy that has no stable
 address with a secret header — and the dependency-closed releases that go with
 them:
 
-- `@emseepea/server@0.17.0`
-- `@emseepea/feedback@0.3.2`
-- `@emseepea/react@0.3.5`
-- `@emseepea/svelte@0.1.9`
-- `@emseepea/testing@0.16.3`
-- `@emseepea/create-api-backed-server@0.0.42`
-- `@emseepea/create-database-schema-server@0.0.30`
-- `@emseepea/create-html-ui-server@0.0.44`
-- `@emseepea/create-mongodb-backed-server@0.0.30`
-- `@emseepea/create-multi-instance-postgres-server@0.0.32`
-- `@emseepea/create-openapi-backed-server@0.0.24`
-- `@emseepea/create-progress-streaming-server@0.0.42`
-- `@emseepea/create-react-ui-server@0.0.44`
-- `@emseepea/create-resources-and-prompts-server@0.0.41`
-- `@emseepea/create-soap-backed-server@0.0.29`
-- `@emseepea/create-tool-server@0.0.44`
+- `@emseepea/server@0.18.0`
+- `@emseepea/feedback@0.3.3`
+- `@emseepea/react@0.3.6`
+- `@emseepea/svelte@0.1.10`
+- `@emseepea/testing@0.16.4`
+- `@emseepea/create-api-backed-server@0.0.43`
+- `@emseepea/create-database-schema-server@0.0.31`
+- `@emseepea/create-html-ui-server@0.0.45`
+- `@emseepea/create-mongodb-backed-server@0.0.31`
+- `@emseepea/create-multi-instance-postgres-server@0.0.33`
+- `@emseepea/create-openapi-backed-server@0.0.25`
+- `@emseepea/create-progress-streaming-server@0.0.43`
+- `@emseepea/create-react-ui-server@0.0.45`
+- `@emseepea/create-resources-and-prompts-server@0.0.42`
+- `@emseepea/create-soap-backed-server@0.0.30`
+- `@emseepea/create-tool-server@0.0.45`
 
 ## Who Wrote This and What It Is Worth
 
@@ -195,9 +195,12 @@ packages, what the registry now serves, or that any adopter runs this.
 - The Quality workflow must pass on the exact source commit.
 - The Changesets release pull request must contain only generated version,
   lockfile, manifest, and changelog changes for the exact package set above.
-- Quality and Release must pass on the exact version commit.
-- Registry readback must confirm the version and `latest` tag, integrity,
-  signature, provenance, and exact release-commit binding.
+- Quality must pass on the exact source commit, and Release semantic and build
+  checks must pass on the exact release pull request head.
+- Registry readback must confirm each version under the npm `next` distribution
+  tag before promotion and the `latest` tag afterward. It must also confirm
+  integrity, signatures, provenance, and the exact source commit used to
+  publish each package.
 - The downloaded package must pass clean installation and verify the public
   command through its packed entry point.
 - Adopter production use requires separate journey evidence.
