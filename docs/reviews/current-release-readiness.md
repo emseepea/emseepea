@@ -9,7 +9,7 @@ address with a secret header — and the dependency-closed releases that go with
 them:
 
 - `@emseepea/server@0.17.0`
-- `@emseepea/feedback@0.3.1`
+- `@emseepea/feedback@0.3.2`
 - `@emseepea/react@0.3.5`
 - `@emseepea/svelte@0.1.9`
 - `@emseepea/testing@0.16.3`

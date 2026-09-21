@@ -21,7 +21,7 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/feedback": "0.3.0",
+    "@emseepea/feedback": "0.3.1",
     "@emseepea/server": "0.16.0",
     "@scalar/openapi-upgrader": "0.2.15",
     "@emseepea/testing": "0.16.2",
