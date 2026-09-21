@@ -14,7 +14,7 @@ them:
 - `@emseepea/svelte@0.1.9`
 - `@emseepea/testing@0.16.3`
 - `@emseepea/create-api-backed-server@0.0.42`
-- `@emseepea/create-database-schema-server@0.0.29`
+- `@emseepea/create-database-schema-server@0.0.30`
 - `@emseepea/create-html-ui-server@0.0.44`
 - `@emseepea/create-mongodb-backed-server@0.0.29`
 - `@emseepea/create-multi-instance-postgres-server@0.0.32`
