@@ -44,7 +44,7 @@ export async function promoteRelease({
   const missing = [];
   for (const { name, version } of packages) {
     const onNext = await resolveNext(name, version);
-    if (onNext !== undefined && onNext !== version) missing.push(`${name}@${version} is not on next (next is ${onNext})`);
+    if (onNext !== version) missing.push(`${name}@${version} is not on next (next is ${onNext})`);
   }
   assert.deepEqual(missing, [], missing.join("; "));
 
