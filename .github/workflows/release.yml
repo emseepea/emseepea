@@ -145,6 +145,8 @@ jobs:
         run: npm run release:next
       - name: Verify the packages reached the registry under next
         id: registry-verify
+        env:
+          EMSEEPEA_RELEASE_SHA: ${{ inputs.head_sha }}
         run: |
           node scripts/verify-registry-release.mjs verify \
             release-artifacts/registry-before.json release-artifacts/registry-after.json --tag next

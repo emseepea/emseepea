@@ -85,3 +85,28 @@ test("promotion is idempotent when a tag already points at the version", async (
   // The server is already promoted, so only the feedback package moves.
   assert.deepEqual(calls, ["dist-tag add @emseepea/feedback@0.4.0 latest --userconfig /dev/null"]);
 });
+
+test("an unchanged package already on latest does not need the next tag", async () => {
+  const calls = [];
+  await promoteRelease({
+    packages: [
+      { name: "@emseepea/tailwind", version: "0.1.0" },
+      { name: "@emseepea/server", version: "1.1.0" },
+    ],
+    run: async (command, args) => { calls.push([command, ...args].join(" ")); return ""; },
+    readNextTag: async (name) => name === "@emseepea/tailwind" ? "0.0.1" : "1.1.0",
+    readLatestTag: async (name) => name === "@emseepea/tailwind" ? "0.1.0" : "1.0.0",
+    changedPackages: new Set(["@emseepea/server"]),
+  });
+  assert.deepEqual(calls, ["npm dist-tag add @emseepea/server@1.1.0 latest --userconfig /dev/null"]);
+});
+
+test("a freshly released version still needs next after a partial promotion", async () => {
+  await assert.rejects(() => promoteRelease({
+    packages: [{ name: "@emseepea/server", version: "1.1.0" }],
+    run: async () => "",
+    readNextTag: async () => "1.0.0",
+    readLatestTag: async () => "1.1.0",
+    changedPackages: new Set(["@emseepea/server"]),
+  }), /server.*next/);
+});
