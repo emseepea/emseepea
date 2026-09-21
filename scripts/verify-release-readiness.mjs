@@ -138,6 +138,10 @@ export function assertReleasePullRequestPlan(status, baseLock, headLock, changed
   assert.deepEqual(
     changedFiles.filter((file) => file !== "package.json"
       && file !== "package-lock.json"
+      // ADR-0099: `version-packages` writes this pointer to the quality run
+      // that measured the website build, so it rides into `publish` with the
+      // versioned changes. It is generated, not hand-edited.
+      && file !== ".release/origin.json"
       && !/^\.changeset\/[^/]+\.md$/.test(file)
       && !workspaceFiles.has(file)),
     [],

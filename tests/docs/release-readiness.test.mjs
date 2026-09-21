@@ -184,6 +184,33 @@ test("release readiness binds the Changesets plan to the release pull request", 
     }],
   ));
 
+  // ADR-0099: `version-packages` writes the origin pointer into the release
+  // pull request, because the publish branch cannot otherwise find the quality
+  // run that measured the website build. It is generated, not hand-edited, so
+  // the non-generated-file check has to know about it.
+  assert.doesNotThrow(() => assertReleasePullRequestPlan(
+    status,
+    baseLock,
+    headLock,
+    [".release/origin.json", "package-lock.json", "packages/server/package.json", "packages/server/CHANGELOG.md"],
+    [{
+      base: { name: "@emseepea/server", version: "1.0.0" },
+      head: { name: "@emseepea/server", version: "1.0.1" },
+    }],
+  ));
+
+  // Anything else under .release/ is not something the release tooling writes.
+  assert.throws(() => assertReleasePullRequestPlan(
+    status,
+    baseLock,
+    headLock,
+    [".release/notes.md", "package-lock.json", "packages/server/package.json", "packages/server/CHANGELOG.md"],
+    [{
+      base: { name: "@emseepea/server", version: "1.0.0" },
+      head: { name: "@emseepea/server", version: "1.0.1" },
+    }],
+  ), /non-generated files/);
+
   const initializerStatus = {
     releases: [
       ...status.releases,
