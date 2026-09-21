@@ -6,6 +6,8 @@ import test from "node:test";
 
 import { createEmseepea, loadDeploymentProfile, serveEmseepea } from "@emseepea/server";
 
+const secret = "s3cret-value-at-least-32-chars-long!!";
+const boundary = { header: "x-proxy-token", secretEnv: "EMSEEPEA_PROXY_SECRET" };
 const validConfig = {
   allowedAuthorities: ["mcp.example.com"],
   allowedOrigins: ["https://mcp.example.com"],
@@ -43,6 +45,14 @@ test("deployment environment is loopback by default and fail-closed in productio
     { ...validConfig, forwardedHops: -1 },
     { ...validConfig, forwardedHops: 1.5 },
     { ...validConfig, forwardedHops: "1" },
+    // ADR-0102: the boundary is declared one way or the other. Omitting the
+    // list used to be refused by the schema; it is now refused by the
+    // exactly-one rule, and that refusal has to keep its teeth on this path.
+    withoutProxyAddresses(validConfig),
+    { ...validConfig, proxyBoundary: boundary },
+    withoutProxyAddresses({ ...validConfig, proxyBoundary: { header: "x-proxy-token" } }),
+    withoutProxyAddresses({ ...validConfig, proxyBoundary: { ...boundary, secret: "inline" } }),
+    withoutProxyAddresses({ ...validConfig, proxyBoundary: { ...boundary, header: "x-forwarded-for" } }),
   ]) {
     await writeFile(configPath, JSON.stringify(invalid));
     assert.throws(() => loadDeploymentProfile(environment));
@@ -58,6 +68,24 @@ test("deployment environment is loopback by default and fail-closed in productio
     forwardedHops: 1,
   });
 
+  // A proved boundary travels through the config file too. The file names the
+  // variable holding the secret rather than carrying it, so the config stays
+  // non-secret policy and the loaded profile carries the resolved value.
+  const provedConfig = withoutProxyAddresses({ ...validConfig, proxyBoundary: boundary });
+  await writeFile(configPath, JSON.stringify(provedConfig));
+  assert.throws(
+    () => loadDeploymentProfile(environment),
+    /names EMSEEPEA_PROXY_SECRET for the proxy secret, and it is not set/,
+  );
+  assert.deepEqual(
+    loadDeploymentProfile({ ...environment, EMSEEPEA_PROXY_SECRET: secret }),
+    {
+      mode: "production-behind-proxy",
+      ...withoutProxyAddresses(validConfig),
+      proxyBoundary: { header: boundary.header, secret },
+    },
+  );
+
   await writeFile(configPath, Buffer.from([0xff]));
   assert.throws(() => loadDeploymentProfile(environment));
   await writeFile(configPath, " ".repeat(16 * 1024 + 1));
@@ -70,3 +98,8 @@ test("production deployment binds publicly only when explicitly selected", async
   t.after(() => running.close());
   assert.equal(running.url.hostname, "0.0.0.0");
 });
+
+function withoutProxyAddresses(config) {
+  const { trustedProxyAddresses: _omitted, ...rest } = config;
+  return rest;
+}

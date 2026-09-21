@@ -784,6 +784,43 @@ Your proxy must control the forwarding headers and send:
 If your proxy appends to `X-Forwarded-For` instead of replacing it, set
 `forwardedHops`. The next section explains how.
 
+#### A proxy with no fixed address
+
+Some platforms give you no fixed proxy address to list. Cloud Run behind an
+external load balancer is one: the address your server sees is infrastructure,
+and it changes. Instead of listing an address, have the proxy prove itself.
+
+Configure your proxy to add a header carrying a secret. On a Google load
+balancer that is a custom request header on the backend service. The header can
+be any name except `host`, `forwarded`, or an `x-forwarded-*` name, and the
+secret must be at least 32 characters.
+
+Then set `proxyBoundary` to that header and secret in the `deployment` object
+above, in place of `trustedProxyAddresses`. Supply exactly one of the two: a
+profile with both is refused, and so is one with neither. Read the secret from
+the environment rather than writing it into your source.
+
+Set the header on your proxy first. Until the proxy is sending it, every
+request is refused, which is the safe direction for a mistake to go: the server
+closes rather than opens.
+
+This replaces the address check and nothing else. Your proxy must still send
+the forwarding headers listed above, and the authority, origin and rate-limit
+checks all still run.
+
+The server compares what arrives against the secret and refuses anything else.
+A caller cannot guess it. Anyone who learns it can reach your server from any
+address until you rotate it.
+
+Treat the secret as a credential. Keep it out of source control, supply it from
+your platform's secret store, and rotate it as you would any other. Em See Pea
+never writes it to a log and never sends it to an observability adapter.
+
+Your own infrastructure is the part to check. The secret travels as a request
+header, and load balancers and CDNs often log request headers by default. Turn
+off logging for that header at your proxy and anywhere in front of it, or you
+will have a live credential in your logs.
+
 #### A proxy that appends instead of replacing
 
 Some load balancers append their own address after the client's, so

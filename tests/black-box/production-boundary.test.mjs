@@ -114,6 +114,160 @@ test("invalid production configuration fails before listening", async () => {
   }), /Invalid trusted proxy IP address/);
 });
 
+// ADR-0102, as amended: a deployment behind an ingress the platform already
+// restricts has no stable peer address to enumerate. It proves the request
+// came through the proxy instead, with a secret the proxy injects. Getting it
+// wrong refuses every request rather than accepting every request.
+
+const SECRET = "s3cret-value-at-least-32-chars-long!!";
+
+test("the proxy boundary is declared exactly one way", () => {
+  assert.throws(
+    () => boundaryApp({}),
+    /exactly one of trustedProxyAddresses or proxyBoundary/,
+  );
+  assert.throws(
+    () => boundaryApp({ trustedProxyAddresses: ["192.0.2.200"], proxyBoundary: { header: "x-proxy-token", secret: SECRET } }),
+    /exactly one of trustedProxyAddresses or proxyBoundary/,
+  );
+});
+
+test("a proxy secret too short to be a secret is refused at construction", () => {
+  assert.throws(
+    () => boundaryApp({ proxyBoundary: { header: "x-proxy-token", secret: "short" } }),
+    /proxyBoundary.secret must be at least 32 characters/,
+  );
+  // A forwarding header cannot carry the proof: the caller controls what
+  // arrives in those, and the proxy overwrites them for its own purposes.
+  assert.throws(
+    () => boundaryApp({ proxyBoundary: { header: "x-forwarded-for", secret: SECRET } }),
+    /proxyBoundary.header must not be a forwarding header/,
+  );
+  assert.throws(
+    () => boundaryApp({ proxyBoundary: { header: "not a header", secret: SECRET } }),
+    /proxyBoundary.header/,
+  );
+  // A header value arrives decoded as latin1 while a JS string hashes as
+  // UTF-8, so a non-ASCII secret could never match. Refusing it at
+  // construction beats refusing every request with no way to tell why.
+  for (const secret of [
+    `${SECRET}\u00e9`,
+    ` ${SECRET}`,
+    `${SECRET} `,
+    `${SECRET}\u0000`,
+  ]) {
+    assert.throws(
+      () => boundaryApp({ proxyBoundary: { header: "x-proxy-token", secret } }),
+      /proxyBoundary.secret must be printable ASCII with no surrounding spaces/,
+      `expected refusal for ${JSON.stringify(secret)}`,
+    );
+  }
+});
+
+test("a verified proxy secret admits any peer and keeps every other check", async () => {
+  let calls = 0;
+  const app = boundaryApp(
+    { proxyBoundary: { header: "X-Proxy-Token", secret: SECRET } },
+    () => { calls += 1; },
+    { maxRequests: 1, windowMs: 60_000, maxClients: 10 },
+  );
+  const running = await serveEmseepea(app, { port: 0 });
+  try {
+    const proven = (overrides = {}) => validHeaders({ "X-Proxy-Token": SECRET, ...overrides });
+
+    // The peer is this test's own socket, which no allowlist names.
+    assert.equal((await call(running.url, proven())).status, 200);
+    assert.equal(calls, 1);
+
+    // Proving the hop skips the address check and nothing else.
+    assert.equal((await call(running.url, proven({ Host: "attacker.example" }))).status, 403);
+    assert.equal((await call(running.url, proven({ Origin: "https://attacker.example" }))).status, 403);
+    assert.equal((await call(running.url, proven({ "X-Forwarded-Proto": "http" }))).status, 403);
+    assert.equal((await call(running.url, proven({ "X-Forwarded-For": "192.0.2.1, 192.0.2.2" }))).status, 403);
+    assert.equal(calls, 1);
+
+    assert.equal((await call(running.url, proven())).status, 429);
+    assert.equal((await call(running.url, proven({ "X-Forwarded-For": "192.0.2.77" }))).status, 200);
+    assert.equal(calls, 2);
+  } finally {
+    await running.close();
+  }
+});
+
+test("a missing or wrong proxy secret refuses every request", async () => {
+  let calls = 0;
+  const app = boundaryApp({ proxyBoundary: { header: "X-Proxy-Token", secret: SECRET } }, () => { calls += 1; });
+  const running = await serveEmseepea(app, { port: 0 });
+  try {
+    // This is the misconfiguration case: the proxy is not injecting the
+    // header. It fails closed, which is the whole point of proving the hop
+    // rather than declaring it.
+    assert.equal((await call(running.url, validHeaders())).status, 403);
+    assert.equal((await call(running.url, validHeaders({ "X-Proxy-Token": "" }))).status, 403);
+    assert.equal((await call(running.url, validHeaders({ "X-Proxy-Token": `${SECRET}x` }))).status, 403);
+    assert.equal((await call(running.url, validHeaders({ "X-Proxy-Token": SECRET.slice(0, -1) }))).status, 403);
+    // A caller who sends the header twice cannot slip a good value past.
+    assert.equal((await call(running.url, validHeaders({ "X-Proxy-Token": [SECRET, "wrong"] }))).status, 403);
+    assert.equal(calls, 0);
+
+    const refused = await call(running.url, validHeaders({ "X-Proxy-Token": "wrong" }));
+    assert.equal(refused.status, 403);
+    // The response must not confirm the header name or echo any of the value.
+    assert.doesNotMatch(refused.body, /proxy-token/i);
+    assert.doesNotMatch(refused.body, /s3cret/i);
+  } finally {
+    await running.close();
+  }
+});
+
+test("the proxy secret never reaches an observability adapter", async () => {
+  const events = [];
+  const app = boundaryApp(
+    { proxyBoundary: { header: "X-Proxy-Token", secret: SECRET } },
+    () => {},
+    { maxRequests: 10, windowMs: 1_000, maxClients: 10 },
+    [structuredLogging("capture", (event) => { events.push(event); })],
+  );
+  const running = await serveEmseepea(app, { port: 0 });
+  try {
+    await call(running.url, validHeaders({ "X-Proxy-Token": SECRET }));
+    await call(running.url, validHeaders({ "X-Proxy-Token": "wrong" }));
+  } finally {
+    await running.close();
+  }
+  assert.ok(events.length >= 1);
+  const serialized = JSON.stringify(events);
+  assert.doesNotMatch(serialized, /s3cret/i);
+  assert.doesNotMatch(serialized, /wrong/i);
+});
+
+function boundaryApp(boundary, onCall = () => {}, rateLimit = { maxRequests: 10, windowMs: 1_000, maxClients: 10 }, observability) {
+  const tool = defineTool({
+    name: "synthetic-read",
+    access: "public",
+    description: "Return a synthetic value.",
+    inputSchema: z.object({ id: z.string() }),
+    outputSchema: z.object({ id: z.string() }),
+    handler: ({ id }) => {
+      onCall();
+      return { text: id, data: { id } };
+    },
+  });
+  return createEmseepea({
+    name: "production-test",
+    version: "0.0.0",
+    tools: [tool],
+    ...(observability ? { observability } : {}),
+    deployment: {
+      mode: "production-behind-proxy",
+      allowedAuthorities: ["API.EXAMPLE:443"],
+      allowedOrigins: ["https://api.example"],
+      ...boundary,
+      rateLimit,
+    },
+  });
+}
+
 function productionApp(onCall, rateLimit, trustedProxyAddresses = ["::ffff:127.0.0.1"], forwardedHops, observability) {
   const tool = defineTool({
     name: "synthetic-read",

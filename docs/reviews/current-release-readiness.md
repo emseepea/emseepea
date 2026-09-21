@@ -2,9 +2,11 @@
 
 Date: 2026-09-21
 
-Release verification is not complete. This review covers reading the forwarded
-client address by counting from the end, and the dependency-closed releases
-that go with it:
+Release verification is not complete. This review covers two changes to the
+`production-behind-proxy` deployment profile — reading the forwarded client
+address by counting from the end, and proving a proxy that has no stable
+address with a secret header — and the dependency-closed releases that go with
+them:
 
 - `@emseepea/server@0.17.0`
 - `@emseepea/feedback@0.3.1`
@@ -60,6 +62,26 @@ own context. They are also agents, not people.
   reports are local artefacts under `.risk-reports/`, which is not committed,
   so a reader of this repository cannot open them.
 
+## Proving a Proxy With No Fixed Address
+
+A server behind a load balancer with no stable address could not start at all.
+The profile required a list of literal proxy addresses, and platforms like
+Cloud Run behind an external load balancer present nothing stable to list.
+
+The profile now takes `proxyBoundary`: a header name and a secret. The adopter
+configures the proxy to inject that header, and the server refuses any request
+that does not carry it. Exactly one of the two fields is supplied.
+
+An earlier form of this change was withdrawn before it shipped. It let the
+deployment declare that the platform enforced the boundary, which the
+framework had no way to check. Pipeline risk review scored it above appetite
+and refused the commit, on the grounds that every remaining check is settable
+by whoever sends the request, so the address comparison was the only one
+binding to network position. The replacement inverts the failure direction: a
+proxy that is not sending the header refuses every request, so a mistake
+closes the server rather than opening it. ADR-0103 records that decision and
+supersedes ADR-0102.
+
 ## Reading an Appending Proxy
 
 A server in `production-behind-proxy` mode refused every request that arrived
@@ -109,7 +131,15 @@ configuration becomes invalid, and no address allowlist widens.
   adapter. The test checks that the refusal sent back to the caller mentions
   hops nowhere, in any capitalisation. It checks the one refusal path the test
   exercises, not every response the server can send.
-- Local runs: 227 of 228 black-box and documentation tests pass. The one
+- The proved boundary is checked, not declared. Its tests cover a served
+  request from an unlisted peer, and refusal when the header is absent, empty,
+  wrong, a prefix of the secret, an extension of it, or sent twice. A further
+  test asserts the secret reaches no observability adapter on either path.
+- A secret that could never match is refused at construction rather than at
+  every request: shorter than 32 characters, outside printable ASCII, or with
+  surrounding spaces. The encoding case matters because a header value is
+  decoded latin1 while the configured string hashes as UTF-8.
+- Local runs: 232 of 233 black-box and documentation tests pass. The one
   failure is the packed-initializer check, named under limits below. Typecheck
   clean, decision check clean, published-content and README density gates pass.
 
@@ -130,12 +160,20 @@ packages, what the registry now serves, or that any adopter runs this.
   `create-multi-instance-postgres-server` and runs its suite. PostgreSQL is not
   running on this machine. Continuous integration runs it under initializer
   qualification, which the release pull request also depends on.
-- Only half of the decision this implements has shipped. ADR-0102 covers both a
-  declared proxy topology and a platform-enforced proxy boundary. The boundary
-  half is GitHub issue 119 and is not implemented, so a deployment whose proxy has no
-  stable address still cannot satisfy `trustedProxyAddresses`. The release
-  notes say so.
-- The decision record was rewritten in place after it was ratified, four times.
+- The secret travels as a request header, so the adopter's own proxy or CDN
+  may log it. The framework does not log the value and does not send it to an
+  observability adapter, and both are tested; neither fact constrains the
+  infrastructure in front, where header logging is a common default. Every
+  adopter-facing surface now says so. This is the real cost of moving from a
+  network-position check to a bearer secret.
+- There is one secret, with no second value accepted during rotation, so
+  rotating it has a window in which requests are refused. ADR-0103 records
+  that as an accepted limitation rather than an oversight.
+- ADR-0103 is not yet ratified and ADR-0102 has not been renamed to superseded.
+  Both change together when the maintainer ratifies. Until then the generated
+  decision index lists ADR-0102 among current decisions, and its checks
+  describe a shape the code no longer has.
+- ADR-0102 was rewritten in place after it was ratified, four times.
   The maintainer directed each rewrite and re-ratified it each time. This
   project's rule is that a ratified decision is superseded, not amended. That
   rule is the reason three supersession records were written yesterday.

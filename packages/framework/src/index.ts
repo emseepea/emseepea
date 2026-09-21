@@ -68,7 +68,7 @@ import type {
   RouteHandlerMethod,
 } from "fastify";
 import { AsyncLocalStorage } from "node:async_hooks";
-import { createHash } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { readdir, realpath } from "node:fs/promises";
 import { isIP } from "node:net";
@@ -778,7 +778,34 @@ export type DeploymentProfile =
       readonly mode: "production-behind-proxy";
       readonly allowedAuthorities: readonly string[];
       readonly allowedOrigins: readonly string[];
-      readonly trustedProxyAddresses: readonly string[];
+      /**
+       * The literal addresses the proxy in front may connect from. A CIDR
+       * range is refused: the comparison is exact membership.
+       *
+       * Supply this OR `proxyBoundary`, never both and never neither.
+       */
+      readonly trustedProxyAddresses?: readonly string[];
+      /**
+       * Proves a request arrived through the proxy, for deployments where no
+       * stable peer address exists to enumerate. The proxy injects `header`
+       * with the value `secret`; the server compares and refuses anything
+       * else.
+       *
+       * This replaces the peer address comparison and changes nothing else:
+       * the protocol, authority, origin and rate-limit checks all still run.
+       *
+       * A proxy that is not injecting the header refuses every request, so a
+       * mistake here closes the server rather than opening it. Configure the
+       * header on the proxy first, then deploy with this set.
+       *
+       * `secret` is a credential. Keep it out of source control and out of
+       * the deployment config file: supply it from your platform's secret
+       * store at runtime. It is never logged and never sent to an
+       * observability adapter.
+       *
+       * Supply this OR `trustedProxyAddresses`, never both and never neither.
+       */
+      readonly proxyBoundary?: { readonly header: string; readonly secret: string };
       /**
        * How many entries the infrastructure in front appends to
        * `x-forwarded-for` AFTER the client address. Defaults to 0.
@@ -822,7 +849,13 @@ export function loadDeploymentProfile(
   const parsed = z.strictObject({
     allowedAuthorities: z.array(z.string()).min(1),
     allowedOrigins: z.array(z.string()).min(1),
-    trustedProxyAddresses: z.array(z.string()).min(1),
+    trustedProxyAddresses: z.array(z.string()).min(1).optional(),
+    // The config file carries non-secret policy only, so it names the
+    // environment variable holding the secret rather than the secret itself.
+    proxyBoundary: z.strictObject({
+      header: z.string(),
+      secretEnv: z.string().min(1),
+    }).optional(),
     forwardedHops: z.number().int().nonnegative().optional(),
     rateLimit: z.strictObject({
       maxRequests: z.number().int().positive(),
@@ -830,17 +863,32 @@ export function loadDeploymentProfile(
       maxClients: z.number().int().positive(),
     }),
   }).parse(JSON.parse(source));
-  const profile = { mode, ...parsed } satisfies DeploymentProfile;
+  // The file names the variable holding the proxy secret; the value itself
+  // comes from the environment, so the config stays non-secret policy.
+  const { proxyBoundary: fileBoundary, ...policy } = parsed;
+  let proxyBoundary: { header: string; secret: string } | undefined;
+  if (fileBoundary) {
+    const secret = environment[fileBoundary.secretEnv];
+    if (!secret) {
+      throw new TypeError(`Production deployment config names ${fileBoundary.secretEnv} for the proxy secret, and it is not set`);
+    }
+    proxyBoundary = { header: fileBoundary.header, secret };
+  }
+  const profile = {
+    mode,
+    ...policy,
+    ...(proxyBoundary ? { proxyBoundary } : {}),
+  } satisfies DeploymentProfile;
   const normalized = normalizeDeployment(profile);
   if (normalized.mode !== "production-behind-proxy") throw new TypeError("Production deployment config is invalid");
   for (const [label, values, normalizedValues] of [
     ["allowed authority", parsed.allowedAuthorities, normalized.allowedAuthorities],
     ["allowed origin", parsed.allowedOrigins, normalized.allowedOrigins],
-    ["trusted proxy address", parsed.trustedProxyAddresses, normalized.trustedProxyAddresses],
+    ["trusted proxy address", parsed.trustedProxyAddresses ?? [], normalized.trustedProxyAddresses ?? new Set()],
   ] as const) {
     if (normalizedValues.size !== values.length) throw new TypeError(`Duplicate ${label}`);
   }
-  for (const address of parsed.trustedProxyAddresses) {
+  for (const address of parsed.trustedProxyAddresses ?? []) {
     if (normalizeIp(address) !== address) throw new TypeError(`Trusted proxy address is not normalized: ${address}`);
   }
   return profile;
@@ -863,7 +911,11 @@ type NormalizedDeployment =
       readonly mode: "production-behind-proxy";
       readonly allowedAuthorities: ReadonlySet<string>;
       readonly allowedOrigins: ReadonlySet<string>;
-      readonly trustedProxyAddresses: ReadonlySet<string>;
+      /** Absent when the boundary is declared platform-enforced. */
+      /** Absent when the boundary is proved by a header instead. */
+      readonly trustedProxyAddresses: ReadonlySet<string> | undefined;
+      /** Absent when the boundary is an address allowlist. */
+      readonly proxyBoundary: { readonly header: string; readonly digest: Buffer } | undefined;
       readonly forwardedHops: number;
       readonly rateLimit: Readonly<RateLimitOptions>;
     };
@@ -3002,9 +3054,21 @@ function validateProductionRequest(
     void sendRpcError(reply, status, -32004, message);
     return false;
   };
-  const peer = normalizeIp(request.raw.socket.remoteAddress);
-  if (!peer || !deployment.trustedProxyAddresses.has(peer)) {
-    return reject(403, "Request did not come from a trusted proxy");
+  // ADR-0102: the boundary is either an address the proxy connects from, or a
+  // secret the proxy injects that a caller cannot know. Exactly one is
+  // configured, and `normalizeDeployment` refuses a profile with neither, so
+  // the `else` below is reached only when a boundary was proved by header.
+  if (deployment.proxyBoundary !== undefined) {
+    if (!provedProxyHop(request.raw.rawHeaders, deployment.proxyBoundary)) {
+      // The same message as the address failure: naming the header or saying
+      // the value was close would help a caller guess at it.
+      return reject(403, "Request did not come from a trusted proxy");
+    }
+  } else {
+    const peer = normalizeIp(request.raw.socket.remoteAddress);
+    if (!deployment.trustedProxyAddresses?.has(peer ?? "")) {
+      return reject(403, "Request did not come from a trusted proxy");
+    }
   }
   const proto = singleHeader(request.raw.rawHeaders, "x-forwarded-proto");
   const forwardedFor = singleHeader(request.raw.rawHeaders, "x-forwarded-for");
@@ -3181,10 +3245,59 @@ function isLoopbackUrl(url: URL): boolean {
   return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
 }
 
+// ADR-0102: a header-proved proxy boundary. The value is a credential, so it
+// is held as a SHA-256 digest and compared against the digest of whatever
+// arrived. Equal-length digests let `timingSafeEqual` do its job without the
+// comparison leaking the secret's length.
+function normalizeProxyBoundary(
+  boundary: { readonly header: string; readonly secret: string },
+): { readonly header: string; readonly digest: Buffer } {
+  const header = boundary.header.toLowerCase();
+  if (!/^[a-z0-9!#$%&'*+.^_`|~-]+$/.test(header)) {
+    throw new TypeError(`proxyBoundary.header is not a valid header name: ${boundary.header}`);
+  }
+  // A caller controls what arrives in a forwarding header, and a proxy
+  // rewrites them for its own purposes, so neither can carry the proof.
+  if (header.startsWith("x-forwarded-") || header === "forwarded" || header === "host") {
+    throw new TypeError(`proxyBoundary.header must not be a forwarding header: ${boundary.header}`);
+  }
+  if (boundary.secret.length < 32) {
+    throw new TypeError("proxyBoundary.secret must be at least 32 characters");
+  }
+  // A header value reaches the request path decoded as latin1, while this
+  // string hashes as UTF-8. Outside printable ASCII the two disagree and the
+  // secret could never match, refusing every request with nothing to say why.
+  // Surrounding spaces are refused for the same reason: a proxy strips them.
+  if (!/^[\x21-\x7e](?:[\x20-\x7e]*[\x21-\x7e])?$/.test(boundary.secret)) {
+    throw new TypeError("proxyBoundary.secret must be printable ASCII with no surrounding spaces");
+  }
+  return { header, digest: createHash("sha256").update(boundary.secret).digest() };
+}
+
+function provedProxyHop(
+  rawHeaders: readonly string[],
+  boundary: { readonly header: string; readonly digest: Buffer },
+): boolean {
+  // `singleHeader` returns null for a repeated field, so a caller cannot send
+  // the header twice and hope one of them is taken.
+  const supplied = singleHeader(rawHeaders, boundary.header);
+  if (supplied === null || supplied === undefined || supplied === "") return false;
+  return timingSafeEqual(createHash("sha256").update(supplied).digest(), boundary.digest);
+}
+
 function normalizeDeployment(profile: DeploymentProfile): NormalizedDeployment {
   if (profile.mode === "loopback") return profile;
+  // ADR-0102: a deployment states its proxy boundary one way or the other. An
+  // omission must not read as "platform-enforced", because that is also what
+  // forgetting looks like.
+  const declared = profile.proxyBoundary !== undefined;
+  const enumerated = profile.trustedProxyAddresses !== undefined;
+  if (declared === enumerated) {
+    throw new TypeError("Production deployment needs exactly one of trustedProxyAddresses or proxyBoundary");
+  }
+
   if (!profile.allowedAuthorities.length || !profile.allowedOrigins.length ||
-      !profile.trustedProxyAddresses.length) {
+      (enumerated && !profile.trustedProxyAddresses?.length)) {
     throw new TypeError("Production deployment allowlists must not be empty");
   }
   return {
@@ -3195,9 +3308,14 @@ function normalizeDeployment(profile: DeploymentProfile): NormalizedDeployment {
     allowedOrigins: new Set(profile.allowedOrigins.map((value) => requiredNormalized(
       "allowed HTTPS origin", value, normalizeOrigin,
     ))),
-    trustedProxyAddresses: new Set(profile.trustedProxyAddresses.map((value) => requiredNormalized(
-      "trusted proxy IP address", value, normalizeIp,
-    ))),
+    trustedProxyAddresses: profile.trustedProxyAddresses === undefined
+      ? undefined
+      : new Set(profile.trustedProxyAddresses.map((value) => requiredNormalized(
+        "trusted proxy IP address", value, normalizeIp,
+      ))),
+    proxyBoundary: profile.proxyBoundary === undefined
+      ? undefined
+      : normalizeProxyBoundary(profile.proxyBoundary),
     forwardedHops: nonNegativeInteger("forwardedHops", profile.forwardedHops ?? 0),
     rateLimit: {
       maxRequests: positiveInteger("rateLimit.maxRequests", profile.rateLimit.maxRequests),

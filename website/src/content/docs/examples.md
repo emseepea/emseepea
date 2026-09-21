@@ -47,6 +47,37 @@ The deployment file contains only non-secret policy:
 }
 ```
 
+If your platform gives you no fixed proxy address to list, have the proxy
+prove itself instead. Configure it to add a header carrying a secret, and
+replace `trustedProxyAddresses` with a `proxyBoundary` naming that header and
+the environment variable holding the secret:
+
+```json
+{
+  "proxyBoundary": { "header": "x-proxy-token", "secretEnv": "EMSEEPEA_PROXY_SECRET" }
+}
+```
+
+Set the header on your proxy before you deploy this. Until the proxy sends it,
+every request is refused. That is the safe direction for a mistake to go. The
+secret must be at least 32 characters.
+
+The deployment file stays non-secret. It names the variable; your platform
+supplies the value at runtime, the same way you provide every other secret. In
+code the field is `secret` and carries the value itself; in this file it is
+`secretEnv` and names the variable.
+
+The secret travels as a request header, and proxies and CDNs often log request
+headers by default. Turn off logging for that header at your proxy and anything
+in front of it.
+
+Supply either `trustedProxyAddresses` or `proxyBoundary`, never both. A profile
+with neither is refused too. This replaces the address check and nothing else:
+the authority, origin, forwarded-protocol and rate-limit checks all still run.
+
+[How to prove a proxy with no fixed address](https://github.com/emseepea/emseepea/tree/main/packages/framework#a-proxy-with-no-fixed-address)
+explains the setup in full.
+
 `forwardedHops` says how many entries the infrastructure in front appends to
 `X-Forwarded-For` after the client's address. Leave it at `0` if your proxy
 replaces the header, which means it must carry exactly one entry. If your load
