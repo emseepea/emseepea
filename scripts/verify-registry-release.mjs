@@ -41,10 +41,11 @@ export function assertRegistryState(before, after, { tag = "latest" } = {}) {
     assert.ok(actual, `${expected.name} registry metadata is missing`);
     assert.equal(actual.version, expected.version);
     assert.equal(actual.present, true, `${expected.name}@${expected.version} is missing`);
+    const expectedTag = tag === "next" && expected.version === expected.latest ? "latest" : tag;
     assert.equal(
-      actual.tags?.[tag] ?? actual.latest,
+      expectedTag === "latest" ? actual.tags?.latest ?? actual.latest : actual.tags?.next,
       expected.version,
-      `${expected.name} ${tag} tag is wrong`,
+      `${expected.name} ${expectedTag} tag is wrong`,
     );
     assert.match(actual.integrity, /^sha512-/, `${expected.name} integrity is missing`);
     assert.ok(actual.tarball, `${expected.name} tarball is missing`);

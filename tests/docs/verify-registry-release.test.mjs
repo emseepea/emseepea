@@ -30,6 +30,30 @@ test("a next publish is verified against the next tag, not latest", () => {
   assert.throws(() => assertRegistryState(before, after, { tag: "latest" }), /latest tag/);
 });
 
+test("a next publish checks unchanged packages on latest, including a retry", () => {
+  const candidate = published({ latest: "1.0.0", next: "1.1.0" }).packages[0];
+  const unchanged = {
+    ...candidate,
+    name: "@emseepea/tailwind",
+    version: "0.1.0",
+    tags: { latest: "0.1.0", next: "0.0.1" },
+  };
+  const expected = { packages: [
+    { ...before.packages[0], present: true },
+    { name: unchanged.name, version: unchanged.version, present: true, latest: "0.1.0" },
+  ] };
+  const actual = { packages: [candidate, unchanged] };
+  assert.doesNotThrow(() => assertRegistryState(expected, actual, { tag: "next" }));
+  assert.throws(
+    () => assertRegistryState(expected, { packages: [{ ...candidate, tags: { latest: "1.0.0", next: "1.0.0" } }, unchanged] }, { tag: "next" }),
+    /server next tag/,
+  );
+  assert.throws(
+    () => assertRegistryState(expected, { packages: [candidate, { ...unchanged, tags: { latest: "0.0.1", next: "0.0.1" } }] }, { tag: "next" }),
+    /tailwind latest tag/,
+  );
+});
+
 test("a promotion is verified against the latest tag", () => {
   const after = published({ latest: "1.1.0", next: "1.1.0" });
   assert.doesNotThrow(() => assertRegistryState(before, after, { tag: "latest" }));
