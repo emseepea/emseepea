@@ -271,3 +271,20 @@ refused at construction with a named error.
   SHA-256: `0de6e5fd5c558887f1fe1b6a4391758c03c30754c0a188798a67e0ece0890cbe`
 - `website/src/content/docs/examples.md`
   SHA-256: `e0080c22cf47203a5f7deabcc29638c369a3177b392117685e67b2d0b31375fb`
+
+## Ratified Proxy Decision and Superseded Index
+
+Result: PASS. A fresh review of the ratified ADR-0103, the renamed historical
+ADR-0102, and the regenerated decision index found no cognitive-accessibility
+issues in the Markdown source. The decision leads with the proved boundary and
+distinguishes a wrong declaration that could silently admit requests from a
+missing secret that refuses them. The historical decision and index identify
+ADR-0103 as its replacement. This review did not assess rendered website pages
+or verify a deployed adopter request.
+
+- `docs/decisions/0102-declared-proxy-topology-for-production-deployments.superseded.md`
+  SHA-256: `26637422f4a865802a1984bf1a8996d4b6494aea92265150460fe20ae8fdb553`
+- `docs/decisions/0103-proved-proxy-boundary-for-production-deployments.proposed.md`
+  SHA-256: `1c527722a0fd2d77dc009ed17baa24e23bc74c3388d1769e758242f9bd436c31`
+- `docs/decisions/README.md`
+  SHA-256: `28db70f00098eb46244d1b9bcb5a830b6e45b330a927d8e9a960ac02150b3017`
