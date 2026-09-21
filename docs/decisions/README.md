@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 99 decisions: 55 current and 44 historical.
+This project has 101 decisions: 56 current and 45 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -70,6 +70,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0099: Website Deploys with the Release](0099-website-deploys-with-the-release.proposed.md): Proposed; human review confirmed.
 - [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.proposed.md): Proposed; human review confirmed.
 - [ADR-0101: Vulnerability Scanning Without a Release Workflow](0101-vulnerability-scanning-without-a-release-workflow.proposed.md): Proposed; human review confirmed.
+- [ADR-0103: Proved Proxy Boundary for Production Deployments](0103-proved-proxy-boundary-for-production-deployments.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -117,6 +118,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0088: Always-Available Checked Model Context Protocol (MCP) Ping](0088-always-available-checked-mcp-ping.superseded.md): Superseded; human review confirmed.
 - [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.superseded.md): Superseded; human review confirmed.
 - [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.superseded.md): Superseded; human review confirmed.
+- [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -2245,3 +2247,51 @@ Chosen option: **bind publication to the passing quality run for the originating
 - Standalone initializer qualification requires the scan to pass.
 - Publication retains package signature, integrity, provenance, and clean-install checks.
 - No release pull request is opened, and nothing is published, for a commit whose scan did not pass.
+
+### [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.superseded.md)
+
+- Status: Superseded
+- Human review: Confirmed
+- Replaced by: [ADR-0103: Proved Proxy Boundary for Production Deployments](0103-proved-proxy-boundary-for-production-deployments.proposed.md)
+
+#### ADR-0102 Decision
+
+Chosen option: **let the deployment declare its proxy topology**, because it is the only option that keeps the framework making the decision while letting the adopter supply the one fact it cannot observe.
+
+#### ADR-0102 Checks
+
+- A profile with neither `trustedProxyAddresses` nor `proxyBoundary` is refused at construction, and so is one carrying both.
+- A profile declaring `proxyBoundary: "platform-enforced"` starts, serves a request from any peer, and still refuses a disallowed authority, a disallowed origin, a non-HTTPS forwarded protocol and a rate-limited client.
+- `trustedProxyAddresses` still rejects a CIDR at construction.
+- With `forwardedHops` unset, a multi-entry `x-forwarded-for` is refused, exactly as today.
+- With `forwardedHops: 1`, both `<client>, <balancer>` and `<caller-supplied>, <client>, <balancer>` rate-limit on `<client>`, and a caller who varies their own prefix is limited on the same key.
+- With `forwardedHops: 1`, a single-entry header is refused, the response carries the same generic message as every other forwarding refusal, and the server's log record names the hop-count mismatch.
+- A count one higher than the topology reads the caller's own prefix as the client address, and serves the request. That is the accepted silent failure named in Consequences, not a guarded case: refusing an over-long header instead would break the prefix-ignoring this decision depends on. A behavioural test pins the direction, so prose that states it backwards contradicts a passing test rather than standing unchallenged.
+- `forwardedHops` rejects a negative, fractional or non-numeric value at construction.
+- A request carrying `x-forwarded-for` twice is refused at every hop count, so a caller cannot shift the index by repeating the field.
+- A configuration file carrying `proxyBoundary` or `forwardedHops` loads, and one carrying an unknown key is still refused.
+- A server started with `proxyBoundary: "platform-enforced"` records once at startup that the peer check is disabled by declaration.
+- A loaded profile still equals the configuration file it came from, so the hop-count default is not materialized by the loader.
+
+### [ADR-0103: Proved Proxy Boundary for Production Deployments](0103-proved-proxy-boundary-for-production-deployments.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.superseded.md)
+
+#### ADR-0103 Decision
+
+Chosen option: **prove the hop with a secret the proxy injects**, because it turns an unverifiable claim into a check, and because it inverts the failure direction: a proxy that is not sending the header refuses every request rather than admitting every request.
+
+#### ADR-0103 Checks
+
+- A profile with neither `trustedProxyAddresses` nor `proxyBoundary` is refused at construction, and so is one carrying both, on the API path and through the configuration file.
+- A request carrying the right secret is served from any peer address. The server still refuses a disallowed authority, a disallowed origin, a forwarded protocol other than HTTPS (encrypted HTTP) and a rate-limited client.
+- A request with the header absent, empty, wrong, or a prefix or extension of the secret is refused, and so is one sending the header twice.
+- The refusal names neither the header nor any part of the value, and carries the same message as an address failure.
+- The secret reaches no logging and monitoring integration (observability adapter), on the served path or the refused one.
+- A secret shorter than 32 characters is refused at construction, as is a header name using characters not allowed by HTTP, and any `x-forwarded-*` header, `forwarded`, or `host`.
+- The comparison uses equal-length digests and is designed not to reveal the secret through timing differences (constant-time comparison).
+- The configuration file names the environment variable holding the secret and is refused when that variable is unset. A loaded profile carries the resolved value.
+- `trustedProxyAddresses` still rejects an IP address range (CIDR) at construction.
+- Everything ADR-0102 confirmed about `forwardedHops` still holds.

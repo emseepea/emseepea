@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { promisify } from "node:util";
 
 import { publishablePackages } from "./public-packages.mjs";
+import { releaseVersionContext } from "./release-version-context.mjs";
 
 const registry = "https://registry.npmjs.org";
+const exec = promisify(execFile);
 const packageFiles = (await publishablePackages()).map(({ name, path }) => [name, `${path}/package.json`]);
 const waitForPropagation = () => new Promise((resolveDelay) => setTimeout(resolveDelay, 3_000));
 
@@ -41,10 +45,11 @@ export function assertRegistryState(before, after, { tag = "latest" } = {}) {
     assert.ok(actual, `${expected.name} registry metadata is missing`);
     assert.equal(actual.version, expected.version);
     assert.equal(actual.present, true, `${expected.name}@${expected.version} is missing`);
+    const expectedTag = tag === "next" && expected.version === expected.latest ? "latest" : tag;
     assert.equal(
-      actual.tags?.[tag] ?? actual.latest,
+      expectedTag === "latest" ? actual.tags?.latest ?? actual.latest : actual.tags?.next,
       expected.version,
-      `${expected.name} ${tag} tag is wrong`,
+      `${expected.name} ${expectedTag} tag is wrong`,
     );
     assert.match(actual.integrity, /^sha512-/, `${expected.name} integrity is missing`);
     assert.ok(actual.tarball, `${expected.name} tarball is missing`);
@@ -104,13 +109,38 @@ async function capture(path) {
 
 async function verify(beforePath, afterPath, { tag = "latest" } = {}) {
   const before = JSON.parse(await readFile(beforePath, "utf8"));
+  const { releaseSha, changedPackages } = await releaseVersionContext();
+  assert.equal(
+    process.env.GITHUB_REF,
+    tag === "next" ? "refs/heads/changeset-release/publish" : "refs/heads/publish",
+    "registry verification is running on the wrong branch",
+  );
+  const expectedRun = {
+    releaseSha,
+    releaseRunId: process.env.EMSEEPEA_RELEASE_RUN_ID ?? (tag === "next" ? process.env.GITHUB_RUN_ID : undefined),
+    changedPackages,
+    repository: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`,
+    workflowPath: process.env.EMSEEPEA_PUBLISH_WORKFLOW_PATH ?? ".github/workflows/release.yml",
+    invocationPrefix: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/`,
+  };
+  const checkStatements = async (after, statements) => {
+    const commits = statements.map(provenanceCommit);
+    const ancestorCommits = new Set();
+    for (const [index, item] of before.packages.entries()) {
+      if (changedPackages.has(item.name)) continue;
+      assert.match(commits[index], /^[a-f0-9]{40}$/, `${item.name} provenance commit is malformed`);
+      await exec("git", ["merge-base", "--is-ancestor", commits[index], releaseSha]);
+      ancestorCommits.add(commits[index]);
+    }
+    assertStatements(before, after, statements, { ...expectedRun, ancestorCommits });
+    return commits;
+  };
   const prior = classifyPublication(before, { packages: before.packages });
   if (prior === "unchanged") {
     const after = { packages: await Promise.all(before.packages.map(readCurrent)) };
     assertRegistryState(before, after, { tag });
     const statements = await Promise.all(after.packages.map(readProvenance));
-    const commits = statements.map(provenanceCommit);
-    assertStatements(after, statements, commits);
+    const commits = await checkStatements(after, statements);
     after.packages.forEach((item, index) => { item.releaseSha = commits[index]; });
     await writeReleaseOutputs();
     await writeJson(afterPath, after);
@@ -124,30 +154,48 @@ async function verify(beforePath, afterPath, { tag = "latest" } = {}) {
   assertRegistryState(before, after, { tag });
 
   const statements = await Promise.all(after.packages.map(readProvenance));
-  const commits = statements.map(provenanceCommit);
-  for (const [index, item] of before.packages.entries()) {
-    if (!item.present) assert.equal(commits[index], process.env.GITHUB_SHA, `${item.name} provenance does not bind this release commit`);
-  }
-  assertStatements(after, statements, commits);
+  const commits = await checkStatements(after, statements);
   after.packages.forEach((item, index) => { item.releaseSha = commits[index]; });
   await writeJson(afterPath, after);
   await writeReleaseOutputs();
 }
 
-function assertStatements(after, statements, commits) {
-  const expectedRun = {
-    ref: process.env.GITHUB_REF,
-    repository: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`,
-    // ADR-0098 retires release.yml; the publishing workflow is the one that
-    // built and published the tarballs, which is the release-pull-request build.
-    workflowPath: process.env.EMSEEPEA_PUBLISH_WORKFLOW_PATH ?? ".github/workflows/release-build.yml",
-    invocationPrefix: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/`,
-  };
+export function assertStatements(before, after, statements, {
+  releaseSha,
+  releaseRunId,
+  changedPackages,
+  ancestorCommits,
+  repository,
+  workflowPath,
+  invocationPrefix,
+}) {
+  assert.match(releaseRunId, /^[0-9]+$/, "successful release run ID is missing");
+  assert.equal(after.packages.length, before.packages.length);
+  assert.equal(statements.length, after.packages.length);
   for (const [index, item] of after.packages.entries()) {
     const statement = statements[index];
+    const prior = before.packages[index];
+    assert.equal(prior.name, item.name);
+    const commit = provenanceCommit(statement);
+    const fresh = changedPackages.has(item.name);
+    if (fresh) {
+      assert.equal(commit, releaseSha, `${item.name} provenance does not bind this release commit`);
+    } else {
+      assert.ok(prior.present && prior.latest === item.version, `${item.name} was not already on latest before this release`);
+      assert.ok(ancestorCommits.has(commit), `${item.name} historical provenance is not an ancestor of the release`);
+    }
+    const ref = fresh
+      ? "refs/heads/changeset-release/publish"
+      : statement?.predicate?.buildDefinition?.externalParameters?.workflow?.ref;
+    if (!fresh) {
+      assert.ok(["refs/heads/main", "refs/heads/changeset-release/publish"].includes(ref), `${item.name} historical provenance ref is wrong`);
+    }
     assertProvenance(statement, {
-      ...expectedRun,
-      sha: commits[index],
+      ref,
+      repository,
+      workflowPath,
+      invocationPrefix: fresh ? `${invocationPrefix}${releaseRunId}/` : invocationPrefix,
+      sha: commit,
       subject: `pkg:npm/${encodeURIComponent(item.name).replace("%2F", "/")}@${item.version}`,
       sha512: Buffer.from(item.integrity.slice("sha512-".length), "base64").toString("hex"),
     });

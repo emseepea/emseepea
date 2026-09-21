@@ -23,7 +23,19 @@ export interface CallerClassification {
 
 export interface ObservabilityState {
   protocolOutcome: Exclude<ObservedProtocolOutcome, "disconnected">;
+  /**
+   * Why a production forwarding check refused, when the reason is one the
+   * operator needs and the caller must not be told (ADR-0102). The response
+   * carries the same generic message either way.
+   */
+  forwardingRefusal?: ObservedForwardingRefusal;
 }
+
+/**
+ * `hop-count-mismatch`: the header carried fewer entries than
+ * `forwardedHops` declared, so no entry could be the client address.
+ */
+export type ObservedForwardingRefusal = "hop-count-mismatch";
 
 const requestStates = new WeakMap<FastifyRequest, ObservabilityState>();
 
@@ -37,6 +49,13 @@ export interface ObservabilityEvent {
   readonly protocolOutcome: ObservedProtocolOutcome;
   readonly callerClass?: string;
   readonly durationMs: number;
+  /**
+   * Present only on a refused production request whose forwarding metadata
+   * failed for a reason the operator needs in order to fix a declaration
+   * (ADR-0102). Absent on every other request, so an adapter that ignores it
+   * behaves exactly as before.
+   */
+  readonly forwardingRefusal?: ObservedForwardingRefusal;
 }
 
 export interface ObservabilityAdapter {
@@ -122,6 +141,7 @@ export function installObservability(
             : state.protocolOutcome,
         ...(callerClass ? { callerClass } : {}),
         durationMs: Math.min(3_600_000, Math.max(0, performance.now() - started)),
+        ...(state.forwardingRefusal ? { forwardingRefusal: state.forwardingRefusal } : {}),
       });
       for (const adapter of adapters) {
         try {

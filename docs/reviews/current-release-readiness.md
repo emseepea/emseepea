@@ -1,91 +1,147 @@
 # Current Release Readiness
 
-Date: 2026-09-20
+Date: 2026-09-21
 
-Release verification is not complete. This review covers publishing first-party
-tool result schemas open, and the dependency-closed releases that go with it:
+Release verification is not complete. This review covers two changes to the
+`production-behind-proxy` deployment profile — reading the forwarded client
+address by counting from the end, and proving a proxy that has no stable
+address with a secret header — and the dependency-closed releases that go with
+them:
 
-- `@emseepea/server@0.16.0`
-- `@emseepea/feedback@0.3.0`
-- `@emseepea/react@0.3.4`
-- `@emseepea/svelte@0.1.8`
-- `@emseepea/testing@0.16.2`
-- `@emseepea/create-api-backed-server@0.0.41`
-- `@emseepea/create-database-schema-server@0.0.28`
-- `@emseepea/create-html-ui-server@0.0.43`
-- `@emseepea/create-mongodb-backed-server@0.0.28`
-- `@emseepea/create-multi-instance-postgres-server@0.0.31`
-- `@emseepea/create-openapi-backed-server@0.0.23`
-- `@emseepea/create-progress-streaming-server@0.0.41`
-- `@emseepea/create-react-ui-server@0.0.43`
-- `@emseepea/create-resources-and-prompts-server@0.0.40`
-- `@emseepea/create-soap-backed-server@0.0.28`
-- `@emseepea/create-tool-server@0.0.43`
+- `@emseepea/server@0.18.0`
+- `@emseepea/feedback@0.3.3`
+- `@emseepea/react@0.3.6`
+- `@emseepea/svelte@0.1.10`
+- `@emseepea/testing@0.16.4`
+- `@emseepea/create-api-backed-server@0.0.43`
+- `@emseepea/create-database-schema-server@0.0.31`
+- `@emseepea/create-html-ui-server@0.0.45`
+- `@emseepea/create-mongodb-backed-server@0.0.31`
+- `@emseepea/create-multi-instance-postgres-server@0.0.33`
+- `@emseepea/create-openapi-backed-server@0.0.25`
+- `@emseepea/create-progress-streaming-server@0.0.43`
+- `@emseepea/create-react-ui-server@0.0.45`
+- `@emseepea/create-resources-and-prompts-server@0.0.42`
+- `@emseepea/create-soap-backed-server@0.0.30`
+- `@emseepea/create-tool-server@0.0.45`
 
 ## Who Wrote This and What It Is Worth
 
-An agent wrote this record, and an agent wrote the change it describes and the
-release notes that ship with it. Read it as that agent's account of its own
+An agent wrote this record, and agents wrote the change it describes and the
+release notes that ship with it. Read it as those agents' account of their own
 work, not as someone else's check on it.
 
-Three reviews ran separately from the agent that did the work, each with its own
-context. They are also agents, not people.
+The implementation and its first tests came from a different session, working
+in a separate worktree, which had reported the issue and then measured its
+cause in a live deployment. The session writing this record added three tests,
+the prose, and the decision record.
 
-- Architecture review ran three times and failed the change twice. The first
-  failure was substantive: an earlier draft had no release notes at all for a
-  change to a published contract. The second was a defect the agent had shipped
-  into the working tree — a test asserting the old behaviour, which the agent
-  had not run before reporting the change as green.
-- Cognitive-accessibility review ran over the release notes four times, and
-  separately over this record and the backlog records written today. Its
-  findings are in `docs/reviews/cognitive-accessibility-2026-09-20.md`. On the
-  release notes it found a heading reading "What did not change" sitting above a
-  paragraph describing a change, and a disclosure that gave the reader no
-  remedy; both were fixed. On earlier records that file lists findings that were
-  not applied, and says which and why.
-- Risk review scored the change above this project's appetite and refused it
-  until the release notes said something falsifiable about whether this would
-  happen again.
+Three reviews ran separately from the agents that did the work, each with its
+own context. They are also agents, not people.
 
-## Open Result Schemas in First-Party Tools
+- Architecture review ran three times. The first run passed. The second
+  failed the change. Its ground was that the decision record this change
+  implements had been ratified and was then edited in place, which this
+  project's own rule forbids. The third run passed, but only because it was
+  told the maintainer had directed the rewrite. The underlying conflict was
+  not fixed. It is written down below as a known limit.
+- Cognitive-accessibility review graded three of five changed prose surfaces
+  as failures, all on the same point. A sixth surface, the starter-package
+  changeset, was written afterwards and reviewed separately; it carried the
+  same defect a seventh time. Both rounds of findings, and the exact text each
+  cleared, are in `docs/reviews/cognitive-accessibility-2026-09-21.md`.
+- Risk review ran repeatedly, and its sequence matters more than any single
+  number. An early score was within appetite. The push was then refused by
+  the release-readiness gate, which forced the starter changeset and this
+  record's rewrite, so that score no longer described the tree. A later score
+  refused the commit: it found this record citing the earlier score as though
+  it still applied. That citation is what this bullet replaced. This document
+  states the band rather than a value, because a value copied here goes stale
+  the moment anything else in the tree changes, and because the run that
+  confirms a value always postdates the record describing it. The full
+  reports are local artefacts under `.risk-reports/`, which is not committed,
+  so a reader of this repository cannot open them.
 
-The tools shipped in the feedback package, and the result view exported from the
-server package, declared their results closed. A client validating a response
-against a captured copy of one of those schemas had to reject any field the
-result gained later, so adding a field was a breaking change for that client.
-Those schemas are now open.
+## Proving a Proxy With No Fixed Address
 
-The mechanism this project shipped in 0.15.0 is unchanged. A schema declared
-strict still publishes closed, and that is still how to ask for a closed
-contract deliberately. What changed is which declaration these particular
-first-party schemas use.
+A server behind a load balancer with no stable address could not start at all.
+The profile required a list of literal proxy addresses, and platforms like
+Cloud Run behind an external load balancer present nothing stable to list.
 
-Result values do not change. The framework sends the value its schema produced,
-so a field the schema does not declare is removed before the response is built,
-exactly as before.
+The profile now takes `proxyBoundary`: a header name and a secret. The adopter
+configures the proxy to inject that header, and the server refuses any request
+that does not carry it. Exactly one of the two fields is supplied.
+
+An earlier form of this change was withdrawn before it shipped. It let the
+deployment declare that the platform enforced the boundary, which the
+framework had no way to check. Pipeline risk review scored it above appetite
+and refused the commit, on the grounds that every remaining check is settable
+by whoever sends the request, so the address comparison was the only one
+binding to network position. The replacement inverts the failure direction: a
+proxy that is not sending the header refuses every request, so a mistake
+closes the server rather than opening it. ADR-0103 records that decision and
+supersedes ADR-0102.
+
+## Reading an Appending Proxy
+
+A server in `production-behind-proxy` mode refused every request that arrived
+through a load balancer which appends its own address to `x-forwarded-for`
+rather than replacing the header. The check accepted one entry and nothing
+else, and an appending balancer always produces at least two, so such a
+deployment could not start serving at all.
+
+The production profile now takes an optional `forwardedHops`: how many entries
+the proxies in front append after the client address. One hop is one piece of
+infrastructure that adds its own address to the header.
+
+The server counts back that many positions from the end of the header and
+treats the entry it lands on as the client. While that count matches the
+deployment, anything a caller puts in front of the client address is ignored.
+If the count is set higher than the truth, the server lands inside the part of
+the header the caller controls. Nothing in the framework detects that.
+
+The default is `0`, which is exactly the previous rule. No existing
+configuration becomes invalid, and no address allowlist widens.
 
 ## Evidence So Far
 
-- Both new checks were watched failing first. The feedback check reported closed
-  nodes at the result root and inside the messages array; the result-view check,
-  with the change temporarily reverted, named every closed node in the view.
-  Both pass with the change in place.
-- A test that asserted the old behaviour was found failing and corrected rather
-  than deleted. It now asserts that an undeclared key is dropped, at the top
-  level and nested, which keeps the property that matters: a key nobody declared
-  never reaches the view a renderer receives.
-- Architecture review read the code and found that nothing undeclared can reach
-  a client that could not before, and that this change does not alter how a
-  deliberate closed declaration is treated. That is not a claim that every
-  deliberate closed declaration publishes closed. It does not — see the limit
-  below.
-- Risk review examined whether opening the result view weakens the boundary that
-  parses messages arriving by `postMessage`. It concluded the boundary never
-  rested on rejecting unknown keys; it rests on a sender check and on per-field
-  validation, both unchanged.
-- The full local test command stopped at the checks that need Docker. The
-  checks that do not need it were run separately and passed. See the limits
-  below.
+- The cause was measured, not guessed at. The reporting session deployed
+  instrumentation to the affected service and read three requests. Every one
+  showed two forwarded-for entries, the protocol present exactly once and
+  always `https`, no duplicated field, and a peer matching the configured
+  trusted proxy. Three requests from one service is a small sample. For those
+  requests it rules out every other cause of the refusal message the code can
+  produce, which leaves the case where the header carries more than one entry.
+  That is strong evidence, not proof that no other cause exists anywhere.
+- The dangerous failure direction is pinned by a behavioural test, not by
+  prose. One real appending hop declared as two: a caller who prepends is
+  served on a rate-limit budget of their own, so the limit never catches them.
+  Two differing prefixes each get a fresh budget, and repeating a prefix
+  returns 429 Too Many Requests, which shows the limiter is still limiting
+  rather than disabled.
+- A paired test shows the opposite case: when the count is right, a caller
+  cannot get a rate-limit budget of their own. A budget of one request, two
+  requests differing only in the prefix the caller supplied, second refused.
+- A test covers the repeated-header trick: sending `x-forwarded-for` twice
+  cannot move which entry the server reads. It runs at hop counts 0 and 1,
+  which are the counts this release's deployments use, not at arbitrary counts.
+- A check in the opposite direction shows the default did not widen: the same
+  two-entry header the new tests accept at hop 1 is refused at the default.
+- The hop-count mismatch is recorded through the operator's observability
+  adapter. The test checks that the refusal sent back to the caller mentions
+  hops nowhere, in any capitalisation. It checks the one refusal path the test
+  exercises, not every response the server can send.
+- The proved boundary is checked, not declared. Its tests cover a served
+  request from an unlisted peer, and refusal when the header is absent, empty,
+  wrong, a prefix of the secret, an extension of it, or sent twice. A further
+  test asserts the secret reaches no observability adapter on either path.
+- A secret that could never match is refused at construction rather than at
+  every request: shorter than 32 characters, outside printable ASCII, or with
+  surrounding spaces. The encoding case matters because a header value is
+  decoded latin1 while the configured string hashes as UTF-8.
+- Local runs: 232 of 233 black-box and documentation tests pass. The one
+  failure is the packed-initializer check, named under limits below. Typecheck
+  clean, decision check clean, published-content and README density gates pass.
 
 These are checks on the source code and on this machine. They do not prove that
 continuous integration passed on the exact commit, that npm accepted the
@@ -93,44 +149,58 @@ packages, what the registry now serves, or that any adopter runs this.
 
 ## Known Limits of This Review
 
-- Docker was not running on this machine, so the container-backed example
-  projects and two packed-initializer checks did not run locally. Everything
-  else ran: the decision check, lint, build, typecheck, and the feedback, React,
-  Svelte, testing and Tailwind package suites. The black-box, documentation and
-  language-model suites ran 233 tests: 231 passed and 2 were skipped.
-  Continuous integration runs the full suite on the exact commit, and that run
-  is the evidence for this release rather than the local one.
-- This is the second release in a row to change published result schemas from
-  closed to open, so adopters re-capture their stored schema copies twice. The
-  0.15.0 note told them schemas declared strict were unaffected. That was true
-  of the rule and not of these schemas, which were declared that way. Both
-  release notes say so directly and name the tests that now enforce openness, so
-  the claim can be checked rather than believed.
-- An adapter's mistake is quieter than it was. An unexpected key nested inside a
-  feedback conversation is now dropped rather than reported. It is still never
-  sent to a client. Both the source and the release note record this.
-- The release plan omitted the eleven starter packages that pin the server
-  version. The release-readiness check caught it and the starters were added.
-  That omission is Problem 001, which remains open; this release worked around
-  it by hand rather than fixing it.
-- A deliberately strict result schema does not always publish closed. When it is
-  fed from an open object, the framework drops the closure and publishes the
-  schema open. That behaviour arrived in 0.15.0 and this release does not fix
-  it. It is Problem 006, which remains open. Both release notes in this release
-  now disclose it, because the alternative was to repeat the mistake this
-  release exists to own.
-- A guide check does not exist, so nobody verified the shipped package guide
-  against this change. Problem 007 is the permanent record and this release
-  widens it: the guide is now also silent on the result view publishing open.
+- The measured benchmark that architecture decision record 0102 (ADR-0102)
+  requires before release did not run on this machine. It fails on this host
+  with `EADDRNOTAVAIL`, which means the host would not give it a network
+  address to listen on. The Quality workflow is configured to run it on the
+  exact commit, and the release pull request depends on that job. This review
+  did not watch that job run, so there is no local evidence for the benchmark
+  at all.
+- One test failed locally: the packed-initializer check that scaffolds
+  `create-multi-instance-postgres-server` and runs its suite. PostgreSQL is not
+  running on this machine. Continuous integration runs it under initializer
+  qualification, which the release pull request also depends on.
+- The secret travels as a request header, so the adopter's own proxy or CDN
+  may log it. The framework does not log the value and does not send it to an
+  observability adapter, and both are tested; neither fact constrains the
+  infrastructure in front, where header logging is a common default. Every
+  adopter-facing surface now says so. This is the real cost of moving from a
+  network-position check to a bearer secret.
+- There is one secret, with no second value accepted during rotation, so
+  rotating it has a window in which requests are refused. ADR-0103 records
+  that as an accepted limitation rather than an oversight.
+- ADR-0103 is not yet ratified and ADR-0102 has not been renamed to superseded.
+  Both change together when the maintainer ratifies. Until then the generated
+  decision index lists ADR-0102 among current decisions, and its checks
+  describe a shape the code no longer has.
+- ADR-0102 was rewritten in place after it was ratified, four times.
+  The maintainer directed each rewrite and re-ratified it each time. This
+  project's rule is that a ratified decision is superseded, not amended. That
+  rule is the reason three supersession records were written yesterday.
+  Architecture review flagged the conflict correctly. There is an unwritten
+  exception here, that the maintainer may direct a rewrite in place, and
+  because it is unwritten the rule and the practice disagree. No problem
+  ticket has been filed for this yet; it is queued as a session task only.
+- The eleven starter packages that pin the server version were again omitted
+  from the release plan, and again caught by the release-readiness check rather
+  than by the author. That is Problem 001, which remains open. This release
+  worked around it by hand, exactly as the previous release did.
+- GitHub issue 120 is not closed by this release. The cause was measured, and
+  the fix behaves as intended in every case the tests cover. That is not the
+  same as verified in production. Verifying it needs a release, and then a real
+  request through the affected deployment that actually succeeds.
 
 ## Required Publication Evidence
 
 - The Quality workflow must pass on the exact source commit.
 - The Changesets release pull request must contain only generated version,
   lockfile, manifest, and changelog changes for the exact package set above.
-- Quality and Release must pass on the exact version commit.
-- Registry readback must confirm the version and `latest` tag, integrity,
-  signature, provenance, and exact release-commit binding.
+- Quality must pass on the exact source commit, and Release semantic and build
+  checks must pass on the exact release pull request head.
+- Registry readback must confirm each version under the npm `next` distribution
+  tag before promotion and the `latest` tag afterward. It must also confirm
+  integrity, signatures, provenance, and the exact source commit used to
+  publish each package.
 - The downloaded package must pass clean installation and verify the public
   command through its packed entry point.
 - Adopter production use requires separate journey evidence.
@@ -152,9 +222,11 @@ verification, downloaded-package verification, or adopter production use.
 The result below is the source-readiness result.
 
 - Result: PASS
-- Source-readiness review: PASS
-- Pipeline risk review: commit, push, and release are each within the approved
-  risk limit of 5 out of 25. The first score was above that limit and refused
-  the release until the notes said something a reader could check.
+- Source-readiness review: PASS. This is a result about the source code only.
+  It is not a release result.
+- Pipeline risk review: each layer is within the approved risk limit of 5 out
+  of 25, as scored for the exact commit this record ships with. The score
+  itself is not restated here; see the note under "Who Wrote This and What It
+  Is Worth" for why.
 - Final result: within appetite, subject to the required exact-commit gates.
 - Release verification: NOT COMPLETE until the required publication gates pass.

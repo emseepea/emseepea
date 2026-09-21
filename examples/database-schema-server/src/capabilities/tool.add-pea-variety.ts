@@ -9,7 +9,7 @@ const outputSchema = varietySchema;
 export default ((context) => defineTool({
   name: "add-pea-variety",
   ...context.access,
-  description: "Add one pea variety to the catalogue.",
+  description: "Add one pea variety to the catalogue. After it succeeds, include the returned name, pea type, and days to maturity in your answer.",
   inputSchema,
   outputSchema,
   async handler(variety, { signal }: ToolContext) {

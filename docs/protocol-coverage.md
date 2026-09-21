@@ -546,7 +546,12 @@ duration. Applications may also configure up to 16 non-overlapping `User-Agent`
 prefixes. The event then includes only the matching configured `callerClass` or
 `_OTHER`; raw headers never reach an adapter. Transport outcome remains
 `finished` or `disconnected`. Protocol outcome is `success`, `tool_error`,
-`protocol_error`, or `disconnected`.
+`protocol_error`, or `disconnected`. 
+
+A refused production request may also carry a `forwardingRefusal` reason. It
+names the forwarding setting an operator has to correct, such as
+`forwardedHops`. The reason always comes from a fixed list of values, and never
+repeats anything a caller sent.
 
 The [observability HTTP tests](../tests/black-box/telemetry.test.mjs) cover two
 adapters, JSON and Server-Sent Events (SSE) requests, stable order, redaction,

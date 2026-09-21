@@ -282,7 +282,7 @@ jobs:
         with:
           # ADR-0098 step 1: this run opens the pull request and publishes
           # nothing. Publication happens at step 2, from the pull request head.
-          publish-script: echo "publication is handled by release-build.yml"
+          publish-script: echo "publication is handled by release.yml"
           version-script: npm run version-packages
           create-github-releases: false
           pr-base-branch: publish
@@ -300,7 +300,7 @@ jobs:
           set -euo pipefail
           head_sha="$(git ls-remote origin refs/heads/changeset-release/publish | cut -f1)"
           [ -n "$head_sha" ] || { echo "release pull request branch is missing on origin" >&2; exit 1; }
-          gh workflow run release-build.yml \
+          gh workflow run release.yml \
             --ref changeset-release/publish \
             -f head_sha="$head_sha" \
             -f base_sha="$GITHUB_SHA" \

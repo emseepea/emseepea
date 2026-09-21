@@ -12,6 +12,7 @@ import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
 import { publishablePackages } from "./public-packages.mjs";
+import { releaseVersionContext } from "./release-version-context.mjs";
 
 const exec = promisify(execFile);
 
@@ -33,6 +34,7 @@ export async function promoteRelease({
   run = execute,
   readNextTag,
   readLatestTag = async () => undefined,
+  changedPackages = new Set(packages.map(({ name }) => name)),
 } = {}) {
   const read = readTag(run);
   const resolveNext = readNextTag ?? ((name, version) => read(name, version, "next"));
@@ -43,8 +45,9 @@ export async function promoteRelease({
   // promoting it would put unchecked bytes on `latest`.
   const missing = [];
   for (const { name, version } of packages) {
+    if (!changedPackages.has(name) && await resolveLatest(name, version) === version) continue;
     const onNext = await resolveNext(name, version);
-    if (onNext !== undefined && onNext !== version) missing.push(`${name}@${version} is not on next (next is ${onNext})`);
+    if (onNext !== version) missing.push(`${name}@${version} is not on next (next is ${onNext})`);
   }
   assert.deepEqual(missing, [], missing.join("; "));
 
@@ -62,5 +65,6 @@ export async function releasePackages(cwd = process.cwd()) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  await promoteRelease({ packages: await releasePackages() });
+  const { changedPackages } = await releaseVersionContext();
+  await promoteRelease({ packages: await releasePackages(), changedPackages });
 }

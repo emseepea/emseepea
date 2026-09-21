@@ -1,5 +1,16 @@
 # @emseepea/feedback
 
+## 0.3.3
+
+### Patch Changes
+
+- [`fe78454`](https://github.com/emseepea/emseepea/commit/fe784541f946447d59608fd73a5450cb1de0814e) Thanks [@tompahoward](https://github.com/tompahoward)! - Only tell a user feedback was recorded after `submit-feedback` succeeds
+
+  When another tool's result reveals notable friction, the feedback tool now tells the AI to record it before answering. It also tells the AI not to claim a record exists until the tool succeeds. In one test, the AI had said it recorded feedback without calling the tool.
+
+- Updated dependencies [[`6a6abdd`](https://github.com/emseepea/emseepea/commit/6a6abddabe158c406c82a0fef6edd7147a4b99e2), [`bb39bfa`](https://github.com/emseepea/emseepea/commit/bb39bfa6b0a350468472f8956a2cd44711cab754)]:
+  - @emseepea/server@0.18.0
+
 ## 0.3.0
 
 ### Minor Changes

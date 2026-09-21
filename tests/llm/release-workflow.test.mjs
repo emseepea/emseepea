@@ -28,7 +28,7 @@ import { useRegistryTarballs } from "../../scripts/use-registry-tarballs.mjs";
 // request job in Quality, the build that publishes under `next`, and the
 // promotion on merge to `publish`. These assertions follow the work, not the
 // old file name.
-const releaseBuild = await readFile(new URL("../../.github/workflows/release-build.yml", import.meta.url), "utf8");
+const releaseBuild = await readFile(new URL("../../.github/workflows/release.yml", import.meta.url), "utf8");
 const publish = await readFile(new URL("../../.github/workflows/publish.yml", import.meta.url), "utf8");
 const quality = await readFile(new URL("../../.github/workflows/quality.yml", import.meta.url), "utf8");
 const workflow = `${releaseBuild}\n${publish}`;
@@ -105,8 +105,8 @@ test("release preparation and publication do not run when release state is unkno
   const job = quality.match(/  release-pull-request:[\s\S]*/)?.[0] ?? "";
   assert.match(job, /needs: \[initializer-qualification, test, website-performance\]/);
   assert.match(job, /if: \$\{\{ github\.event_name == 'push' && github\.ref == 'refs\/heads\/main' \}\}/);
-  assert.match(job, /gh workflow run release-build\.yml/);
-  assert.ok(job.indexOf("changesets/action@") < job.indexOf("gh workflow run release-build.yml"));
+  assert.match(job, /gh workflow run release\.yml/);
+  assert.ok(job.indexOf("changesets/action@") < job.indexOf("gh workflow run release.yml"));
   // Publication waits for the semantic evaluation, and the promotion waits for
   // the publication having been verified.
   assert.match(releaseBuild, /  publish-next:\n\s+name: [^\n]*\n\s+needs: semantic-eval/);
@@ -467,9 +467,9 @@ test("registry checks require latest and exact provenance", () => {
   const expected = {
     ref: "refs/heads/main",
     repository: "https://github.com/emseepea/emseepea",
-    // ADR-0098: the publishing workflow is the release build, not the retired
-    // release workflow.
-    workflowPath: ".github/workflows/release-build.yml",
+    // ADR-0098: the publishing workflow is the release build, which keeps the
+    // `release.yml` name so the npm trusted publishers stay valid.
+    workflowPath: ".github/workflows/release.yml",
     sha: "abc123",
     invocationPrefix: "https://github.com/emseepea/emseepea/actions/runs/42/",
     subject: "pkg:npm/%40emseepea/server@0.0.2",
