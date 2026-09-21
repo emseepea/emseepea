@@ -319,3 +319,20 @@ of the model's actual answer.
   SHA-256: `cf1cf9cf0842d380a7b93a4fc64259fee47a8bc58170eafc7a91d2f978ecb21f`
 - `docs/reviews/current-release-readiness.md`
   SHA-256: `9185df4159e2f6dfbe40236913d8793b75977fbc7c0bea0f900e5060bbadcaac`
+
+## MongoDB Addition Confirmation
+
+Result: PASS. The reviewer checked the exact changeset, the updated release
+package list, and the model-facing tool description. The changeset describes
+which saved details the AI is asked to include, and the release list names the
+planned initializer version without claiming publication. The tool description
+asks for the returned name, pea type, and maturity time after a successful
+addition. This prose review does not replace semantic evaluation of the model's
+actual answer.
+
+- `.changeset/mongodb-add-confirmation.md`
+  SHA-256: `a4217da363519170a3c469479e8f89fc40bc9730384b271b70c86724f5c637d3`
+- `docs/reviews/current-release-readiness.md`
+  SHA-256: `c9bf7507fbd8a9a03ab96344887ccf2b9e2459bc076543a57c7c24cb61722a2f`
+- `examples/mongodb-backed-server/src/capabilities/tool.add-pea-variety.ts`
+  SHA-256: `2b68a00fb25c3b8530013f32efabfa0424fc04281000221f264fd2aac3ab7a53`

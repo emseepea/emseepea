@@ -16,7 +16,7 @@ them:
 - `@emseepea/create-api-backed-server@0.0.42`
 - `@emseepea/create-database-schema-server@0.0.30`
 - `@emseepea/create-html-ui-server@0.0.44`
-- `@emseepea/create-mongodb-backed-server@0.0.29`
+- `@emseepea/create-mongodb-backed-server@0.0.30`
 - `@emseepea/create-multi-instance-postgres-server@0.0.32`
 - `@emseepea/create-openapi-backed-server@0.0.24`
 - `@emseepea/create-progress-streaming-server@0.0.42`
