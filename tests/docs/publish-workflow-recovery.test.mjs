@@ -1,9 +1,30 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { parse } from "yaml";
 
 const workflow = parse(await readFile(new URL("../../.github/workflows/publish.yml", import.meta.url), "utf8"));
+const quality = parse(await readFile(new URL("../../.github/workflows/quality.yml", import.meta.url), "utf8"));
+
+test("release dispatch runs for the matching PR head and refuses a mismatch", () => {
+  const dispatch = quality.jobs["release-pull-request"].steps.find((step) =>
+    step.name === "Build and publish the release pull request under next");
+  const head = "a".repeat(40);
+  const shell = `
+    git() { printf '%s\\trefs/heads/changeset-release/publish\\n' "$HEAD_SHA"; }
+    gh() { if [ "$1" = pr ]; then printf '%s\\n' "$PR_SHA"; else printf 'DISPATCH:%s\\n' "$*"; fi; }
+    ${dispatch.run}
+  `;
+  const env = { ...process.env, HEAD_SHA: head, PR_SHA: head, GITHUB_REPOSITORY: "emseepea/emseepea", GITHUB_SHA: "b".repeat(40), GITHUB_RUN_ID: "123" };
+  const accepted = spawnSync("bash", ["-e", "-c", shell], { env, encoding: "utf8" });
+  assert.equal(accepted.status, 0, accepted.stderr);
+  assert.match(accepted.stdout, new RegExp(`DISPATCH:workflow run release\\.yml .*head_sha=${head}`));
+
+  const refused = spawnSync("bash", ["-e", "-c", shell], { env: { ...env, PR_SHA: "c".repeat(40) }, encoding: "utf8" });
+  assert.notEqual(refused.status, 0);
+  assert.doesNotMatch(refused.stdout, /DISPATCH:/);
+});
 
 test("promotion passes the bound release run to the original artifact download", () => {
   const promote = workflow.jobs.promote;
@@ -16,6 +37,15 @@ test("promotion passes the bound release run to the original artifact download",
   assert.equal(download.with.name, "release-artifacts-${{ needs.promote.outputs.release_sha }}");
   assert.equal(download.with["run-id"], "${{ needs.promote.outputs.release_run_id }}");
   assert.equal(workflow.jobs["release-records"].permissions.actions, "read");
+});
+
+test("a failed promotion bind cannot pass through tee", () => {
+  const bind = workflow.jobs.promote.steps.find((step) => step.name === "Bind promotion to the checked release run");
+  const result = spawnSync("bash", ["-e", "-c", `node() { return 7; }\n${bind.run}`], {
+    env: { ...process.env, GITHUB_ENV: "/dev/null", GITHUB_OUTPUT: "/dev/null" },
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 7);
 });
 
 test("release records finish before the publish head reaches main", () => {
