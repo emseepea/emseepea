@@ -181,9 +181,9 @@ test("the npm promotion token reaches only the two package-write processes", asy
   for (const [jobName, job] of Object.entries(definition.jobs)) {
     for (const step of job.steps) {
       const configured = {
-        ...(definition.env ?? {}),
-        ...(job.env ?? {}),
-        ...(step.env ?? {}),
+        ...definition.env,
+        ...job.env,
+        ...step.env,
       };
       const environment = Object.fromEntries(Object.entries(configured).map(([key, value]) => [
         key,
