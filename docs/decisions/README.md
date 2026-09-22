@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 101 decisions: 56 current and 45 historical.
+This project has 102 decisions: 57 current and 45 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -71,6 +71,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.proposed.md): Proposed; human review confirmed.
 - [ADR-0101: Vulnerability Scanning Without a Release Workflow](0101-vulnerability-scanning-without-a-release-workflow.proposed.md): Proposed; human review confirmed.
 - [ADR-0103: Proved Proxy Boundary for Production Deployments](0103-proved-proxy-boundary-for-production-deployments.proposed.md): Proposed; human review confirmed.
+- [ADR-0105: Bounded Stage-Only Token for npm Promotion](0105-bounded-stage-only-token-for-npm-promotion.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2295,3 +2296,28 @@ Chosen option: **prove the hop with a secret the proxy injects**, because it tur
 - The configuration file names the environment variable holding the secret and is refused when that variable is unset. A loaded profile carries the resolved value.
 - `trustedProxyAddresses` still rejects an IP address range (CIDR) at construction.
 - Everything ADR-0102 confirmed about `forwardedHops` still holds.
+
+### [ADR-0105: Bounded Stage-Only Token for npm Promotion](0105-bounded-stage-only-token-for-npm-promotion.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0105 Decision
+
+Chosen option: **"A bounded, stage-only promotion token with assisted rotation"**, because it preserves registry-artifact verification and unattended routine promotion while restricting the reusable credential from directly publishing a new package version.
+
+#### ADR-0105 Checks
+
+- npm records one granular token with **Read and write (stage only)** access, expiry no later than 90 days after creation, two-factor-authentication bypass enabled, no organisation access, and only the exact package list produced by `publishablePackages()` plus `initializerPackages[].replaces.name`.
+- npm continues to reject direct `npm publish` with that stage-only token while allowing unattended distribution-tag movement and deprecation for the selected packages.
+- Setup evidence records that exact package list, token settings, expiry date, and the list's position below npm's 50-package ceiling without recording the token value.
+- GitHub records `NPM_PROMOTION_TOKEN` as a repository Actions secret and never reveals its value after creation.
+- Only the distribution-tag promotion step and replaced-initializer deprecation step receive the secret, each as step-scoped `NODE_AUTH_TOKEN`; pull-request-triggered and fork-triggered jobs cannot reference it, and tests reject workflow, job, or other step scope.
+- The promotion job has no `id-token: write` permission.
+- New package versions continue to use npm trusted publishing under `next`, and the promotion token is not supplied to that publishing job.
+- A promotion run moves only the versions already verified under `next` to `latest`, and a deprecation run can retire only a selected replaced initializer package.
+- With the secret absent or authentication-invalid, promotion stops at the first npm write. Any failure before the full set is verified prevents website deployment, merge-back, package tags, and GitHub release records.
+- A retry after partial promotion proves the already-moved tags match the expected versions and completes the remaining package set without rebuilding or republishing tarballs.
+- No token value, npm passkey, or npm one-time-password seed appears in source, local npm configuration, workflow logs, artifacts, or continuous-integration access to 1Password.
+- A reminder exists at least 30 days before the recorded token expiry and links the rotation to this repository and secret name.
+- Rotation is not complete until a real promotion succeeds with the replacement token and the prior token is then revoked.
