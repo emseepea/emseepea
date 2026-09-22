@@ -293,13 +293,15 @@ jobs:
         # wrote, so the build cannot be triggered by the push. The dispatch
         # repeats on every update, so the build always matches the head that
         # will be merged.
-        if: steps.release-work.outputs.has_changesets == 'true' && steps.changesets.outputs.pullRequestNumber
+        if: steps.release-work.outputs.has_changesets == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           head_sha="$(git ls-remote origin refs/heads/changeset-release/publish | cut -f1)"
           [ -n "$head_sha" ] || { echo "release pull request branch is missing on origin" >&2; exit 1; }
+          pr_sha="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --base publish --head changeset-release/publish --limit 2 --json headRefOid --jq 'if length == 1 then .[0].headRefOid else empty end')"
+          [ "$head_sha" = "$pr_sha" ] || { echo "release pull request head does not match origin" >&2; exit 1; }
           gh workflow run release.yml \
             --ref changeset-release/publish \
             -f head_sha="$head_sha" \
