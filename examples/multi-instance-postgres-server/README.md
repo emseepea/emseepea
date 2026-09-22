@@ -1,5 +1,8 @@
 # `@emseepea/create-multi-instance-postgres-server`
 
+Em See Pea is beta. [Maturity and support](https://github.com/emseepea/emseepea/blob/main/SUPPORT.md#maturity-and-support)
+defines the limits of that label.
+
 This directory is both the maintained example and the template source for its
 public npm initializer.
 
@@ -62,7 +65,8 @@ again is safe, and saving changed counts replaces the complete desired state.
 
 ## Run Locally
 
-You need Node.js 22 or 24 and Docker Compose. Install dependencies, then start
+You need Node.js 22.13.0 or newer and Docker Compose. Continuous integration
+(CI) exercises Node.js 22 and 24. Install dependencies, then start
 PostgreSQL and two independent server processes:
 
 ```sh

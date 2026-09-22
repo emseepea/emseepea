@@ -2,9 +2,9 @@
 
 ## Supported Versions
 
-Em See Pea is pre-alpha. Only the most recent `0.x` version published under
-the npm `latest` tag is eligible for security fixes. No production-support or
-backport commitment is made yet.
+Em See Pea is beta. Only the newest version published under the npm `latest`
+tag is eligible for security fixes. See [maturity and support](SUPPORT.md#maturity-and-support)
+for the breaking-change window and support limits.
 
 ## Report a Vulnerability
 
@@ -16,4 +16,4 @@ secrets.
 
 We will assess reports in good faith and coordinate disclosure after a fix or
 mitigation is available. This policy does not promise a response or remediation
-time while the project is pre-alpha.
+time.

@@ -115,7 +115,8 @@ when the connected service uses a different input or output format.
 
 ## Check compatibility before switching
 
-Em See Pea is pre-alpha and implements part of MCP `2026-07-28`. Check your
+Em See Pea is beta; [maturity and support](https://emseepea.github.io/emseepea/#maturity-and-support)
+states what that means. Check the [protocol coverage ledger](https://github.com/emseepea/emseepea/blob/main/docs/protocol-coverage.md) and your
 clients, published schemas, metadata, and any ChatGPT widgets explicitly.
 Do not assume they will behave identically after a framework change.
 

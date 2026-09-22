@@ -8,7 +8,9 @@ Last reviewed: 2026-09-12
 
 Em See Pea is a pre-release, public, MIT-licensed TypeScript monorepo for a
 general-purpose Model Context Protocol (MCP) Streamable HTTP server framework.
-It includes examples, documentation, and pre-alpha packages published on npm.
+It includes examples, documentation, and beta packages published on npm. See
+[maturity and support](SUPPORT.md#maturity-and-support) for the bounded meaning
+of beta.
 
 Adopters use this source to build deployable servers. This project does not
 operate a hosted service and makes no service-availability or service-level
