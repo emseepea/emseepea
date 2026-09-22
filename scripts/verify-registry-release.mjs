@@ -34,6 +34,19 @@ export async function waitForPublication(before, read, wait = waitForPropagation
   assert.equal(classifyPublication(before, after), "published", "not all packages appeared after publication");
 }
 
+export async function waitForRegistryTag(before, read, wait = waitForPropagation, { tag = "latest" } = {}) {
+  for (let attempt = 1; attempt <= 60; attempt += 1) {
+    const after = await read();
+    try {
+      assertRegistryState(before, after, { tag });
+      return after;
+    } catch (error) {
+      if (error.code !== "ERR_ASSERTION" || !error.message.split("\n", 1)[0].endsWith(" tag is wrong") || attempt === 60) throw error;
+    }
+    await wait();
+  }
+}
+
 // ADR-0098 publishes under `next` at the release pull request and moves the tag
 // to `latest` on merge, so the same state is correct at one point and wrong at
 // the other. The caller says which tag must name the version; `latest` stays the
@@ -137,8 +150,9 @@ async function verify(beforePath, afterPath, { tag = "latest" } = {}) {
   };
   const prior = classifyPublication(before, { packages: before.packages });
   if (prior === "unchanged") {
-    const after = { packages: await Promise.all(before.packages.map(readCurrent)) };
-    assertRegistryState(before, after, { tag });
+    const after = await waitForRegistryTag(before, async () => (
+      { packages: await Promise.all(before.packages.map(readCurrent)) }
+    ), waitForPropagation, { tag });
     const statements = await Promise.all(after.packages.map(readProvenance));
     const commits = await checkStatements(after, statements);
     after.packages.forEach((item, index) => { item.releaseSha = commits[index]; });
@@ -147,11 +161,13 @@ async function verify(beforePath, afterPath, { tag = "latest" } = {}) {
     return;
   }
 
-  const after = await waitForPublication(
+  await waitForPublication(
     before,
     async () => ({ packages: await Promise.all(before.packages.map(readCurrent)) }),
   );
-  assertRegistryState(before, after, { tag });
+  const after = await waitForRegistryTag(before, async () => (
+    { packages: await Promise.all(before.packages.map(readCurrent)) }
+  ), waitForPropagation, { tag });
 
   const statements = await Promise.all(after.packages.map(readProvenance));
   const commits = await checkStatements(after, statements);

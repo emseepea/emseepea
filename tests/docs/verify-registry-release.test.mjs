@@ -5,6 +5,7 @@ import {
   assertRegistryState,
   assertStatements,
   classifyPublication,
+  waitForRegistryTag,
 } from "../../scripts/verify-registry-release.mjs";
 
 // ADR-0098 publishes under `next` at the release pull request and moves the tag
@@ -58,6 +59,29 @@ test("a next publish checks unchanged packages on latest, including a retry", ()
 test("a promotion is verified against the latest tag", () => {
   const after = published({ latest: "1.1.0", next: "1.1.0" });
   assert.doesNotThrow(() => assertRegistryState(before, after, { tag: "latest" }));
+});
+
+test("promotion waits for a moved latest tag to propagate", async () => {
+  const snapshots = [
+    published({ latest: "1.0.0", next: "1.1.0" }),
+    published({ latest: "1.1.0", next: "1.1.0" }),
+  ];
+  let waits = 0;
+  const after = await waitForRegistryTag(before, async () => snapshots.shift(), async () => { waits += 1; });
+  assert.equal(after.packages[0].tags.latest, "1.1.0");
+  assert.equal(waits, 1);
+});
+
+test("promotion does not retry a missing signature as propagation lag", async () => {
+  let reads = 0;
+  await assert.rejects(
+    waitForRegistryTag(before, async () => {
+      reads += 1;
+      return { packages: [{ ...published({ latest: "1.1.0" }).packages[0], signatures: 0 }] };
+    }, async () => {}),
+    /signature is missing/,
+  );
+  assert.equal(reads, 1);
 });
 
 test("the tag defaults to latest so an unqualified check stays strict", () => {
