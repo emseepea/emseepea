@@ -55,7 +55,7 @@ export async function promoteRelease({
 
   for (const { name, version } of packages) {
     if (latest.get(name) === version) continue;
-    await run("npm", ["dist-tag", "add", `${name}@${version}`, "latest", "--userconfig", "/dev/null"]);
+    await run("npm", ["dist-tag", "add", `${name}@${version}`, "latest"]);
   }
 }
 

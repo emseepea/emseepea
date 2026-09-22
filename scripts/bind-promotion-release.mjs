@@ -50,10 +50,16 @@ export async function bindPromotionRelease({
   assert.ok(runs.length <= 1, "expected exactly one successful Release run");
   const repair = runs.length === 0;
   if (repair) {
-    const originalMerge = await run("git", ["rev-parse", "HEAD^1"]);
+    const repairBase = await run("git", ["rev-parse", "HEAD^1"]);
     assert.match(env.EMSEEPEA_REPAIR_BASE_SHA, fullSha, "original publish merge is missing");
-    assert.equal(originalMerge, env.EMSEEPEA_REPAIR_BASE_SHA, "repair does not follow the original publish merge");
-    releaseSha = await run("git", ["rev-parse", "HEAD^1^2"]);
+    assert.equal(repairBase, env.EMSEEPEA_REPAIR_BASE_SHA, "repair does not follow the expected publish merge");
+    let originalMerge = repairBase;
+    if (env.EMSEEPEA_ORIGINAL_PUBLISH_SHA) {
+      assert.match(env.EMSEEPEA_ORIGINAL_PUBLISH_SHA, fullSha, "original publish merge is missing");
+      originalMerge = await run("git", ["rev-parse", "HEAD^1^1"]);
+      assert.equal(originalMerge, env.EMSEEPEA_ORIGINAL_PUBLISH_SHA, "repair does not follow the original publish merge");
+    }
+    releaseSha = await run("git", ["rev-parse", originalMerge === repairBase ? "HEAD^1^2" : "HEAD^1^1^2"]);
     runs = await runsAt(releaseSha);
     assert.equal(runs.length, 1, "expected exactly one successful Release run for the original pull request head");
     assert.equal(

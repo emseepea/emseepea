@@ -58,10 +58,10 @@ jobs:
         if: steps.plan.outputs.released == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Only the first repair merge after this failed, tag-free promotion
-          # may reuse the already-checked #121 tarballs. Later merges fail
-          # closed on this route and must bind their own release head.
-          EMSEEPEA_REPAIR_BASE_SHA: "0b7f2b97387917013549814340ebc80a26ad0c48"
+          # Only the repair immediately after this failed promotion may reuse
+          # the already-checked #121 tarballs.
+          EMSEEPEA_REPAIR_BASE_SHA: "2bb97f91f47d56461ebcb20270af8fde3a91e458"
+          EMSEEPEA_ORIGINAL_PUBLISH_SHA: "0b7f2b97387917013549814340ebc80a26ad0c48"
         run: |
           node scripts/bind-promotion-release.mjs >> "$GITHUB_ENV"
       - name: Capture the current npm package state
@@ -72,7 +72,11 @@ jobs:
         # built and checked. promote-release.mjs refuses a version that is not
         # already on next, so nothing unchecked can reach latest.
         if: steps.plan.outputs.released == 'true'
-        run: node scripts/promote-release.mjs
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PROMOTION_TOKEN }}
+        run: |
+          test -n "$NODE_AUTH_TOKEN"
+          node scripts/promote-release.mjs
       - name: Verify latest resolves to the released version
         if: steps.plan.outputs.released == 'true'
         run: |
