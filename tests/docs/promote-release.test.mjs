@@ -15,7 +15,7 @@ test("promotion moves each package's latest tag to the version already on next",
   const calls = [];
   const run = async (command, args) => {
     calls.push([command, ...args].join(" "));
-    if (args[0] === "view") return "1.1.0";
+    if (args[0] === "view") return "1.0.0";
     return "";
   };
   await promoteRelease({
@@ -24,6 +24,8 @@ test("promotion moves each package's latest tag to the version already on next",
     readNextTag: async (name) => (name === "@emseepea/server" ? "1.1.0" : "0.4.0"),
   });
   assert.deepEqual(calls, [
+    "npm view @emseepea/server@latest version --userconfig /dev/null",
+    "npm view @emseepea/feedback@latest version --userconfig /dev/null",
     "npm dist-tag add @emseepea/server@1.1.0 latest --userconfig /dev/null",
     "npm dist-tag add @emseepea/feedback@0.4.0 latest --userconfig /dev/null",
   ]);
@@ -49,6 +51,7 @@ test("promotion refuses a missing next tag before moving any latest tag", async 
       packages,
       run: async (command, args) => { calls.push([command, ...args].join(" ")); return ""; },
       readNextTag: async (name) => (name === "@emseepea/server" ? "1.1.0" : undefined),
+      readLatestTag: async () => undefined,
     }),
     /@emseepea\/feedback.*next/,
   );
@@ -65,6 +68,7 @@ test("promotion refuses an unreadable next tag before moving any latest tag", as
         if (args[0] === "view" && args[1] === "@emseepea/feedback@next") throw new Error("registry unavailable");
         return args[1] === "@emseepea/server@next" ? "1.1.0" : "";
       },
+      readLatestTag: async () => undefined,
     }),
     /@emseepea\/feedback.*next/,
   );
@@ -109,4 +113,19 @@ test("a freshly released version still needs next after a partial promotion", as
     readLatestTag: async () => "1.1.0",
     changedPackages: new Set(["@emseepea/server"]),
   }), /server.*next/);
+});
+
+test("the default latest lookup skips an unchanged package already on latest", async () => {
+  const calls = [];
+  await promoteRelease({
+    packages: [{ name: "@emseepea/tailwind", version: "0.1.0" }],
+    changedPackages: new Set(),
+    run: async (command, args) => {
+      calls.push([command, ...args].join(" "));
+      if (args[0] === "view" && args[1] === "@emseepea/tailwind@latest") return "0.1.0";
+      if (args[0] === "view" && args[1] === "@emseepea/tailwind@next") return "0.0.1";
+      throw new Error("unexpected npm call");
+    },
+  });
+  assert.deepEqual(calls, ["npm view @emseepea/tailwind@latest version --userconfig /dev/null"]);
 });
