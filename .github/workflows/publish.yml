@@ -54,21 +54,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/read-release-plan.mjs >> "$GITHUB_OUTPUT"
-      - name: Bind promotion to the merged release pull request head
-        if: steps.plan.outputs.released == 'true'
-        run: |
-          release_sha="$(git rev-parse "${GITHUB_SHA}^2")"
-          echo "EMSEEPEA_RELEASE_SHA=$release_sha" >> "$GITHUB_ENV"
-      - name: Bind promotion to the successful release run
+      - name: Bind promotion to the checked release run
         if: steps.plan.outputs.released == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Only the first repair merge after this failed, tag-free promotion
+          # may reuse the already-checked #121 tarballs. Later merges fail
+          # closed on this route and must bind their own release head.
+          EMSEEPEA_REPAIR_BASE_SHA: "0b7f2b97387917013549814340ebc80a26ad0c48"
         run: |
-          release_run_id="$(gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/release.yml/runs" \
-            -f head_sha="$EMSEEPEA_RELEASE_SHA" \
-            --jq '.workflow_runs[] | select(.conclusion == "success" and .event == "workflow_dispatch" and .head_branch == "changeset-release/publish") | .id')"
-          [[ "$release_run_id" =~ ^[0-9]+$ ]] || { echo "expected one successful release run for $EMSEEPEA_RELEASE_SHA" >&2; exit 1; }
-          echo "EMSEEPEA_RELEASE_RUN_ID=$release_run_id" >> "$GITHUB_ENV"
+          node scripts/bind-promotion-release.mjs >> "$GITHUB_ENV"
       - name: Capture the current npm package state
         if: steps.plan.outputs.released == 'true'
         run: node scripts/verify-registry-release.mjs capture release-artifacts/registry-before.json
