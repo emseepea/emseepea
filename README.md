@@ -17,6 +17,7 @@ eligibility, and support limits.
 The active revision is MCP `2026-07-28` over Streamable HTTP. The same stateless
 endpoint supports a verified subset of `2025-11-25`, `2025-06-18`, `2025-03-26`,
 `2024-11-05`, and `2024-10-07`: initialization, tool listing, and tool invocation.
+
 List-change notifications within one process and a generic
 extension-notification registration point are not implemented. MCP Sampling
 is intentionally absent. See the

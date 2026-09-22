@@ -71,7 +71,9 @@ Em See Pea is beta. Here, beta means exactly this:
 The active revision is MCP `2026-07-28` over Streamable HTTP. One stateless
 endpoint also accepts a verified compatibility subset of `2025-11-25`,
 `2025-06-18`, `2025-03-26`, `2024-11-05`, and `2024-10-07`: initialization,
-tool listing, and tool invocation. Two optional capabilities are not
+tool listing, and tool invocation.
+
+Two optional capabilities are not
 implemented: list-change notifications within one running process and a
 generic extension-notification registration point. MCP Sampling is
 intentionally absent because the

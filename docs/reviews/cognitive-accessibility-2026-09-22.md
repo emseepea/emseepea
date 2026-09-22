@@ -20,7 +20,7 @@ Markdown file.
 | --- | --- |
 | `.changeset/bounded-beta-claims.md` | `461d57c3fbc7d7fcedec8c6a8dacc5b8903b843329159094cc3c7ee8abff0893` |
 | `CONTRIBUTING.md` | `22fed7917c74183626be7f31dc65c19b1d6f88b526f688f75986482a62e5ea78` |
-| `README.md` | `bd37b1fbdbdf806c13cc377b8c241631416ca9615f641807e62bf091c5566735` |
+| `README.md` | `e63f1e781fb27583bbb1febb8233076a9cd0af9d17b70beb2a523e39cec3122f` |
 | `RISK-POLICY.md` | `8b888df484fb4c68dfc9b910f4d3bfb30c817ed4b9a28b1b6cea04778f8ffe66` |
 | `SECURITY.md` | `be55cf7b898f1457a5bc43fc9c6c2840a6ddfb12b220b1d2e0a301cb17a6d122` |
 | `SUPPORT.md` | `d66b32dc4977f84a5d4c3c6048d3a37f6fe41960bf42200b90f32f6cbbd58090` |
@@ -42,6 +42,6 @@ Markdown file.
 | `packages/tailwind/README.md` | `8e7a8f7a19340c29c57ae1f57b6448e48d8fdbd9846b50318bfe83f1a084b424` |
 | `packages/testing/README.md` | `7bf22256c0bbf7063c79900f4d7e9e7e4ec24f147d9114f979c34e2eccc02e00` |
 | `website/src/content/docs/getting-started.md` | `184dd546d459dddef767201cde297451b61c5877fe81da1f19a6121f6569cd85` |
-| `website/src/content/docs/index.md` | `e159c2db4d9cd57fe11e441053640b6cf04dd94ec4a0ea613609f8f0d52b3db8` |
+| `website/src/content/docs/index.md` | `137959bd078135fe77237da9cac45388fb1d2e2605fb4dcddb02630e9c99485b` |
 | `website/src/content/docs/less-server-code.md` | `00ccf62ac8fd47f6d3e695b28943e7d6daa19c783ccfd514ffee75ecca27a5ff` |
 | `website/src/content/docs/result-cards.mdx` | `8140efd962b205858d26afa1aacc6a12dea8129b64d285bd23b07da8cde4a849` |
