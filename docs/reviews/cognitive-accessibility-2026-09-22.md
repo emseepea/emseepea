@@ -20,6 +20,7 @@ Markdown file.
 | --- | --- |
 | `.changeset/bounded-beta-claims.md` | `461d57c3fbc7d7fcedec8c6a8dacc5b8903b843329159094cc3c7ee8abff0893` |
 | `CONTRIBUTING.md` | `22fed7917c74183626be7f31dc65c19b1d6f88b526f688f75986482a62e5ea78` |
+| `docs/reviews/current-release-readiness.md` | `b361779542c89258c7b9a92287efeb03a3018cf131a22d480ca4a35e6af55b1e` |
 | `README.md` | `e63f1e781fb27583bbb1febb8233076a9cd0af9d17b70beb2a523e39cec3122f` |
 | `RISK-POLICY.md` | `8b888df484fb4c68dfc9b910f4d3bfb30c817ed4b9a28b1b6cea04778f8ffe66` |
 | `SECURITY.md` | `be55cf7b898f1457a5bc43fc9c6c2840a6ddfb12b220b1d2e0a301cb17a6d122` |
