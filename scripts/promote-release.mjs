@@ -33,7 +33,7 @@ export async function promoteRelease({
   packages,
   run = execute,
   readNextTag,
-  readLatestTag = async () => undefined,
+  readLatestTag,
   changedPackages = new Set(packages.map(({ name }) => name)),
 } = {}) {
   const read = readTag(run);
@@ -44,16 +44,18 @@ export async function promoteRelease({
   // `next` was never built or verified by the release pull request, and
   // promoting it would put unchecked bytes on `latest`.
   const missing = [];
+  const latest = new Map();
   for (const { name, version } of packages) {
-    if (!changedPackages.has(name) && await resolveLatest(name, version) === version) continue;
+    latest.set(name, await resolveLatest(name, version));
+    if (!changedPackages.has(name) && latest.get(name) === version) continue;
     const onNext = await resolveNext(name, version);
     if (onNext !== version) missing.push(`${name}@${version} is not on next (next is ${onNext})`);
   }
   assert.deepEqual(missing, [], missing.join("; "));
 
   for (const { name, version } of packages) {
-    if (await resolveLatest(name, version) === version) continue;
-    await run("npm", ["dist-tag", "add", `${name}@${version}`, "latest", "--userconfig", "/dev/null"]);
+    if (latest.get(name) === version) continue;
+    await run("npm", ["dist-tag", "add", `${name}@${version}`, "latest"]);
   }
 }
 
