@@ -26,8 +26,8 @@ test("promotion moves each package's latest tag to the version already on next",
   assert.deepEqual(calls, [
     "npm view @emseepea/server@latest version --userconfig /dev/null",
     "npm view @emseepea/feedback@latest version --userconfig /dev/null",
-    "npm dist-tag add @emseepea/server@1.1.0 latest --userconfig /dev/null",
-    "npm dist-tag add @emseepea/feedback@0.4.0 latest --userconfig /dev/null",
+    "npm dist-tag add @emseepea/server@1.1.0 latest",
+    "npm dist-tag add @emseepea/feedback@0.4.0 latest",
   ]);
 });
 
@@ -87,7 +87,7 @@ test("promotion is idempotent when a tag already points at the version", async (
     readLatestTag: async (name) => (name === "@emseepea/server" ? "1.1.0" : "0.3.0"),
   });
   // The server is already promoted, so only the feedback package moves.
-  assert.deepEqual(calls, ["dist-tag add @emseepea/feedback@0.4.0 latest --userconfig /dev/null"]);
+  assert.deepEqual(calls, ["dist-tag add @emseepea/feedback@0.4.0 latest"]);
 });
 
 test("an unchanged package already on latest does not need the next tag", async () => {
@@ -102,7 +102,7 @@ test("an unchanged package already on latest does not need the next tag", async 
     readLatestTag: async (name) => name === "@emseepea/tailwind" ? "0.1.0" : "1.0.0",
     changedPackages: new Set(["@emseepea/server"]),
   });
-  assert.deepEqual(calls, ["npm dist-tag add @emseepea/server@1.1.0 latest --userconfig /dev/null"]);
+  assert.deepEqual(calls, ["npm dist-tag add @emseepea/server@1.1.0 latest"]);
 });
 
 test("a freshly released version still needs next after a partial promotion", async () => {
