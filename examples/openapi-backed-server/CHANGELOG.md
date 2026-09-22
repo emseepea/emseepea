@@ -1,5 +1,11 @@
 # @emseepea/create-openapi-backed-server
 
+## 0.0.26
+
+### Patch Changes
+
+- [`79c7097`](https://github.com/emseepea/emseepea/commit/79c7097cad441701c9d49fbf356a3e74eb2c85ed) Thanks [@tompahoward](https://github.com/tompahoward)! - Package READMEs now identify Em See Pea as beta and link to its breaking-change, security-fix, and support limits. The root README and website now distinguish verified MCP 2026-07-28 Streamable HTTP coverage and a five-revision compatibility subset from optional gaps. They also separate supported Node.js versions from versions exercised in continuous integration. Runtime behaviour is unchanged.
+
 ## 0.0.25
 
 ### Patch Changes

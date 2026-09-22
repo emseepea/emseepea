@@ -1,7 +1,8 @@
 # Contributing to Em See Pea
 
-Em See Pea is pre-alpha. Small, focused changes with evidence at the public
-boundary are welcome.
+Em See Pea is beta. See [maturity and support](SUPPORT.md#maturity-and-support)
+for its limits. Small, focused changes with evidence at the public boundary
+are welcome.
 
 ## Before Opening a Pull Request
 

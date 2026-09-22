@@ -10,14 +10,25 @@
 Em See Pea is a general-purpose framework for Model Context Protocol (MCP)
 `2026-07-28` servers over Streamable HTTP.
 
-The project is pre-alpha. It supports a small set of tested MCP server features.
-It does not support the full MCP server protocol yet.
+The project is beta. [Maturity and support](SUPPORT.md#maturity-and-support)
+explains the verified capabilities, possible breaking changes, security-fix
+eligibility, and support limits.
+
+The active revision is MCP `2026-07-28` over Streamable HTTP. The same stateless
+endpoint supports a verified subset of `2025-11-25`, `2025-06-18`, `2025-03-26`,
+`2024-11-05`, and `2024-10-07`: initialization, tool listing, and tool invocation.
+
+List-change notifications within one process and a generic
+extension-notification registration point are not implemented. MCP Sampling
+is intentionally absent. See the
+[protocol coverage ledger](docs/protocol-coverage.md) for evidence and limits.
 
 ## What You Can Build Today
 
 Use the current framework to create:
 
-- a Fastify MCP server that runs on Node.js 22 or 24
+- a Fastify MCP server that supports Node.js 22 or newer; four starters require
+  22.13.0 or newer
 - public tools that anyone can call
 - protected tools, resources, prompts, and completions that authenticate before application code runs
 - tools that call another service and check its response
@@ -35,6 +46,9 @@ Use the current framework to create:
 Public and protected tools can also report progress behind a trusted proxy. See
 [how to configure proxy progress](packages/framework/README.md#use-progress-behind-a-proxy)
 and its [tested limits](docs/protocol-coverage.md#progress-updates).
+
+Continuous integration (CI) exercises Node.js 22 and 24. These are tested
+versions, not the complete support range.
 
 Startup capability discovery is also supported. See
 [how startup discovery works](packages/framework/README.md#discover-capability-modules-at-startup).
@@ -63,7 +77,9 @@ For detailed gates and evidence, see the [quality policy][quality-policy] and
 
 ## Create a Project
 
-These commands use the pre-alpha initializer packages published on npm.
+These commands use the initializer packages published on npm. Em See Pea is
+beta; see
+[maturity and support](SUPPORT.md#maturity-and-support) before deploying.
 Replace `my-server` with an unused directory name:
 
 - [One public tool](examples/tool-server/README.md): `npm init @emseepea/tool-server -- my-server`

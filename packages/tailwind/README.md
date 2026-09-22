@@ -1,5 +1,8 @@
 # Tailwind Stylesheet
 
+Em See Pea is beta. [Maturity and support](https://github.com/emseepea/emseepea/blob/main/SUPPORT.md#maturity-and-support)
+defines the limits of that label.
+
 `@emseepea/tailwind/styles.css` is the compiled stylesheet for Em See Pea form
 views and Result Cards. Consumers import one CSS file and need no Tailwind
 configuration or Tailwind runtime dependency.
@@ -21,4 +24,4 @@ for the checked import path in a working server.
 See [how to render an accessible Result Card](../../website/src/content/docs/result-cards.mdx)
 for Native HTML, React, and Svelte guidance.
 
-This package is open source under MIT and remains pre-alpha while its version is below 1.0.
+This package is open source under MIT.

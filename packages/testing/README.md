@@ -1,5 +1,8 @@
 # `@emseepea/testing`
 
+Em See Pea is beta. [Maturity and support](https://github.com/emseepea/emseepea/blob/main/SUPPORT.md#maturity-and-support)
+defines the limits of that label.
+
 Test whether an AI selects the right MCP tool and understands its result, not
 just whether the server returns valid data. Write JavaScript tests with ordinary
 imports, setup hooks, loops, and assertions.

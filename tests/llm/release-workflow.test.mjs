@@ -111,7 +111,7 @@ test("release preparation and publication do not run when release state is unkno
   // the publication having been verified.
   assert.match(releaseBuild, /  publish-next:\n\s+name: [^\n]*\n\s+needs: semantic-eval/);
   assert.match(publish, /  deploy-website:[\s\S]*?needs: promote/);
-  assert.match(publish, /  merge-back:[\s\S]*?needs: \[promote, deploy-website\]/);
+  assert.match(publish, /  merge-back:[\s\S]*?needs: \[promote, deploy-website, release-records\]/);
 });
 
 test("release work is derived from changesets and exact package version tags", async () => {
