@@ -1,7 +1,13 @@
 # `@emseepea/create-soap-backed-server`
 
+Em See Pea is beta. [Maturity and support](https://github.com/emseepea/emseepea/blob/main/SUPPORT.md#maturity-and-support)
+defines the limits of that label.
+
 This directory is both the maintained example and the template source for its
 public npm initializer.
+
+You need Node.js 22.13.0 or newer. Continuous integration (CI) exercises Node.js
+22 and 24.
 
 ## Use This Template
 

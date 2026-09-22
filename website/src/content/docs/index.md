@@ -59,10 +59,32 @@ Keep these tests in `eval/`, separate from ordinary tests in `test/`.
 
 [Write an AI tool-choice test](./ai-tests/).
 
-## Before you start
+## Maturity and support
 
-Em See Pea is pre-alpha. It uses Fastify and Node.js 22 or 24, and supports
-part of MCP `2026-07-28`, not the entire protocol.
+Em See Pea is beta. Here, beta means exactly this:
+
+- The MCP capabilities named below are usable and verified end to end.
+- Versions below 1.0 may still introduce breaking changes.
+- Only the newest version published under the npm `latest` tag is eligible for security fixes.
+- There is no production-support promise, no backport promise, and no response-time promise.
+
+The active revision is MCP `2026-07-28` over Streamable HTTP. One stateless
+endpoint also accepts a verified compatibility subset of `2025-11-25`,
+`2025-06-18`, `2025-03-26`, `2024-11-05`, and `2024-10-07`: initialization,
+tool listing, and tool invocation. Two optional capabilities are not
+implemented: list-change notifications within one running process and a
+generic extension-notification registration point. MCP Sampling is
+intentionally absent because the
+active revision deprecates it. Read the
+[protocol coverage ledger](https://github.com/emseepea/emseepea/blob/main/docs/protocol-coverage.md)
+for the evidence and boundaries.
+
+The packages support Node.js 22 or newer. Four starters require Node.js
+22.13.0 or newer. Continuous integration (CI) exercises Node.js 22 and 24;
+those are tested versions,
+not the complete support range.
+
+## Before you start
 
 The starter commands use npm's default release channel. The framework and examples
 are open source under the

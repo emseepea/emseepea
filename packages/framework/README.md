@@ -12,9 +12,11 @@ bounded progress updates. Direct tools,
 resources, and prompts can ask capable clients for more information. Prompt
 arguments and resource fields may also offer suggestions.
 
-The package is pre-alpha. See the
-[repository README](https://github.com/emseepea/emseepea#readme) for what the
-package supports and what it does not support.
+The package is beta. [Maturity and support](https://github.com/emseepea/emseepea/blob/main/SUPPORT.md#maturity-and-support)
+defines the verified capabilities, breaking-change window, security-fix
+eligibility, and support limits. See the
+[protocol coverage ledger](https://github.com/emseepea/emseepea/blob/main/docs/protocol-coverage.md)
+for the supported MCP subset and gaps.
 
 ## Render a bounded result view
 

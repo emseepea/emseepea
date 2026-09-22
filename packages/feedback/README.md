@@ -1,5 +1,8 @@
 # `@emseepea/feedback`
 
+Em See Pea is beta. [Maturity and support](https://github.com/emseepea/emseepea/blob/main/SUPPORT.md#maturity-and-support)
+defines the limits of that label.
+
 Add detailed feedback or a durable support conversation to any Em See Pea
 server. The package is optional. Generated applications do not configure it.
 Their semantic tests install it only as a development dependency so successful

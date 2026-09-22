@@ -8,7 +8,9 @@ Start with the tool server example. It answers questions about the type, growth
 habit, maturity time, and traits of two made-up pea varieties. It includes both
 ordinary tests and tests of AI tool choice and explanations.
 
-You need Git, Node.js 22 or 24, and npm. This is a local development quickstart,
+You need Git, Node.js 22 or newer, and npm. Continuous integration (CI)
+exercises Node.js 22 and 24.
+This is a local development quickstart,
 not production deployment guidance.
 
 The [tool server example directory](https://github.com/emseepea/emseepea/tree/main/examples/tool-server)
@@ -25,7 +27,10 @@ cd my-mcp
 ```
 
 The initializer creates a private standalone project. Its `package.json` uses
-the pre-alpha versions of `@emseepea/server` and `@emseepea/testing`.
+published versions of `@emseepea/server` and `@emseepea/testing`. Em See Pea is
+beta; see
+[maturity and support](https://emseepea.github.io/emseepea/#maturity-and-support)
+for the limits of that label.
 
 ## Install and check it
 

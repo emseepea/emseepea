@@ -1,5 +1,8 @@
 # `@emseepea/create-progress-streaming-server`
 
+Em See Pea is beta. [Maturity and support](https://github.com/emseepea/emseepea/blob/main/SUPPORT.md#maturity-and-support)
+defines the limits of that label.
+
 This directory is both the maintained example and its public npm initializer.
 
 ## Use This Template
