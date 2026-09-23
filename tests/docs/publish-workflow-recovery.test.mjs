@@ -7,6 +7,35 @@ import { parse } from "yaml";
 const workflow = parse(await readFile(new URL("../../.github/workflows/publish.yml", import.meta.url), "utf8"));
 const quality = parse(await readFile(new URL("../../.github/workflows/quality.yml", import.meta.url), "utf8"));
 
+test("release pull requests use the exact-head release build instead of duplicate Quality runs", () => {
+  assert.deepEqual(quality.on.pull_request["branches-ignore"], ["publish"]);
+});
+
+test("a new release pull request waits for the previous publish head to reach main", () => {
+  const guard = quality.jobs["release-pull-request"].steps.find((step) =>
+    step.name === "Require the previous publish head on main");
+  const main = "a".repeat(40);
+  const shell = `
+    git() {
+      case "$1" in
+        ls-remote|fetch) return 0 ;;
+        merge-base) [ "$PUBLISH_IS_ANCESTOR" = true ] && return 0 || return 1 ;;
+      esac
+      return 1
+    }
+    ${guard?.run ?? "missing_guard"}
+  `;
+  const env = { ...process.env, GITHUB_SHA: main, PUBLISH_IS_ANCESTOR: "true" };
+  const accepted = spawnSync("bash", ["-e", "-c", shell], { env, encoding: "utf8" });
+  assert.equal(accepted.status, 0, accepted.stderr);
+
+  const refused = spawnSync("bash", ["-e", "-c", shell], {
+    env: { ...env, PUBLISH_IS_ANCESTOR: "false" },
+    encoding: "utf8",
+  });
+  assert.notEqual(refused.status, 0);
+});
+
 test("release dispatch runs for the matching PR head and refuses a mismatch", () => {
   const dispatch = quality.jobs["release-pull-request"].steps.find((step) =>
     step.name === "Build and publish the release pull request under next");

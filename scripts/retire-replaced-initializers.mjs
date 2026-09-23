@@ -40,7 +40,20 @@ export async function retireReplacedInitializers({
     )));
     if (current.every((message) => message === deprecation)) continue;
 
-    await run("npm", ["deprecate", `${name}@*`, deprecation]);
+    try {
+      await run("npm", ["deprecate", `${name}@*`, deprecation]);
+    } catch (error) {
+      let confirmed = false;
+      try {
+        const after = await Promise.all(publishedVersions.map(async (version) => (
+          readDeprecation(run, `${name}@${version}`)
+        )));
+        confirmed = after.every((message) => message === deprecation);
+      } catch {
+        // Preserve the write failure when the public postcondition cannot be proved.
+      }
+      if (!confirmed) throw error;
+    }
     for (const version of publishedVersions) {
       await waitForDeprecation(run, `${name}@${version}`, deprecation, pause);
     }
@@ -57,7 +70,8 @@ function view(run, spec, field) {
 
 async function readDeprecation(run, spec) {
   const output = await view(run, spec, "deprecated");
-  return output ? JSON.parse(output) : "";
+  const value = output ? JSON.parse(output) : "";
+  return Array.isArray(value) && value.length === 1 ? value[0] : value;
 }
 
 async function waitForDeprecation(run, spec, expected, pause) {
