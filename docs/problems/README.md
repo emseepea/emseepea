@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-09-24 **P003 verification pending** — The release now checks package-name prerequisites before publication
+> Last reviewed: 2026-09-24 **P015 captured** — Production-boundary CPU benchmark gives conflicting results for an unchanged revision (lightweight aside via /wr-itil:capture-problem)
 > Run `/wr-itil:manage-problem review` to refresh.
 
 ## WSJF Rankings
@@ -15,6 +15,7 @@ Weighted Shortest Job First (WSJF) ranks higher-value, lower-effort work first.
 | 12.0 | P011 | The release risk gate cannot be satisfied from a worktree | 12 (High) | Open | S | 2026-09-20 | internal |
 | 10.0 | P001 | Changesets omit initializer bumps when embedded template dependencies change | 20 (Very High) | Open | M | 2026-09-11 | internal |
 | 9.0 | P006 | A strict result schema opens when it is piped from an open object | 9 (Medium) | Open | S | 2026-09-20 | internal |
+| 7.5 | P015 | Production-boundary CPU benchmark gives conflicting results for an unchanged revision | 15 (High) | Open | M | 2026-09-24 | internal |
 | 6.0 | P004 | Problem backlog parser couples to an unexplained exact heading | 6 (Medium) | Open | S | 2026-09-11 | internal |
 | 6.0 | P008 | The release package list is transcribed by hand into the readiness record | 12 (High) | Open | M | 2026-09-20 | internal |
 | 6.0 | P009 | A tool call can fail after the backend has recorded the work | 12 (High) | Open | M | 2026-09-20 | internal |

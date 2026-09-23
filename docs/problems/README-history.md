@@ -29,6 +29,11 @@
 
 ## 2026-09-24
 
-Previous backlog headline archived when P003 moved to verification pending:
+Previous backlog headline archived when P015 was captured:
+
+> Last reviewed: 2026-09-24 **P003 verification pending** — The release now checks package-name prerequisites before publication
+
+Archived on 2026-09-24 when P003 moved to verification pending; previous
+headline dated 2026-09-23:
 
 > Last reviewed: 2026-09-23 **P003 known error** — Registry capture treated a missing package name as an ordinary unpublished version until `npm publish`
