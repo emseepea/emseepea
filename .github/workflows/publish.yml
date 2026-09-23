@@ -26,7 +26,6 @@ jobs:
     permissions:
       contents: read
       actions: read
-      id-token: write
     outputs:
       released: ${{ steps.plan.outputs.released }}
       website: ${{ steps.plan.outputs.website }}
@@ -66,6 +65,7 @@ jobs:
           EMSEEPEA_REPAIR_BASE_SHA: "2bb97f91f47d56461ebcb20270af8fde3a91e458"
           EMSEEPEA_ORIGINAL_PUBLISH_SHA: "0b7f2b97387917013549814340ebc80a26ad0c48"
         run: |
+          set -o pipefail
           node scripts/bind-promotion-release.mjs | tee -a "$GITHUB_ENV" >> "$GITHUB_OUTPUT"
       - name: Capture the current npm package state
         if: steps.plan.outputs.released == 'true'
@@ -74,6 +74,8 @@ jobs:
         # ADR-0098: the tarballs promoted are the ones the release pull request
         # built and checked. promote-release.mjs refuses a version that is not
         # already on next, so nothing unchecked can reach latest.
+        # ADR-0105: this stage-only token can move tags but cannot publish a
+        # new version. Keep it scoped to this npm write step.
         if: steps.plan.outputs.released == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PROMOTION_TOKEN }}
@@ -167,6 +169,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash scripts/publish-release-records.sh
       - name: Retire replaced initializers
+        # ADR-0105: the same selected-package token is needed only for this
+        # deprecation write and is not available to the rest of the job.
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PROMOTION_TOKEN }}
         run: npm run release:deprecate-replaced
 
   merge-back:

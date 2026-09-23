@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import test from "node:test";
+import { parse as parseYaml } from "yaml";
 
 import { ensureReleaseTag } from "../../scripts/ensure-release-tag.mjs";
 import { packRegistryPackage } from "../../scripts/pack-registry-package.mjs";
@@ -170,6 +171,36 @@ test("publication evidence describes the protected progress boundary", () => {
 test("the completed feedback bootstrap cannot remain as a credential fallback", () => {
   assert.doesNotMatch(workflow, /Bootstrap the first feedback publication/);
   assert.doesNotMatch(workflow, /secrets\.NPM_TOKEN/);
+});
+
+test("the npm promotion token reaches only the two package-write processes", async () => {
+  const definition = parseYaml(publish);
+  const sentinel = "promotion-token-sentinel";
+  const visible = [];
+
+  for (const [jobName, job] of Object.entries(definition.jobs)) {
+    for (const step of job.steps) {
+      const configured = {
+        ...definition.env,
+        ...job.env,
+        ...step.env,
+      };
+      const environment = Object.fromEntries(Object.entries(configured).map(([key, value]) => [
+        key,
+        value === "${{ secrets.NPM_PROMOTION_TOKEN }}" ? sentinel : String(value),
+      ]));
+      const { stdout } = await exec(process.execPath, [
+        "-e",
+        "process.stdout.write(process.env.NODE_AUTH_TOKEN ?? '')",
+      ], { env: { PATH: process.env.PATH, ...environment } });
+      if (stdout === sentinel) visible.push(`${jobName}: ${step.name}`);
+    }
+  }
+
+  assert.deepEqual(visible, [
+    "promote: Move each package's next tag to latest",
+    "release-records: Retire replaced initializers",
+  ]);
 });
 
 test("registry tarball downloads retry bounded propagation failures", async () => {

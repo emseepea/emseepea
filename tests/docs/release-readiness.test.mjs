@@ -106,6 +106,15 @@ test("release readiness covers every package planned by Changesets", () => {
   );
 });
 
+test("website-only releases do not reuse npm package readiness", () => {
+  const status = { releases: [
+    { name: "@emseepea/website", type: "patch", newVersion: "0.0.1" },
+  ] };
+  assert.doesNotThrow(() => assertPlannedReleaseReadiness(status, retryReview, {
+    requireReleases: true,
+  }));
+});
+
 test("untagged packages drive initializer dependency closure without expanding the readiness batch", () => {
   const untaggedReleases = [
     { name: "@emseepea/server", newVersion: "0.10.1" },
