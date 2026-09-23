@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-09-23 **P003 known error** — Registry capture treated a missing package name as an ordinary unpublished version until `npm publish`
+> Last reviewed: 2026-09-24 **P003 verification pending** — The release now checks package-name prerequisites before publication
 > Run `/wr-itil:manage-problem review` to refresh.
 
 ## WSJF Rankings
@@ -9,7 +9,6 @@ Weighted Shortest Job First (WSJF) ranks higher-value, lower-effort work first.
 
 | WSJF | ID | Title | Severity | Status | Effort | Reported | Origin |
 |------|-----|-------|----------|--------|--------|----------|--------|
-| 30.0 | P003 | Release workflow lacks first-package trusted-publisher preflight | 15 (High) | Known Error | S | 2026-09-11 | internal |
 | 15.0 | P005 | Branch push is ungated, so untested changes reach continuous integration | 15 (High) | Open | S | 2026-09-20 | internal |
 | 12.0 | P007 | The shipped package guide is silent on open-by-default result schemas | 12 (High) | Open | S | 2026-09-20 | internal |
 | 12.0 | P010 | The release gives up waiting before the registry catches up | 12 (High) | Open | S | 2026-09-20 | internal |
@@ -30,6 +29,7 @@ Fix released, awaiting verification. Sorted by release date, oldest first.
 | ID | Title | Released | Fix summary | Likely verified? |
 |----|-------|----------|-------------|------------------|
 | P002 | Release readiness verifier only tests fixture-like stable PASS marker | 2026-09-20 | Every `npm test` now checks the live readiness record still has both marker labels. Verdicts are still checked only at release time. | no — not observed |
+| P003 | Release workflow lacks first-package trusted-publisher preflight | 2026-09-24 | The release checks every public package name before publication and stops with separate bootstrap guidance when a name is absent. | no — not observed |
 
 ## Parked
 

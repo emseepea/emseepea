@@ -64,7 +64,7 @@ not treat a promotion token as that authority.
 
 - Criteria: `RISK-POLICY.md`
 - Realised-as: [Problem 003: Release Workflow Lacks First-Package Trusted-Publisher
-  Preflight](../problems/known-error/003-release-workflow-lacks-first-package-trusted-publisher-preflight.md)
+  Preflight](../problems/verifying/003-release-workflow-lacks-first-package-trusted-publisher-preflight.md)
 - Treatment Architecture Decision Records (ADRs):
   [ADR-0071: Separate OpenAPI-Backed Example and Initializer](../decisions/0071-separate-openapi-backed-example-and-initializer.proposed.md),
   [ADR-0098: Publish on Merge to a Publish Branch](../decisions/0098-publish-on-merge-to-a-publish-branch.proposed.md),

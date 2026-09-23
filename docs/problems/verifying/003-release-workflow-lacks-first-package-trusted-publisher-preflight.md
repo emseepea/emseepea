@@ -2,7 +2,7 @@
 
 The release found a missing npm package name only after publication began.
 
-**Status**: Known Error
+**Status**: Verification Pending
 **Reported**: 2026-09-11
 **Priority**: 15 (High) — Impact: 3 × Likelihood: 5 — derived at capture because every newly named package reaches the same missing-package state and the failure interrupts publication
 **Origin**: internal
@@ -75,6 +75,23 @@ registry preflight to the existing release verification path and call it from
 manual and authorization-bound; the check should only stop with an actionable
 diagnostic. Evidence: workflow run `34555128253`, attempt 2, reached npm publish
 and failed with `E404` for the absent package.
+
+## Fix Released
+
+Released on 2026-09-24 in commit
+`5c493da45cc1cbf07b0cd85e0b089d17cf74f13e`, which is on `main`.
+<!-- no-changeset-reference: workflow-only fix; no package release intended -->
+
+The release workflow now checks every public package name anonymously before
+`npm publish`. A missing package stops with the separately authorized bootstrap
+guidance; other registry failures are not misclassified.
+
+Exercise evidence: focused release tests passed 39 of 39, and Quality run
+[`35912998949`](https://github.com/emseepea/emseepea/actions/runs/35912998949)
+passed for the exact commit after its failed Node.js 22 benchmark job was rerun.
+
+Awaiting user verification of a future first-package release stopping before
+publication.
 
 ## Dependencies
 

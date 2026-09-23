@@ -26,3 +26,9 @@
 > Last reviewed: 2026-09-23 **P013 captured** — Feedback event construction is duplicated across four adapters (lightweight aside via /wr-itil:capture-problem)
 
 > Last reviewed: 2026-09-23 **P014 captured** — Direct dependencies have no identified owner or purpose (lightweight aside via /wr-itil:capture-problem)
+
+## 2026-09-24
+
+Previous backlog headline archived when P003 moved to verification pending:
+
+> Last reviewed: 2026-09-23 **P003 known error** — Registry capture treated a missing package name as an ordinary unpublished version until `npm publish`
