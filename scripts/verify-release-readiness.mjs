@@ -85,7 +85,9 @@ export function assertPlannedReleaseReadiness(status, review, { requireReleases 
   }
   if (releases.length === 0) return;
   assertReleaseReadiness({
-    packages: releases.map(({ name, newVersion }) => ({ name, version: newVersion, present: false })),
+    packages: releases
+      .filter(({ name }) => publicPackages.some((candidate) => candidate.name === name))
+      .map(({ name, newVersion }) => ({ name, version: newVersion, present: false })),
   }, review);
 }
 
