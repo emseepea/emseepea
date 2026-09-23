@@ -61,6 +61,68 @@ test("deprecates every published version", async () => {
   assert.equal(calls.filter(([, first]) => first === "view").length, 10);
 });
 
+test("accepts npm's single-element deprecation arrays", async () => {
+  const calls = [];
+  const run = async (command, args) => {
+    calls.push([command, ...args]);
+    const joined = args.join(" ");
+    if (joined.includes("create-tool-server version")) return '"0.0.1"';
+    if (joined.includes("create-sign-in-tool-server versions")) return '["0.0.13"]';
+    if (joined.includes("create-sign-in-tool-server@0.0.13 deprecated")) {
+      return JSON.stringify([toolMessage]);
+    }
+    if (joined.includes("create-multi-instance-postgres-server version")) return '"0.0.1"';
+    if (joined.includes("create-multi-instance-sqlite-server versions")) return '["0.0.11"]';
+    if (joined.includes("create-multi-instance-sqlite-server@0.0.11 deprecated")) {
+      return JSON.stringify([postgresMessage]);
+    }
+    throw new Error(`Unexpected command: ${command} ${joined}`);
+  };
+
+  await retireReplacedInitializers({ run, pause: async () => {} });
+
+  assert.equal(calls.some(([, first]) => first === "deprecate"), false);
+});
+
+test("accepts a failed deprecate after the registry confirms the requested state", async () => {
+  let deprecateAttempted = false;
+  const run = async (command, args) => {
+    const joined = args.join(" ");
+    if (joined.includes("create-tool-server version")) return '"0.0.1"';
+    if (joined.includes("create-sign-in-tool-server versions")) return '["0.0.13"]';
+    if (joined.includes("create-sign-in-tool-server@0.0.13 deprecated")) {
+      return deprecateAttempted ? JSON.stringify([toolMessage]) : "";
+    }
+    if (args[0] === "deprecate" && args[1] === "@emseepea/create-sign-in-tool-server@*") {
+      deprecateAttempted = true;
+      throw new Error("E404 after registry update");
+    }
+    if (joined.includes("create-multi-instance-postgres-server version")) return '"0.0.1"';
+    if (joined.includes("create-multi-instance-sqlite-server versions")) return '["0.0.11"]';
+    if (joined.includes("create-multi-instance-sqlite-server@0.0.11 deprecated")) {
+      return JSON.stringify([postgresMessage]);
+    }
+    throw new Error(`Unexpected command: ${command} ${joined}`);
+  };
+
+  await retireReplacedInitializers({ run, pause: async () => {} });
+  assert.equal(deprecateAttempted, true);
+});
+
+test("keeps a failed deprecate when the registry postcondition is absent", async () => {
+  await assert.rejects(() => retireReplacedInitializers({
+    run: async (_command, args) => {
+      const joined = args.join(" ");
+      if (joined.includes("create-tool-server version")) return '"0.0.1"';
+      if (joined.includes("create-sign-in-tool-server versions")) return '["0.0.13"]';
+      if (joined.includes("create-sign-in-tool-server@0.0.13 deprecated")) return "";
+      if (args[0] === "deprecate") throw new Error("E404 without registry update");
+      throw new Error(`Unexpected command: npm ${joined}`);
+    },
+    pause: async () => {},
+  }), /E404 without registry update/);
+});
+
 test("does not mistake registry failures for package removal", async () => {
   await assert.rejects(() => retireReplacedInitializers({
     run: async (_command, args) => {

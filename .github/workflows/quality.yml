@@ -2,6 +2,8 @@ name: Quality
 
 on:
   pull_request:
+    branches-ignore:
+      - publish
   push:
     branches:
       - main
@@ -268,6 +270,16 @@ jobs:
             echo "has_changesets=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_changesets=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Require the previous publish head on main
+        if: steps.release-work.outputs.has_changesets == 'true'
+        run: |
+          if git ls-remote --exit-code --heads origin publish >/dev/null 2>&1; then
+            git fetch origin publish
+            git merge-base --is-ancestor origin/publish "$GITHUB_SHA" || {
+              echo "publish has not been merged back into main; finish the previous release before creating another" >&2
+              exit 1
+            }
           fi
       - name: Ensure the publish branch exists
         if: steps.release-work.outputs.has_changesets == 'true'
