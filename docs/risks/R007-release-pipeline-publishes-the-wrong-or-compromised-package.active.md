@@ -4,14 +4,16 @@
 **Category**: information security
 **Identified**: 2026-08-27
 **Owner**: Release maintainer
-**Last reviewed**: 2026-09-04
+**Last reviewed**: 2026-09-23
 **Next review**: 2027-02-28
 
 ## Description
 
 Release automation, dependencies, credentials, or package metadata may be
 compromised or misconfigured. The pipeline could publish the wrong package,
-wrong revision, or unsafe contents.
+wrong revision, or unsafe contents. It may instead fail only when publication
+starts, after earlier qualification has passed, because a new package name does
+not yet exist in the registry.
 
 Because adopters install the published package, this could spread compromised
 code beyond the repository.
@@ -55,6 +57,14 @@ Impact × Likelihood *before* controls.
   package inspection checks that every public import and command is present.
   Implemented in `.github/workflows/release.yml`,
   `packages/framework/package.json`, and `packages/testing/package.json`.
+- **Stop before publishing an unregistered package name** - The anonymous
+  registry capture distinguishes a missing package-name response from an absent
+  target version and from other registry failures. It stops before `npm publish`
+  with the manual bootstrap boundary, the exact trusted-publisher workflow, and
+  the promotion-token limit. Implemented in
+  `scripts/verify-registry-release.mjs` and `.github/workflows/release.yml`;
+  exercised by `tests/docs/verify-registry-release.test.mjs` and
+  `tests/llm/release-workflow.test.mjs`.
 - **Release artifacts** - The workflow records a checksum, a CycloneDX software
   bill of materials (a list of package ingredients), the exact commit,
   lockfile, supported features, excluded features, and readiness review.
@@ -76,6 +86,14 @@ Mitigate. Trusted publishing, immutable workflow pins, exact-commit gates, and
 post-publication verification remain mandatory. Any one-off first-package
 bootstrap requires its own least-privilege review and immediate credential
 removal; it is not a reusable fallback.
+
+Problem 003 exposed a missing control: registry capture did not stop when the
+package name itself was absent. The read-only package-name preflight is now an
+operating control, supported by focused tests and workflow-order evidence. It
+reduces this failure mode without claiming that an existing package has a valid
+trusted-publisher configuration. The broader residual score remains 5 because
+this control does not reduce the severe impact of the other publication and
+supply-chain failures covered by this risk.
 
 ## Monitoring
 
@@ -100,8 +118,15 @@ removal; it is not a reusable fallback.
   from Promptfoo's optional dependencies. See the
   [0.0.2 release run](https://github.com/windyroad/emseepea/actions/runs/33259549290).
   Fresh-install checks now run before npm publication as well as afterward.
+- Realised-as: [Problem 003: Release Workflow Lacks First-Package
+  Trusted-Publisher Preflight](../problems/known-error/003-release-workflow-lacks-first-package-trusted-publisher-preflight.md)
+  records the release that reached `npm publish` before discovering that a new
+  package name did not exist in the registry.
 - Treatment ADRs:
-  [ADR-0019: Public Pre-Alpha Releases Through npm Trusted Publishing](../decisions/0019-public-pre-alpha-releases-through-npm-trusted-publishing.superseded.md)
+  [ADR-0098: Publish on Merge to a Publish Branch](../decisions/0098-publish-on-merge-to-a-publish-branch.proposed.md),
+  [ADR-0100: Trunk Push and Watch Under a Publish Branch](../decisions/0100-trunk-push-and-watch-under-a-publish-branch.proposed.md),
+  [ADR-0101: Vulnerability Scanning Without a Release Workflow](../decisions/0101-vulnerability-scanning-without-a-release-workflow.proposed.md), and
+  [ADR-0105: Bounded Stage-Only Token for npm Promotion](../decisions/0105-bounded-stage-only-token-for-npm-promotion.proposed.md).
 - Personas affected: package consumers, adopters, and maintainers
 
 ## Source Evidence (auto-scaffolded 2026-08-27)
@@ -136,3 +161,7 @@ evidence, or risk policy change.
 - 2026-09-23: Linked Problem 014's unowned-direct-dependency concern. This
   traceability update did not change the risk's controls, scoring, treatment,
   owner, or review date.
+- 2026-09-23: Recorded Problem 003's realised first-package failure, added the
+  tested read-only registry preflight as an operating control, replaced the
+  historical treatment-decision link with current release decisions, and kept
+  the residual score at 5 because the broader supply-chain impact is unchanged.

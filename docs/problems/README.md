@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-09-23 **P014 captured** — Direct dependencies have no identified owner or purpose (lightweight aside via /wr-itil:capture-problem)
+> Last reviewed: 2026-09-23 **P003 known error** — Registry capture treated a missing package name as an ordinary unpublished version until `npm publish`
 > Run `/wr-itil:manage-problem review` to refresh.
 
 ## WSJF Rankings
@@ -9,7 +9,7 @@ Weighted Shortest Job First (WSJF) ranks higher-value, lower-effort work first.
 
 | WSJF | ID | Title | Severity | Status | Effort | Reported | Origin |
 |------|-----|-------|----------|--------|--------|----------|--------|
-| 15.0 | P003 | Release workflow lacks first-package trusted-publisher preflight | 15 (High) | Open | S | 2026-09-11 | internal |
+| 30.0 | P003 | Release workflow lacks first-package trusted-publisher preflight | 15 (High) | Known Error | S | 2026-09-11 | internal |
 | 15.0 | P005 | Branch push is ungated, so untested changes reach continuous integration | 15 (High) | Open | S | 2026-09-20 | internal |
 | 12.0 | P007 | The shipped package guide is silent on open-by-default result schemas | 12 (High) | Open | S | 2026-09-20 | internal |
 | 12.0 | P010 | The release gives up waiting before the registry catches up | 12 (High) | Open | S | 2026-09-20 | internal |

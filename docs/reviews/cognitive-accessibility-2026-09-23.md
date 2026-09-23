@@ -76,3 +76,22 @@ Scope: source Markdown clarity and cognitive accessibility only.
 | File | SHA-256 |
 | --- | --- |
 | `docs/audits/outbound-responses-log.md` | `369d801a53f59565df7c23b5bcb956a168037247b7fcf440ad18d14ad5feac52` |
+
+## First-package release preflight
+
+Result: PASS after one review correction. An independent cognitive-
+accessibility specialist reviewed the final problem transition, standing-risk
+treatment, backlog records, and Changeset. The final wording separates the
+historical decision from current release authority, the read-only check from
+registry mutation, and package-name existence from trusted-publisher
+authorization.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `.changeset/preflight-first-package.md` | `a5ba6cd51210e79597eaa2a3bd34c4b47a054f6e51795d0a46fea839c7827f28` |
+| `docs/problems/README-history.md` | `d8d10c173eaef52325f15846efddd62f5948a85dc0db00593968e7e6a23d2415` |
+| `docs/problems/README.md` | `9a19820f89ab96e9af7e2fca42c8ec3b5a59007dfacab6f7285cac98c1a1167e` |
+| `docs/problems/known-error/003-release-workflow-lacks-first-package-trusted-publisher-preflight.md` | `717f3b9031d4af3a5d6919d04c615bedaae051cf9cd6ef1ec310713bd0a6950a` |
+| `docs/risks/R007-release-pipeline-publishes-the-wrong-or-compromised-package.active.md` | `d8c88206181334cc2467e218ef72377be594111a9718d272dff3d02243a8f01a` |
