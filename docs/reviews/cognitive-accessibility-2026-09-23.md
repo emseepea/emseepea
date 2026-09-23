@@ -95,3 +95,17 @@ Scope: source Markdown clarity and cognitive accessibility only.
 | `docs/problems/README.md` | `9a19820f89ab96e9af7e2fca42c8ec3b5a59007dfacab6f7285cac98c1a1167e` |
 | `docs/problems/known-error/003-release-workflow-lacks-first-package-trusted-publisher-preflight.md` | `717f3b9031d4af3a5d6919d04c615bedaae051cf9cd6ef1ec310713bd0a6950a` |
 | `docs/risks/R007-release-pipeline-publishes-the-wrong-or-compromised-package.active.md` | `d8c88206181334cc2467e218ef72377be594111a9718d272dff3d02243a8f01a` |
+
+## P003 retrospective
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+exact retrospective briefing and ask-hygiene record. The final wording keeps
+the registry check, bootstrap authority, trusted-publisher configuration, and
+promotion-token boundary distinct and scannable.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/briefing/releases-and-ci.md` | `fe1322a2a1dc7aa943fd1c9e854ea2b917664478e58a7605ef1c5767de42a3dd` |
+| `docs/retros/2026-09-23-ask-hygiene.md` | `80fe5a1c1b4f7321db75126b8195e161a7978c85d58bbf80fb7fd17cf6dcd823` |
