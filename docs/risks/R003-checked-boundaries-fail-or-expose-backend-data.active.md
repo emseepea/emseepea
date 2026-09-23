@@ -67,6 +67,7 @@ cancellation, limit, and error path before it can be advertised.
 ## Related
 
 - Criteria: `RISK-POLICY.md`
+- Related problem: [Problem 012: Framework Runtime Is Concentrated in One Multi-Responsibility Module](../problems/open/012-framework-runtime-is-concentrated-in-one-multi-responsibility-module.md) records a concentrated change surface across the controls this risk depends on.
 - Realised-as: none recorded
 - Treatment ADRs:
   [ADR-0006: Canonical Public Contract and Private Manifest Compilation](../decisions/0006-canonical-public-contract-and-private-manifest-compilation.proposed.md)
