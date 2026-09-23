@@ -44,3 +44,21 @@ Scope: source Markdown clarity and cognitive accessibility only.
 | `docs/problems/README.md` | `e40f199a0ad3144a8ff0ef7c69f4ed32a46af4f1793a441ee573f7a525e924ee` |
 | `docs/problems/README-history.md` | `7d5a1ad1302c04b5cd32c96760463d7919e6e6072b07fd4d37842a94a6164568` |
 | `docs/risks/R003-checked-boundaries-fail-or-expose-backend-data.active.md` | `3df9c64999bae3adbe3b31d09bc03d2e0d1904c8654bdc80bf2c54ee38ae0ab3` |
+
+## Problem capture 014
+
+Result: PASS after review revisions. Independent cognitive-accessibility review
+covered the problem record, the live backlog, and its standing-risk trace. The
+final record distinguishes an unverified ownership concern from proof that a
+dependency is safe to remove, states the required verification plainly, and
+leaves duplicate or parent decisions to the next problem review. The R007
+change log records that the traceability-only update did not alter the risk's
+controls, scoring, treatment, owner, or review date.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/open/014-direct-dependencies-have-no-identified-owner-or-purpose.md` | `a5869886dc71a759749fa1729cd60f8e74153fe1f6c2bac2749cef89de505ff7` |
+| `docs/problems/README.md` | `2fa3d0bc69350a39b605c5bfb593f8e579938271fa7c6efaa69bb9d3011a1b2c` |
+| `docs/risks/R007-release-pipeline-publishes-the-wrong-or-compromised-package.active.md` | `aff962e0678ca1b45da2aa58991fd62051cd8388fb4bd788e75a73a1ed04e9aa` |

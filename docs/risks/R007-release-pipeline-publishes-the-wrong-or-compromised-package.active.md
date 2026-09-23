@@ -89,6 +89,7 @@ removal; it is not a reusable fallback.
 ## Related
 
 - Criteria: `RISK-POLICY.md`
+- Related problem: [Problem 014: Direct Dependencies Have No Identified Owner or Purpose](../problems/open/014-direct-dependencies-have-no-identified-owner-or-purpose.md) records two dependency declarations whose owning import or documented purpose has not yet been identified.
 - Realised-as: `@emseepea/server@0.0.1` and `@emseepea/testing@0.0.1`
   were published without their built files on 2026-08-29. Both versions were
   deprecated before announcement, and no Git tags or GitHub releases were
@@ -132,3 +133,6 @@ evidence, or risk policy change.
   dependency graph checks and a pinned OSV lockfile scan after repeated advisory
   endpoint timeouts. Retained registry integrity, provenance, signature, and
   clean-install controls.
+- 2026-09-23: Linked Problem 014's unowned-direct-dependency concern. This
+  traceability update did not change the risk's controls, scoring, treatment,
+  owner, or review date.
