@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-09-23 **P012 captured** — Framework runtime is concentrated in one multi-responsibility module (lightweight aside via /wr-itil:capture-problem)
+> Last reviewed: 2026-09-23 **P013 captured** — Feedback event construction is duplicated across four adapters (lightweight aside via /wr-itil:capture-problem)
 > Run `/wr-itil:manage-problem review` to refresh.
 
 ## WSJF Rankings
@@ -19,6 +19,7 @@ Weighted Shortest Job First (WSJF) ranks higher-value, lower-effort work first.
 | 6.0 | P004 | Problem backlog parser couples to an unexplained exact heading | 6 (Medium) | Open | S | 2026-09-11 | internal |
 | 6.0 | P008 | The release package list is transcribed by hand into the readiness record | 12 (High) | Open | M | 2026-09-20 | internal |
 | 6.0 | P009 | A tool call can fail after the backend has recorded the work | 12 (High) | Open | M | 2026-09-20 | internal |
+| 3.0 | P013 | Feedback event construction is duplicated across four adapters | 6 (Medium) | Open | M | 2026-09-23 | internal |
 | 2.0 | P012 | Framework runtime is concentrated in one multi-responsibility module | 8 (Medium) | Open | L | 2026-09-23 | internal |
 
 ## Verification Queue

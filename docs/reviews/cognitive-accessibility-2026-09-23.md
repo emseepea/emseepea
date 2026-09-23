@@ -25,3 +25,22 @@ Scope: source Markdown clarity and cognitive accessibility only.
 | File | SHA-256 |
 | --- | --- |
 | `.changeset/publish-beta-maturity-site.md` | `442459dc03e95af0980a9582d20bda92e6be2163d160f5e7cd8374a3fd8e3606` |
+
+## Problem captures 012 and 013
+
+Result: PASS after review revisions. Independent cognitive-accessibility review
+covered both problem records, the live backlog and history, and their standing-
+risk trace. The review moved the P010/P011 history entry under its actual date
+and recorded P012 and P013 together under 23 September. The final records keep
+the symptoms, current impact, workaround, investigation, and risk relationship
+distinct without pre-selecting a solution.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/open/012-framework-runtime-is-concentrated-in-one-multi-responsibility-module.md` | `5f06ec639fb3b8929f4b0c1bee97a1c26544b6d95a088a212e8a8c1d282532d3` |
+| `docs/problems/open/013-feedback-event-construction-is-duplicated-across-four-adapters.md` | `5e28db6cf61a61a379291ff411a977349466eb52f6793b1de32d087f79e5481e` |
+| `docs/problems/README.md` | `e40f199a0ad3144a8ff0ef7c69f4ed32a46af4f1793a441ee573f7a525e924ee` |
+| `docs/problems/README-history.md` | `7d5a1ad1302c04b5cd32c96760463d7919e6e6072b07fd4d37842a94a6164568` |
+| `docs/risks/R003-checked-boundaries-fail-or-expose-backend-data.active.md` | `3df9c64999bae3adbe3b31d09bc03d2e0d1904c8654bdc80bf2c54ee38ae0ab3` |
