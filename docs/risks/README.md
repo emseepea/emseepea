@@ -23,3 +23,4 @@ A dash (`—`) means the score is not estimated yet. A residual score above the
 | [R010](R010-guides-and-examples-drift-from-released-packages.active.md) | Guides and examples drift from released packages | Delivery | 16 | 4 | Mitigate | Documentation and examples maintainer | 2027-02-28 |
 | [R011](R011-untrusted-ui-data-executes-markup-or-reveals-private-state.active.md) | Untrusted UI data executes markup or reveals private state | Information security | 20 | 20 | Avoid | Framework security maintainer | 2027-02-28 |
 | [R012](R012-framework-examples-obscure-correct-adoption.active.md) | Framework examples obscure correct adoption | Delivery | 20 | 4 | Mitigate | Framework developer-experience maintainer | 2027-02-28 |
+| [R013](R013-release-reaches-publication-before-registry-prerequisites-are-verified.active.md) | Release reaches publication before registry prerequisites are verified | Operational | 15 | 3 | Mitigate | Release maintainer | 2027-03-24 |

@@ -79,22 +79,23 @@ Scope: source Markdown clarity and cognitive accessibility only.
 
 ## First-package release preflight
 
-Result: PASS after one review correction. An independent cognitive-
-accessibility specialist reviewed the final problem transition, standing-risk
-treatment, backlog records, and Changeset. The final wording separates the
-historical decision from current release authority, the read-only check from
-registry mutation, and package-name existence from trusted-publisher
-authorization.
+Result: PASS after review corrections. An independent cognitive-accessibility
+specialist reviewed the final problem transition, standing-risk treatment, and
+backlog records. The final wording separates the historical decision from
+current release authority, the read-only check from registry mutation, and
+package-name existence from trusted-publisher authorization. It also expands
+abbreviations on first use and places a plain-language summary before scoring
+metadata.
 
 Scope: source Markdown clarity and cognitive accessibility only.
 
 | File | SHA-256 |
 | --- | --- |
-| `.changeset/preflight-first-package.md` | `a5ba6cd51210e79597eaa2a3bd34c4b47a054f6e51795d0a46fea839c7827f28` |
 | `docs/problems/README-history.md` | `d8d10c173eaef52325f15846efddd62f5948a85dc0db00593968e7e6a23d2415` |
 | `docs/problems/README.md` | `9a19820f89ab96e9af7e2fca42c8ec3b5a59007dfacab6f7285cac98c1a1167e` |
-| `docs/problems/known-error/003-release-workflow-lacks-first-package-trusted-publisher-preflight.md` | `717f3b9031d4af3a5d6919d04c615bedaae051cf9cd6ef1ec310713bd0a6950a` |
-| `docs/risks/R007-release-pipeline-publishes-the-wrong-or-compromised-package.active.md` | `d8c88206181334cc2467e218ef72377be594111a9718d272dff3d02243a8f01a` |
+| `docs/problems/known-error/003-release-workflow-lacks-first-package-trusted-publisher-preflight.md` | `21d9de16ea1dd3a758c594a0606771e92fa8846e01420083cb6b38c5b853d636` |
+| `docs/risks/README.md` | `5368e0ca4ee46f060ec6f358f771e00fd41bbfbe6f04c8fb05733e899e2cc935` |
+| `docs/risks/R013-release-reaches-publication-before-registry-prerequisites-are-verified.active.md` | `cc42af277cfbbfe83892c322ffb2437baa82254242ea964a052cacc7d766be9c` |
 
 ## P003 retrospective
 
