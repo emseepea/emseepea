@@ -61,3 +61,22 @@ no responses or state changes were found, and no polling failures occurred.
 | File | SHA-256 |
 | --- | --- |
 | `docs/audits/outbound-responses-log.md` | `e53ea0a932348299d8c44e84f4b86d2420b14d6e6dea930e9a03a38e4ed8c700` |
+
+## P005 story map and delivery story
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+complete draft map, its delivery story, and the reverse traces. The map presents
+one ratification decision, labels its unconfirmed status, and keeps detailed
+acceptance criteria available without making them a prerequisite for reading the
+journey.
+
+Scope: source HTML and Markdown clarity and cognitive accessibility. A separate
+web accessibility review passed the rendered table structure, keyboard-focusable
+scroll region, headings, links, and non-colour status cues.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/story-maps/draft/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `427d9fd52c94610e324b2b00e1ac36eb906460e91708c995dd0b3b874ec9646b` |
+| `docs/stories/draft/STORY-001-qualify-each-outgoing-branch-tip-before-push.md` | `3eca6964c2b531d537d377f0a6a11bdda72d6b10aeff38d31c3682bb6b9a852c` |
+| `docs/problems/open/005-branch-push-is-ungated-so-untested-changes-reach-ci.md` | `be7cf24ddf05e3a6bc8359512ca95ac41464c27d8efc59362d3a6c26c76efa2f` |
+| `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `af525511a1afd5f1c4d32ca3ef217fd2964ee8a84b27d59430f93a21f2365193` |
