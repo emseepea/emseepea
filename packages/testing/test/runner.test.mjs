@@ -108,13 +108,13 @@ test("conversation tests assert exact calls, meaning, and no-call follow-ups", {
 import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 const log = (value) => appendFileSync(${JSON.stringify(modelLog)}, JSON.stringify(value) + "\\n");
-const waitForPeers = async (phase, expected) => {
-  log({ barrier: phase, pid: process.pid });
+const waitForPeers = async (phase, expected, peerKey = process.pid) => {
+  log({ barrier: phase, peerKey, pid: process.pid });
   for (let attempt = 0; attempt < 500; attempt += 1) {
     const records = readFileSync(${JSON.stringify(modelLog)}, "utf8").trim().split("\\n").flatMap((line) => {
       try { return [JSON.parse(line)]; } catch { return []; }
     });
-    if (new Set(records.filter((entry) => entry.barrier === phase).map((entry) => entry.pid)).size >= expected) return;
+    if (new Set(records.filter((entry) => entry.barrier === phase).map((entry) => entry.peerKey)).size >= expected) return;
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
   process.exit(24);
@@ -129,7 +129,8 @@ const result = (answer, calls = 0) => ({
 });
 if (!process.argv.includes("--input-format")) {
   const prompt = process.argv[process.argv.indexOf("--print") + 1];
-  if (prompt.includes("CONCURRENT_BARRIER")) await waitForPeers("judge", 9);
+  const concurrentTrial = prompt.match(/CONCURRENT_BARRIER trial-(\\d+)/)?.[1];
+  if (concurrentTrial) await waitForPeers("judge", 3, concurrentTrial);
   if (prompt.includes("JUDGE_EXIT_23")) process.exit(23);
   if (prompt.includes("JUDGE_PROVIDER_SECRET")) {
     process.stdout.write(JSON.stringify({ ...result("PRIVATE_PROVIDER_MESSAGE"), is_error: true,
@@ -235,7 +236,9 @@ if (!process.argv.includes("--input-format")) {
           : "Pisum sativum was returned. I recorded that the result was immediately useful and clear."
       : followUp
       ? "40 inbound packets"
-      : "There are 85 packets available to promise from 120 on hand minus 35 reserved; 40 inbound packets do not count.";
+      : context === "CONCURRENT_BARRIER"
+        ? "CONCURRENT_BARRIER trial-" + process.pid + "; there are 85 packets available to promise."
+        : "There are 85 packets available to promise from 120 on hand minus 35 reserved; 40 inbound packets do not count.";
     process.stdout.write(JSON.stringify(result(answer, calls.length)) + "\\n");
   });
 }
@@ -372,6 +375,8 @@ test("inventory conversation", async (t) => {
     .slice(concurrentStart);
   assert.equal(new Set(concurrentInvocations.filter(({ barrier }) => barrier === "judge")
     .map(({ pid }) => pid)).size, 9);
+  assert.equal(new Set(concurrentInvocations.filter(({ barrier }) => barrier === "judge")
+    .map(({ peerKey }) => peerKey)).size, 3);
   for (const prompt of ["How many packets can we promise now?", "How many packets were inbound?"]) {
     assert.equal(new Set(concurrentInvocations.filter(({ barrier }) => barrier === `answer:${prompt}`)
       .map(({ pid }) => pid)).size, 3);

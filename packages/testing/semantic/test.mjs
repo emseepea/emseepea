@@ -392,7 +392,8 @@ export async function assertResponseMeaning(turn, expectation) {
 }
 
 async function judgeTrialMeaning(trial, trialIndex, expected) {
-  const outcomes = await Promise.all([1, 2, 3].map(async (judgment) => {
+  const outcomes = [];
+  for (const judgment of [1, 2, 3]) {
     const request = judgePrompt(trial.history, expected);
     const record = {
       trial: trialIndex + 1,
@@ -413,14 +414,14 @@ async function judgeTrialMeaning(trial, trialIndex, expected) {
       });
       const verdict = parseJudgeVerdict(response.answer.trim());
       record.verdict = verdict;
-      return { failed: !verdict.pass, record };
+      outcomes.push({ failed: !verdict.pass, record });
     } catch (error) {
       record.error = error instanceof SyntaxError || error.message === "Judge returned an invalid verdict"
         ? "invalid judge verdict"
         : safeModelFailure(error);
-      return { failed: true, record };
+      outcomes.push({ failed: true, record });
     }
-  }));
+  }
   return {
     failed: outcomes.some(({ failed }) => failed),
     records: outcomes.map(({ record }) => record),
