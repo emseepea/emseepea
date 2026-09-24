@@ -1,5 +1,11 @@
 # @emseepea/create-mongodb-backed-server
 
+## 0.0.33
+
+### Patch Changes
+
+- [`a2d23fa`](https://github.com/emseepea/emseepea/commit/a2d23faf9cd970ea05263576680e9e57ad363fbd) Thanks [@tompahoward](https://github.com/tompahoward)! - Run independent tests of answer meaning at the same time while keeping each test's evaluations sequential. Saved evidence remains complete and in its original order.
+
 ## 0.0.32
 
 ### Patch Changes
