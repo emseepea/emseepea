@@ -177,3 +177,16 @@ region after rerendering.
 | `docs/stories/done/STORY-001-qualify-each-outgoing-branch-tip-before-push.md` | `e9d48d1b45624965ec5ad2fe87efaa0dc8baf4074faaadbea84b30c7788f0e0c` |
 | `docs/story-maps/README.md` | `05732b54e789995176b908da08502270bcee66acc6c9ec5168fb6209dc854dbe` |
 | `docs/story-maps/completed/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `d12bb6ad7d23d4447203a23feb9a42054e0149a87149cb683cc3f3a16d89a23e` |
+
+## Semantic-test concurrency release note
+
+Result: PASS after replacing specialist terms with plain language. An
+independent cognitive-accessibility specialist reviewed the exact release
+documents.
+
+Scope: source Markdown clarity, plain language, and cognitive accessibility.
+
+| File | SHA-256 |
+| --- | --- |
+| `.changeset/fast-semantic-trials.md` | `8df8a27299eb14715d6fdfbed217f380b71a266fdf2ee6c0d011f3b2872f5ee0` |
+| `docs/reviews/current-release-readiness.md` | `d8412b4163f6fc3f04f0f06dfbc8376183c42e53f4d7d103a584387472c96367` |

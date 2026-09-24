@@ -85,77 +85,79 @@ export async function createConversation(testContext, options) {
     async send(prompt) {
       if (typeof prompt !== "string" || !prompt.trim()) throw new Error("send needs a user prompt");
       ensureOpen(state);
+      const results = await Promise.allSettled(state.trials.map(async (trial) => {
+        trial.model ??= startModelConversation(
+          provider,
+          trial.directory,
+          trial.running.url,
+          trial.tools,
+          semanticAuthToken(specification),
+          specification.context,
+          testContext.signal,
+        );
+        const answer = await trial.model.send(prompt);
+        const calls = answer.calls;
+        trial.history.push({
+          user: prompt,
+          toolCalls: calls.map((call, index) => ({
+            ...call,
+            result: answer.toolResults[index].content,
+            isError: answer.toolResults[index].isError,
+          })),
+          assistant: answer.answer,
+        });
+        const record = {
+          turn: trial.record.turns.length + 1,
+          interactionMode: "native-mcp",
+          prompt,
+          response: answer.answer,
+          toolCalls: calls.map((call, index) => ({
+            ...call,
+            result: answer.toolResults[index].content,
+            isError: answer.toolResults[index].isError,
+          })),
+          promptSha256: hash(prompt),
+          answerSha256: hash(answer.answer),
+          answerModels: answer.models,
+          answerTurnCount: answer.turnCount,
+          answerProviderTurnCount: answer.providerTurnCount,
+          answerProviderToolCount: answer.providerToolCount,
+          advertisedToolCount: trial.tools.length,
+          advertisedToolsSha256: hash(JSON.stringify(trial.tools)),
+          selectedCallsSha256: hash(JSON.stringify(calls)),
+          selectedTools: calls.map(({ name: toolName }) => toolName),
+          toolCallCount: calls.length,
+          materialSha256: hash(JSON.stringify(answer.pathEvidence)),
+          pathEvidence: answer.pathEvidence,
+          literalAssertionCount: 0,
+          meaningAssertionCount: 0,
+        };
+        trial.record.turns.push(record);
+        return {
+          answer: answer.answer,
+          calls,
+          prompt,
+          record,
+          state,
+          evidence,
+          provider,
+          signal: testContext.signal,
+          history: Object.freeze([...trial.history]),
+        };
+      }));
       const trials = [];
-      let activeTrial;
-      try {
-        for (const trial of state.trials) {
-          activeTrial = trial;
-          trial.model ??= startModelConversation(
-            provider,
-            trial.directory,
-            trial.running.url,
-            trial.tools,
-            semanticAuthToken(specification),
-            specification.context,
-            testContext.signal,
-          );
-          const answer = await trial.model.send(prompt);
-          const calls = answer.calls;
-          trial.history.push({
-            user: prompt,
-            toolCalls: calls.map((call, index) => ({
-              ...call,
-              result: answer.toolResults[index].content,
-              isError: answer.toolResults[index].isError,
-            })),
-            assistant: answer.answer,
-          });
-          const record = {
-            turn: trial.record.turns.length + 1,
-            interactionMode: "native-mcp",
-            prompt,
-            response: answer.answer,
-            toolCalls: calls.map((call, index) => ({
-              ...call,
-              result: answer.toolResults[index].content,
-              isError: answer.toolResults[index].isError,
-            })),
-            promptSha256: hash(prompt),
-            answerSha256: hash(answer.answer),
-            answerModels: answer.models,
-            answerTurnCount: answer.turnCount,
-            answerProviderTurnCount: answer.providerTurnCount,
-            answerProviderToolCount: answer.providerToolCount,
-            advertisedToolCount: trial.tools.length,
-            advertisedToolsSha256: hash(JSON.stringify(trial.tools)),
-            selectedCallsSha256: hash(JSON.stringify(calls)),
-            selectedTools: calls.map(({ name: toolName }) => toolName),
-            toolCallCount: calls.length,
-            materialSha256: hash(JSON.stringify(answer.pathEvidence)),
-            pathEvidence: answer.pathEvidence,
-            literalAssertionCount: 0,
-            meaningAssertionCount: 0,
-          };
-          trial.record.turns.push(record);
-          trials.push({
-            answer: answer.answer,
-            calls,
-            prompt,
-            record,
-            state,
-            evidence,
-            provider,
-            signal: testContext.signal,
-            history: Object.freeze([...trial.history]),
-          });
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          trials.push(result.value);
+          return;
         }
-      } catch (error) {
-        if (activeTrial) {
-          activeTrial.record.error = safeModelFailure(error);
-          if (Array.isArray(error?.attemptedToolCalls)) {
-            activeTrial.record.attemptedToolCalls = error.attemptedToolCalls;
-          }
+        const trial = state.trials[index];
+        trial.record.error = safeModelFailure(result.reason);
+        if (Array.isArray(result.reason?.attemptedToolCalls)) {
+          trial.record.attemptedToolCalls = result.reason.attemptedToolCalls;
         }
+      });
+      if (results.some(({ status }) => status === "rejected")) {
         state.failed = true;
         evidence.failedPhase = "conversation turn";
         throw new Error(`Semantic test failed during conversation turn: ${name}`);
@@ -188,7 +190,9 @@ export function assertToolCalls(turn, expected) {
 export async function assertToolCallsWithOptionalFeedback(turn, expected) {
   const trials = turnTrials(turn);
   validateExpectedCalls(expected);
-  for (const trial of trials) {
+  const judgments = [];
+  for (let trialIndex = 0; trialIndex < trials.length; trialIndex += 1) {
+    const trial = trials[trialIndex];
     trial.record.expectedTools = expected.map(({ name }) => name);
     trial.record.expectedCalls = expected;
     trial.record.expectedOptionalFeedback = true;
@@ -221,9 +225,14 @@ export async function assertToolCallsWithOptionalFeedback(turn, expected) {
       detail: feedback.arguments.detail,
       expectationSha256: hash(expectation),
     };
-    const disclosureFailed = await judgeTrialMeaning(trial, trialIndex, expectation);
-    if (recordedCall.isError || disclosureFailed) failed = true;
+    judgments.push({ trial, trialIndex, expectation, recordedCall });
   }
+  const outcomes = await Promise.all(judgments.map(({ trial, trialIndex, expectation }) =>
+    judgeTrialMeaning(trial, trialIndex, expectation)));
+  outcomes.forEach(({ records }, index) => {
+    trials[0].evidence.judgeVerdicts.push(...records);
+    if (judgments[index].recordedCall.isError || outcomes[index].failed) failed = true;
+  });
   if (failed) {
     failAssertion(trials, "feedback-disclosure assertion");
     throw new Error("Optional feedback failed or was not openly described in the response");
@@ -368,23 +377,22 @@ export async function assertResponseMeaning(turn, expectation) {
     || Object.keys(expectation).join(",") !== "expected") {
     throw new Error("Response meaning needs exactly one non-empty expected statement");
   }
-  let failed = false;
   for (let trialIndex = 0; trialIndex < trials.length; trialIndex += 1) {
-    const trial = trials[trialIndex];
-    trial.record.expectedMeaning = expectation.expected;
-    if (await judgeTrialMeaning(trial, trialIndex, expectation.expected)) failed = true;
-    trial.record.meaningAssertionCount += 1;
+    trials[trialIndex].record.expectedMeaning = expectation.expected;
   }
+  const outcomes = await Promise.all(trials.map((trial, trialIndex) =>
+    judgeTrialMeaning(trial, trialIndex, expectation.expected)));
+  trials[0].evidence.judgeVerdicts.push(...outcomes.flatMap(({ records }) => records));
+  for (const trial of trials) trial.record.meaningAssertionCount += 1;
   trials[0].state.meaningAssertions += 1;
-  if (failed) {
+  if (outcomes.some(({ failed }) => failed)) {
     failAssertion(trials, "model judgment");
     throw new Error("Response did not have the expected meaning");
   }
 }
 
 async function judgeTrialMeaning(trial, trialIndex, expected) {
-  let failed = false;
-  for (let judgment = 1; judgment <= 3; judgment += 1) {
+  const outcomes = await Promise.all([1, 2, 3].map(async (judgment) => {
     const request = judgePrompt(trial.history, expected);
     const record = {
       trial: trialIndex + 1,
@@ -405,16 +413,18 @@ async function judgeTrialMeaning(trial, trialIndex, expected) {
       });
       const verdict = parseJudgeVerdict(response.answer.trim());
       record.verdict = verdict;
-      if (!verdict.pass) failed = true;
+      return { failed: !verdict.pass, record };
     } catch (error) {
       record.error = error instanceof SyntaxError || error.message === "Judge returned an invalid verdict"
         ? "invalid judge verdict"
         : safeModelFailure(error);
-      failed = true;
+      return { failed: true, record };
     }
-    trial.evidence.judgeVerdicts.push(record);
-  }
-  return failed;
+  }));
+  return {
+    failed: outcomes.some(({ failed }) => failed),
+    records: outcomes.map(({ record }) => record),
+  };
 }
 
 function safeModelFailure(error) {
