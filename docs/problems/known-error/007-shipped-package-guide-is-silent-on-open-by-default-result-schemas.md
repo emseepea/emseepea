@@ -1,9 +1,10 @@
 # Problem 007: The Shipped Package Guide Is Silent on Open-by-Default Result Schemas
 
-**Status**: Open
+**Status**: Known Error
 **Reported**: 2026-09-20
 **Priority**: 12 (High) — Impact: 3 × Likelihood: 4 — see the rating note below
 **Effort**: S (small) — a section in one guide, plus its review evidence
+**WSJF**: 24.0 — Priority 12 × Known Error multiplier 2.0 / Effort 1
 **JTBD**: JTBD-102 — a job to be done: keep guidance accurate
 **Persona**: framework-maintainer
 
@@ -59,17 +60,41 @@ Nothing in the release path checks that a behaviour change is reflected in the
 guidance shipped alongside it, so the omission reached a published release
 without being reported.
 
+The behaviour is already covered by
+`tests/black-box/output-schema-openness.test.mjs`. The missing boundary is the
+shipped guide: there was no focused check requiring the guide to state the
+open-by-default contract, the direct `z.strictObject` closed contract, and the
+rule that runtime responses contain only declared fields.
+
+On 2026-09-25, this executable documentation assertion exited 1 because the
+guide has no matching section:
+
+```sh
+node --input-type=module -e 'import assert from "node:assert/strict"; import { readFile } from "node:fs/promises"; const guide = await readFile("packages/framework/README.md", "utf8"); assert.match(guide, /## Published Result Schemas[\s\S]*z\.object[\s\S]*open[\s\S]*z\.strictObject[\s\S]*closed[\s\S]*declared fields/i);'
+```
+
 This is the gap JTBD-102 names: when the framework's behaviour changes, the
 published guidance should be checked against that same change. The job is
 ratified; the check it describes does not exist as an automated control.
 
 ### Investigation Tasks
 
-- [ ] Create reproduction test
+- [x] Create and run a failing documentation assertion against the shipped guide
 - [ ] Add the open-by-default default and the closed-contract declaration to the
       package guide
-- [ ] Decide whether a release can be gated on guidance being checked against
-      the behaviour it documents, and what that check could mechanically assert
+- [x] Define a focused guide check that can mechanically assert the
+      open-by-default contract, the direct `z.strictObject` closed contract,
+      and the rule that runtime responses contain only declared fields
+
+## Fix Strategy
+
+The completed proposal is STORY-MAP-002, with RFC-002 and STORY-002. It keeps
+the package-guide edit, focused documentation test, packed-package inspection,
+changeset, and cognitive-accessibility review in one small delivery story.
+
+The proposal is unconfirmed. Do not edit `packages/framework/README.md` or
+implement STORY-002 until STORY-MAP-002 is ratified. ADR-0096 already governs
+the schema behaviour; ADR-0023 governs the published-content review.
 
 ## Dependencies
 
@@ -84,3 +109,16 @@ P006, which records a correctness defect from the same decision; this ticket
 records a guidance defect from it.
 
 Captured via /wr-itil:capture-problem; expand at next investigation.
+
+## Story Maps
+
+| ID | Title | Status |
+|----|-------|--------|
+| STORY-MAP-002 | STORY-MAP-002: Keep the Shipped Package Guide Aligned with Framework Behaviour | draft |
+
+
+## Stories
+
+| ID | Title | Status |
+|----|-------|--------|
+| STORY-002 | STORY-002: Explain Open-by-Default Result Schemas in the Package Guide | draft |

@@ -41,3 +41,9 @@ Archived on 2026-09-24 when P003 moved to verification pending; previous
 headline dated 2026-09-23:
 
 > Last reviewed: 2026-09-23 **P003 known error** — Registry capture treated a missing package name as an ordinary unpublished version until `npm publish`
+
+## 2026-09-25
+
+Previous backlog headline archived when P007 moved to known error:
+
+> Last reviewed: 2026-09-24 **P005 closed on exact evidence** — The governed push and exact-SHA Quality run exercised the branch push gate.

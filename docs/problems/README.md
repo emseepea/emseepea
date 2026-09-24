@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-09-24 **P005 closed on exact evidence** — The governed push and exact-SHA Quality run exercised the branch push gate.
+> Last reviewed: 2026-09-25 **P007 known error** — The shipped guide omission has a failing documentation assertion, documented workaround, and unconfirmed fix proposal.
 > Run `/wr-itil:manage-problem review` to refresh.
 
 ## WSJF Rankings
@@ -9,7 +9,7 @@ Weighted Shortest Job First (WSJF) ranks higher-value, lower-effort work first.
 
 | WSJF | ID | Title | Severity | Status | Effort | Reported | Origin |
 |------|-----|-------|----------|--------|--------|----------|--------|
-| 12.0 | P007 | The shipped package guide is silent on open-by-default result schemas | 12 (High) | Open | S | 2026-09-20 | internal |
+| 24.0 | P007 | The shipped package guide is silent on open-by-default result schemas | 12 (High) | Known Error | S | 2026-09-20 | internal |
 | 12.0 | P010 | The release gives up waiting before the registry catches up | 12 (High) | Open | S | 2026-09-20 | internal |
 | 12.0 | P011 | The release risk gate cannot be satisfied from a worktree | 12 (High) | Open | S | 2026-09-20 | internal |
 | 10.0 | P001 | Changesets omit initializer bumps when embedded template dependencies change | 20 (Very High) | Open | M | 2026-09-11 | internal |
