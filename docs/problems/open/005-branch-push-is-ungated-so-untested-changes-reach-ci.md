@@ -159,15 +159,20 @@ Captured via /wr-itil:capture-problem; expand at next investigation.
 
 - [Risk R015: Untested Branch Pushes Consume Continuous Integration (CI) and Weaken Verification Claims](../../risks/R015-untested-branch-pushes-consume-ci-and-weaken-verification-claims.active.md) records the realized risk, missing push-boundary control, and current residual score of 15 (High), outside appetite.
 - [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](../../decisions/0106-clean-install-exact-commit-branch-push-gate.proposed.md) is the ratified treatment decision.
-## Stories
-
-| ID | Title | Status |
-|----|-------|--------|
-| STORY-001 | STORY-001: Qualify Each Outgoing Branch Tip Before Push | draft |
-
 
 ## Story Maps
+
+Related story maps are listed by ID, title, and lifecycle status.
 
 | ID | Title | Status |
 |----|-------|--------|
 | STORY-MAP-001 | STORY-MAP-001: Share a verified framework change safely | accepted |
+
+
+## Stories
+
+Related stories are listed by ID, title, and lifecycle status.
+
+| ID | Title | Status |
+|----|-------|--------|
+| STORY-001 | STORY-001: Qualify Each Outgoing Branch Tip Before Push | accepted |

@@ -1,5 +1,5 @@
 ---
-status: draft
+status: accepted
 story-id: qualify-each-outgoing-branch-tip-before-push
 reported: 2026-09-24
 decision-makers: [Tom Howard]

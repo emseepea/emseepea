@@ -112,3 +112,22 @@ Scope: source HTML and Markdown clarity and cognitive accessibility.
 | `docs/story-maps/README.md` | `3c954546eddd5ae4c936d9200d5b71395db4b69f89047878a5205d7559c6e459` |
 | `docs/problems/open/005-branch-push-is-ungated-so-untested-changes-reach-ci.md` | `228a44c69e5438ac6d7c809a55478d7b3045735046668e5bbc36f519d3855e71` |
 | `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `0f08a45f8369bbc45d8fe1d378cb16209285cd28437637b03f293f77682d8a91` |
+
+## P005 story acceptance
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+accepted story, its lifecycle index, the accepted story map, and both reverse
+traces. The wording distinguishes an accepted plan from completed work: the
+release remains proposed and explicitly says implementation has not started.
+
+Scope: source HTML and Markdown clarity and cognitive accessibility. A separate
+web accessibility review passed the headings, table descriptions, linked story
+title, lifecycle labels, and local link targets.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/stories/README.md` | `a60266e324d30785f40153428fa39281c52d42e7ac054e379ba78b2e1328a048` |
+| `docs/stories/accepted/STORY-001-qualify-each-outgoing-branch-tip-before-push.md` | `382306099e021e72e5d31405946032912d7dac5bd2cac1f0ad6c59969e78b5f0` |
+| `docs/problems/open/005-branch-push-is-ungated-so-untested-changes-reach-ci.md` | `913885c374b3a5648e9cb4838257e70e711d05557afe841e6b8d223679fa9c23` |
+| `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `c1de96a871f525c8b5116cb0ef8c390ff89333ed7edd986d0d7fce98e7f2ecd2` |
+| `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `6b3322c11a69d2d43ec47d8f83824e4b8205f76944a51173c600b2f7331cff4a` |
