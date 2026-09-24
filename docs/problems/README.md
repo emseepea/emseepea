@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-09-24 **P015 captured** — Production-boundary CPU benchmark gives conflicting results for an unchanged revision (lightweight aside via /wr-itil:capture-problem)
+> Last reviewed: 2026-09-24 **P005 closed on exact evidence** — The governed push and exact-SHA Quality run exercised the branch push gate.
 > Run `/wr-itil:manage-problem review` to refresh.
 
 ## WSJF Rankings
@@ -9,7 +9,6 @@ Weighted Shortest Job First (WSJF) ranks higher-value, lower-effort work first.
 
 | WSJF | ID | Title | Severity | Status | Effort | Reported | Origin |
 |------|-----|-------|----------|--------|--------|----------|--------|
-| 15.0 | P005 | Branch push is ungated, so untested changes reach continuous integration | 15 (High) | Open | S | 2026-09-20 | internal |
 | 12.0 | P007 | The shipped package guide is silent on open-by-default result schemas | 12 (High) | Open | S | 2026-09-20 | internal |
 | 12.0 | P010 | The release gives up waiting before the registry catches up | 12 (High) | Open | S | 2026-09-20 | internal |
 | 12.0 | P011 | The release risk gate cannot be satisfied from a worktree | 12 (High) | Open | S | 2026-09-20 | internal |
@@ -38,3 +37,9 @@ None parked.
 
 | ID | Title | Reason | Parked since |
 |---|---|---|---|
+
+## Closed
+
+| ID | Title | Closed | Evidence |
+|----|-------|--------|----------|
+| P005 | [Branch push is ungated, so untested changes reach continuous integration](closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md) | 2026-09-24 | Installed hook accepted exact commit `0c28ae0`; Quality run `35964172151` passed for that SHA. |

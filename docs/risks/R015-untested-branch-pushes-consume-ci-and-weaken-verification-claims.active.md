@@ -36,25 +36,37 @@ Impact × Likelihood *before* controls.
 - **Documented manual workaround** — Maintainers can run `npm ci` and `npm test`
   before pushing. Recorded in Problem 005. This is guidance, not an enforced
   control, and Problem 005 shows that it can be missed.
+- **Exact-commit qualification** — `npm run push:qualify` starts only from a
+  clean committed checkout, runs `npm ci` followed by the existing `npm test`,
+  and records evidence only if the same `HEAD` remains clean afterwards.
+- **Native push-boundary enforcement** — the tracked `pre-push` hook checks
+  every non-deletion outgoing tip for evidence bound to its exact commit.
+  Behavioural tests cover missing and stale evidence, multiple tips, deletion
+  pushes, and installation in a fresh clone or worktree.
+- **Exercised control** — the installed hook accepted governed push commit
+  `0c28ae0cf68c345c3ca64f6cdafba497c06b0116`, and GitHub Quality run
+  [`35964172151`](https://github.com/emseepea/emseepea/actions/runs/35964172151)
+  passed for that exact commit.
 
 ## Residual Risk
 
 Impact × Likelihood *after* controls.
 
 - **Impact**: 3 (Moderate)
-- **Likelihood**: 5 (Almost certain)
-- **Residual Score**: 15
-- **Residual Band**: High
+- **Likelihood**: 2 (Unlikely)
+- **Residual Score**: 6
+- **Residual Band**: Medium
 - **Within appetite?**: No
 
 ## Treatment
 
-Mitigate. The missing control is an enforced check before branch pushes. It
-should accept only evidence that `npm ci` and the full test suite passed for
-each branch commit being pushed. ADR-0106 was ratified on 2026-09-24. The
-residual score remains the same as the inherent score until the decision is
-implemented with behavioural coverage and exercised successfully. No
-unevidenced reduction is claimed.
+Mitigate. ADR-0106's exact-commit gate is implemented, covered by behavioural
+tests, and exercised by a governed push whose remote Quality run passed for the
+same commit. Likelihood is now Unlikely because the installed hook rejects
+ordinary unqualified pushes. It is not Rare: installation remains explicit in
+each clone or worktree, and Git permits an intentional `--no-verify` bypass.
+The active residual therefore remains above appetite and continues to be
+monitored rather than being treated as eliminated.
 
 ## Monitoring
 
@@ -69,8 +81,8 @@ unevidenced reduction is claimed.
 ## Related
 
 - Criteria: `RISK-POLICY.md`
-- Realised-as: [Problem 005: Branch Push Is Ungated, So Untested Changes Reach Continuous Integration](../problems/open/005-branch-push-is-ungated-so-untested-changes-reach-ci.md)
-- Treatment ADRs: [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](../decisions/0106-clean-install-exact-commit-branch-push-gate.proposed.md) (ratified 2026-09-24; implementation pending)
+- Realised-as: [Problem 005: Branch Push Is Ungated, So Untested Changes Reach Continuous Integration](../problems/closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md)
+- Treatment ADRs: [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](../decisions/0106-clean-install-exact-commit-branch-push-gate.proposed.md) (ratified and implemented 2026-09-24)
 - Personas affected: [Framework maintainer](../jtbd/framework-maintainer/persona.md)
 - Job served: [JTBD-101: Publish Installable Packages Safely](../jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md)
 
@@ -81,3 +93,7 @@ unevidenced reduction is claimed.
   risk at 15 pending evidenced treatment.
 - 2026-09-24: Tom ratified ADR-0106. Retained residual risk at 15 pending
   implementation, behavioural coverage, and a successful real push.
+- 2026-09-24: Reduced residual risk from 15 to 6 after behavioural coverage,
+  the installed hook's governed push of exact commit `0c28ae0`, and successful
+  Quality run `35964172151`. Retained Active status because explicit hook
+  installation and Git's intentional hook bypass keep likelihood above Rare.

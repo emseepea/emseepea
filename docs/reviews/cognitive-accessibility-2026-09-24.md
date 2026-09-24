@@ -151,3 +151,29 @@ hidden lifecycle wording, and updated story link.
 | `docs/stories/README-history.md` | `bf22641056dbdd006c344ca5481ce81567d72d4c506aca6d3587f7a146d33b4e` |
 | `docs/stories/README.md` | `3c24c151ced0d5a0cd41c493263fb59eebd237d7cdbb35144bfb7755bc7bc549` |
 | `docs/stories/in-progress/STORY-001-qualify-each-outgoing-branch-tip-before-push.md` | `b22fc8793f76d031dc84071e26ebf1aaa25894ecf7774f1947568712094b0a59` |
+
+## P005 and STORY-001 closure
+
+Result: PASS after expanding the lifecycle-recovery explanation. An independent
+cognitive-accessibility specialist reviewed the exact closure records. The
+final wording distinguishes the delivered gate and closed problem from R015,
+which remains Active at residual score 6 because hook installation is required
+in each clone or worktree and `--no-verify` can bypass local hooks.
+
+Scope: source HTML and Markdown clarity, plain language, and cognitive
+accessibility. A separate web accessibility review passed the canonical map's
+table semantics, status labels, links, headings, and keyboard-focusable scroll
+region after rerendering.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/README-history.md` | `b88f23bb94ce7bb27f5e072814e21b5b81a2340bb53a91c717542e666ddda813` |
+| `docs/problems/README.md` | `840a96801a1db496e285b0327ce67862ef96adaaa0553791d42315239037b09a` |
+| `docs/problems/closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md` | `38ac62e3db7704d224fe800f9490e656812a37d5d27e635b4221dcb6e69db824` |
+| `docs/risks/R015-untested-branch-pushes-consume-ci-and-weaken-verification-claims.active.md` | `98d7cda0ecd09ae9a9e1df3ba8bd404fd9fd74c5a72f4dbc2c917e6f3b4ddedf` |
+| `docs/risks/README.md` | `43b97d6a435674e8c891d65916fac95ff9b157d2a1d75dbab119cce6eb02fc94` |
+| `docs/stories/README-history.md` | `371d9dc562befe22b116d2b8861bdca95478aad6894f995b3af45c95560a3f5a` |
+| `docs/stories/README.md` | `5c9600bd9abfadb45bbb68b8dd6c448f2b019913c321fb754f1fcb75e2f44b6a` |
+| `docs/stories/done/STORY-001-qualify-each-outgoing-branch-tip-before-push.md` | `e9d48d1b45624965ec5ad2fe87efaa0dc8baf4074faaadbea84b30c7788f0e0c` |
+| `docs/story-maps/README.md` | `05732b54e789995176b908da08502270bcee66acc6c9ec5168fb6209dc854dbe` |
+| `docs/story-maps/completed/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `d12bb6ad7d23d4447203a23feb9a42054e0149a87149cb683cc3f3a16d89a23e` |

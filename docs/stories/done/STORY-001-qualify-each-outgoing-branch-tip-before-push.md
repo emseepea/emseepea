@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 story-id: qualify-each-outgoing-branch-tip-before-push
 reported: 2026-09-24
 decision-makers: [Tom Howard]
@@ -58,10 +58,16 @@ exact commit before they publish or share it.
 
 Implemented the tracked native `pre-push` hook, `npm run hooks:install`, and
 `npm run push:qualify`. Behavioural checks cover failed qualification,
-unchanged clean-checkout binding, missing and stale evidence, multiple outgoing
-tips, deletion pushes, and fresh clone/worktree installation. A real push has
-not been performed in this implementation slice, so R015 remains 15 and the
-story stays in progress.
+unchanged clean-checkout binding, missing evidence, stale evidence, multiple
+outgoing tips, deletion-only pushes, and fresh clone/worktree installation.
+The installed hook accepted governed push commit
+`0c28ae0cf68c345c3ca64f6cdafba497c06b0116`, and GitHub Quality run
+[`35964172151`](https://github.com/emseepea/emseepea/actions/runs/35964172151)
+passed for that exact commit.
+
+STORY-001 moved to done using the documented recovery for a lifecycle deadlock
+where the story can finish before the related RFC record can move. This does
+not change RFC-001's recorded status. The recovery is tracked as P508.
 
 ## Dependencies
 

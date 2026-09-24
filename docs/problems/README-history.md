@@ -29,6 +29,10 @@
 
 ## 2026-09-24
 
+Previous backlog headline archived when P005 closed:
+
+> Last reviewed: 2026-09-24 **P015 captured** — Production-boundary CPU benchmark gives conflicting results for an unchanged revision (lightweight aside via /wr-itil:capture-problem)
+
 Previous backlog headline archived when P015 was captured:
 
 > Last reviewed: 2026-09-24 **P003 verification pending** — The release now checks package-name prerequisites before publication
