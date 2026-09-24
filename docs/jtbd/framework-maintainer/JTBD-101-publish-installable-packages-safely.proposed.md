@@ -48,4 +48,4 @@ Related stories are listed by ID, title, and lifecycle status.
 
 | ID | Title | Status |
 |----|-------|--------|
-| STORY-001 | STORY-001: Qualify Each Outgoing Branch Tip Before Push | accepted |
+| STORY-001 | STORY-001: Qualify Each Outgoing Branch Tip Before Push | in-progress |

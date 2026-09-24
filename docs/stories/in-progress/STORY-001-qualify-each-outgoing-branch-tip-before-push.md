@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: in-progress
 story-id: qualify-each-outgoing-branch-tip-before-push
 reported: 2026-09-24
 decision-makers: [Tom Howard]
@@ -27,21 +27,21 @@ from a clean install before push.
 
 ## Acceptance criteria
 
-- [ ] A qualification command starts only from a clean committed checkout, runs
+- [x] A qualification command starts only from a clean committed checkout, runs
       `npm ci` before the existing `npm test`, and writes no evidence when either
       command fails.
-- [ ] Qualification records the exact commit only after confirming that `HEAD`
+- [x] Qualification records the exact commit only after confirming that `HEAD`
       is unchanged and the checkout remains clean.
-- [ ] The repository-owned `pre-push` hook rejects every non-deletion outgoing
+- [x] The repository-owned `pre-push` hook rejects every non-deletion outgoing
       branch tip without evidence for its exact commit.
-- [ ] Behavioural checks cover missing evidence, evidence for an earlier commit,
+- [x] Behavioural checks cover missing evidence, evidence for an earlier commit,
       multiple outgoing tips, and the deletion-only exemption.
-- [ ] The hook uses a tracked native Git implementation, adds no dependency,
+- [x] The hook uses a tracked native Git implementation, adds no dependency,
       path classifier, or second test contract, and its installation works in a
       fresh clone or worktree.
-- [ ] Maintainer documentation uses the repository's npm-script command
+- [x] Maintainer documentation uses the repository's npm-script command
       contract and keeps `npm run push:watch` as the separate `main` push flow.
-- [ ] Risk R015 stays at 15 until the behavioural checks pass and a real push
+- [x] Risk R015 stays at 15 until the behavioural checks pass and a real push
       demonstrates the gate.
 
 ## Driving problem trace
@@ -56,7 +56,12 @@ exact commit before they publish or share it.
 
 ## Implementation notes
 
-(deferred — populate during implementation)
+Implemented the tracked native `pre-push` hook, `npm run hooks:install`, and
+`npm run push:qualify`. Behavioural checks cover failed qualification,
+unchanged clean-checkout binding, missing and stale evidence, multiple outgoing
+tips, deletion pushes, and fresh clone/worktree installation. A real push has
+not been performed in this implementation slice, so R015 remains 15 and the
+story stays in progress.
 
 ## Dependencies
 

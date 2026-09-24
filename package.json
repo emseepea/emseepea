@@ -26,6 +26,8 @@
     "claude:prepare": "node node_modules/@anthropic-ai/claude-code/install.cjs",
     "changeset": "changeset",
     "check": "npm test",
+    "hooks:install": "node scripts/branch-push-gate.mjs install",
+    "push:qualify": "node scripts/branch-push-gate.mjs qualify",
     "push:watch": "node scripts/push-and-watch.mjs",
     "release:watch": "node scripts/release-and-watch.mjs",
     "release:deprecate-replaced": "node scripts/retire-replaced-initializers.mjs",

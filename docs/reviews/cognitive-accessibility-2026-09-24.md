@@ -131,3 +131,23 @@ title, lifecycle labels, and local link targets.
 | `docs/problems/open/005-branch-push-is-ungated-so-untested-changes-reach-ci.md` | `913885c374b3a5648e9cb4838257e70e711d05557afe841e6b8d223679fa9c23` |
 | `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `c1de96a871f525c8b5116cb0ef8c390ff89333ed7edd986d0d7fce98e7f2ecd2` |
 | `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `6b3322c11a69d2d43ec47d8f83824e4b8205f76944a51173c600b2f7331cff4a` |
+
+## P005 push-gate implementation
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+maintainer commands, in-progress story, lifecycle index and history, and both
+reverse traces. The wording separates implemented local controls from the real
+push evidence that remains and keeps R015 at 15.
+
+Scope: source Markdown clarity, plain language, and cognitive accessibility. A
+separate web accessibility review passed the story map's status, visible and
+hidden lifecycle wording, and updated story link.
+
+| File | SHA-256 |
+| --- | --- |
+| `CONTRIBUTING.md` | `0cf58eb3e2d97786275f081e621bca7575f9052ec50c1d820099024dbb9f50e1` |
+| `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `c7009a5aa7f1a57185acb9f663e4f86fc6995295193d29a92292675a782eb191` |
+| `docs/problems/open/005-branch-push-is-ungated-so-untested-changes-reach-ci.md` | `752e2d0b14c8d96a74071681cdbc2017961fbcfa1f84492514e7687385c581e0` |
+| `docs/stories/README-history.md` | `bf22641056dbdd006c344ca5481ce81567d72d4c506aca6d3587f7a146d33b4e` |
+| `docs/stories/README.md` | `3c24c151ced0d5a0cd41c493263fb59eebd237d7cdbb35144bfb7755bc7bc549` |
+| `docs/stories/in-progress/STORY-001-qualify-each-outgoing-branch-tip-before-push.md` | `b22fc8793f76d031dc84071e26ebf1aaa25894ecf7774f1947568712094b0a59` |

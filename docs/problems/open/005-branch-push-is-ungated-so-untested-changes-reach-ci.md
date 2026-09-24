@@ -113,7 +113,7 @@ pushed, because the rebase moved the branch 169 commits forward in between.
 
 ### Investigation Tasks
 
-- [ ] Create reproduction test
+- [x] Create reproduction test
 - [x] Obtain architecture and JTBD reviews. Both require repository-wide,
       exact-commit evidence at the native push boundary.
 - [x] Draft the complete treatment decision: every non-deletion branch push;
@@ -121,7 +121,7 @@ pushed, because the rebase moved the branch 169 commits forward in between.
       bound to each exact outgoing tip.
 - [x] Obtain human ratification of the clean-install exact-commit gate in
       ADR-0106 before writing dependent hook, qualification, or installer code.
-- [ ] After ratification, create behavioural tests that fail before
+- [x] After ratification, create behavioural tests that fail before
       implementation and cover absent and stale markers, multiple pushed tips,
       and deletion-only ref updates.
 
@@ -140,7 +140,9 @@ unchanged, and bind the pass marker to the exact pushed Git commit identifier
 (SHA).
 
 This is a durable development-workflow decision. Tom ratified ADR-0106 on
-2026-09-24. No dependent implementation has started.
+2026-09-24. Implementation started on 2026-09-24. Behavioural tests now
+exercise the tracked native hook and exact-commit qualification. A real push
+has not yet demonstrated the gate, so P005 remains open and R015 remains 15.
 
 ## Dependencies
 
@@ -175,4 +177,4 @@ Related stories are listed by ID, title, and lifecycle status.
 
 | ID | Title | Status |
 |----|-------|--------|
-| STORY-001 | STORY-001: Qualify Each Outgoing Branch Tip Before Push | accepted |
+| STORY-001 | STORY-001: Qualify Each Outgoing Branch Tip Before Push | in-progress |
