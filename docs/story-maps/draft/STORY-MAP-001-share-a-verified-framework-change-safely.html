@@ -12,14 +12,14 @@
   <meta name="jtbd" content="JTBD-101">
   <meta name="reported" content="2026-09-24">
   <meta name="decision-makers" content="Tom Howard">
-  <meta name="human-oversight" content="unconfirmed">
+  <meta name="human-oversight" content="confirmed">
+  <meta name="oversight-hash" content="ba5d0c7084ced83122701c7af7169c3f22254620c769e929f204a3f846a5ee3e">
   <link rel="stylesheet" href="../story-map.css">
 </head>
 <body>
   <main>
     <h1 id="story-map-title">Share a verified framework change safely</h1>
-    <p class="orient"><strong>Draft — not yet agreed.</strong> 1 release, 1 story, one release per row.</p>
-    <p class="orient">Read the release names down the left. Say yes to agree it, or name the row that is wrong or missing. The detail inside the cards is there if you want it, not because you have to read it.</p>
+    <p class="orient"><strong>Agreed.</strong> 1 release, 1 story, one release per row.</p>
     <div id="story-map"><div class="scroll" tabindex="0" role="region" aria-label="Story map grid"><table class="map"><caption>Share a verified framework change safely — 5 journey activities across 1 releases</caption><thead><tr><td class="corner"></td><th class="act" scope="col">Prepare the revision</th><th class="act" scope="col">Establish clean dependencies</th><th class="act" scope="col">Prove the exact commit</th><th class="act" scope="col">Share the revision</th><th class="act" scope="col">Confirm the remote checks</th></tr></thead><tbody><tr><th class="slice" scope="row"><span class="badge b-next"><span class="b-glyph" aria-hidden="true">→</span>Proposed: RFC-001</span> <span class="s-name">Reject unqualified branch pushes</span><span class="s-problems">closes <a href="../../problems/open/005-branch-push-is-ungated-so-untested-changes-reach-ci.md" class="ref-link">P005</a></span></th><td class="cell empty"><span class="vh">No stories for Prepare the revision in Reject unqualified branch pushes.</span></td><td class="cell empty"><span class="vh">No stories for Establish clean dependencies in Reject unqualified branch pushes.</span></td><td class="cell empty"><span class="vh">No stories for Prove the exact commit in Reject unqualified branch pushes.</span></td><td class="cell"><ul class="tasks" role="list"><li><div class="task" data-story-id="STORY-001" data-rfc="RFC-001" data-jtbd="JTBD-101" data-status="draft"><div class="t-status ts-draft">Draft</div><a href="../../stories/draft/STORY-001-qualify-each-outgoing-branch-tip-before-push.md" class="ref-link"><span class="t-title">Qualify each outgoing branch tip before push</span></a><div class="t-value"><div class="v-line v-inorder"><span class="v-lead">In order to </span>keep locally reproducible failures out of remote continuous integration</div><div class="v-line v-asa"><span class="v-lead">as </span>a framework maintainer</div><div class="v-line v-iwant"><span class="v-lead">I want </span>each outgoing branch tip checked from a clean install before push.</div></div><div class="t-ref">Traces: <a href="../../decisions/0106-clean-install-exact-commit-branch-push-gate.proposed.md" class="ref-link">ADR-0106</a></div></div></li></ul></td><td class="cell empty"><span class="vh">No stories for Confirm the remote checks in Reject unqualified branch pushes.</span></td></tr></tbody></table></div></div>
 <p class="traces" id="story-map-traces"><span class="tr-group"><strong>Jobs:</strong> <a href="../../jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md" class="ref-link">JTBD-101</a></span></p>
   </main>
@@ -27,6 +27,8 @@
 
   <script id="story-map-data" type="application/json">
 {
+  "humanOversight": "confirmed",
+  "oversightHash": "ba5d0c7084ced83122701c7af7169c3f22254620c769e929f204a3f846a5ee3e",
   "storyMapId": "STORY-MAP-001",
   "title": "Share a verified framework change safely",
   "status": "draft",

@@ -80,3 +80,18 @@ scroll region, headings, links, and non-colour status cues.
 | `docs/stories/draft/STORY-001-qualify-each-outgoing-branch-tip-before-push.md` | `3eca6964c2b531d537d377f0a6a11bdda72d6b10aeff38d31c3682bb6b9a852c` |
 | `docs/problems/open/005-branch-push-is-ungated-so-untested-changes-reach-ci.md` | `be7cf24ddf05e3a6bc8359512ca95ac41464c27d8efc59362d3a6c26c76efa2f` |
 | `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `af525511a1afd5f1c4d32ca3ef217fd2964ee8a84b27d59430f93a21f2365193` |
+
+## P005 story map ratification
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+ratified map and its first lifecycle index. The map clearly records agreement
+without claiming implementation: its release row remains proposed and its story
+remains draft. The index is short, descriptive, and navigable by map, problem,
+release slice, and job.
+
+Scope: source HTML and Markdown clarity and cognitive accessibility.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/story-maps/draft/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `1b348b77393ac56134d7bf54bb1239e0fe49a93a470f0ba9ae6f8db7cf6ae5c8` |
+| `docs/story-maps/README.md` | `1f50ee69a108fb59263997ff3c9cdcce86afe11c10ef9a13b21d6df6fe608bc9` |
