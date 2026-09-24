@@ -10,6 +10,17 @@ remains unchanged.
 ## Planned Package Set
 
 - `@emseepea/testing@0.16.6`
+- `@emseepea/create-api-backed-server@0.0.45`
+- `@emseepea/create-database-schema-server@0.0.33`
+- `@emseepea/create-html-ui-server@0.0.47`
+- `@emseepea/create-mongodb-backed-server@0.0.33`
+- `@emseepea/create-multi-instance-postgres-server@0.0.35`
+- `@emseepea/create-openapi-backed-server@0.0.27`
+- `@emseepea/create-progress-streaming-server@0.0.45`
+- `@emseepea/create-react-ui-server@0.0.47`
+- `@emseepea/create-resources-and-prompts-server@0.0.44`
+- `@emseepea/create-soap-backed-server@0.0.32`
+- `@emseepea/create-tool-server@0.0.47`
 
 This handwritten list is the documented release-unblocking workaround while
 problem P008 remains open. It is not independent human confirmation of the
@@ -19,7 +30,8 @@ generated release plan.
 
 A behavioural test proves that:
 
-- three independent answer tests and nine evaluations can run at the same time;
+- three independent answer tests and three evaluation sequences can run at the
+  same time, with each sequence making one evaluation at a time;
 - all parallel tasks finish even if one fails; and
 - saved evidence keeps its original order.
 
@@ -31,9 +43,8 @@ Markdown-accessibility reviews passed.
 ## Required Publication Evidence
 
 - Quality must pass on the exact source commit.
-- The generated release pull request must contain only
-  `@emseepea/testing@0.16.6`. Its Release checks must pass on the latest commit
-  in that pull request.
+- The generated release pull request must contain only the 12 packages listed
+  above. Its Release checks must pass on the latest commit in that pull request.
 - Trusted publication must publish that planned version under `next`.
 - A registry readback must confirm the published version, package integrity,
   signatures, build origin, exact source commit, and public types. A clean

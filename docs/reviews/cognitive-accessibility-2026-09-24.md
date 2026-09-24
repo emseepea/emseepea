@@ -188,5 +188,5 @@ Scope: source Markdown clarity, plain language, and cognitive accessibility.
 
 | File | SHA-256 |
 | --- | --- |
-| `.changeset/fast-semantic-trials.md` | `8df8a27299eb14715d6fdfbed217f380b71a266fdf2ee6c0d011f3b2872f5ee0` |
-| `docs/reviews/current-release-readiness.md` | `d8412b4163f6fc3f04f0f06dfbc8376183c42e53f4d7d103a584387472c96367` |
+| `.changeset/fast-semantic-trials.md` | `2d378d34f646120a19a0286ce62fbf51c9c0df638d9f1254ae8a7f51bd9a15af` |
+| `docs/reviews/current-release-readiness.md` | `274a36206315bd9597163e7dacf45004da766e0318b55fa1874dd6f3df6278a8` |
