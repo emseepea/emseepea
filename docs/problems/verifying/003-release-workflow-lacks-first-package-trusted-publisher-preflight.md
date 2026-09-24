@@ -1,10 +1,13 @@
 # Problem 003: Release Workflow Lacks First-Package Trusted-Publisher Preflight
 
-**Status**: Open
+The release found a missing npm package name only after publication began.
+
+**Status**: Verification Pending
 **Reported**: 2026-09-11
 **Priority**: 15 (High) — Impact: 3 × Likelihood: 5 — derived at capture because every newly named package reaches the same missing-package state and the failure interrupts publication
 **Origin**: internal
 **Effort**: S — one release preflight and focused regression coverage should define the missing-package branch
+**Weighted Shortest Job First (WSJF)**: 30.0 — severity 15 × Known Error multiplier 2.0 ÷ S effort 1
 **Jobs To Be Done (JTBD)**: JTBD-101
 **Persona**: framework-maintainer
 
@@ -13,11 +16,12 @@
 The release workflow attempted to publish the new
 `@emseepea/create-openapi-backed-server@0.0.1` package through npm trusted
 publishing before that package existed in the registry. Release workflow run
-`34555128253`, attempt 2, failed with npm `E404`. ADR-0019 already records that
+`34555128253`, attempt 2, failed with npm `E404`. Architecture Decision Record
+(ADR) 0019 already records that
 npm requires a package to exist before its package-scoped trusted publisher can
-be configured, but the release tooling did not detect that state before the
-publish attempt or direct the maintainer to the separately governed bootstrap
-path.
+be configured. That decision is historical context, not current implementation
+authority. The release tooling did not detect the state before the publish
+attempt or direct the maintainer to the separately governed bootstrap path.
 
 The authorized recovery created a manifest-only `0.0.0` placeholder, configured
 the exact GitHub Actions trusted publisher, reran the workflow successfully,
@@ -34,8 +38,9 @@ this release but did not add a reusable first-package preflight.
 
 ## Workaround
 
-Perform the separately authorized manifest-only bootstrap described by
-ADR-0019, configure the trusted publisher, and rerun the failed publish job.
+Use a separately authorized manifest-only bootstrap, configure the exact
+trusted publisher required by the current release workflow, remove the
+bootstrap credential, and rerun the failed publish job.
 
 ## Impact Assessment
 
@@ -48,22 +53,45 @@ ADR-0019, configure the trusted publisher, and rerun the failed publish job.
 
 ## Root Cause Analysis
 
+The registry capture treated a package-name `404` as ordinary unpublished
+version state. It recorded that the target version was absent, but did not stop
+when the package name itself was absent. The first operation that distinguished
+those states was `npm publish`, after the earlier release checks had passed.
+
 ### Investigation Tasks
 
-- [ ] Add a pre-publish check that distinguishes a package missing from npm from
+- [x] Add a pre-publish check that distinguishes a package missing from npm from
   an existing package that the workflow cannot publish.
-- [ ] Emit the exact separately governed bootstrap checklist without creating a
+- [x] Emit the exact separately governed bootstrap checklist without creating a
   package or credential automatically.
-- [ ] Add a focused regression test for the missing-package result.
+- [x] Add focused regression tests for the missing-package result, existing
+  packages, non-404 registry failures, and workflow ordering.
 
 ## Fix Strategy
 
-**Shape**: internal code and continuous integration. Add the smallest reusable
+**Shape**: internal code and continuous integration (CI). Add the smallest reusable
 registry preflight to the existing release verification path and call it from
 `.github/workflows/release.yml` before publication. Keep bootstrap state changes
 manual and authorization-bound; the check should only stop with an actionable
 diagnostic. Evidence: workflow run `34555128253`, attempt 2, reached npm publish
 and failed with `E404` for the absent package.
+
+## Fix Released
+
+Released on 2026-09-24 in commit
+`5c493da45cc1cbf07b0cd85e0b089d17cf74f13e`, which is on `main`.
+<!-- no-changeset-reference: workflow-only fix; no package release intended -->
+
+The release workflow now checks every public package name anonymously before
+`npm publish`. A missing package stops with the separately authorized bootstrap
+guidance; other registry failures are not misclassified.
+
+Exercise evidence: focused release tests passed 39 of 39, and Quality run
+[`35912998949`](https://github.com/emseepea/emseepea/actions/runs/35912998949)
+passed for the exact commit after its failed Node.js 22 benchmark job was rerun.
+
+Awaiting user verification of a future first-package release stopping before
+publication.
 
 ## Dependencies
 
@@ -73,8 +101,15 @@ and failed with `E404` for the absent package.
 
 ## Related
 
-- ADR-0019, Public Pre-Alpha Releases Through npm Trusted Publishing.
+- ADR-0019, Public Pre-Alpha Releases Through npm Trusted Publishing
+  (historical context only; not current implementation authority).
 - ADR-0071, Separate OpenAPI-Backed Example and Initializer.
+- ADR-0098, Publish on Merge to a Publish Branch.
+- ADR-0100, Trunk Push and Watch Under a Publish Branch.
+- ADR-0101, Vulnerability Scanning Without a Release Workflow.
+- ADR-0105, Bounded Stage-Only Token for npm Promotion.
+- [Risk R013: Release Reaches Publication Before Registry Prerequisites Are
+  Verified](../../risks/R013-release-reaches-publication-before-registry-prerequisites-are-verified.active.md).
 - JTBD-101, Publish Installable Packages Safely.
 - Captured via `/wr-itil:capture-problem`; the title-only duplicate check found
   Problem 002 (Release Readiness Verifier Only Tests Fixture-Like Stable PASS

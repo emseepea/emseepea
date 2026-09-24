@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 102 decisions: 57 current and 45 historical.
+This project has 103 decisions: 58 current and 45 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -72,6 +72,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0101: Vulnerability Scanning Without a Release Workflow](0101-vulnerability-scanning-without-a-release-workflow.proposed.md): Proposed; human review confirmed.
 - [ADR-0103: Proved Proxy Boundary for Production Deployments](0103-proved-proxy-boundary-for-production-deployments.proposed.md): Proposed; human review confirmed.
 - [ADR-0105: Bounded Stage-Only Token for npm Promotion](0105-bounded-stage-only-token-for-npm-promotion.proposed.md): Proposed; human review confirmed.
+- [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2321,3 +2322,23 @@ Chosen option: **"A bounded, stage-only promotion token with assisted rotation"*
 - No token value, npm passkey, or npm one-time-password seed appears in source, local npm configuration, workflow logs, artifacts, or continuous-integration access to 1Password.
 - A reminder exists at least 30 days before the recorded token expiry and links the rotation to this repository and secret name.
 - Rotation is not complete until a real promotion succeeds with the replacement token and the prior token is then revoked.
+
+### [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0106 Decision
+
+Chosen option: **"Clean-install exact-commit gate"**, because it closes both parts of the observed failure: the absent push-boundary control and the stale dependency state that disguised the reproducible failure.
+
+#### ADR-0106 Checks
+
+- A behavioural test proves a branch push that sends a commit is rejected when no pass marker matches the branch commit being pushed.
+- A behavioural test proves a marker for an earlier commit is rejected after a commit or rebase changes the branch commit being pushed.
+- A behavioural test proves multiple pushed branches must each carry matching evidence and deletion-only ref updates do not require it.
+- The qualification command runs `npm ci` before `npm test`, stops on either failure, and writes no marker on failure.
+- The qualification command records the commit SHA, Git's commit identifier, only after confirming `HEAD` is unchanged and the checkout is clean.
+- The installed `pre-push` hook uses the repository-owned tracked implementation and fails closed when it cannot read or validate evidence for the exact commit.
+- Installation is verified in a fresh clone or worktree, and documentation uses the repository's npm-script command contract.
+- The standing risk remains above the accepted risk level until two things are true: behavioural checks pass, and a real push has demonstrated that the gate works. Only after that evidence exists may the risk record reduce the control gap and the remaining likelihood.

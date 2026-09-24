@@ -1,0 +1,2 @@
+#!/bin/sh
+exec node "$(git rev-parse --show-toplevel)/scripts/branch-push-gate.mjs" check

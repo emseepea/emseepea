@@ -24,6 +24,16 @@ export function classifyPublication(before, after) {
   return "missing";
 }
 
+export function assertRegistryPackagesExist(packages) {
+  const missing = packages.filter(({ registered }) => !registered).map(({ name }) => name);
+  assert.equal(missing.length, 0, [
+    `${missing.join(", ")} is absent from npm. Publication stopped before npm publish.`,
+    "Complete the separately authorized first-package bootstrap, configure .github/workflows/release.yml as the npm trusted publisher, remove the bootstrap credential, and rerun.",
+    "Do not use NPM_PROMOTION_TOKEN: it may only move tags or deprecate packages.",
+    "Package existence does not prove trusted-publisher configuration.",
+  ].join(" "));
+}
+
 export async function waitForPublication(before, read, wait = waitForPropagation) {
   let after;
   for (let attempt = 1; attempt <= 60; attempt += 1) {
@@ -113,11 +123,13 @@ async function capture(path) {
     return {
       name,
       version,
+      registered: Boolean(metadata),
       present: Boolean(metadata?.versions?.[version]),
       latest: metadata?.["dist-tags"]?.latest ?? "",
     };
   }));
-  await writeJson(path, { packages });
+  assertRegistryPackagesExist(packages);
+  await writeJson(path, { packages: packages.map(({ registered: _registered, ...item }) => item) });
 }
 
 async function verify(beforePath, afterPath, { tag = "latest" } = {}) {
@@ -260,8 +272,8 @@ async function readCurrent(expected) {
   };
 }
 
-async function fetchPackage(name) {
-  const response = await fetch(`${registry}/${encodeURIComponent(name)}`, {
+export async function fetchPackage(name, { request = fetch } = {}) {
+  const response = await request(`${registry}/${encodeURIComponent(name)}`, {
     headers: { "cache-control": "no-cache" },
   });
   if (response.status === 404) return undefined;

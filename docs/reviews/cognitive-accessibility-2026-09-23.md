@@ -25,3 +25,88 @@ Scope: source Markdown clarity and cognitive accessibility only.
 | File | SHA-256 |
 | --- | --- |
 | `.changeset/publish-beta-maturity-site.md` | `442459dc03e95af0980a9582d20bda92e6be2163d160f5e7cd8374a3fd8e3606` |
+
+## Problem captures 012 and 013
+
+Result: PASS after review revisions. Independent cognitive-accessibility review
+covered both problem records, the live backlog and history, and their standing-
+risk trace. The review moved the P010/P011 history entry under its actual date
+and recorded P012 and P013 together under 23 September. The final records keep
+the symptoms, current impact, workaround, investigation, and risk relationship
+distinct without pre-selecting a solution.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/open/012-framework-runtime-is-concentrated-in-one-multi-responsibility-module.md` | `5f06ec639fb3b8929f4b0c1bee97a1c26544b6d95a088a212e8a8c1d282532d3` |
+| `docs/problems/open/013-feedback-event-construction-is-duplicated-across-four-adapters.md` | `5e28db6cf61a61a379291ff411a977349466eb52f6793b1de32d087f79e5481e` |
+| `docs/problems/README.md` | `e40f199a0ad3144a8ff0ef7c69f4ed32a46af4f1793a441ee573f7a525e924ee` |
+| `docs/problems/README-history.md` | `7d5a1ad1302c04b5cd32c96760463d7919e6e6072b07fd4d37842a94a6164568` |
+| `docs/risks/R003-checked-boundaries-fail-or-expose-backend-data.active.md` | `3df9c64999bae3adbe3b31d09bc03d2e0d1904c8654bdc80bf2c54ee38ae0ab3` |
+
+## Problem capture 014
+
+Result: PASS after review revisions. Independent cognitive-accessibility review
+covered the problem record, the live backlog, and its standing-risk trace. The
+final record distinguishes an unverified ownership concern from proof that a
+dependency is safe to remove, states the required verification plainly, and
+leaves duplicate or parent decisions to the next problem review. The R007
+change log records that the traceability-only update did not alter the risk's
+controls, scoring, treatment, owner, or review date.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/open/014-direct-dependencies-have-no-identified-owner-or-purpose.md` | `a5869886dc71a759749fa1729cd60f8e74153fe1f6c2bac2749cef89de505ff7` |
+| `docs/problems/README.md` | `2fa3d0bc69350a39b605c5bfb593f8e579938271fa7c6efaa69bb9d3011a1b2c` |
+| `docs/risks/R007-release-pipeline-publishes-the-wrong-or-compromised-package.active.md` | `aff962e0678ca1b45da2aa58991fd62051cd8388fb4bd788e75a73a1ed04e9aa` |
+
+## Upstream-response audit log
+
+Result: PASS after review revisions. Independent cognitive-accessibility review
+covered the generated upstream-response audit log. The opening now explains the
+record's purpose and location in short, plain-language statements before citing
+the longer internal policy identifiers. The dated pass remains concise and
+scannable.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/audits/outbound-responses-log.md` | `369d801a53f59565df7c23b5bcb956a168037247b7fcf440ad18d14ad5feac52` |
+
+## First-package release preflight
+
+Result: PASS after review corrections. An independent cognitive-accessibility
+specialist reviewed the final problem transition, standing-risk treatment, and
+backlog records. The final wording separates the historical decision from
+current release authority, the read-only check from registry mutation, and
+package-name existence from trusted-publisher authorization. It also expands
+abbreviations on first use and places a plain-language summary before scoring
+metadata.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/README-history.md` | `d8d10c173eaef52325f15846efddd62f5948a85dc0db00593968e7e6a23d2415` |
+| `docs/problems/README.md` | `9a19820f89ab96e9af7e2fca42c8ec3b5a59007dfacab6f7285cac98c1a1167e` |
+| `docs/problems/known-error/003-release-workflow-lacks-first-package-trusted-publisher-preflight.md` | `21d9de16ea1dd3a758c594a0606771e92fa8846e01420083cb6b38c5b853d636` |
+| `docs/risks/README.md` | `5368e0ca4ee46f060ec6f358f771e00fd41bbfbe6f04c8fb05733e899e2cc935` |
+| `docs/risks/R013-release-reaches-publication-before-registry-prerequisites-are-verified.active.md` | `cc42af277cfbbfe83892c322ffb2437baa82254242ea964a052cacc7d766be9c` |
+
+## P003 retrospective
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+exact retrospective briefing and ask-hygiene record. The final wording keeps
+the registry check, bootstrap authority, trusted-publisher configuration, and
+promotion-token boundary distinct and scannable.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/briefing/releases-and-ci.md` | `fe1322a2a1dc7aa943fd1c9e854ea2b917664478e58a7605ef1c5767de42a3dd` |
+| `docs/retros/2026-09-23-ask-hygiene.md` | `80fe5a1c1b4f7321db75126b8195e161a7978c85d58bbf80fb7fd17cf6dcd823` |

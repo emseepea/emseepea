@@ -100,13 +100,25 @@ test("conversation tests assert exact calls, meaning, and no-call follow-ups", {
   await mkdir(join(directory, "eval"));
   const model = join(directory, "model.mjs");
   const modelLog = join(directory, "model-log.jsonl");
+  const answerFailureClaim = join(directory, "answer-failure-claim");
   const file = join(directory, "eval", "meaning.test.mjs");
   const output = join(directory, "evidence.json");
   const directoryPattern = new RegExp(directory.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   await writeFile(model, `#!/usr/bin/env node
-import { appendFileSync, readFileSync } from "node:fs";
+import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 const log = (value) => appendFileSync(${JSON.stringify(modelLog)}, JSON.stringify(value) + "\\n");
+const waitForPeers = async (phase, expected, peerKey = process.pid) => {
+  log({ barrier: phase, peerKey, pid: process.pid });
+  for (let attempt = 0; attempt < 500; attempt += 1) {
+    const records = readFileSync(${JSON.stringify(modelLog)}, "utf8").trim().split("\\n").flatMap((line) => {
+      try { return [JSON.parse(line)]; } catch { return []; }
+    });
+    if (new Set(records.filter((entry) => entry.barrier === phase).map((entry) => entry.peerKey)).size >= expected) return;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  process.exit(24);
+};
 process.stderr.write("MODEL_STDERR_SENTINEL\\n");
 const result = (answer, calls = 0) => ({
   type: "result", is_error: false, num_turns: calls + 1, result: answer,
@@ -117,6 +129,8 @@ const result = (answer, calls = 0) => ({
 });
 if (!process.argv.includes("--input-format")) {
   const prompt = process.argv[process.argv.indexOf("--print") + 1];
+  const concurrentTrial = prompt.match(/CONCURRENT_BARRIER trial-(\\d+)/)?.[1];
+  if (concurrentTrial) await waitForPeers("judge", 3, concurrentTrial);
   if (prompt.includes("JUDGE_EXIT_23")) process.exit(23);
   if (prompt.includes("JUDGE_PROVIDER_SECRET")) {
     process.stdout.write(JSON.stringify({ ...result("PRIVATE_PROVIDER_MESSAGE"), is_error: true,
@@ -144,18 +158,22 @@ if (!process.argv.includes("--input-format")) {
   log({ native: true, tools, config, context,
     hasServerToken: process.env.EMSEEPEA_SEMANTIC_MCP_TOKEN !== undefined,
     hasJsonSchema: process.argv.includes("--json-schema") });
-  const answerTrial = readFileSync(${JSON.stringify(modelLog)}, "utf8").trim().split("\\n")
-    .map(JSON.parse).filter((entry) => entry.native && entry.context === "ANSWER_FAIL_THIRD").length;
   process.stdout.write(JSON.stringify({ type: "system", subtype: "init", tools,
     mcp_servers: [{ name: "emseepea_eval", status: "connected" }] }) + "\\n");
   let turn = 0;
-  createInterface({ input: process.stdin }).on("line", (line) => {
+  createInterface({ input: process.stdin }).on("line", async (line) => {
     turn += 1;
     const input = JSON.parse(line);
     const prompt = input.message.content[0].text;
-    if (context === "ANSWER_FAIL_THIRD" && answerTrial === 3) {
-      process.stderr.write("PRIVATE_ANSWER_PROVIDER_SECRET\\n");
-      process.exit(23);
+    if (context === "CONCURRENT_BARRIER") await waitForPeers("answer:" + prompt, 3);
+    if (context === "ANSWER_FAIL_ONE") {
+      try {
+        writeFileSync(${JSON.stringify(answerFailureClaim)}, "claimed", { flag: "wx" });
+        process.stderr.write("PRIVATE_ANSWER_PROVIDER_SECRET\\n");
+        process.exit(23);
+      } catch (error) {
+        if (error.code !== "EEXIST") throw error;
+      }
     }
     const followUp = prompt === "How many packets were inbound?";
     const forceTwoCalls = context === "TWO_ORDERED_CALLS";
@@ -218,7 +236,9 @@ if (!process.argv.includes("--input-format")) {
           : "Pisum sativum was returned. I recorded that the result was immediately useful and clear."
       : followUp
       ? "40 inbound packets"
-      : "There are 85 packets available to promise from 120 on hand minus 35 reserved; 40 inbound packets do not count.";
+      : context === "CONCURRENT_BARRIER"
+        ? "CONCURRENT_BARRIER trial-" + process.pid + "; there are 85 packets available to promise."
+        : "There are 85 packets available to promise from 120 on hand minus 35 reserved; 40 inbound packets do not count.";
     process.stdout.write(JSON.stringify(result(answer, calls.length)) + "\\n");
   });
 }
@@ -346,6 +366,27 @@ test("inventory conversation", async (t) => {
   assert.ok(invocations.filter(({ native }) => native).every(({ tools, config, hasJsonSchema, hasServerToken }) =>
     tools.length === 1 && Object.keys(config.mcpServers).join() === "emseepea_eval"
       && hasJsonSchema === false && hasServerToken === true));
+
+  const concurrentStart = (await readFile(modelLog, "utf8")).trim().split("\n").length;
+  await writeFile(file, source({ context: "CONCURRENT_BARRIER", meaning: "CONCURRENT_BARRIER" }));
+  const concurrent = run();
+  assert.equal(concurrent.status, 0, concurrent.stdout + concurrent.stderr);
+  const concurrentInvocations = (await readFile(modelLog, "utf8")).trim().split("\n").map(JSON.parse)
+    .slice(concurrentStart);
+  assert.equal(new Set(concurrentInvocations.filter(({ barrier }) => barrier === "judge")
+    .map(({ pid }) => pid)).size, 9);
+  assert.equal(new Set(concurrentInvocations.filter(({ barrier }) => barrier === "judge")
+    .map(({ peerKey }) => peerKey)).size, 3);
+  for (const prompt of ["How many packets can we promise now?", "How many packets were inbound?"]) {
+    assert.equal(new Set(concurrentInvocations.filter(({ barrier }) => barrier === `answer:${prompt}`)
+      .map(({ pid }) => pid)).size, 3);
+  }
+  const concurrentEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+  assert.deepEqual(concurrentEvidence.judgeVerdicts.map(({ trial, judgment }) => [trial, judgment]), [
+    [1, 1], [1, 2], [1, 3],
+    [2, 1], [2, 2], [2, 3],
+    [3, 1], [3, 2], [3, 3],
+  ]);
 
   await writeFile(file, source({
     firstOptionalTool: "get-private-inventory-report",
@@ -523,18 +564,17 @@ test("inventory conversation", async (t) => {
   const providerEvidence = Object.values(JSON.parse(providerEvidenceText).cases)[0];
   assert.ok(providerEvidence.judgeVerdicts.every(({ error }) => error === "model command reported an error"));
 
-  await writeFile(file, source({ context: "ANSWER_FAIL_THIRD" }));
+  await writeFile(file, source({ context: "ANSWER_FAIL_ONE" }));
   const answerFailure = run();
   assert.equal(answerFailure.status, 1, "A failed answer invocation must fail");
   const answerEvidenceText = await readFile(output, "utf8");
   assert.doesNotMatch(answerEvidenceText, /PRIVATE_ANSWER_PROVIDER_SECRET/);
   const answerEvidence = Object.values(JSON.parse(answerEvidenceText).cases)[0];
   assert.equal(answerEvidence.failedPhase, "conversation turn");
-  assert.ok(answerEvidence.answerTrials.slice(0, 2).every(({ turns, error }) => (
-    turns.length === 1 && error === undefined
-  )));
-  assert.equal(answerEvidence.answerTrials[2].turns.length, 0);
-  assert.equal(answerEvidence.answerTrials[2].error, "model conversation exited 23");
+  assert.equal(answerEvidence.answerTrials.filter(({ error }) => error === undefined).length, 2);
+  assert.equal(answerEvidence.answerTrials.filter(({ error }) => error === "model conversation exited 23").length, 1);
+  assert.ok(answerEvidence.answerTrials.filter(({ error }) => error === undefined)
+    .every(({ turns }) => turns.length === 1));
 });
 
 test("literal response assertions reject numerical expectations", { timeout: 120_000 }, async (t) => {
