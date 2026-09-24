@@ -114,14 +114,33 @@ pushed, because the rebase moved the branch 169 commits forward in between.
 ### Investigation Tasks
 
 - [ ] Create reproduction test
-- [ ] Decide the gate's scope: every push, or only pushes touching `packages/`
-      and `tests/`. The full suite takes over ten minutes, and the packed
-      initializer test alone takes about six minutes.
-- [ ] Decide whether a check for an out-of-date install belongs in the same
-      gate, since that is what disguised the real failure
-- [ ] Decide whether the gate should run the suite the way CI does. One guard
-      read only the working tree locally while CI read the whole branch, so a
-      full local run reported green while CI was red on the same assertion.
+- [x] Obtain architecture and JTBD reviews. Both require repository-wide,
+      exact-commit evidence at the native push boundary.
+- [x] Draft the complete treatment decision: every non-deletion branch push;
+      `npm ci` followed by `npm test`; unchanged clean checkout; pass marker
+      bound to each exact outgoing tip.
+- [x] Obtain human ratification of the clean-install exact-commit gate in
+      ADR-0106 before writing dependent hook, qualification, or installer code.
+- [ ] After ratification, create behavioural tests that fail before
+      implementation and cover absent and stale markers, multiple pushed tips,
+      and deletion-only ref updates.
+
+### Review Findings (2026-09-24)
+
+The architecture review confirmed that a plain wrapper command cannot treat the
+root cause because `git push` would remain ungated. A repository-owned native
+`pre-push` boundary is required. Adding Husky or a path classifier would add
+complexity without improving the required repository-wide, exact-commit check.
+
+The JTBD review rejected a test-only marker because stale installed dependencies
+contributed to the failure. The proposed gate must first establish the
+committed lockfile state with `npm ci`. It must then run the existing
+whole-repository `npm test`, confirm that the clean committed checkout is
+unchanged, and bind the pass marker to the exact pushed Git commit identifier
+(SHA).
+
+This is a durable development-workflow decision. Tom ratified ADR-0106 on
+2026-09-24. No dependent implementation has started.
 
 ## Dependencies
 
@@ -137,3 +156,6 @@ that reports a pass without checking the thing it claims to verify. This ticket
 is about no gate existing at the push boundary at all.
 
 Captured via /wr-itil:capture-problem; expand at next investigation.
+
+- [Risk R015: Untested Branch Pushes Consume Continuous Integration (CI) and Weaken Verification Claims](../../risks/R015-untested-branch-pushes-consume-ci-and-weaken-verification-claims.active.md) records the realized risk, missing push-boundary control, and current residual score of 15 (High), outside appetite.
+- [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](../../decisions/0106-clean-install-exact-commit-branch-push-gate.proposed.md) is the ratified treatment decision.

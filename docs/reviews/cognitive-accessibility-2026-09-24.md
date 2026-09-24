@@ -34,3 +34,21 @@ Scope: source Markdown clarity and cognitive accessibility only.
 | `docs/problems/README.md` | `a4f3e67ceddd4249980b4a9375800e0ab3ba5148981035038d258dcf80401481` |
 | `docs/problems/README-history.md` | `dcdd3d45573321e8e32d35be6802a70512a9e434ce4f18dbb7c9d380843ddc7b` |
 | `docs/risks/README.md` | `af1c96e82ec41e6e85775eb3e74289550c256ee4cf6575593a09f55857bed120` |
+
+## P005 investigation, ADR-0106, and R015
+
+Result: PASS after plain-language and acronym clarifications. An independent
+cognitive-accessibility specialist reviewed the exact problem, proposed
+decision, standing risk, and generated indexes. The final wording defines
+abbreviations, separates the qualification steps, and explains the proposed
+push check in reader-first terms.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/decisions/0106-clean-install-exact-commit-branch-push-gate.proposed.md` | `eb27b4c581bd1ca1e1c17ffbc5ebfd5b924fa3bd11d96f85ca8eec87e8473173` |
+| `docs/decisions/README.md` | `0cc839661f1e0f98750a99c1ddeb694bdddc8b4765d70b5f1a2d8b5f896fc289` |
+| `docs/problems/open/005-branch-push-is-ungated-so-untested-changes-reach-ci.md` | `22cdca50effcb6fe92c4a1bae4353403f739206e53e2c8a6c983c52cf28e24f0` |
+| `docs/risks/R015-untested-branch-pushes-consume-ci-and-weaken-verification-claims.active.md` | `1c061fd1c97594cdd59fcc9aab80dbdf103060458188fa94823ea8fa3c404534` |
+| `docs/risks/README.md` | `35e05a93af8e70a13b73fea8ee44dc81e0dcf7a33bafb897aba251e15f4d1dce` |
