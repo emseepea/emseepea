@@ -95,3 +95,20 @@ Scope: source HTML and Markdown clarity and cognitive accessibility.
 | --- | --- |
 | `docs/story-maps/draft/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `1b348b77393ac56134d7bf54bb1239e0fe49a93a470f0ba9ae6f8db7cf6ae5c8` |
 | `docs/story-maps/README.md` | `1f50ee69a108fb59263997ff3c9cdcce86afe11c10ef9a13b21d6df6fe608bc9` |
+
+## P005 story map acceptance
+
+Result: PASS after clarifying that the accepted plan is not implemented. An
+independent cognitive-accessibility specialist reviewed the accepted map, its
+lifecycle index, and both reverse traces. The always-visible release name says
+implementation has not started, while the release row remains proposed and the
+story remains draft.
+
+Scope: source HTML and Markdown clarity and cognitive accessibility.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `02dc6a73c5cd4df6d300e41af4801b790e967545138ad1897fb333358680900e` |
+| `docs/story-maps/README.md` | `3c954546eddd5ae4c936d9200d5b71395db4b69f89047878a5205d7559c6e459` |
+| `docs/problems/open/005-branch-push-is-ungated-so-untested-changes-reach-ci.md` | `228a44c69e5438ac6d7c809a55478d7b3045735046668e5bbc36f519d3855e71` |
+| `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `0f08a45f8369bbc45d8fe1d378cb16209285cd28437637b03f293f77682d8a91` |
