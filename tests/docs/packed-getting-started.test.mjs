@@ -234,6 +234,12 @@ test("the packed public packages pass fresh-install and getting-started checks",
     const installedReadme = await readFile(path.join(directory, "node_modules/@emseepea/server/README.md"), "utf8");
     assert.match(installedReadme, /intentionally does not support.*sampling\/createMessage/s);
     assert.match(installedReadme, /Protocol-Native Tool Results/);
+    const resultSchemasGuide = installedReadme.match(/## Published Result Schemas\n([\s\S]*?)(?=\n## |$)/)?.[1];
+    assert.ok(resultSchemasGuide, "the packed server guide must explain published result schemas");
+    assert.match(resultSchemasGuide, /`z\.object`[\s\S]*open[\s\S]*unknown fields/i);
+    assert.match(resultSchemasGuide, /direct `z\.strictObject`[\s\S]*closed/i);
+    assert.match(resultSchemasGuide, /`z\.object\(\.\.\.\)\.pipe\(z\.strictObject\(\.\.\.\)\)`[\s\S]*open/i);
+    assert.match(resultSchemasGuide, /handlers[\s\S]*declared keys[\s\S]*responses[\s\S]*declared fields/i);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
