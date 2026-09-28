@@ -10,7 +10,7 @@ Active stories are listed by story, problem, job, release slice, and story map.
 
 | ID | Title | Problems | JTBD | RFCs | Story Maps | Effort | Accepted by |
 |----|-------|----------|------|------|------------|--------|-------------|
-No stories are active.
+| STORY-002 | [Explain Open-by-Default Result Schemas in the Package Guide](draft/STORY-002-explain-open-by-default-result-schemas-in-the-package-guide.md) | [P007](../problems/known-error/007-shipped-package-guide-is-silent-on-open-by-default-result-schemas.md) | [JTBD-102](../jtbd/framework-maintainer/JTBD-102-keep-guidance-accurate.proposed.md) | RFC-002 | [STORY-MAP-002](../story-maps/draft/STORY-MAP-002-keep-the-shipped-package-guide-aligned-with-framework-behaviour.html) | S | Tom Howard |
 
 ## Done
 
