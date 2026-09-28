@@ -2,13 +2,13 @@
 
 These maps group delivery stories by lifecycle. They are planning records, not ranked work items.
 
-## Draft
+## Accepted
 
-Draft story maps are listed by map, problem, release slice, and job.
+Accepted story maps are listed by map, problem, release slice, and job.
 
 | ID | Title | Problems | RFCs | JTBD |
 |----|-------|----------|------|------|
-| [STORY-MAP-002](draft/STORY-MAP-002-keep-the-shipped-package-guide-aligned-with-framework-behaviour.html) | Keep the shipped package guide aligned with framework behaviour | [P007 - The shipped package guide is silent on open-by-default result schemas](../problems/known-error/007-shipped-package-guide-is-silent-on-open-by-default-result-schemas.md) | RFC-002 - Explain open-by-default result schemas in the shipped package guide | [JTBD-102 - Keep guidance accurate](../jtbd/framework-maintainer/JTBD-102-keep-guidance-accurate.proposed.md) |
+| [STORY-MAP-002](accepted/STORY-MAP-002-keep-the-shipped-package-guide-aligned-with-framework-behaviour.html) | Keep the shipped package guide aligned with framework behaviour | [P007 - The shipped package guide is silent on open-by-default result schemas](../problems/known-error/007-shipped-package-guide-is-silent-on-open-by-default-result-schemas.md) | RFC-002 - Explain open-by-default result schemas in the shipped package guide | [JTBD-102 - Keep guidance accurate](../jtbd/framework-maintainer/JTBD-102-keep-guidance-accurate.proposed.md) |
 
 ## Completed
 
