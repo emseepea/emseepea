@@ -1,10 +1,11 @@
 # Problem 010: The Release Gives Up Waiting Before the Registry Catches Up
 
-**Status**: Open
+**Status**: Known Error
 **Reported**: 2026-09-20
 **Priority**: 12 (High) — Impact: 4 × Likelihood: 3 — three published packages cannot resolve their own runtime dependency during the window, and the eleven starters carry pins that stop a freshly created project installing; those spans are deduced from published manifests and registry timestamps rather than observed. Observed once, and it depends on how slow the registry is on the day
 **Origin**: internal
 **Effort**: S (small) — this ticket is the wait, which is a loop count and an interval in one file, and that is what the backlog ranking prices. The third investigation task below, making a package set become visible together rather than in pieces, is larger and belongs in its own ticket once the decision is taken
+**WSJF**: 24.0 — Priority 12 × Known Error multiplier 2.0 / Effort 1
 **Jobs To Be Done (JTBD)**: JTBD-101 — a job to be done: publish installable packages safely
 **Persona**: framework-maintainer
 

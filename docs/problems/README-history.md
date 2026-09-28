@@ -47,3 +47,7 @@ headline dated 2026-09-23:
 Previous backlog headline archived when P007 moved to known error:
 
 > Last reviewed: 2026-09-24 **P005 closed on exact evidence** — The governed push and exact-SHA Quality run exercised the branch push gate.
+
+## 2026-09-29
+
+> Last reviewed: 2026-09-25 **P007 known error** — The shipped guide omission has a failing documentation assertion, documented workaround, and unconfirmed fix proposal.

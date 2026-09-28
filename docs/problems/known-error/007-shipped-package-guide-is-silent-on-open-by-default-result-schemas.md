@@ -3,6 +3,7 @@
 **Status**: Known Error
 **Reported**: 2026-09-20
 **Priority**: 12 (High) — Impact: 3 × Likelihood: 4 — see the rating note below
+**Origin**: internal
 **Effort**: S (small) — a section in one guide, plus its review evidence
 **WSJF**: 24.0 — Priority 12 × Known Error multiplier 2.0 / Effort 1
 **JTBD**: JTBD-102 — a job to be done: keep guidance accurate
@@ -92,9 +93,8 @@ The completed proposal is STORY-MAP-002, with RFC-002 and STORY-002. It keeps
 the package-guide edit, focused documentation test, packed-package inspection,
 changeset, and cognitive-accessibility review in one small delivery story.
 
-The proposal is unconfirmed. Do not edit `packages/framework/README.md` or
-implement STORY-002 until STORY-MAP-002 is ratified. ADR-0096 already governs
-the schema behaviour; ADR-0023 governs the published-content review.
+STORY-MAP-002 and STORY-002 are ratified and accepted. ADR-0096 governs the
+schema behaviour; ADR-0023 governs the published-content review.
 
 ## Dependencies
 

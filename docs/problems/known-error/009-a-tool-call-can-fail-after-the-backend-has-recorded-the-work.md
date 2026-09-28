@@ -1,10 +1,11 @@
 # Problem 009: A Tool Call Can Fail After the Backend Has Recorded the Work
 
-**Status**: Open
+**Status**: Known Error
 **Reported**: 2026-09-20
 **Priority**: 12 (High) — Impact: 4 × Likelihood: 3 — the caller is told an operation failed when it succeeded, and a caller that retries records the work twice; the first two cases need an adapter to return something the checks reject, which is uncommon but not exotic, while the size limits need only a thread that grows
 **Origin**: internal
 **Effort**: M (medium) — the fix is a boundary move rather than a rule change, and one half of it collides with a check this project deliberately keeps
+**WSJF**: 12.0 — Priority 12 × Known Error multiplier 2.0 / Effort 2
 **Jobs To Be Done (JTBD)**: JTBD-101 — a job to be done: publish installable packages safely
 **Persona**: framework-maintainer
 

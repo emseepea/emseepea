@@ -1,10 +1,11 @@
 # Problem 011: The Release Risk Gate Cannot Be Satisfied From a Worktree
 
-**Status**: Open
+**Status**: Known Error
 **Reported**: 2026-09-20
 **Priority**: 12 (High) — Impact: 3 × Likelihood: 4 — it blocks releasing rather than breaking anything released, but it fires every time work is done in a worktree, which is how this project is worked
 **Origin**: internal
 **Effort**: S (small) — one assertion in this repository's own release script; the plugin needs no change
+**WSJF**: 24.0 — Priority 12 × Known Error multiplier 2.0 / Effort 1
 **Jobs To Be Done (JTBD)**: JTBD-101 — a job to be done: publish installable packages safely
 **Persona**: framework-maintainer
 

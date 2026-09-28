@@ -1,10 +1,11 @@
 # Problem 008: The Release Package List Is Transcribed by Hand Into the Readiness Record
 
-**Status**: Open
+**Status**: Known Error
 **Reported**: 2026-09-20
 **Priority**: 12 (High) — Impact: 3 × Likelihood: 4 — the release stops before anything is published, so the cost is a wasted cycle rather than a bad publication; the list must be retyped on every release, so drift is likely
 **Origin**: internal
 **Effort**: M (medium) — deriving the list is small work, but deciding what the record asserts is a design question that touches the record's shape and the checks that read it
+**WSJF**: 12.0 — Priority 12 × Known Error multiplier 2.0 / Effort 2
 **Jobs To Be Done (JTBD)**: JTBD-101 — a job to be done: publish installable packages safely
 **Persona**: framework-maintainer
 

@@ -1,10 +1,11 @@
 # Problem 015: Production-Boundary CPU Benchmark Gives Conflicting Results for an Unchanged Revision
 
-**Status**: Open
+**Status**: Known Error
 **Reported**: 2026-09-24
 **Priority**: 15 (High) — Impact: 3 × Likelihood: 5 — an observed and uncontrolled measurement conflict disrupted continuous integration and release qualification
 **Origin**: internal
 **Effort**: M — diagnosis needs repeated same-revision measurements and a control that preserves the approved performance ceiling
+**WSJF**: 15.0 — Priority 15 × Known Error multiplier 2.0 / Effort 2
 **Jobs To Be Done (JTBD)**: JTBD-101 — publish installable packages safely
 **Persona**: framework-maintainer
 

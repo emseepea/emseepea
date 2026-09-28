@@ -1,6 +1,6 @@
 # Problem 002: Release Readiness Verifier Only Tests Fixture-Like Stable PASS Marker
 
-**Status**: Verification Pending
+**Status**: Closed (closed-on-evidence 2026-09-29 — release run 35818485686 passed Prepare package evidence on exact release head 5d163f9be1478f9ebea1558c0e36ab760d0370aa. Recovery: rerun /wr-itil:transition-problem 002 known-error to reopen)
 **Reported**: 2026-09-11
 **Priority**: 16 (High) — Impact: 4 × Likelihood: 4 — derived at capture from the observed release-blocking failure and narrow contract coverage
 **Origin**: internal

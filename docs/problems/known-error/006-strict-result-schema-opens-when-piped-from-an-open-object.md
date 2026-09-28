@@ -1,9 +1,11 @@
 # Problem 006: A Strict Result Schema Opens When It Is Piped From an Open Object
 
-**Status**: Open
+**Status**: Known Error
 **Reported**: 2026-09-20
 **Priority**: 9 (Medium) — Impact: 3 × Likelihood: 3 — see the rating note below
+**Origin**: internal
 **Effort**: S (small) — a narrower pairing rule plus one regression case
+**WSJF**: 18.0 — Priority 9 × Known Error multiplier 2.0 / Effort 1
 **JTBD**: JTBD-006 — a job to be done: evolve a published contract safely
 **Persona**: mcp-server-developer
 
