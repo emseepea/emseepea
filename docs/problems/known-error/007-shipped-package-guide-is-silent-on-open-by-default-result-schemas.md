@@ -109,15 +109,15 @@ P006, which records a correctness defect from the same decision; this ticket
 records a guidance defect from it.
 
 Captured via /wr-itil:capture-problem; expand at next investigation.
-## Stories
-
-| ID | Title | Status |
-|----|-------|--------|
-| STORY-002 | STORY-002: Explain Open-by-Default Result Schemas in the Package Guide | draft |
-
-
 ## Story Maps
 
 | ID | Title | Status |
 |----|-------|--------|
 | STORY-MAP-002 | STORY-MAP-002: Keep the Shipped Package Guide Aligned with Framework Behaviour | accepted |
+
+
+## Stories
+
+| ID | Title | Status |
+|----|-------|--------|
+| STORY-002 | STORY-002: Explain Open-by-Default Result Schemas in the Package Guide | accepted |

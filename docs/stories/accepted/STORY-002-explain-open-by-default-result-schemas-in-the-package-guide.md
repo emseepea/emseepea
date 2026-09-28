@@ -1,5 +1,5 @@
 ---
-status: draft
+status: accepted
 story-id: explain-open-by-default-result-schemas-in-the-package-guide
 reported: 2026-09-25
 decision-makers: [Tom Howard]

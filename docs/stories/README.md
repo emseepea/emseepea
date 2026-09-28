@@ -1,6 +1,6 @@
 # Stories
 
-> Last reviewed: 2026-09-24 **STORY-001 done** — The exact-commit gate passed a governed push and exact-SHA remote Quality run.
+> Last reviewed: 2026-09-28 **STORY-002 accepted** — The ratified package-guide correction is ready for implementation.
 
 Stories are grouped by lifecycle. They are delivery slices, not a ranked backlog.
 
@@ -10,7 +10,7 @@ Active stories are listed by story, problem, job, release slice, and story map.
 
 | ID | Title | Problems | JTBD | RFCs | Story Maps | Effort | Accepted by |
 |----|-------|----------|------|------|------------|--------|-------------|
-| STORY-002 | [Explain Open-by-Default Result Schemas in the Package Guide](draft/STORY-002-explain-open-by-default-result-schemas-in-the-package-guide.md) | [P007](../problems/known-error/007-shipped-package-guide-is-silent-on-open-by-default-result-schemas.md) | [JTBD-102](../jtbd/framework-maintainer/JTBD-102-keep-guidance-accurate.proposed.md) | RFC-002 | [STORY-MAP-002](../story-maps/accepted/STORY-MAP-002-keep-the-shipped-package-guide-aligned-with-framework-behaviour.html) | S | Tom Howard |
+| STORY-002 | [Explain Open-by-Default Result Schemas in the Package Guide](accepted/STORY-002-explain-open-by-default-result-schemas-in-the-package-guide.md) | [P007](../problems/known-error/007-shipped-package-guide-is-silent-on-open-by-default-result-schemas.md) | [JTBD-102](../jtbd/framework-maintainer/JTBD-102-keep-guidance-accurate.proposed.md) | RFC-002 | [STORY-MAP-002](../story-maps/accepted/STORY-MAP-002-keep-the-shipped-package-guide-aligned-with-framework-behaviour.html) | S | Tom Howard |
 
 ## Done
 
