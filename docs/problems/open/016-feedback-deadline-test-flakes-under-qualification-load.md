@@ -55,9 +55,10 @@ abort. Production behavior is not implicated.
 
 - [x] Reproduce the failure under repeated focused execution.
 - [x] Compare focused test behavior with direct per-adapter assertions.
-- [ ] Give the test fixture scheduling margin while retaining all four deadline
+- [x] Give the test fixture scheduling margin while retaining all four deadline
   assertions.
-- [ ] Pass repeated focused execution and exact-commit qualification.
+- [x] Pass 200 repeated focused executions.
+- [ ] Pass exact-commit qualification.
 
 ## Dependencies
 
