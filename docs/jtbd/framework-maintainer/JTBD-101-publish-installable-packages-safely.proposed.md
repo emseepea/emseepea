@@ -44,8 +44,7 @@ Related story maps are listed by ID, title, and lifecycle status.
 
 ## Stories
 
-Related stories are listed by ID, title, and lifecycle status.
-
 | ID | Title | Status |
 |----|-------|--------|
-| STORY-001 | STORY-001: Qualify Each Outgoing Branch Tip Before Push | in-progress |
+| STORY-001 | STORY-001: Qualify Each Outgoing Branch Tip Before Push | done |
+| STORY-003 | STORY-003: Resolve the Vulnerable Lockfile Dependency | draft |

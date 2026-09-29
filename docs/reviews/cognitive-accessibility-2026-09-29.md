@@ -79,3 +79,22 @@ does not verify the advisory, dependency resolution, or release outcome.
 | `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `78e23977317b611c07d5dd62f119146adcb4a8e0c4a9769d13bd2b186007d40e` |
 | `docs/problems/README.md` | `ca594475f184ef0b35711bc22461afd9646838ee0d77e32e1d608750ed983c66` |
 | `docs/problems/README-history.md` | `bbc772f6dba669e922f3f2d1d9363a29ab24c6dbdcd0849c5fe14461ee38851d` |
+
+## P017 RFC-003 and STORY-003 governance trace
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+delivery story, problem and job reverse traces, and story-map index. A separate
+voice-and-tone review passed. A separate web accessibility review passed the
+rendered story map's lifecycle consistency, semantic table, focusable scroll
+region, descriptive links, non-colour status labels, and empty-cell text.
+
+Scope: source HTML and Markdown clarity and cognitive accessibility. This
+review does not verify the dependency repair or release outcome.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/stories/draft/STORY-003-resolve-the-vulnerable-lockfile-dependency.md` | `c21acf906f650b3c72cb1c9d2c97126b54fedb7ec129ef445070cc608306f2ea` |
+| `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `60111f585cfc2a0c8119ff017eeba417bef86f46721ee8d9d193181a571cb6b5` |
+| `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `7a7ec106155ffde676e838f20ae53cda521487da49c1aa1f15687ee04654cf20` |
+| `docs/story-maps/README.md` | `8b4e2da2cf9b3bc9134c80f1e1a03a3e2b69695e8ce45d4e32ecba665ffeb19d` |
+| `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `b7cb90daf40aa138813ba90f3128d042d44b8478b91dd797ce75e0f9eb97b4ad` |
