@@ -2,12 +2,16 @@
 
 **Status**: Known Error
 **Reported**: 2026-09-20
-**Priority**: 12 (High) — Impact: 3 × Likelihood: 4 — it blocks releasing rather than breaking anything released, but it fires every time work is done in a worktree, which is how this project is worked
+**Priority**: 12 (High) — Impact: 3 × Likelihood: 4
 **Origin**: internal
 **Effort**: S (small) — one assertion in this repository's own release script; the plugin needs no change
 **WSJF**: 24.0 — Priority 12 × Known Error multiplier 2.0 / Effort 1
 **Jobs To Be Done (JTBD)**: JTBD-101 — a job to be done: publish installable packages safely
 **Persona**: framework-maintainer
+
+The conflict blocks a release rather than breaking a released package. It
+occurs whenever release work runs from a worktree, which is the project's
+normal delivery path.
 
 ## Description
 
@@ -46,13 +50,10 @@ gate entirely — so the effect of the deadlock is that the gate gets bypassed
 rather than satisfied.
 
 Two things should be said about that rather than left implied. The risk policy
-authorises exactly two ways past a gate, a risk-reducing marker and an
-incident-release marker, and this was neither. And the binding check is not a
-technicality standing in the way of an established fact: it exists to establish
-that the score describes the tree being released. A score bound to a different
-checkout is not weak evidence that the released tree was assessed — it is the
-absence of that evidence. Treating the verdict as portable between checkouts is
-the one thing the check declines to grant.
+authorises exactly two ways past a gate: a risk-reducing marker and an
+incident-release marker. This release used neither. The binding check establishes
+that the score describes the checkout being released. A score from another
+checkout provides no evidence for the released checkout.
 
 ## Symptoms
 
@@ -114,13 +115,10 @@ and several commits stale, pass the name check, and only fail later at the base
 comparison. That happened during the 2026-09-20 release: the primary checkout
 sat five commits behind and had to be fast-forwarded by hand first.
 
-Asserting that `HEAD` equals the trunk tip would be a better check than the name
-on its own terms, and it dissolves the deadlock as a side effect: a worktree
-sitting exactly on the tip could then release, and the risk assessment would
-bind to that same worktree. The new assertion has to fetch first. `origin/main`
-is a local remote-tracking ref and this script never updates it before the
-checks run, so comparing against it unchanged would be as stale as the branch
-name it replaces.
+The release check should fetch and then require `HEAD` to equal the trunk tip.
+A worktree at that exact commit could release, and the risk assessment would
+remain bound to the same checkout. Fetching is required because `origin/main`
+is a local remote-tracking ref; without a fetch, it can be stale.
 
 ### Investigation Tasks
 

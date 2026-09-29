@@ -1,13 +1,14 @@
 # Problem Backlog
 
 > Last reviewed: 2026-09-29 **P016 captured** — Feedback deadline test flakes under qualification load (lightweight aside via /wr-itil:capture-problem)
-> Run `/wr-itil:review-problems` to refresh WSJF rankings.
+> Run `/wr-itil:review-problems` to refresh Weighted Shortest Job First (WSJF) rankings.
 
 ## WSJF Rankings
 
-Dev-work queue only. Rows render by critical-bypass, inbound-reported, then
-internal tier; within each tier they use WSJF, Known-Error-first, effort,
-reported date, and ID.
+Development-work queue only. Problems that can bypass normal controls appear
+first, followed by externally reported problems, then internally reported
+problems. Within each group, rows sort by WSJF score, Known Error before Open,
+effort, reported date, and ID.
 
 | WSJF | ID | Title | Severity | Status | Effort | Reported | Origin |
 |------|-----|-------|----------|--------|--------|----------|--------|

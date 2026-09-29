@@ -2,4 +2,4 @@
 "@emseepea/server": patch
 ---
 
-Explain when tool result schemas publish an open or closed client contract, including the known limit for piped strict objects.
+The package guide now explains when tool result schemas publish an open or closed client contract and documents the known limit for piped strict objects.

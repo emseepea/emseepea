@@ -85,12 +85,10 @@ change, so it is out of scope here. It is **not** captured as its own ticket
 yet. Problem 004 records the observation in the meantime, so it does not leave
 the backlog when this ticket closes.
 
-Worth naming for whoever picks up that follow-up: the stop was right about the
-record and wrong about the release. The record was stale, so the gate did its
-job. But nothing was wrong with the sixteen packages, and a gate that halts a
-release over a stale transcription is easier to wave through the next time it
-fires — including the time it is right. That last point is a judgement about
-risk, not something the 2026-09-19 run proved.
+The gate correctly detected that the record was stale; the sixteen packages
+were not defective. Repeated false positives can make maintainers more likely
+to disregard a future valid failure. That is a risk judgement, not something
+the 2026-09-19 run proved.
 
 ### Investigation Tasks
 

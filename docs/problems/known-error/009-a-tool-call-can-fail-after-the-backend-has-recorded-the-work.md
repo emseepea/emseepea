@@ -2,12 +2,16 @@
 
 **Status**: Known Error
 **Reported**: 2026-09-20
-**Priority**: 12 (High) — Impact: 4 × Likelihood: 3 — the caller is told an operation failed when it succeeded, and a caller that retries records the work twice; the first two cases need an adapter to return something the checks reject, which is uncommon but not exotic, while the size limits need only a thread that grows
+**Priority**: 12 (High) — Impact: 4 × Likelihood: 3
 **Origin**: internal
 **Effort**: M (medium) — the fix is a boundary move rather than a rule change, and one half of it collides with a check this project deliberately keeps
 **WSJF**: 12.0 — Priority 12 × Known Error multiplier 2.0 / Effort 2
 **Jobs To Be Done (JTBD)**: JTBD-101 — a job to be done: publish installable packages safely
 **Persona**: framework-maintainer
+
+The caller is told an operation failed when it succeeded, and a retry can
+record the work twice. Invalid adapter receipts are uncommon but plausible;
+size limits require only a conversation that keeps growing.
 
 ## Description
 
@@ -25,7 +29,7 @@ happens earlier. Three cases are left.
 
 **The events property itself.** `events` is a declared key of the result
 schemas, so the parse reads the property before the guarded code is reached. A
-backend whose `events` is a getter that throws still fails the call. The obvious
+backend whose `events` is a getter that throws still fails the call. One possible
 fix — stop declaring the key and read it inside the guard — collides with the
 three conversation wrappers being strict: an undeclared key is rejected there,
 which is the behaviour this project deliberately keeps so an adapter's typo at

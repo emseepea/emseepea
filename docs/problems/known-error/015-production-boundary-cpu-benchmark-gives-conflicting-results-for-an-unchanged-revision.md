@@ -2,12 +2,15 @@
 
 **Status**: Known Error
 **Reported**: 2026-09-24
-**Priority**: 15 (High) — Impact: 3 × Likelihood: 5 — an observed and uncontrolled measurement conflict disrupted continuous integration and release qualification
+**Priority**: 15 (High) — Impact: 3 × Likelihood: 5
 **Origin**: internal
 **Effort**: M — diagnosis needs repeated same-revision measurements and a control that preserves the approved performance ceiling
 **WSJF**: 15.0 — Priority 15 × Known Error multiplier 2.0 / Effort 2
 **Jobs To Be Done (JTBD)**: JTBD-101 — publish installable packages safely
 **Persona**: framework-maintainer
+
+An observed and uncontrolled measurement conflict disrupted continuous
+integration and release qualification.
 
 ## Description
 
