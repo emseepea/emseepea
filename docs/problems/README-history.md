@@ -51,3 +51,5 @@ Previous backlog headline archived when P007 moved to known error:
 ## 2026-09-29
 
 > Last reviewed: 2026-09-25 **P007 known error** — The shipped guide omission has a failing documentation assertion, documented workaround, and unconfirmed fix proposal.
+
+> Last reviewed: 2026-09-29 **backlog refreshed** — P002 closed on exact release evidence; P004, P006, P008–P011, and P015 moved to Known Error after confirmed causes and workarounds.

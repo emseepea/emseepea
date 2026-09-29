@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-09-29 **backlog refreshed** — P002 closed on exact release evidence; P004, P006, P008–P011, and P015 moved to Known Error after confirmed causes and workarounds.
+> Last reviewed: 2026-09-29 **P016 captured** — Feedback deadline test flakes under qualification load (lightweight aside via /wr-itil:capture-problem)
 > Run `/wr-itil:review-problems` to refresh WSJF rankings.
 
 ## WSJF Rankings
@@ -15,6 +15,7 @@ reported date, and ID.
 | 24.0 | P007 | The shipped package guide is silent on open-by-default result schemas | 12 (High) | Known Error | S | 2026-09-20 | internal |
 | 24.0 | P010 | The release gives up waiting before the registry catches up | 12 (High) | Known Error | S | 2026-09-20 | internal |
 | 24.0 | P011 | The release risk gate cannot be satisfied from a worktree | 12 (High) | Known Error | S | 2026-09-20 | internal |
+| 24.0 | P016 | Feedback deadline test flakes under qualification load | 12 (High) | Open | S | 2026-09-29 | internal |
 | 18.0 | P006 | A strict result schema opens when it is piped from an open object | 9 (Medium) | Known Error | S | 2026-09-20 | internal |
 | 15.0 | P015 | Production-boundary CPU benchmark gives conflicting results for an unchanged revision | 15 (High) | Known Error | M | 2026-09-24 | internal |
 | 12.0 | P004 | Problem backlog parser couples to an unexplained exact heading | 6 (Medium) | Known Error | S | 2026-09-11 | internal |
