@@ -98,3 +98,14 @@ review does not verify the dependency repair or release outcome.
 | `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `7a7ec106155ffde676e838f20ae53cda521487da49c1aa1f15687ee04654cf20` |
 | `docs/story-maps/README.md` | `8b4e2da2cf9b3bc9134c80f1e1a03a3e2b69695e8ce45d4e32ecba665ffeb19d` |
 | `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `b7cb90daf40aa138813ba90f3128d042d44b8478b91dd797ce75e0f9eb97b4ad` |
+
+## STORY-003 draft index reconciliation
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+exact draft-story index row. A separate voice-and-tone review also passed.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/stories/README.md` | `dff7d634f4377c5e62f74390fc3fff90f52d42537766c311618353fe1a949aed` |
