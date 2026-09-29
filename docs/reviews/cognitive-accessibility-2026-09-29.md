@@ -48,3 +48,19 @@ Scope: source Markdown clarity and cognitive accessibility only.
 | `docs/stories/accepted/STORY-002-explain-open-by-default-result-schemas-in-the-package-guide.md` | `1a6a1719eb4c0b7efdf69d34510b2424075c1503b1ee3eec3a62a6dc58420684` |
 | `docs/story-maps/README.md` | `16c3709517f79dc24ca21a88078f9ab1b8c21bce0b4fc8c61e4aa742eb2816b8` |
 | `packages/framework/README.md` | `ad4651a23b0bcba625421d5c23cece345cecd11b897b7af0bd2822f406b6f605` |
+
+## P017 dependency-vulnerability problem record
+
+Result: PASS after plain-language remediation. An independent
+cognitive-accessibility specialist reviewed the exact problem record, backlog
+headline and row, and archived prior headline. A separate voice-and-tone review
+also passed.
+
+Scope: source Markdown clarity and cognitive accessibility only. This review
+does not verify the advisory, dependency resolution, or release outcome.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/open/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `8978aa2cc27a4019423b48b37ce772b0be104c1f365cba6a241ac22d59ce3e08` |
+| `docs/problems/README.md` | `089136dadb6ee427eab3e663810477b089e1a186226014868b1b2c0449bca35b` |
+| `docs/problems/README-history.md` | `21e96f3e64ab9f68ebcc507ae0e3da4c508060ff75652b824f3e894d3a9d363d` |
