@@ -42,6 +42,7 @@ Scope: source Markdown clarity and cognitive accessibility only.
 | `docs/problems/known-error/010-the-release-gives-up-waiting-before-the-registry-catches-up.md` | `b6650289e25b879d460ac725fda74ad74f238a0c38ae6b87702ad6c7b834e9c9` |
 | `docs/problems/known-error/011-the-release-risk-gate-cannot-be-satisfied-from-a-worktree.md` | `65e726663933c6a9a6d15b2aa4786ce533e4d488b03cedbccd8a0c8380c52166` |
 | `docs/problems/known-error/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md` | `0bab64b7fe7572d2c7b17ecb63d280281bea68c705fd17ca1a653390f8535048` |
+| `docs/reviews/current-release-readiness.md` | `02bddf7316b4b4d04d3be19e70e84d879eb10697c547a80ddde001431cfc751c` |
 | `docs/stories/README-history.md` | `1a289a7a914e4cf3c0af3b7778a65939e967adb50f91d9d1eb9624df22ffd3bf` |
 | `docs/stories/README.md` | `44d701ca79c2e735f8f5f595f340e071396b5b381f320aa25695bfb0a7ce833d` |
 | `docs/stories/accepted/STORY-002-explain-open-by-default-result-schemas-in-the-package-guide.md` | `1a6a1719eb4c0b7efdf69d34510b2424075c1503b1ee3eec3a62a6dc58420684` |

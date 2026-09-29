@@ -1,11 +1,11 @@
 # Current Release Readiness
 
-Date: 2026-09-24
+Date: 2026-09-29
 
-This review covers the source planned for the next package release. It does not
-claim that the package has been published or that Voder's live Store-review
-checks meet their runtime target. The website is outside this release and
-remains unchanged.
+This review covers the package-guide correction for published result schemas
+and the packages planned for the next release. It does not claim that any
+package has been published. The website is outside this release and remains
+unchanged.
 
 ## Planned Package Set
 
@@ -21,38 +21,38 @@ remains unchanged.
 - `@emseepea/create-resources-and-prompts-server@0.0.44`
 - `@emseepea/create-soap-backed-server@0.0.32`
 - `@emseepea/create-tool-server@0.0.47`
+- `@emseepea/server@0.18.2`
+- `@emseepea/feedback@0.3.5`
+- `@emseepea/react@0.3.8`
+- `@emseepea/svelte@0.1.12`
 
 This handwritten list is the documented release-unblocking workaround while
-problem P008 remains open. It is not independent human confirmation of the
+problem `P008` remains open. It is not independent human confirmation of the
 generated release plan.
 
 ## Source Evidence and Limits
 
-A behavioural test proves that:
+A packed-package behavioural test checks that the guide included in the packed
+`@emseepea/server` package explains open and closed result-schema contracts and
+the known limit for piped strict objects.
 
-- three independent answer tests and three evaluation sequences can run at the
-  same time, with each sequence making one evaluation at a time;
-- all parallel tasks finish even if one fails; and
-- saved evidence keeps its original order.
-
-The complete semantic runner test file passed 4 of 4 tests. The exact source
-commit passed every required local repository check, including examples that
-run in containers. Independent architecture, cognitive-accessibility, and
-Markdown-accessibility reviews passed.
+Exact local qualification passed on source commit
+`d12bb3d08efd4aec791602c36a8ba001928cfa89`. The final readiness-record commit
+still requires its own exact qualification before push. Independent
+architecture, Jobs To Be Done, cognitive-accessibility, and voice-and-tone
+reviews passed for the package-guide correction and its public copy.
 
 ## Required Publication Evidence
 
 - Quality must pass on the exact source commit.
-- The generated release pull request must contain only the 12 packages listed
+- The generated release pull request must contain only the 16 packages listed
   above. Its Release checks must pass on the latest commit in that pull request.
-- Trusted publication must publish that planned version under `next`.
-- A registry readback must confirm the published version, package integrity,
-  signatures, build origin, exact source commit, and public types. A clean
-  installation must exercise the registry package.
-- Only that verified tarball may then be promoted to `latest`, tagged, released,
-  and merged back.
-- Voder must consume the published package and rerun the live Store-review
-  checks. Publication alone does not prove the under-one-minute target.
+- Trusted publication must publish all 16 planned versions under `next`.
+- Registry readback must confirm each published version, package integrity,
+  signatures, build origin, exact source commit, and public types. Clean
+  installations must exercise the registry packages.
+- Only the verified tarballs may then be promoted to `latest`, tagged,
+  released, and merged back.
 
 ## Review Status, Not Release Status
 
