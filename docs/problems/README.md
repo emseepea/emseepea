@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-09-29 **P017 known error** — The locked development dependency predates the advisory; the existing security gate blocks publication
+> Last reviewed: 2026-09-30 **P018 opened** — Release retry reuses occupied npm versions from divergent commits
 > Run `/wr-itil:review-problems` to refresh Weighted Shortest Job First (WSJF) rankings.
 
 ## WSJF Rankings
@@ -24,6 +24,7 @@ effort, reported date, and ID.
 | 12.0 | P008 | The release package list is transcribed by hand into the readiness record | 12 (High) | Known Error | M | 2026-09-20 | internal |
 | 12.0 | P009 | A tool call can fail after the backend has recorded the work | 12 (High) | Known Error | M | 2026-09-20 | internal |
 | 5.0 | P014 | Direct dependencies have no identified owner or purpose | 10 (High) | Open | M | 2026-09-23 | internal |
+| 4.5 | P018 | Release retry reuses occupied versions from divergent commits | 9 (Medium) | Open | M | 2026-09-30 | internal |
 | 3.0 | P013 | Feedback event construction is duplicated across four adapters | 6 (Medium) | Open | M | 2026-09-23 | internal |
 | 2.0 | P012 | Framework runtime is concentrated in one multi-responsibility module | 8 (Medium) | Open | L | 2026-09-23 | internal |
 

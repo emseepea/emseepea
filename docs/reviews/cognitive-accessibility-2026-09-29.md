@@ -1,5 +1,21 @@
 # Cognitive Accessibility Reviews — 2026-09-29
 
+## P018 immutable-version release retry capture — reviewed 2026-09-30
+
+Result: PASS. An independent specialist reviewed the problem ticket and
+backlog entries for a clear status, actionable workaround, precise evidence,
+and manageable reading load. The technical evidence paragraph is dense but
+appropriate for a maintainer-facing problem record.
+
+Scope: cognitive accessibility of the exact public Markdown below. This
+review does not verify the release or authorize promotion.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/open/018-release-retry-reuses-occupied-versions-from-divergent-commits.md` | `9629a4098181af8fbc7f8f87668be88abb51e69f4291aad33489c6fa87a32300` |
+| `docs/problems/README.md` | `4c8f1117f2ff5ca4bec272ec0bd79ad2553863c8fe1ae30cc6243cbf5581986c` |
+| `docs/problems/README-history.md` | `a27f9ccc0133f97aa6120bcbcf10566294ba1f343fbcb5bfd31233e31e374e20` |
+
 ## P016 and R016 qualification-test reliability
 
 Result: PASS. An independent cognitive-accessibility specialist reviewed the
