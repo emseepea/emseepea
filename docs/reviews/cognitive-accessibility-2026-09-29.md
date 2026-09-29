@@ -109,3 +109,23 @@ Scope: source Markdown clarity and cognitive accessibility only.
 | File | SHA-256 |
 | --- | --- |
 | `docs/stories/README.md` | `dff7d634f4377c5e62f74390fc3fff90f52d42537766c311618353fe1a949aed` |
+
+## STORY-003 acceptance
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+accepted story, lifecycle index and history, and problem and job reverse
+traces. A separate voice-and-tone review passed. A separate web accessibility
+review found no axe violations in the rendered story map and passed its table,
+focus, status, link, and empty-cell semantics.
+
+Scope: source HTML and Markdown clarity and cognitive accessibility. This
+review does not verify the dependency repair or release outcome.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/stories/accepted/STORY-003-resolve-the-vulnerable-lockfile-dependency.md` | `6d0a5190aea3407cc4d7a5bc37d4e1817be280a67d7d43e80b9b149ddb493a40` |
+| `docs/stories/README.md` | `47a857be71733a32e607628250c53ec562610ade7c1726043474fbe0144786da` |
+| `docs/stories/README-history.md` | `5dac62b35b8de5d01929e40e1e467fe26b46351d661762f7b98223c43a55e11e` |
+| `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `fa6591de36b00ea2deb529e6f0821a9cd8c0355d932f0a051e3f833a3048dc63` |
+| `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `afd0b2d70df693d60d6b15ef68077201862da54738fa8bf68f62ea7e210d81a2` |
+| `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `be42deeda8dc5992fd9ea7c9fc253c9a3b25f1f7e7962ad5e83d85dcc8cb4927` |

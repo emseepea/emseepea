@@ -9,3 +9,7 @@
 ## 2026-09-28
 
 > Last reviewed: 2026-09-24 **STORY-001 done** — The exact-commit gate passed a governed push and exact-SHA remote Quality run.
+
+## 2026-09-29
+
+> Last reviewed: 2026-09-28 **STORY-002 accepted** — The ratified package-guide correction is ready for implementation.

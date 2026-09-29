@@ -1,5 +1,5 @@
 ---
-status: draft
+status: accepted
 story-id: resolve-the-vulnerable-lockfile-dependency
 reported: 2026-09-29
 decision-makers: [Tom Howard]
