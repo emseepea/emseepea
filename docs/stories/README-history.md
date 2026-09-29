@@ -13,3 +13,5 @@
 ## 2026-09-29
 
 > Last reviewed: 2026-09-28 **STORY-002 accepted** — The ratified package-guide correction is ready for implementation.
+
+> Last reviewed: 2026-09-29 **STORY-003 accepted** — The ratified dependency repair is ready for implementation.

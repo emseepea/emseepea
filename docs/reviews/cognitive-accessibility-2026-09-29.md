@@ -129,3 +129,23 @@ review does not verify the dependency repair or release outcome.
 | `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `fa6591de36b00ea2deb529e6f0821a9cd8c0355d932f0a051e3f833a3048dc63` |
 | `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `afd0b2d70df693d60d6b15ef68077201862da54738fa8bf68f62ea7e210d81a2` |
 | `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `be42deeda8dc5992fd9ea7c9fc253c9a3b25f1f7e7962ad5e83d85dcc8cb4927` |
+
+## STORY-003 in-progress transition
+
+Result: PASS. Independent cognitive-accessibility and voice-and-tone reviews
+confirmed that the lifecycle, selected dependency version, and remaining
+remote verification are stated consistently. A separate rendered web
+accessibility review found no axe violations and passed link, table, focus,
+contrast, and non-colour status checks.
+
+Scope: source HTML and Markdown clarity and accessibility. This review does
+not verify the Open Source Vulnerabilities scan or GitHub Quality outcome.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/stories/in-progress/STORY-003-resolve-the-vulnerable-lockfile-dependency.md` | `bf4e11afd88398b2c74f3cea7a26be4eff6f57294bb8feb6c352dc6a1f95a3ff` |
+| `docs/stories/README.md` | `b381f72c5eb52eadb3835dc18449a97b19c2780766010f00ab993ab2af9309b6` |
+| `docs/stories/README-history.md` | `fd1c4fb0853862f5d9e1f91bf893f87bc1c811bc80997bd976d9c3382e783ff6` |
+| `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `ecfcd2aec03ca0d58bf48d5fa20a4242b249c27655b1c58bc3e65e324ffa7e64` |
+| `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `ae27cd98af5e55fd1ebae16d26987f99bb0d710bbcbc9f8859a1567f6f860e5e` |
+| `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `39231091db362352933ce3865ca639de64a78f0cad72da89455f34a7727c902c` |

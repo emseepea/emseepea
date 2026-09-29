@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: in-progress
 story-id: resolve-the-vulnerable-lockfile-dependency
 reported: 2026-09-29
 decision-makers: [Tom Howard]
@@ -27,12 +27,13 @@ by the existing security and exact-commit gates.
 
 ## Acceptance criteria
 
-- [ ] The root lockfile resolves `undici` to fixed version `8.10.2` without a
+- [x] The root lockfile resolves `undici` to fixed version `8.11.2` without a
       package-manifest change.
-- [ ] `npm ls undici --all` reports no vulnerable `undici` version.
+- [x] `npm ls undici --all` reports no vulnerable `undici` version.
 - [ ] The repository's existing Open Source Vulnerabilities scan passes.
-- [ ] Exact local qualification and the exact-commit GitHub Quality run pass
-      before the blocked package release resumes.
+- [x] Exact local qualification passes.
+- [ ] The exact-commit GitHub Quality run passes before the blocked package
+      release resumes.
 
 ## Driving problem trace
 
