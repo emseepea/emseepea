@@ -50,6 +50,8 @@ Previous backlog headline archived when P007 moved to known error:
 
 ## 2026-09-29
 
+> Last reviewed: 2026-09-29 **P017 opened** — A known vulnerability in a development dependency blocks trunk
+
 > Last reviewed: 2026-09-29 **P016 captured** — Feedback deadline test flakes under qualification load (lightweight aside via `/wr-itil:capture-problem`)
 
 > Last reviewed: 2026-09-25 **P007 known error** — The shipped guide omission has a failing documentation assertion, documented workaround, and unconfirmed fix proposal.

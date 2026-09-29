@@ -64,3 +64,18 @@ does not verify the advisory, dependency resolution, or release outcome.
 | `docs/problems/open/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `8978aa2cc27a4019423b48b37ce772b0be104c1f365cba6a241ac22d59ce3e08` |
 | `docs/problems/README.md` | `089136dadb6ee427eab3e663810477b089e1a186226014868b1b2c0449bca35b` |
 | `docs/problems/README-history.md` | `21e96f3e64ab9f68ebcc507ae0e3da4c508060ff75652b824f3e894d3a9d363d` |
+
+## P017 Known Error transition
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+exact Known Error record, refreshed backlog headline and row, and archived
+prior headline. A separate voice-and-tone review also passed.
+
+Scope: source Markdown clarity and cognitive accessibility only. This review
+does not verify the advisory, dependency resolution, or release outcome.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `78e23977317b611c07d5dd62f119146adcb4a8e0c4a9769d13bd2b186007d40e` |
+| `docs/problems/README.md` | `ca594475f184ef0b35711bc22461afd9646838ee0d77e32e1d608750ed983c66` |
+| `docs/problems/README-history.md` | `bbc772f6dba669e922f3f2d1d9363a29ab24c6dbdcd0849c5fe14461ee38851d` |
