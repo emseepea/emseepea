@@ -1,71 +1,73 @@
 # Current Release Readiness
 
-Date: 2026-09-22
+Date: 2026-09-30
 
-This is a source-readiness review for issue #112 and architecture decision
-record 0097 (ADR-0097). It is not a
-publication or deployed-website verification. The change updates public
-maturity, support, and protocol-coverage claims; it does not change runtime
-behaviour.
+This review covers the package-guide correction for published result schemas
+and the packages planned for the next release. An abandoned release attempt
+published some earlier versions from different commits. Those versions cannot
+form one verified release. The fresh versions below are planned, not yet
+published. The website is outside this release and remains unchanged.
 
 ## Planned Package Set
 
-The Changeset plans these patch versions for packages whose published READMEs
-changed:
+- `@emseepea/testing@0.17.0`
+- `@emseepea/create-api-backed-server@0.1.0`
+- `@emseepea/create-database-schema-server@0.1.0`
+- `@emseepea/create-html-ui-server@0.1.0`
+- `@emseepea/create-mongodb-backed-server@0.1.0`
+- `@emseepea/create-multi-instance-postgres-server@0.1.0`
+- `@emseepea/create-openapi-backed-server@0.1.0`
+- `@emseepea/create-progress-streaming-server@0.1.0`
+- `@emseepea/create-react-ui-server@0.1.0`
+- `@emseepea/create-resources-and-prompts-server@0.1.0`
+- `@emseepea/create-soap-backed-server@0.1.0`
+- `@emseepea/create-tool-server@0.1.0`
+- `@emseepea/server@0.19.0`
+- `@emseepea/feedback@0.4.0`
+- `@emseepea/react@0.4.0`
+- `@emseepea/svelte@0.2.0`
 
-- `@emseepea/server@0.18.1`
-- `@emseepea/feedback@0.3.4`
-- `@emseepea/testing@0.16.5`
-- `@emseepea/react@0.3.7`
-- `@emseepea/svelte@0.1.11`
-- `@emseepea/tailwind@0.1.1`
-- `@emseepea/create-tool-server@0.0.46`
-- `@emseepea/create-api-backed-server@0.0.44`
-- `@emseepea/create-openapi-backed-server@0.0.26`
-- `@emseepea/create-resources-and-prompts-server@0.0.43`
-- `@emseepea/create-progress-streaming-server@0.0.44`
-- `@emseepea/create-html-ui-server@0.0.46`
-- `@emseepea/create-react-ui-server@0.0.46`
-- `@emseepea/create-multi-instance-postgres-server@0.0.34`
-- `@emseepea/create-database-schema-server@0.0.32`
-- `@emseepea/create-mongodb-backed-server@0.0.32`
-- `@emseepea/create-soap-backed-server@0.0.31`
+This handwritten list is the documented release-unblocking workaround while
+problem `P008` remains open. It is not independent human confirmation of the
+generated release plan.
 
 ## Source Evidence and Limits
 
-- The website build now checks public claims, and behavioural tests exercise
-  both accepted and rejected copy. The copy passed architecture, Jobs To Be Done
-  (JTBD), voice,
-  cognitive-accessibility, and web-accessibility reviews.
-- Local lint, build, typecheck, decision checks, website build, and 13 built website
-  checks passed before the final paragraph split. The focused documentation
-  tests passed after it (7 of 7). This is not a claim that the full suite ran
-  on the final commit locally: Docker was unavailable on this machine.
-- Pull request (PR) #125 Quality passed its other checks but failed the README-density test
-  on two long paragraphs. Those paragraphs were split without changing their
-  claims; focused tests passed. Exact-source Quality on the corrected commit
-  remains required.
-- Pipeline risk review found the implementation within the approved 5/25
-  appetite. The final checkout must be reassessed before the commit, push,
-  and release gates; this source-readiness result does not approve publication.
+A packed-package behavioural test checks that the guide included in the packed
+`@emseepea/server` package explains open and closed result-schema contracts and
+the known limit for piped strict objects.
+
+Exact local qualification passed on source commit
+`d12bb3d08efd4aec791602c36a8ba001928cfa89`. This does not qualify the
+release-recovery commit. The exact commit pushed to `main` must pass its own
+qualification and Quality check. The release pull request's latest commit must
+pass its Release checks. Independent architecture, Jobs To Be Done,
+cognitive-accessibility, and voice-and-tone reviews passed for the
+package-guide correction and its public copy. This readiness record needs its
+own cognitive-accessibility review before push.
 
 ## Required Publication Evidence
 
-- Quality must pass on the exact source commit.
-- The generated release pull request must contain the exact planned package
-  set, with Release semantic and build checks passing on its exact head.
-- Trusted publication and registry readback must establish the exact package
-  versions, distribution tags, integrity, signatures, provenance, and source
-  binding. A clean downloaded-package check must exercise the published entry
-  point.
-- The deployed website must be checked against its exact serving revision.
-  Adopter production verification, where claimed, needs separate direct
-  evidence. Neither follows merely from passing continuous integration (CI)
-  or publication.
+- Quality must pass on the exact release-recovery commit pushed to `main`.
+- The generated release pull request must contain only the 16 packages listed
+  above. Its Release checks must pass on the latest commit in that pull request.
+- Trusted publication must publish all 16 planned versions under `next`.
+- Registry readback must confirm each published version, package integrity,
+  signatures, build origin, exact source commit, and public types. Clean
+  installations must exercise the registry packages.
+- Only the verified tarballs may then be promoted to `latest`, tagged,
+  released, and merged back.
 
 ## Review Status, Not Release Status
 
+The `Result` and `Final result` labels below are required by the release
+verifier. They approve this conditional readiness review, not publication or
+promotion. Release verification is still incomplete.
+
 - Result: PASS
-- Source-readiness review: PASS, subject to the checks above.
+- Risk review: PASS within the accepted risk threshold, provided all required
+  checks pass on the exact source commit.
 - Final result: within appetite, subject to the required exact-commit gates.
-- Release verification: NOT COMPLETE.
+- Release verification: NOT COMPLETE. The prior release candidate failed
+  exact-source provenance verification; its published versions are not used
+  for this release.

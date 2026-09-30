@@ -1,6 +1,6 @@
 # Problem 002: Release Readiness Verifier Only Tests Fixture-Like Stable PASS Marker
 
-**Status**: Verification Pending
+**Status**: Closed (closed-on-evidence 2026-09-29 — release run 35818485686 passed Prepare package evidence on exact release head 5d163f9be1478f9ebea1558c0e36ab760d0370aa. Recovery: rerun /wr-itil:transition-problem 002 known-error to reopen)
 **Reported**: 2026-09-11
 **Priority**: 16 (High) — Impact: 4 × Likelihood: 4 — derived at capture from the observed release-blocking failure and narrow contract coverage
 **Origin**: internal
@@ -85,12 +85,10 @@ change, so it is out of scope here. It is **not** captured as its own ticket
 yet. Problem 004 records the observation in the meantime, so it does not leave
 the backlog when this ticket closes.
 
-Worth naming for whoever picks up that follow-up: the stop was right about the
-record and wrong about the release. The record was stale, so the gate did its
-job. But nothing was wrong with the sixteen packages, and a gate that halts a
-release over a stale transcription is easier to wave through the next time it
-fires — including the time it is right. That last point is a judgement about
-risk, not something the 2026-09-19 run proved.
+The gate correctly detected that the record was stale; the sixteen packages
+were not defective. Repeated false positives can make maintainers more likely
+to disregard a future valid failure. That is a risk judgement, not something
+the 2026-09-19 run proved.
 
 ### Investigation Tasks
 

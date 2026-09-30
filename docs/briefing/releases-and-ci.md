@@ -1,23 +1,5 @@
 # Releases and Continuous Integration
 
-## Initializer dependency versioning
-
-Generated initializer templates embed public package versions, but those
-dependencies are not represented in Changesets' public dependency graph. When
-core package versions change, explicitly patch-bump every maintained initializer
-and verify generated template manifests before release.
-
-<!-- signal-score: -1 | last-classified: 2026-09-11 | first-written: 2026-09-11 -->
-
-## Release-readiness marker contract
-
-`scripts/verify-release-readiness.mjs` requires the exact stable marker
-`- Result: PASS`. Keep release completion as the adjacent
-`- Release verification: NOT COMPLETE ...` line. A wording-only accessibility
-edit to the marker blocked publication before npm publish.
-
-<!-- signal-score: -1 | last-classified: 2026-09-11 | first-written: 2026-09-11 -->
-
 ## Exact release evidence
 
 Release completion is exact-commit and exact-workflow evidence. The OpenAPI
@@ -26,12 +8,22 @@ with Quality run `34554628933` and Release run `34555128253`, attempt 3. The
 evidence includes a registry quickstart, package signatures and attestations,
 matching release and registry tarballs, and the unchanged no-spec example.
 
-<!-- signal-score: 2 | last-classified: 2026-09-11 | first-written: 2026-09-11 -->
+<!-- signal-score: 0 | last-classified: 2026-09-23 | first-written: 2026-09-11 -->
 
 ## Concurrent trunk activity
 
-`push:watch` correctly fails closed when an exact-SHA workflow is cancelled by
+`push:watch` correctly fails closed when the workflow for the exact commit is cancelled by
 newer trunk activity. Adopt or rebase the newer `main`, then rerun gates against
 the new exact head rather than treating the cancelled run as release proof.
 
-<!-- signal-score: 2 | last-classified: 2026-09-11 | first-written: 2026-09-11 -->
+<!-- signal-score: 0 | last-classified: 2026-09-23 | first-written: 2026-09-11 -->
+
+## First-package trusted-publisher preflight
+
+Before `release:next`, query each canonical npm package name without credentials.
+Treat only HTTP 404 as a missing package and stop with separately authorized
+first-package setup guidance. Other registry failures remain errors. Package existence
+does not prove trusted-publisher configuration, and the promotion token must not
+create a package or version.
+
+<!-- signal-score: 1 | last-classified: 2026-09-23 | first-written: 2026-09-23 -->

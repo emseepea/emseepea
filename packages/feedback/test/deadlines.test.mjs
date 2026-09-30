@@ -7,7 +7,7 @@ import { createPostgresFeedbackSubmissionBackend } from "../dist/postgres.js";
 const context = () => ({
   scope: "client-a",
   signal: new AbortController().signal,
-  deadlineMs: Date.now() + 25,
+  deadlineMs: Date.now() + 250,
 });
 
 test("provider, PostgreSQL, and Firestore waits stop at the feedback deadline", async () => {

@@ -2,7 +2,7 @@
 
 ISO 31000-aligned project risk criteria
 
-Last reviewed: 2026-09-12
+Last reviewed: 2026-09-28
 
 ## Business Context
 

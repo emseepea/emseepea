@@ -112,6 +112,19 @@ Resource links and embedded resources do not grant access or authorization.
 Deliberate `isError` results reach the client, while thrown, malformed,
 cancelled, and expired operations retain the generic framework error.
 
+## Published Result Schemas
+
+For tool results, `z.object` publishes an open client contract: clients may
+accept unknown fields in later responses. A direct `z.strictObject` declaration
+publishes a closed contract that rejects unknown fields.
+
+Known limit: `z.object(...).pipe(z.strictObject(...))` currently still publishes
+an open contract. Declare `z.strictObject` directly when you need a closed
+contract.
+
+An open published contract does not widen what the server sends. Tool handlers
+may return only declared keys, and responses contain only declared fields.
+
 ## Discover Capability Modules at Startup
 
 Explicit registration still works. If you prefer one file per capability, put

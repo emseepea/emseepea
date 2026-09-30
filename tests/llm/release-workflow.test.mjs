@@ -234,6 +234,8 @@ test("publication builds and verifies packages before creating public releases",
   // the records. The ordering within each still has to hold.
   const job = releaseBuild.match(/  publish-next:[\s\S]*/)?.[0] ?? "";
   assert.ok(job.indexOf("npm ci --ignore-scripts") < job.indexOf("Build packages for publication"));
+  assert.match(job, /Check every package exists before trusted publishing/);
+  assert.ok(job.indexOf("Check every package exists before trusted publishing") < job.indexOf("npm run release:next"));
   assert.ok(job.indexOf("Build packages for publication") < job.indexOf("prepare-release-artifacts.mjs"));
   assert.ok(job.indexOf("prepare-release-artifacts.mjs") < job.indexOf("npm run release:next"));
   assert.ok(job.indexOf("npm run release:next") < job.indexOf("verify-registry-release.mjs verify"));

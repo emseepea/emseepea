@@ -1,0 +1,183 @@
+# Cognitive Accessibility Reviews — 2026-09-29
+
+## P018 immutable-version release retry capture — reviewed 2026-09-30
+
+Result: PASS. An independent specialist reviewed the problem ticket and
+backlog entries for a clear status, actionable workaround, precise evidence,
+and manageable reading load. The technical evidence paragraph is dense but
+appropriate for a maintainer-facing problem record.
+
+Scope: cognitive accessibility of the exact public Markdown below. This
+review does not verify the release or authorize promotion.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/open/018-release-retry-reuses-occupied-versions-from-divergent-commits.md` | `9629a4098181af8fbc7f8f87668be88abb51e69f4291aad33489c6fa87a32300` |
+| `docs/problems/README.md` | `4c8f1117f2ff5ca4bec272ec0bd79ad2553863c8fe1ae30cc6243cbf5581986c` |
+| `docs/problems/README-history.md` | `a27f9ccc0133f97aa6120bcbcf10566294ba1f343fbcb5bfd31233e31e374e20` |
+
+## P016 and R016 qualification-test reliability
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+problem record, standing risk, and risk index. The final wording separates the
+250-millisecond test-only control, 200 focused passes, all 298 `npm test` tests
+passing, and exact-commit qualification that is still pending.
+
+Scope: source Markdown clarity and cognitive accessibility only. This review
+does not verify exact-commit qualification, release publication, or user
+comprehension testing.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/risks/R016-qualification-false-negatives-block-safe-releases.active.md` | `b22b093696869ef087f2bfcbe82ff8255ab269d3e7a006d46e38cb9bc826dc94` |
+| `docs/risks/README.md` | `a1c413584d00d49edfa3ae1e6fe2dbcde36091d3f7e4190143d31f74a140fe82` |
+| `docs/problems/open/016-feedback-deadline-test-flakes-under-qualification-load.md` | `66fc0e621afe1fd75aff235b53671fce1d3a973be825aaf451d34c6a6be8eee7` |
+
+## P007 package guidance and backlog refresh
+
+Result: PASS after plain-language remediation. An independent
+cognitive-accessibility specialist reviewed every public Markdown file changed
+from the trunk base. A separate voice-and-tone review replaced unexplained
+ranking terms, judgment words, idioms, and dense evidence statements without
+changing lifecycle state, scores, or technical meaning.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `.changeset/published-result-schema-guide.md` | `9d1a37c23ad506720469b00aeb53d4ccde18a33b2338d4e73c1c948af22cbd86` |
+| `docs/jtbd/framework-maintainer/JTBD-102-keep-guidance-accurate.proposed.md` | `be80690b424ff32c31d7c5d03cdb1a441b4cba7526a6e9348e8d7428c352be33` |
+| `docs/problems/README-history.md` | `8f47da12a52fdb1abf559b2da907bef5fc7315f9c2b4722bd8d643172069942f` |
+| `docs/problems/README.md` | `1858e4e681a8ee453caccfd6ce747102e8d7f7a08a8ac69d85e57fbaa003ef0c` |
+| `docs/problems/closed/002-release-readiness-verifier-only-tests-fixture-like-stable-pass-marker.md` | `5eada106eb513da09cf0eda5d773a2b47be935495e3b8c5f1174c7a153ea3912` |
+| `docs/problems/known-error/004-problem-backlog-parser-couples-to-an-unexplained-exact-heading.md` | `356f002d4d9f5d59520eb0054331cdc5c7eab612899b9a71c3d8975dbade891d` |
+| `docs/problems/known-error/006-strict-result-schema-opens-when-piped-from-an-open-object.md` | `c9480dc2a88185b1e3da94c258231bd5556c1e1e7527f4781a600334241737d4` |
+| `docs/problems/known-error/007-shipped-package-guide-is-silent-on-open-by-default-result-schemas.md` | `4f6d91487c0f83a750f7e46769e17cd79592e9ff641b4fdd9c35cd8539318274` |
+| `docs/problems/known-error/008-release-package-list-is-transcribed-by-hand-into-the-readiness-record.md` | `d4356402e886e03bd7650dbc124ee38e9b07d079b6a508aaf7445fe352ae05c9` |
+| `docs/problems/known-error/009-a-tool-call-can-fail-after-the-backend-has-recorded-the-work.md` | `b9f6a0056c60f016aabf6e057638e06349e0dfdbe91d5223e68bd01881d016e3` |
+| `docs/problems/known-error/010-the-release-gives-up-waiting-before-the-registry-catches-up.md` | `b6650289e25b879d460ac725fda74ad74f238a0c38ae6b87702ad6c7b834e9c9` |
+| `docs/problems/known-error/011-the-release-risk-gate-cannot-be-satisfied-from-a-worktree.md` | `65e726663933c6a9a6d15b2aa4786ce533e4d488b03cedbccd8a0c8380c52166` |
+| `docs/problems/known-error/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md` | `0bab64b7fe7572d2c7b17ecb63d280281bea68c705fd17ca1a653390f8535048` |
+| `docs/reviews/current-release-readiness.md` | `02bddf7316b4b4d04d3be19e70e84d879eb10697c547a80ddde001431cfc751c` |
+| `docs/stories/README-history.md` | `1a289a7a914e4cf3c0af3b7778a65939e967adb50f91d9d1eb9624df22ffd3bf` |
+| `docs/stories/README.md` | `44d701ca79c2e735f8f5f595f340e071396b5b381f320aa25695bfb0a7ce833d` |
+| `docs/stories/accepted/STORY-002-explain-open-by-default-result-schemas-in-the-package-guide.md` | `1a6a1719eb4c0b7efdf69d34510b2424075c1503b1ee3eec3a62a6dc58420684` |
+| `docs/story-maps/README.md` | `16c3709517f79dc24ca21a88078f9ab1b8c21bce0b4fc8c61e4aa742eb2816b8` |
+| `packages/framework/README.md` | `ad4651a23b0bcba625421d5c23cece345cecd11b897b7af0bd2822f406b6f605` |
+
+## P017 dependency-vulnerability problem record
+
+Result: PASS after plain-language remediation. An independent
+cognitive-accessibility specialist reviewed the exact problem record, backlog
+headline and row, and archived prior headline. A separate voice-and-tone review
+also passed.
+
+Scope: source Markdown clarity and cognitive accessibility only. This review
+does not verify the advisory, dependency resolution, or release outcome.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/open/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `8978aa2cc27a4019423b48b37ce772b0be104c1f365cba6a241ac22d59ce3e08` |
+| `docs/problems/README.md` | `089136dadb6ee427eab3e663810477b089e1a186226014868b1b2c0449bca35b` |
+| `docs/problems/README-history.md` | `21e96f3e64ab9f68ebcc507ae0e3da4c508060ff75652b824f3e894d3a9d363d` |
+
+## P017 Known Error transition
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+exact Known Error record, refreshed backlog headline and row, and archived
+prior headline. A separate voice-and-tone review also passed.
+
+Scope: source Markdown clarity and cognitive accessibility only. This review
+does not verify the advisory, dependency resolution, or release outcome.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `78e23977317b611c07d5dd62f119146adcb4a8e0c4a9769d13bd2b186007d40e` |
+| `docs/problems/README.md` | `ca594475f184ef0b35711bc22461afd9646838ee0d77e32e1d608750ed983c66` |
+| `docs/problems/README-history.md` | `bbc772f6dba669e922f3f2d1d9363a29ab24c6dbdcd0849c5fe14461ee38851d` |
+
+## P017 RFC-003 and STORY-003 governance trace
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+delivery story, problem and job reverse traces, and story-map index. A separate
+voice-and-tone review passed. A separate web accessibility review passed the
+rendered story map's lifecycle consistency, semantic table, focusable scroll
+region, descriptive links, non-colour status labels, and empty-cell text.
+
+Scope: source HTML and Markdown clarity and cognitive accessibility. This
+review does not verify the dependency repair or release outcome.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/stories/draft/STORY-003-resolve-the-vulnerable-lockfile-dependency.md` | `c21acf906f650b3c72cb1c9d2c97126b54fedb7ec129ef445070cc608306f2ea` |
+| `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `60111f585cfc2a0c8119ff017eeba417bef86f46721ee8d9d193181a571cb6b5` |
+| `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `7a7ec106155ffde676e838f20ae53cda521487da49c1aa1f15687ee04654cf20` |
+| `docs/story-maps/README.md` | `8b4e2da2cf9b3bc9134c80f1e1a03a3e2b69695e8ce45d4e32ecba665ffeb19d` |
+| `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `b7cb90daf40aa138813ba90f3128d042d44b8478b91dd797ce75e0f9eb97b4ad` |
+
+## STORY-003 draft index reconciliation
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+exact draft-story index row. A separate voice-and-tone review also passed.
+
+Scope: source Markdown clarity and cognitive accessibility only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/stories/README.md` | `dff7d634f4377c5e62f74390fc3fff90f52d42537766c311618353fe1a949aed` |
+
+## STORY-003 acceptance
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+accepted story, lifecycle index and history, and problem and job reverse
+traces. A separate voice-and-tone review passed. A separate web accessibility
+review found no axe violations in the rendered story map and passed its table,
+focus, status, link, and empty-cell semantics.
+
+Scope: source HTML and Markdown clarity and cognitive accessibility. This
+review does not verify the dependency repair or release outcome.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/stories/accepted/STORY-003-resolve-the-vulnerable-lockfile-dependency.md` | `6d0a5190aea3407cc4d7a5bc37d4e1817be280a67d7d43e80b9b149ddb493a40` |
+| `docs/stories/README.md` | `47a857be71733a32e607628250c53ec562610ade7c1726043474fbe0144786da` |
+| `docs/stories/README-history.md` | `5dac62b35b8de5d01929e40e1e467fe26b46351d661762f7b98223c43a55e11e` |
+| `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `fa6591de36b00ea2deb529e6f0821a9cd8c0355d932f0a051e3f833a3048dc63` |
+| `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `afd0b2d70df693d60d6b15ef68077201862da54738fa8bf68f62ea7e210d81a2` |
+| `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `be42deeda8dc5992fd9ea7c9fc253c9a3b25f1f7e7962ad5e83d85dcc8cb4927` |
+
+## STORY-003 in-progress transition
+
+Result: PASS. Independent cognitive-accessibility and voice-and-tone reviews
+confirmed that the lifecycle, selected dependency version, and remaining
+remote verification are stated consistently. A separate rendered web
+accessibility review found no axe violations and passed link, table, focus,
+contrast, and non-colour status checks.
+
+Scope: source HTML and Markdown clarity and accessibility. This review does
+not verify the Open Source Vulnerabilities scan or GitHub Quality outcome.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/stories/in-progress/STORY-003-resolve-the-vulnerable-lockfile-dependency.md` | `bf4e11afd88398b2c74f3cea7a26be4eff6f57294bb8feb6c352dc6a1f95a3ff` |
+| `docs/stories/README.md` | `b381f72c5eb52eadb3835dc18449a97b19c2780766010f00ab993ab2af9309b6` |
+| `docs/stories/README-history.md` | `fd1c4fb0853862f5d9e1f91bf893f87bc1c811bc80997bd976d9c3382e783ff6` |
+| `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `ecfcd2aec03ca0d58bf48d5fa20a4242b249c27655b1c58bc3e65e324ffa7e64` |
+| `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `ae27cd98af5e55fd1ebae16d26987f99bb0d710bbcbc9f8859a1567f6f860e5e` |
+| `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `39231091db362352933ce3865ca639de64a78f0cad72da89455f34a7727c902c` |
+
+## P007 release-recovery plan — reviewed 2026-09-30
+
+Result: PASS. An independent cognitive-accessibility specialist identified
+three ambiguities in the readiness record; the revised text makes clear that
+its conditional PASS is not release approval, which exact commits need checks,
+and which earlier reviews covered the package guide rather than this record.
+The specialist passed the revisions and changeset copy. This review does not
+verify package publication or promotion. A separate voice-and-tone review
+passed after the changeset used the same precise release terms as the
+readiness record.
+
+| File | SHA-256 |
+| --- | --- |
+| `.changeset/recover-divergent-release.md` | `32f6e20ac91025a5cb4242c4c4df58c541814ee4fdd08ff382b5f10fae33f3ed` |
+| `docs/reviews/current-release-readiness.md` | `0660eb81262d849ad383757bb6dbe4e07f6ab3e32d8cfed07768521f1e79889f` |

@@ -15,6 +15,12 @@ are welcome.
 5. Update the exact capability claim when behavior changes and keep dependency
    licences valid.
 
+Install the repository-owned push hook once in each clone or worktree with
+`npm run hooks:install`. Before pushing a branch tip, run
+`npm run push:qualify`. It starts with `npm ci`, runs the existing `npm test`,
+and records evidence for the exact unchanged commit. `npm run push:watch`
+remains the separate command for pushing `main` and watching its remote checks.
+
 Examples must consume public package APIs and remain private npm workspaces.
 Security reports belong in the private channel described in
 [SECURITY.md](SECURITY.md), not a public issue.

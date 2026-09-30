@@ -125,7 +125,7 @@ jobs:
         run: node scripts/check-release-pull-request.mjs "$BASE_SHA" "$HEAD_SHA"
       - name: Build packages for publication
         run: npm run build
-      - name: Capture the current npm package state
+      - name: Check every package exists before trusted publishing
         run: node scripts/verify-registry-release.mjs capture release-artifacts/registry-before.json
       - name: Prepare package evidence
         env:

@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  assertRegistryPackagesExist,
   assertRegistryState,
   assertStatements,
   classifyPublication,
+  fetchPackage,
   waitForRegistryTag,
 } from "../../scripts/verify-registry-release.mjs";
 
@@ -23,6 +25,30 @@ const published = (tags) => ({ packages: [{
   attestationsUrl: "https://registry.npmjs.org/-/npm/v1/attestations/x",
   signatures: 1,
 }] });
+
+test("trusted publishing stops before a first package publish", () => {
+  assert.doesNotThrow(() => assertRegistryPackagesExist([
+    { name: "@emseepea/server", registered: true },
+  ]));
+  assert.throws(
+    () => assertRegistryPackagesExist([
+      { name: "@emseepea/create-openapi-backed-server", registered: false },
+    ]),
+    /@emseepea\/create-openapi-backed-server is absent from npm[\s\S]*separately authorized first-package bootstrap[\s\S]*\.github\/workflows\/release\.yml[\s\S]*NPM_PROMOTION_TOKEN[\s\S]*does not prove trusted-publisher configuration/,
+  );
+});
+
+test("only a registry 404 is classified as a missing package", async () => {
+  assert.equal(await fetchPackage("@emseepea/missing", {
+    request: async () => ({ ok: false, status: 404 }),
+  }), undefined);
+  await assert.rejects(
+    fetchPackage("@emseepea/server", {
+      request: async () => ({ ok: false, status: 503 }),
+    }),
+    /@emseepea\/server registry metadata returned 503/,
+  );
+});
 
 test("a next publish is verified against the next tag, not latest", () => {
   const after = published({ latest: "1.0.0", next: "1.1.0" });

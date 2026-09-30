@@ -1,10 +1,11 @@
 # Problem 004: Problem Backlog Parser Couples to an Unexplained Exact Heading
 
-**Status**: Open
+**Status**: Known Error
 **Reported**: 2026-09-11
 **Priority**: 6 (Medium) — Impact: 2 × Likelihood: 3 — derived at capture because the failure blocks a local governance command when normal documentation wording changes
 **Origin**: internal
 **Effort**: S — a focused parser contract and regression test should cover the heading boundary
+**WSJF**: 12.0 — Priority 6 × Known Error multiplier 2.0 / Effort 1
 **Jobs To Be Done (JTBD)**: JTBD-102
 **Persona**: framework-maintainer
 
