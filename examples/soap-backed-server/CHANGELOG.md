@@ -1,5 +1,17 @@
 # @emseepea/create-soap-backed-server
 
+## 0.1.0
+
+### Minor Changes
+
+- [`a135961`](https://github.com/emseepea/emseepea/commit/a135961743d22fd3d1617f64b911c9e7f93bd7d9) Thanks [@tompahoward](https://github.com/tompahoward)! - Assign fresh versions to the pending package set. An abandoned release attempt
+  published some earlier versions from different commits, so new versions are
+  needed for one checked release.
+
+### Patch Changes
+
+- [`a2d23fa`](https://github.com/emseepea/emseepea/commit/a2d23faf9cd970ea05263576680e9e57ad363fbd) Thanks [@tompahoward](https://github.com/tompahoward)! - Run independent tests of answer meaning at the same time while keeping each test's evaluations sequential. Saved evidence remains complete and in its original order.
+
 ## 0.0.31
 
 ### Patch Changes

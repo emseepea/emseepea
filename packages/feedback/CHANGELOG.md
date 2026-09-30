@@ -1,5 +1,18 @@
 # @emseepea/feedback
 
+## 0.4.0
+
+### Minor Changes
+
+- [`a135961`](https://github.com/emseepea/emseepea/commit/a135961743d22fd3d1617f64b911c9e7f93bd7d9) Thanks [@tompahoward](https://github.com/tompahoward)! - Assign fresh versions to the pending package set. An abandoned release attempt
+  published some earlier versions from different commits, so new versions are
+  needed for one checked release.
+
+### Patch Changes
+
+- Updated dependencies [[`9c97cac`](https://github.com/emseepea/emseepea/commit/9c97cac02b4bf88fdabb2fbb3fbfb1bc69f2b6f7), [`a135961`](https://github.com/emseepea/emseepea/commit/a135961743d22fd3d1617f64b911c9e7f93bd7d9)]:
+  - @emseepea/server@0.19.0
+
 ## 0.3.4
 
 ### Patch Changes
