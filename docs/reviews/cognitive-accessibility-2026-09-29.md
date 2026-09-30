@@ -165,3 +165,19 @@ not verify the Open Source Vulnerabilities scan or GitHub Quality outcome.
 | `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `ecfcd2aec03ca0d58bf48d5fa20a4242b249c27655b1c58bc3e65e324ffa7e64` |
 | `docs/jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md` | `ae27cd98af5e55fd1ebae16d26987f99bb0d710bbcbc9f8859a1567f6f860e5e` |
 | `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `39231091db362352933ce3865ca639de64a78f0cad72da89455f34a7727c902c` |
+
+## P007 release-recovery plan — reviewed 2026-09-30
+
+Result: PASS. An independent cognitive-accessibility specialist identified
+three ambiguities in the readiness record; the revised text makes clear that
+its conditional PASS is not release approval, which exact commits need checks,
+and which earlier reviews covered the package guide rather than this record.
+The specialist passed the revisions and changeset copy. This review does not
+verify package publication or promotion. A separate voice-and-tone review
+passed after the changeset used the same precise release terms as the
+readiness record.
+
+| File | SHA-256 |
+| --- | --- |
+| `.changeset/recover-divergent-release.md` | `32f6e20ac91025a5cb4242c4c4df58c541814ee4fdd08ff382b5f10fae33f3ed` |
+| `docs/reviews/current-release-readiness.md` | `0660eb81262d849ad383757bb6dbe4e07f6ab3e32d8cfed07768521f1e79889f` |
