@@ -22,3 +22,16 @@ approval from publication and states that exact-commit gates remain pending.
 
 Scope: source Markdown clarity and cognitive accessibility. This review does
 not establish implementation correctness, publication, or adopter use.
+
+## Versioning a Published MCP Server
+
+Result: PASS. A cognitive-accessibility specialist reviewed the new
+versioning guide and its changed entry point and job mapping. The final
+review found no concrete issues after baseline definitions and the
+reviewer/client distinctions were made easier to scan.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `website/src/content/docs/version-a-server.md` | `7f27d71daefec88cbbe0c283e4c23da6437154a003e2ddead752bd2999b01cc9` |
+| `website/src/content/docs/examples.md` | `119e7a56736ea110efd550c3f3c8794ae3b27eb17a5c88a79b3b53d682903c1b` |
+| `docs/jtbd/mcp-server-developer/JTBD-006-evolve-a-published-mcp-contract-safely.proposed.md` | `a43c492d11979d84ae43f20e037c9e73042dac7fbdd88204cc58d21520d222e1` |

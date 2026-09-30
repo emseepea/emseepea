@@ -8,6 +8,7 @@ oversight-date: 2026-09-15
 screens:
   - packages/testing/
   - tests/black-box/
+  - website/src/content/docs/version-a-server.md
 ---
 
 # JTBD-006: Evolve a Published MCP Contract Safely

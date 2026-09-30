@@ -185,6 +185,22 @@ test("readers can use core content without JavaScript", async () => {
   }
 });
 
+test("marketplace authors can reach the versioning guide without JavaScript", async () => {
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 320, height: 900 } });
+  try {
+    const page = await context.newPage();
+    await page.goto(origin + base + "examples/");
+    await page.getByRole("link", { name: "Version a published MCP server", exact: true }).last().click();
+    assert.equal(new URL(page.url()).pathname, base + "version-a-server/");
+    assert.ok(await page.getByRole("heading", { level: 1, name: "Version a published MCP server" }).isVisible());
+    assert.ok(await page.getByRole("link", { name: /published-contract commands/ }).isVisible());
+    await page.getByRole("link", { name: "migration guide" }).click();
+    assert.equal(new URL(page.url()).pathname, base + "less-server-code/");
+  } finally {
+    await context.close();
+  }
+});
+
 test("result-card renderer variants remain available in print", async () => {
   const context = await browser.newContext();
   try {

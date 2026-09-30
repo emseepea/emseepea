@@ -204,14 +204,9 @@ so clients can learn how to authenticate.
 
 ## Retire a capability through a marketplace review window
 
-Set `discoverable: false` on a retiring tool, resource, resource template, or
-prompt. It disappears from MCP list discovery but remains callable by clients
-that already know its name or URI, subject to its existing access policy.
-
-Publish the replacement first. Then submit and publish the hidden-but-callable
-version. Remove the old capability only after the marketplace supports that
-version. This setting preserves compatibility during review; it does not grant
-authorization or make a known capability secret.
+For the visible, hidden-but-callable, and removal stages, follow
+[Version a published MCP server](../version-a-server/). That guide also covers
+contract baselines, client checks, and marketplace update timing.
 
 ## Add feedback to any starter
 
