@@ -20,6 +20,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./markdown": {
+      "types": "./dist/markdown.d.ts",
+      "import": "./dist/markdown.js"
+    },
     "./postgres": {
       "types": "./dist/postgres.d.ts",
       "import": "./dist/postgres.js"

@@ -52,6 +52,22 @@ finish every part of the user's original request before briefly stating the
 specific feedback recorded. A routine successful tool call, structured result,
 or expected number of steps is not feedback-worthy.
 
+## Store one-way feedback as Markdown
+
+For an opt-in local file destination, use
+`createMarkdownFeedbackSubmissionBackend({ directory })` from
+`@emseepea/feedback/markdown` as the backend of `defineFeedbackSubmission`.
+Use an absolute path to a dedicated folder, such as `docs/feedback` resolved
+from your repository root when dogfood testing locally.
+
+Each submission becomes a separate Markdown file. Inside a Git repository, the
+adapter creates a `.gitignore` in that folder before writing feedback. The rule
+ignores generated files; it does not protect already tracked or staged files,
+or files force-added to Git. Check those before sharing your repository.
+
+This destination has no team reply path. Choose a conversation backend when
+users need responses.
+
 ## Add a support conversation
 
 ```ts
