@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-09-30 **P018 opened** — Release retry reuses occupied npm versions from divergent commits
+> Last reviewed: 2026-10-01 **P007 verification pending** — Published server package contains the corrected result-schema guide.
 > Run `/wr-itil:review-problems` to refresh Weighted Shortest Job First (WSJF) rankings.
 
 ## WSJF Rankings
@@ -13,7 +13,6 @@ effort, reported date, and ID.
 | WSJF | ID | Title | Severity | Status | Effort | Reported | Origin |
 |------|-----|-------|----------|--------|--------|----------|--------|
 | 10.0 | P001 | Changesets omit initializer bumps when embedded template dependencies change | 20 (Very High) | Open | M | 2026-09-11 | internal |
-| 24.0 | P007 | The shipped package guide is silent on open-by-default result schemas | 12 (High) | Known Error | S | 2026-09-20 | internal |
 | 24.0 | P010 | The release gives up waiting before the registry catches up | 12 (High) | Known Error | S | 2026-09-20 | internal |
 | 24.0 | P011 | The release risk gate cannot be satisfied from a worktree | 12 (High) | Known Error | S | 2026-09-20 | internal |
 | 24.0 | P016 | Feedback deadline test flakes under qualification load | 12 (High) | Open | S | 2026-09-29 | internal |
@@ -35,6 +34,7 @@ Fix released, awaiting verification. Sorted by release date, oldest first.
 | ID | Title | Released | Fix summary | Likely verified? |
 |----|-------|----------|-------------|------------------|
 | P003 | Release workflow lacks first-package trusted-publisher preflight | 2026-09-24 | The release checks every public package name before publication and stops with separate bootstrap guidance when a name is absent. | no — not observed |
+| P007 | The shipped package guide is silent on open-by-default result schemas | 2026-09-30 | The published server package now explains open and closed result contracts and the piped-strict limit. | yes — observed: published 0.19.1 tarball README and 7/7 packed-package tests on 2026-10-01 |
 
 ## Inbound Upstream Reports
 

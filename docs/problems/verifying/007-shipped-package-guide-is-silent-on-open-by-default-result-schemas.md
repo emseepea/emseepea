@@ -1,6 +1,6 @@
 # Problem 007: The Shipped Package Guide Is Silent on Open-by-Default Result Schemas
 
-**Status**: Known Error
+**Status**: Verification Pending
 **Reported**: 2026-09-20
 **Priority**: 12 (High) — Impact: 3 × Likelihood: 4 — see the rating note below
 **Origin**: internal
@@ -81,7 +81,7 @@ ratified; the check it describes does not exist as an automated control.
 ### Investigation Tasks
 
 - [x] Create and run a failing documentation assertion against the shipped guide
-- [ ] Add the open-by-default default and the closed-contract declaration to the
+- [x] Add the open-by-default default and the closed-contract declaration to the
       package guide
 - [x] Define a focused guide check that can mechanically assert the
       open-by-default contract, the direct `z.strictObject` closed contract,
@@ -95,6 +95,19 @@ changeset, and cognitive-accessibility review in one small delivery story.
 
 STORY-MAP-002 and STORY-002 are ratified and accepted. ADR-0096 governs the
 schema behaviour; ADR-0023 governs the published-content review.
+
+**Release vehicle**: .changeset/published-result-schema-guide.md
+
+## Fix Released
+
+The package guide correction entered `@emseepea/server@0.19.0` in version commit
+`e75e06ed7636ea8c87a9208c51b00d075fc095ee` and is present in the current
+published `@emseepea/server@0.19.1` tarball. The guide now explains the open
+`z.object` contract, direct `z.strictObject` closed contract, piped strict
+limit, and declared-only runtime responses. The packed-package documentation
+test passed 7/7 checks on 2026-10-01, and the published 0.19.1 tarball's
+`package/README.md` was inspected directly. Awaiting user verification or a
+separate evidence-based closure transition.
 
 ## Dependencies
 
