@@ -4,10 +4,12 @@ description: Change a marketplace-listed MCP server while keeping existing clien
 ---
 
 A new Model Context Protocol (MCP) server release can reach clients before a
-marketplace accepts its updated tool definitions. Plan for the public contracts
-that clients and reviewers may use during that interval. Your application
-chooses its release numbers and when to deploy; the MCP protocol revision and a
-marketplace listing version are separate from your server release number.
+marketplace accepts its updated tool definitions. OpenAI reviews hosted tool
+changes independently: one tool can go live while another update is held.
+Plan for the public contracts that clients and reviewers may use during that
+interval. Your application chooses its release numbers and when to deploy. The
+MCP protocol revision and marketplace listing version are separate from your
+server release number.
 
 ## Keep the published contracts
 
@@ -17,10 +19,13 @@ published or submitted for review. Use these records during the change:
 - **Published baseline:** the captured contract for the version currently
   published to clients.
 - **Submitted baseline:** the captured contract for the version under review.
+- **Live tool baseline:** each tool definition currently marked Live by the
+  marketplace, including an earlier definition retained while an update is held.
 
-Keep each baseline that still has clients or an active review. During review,
-compare the candidate against both. A review outcome may change which
-baselines remain active; retain older captures as history.
+Keep each baseline that still has clients or an active review. Compare a
+candidate against the published, submitted, and live definitions that still
+apply; these may differ during per-tool review. A review outcome may change
+which baselines remain active; retain older captures as history.
 
 The [published-contract commands in `@emseepea/testing`](https://github.com/emseepea/emseepea/tree/main/packages/testing#check-a-published-mcp-contract)
 show how to capture a versioned baseline and check a candidate against every
@@ -59,9 +64,9 @@ Run those cases as automated checks on every relevant server change. Include
 both the public contract comparison and the behavior checks in the pipeline:
 a compatible schema alone cannot prove the answer is correct.
 
-After submitting, keep a copy of the submitted version and its exact test cases
-as a regression baseline. Keep credentials and private customer data out of
-that copy.
+After submitting a plugin version, keep a copy of its submitted definition and
+exact test cases as a regression baseline. Keep credentials and private
+customer data out of that copy.
 
 If you revise the submission, preserve the earlier copy as history
 and make the new submitted cases the active baseline. A failing case should
@@ -80,29 +85,34 @@ CI wiring, and release decision.
 
 ## Replace an incompatible tool in stages
 
-Keep the old implementation callable until its clients have migrated.
+Keep the old implementation callable until its clients have migrated. For a
+hosted tool update to an already published OpenAI plugin, correct any scan
+findings and repeat deployment and scanning before continuing:
 
 1. Add the replacement under a new name while the old tool still accepts its
-   published inputs and produces its relied-on results.
+   published inputs and produces its relied-on results. Leave the old tool
+   discoverable at this stage.
 2. Test calls to both tools through the MCP endpoint.
-3. Give clients migration instructions and time to adopt the replacement.
-4. When the replacement works, set `discoverable: false` on the old tool. It
-   disappears from MCP list discovery but remains directly callable by name
-   under its existing access policy.
-5. Submit a version whose scanned listing includes the new tool and omits the
-   old one.
-6. After the new version is published, verify affected clients have migrated.
-7. Remove direct-call support for the old tool only after that verification.
-   This removal breaks clients still calling its old name.
-8. Update active baselines and migration instructions according to your
-   application release policy.
+3. Deploy the server with both tools supported.
+4. Rescan in the OpenAI portal.
+5. Confirm the replacement is marked **Live** and appears in fresh discovery.
+   An issue-free scan alone does not establish that it is Live.
+6. Give clients migration instructions and time to adopt the replacement.
+7. Only after the replacement is Live, set `discoverable: false` on the old
+   tool. Keep old direct calls working under their existing access policy.
+8. Rescan in the OpenAI portal.
+9. Confirm the old tool is absent from fresh discovery while the replacement
+   remains Live.
+10. Verify affected clients have migrated.
+11. Remove old direct-call support. This breaks clients still calling its old
+    name.
+12. Update active baselines and migration instructions according to your
+    application release policy.
 
-- **Reviewer:** works from the submitted scan, which should list the new tool
-  and omit the retired one.
-- **Existing client:** may still hold the old definition and call the old tool
-  while your server supports it.
-- **Fresh discovery:** may stop showing the old tool when OpenAI scans its
-  removal. The new tool can pass its own checks independently.
+An existing client may still hold the old definition while your server
+supports its calls. OpenAI can remove the old tool from fresh discovery as
+soon as a scan detects that it is hidden or deleted. Do not rely on an atomic
+switch between old and new tool lists.
 
 Do not use a new release number alone as proof of compatibility. Record which
 baseline checks and client journeys passed for the exact server revision you
@@ -117,11 +127,17 @@ say that OpenAI periodically scans the live endpoint:
 
 - A deleted tool leaves the published list when a scan detects its removal.
 - A new tool becomes available after its automated checks pass.
-- A changed tool keeps its previous definition live while the update is held.
+- A changed tool keeps its previous definition live while the update is held;
+  a passing update replaces that definition automatically.
 - A server deployment takes effect before a scan or approval.
 
-Keep accepting calls that match the live definition. If a deployment stops the
-server from accepting those calls, roll back that deployment.
+Each tool can pass independently. After deploying a tool change, select
+**Rescan** in the portal and inspect both its issues and its **Live definition**
+or **Held update**. If the portal says **Earlier version live**, the update is
+still held; fix its findings and rescan before treating the new definition as
+available. An incomplete check is not an approval, even with no findings. Keep
+accepting calls that match each live definition. If a deployment stops the
+server from accepting those calls, roll it back.
 
 OpenAI distinguishes these tool updates from changes to submitted plugin
 information or imported skills, which require a new draft version, review, and
