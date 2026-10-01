@@ -6,6 +6,7 @@ description: Change a marketplace-listed MCP server while keeping existing clien
 A new Model Context Protocol (MCP) server release can reach clients before a
 marketplace accepts its updated tool definitions. OpenAI reviews hosted tool
 changes independently: one tool can go live while another update is held.
+
 Plan for the public contracts that clients and reviewers may use during that
 interval. Your application chooses its release numbers and when to deploy. The
 MCP protocol revision and marketplace listing version are separate from your
@@ -135,9 +136,11 @@ Each tool can pass independently. After deploying a tool change, select
 **Rescan** in the portal and inspect both its issues and its **Live definition**
 or **Held update**. If the portal says **Earlier version live**, the update is
 still held; fix its findings and rescan before treating the new definition as
-available. An incomplete check is not an approval, even with no findings. Keep
-accepting calls that match each live definition. If a deployment stops the
-server from accepting those calls, roll it back.
+available.
+
+An incomplete check is not an approval, even with no findings. Keep accepting
+calls that match each live definition. If a deployment stops the server from
+accepting those calls, roll it back.
 
 OpenAI distinguishes these tool updates from changes to submitted plugin
 information or imported skills, which require a new draft version, review, and
