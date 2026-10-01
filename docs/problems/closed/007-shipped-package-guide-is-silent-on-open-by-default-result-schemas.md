@@ -93,7 +93,7 @@ The completed proposal is STORY-MAP-002, with RFC-002 and STORY-002. It keeps
 the package-guide edit, focused documentation test, packed-package inspection,
 changeset, and cognitive-accessibility review in one small delivery story.
 
-STORY-MAP-002 and STORY-002 are ratified and accepted. ADR-0096 governs the
+STORY-MAP-002 is ratified and completed; STORY-002 is done. ADR-0096 governs the
 schema behaviour; ADR-0023 governs the published-content review.
 
 **Release vehicle**: .changeset/published-result-schema-guide.md
@@ -126,11 +126,11 @@ Captured via /wr-itil:capture-problem; expand at next investigation.
 
 | ID | Title | Status |
 |----|-------|--------|
-| STORY-MAP-002 | STORY-MAP-002: Keep the Shipped Package Guide Aligned with Framework Behaviour | accepted |
+| STORY-MAP-002 | STORY-MAP-002: Keep the Shipped Package Guide Aligned with Framework Behaviour | completed |
 
 
 ## Stories
 
 | ID | Title | Status |
 |----|-------|--------|
-| STORY-002 | STORY-002: Explain Open-by-Default Result Schemas in the Package Guide | accepted |
+| STORY-002 | STORY-002: Explain Open-by-Default Result Schemas in the Package Guide | done |

@@ -1,5 +1,11 @@
 # Story Review History
 
+## 2026-10-02
+
+Previous story headline archived when STORY-002 reached done:
+
+> Last reviewed: 2026-09-29 **STORY-003 in progress** — The lockfile is repaired and exact local qualification passed; remote security verification remains.
+
 ## 2026-09-24
 
 > Last reviewed: 2026-09-24 **STORY-001 accepted** — Ready to implement the exact-commit branch push gate.

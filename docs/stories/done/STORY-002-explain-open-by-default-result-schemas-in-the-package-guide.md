@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: done
 story-id: explain-open-by-default-result-schemas-in-the-package-guide
 reported: 2026-09-25
 decision-makers: [Tom Howard]
@@ -27,20 +27,28 @@ open by default and how to publish a closed contract.
 
 ## Acceptance criteria
 
-- [ ] The package guide states that tool result schemas declared with
+- [x] The package guide states that tool result schemas declared with
       `z.object` publish an open client contract that permits unknown fields.
-- [ ] The guide states that a result schema declared directly with
+- [x] The guide states that a result schema declared directly with
       `z.strictObject` publishes a closed client contract.
-- [ ] The guide states the P006 known limit: piping an open object into
+- [x] The guide states the P006 known limit: piping an open object into
       `z.strictObject` currently publishes an open contract.
-- [ ] The guide states that opening the published client contract does not
+- [x] The guide states that opening the published client contract does not
       widen runtime responses: handlers may return only declared keys, and
       responses contain only declared fields.
-- [ ] A focused documentation test passes and inspection of the packed package
+- [x] A focused documentation test passes and inspection of the packed package
       confirms that it contains the updated guide.
-- [ ] A cognitive-accessibility review finds no unresolved issues with the
+- [x] A cognitive-accessibility review finds no unresolved issues with the
       section's wording or phone-width scanability.
-- [ ] A changeset describes the package-guide correction.
+- [x] A changeset describes the package-guide correction.
+
+## Completion evidence
+
+Commit `9c97cac0` added the guide, packed-package test, and changeset. The
+published `@emseepea/server@0.19.1` tarball contains the corrected guide;
+the packed-package test passed 7/7 checks on 2026-10-01. Independent review
+passed the wording and a 375px rendering of the target section without
+horizontal overflow. P007 closed on that package evidence on 2026-10-01.
 
 ## Driving problem trace
 
