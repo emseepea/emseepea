@@ -10,13 +10,25 @@ repair required by Quality. It is a release plan, not a publication claim.
 The planned public package versions are:
 
 - `@emseepea/server@0.19.1`
+- `@emseepea/create-tool-server@0.1.1`
+- `@emseepea/create-api-backed-server@0.1.1`
+- `@emseepea/create-openapi-backed-server@0.1.1`
+- `@emseepea/create-resources-and-prompts-server@0.1.1`
+- `@emseepea/create-progress-streaming-server@0.1.1`
+- `@emseepea/create-html-ui-server@0.1.1`
+- `@emseepea/create-react-ui-server@0.1.1`
+- `@emseepea/create-multi-instance-postgres-server@0.1.1`
+- `@emseepea/create-database-schema-server@0.1.1`
+- `@emseepea/create-mongodb-backed-server@0.1.1`
+- `@emseepea/create-soap-backed-server@0.1.1`
 - `@emseepea/feedback@0.5.1`
 - `@emseepea/react@0.4.1`
 - `@emseepea/svelte@0.2.1`
 - `@emseepea/testing@0.17.1`
 
-The server patch updates Fastify from 5.12.1 to 5.12.5. Changesets plans the
-other public patches for their internal dependencies. The private
+The server patch updates Fastify from 5.12.1 to 5.12.5. All 11 initializers
+publish patches because their templates use the server version. Changesets
+plans the other public patches for their internal dependencies. The private
 `@emseepea/website` patch to 0.0.3 carries the guide.
 
 ## Source Evidence and Limits
