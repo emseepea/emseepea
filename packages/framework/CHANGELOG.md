@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.19.1
+
+### Patch Changes
+
+- [`8b62897`](https://github.com/emseepea/emseepea/commit/8b62897a5a6130cfeda56ffb991ea3c6877191c5) Thanks [@tompahoward](https://github.com/tompahoward)! - Update Fastify to 5.12.5 to address advisories reported by the OSV vulnerability database, and update the server version used by the initializer templates.
+
 ## 0.19.0
 
 ### Minor Changes
