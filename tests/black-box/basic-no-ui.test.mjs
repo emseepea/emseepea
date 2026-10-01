@@ -71,7 +71,7 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     tools: [tool],
     maxRequestBytes: 1_024,
     maxApplicationResultBytes: 256,
-    operationTimeoutMs: 40,
+    operationTimeoutMs: 500,
   });
   const running = await serveEmseepea(handler, { port: 0 });
 
@@ -275,9 +275,10 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
 
     const timedOut = await rpc(running.url, "tools/call", {
       name: "lookup-bean",
-      arguments: { id: "slow", delayMs: 200 },
+      arguments: { id: "slow", delayMs: 1_000 },
     });
     assert.equal(timedOut.response.status, 200);
+    assert.equal(timedOut.body.result.isError, true);
     assert.doesNotMatch(JSON.stringify(timedOut.body), /AbortError|stack|timed out/i);
 
     const beforeDeniedRequests = handlerCalls;

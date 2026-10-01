@@ -44,7 +44,7 @@
     "@modelcontextprotocol/fastify": "2.0.0",
     "@modelcontextprotocol/node": "2.0.0",
     "@modelcontextprotocol/server": "2.0.0",
-    "fastify": "5.12.1",
+    "fastify": "5.12.5",
     "zod": "4.4.3"
   },
   "engines": {
