@@ -129,7 +129,7 @@ test("release work is derived from changesets and exact package version tags", a
 test("versioning refreshes the lockfile", () => {
   assert.equal(
     manifest.scripts["version-packages"],
-    "changeset version && node scripts/record-release-origin.mjs && npm install --package-lock-only --ignore-scripts",
+    "changeset version && node scripts/freeze-unplanned-initializers.mjs && node scripts/record-release-origin.mjs && npm install --package-lock-only --ignore-scripts",
   );
   // ADR-0099 deploys the build the quality gate measured, which lives in a
   // different run; the release pull request has to carry a pointer to it.

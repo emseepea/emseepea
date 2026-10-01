@@ -99,6 +99,44 @@ required.
 
 ## Choose a Backend
 
+### Markdown files (one-way submissions)
+
+`createMarkdownFeedbackSubmissionBackend({ directory })` stores each one-way
+submission as a separate Markdown file in a configurable local directory. Pass
+it to `defineFeedbackSubmission`; it does not implement protected conversations
+or a team reply path. No generated application enables this option by default.
+
+```ts
+import { resolve } from "node:path";
+import { createMarkdownFeedbackSubmissionBackend } from "@emseepea/feedback/markdown";
+
+const backend = createMarkdownFeedbackSubmissionBackend({
+  directory: resolve("docs/feedback"),
+});
+```
+
+The directory must be absolute and on a trusted local filesystem that supports
+directory syncing. Use a dedicated feedback folder, such as `docs/feedback`
+when running locally from the repository root. Scope values become SHA-256
+directory names; generated IDs become filenames. The adapter rejects symlinks
+at the configured and scope directories and creates private scope directories
+and files.
+
+When the folder is inside a Git repository, the adapter creates and checks a
+`.gitignore` there before storing feedback. It ignores generated feedback files
+but leaves the `.gitignore` visible to Git. The adapter rejects a general docs
+folder containing other files.
+
+The ignore rule does not protect feedback that was already tracked or staged,
+or files added with `git add -f`. Check those separately before sharing the
+repository.
+
+A successful call means the file and its directory entry were synced before the
+receipt and event were returned. The adapter does not commit files to Git, send
+notifications, or provide shared storage across instances. Include feedback
+only in backups or exports approved for that content. Treat feedback prose and
+application-declared context as untrusted, even when displayed as Markdown.
+
 ### PostgreSQL
 
 Run `migratePostgresFeedback(pool)` once during controlled setup, then use
