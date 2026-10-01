@@ -100,9 +100,12 @@ test("the initialized quickstart passes its documented checks", {
       const timeout = command === "npm install --ignore-scripts" ? 600_000 : 120_000;
       await exec(binary, args, { cwd: project, env, timeout, maxBuffer: 1024 * 1024 });
     }
-    for (const name of ["@emseepea/server", "@emseepea/feedback", "@emseepea/testing"]) {
+    for (const [name, packageDir] of [["@emseepea/server", "framework"], ["@emseepea/feedback", "feedback"], ["@emseepea/testing", "testing"]]) {
       const installed = JSON.parse(await readFile(path.join(project, "node_modules", name, "package.json"), "utf8"));
-      assert.equal(installed.version, manifest.dependencies?.[name] ?? manifest.devDependencies?.[name]);
+      const expected = packageSource === "packed"
+        ? JSON.parse(await readFile(path.join(root, "packages", packageDir, "package.json"), "utf8")).version
+        : manifest.dependencies?.[name] ?? manifest.devDependencies?.[name];
+      assert.equal(installed.version, expected);
     }
 
     // Exercise the documented command, not a direct launch that bypasses its script.

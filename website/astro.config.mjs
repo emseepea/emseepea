@@ -48,7 +48,7 @@ export default defineConfig({
     },
     sidebar: [
       { label: "Start here", items: ["index", "getting-started", "result-cards", "ai-tests", "feedback", "less-server-code"] },
-      { label: "Explore", items: ["examples"] },
+      { label: "Explore", items: ["examples", "version-a-server"] },
     ],
   })],
 });

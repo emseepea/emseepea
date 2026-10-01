@@ -1,5 +1,11 @@
 # @emseepea/website
 
+## 0.0.3
+
+### Patch Changes
+
+- [`4342a00`](https://github.com/emseepea/emseepea/commit/4342a005a2578f8f0141f58d827b1a5e4fe2382f) Thanks [@tompahoward](https://github.com/tompahoward)! - Update the MCP versioning guide for independent tool reviews, rescans, and safe replacement ordering.
+
 ## 0.0.2
 
 ### Patch Changes
