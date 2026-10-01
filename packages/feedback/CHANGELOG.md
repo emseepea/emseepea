@@ -1,5 +1,11 @@
 # @emseepea/feedback
 
+## 0.5.0
+
+### Minor Changes
+
+- [`b35186b`](https://github.com/emseepea/emseepea/commit/b35186b8f0a28ed87f987784bb8d7b53f8ef3f24) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an opt-in Markdown file destination for one-way feedback submissions and document local repository use.
+
 ## 0.4.0
 
 ### Minor Changes
