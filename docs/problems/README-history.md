@@ -2,6 +2,10 @@
 
 ## 2026-10-01
 
+Previous backlog headline archived when P007 closed on published-package evidence:
+
+> Last reviewed: 2026-10-01 **P007 verification pending** — Published server package contains the corrected result-schema guide.
+
 Previous backlog headline archived when P007 moved to verification pending:
 
 > Last reviewed: 2026-09-30 **P018 opened** — Release retry reuses occupied npm versions from divergent commits

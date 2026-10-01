@@ -1,6 +1,6 @@
 # Problem 007: The Shipped Package Guide Is Silent on Open-by-Default Result Schemas
 
-**Status**: Verification Pending
+**Status**: Closed (closed-on-evidence 2026-10-01 — the published `@emseepea/server@0.19.1` tarball contains the corrected guide, and the packed-package test passed 7/7 checks. Recovery: rerun /wr-itil:transition-problem 007 known-error to reopen)
 **Reported**: 2026-09-20
 **Priority**: 12 (High) — Impact: 3 × Likelihood: 4 — see the rating note below
 **Origin**: internal
@@ -106,8 +106,8 @@ published `@emseepea/server@0.19.1` tarball. The guide now explains the open
 `z.object` contract, direct `z.strictObject` closed contract, piped strict
 limit, and declared-only runtime responses. The packed-package documentation
 test passed 7/7 checks on 2026-10-01, and the published 0.19.1 tarball's
-`package/README.md` was inspected directly. Awaiting user verification or a
-separate evidence-based closure transition.
+`package/README.md` was inspected directly. This post-release package check
+verified the ticket's guide correction.
 
 ## Dependencies
 
