@@ -24,7 +24,7 @@
     "@emseepea/feedback": "0.5.1",
     "@emseepea/server": "0.19.1",
     "@scalar/openapi-upgrader": "0.2.15",
-    "@emseepea/testing": "0.17.1",
+    "@emseepea/testing": "0.18.0",
     "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "24.13.3",
     "oxlint": "1.80.0",

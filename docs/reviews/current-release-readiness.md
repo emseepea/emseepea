@@ -9,10 +9,16 @@ It is not a publication, client compatibility, or production claim.
 
 The generated Changesets plan contains one public release:
 
-- `@emseepea/testing@0.18.0`
+- `@emseepea/testing@0.19.0`
 
 No server, feedback, UI, or initializer package release is planned. References
 to testing in development dependencies do not add packages to this plan.
+
+Version `0.18.0` was already staged from earlier source. Its immutable package
+and provenance remain unchanged. The source baseline now reflects that occupied
+version; the retained minor changeset plans a fresh `0.19.0` release containing
+scripted confirmations and explicit alternative tool-sequence assertions.
+This replacement still requires normal publication and registry verification.
 
 ## Behaviour and Evidence
 
