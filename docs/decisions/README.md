@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 104 decisions: 59 current and 45 historical.
+This project has 105 decisions: 60 current and 45 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -74,6 +74,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0105: Bounded Stage-Only Token for npm Promotion](0105-bounded-stage-only-token-for-npm-promotion.proposed.md): Proposed; human review confirmed.
 - [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.proposed.md): Proposed; human review confirmed.
 - [ADR-0107: Release Gates Require a Mature Available Vulnerability Fix](0107-release-gates-require-a-mature-available-vulnerability-fix.proposed.md): Proposed; human review pending.
+- [ADR-0108: External Approval Uses Encrypted Bound Capsules and Atomic Consumption](0108-external-approval-uses-encrypted-bound-capsules-and-atomic-consumption.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -2361,3 +2362,18 @@ Chosen option: **block findings with a mature available fix**. This adds the use
 - Tests cover separate affected ranges and later reintroductions of a flaw.
 - Actual release use demonstrates that visible unpatched findings do not block publication while eligible-fix findings retain their block.
 - Actual production-use evidence has not yet been obtained. This record remains proposed; the predecessor's ratified text is preserved.
+
+### [ADR-0108: External Approval Uses Encrypted Bound Capsules and Atomic Consumption](0108-external-approval-uses-encrypted-bound-capsules-and-atomic-consumption.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### ADR-0108 Decision
+
+Chosen option: **separate encrypted external-approval broker**, because signed request state must not acquire guarantees it does not provide.
+
+#### ADR-0108 Checks
+
+- Public-interface tests reject tampering, wrong keys and bindings, oversized or expired state, cancellation and concurrent replay.
+- Shared-store tests prove restart and multiple-instance use, with no business payload in approval records.
+- Actual adopter production use demonstrates that the same approved effect executes only after explicit approval. That evidence is outstanding.
