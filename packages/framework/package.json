@@ -27,6 +27,10 @@
     "./http": {
       "types": "./dist/http.d.ts",
       "import": "./dist/http.js"
+    },
+    "./external-approval": {
+      "types": "./dist/external-approval.d.ts",
+      "import": "./dist/external-approval.js"
     }
   },
   "files": [
