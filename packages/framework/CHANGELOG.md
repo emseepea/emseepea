@@ -1,5 +1,12 @@
 # @emseepea/server
 
+## 0.20.0
+
+### Minor Changes
+
+- [`77a924e`](https://github.com/emseepea/emseepea/commit/77a924ed632181d8ea02a282c077ac40c03b129e) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an optional approval broker that encrypts the proposed action and allows an approved decision to be used only once.
+  Applications remain responsible for authentication, permissions and execution.
+
 ## 0.19.1
 
 ### Patch Changes

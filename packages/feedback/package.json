@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/feedback",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Optional detailed feedback and support conversations for Em See Pea servers",
   "license": "MIT",
   "repository": {
@@ -62,11 +62,11 @@
     "lint": "oxlint src test eval"
   },
   "dependencies": {
-    "@emseepea/server": "0.19.1",
+    "@emseepea/server": "0.20.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@emseepea/testing": "0.20.0",
+    "@emseepea/testing": "0.20.1",
     "pg": "8.23.0"
   },
   "engines": {

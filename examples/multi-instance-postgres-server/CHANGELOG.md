@@ -1,5 +1,11 @@
 # @emseepea/create-multi-instance-postgres-server
 
+## 0.1.3
+
+### Patch Changes
+
+- [`77a924e`](https://github.com/emseepea/emseepea/commit/77a924ed632181d8ea02a282c077ac40c03b129e) Thanks [@tompahoward](https://github.com/tompahoward)! - Update starter projects to use the new server and testing package versions.
+
 ## 0.1.2
 
 ### Patch Changes
