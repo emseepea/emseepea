@@ -1,5 +1,20 @@
 # Cognitive Accessibility Reviews — 2026-10-03
 
+## Explicit alternative tool sequences
+
+Result: PASS. An independent read-only cognitive-accessibility specialist
+reviewed the current testing-package README. The new optional permission-check
+example explains the bounded alternatives, exact sequence matching and retained
+evidence. It keeps argument, meaning, confirmation and feedback assertions
+separate. No clarity, heading or link-label finding remains.
+
+Scope: source Markdown only. No rendered mobile inspection, reader comprehension
+testing, native ChatGPT certification or release verification was performed.
+
+| File | SHA-256 |
+| --- | --- |
+| `packages/testing/README.md` | `f692cf95f15fe15b58befd3c906c8dee0bebfb407d3f7c9a0f191b244c5af7a0` |
+
 ## Native elicitation testing guidance
 
 Result: PASS after correcting the new section's heading level. An independent
