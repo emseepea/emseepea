@@ -60,7 +60,7 @@ never production. Resources and prompts need deterministic protocol tests;
 this library does not pretend that manually injecting their content proves a
 native user journey.
 
-### Scripted Confirmation Input
+## Scripted Confirmation Input
 
 For tools that request form elicitation, supply an explicit simulated human
 response for that turn. The script answers the real native client's request;
