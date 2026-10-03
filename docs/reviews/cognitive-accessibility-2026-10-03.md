@@ -28,3 +28,17 @@ verification of the release gate.
 | --- | --- |
 | `docs/decisions/0107-release-gates-require-a-mature-available-vulnerability-fix.proposed.md` | `a1a7709f5ce125c093f2f9b8257fe43fb43365b7b96ef6eb72df457e93851043` |
 | `docs/decisions/README.md` | `a20391c1c9a6998b84f5e1a2f5626e949bbd8a4c79a09a12850351e27758443e` |
+
+## Scripted confirmation release metadata
+
+Result: PASS. An independent read-only cognitive-accessibility specialist
+reviewed the final release note and readiness record. The single-package plan,
+visible unpatched findings and remaining publication requirements are clear.
+The record distinguishes synthetic native Claude input from native ChatGPT,
+actual human consent and production evidence. This review covers content
+clarity only, not release or deployment verification.
+
+| File | SHA-256 |
+| --- | --- |
+| `.changeset/scripted-native-confirmations.md` | `e1f6336354c149ea90ab640bce20574923f0fd88e4e3899c3205f0955b5a83c4` |
+| `docs/reviews/current-release-readiness.md` | `f964e56b71dd4336135eab8c0f7cea9019fa5357f43bdde884d1dff080b3bc71` |
