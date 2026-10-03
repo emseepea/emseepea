@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.20.0
+
+### Minor Changes
+
+- [`6ed1007`](https://github.com/emseepea/emseepea/commit/6ed1007f4aa341e185f38f5b30277625ffced954) Thanks [@tompahoward](https://github.com/tompahoward)! - Semantic conversation testing adds scripted native form-confirmation responses and evidence with configured credentials redacted.
+
 ## 0.17.1
 
 ### Patch Changes
