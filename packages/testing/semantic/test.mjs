@@ -268,15 +268,28 @@ export function assertOptionalToolCall(turn, name) {
 
 export function assertToolNames(turn, expected) {
   const trials = turnTrials(turn);
-  if (!Array.isArray(expected) || expected.some((name) => typeof name !== "string" || !name.trim())) {
+  const validNames = (names) => Array.isArray(names)
+    && names.every((name) => typeof name === "string" && name.trim());
+  const alternatives = Array.isArray(expected) ? undefined : expected?.oneOf;
+  if (alternatives !== undefined && (!Array.isArray(alternatives)
+    || alternatives.length < 1 || alternatives.length > 8 || !alternatives.every(validNames))) {
+    throw new Error("Expected tool alternatives must contain one to eight string arrays");
+  }
+  if (alternatives === undefined && !validNames(expected)) {
     throw new Error("Expected tool names must be a string array");
   }
+  const sequences = (alternatives ?? [expected]).map((names) => [...names]);
   for (const trial of trials) {
-    trial.record.expectedTools = expected;
+    const actual = trial.calls.map(({ name }) => name);
+    const match = sequences.find((names) => JSON.stringify(names) === JSON.stringify(actual));
+    trial.record.expectedTools = match ?? sequences[0];
+    if (alternatives !== undefined) trial.record.expectedToolAlternatives = sequences;
     recordFlexibleExpectation(trial.record);
   }
   try {
-    for (const trial of trials) assert.deepStrictEqual(trial.calls.map(({ name }) => name), expected);
+    for (const trial of trials) {
+      assert.deepStrictEqual(trial.calls.map(({ name }) => name), trial.record.expectedTools);
+    }
   } catch {
     failAssertion(trials, "tool-name assertion");
     throw new Error("Tool names did not match the expected order and count");
@@ -552,6 +565,8 @@ function recordFlexibleExpectation(record) {
     tools: record.expectedTools,
     arguments: record.expectedArguments,
     feedback: record.expectedFeedback,
+    ...(record.expectedToolAlternatives === undefined
+      ? {} : { alternatives: record.expectedToolAlternatives }),
   }));
 }
 

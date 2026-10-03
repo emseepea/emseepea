@@ -22,6 +22,13 @@ it with `assertToolArguments` for the stable call and `assertFeedback` for the
 feedback observation and important detail. Keep `assertToolCalls` when every
 complete argument should match exactly and no feedback tool is advertised.
 
+For an intentionally optional permission check, use
+`assertToolNames(turn, { oneOf: [["update"], ["permissions", "update"]] })`.
+Supply one to eight explicit sequences. Each trial must match a complete
+sequence in the listed order and count. The evidence retains all alternatives
+and the matched sequence; arguments, meaning, confirmation and feedback still
+need their own assertions.
+
 For a successful turn that advertises feedback, use
 `assertToolCallsWithOptionalFeedback`. It requires the exact ordered primary
 calls and arguments, then allows no feedback call or one trailing

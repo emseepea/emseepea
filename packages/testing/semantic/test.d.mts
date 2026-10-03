@@ -54,7 +54,11 @@ export function assertToolCallsWithOptionalFeedback(
 export function assertNoToolCalls(turn: ConversationTurn): void;
 /** Allows no tool call or exactly one call to the named tool in each trial. */
 export function assertOptionalToolCall(turn: ConversationTurn, name: string): void;
-export function assertToolNames(turn: ConversationTurn, expected: readonly string[]): void;
+/** Requires an exact sequence, or one of at most eight explicitly authored sequences. */
+export function assertToolNames(
+  turn: ConversationTurn,
+  expected: readonly string[] | { readonly oneOf: readonly (readonly string[])[] },
+): void;
 export function assertToolArguments(
   turn: ConversationTurn,
   name: string,
