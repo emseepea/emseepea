@@ -62,10 +62,15 @@ test("workflows do not use the npm vulnerability advisory", () => {
 
 test("Quality scans the committed lockfile before initializer qualification", () => {
   const pin = "06b2ab4348248b456ee06c9e953637f55e03504f";
-  assert.match(quality, new RegExp(`google/osv-scanner-action/osv-scanner-action@${pin}`));
+  assert.match(quality, /ghcr\.io\/google\/osv-scanner-action@sha256:4cc9d6b5a6bb3a81c38c8d1610f6855512ddd1ba5af77083a856f171dbd0d463/);
+  assert.match(quality, /docker run --rm --entrypoint osv-scanner/);
+  assert.match(quality, /scan_exit=\$\?/);
+  assert.match(quality, /if \[ "\$scan_exit" -ne 0 \] && \[ "\$scan_exit" -ne 1 \]; then exit "\$scan_exit"; fi/);
   assert.match(quality, new RegExp(`google/osv-scanner-action/osv-reporter-action@${pin}`));
   assert.match(quality, /--lockfile=package-lock\.json/);
-  assert.match(quality, /--fail-on-vuln=true/);
+  assert.match(quality, /--fail-on-vuln=false/);
+  assert.match(quality, /echo "exit-code=\$scan_exit" >> "\$GITHUB_OUTPUT"/);
+  assert.match(quality, /node scripts\/vulnerability-release-gate\.mjs results\.json '\$\{\{ steps\.osv-scan\.outputs\.exit-code \}\}'/);
   assert.match(quality, /vulnerability-scan:[\s\S]*?timeout-minutes: 10/);
   assert.match(quality, /initializer-qualification:[\s\S]*?needs: vulnerability-scan/);
 });
