@@ -1,5 +1,11 @@
 # @emseepea/create-html-ui-server
 
+## 0.1.2
+
+### Patch Changes
+
+- [`bc68069`](https://github.com/emseepea/emseepea/commit/bc6806999fc976cdf98d1c01b2269de486b7de05) Thanks [@tompahoward](https://github.com/tompahoward)! - New projects include the updated semantic conversation testing package.
+
 ## 0.1.1
 
 ### Patch Changes
