@@ -43,11 +43,11 @@ Maintainers update examples and guides by hand after the implementation changes.
 
 | ID | Title | Status |
 |----|-------|--------|
-| STORY-MAP-002 | STORY-MAP-002: Keep the Shipped Package Guide Aligned with Framework Behaviour | accepted |
+| STORY-MAP-002 | STORY-MAP-002: Keep the Shipped Package Guide Aligned with Framework Behaviour | completed |
 
 
 ## Stories
 
 | ID | Title | Status |
 |----|-------|--------|
-| STORY-002 | STORY-002: Explain Open-by-Default Result Schemas in the Package Guide | accepted |
+| STORY-002 | STORY-002: Explain Open-by-Default Result Schemas in the Package Guide | done |

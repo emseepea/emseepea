@@ -22,6 +22,13 @@ it with `assertToolArguments` for the stable call and `assertFeedback` for the
 feedback observation and important detail. Keep `assertToolCalls` when every
 complete argument should match exactly and no feedback tool is advertised.
 
+For an intentionally optional permission check, use
+`assertToolNames(turn, { oneOf: [["update"], ["permissions", "update"]] })`.
+Supply one to eight explicit sequences. Each trial must match a complete
+sequence in the listed order and count. The evidence retains all alternatives
+and the matched sequence; arguments, meaning, confirmation and feedback still
+need their own assertions.
+
 For a successful turn that advertises feedback, use
 `assertToolCallsWithOptionalFeedback`. It requires the exact ordered primary
 calls and arguments, then allows no feedback call or one trailing
@@ -59,6 +66,33 @@ Point semantic tests only at isolated, effect-safe test servers and fixtures,
 never production. Resources and prompts need deterministic protocol tests;
 this library does not pretend that manually injecting their content proves a
 native user journey.
+
+## Scripted Confirmation Input
+
+For tools that request form elicitation, supply an explicit simulated human
+response for that turn. The script answers the real native client's request;
+it is not sent to the model and does not replace a tool result.
+
+```js
+const turn = await conversation.send("Create a contact named Synthetic Customer.", {
+  elicitations: [{
+    messageIncludes: ["Create", "Synthetic Customer"],
+    response: { action: "accept", content: { decision: "create" } },
+  }],
+});
+assertNoNegativeFeedback(turn);
+```
+
+Choose fragments that identify the exact proposed effect and recipient where
+applicable. Every fragment must match one actual form request. Unexpected,
+ambiguous, duplicate, and unused scripted responses fail the turn. No request
+is approved by default; URL elicitation is unsupported.
+
+Each of the three trials records the form message, schema, and scripted human
+decision in `turn.elicitations` and saved evidence. This proves the tested
+native client exchange with simulated human input, not compatibility with a
+different client or a person's actual consent. Continue to use isolated,
+synthetic servers; never point these tests at production.
 
 ## Test Extension Composition
 
@@ -381,6 +415,7 @@ tool arguments, tool results, assertions, or application context.
 
 Provider events, MCP addresses, configuration, headers, provider and harness
 credentials, environment values, stderr, and home-directory paths are not
-retained. Secrets placed inside test content are not detected or redacted.
+retained. Known configured authentication values are scrubbed from elicitation
+evidence. Arbitrary secrets placed inside test content are not detected.
 Local evidence is written with mode `0600`; repository CI retains it for 14
 days.

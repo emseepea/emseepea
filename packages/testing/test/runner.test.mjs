@@ -253,6 +253,8 @@ if (!process.argv.includes("--input-format")) {
     serverUrl = protectedServer,
     expectedCalls,
     firstOptionalTool,
+    firstToolNames,
+    mutateToolNames = false,
     followUpOptionalTool,
     allowOptionalFeedback = false,
   } = {}) => `
@@ -265,6 +267,7 @@ import {
   assertResponseMeaning,
   assertToolCalls,
   assertToolCallsWithOptionalFeedback,
+  assertToolNames,
   createConversation,
 } from ${JSON.stringify(helper)};
 
@@ -275,7 +278,11 @@ test("inventory conversation", async (t) => {
     ${context === undefined ? "" : `context: ${JSON.stringify(context)},`}
   });
   const inventory = await chat.send("How many packets can we promise now?");
-  ${firstOptionalTool
+  ${firstToolNames !== undefined
+    ? `const names = ${JSON.stringify(firstToolNames)};
+  assertToolNames(inventory, names);
+  ${mutateToolNames ? 'names.oneOf[0].push("unexpected-tool"); names.oneOf.push(["other-tool"]);' : ""}`
+    : firstOptionalTool
     ? `assertOptionalToolCall(inventory, ${JSON.stringify(firstOptionalTool)});`
     : `${allowOptionalFeedback ? "await assertToolCallsWithOptionalFeedback" : "assertToolCalls"}(inventory, ${JSON.stringify(expectedCalls ?? [{
       name: "get-private-inventory-report",
@@ -366,6 +373,54 @@ test("inventory conversation", async (t) => {
   assert.ok(invocations.filter(({ native }) => native).every(({ tools, config, hasJsonSchema, hasServerToken }) =>
     tools.length === 1 && Object.keys(config.mcpServers).join() === "emseepea_eval"
       && hasJsonSchema === false && hasServerToken === true));
+
+  for (const firstToolNames of [
+    ["get-private-inventory-report"],
+    { oneOf: [["get-private-inventory-report"], []] },
+    { oneOf: [[], ["get-private-inventory-report"]] },
+  ]) {
+    await writeFile(file, source({ firstToolNames, mutateToolNames: !Array.isArray(firstToolNames) }));
+    const acceptedNames = run();
+    assert.equal(acceptedNames.status, 0, acceptedNames.stdout + acceptedNames.stderr);
+    const namesEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+    for (const { turns } of namesEvidence.answerTrials) {
+      assert.deepEqual(turns[0].expectedTools, ["get-private-inventory-report"]);
+      if (!Array.isArray(firstToolNames)) {
+        assert.deepEqual(turns[0].expectedToolAlternatives, firstToolNames.oneOf);
+      }
+    }
+  }
+  for (const firstToolNames of [
+    { oneOf: [] },
+    { oneOf: Array.from({ length: 9 }, () => []) },
+    { oneOf: [[""]] },
+    { oneOf: [["other-tool"]] },
+    { oneOf: [["get-private-inventory-report", "get-private-inventory-report"]] },
+    { oneOf: [["other-tool", "get-private-inventory-report"]] },
+    { oneOf: [["get-private-inventory-report", "other-tool"]] },
+  ]) {
+    await writeFile(file, source({ firstToolNames }));
+    const rejectedNames = run();
+    assert.equal(rejectedNames.status, 1, `Invalid or unmatched alternatives must fail: ${JSON.stringify(firstToolNames)}`);
+    if (firstToolNames.oneOf.length > 0 && firstToolNames.oneOf.length <= 8
+      && firstToolNames.oneOf.every((names) => names.every((name) => name.trim()))) {
+      assert.equal(Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0].failedPhase,
+        "tool-name assertion");
+    }
+  }
+  for (const [context, firstToolNames] of [
+    ["PRIMARY_WITH_POSITIVE_FEEDBACK", { oneOf: [["submit-feedback", "search-pea-taxa"]] }],
+    ["PRIMARY_WITH_DUPLICATE_FEEDBACK", { oneOf: [["search-pea-taxa", "submit-feedback"]] }],
+  ]) {
+    await writeFile(file, source({ context, firstToolNames, serverUrl: feedbackServer }));
+    const rejectedActualCalls = run();
+    assert.equal(rejectedActualCalls.status, 1, rejectedActualCalls.stdout + rejectedActualCalls.stderr);
+    const rejectedEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+    assert.equal(rejectedEvidence.failedPhase, "tool-name assertion");
+    assert.ok(rejectedEvidence.answerTrials.every(({ turns }) =>
+      turns[0].selectedTools.join() === (context === "PRIMARY_WITH_POSITIVE_FEEDBACK"
+        ? "search-pea-taxa,submit-feedback" : "search-pea-taxa,submit-feedback,submit-feedback")));
+  }
 
   const concurrentStart = (await readFile(modelLog, "utf8")).trim().split("\n").length;
   await writeFile(file, source({ context: "CONCURRENT_BARRIER", meaning: "CONCURRENT_BARRIER" }));

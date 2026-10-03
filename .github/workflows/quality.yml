@@ -33,20 +33,35 @@ jobs:
           persist-credentials: false
       - name: Scan the committed lockfile
         id: osv-scan
-        continue-on-error: true
-        uses: google/osv-scanner-action/osv-scanner-action@06b2ab4348248b456ee06c9e953637f55e03504f # v2.5.0
-        with:
-          scan-args: |-
-            --output=results.json
-            --format=json
-            --lockfile=package-lock.json
-      - name: Fail on known vulnerabilities
+        run: |
+          set +e
+          docker run --rm --entrypoint osv-scanner \
+            --volume "$GITHUB_WORKSPACE:/github/workspace" --workdir /github/workspace \
+            ghcr.io/google/osv-scanner-action@sha256:4cc9d6b5a6bb3a81c38c8d1610f6855512ddd1ba5af77083a856f171dbd0d463 \
+            --output=results.json --format=json --lockfile=package-lock.json
+          scan_exit=$?
+          set -e
+          echo "exit-code=$scan_exit" >> "$GITHUB_OUTPUT"
+          if [ "$scan_exit" -ne 0 ] && [ "$scan_exit" -ne 1 ]; then exit "$scan_exit"; fi
+      - name: Report every known vulnerability
         uses: google/osv-scanner-action/osv-reporter-action@06b2ab4348248b456ee06c9e953637f55e03504f # v2.5.0
         with:
           scan-args: |-
             --new=results.json
-            --fail-on-vuln=true
+            --fail-on-vuln=false
             --gh-annotations=false
+      - name: Set up Node.js for fix eligibility
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24.21.0
+      - name: Use the recorded npm version
+        run: |
+          corepack enable npm
+          test "$(npm --version)" = "$(node -p 'require("./package.json").packageManager.slice(4)')"
+      - name: Install locked gate dependencies
+        run: npm ci --ignore-scripts
+      - name: Require available fixes published at least 14 days ago
+        run: node scripts/vulnerability-release-gate.mjs results.json '${{ steps.osv-scan.outputs.exit-code }}'
 
   test:
     name: Node.js ${{ matrix.node-version }}

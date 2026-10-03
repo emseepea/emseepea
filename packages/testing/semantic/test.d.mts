@@ -18,11 +18,26 @@ export interface ConversationOptions {
 export interface ConversationTurn {
   readonly responses: readonly string[];
   readonly toolCalls: readonly (readonly ToolCall[])[];
+  readonly elicitations: readonly (readonly ElicitationEvidence[])[];
+}
+
+export interface ScriptedElicitation {
+  /** Every fragment must occur in exactly one actual form request. Never sent to the model. */
+  messageIncludes: readonly string[];
+  response: { action: "accept" | "decline" | "cancel"; content?: Record<string, unknown> };
+}
+
+export interface ElicitationEvidence {
+  readonly mode: "form";
+  readonly message: string;
+  readonly requestedSchema: Record<string, unknown>;
+  readonly response?: ScriptedElicitation["response"];
+  readonly inputSource?: "scripted-human";
 }
 
 export interface SemanticConversation {
   /** Sends this exact user message through the same provider-native MCP conversation. */
-  send(prompt: string): Promise<ConversationTurn>;
+  send(prompt: string, options?: { elicitations: readonly ScriptedElicitation[] }): Promise<ConversationTurn>;
 }
 
 export function createConversation(
@@ -39,7 +54,11 @@ export function assertToolCallsWithOptionalFeedback(
 export function assertNoToolCalls(turn: ConversationTurn): void;
 /** Allows no tool call or exactly one call to the named tool in each trial. */
 export function assertOptionalToolCall(turn: ConversationTurn, name: string): void;
-export function assertToolNames(turn: ConversationTurn, expected: readonly string[]): void;
+/** Requires an exact sequence, or one of at most eight explicitly authored sequences. */
+export function assertToolNames(
+  turn: ConversationTurn,
+  expected: readonly string[] | { readonly oneOf: readonly (readonly string[])[] },
+): void;
 export function assertToolArguments(
   turn: ConversationTurn,
   name: string,

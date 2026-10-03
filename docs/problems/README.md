@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-09-30 **P018 opened** — Release retry reuses occupied npm versions from divergent commits
+> Last reviewed: 2026-10-01 **P007 closed on evidence** — Published server package contains the corrected result-schema guide.
 > Run `/wr-itil:review-problems` to refresh Weighted Shortest Job First (WSJF) rankings.
 
 ## WSJF Rankings
@@ -13,7 +13,6 @@ effort, reported date, and ID.
 | WSJF | ID | Title | Severity | Status | Effort | Reported | Origin |
 |------|-----|-------|----------|--------|--------|----------|--------|
 | 10.0 | P001 | Changesets omit initializer bumps when embedded template dependencies change | 20 (Very High) | Open | M | 2026-09-11 | internal |
-| 24.0 | P007 | The shipped package guide is silent on open-by-default result schemas | 12 (High) | Known Error | S | 2026-09-20 | internal |
 | 24.0 | P010 | The release gives up waiting before the registry catches up | 12 (High) | Known Error | S | 2026-09-20 | internal |
 | 24.0 | P011 | The release risk gate cannot be satisfied from a worktree | 12 (High) | Known Error | S | 2026-09-20 | internal |
 | 24.0 | P016 | Feedback deadline test flakes under qualification load | 12 (High) | Open | S | 2026-09-29 | internal |
@@ -55,3 +54,4 @@ None parked.
 |----|-------|--------|----------|
 | P005 | [Branch push is ungated, so untested changes reach continuous integration](closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md) | 2026-09-24 | Installed hook accepted exact commit `0c28ae0`; Quality run `35964172151` passed for that SHA. |
 | P002 | [Release readiness verifier only tests fixture-like stable PASS marker](closed/002-release-readiness-verifier-only-tests-fixture-like-stable-pass-marker.md) | 2026-09-29 | Release run `35818485686` passed Prepare package evidence on exact release head `5d163f9be1478f9ebea1558c0e36ab760d0370aa`. |
+| P007 | [The shipped package guide is silent on open-by-default result schemas](closed/007-shipped-package-guide-is-silent-on-open-by-default-result-schemas.md) | 2026-10-01 | Published `@emseepea/server@0.19.1` tarball README contains the corrected guide; packed-package documentation test passed 7/7. |

@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
+import { scriptedElicitations } from "./elicitation.mjs";
 
 const model = "claude-sonnet-4-6";
 const mcpServerName = "emseepea_eval";
@@ -236,7 +237,7 @@ export function conversationInvocation(provider, directory, url, tools, authToke
   };
 }
 
-export function startModelConversation(provider, directory, url, tools, authToken, context, signal) {
+export function startModelConversation(provider, directory, url, tools, authToken, context, signal, serverSecrets = []) {
   signal?.throwIfAborted();
   const invocation = conversationInvocation(provider, directory, url, tools, authToken, context);
   const child = spawn(invocation.command, invocation.args, {
@@ -250,12 +251,13 @@ export function startModelConversation(provider, directory, url, tools, authToke
   let initialEvents = [];
   let initialized = false;
   let closed = false;
+  const controlIds = new Set();
   const fail = (message) => {
     if (!pending) return;
     clearTimeout(pending.timer);
-    const reject = pending.reject;
+    const { reject, script } = pending;
     pending = undefined;
-    reject(new Error(message));
+    reject(Object.assign(new Error(message), { elicitations: script.evidence }));
   };
   const abort = () => { fail("Model conversation was cancelled"); child.kill("SIGKILL"); };
   signal?.addEventListener("abort", abort, { once: true });
@@ -277,6 +279,21 @@ export function startModelConversation(provider, directory, url, tools, authToke
         child.kill("SIGKILL");
         return;
       }
+      if (event.type === "control_request") {
+        try {
+          if (!pending || typeof event.request_id !== "string" || !event.request_id
+            || controlIds.has(event.request_id)) throw new Error("Unexpected native control request");
+          controlIds.add(event.request_id);
+          const response = pending.script.respond(event.request);
+          child.stdin.write(`${JSON.stringify({ type: "control_response", response: {
+            subtype: "success", request_id: event.request_id, response,
+          } })}\n`);
+        } catch (error) {
+          fail(error.message);
+          child.kill("SIGKILL");
+        }
+        continue;
+      }
       if (!pending) {
         initialEvents.push(event);
         continue;
@@ -284,13 +301,14 @@ export function startModelConversation(provider, directory, url, tools, authToke
       pending.events.push(event);
       if (event.type !== "result") continue;
       clearTimeout(pending.timer);
-      const { events, resolve, reject } = pending;
+      const { events, resolve, reject, script } = pending;
       pending = undefined;
       try {
+        script.finish();
         const turn = parseNativeClaudeEvents(events, tools, !initialized);
         initialized = true;
-        resolve(turn);
-      } catch (error) { reject(error); }
+        resolve({ ...turn, elicitations: script.evidence });
+      } catch (error) { reject(Object.assign(error, { elicitations: script.evidence })); }
     }
   });
   child.once("error", () => fail("Model conversation could not start"));
@@ -299,16 +317,17 @@ export function startModelConversation(provider, directory, url, tools, authToke
     if (pending) fail(`Model conversation exited ${String(code)}`);
   });
   return Object.freeze({
-    send(prompt) {
+    send(prompt, options) {
       if (closed || child.stdin.destroyed) throw new Error("Model conversation is closed");
       if (pending) throw new Error("Model conversation already has a pending turn");
+      const script = scriptedElicitations(options, [authToken, invocation.env.CLAUDE_CODE_OAUTH_TOKEN, ...serverSecrets]);
       return new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
           fail("Model command timed out");
           child.kill("SIGKILL");
         }, 180_000);
         timer.unref();
-        pending = { events: initialEvents, reject, resolve, timer };
+        pending = { events: initialEvents, reject, resolve, timer, script };
         initialEvents = [];
         child.stdin.write(`${JSON.stringify({
           type: "user",

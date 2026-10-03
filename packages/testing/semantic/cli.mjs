@@ -172,6 +172,15 @@ function validToolAssertions(turn, isHash) {
         || (turn.toolCalls.length === 1 && turn.toolCalls[0].name === turn.expectedOptionalTool));
   }
   if (JSON.stringify(turn.selectedTools) !== JSON.stringify(turn.expectedTools)) return false;
+  if (turn.expectedToolAlternatives !== undefined) {
+    const alternatives = turn.expectedToolAlternatives;
+    if (!Array.isArray(alternatives) || alternatives.length < 1 || alternatives.length > 8
+      || !alternatives.every((names) => Array.isArray(names)
+        && names.every((name) => typeof name === "string" && name.trim()))
+      || !alternatives.some((names) => JSON.stringify(names) === JSON.stringify(turn.expectedTools))) {
+      return false;
+    }
+  }
   if (isHash(turn.expectedCallsSha256)) {
     return JSON.stringify(turn.toolCalls.map(({ name, arguments: args }) => ({ name, arguments: args })))
       === JSON.stringify(turn.expectedCalls);
@@ -181,6 +190,8 @@ function validToolAssertions(turn, isHash) {
     tools: turn.expectedTools,
     arguments: turn.expectedArguments,
     feedback: turn.expectedFeedback,
+    ...(turn.expectedToolAlternatives === undefined
+      ? {} : { alternatives: turn.expectedToolAlternatives }),
   })).digest("hex");
   if (expectedHash !== turn.expectedSelectionSha256) return false;
   for (const [name, expected] of Object.entries(turn.expectedArguments ?? {})) {
