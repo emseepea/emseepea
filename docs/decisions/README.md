@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 103 decisions: 58 current and 45 historical.
+This project has 104 decisions: 59 current and 45 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -73,6 +73,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0103: Proved Proxy Boundary for Production Deployments](0103-proved-proxy-boundary-for-production-deployments.proposed.md): Proposed; human review confirmed.
 - [ADR-0105: Bounded Stage-Only Token for npm Promotion](0105-bounded-stage-only-token-for-npm-promotion.proposed.md): Proposed; human review confirmed.
 - [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.proposed.md): Proposed; human review confirmed.
+- [ADR-0107: Release Gates Require a Mature Available Vulnerability Fix](0107-release-gates-require-a-mature-available-vulnerability-fix.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -2235,6 +2236,7 @@ Chosen option: **keep the watched set as a list guarded by a drift test, and all
 - Status: Proposed
 - Human review: Confirmed
 - Replaces: [ADR-0047: Pinned Open Source Vulnerabilities (OSV) Lockfile Scanning](0047-pinned-osv-lockfile-vulnerability-scanning.superseded.md)
+- Replaced by: [ADR-0107: Release Gates Require a Mature Available Vulnerability Fix](0107-release-gates-require-a-mature-available-vulnerability-fix.proposed.md)
 
 #### ADR-0101 Decision
 
@@ -2342,3 +2344,20 @@ Chosen option: **"Clean-install exact-commit gate"**, because it closes both par
 - The installed `pre-push` hook uses the repository-owned tracked implementation and fails closed when it cannot read or validate evidence for the exact commit.
 - Installation is verified in a fresh clone or worktree, and documentation uses the repository's npm-script command contract.
 - The standing risk remains above the accepted risk level until two things are true: behavioural checks pass, and a real push has demonstrated that the gate works. Only after that evidence exists may the risk record reduce the control gap and the remaining likelihood.
+
+### [ADR-0107: Release Gates Require a Mature Available Vulnerability Fix](0107-release-gates-require-a-mature-available-vulnerability-fix.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+- Replaces: [ADR-0101: Vulnerability Scanning Without a Release Workflow](0101-vulnerability-scanning-without-a-release-workflow.proposed.md)
+
+#### ADR-0107 Decision
+
+Chosen option: **block findings with a mature available fix**. This adds the user-directed exceptions to the existing rule. It retains the existing block when an eligible fix is available; it does not interpret “can update” as a new mandatory-update instruction.
+
+#### ADR-0107 Checks
+
+- Behavioural tests distinguish no fix, a fix younger than 14 days, and a fix exactly 14 days old. They reject incomplete data and operational failures.
+- Tests cover separate affected ranges and later reintroductions of a flaw.
+- Actual release use demonstrates that visible unpatched findings do not block publication while eligible-fix findings retain their block.
+- Actual production-use evidence has not yet been obtained. This record remains proposed; the predecessor's ratified text is preserved.
