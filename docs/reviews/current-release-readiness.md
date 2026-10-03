@@ -1,96 +1,82 @@
 # Current Release Readiness
 
-Date: 2026-10-03
+Date: 2026-10-04
 
-This plan covers scripted native form-confirmation input in semantic tests.
-It is not a publication, client compatibility, or production claim.
+This plan covers the optional external-approval broker and matching library
+and starter dependency versions. It is not a publication, native ChatGPT,
+application integration or production-verification claim.
 
 ## Planned Package Set
 
-The Changesets plan covers the testing package and all eleven initializer
-templates that include it:
+The server minor release advances its dependent libraries. All eleven starter
+projects are included so their generated projects use matching dependencies.
 
-- `@emseepea/testing@0.20.0`
-- `@emseepea/create-tool-server@0.1.2`
-- `@emseepea/create-api-backed-server@0.1.2`
-- `@emseepea/create-openapi-backed-server@0.1.2`
-- `@emseepea/create-resources-and-prompts-server@0.1.2`
-- `@emseepea/create-progress-streaming-server@0.1.2`
-- `@emseepea/create-html-ui-server@0.1.2`
-- `@emseepea/create-react-ui-server@0.1.2`
-- `@emseepea/create-multi-instance-postgres-server@0.1.2`
-- `@emseepea/create-database-schema-server@0.1.2`
-- `@emseepea/create-mongodb-backed-server@0.1.2`
-- `@emseepea/create-soap-backed-server@0.1.2`
+- `@emseepea/server@0.20.0`
+- `@emseepea/feedback@0.5.2`
+- `@emseepea/react@0.4.2`
+- `@emseepea/svelte@0.2.2`
+- `@emseepea/testing@0.20.1`
+- `@emseepea/create-tool-server@0.1.3`
+- `@emseepea/create-api-backed-server@0.1.3`
+- `@emseepea/create-openapi-backed-server@0.1.3`
+- `@emseepea/create-resources-and-prompts-server@0.1.3`
+- `@emseepea/create-progress-streaming-server@0.1.3`
+- `@emseepea/create-html-ui-server@0.1.3`
+- `@emseepea/create-react-ui-server@0.1.3`
+- `@emseepea/create-multi-instance-postgres-server@0.1.3`
+- `@emseepea/create-database-schema-server@0.1.3`
+- `@emseepea/create-mongodb-backed-server@0.1.3`
+- `@emseepea/create-soap-backed-server@0.1.3`
 
-No server, feedback, UI or website package release is planned.
+No website or Tailwind package release is planned. No third-party dependency
+version changes are included. Published package versions remain immutable.
 
-Testing versions `0.18.0` and `0.19.0` are already occupied. Their immutable
-packages and provenance remain unchanged. Version `0.19.0` was published under
-`next`, but downloaded-package verification failed: the published tool-server
-initializer still installed testing `0.17.1`, while its source template expected
-`0.18.0`. That candidate was not promoted.
+## Behaviour and Local Evidence
 
-The source baseline now reflects `0.19.0`. The retained minor changeset plans
-fresh testing `0.20.0`; a paired patch changeset releases the eleven updated
-initializer templates as `0.1.2`. Normal versioning updates their testing pins
-to the planned testing version. The installed-version assertion stays intact.
-This repair requires fresh qualification and normal publication verification.
+The broker is available only through the separate
+`@emseepea/server/external-approval` import. It encrypts the proposed action,
+binds approval to its principal and exact details, and uses an atomic storage
+adapter to consume approval once. Stored records contain hashes, expiry and
+decision state, not the proposal's business fields.
 
-## Behaviour and Evidence
+It does not create a page, execute a tool, grant permission or fabricate a
+native form response. Applications must authenticate the person, prevent
+cross-site form submission, recheck permissions and current provider state,
+and retain duplicate prevention. An approved decision is not provider-success
+evidence. Cancellation and expiry cannot authorize execution.
 
-Tests can provide explicit responses to matching native form-confirmation
-requests through `chat.send(prompt, { elicitations })`. Unexpected, ambiguous,
-repeated, or unused scripts fail. URL requests are not supported. There is no
-default approval. Retained confirmation evidence redacts known configured
-credentials; arbitrary secrets placed in test content are not detected.
+The implementation is committed at
+`74cf3ea08856a831dd2345d0e0fdd92e2e8233a2`. Local evidence includes:
 
-The source implementation and README are committed at
-`ae3a327cfc7688c5c7f9f246120c7574d746f454`.
-The dependency and release-gate repairs are committed at
-`3a1fe87c6ab4814dc6829f770dc40e6996c88ca8`. Its exact-commit clean-install
-qualification passed. Local evidence for the implementation includes:
+- Fifteen public-API behavioural tests pass, covering binding, tampering,
+  wrong identity, cancellation, expiry, concurrency, restart, replay,
+  configuration bounds and safe storage-error handling.
+- The complete local suite passed with 334 root tests, plus the build,
+  typecheck and example checks.
+- Normal clean-install qualification passed for exactly this commit.
+- A fresh installation of the locally packed server exercised approval and
+  replay through the public import. This is not a registry-published package.
+- Architecture, JTBD and behavioural-test reviews passed. Both release notes
+  passed voice/tone and confidentiality review.
 
-- Exact-commit clean-install qualification and the full `npm test` passed.
-- All 17 focused confirmation helper and provider tests passed.
-- All 47 built testing-package tests passed.
-- Build, typecheck, and lint passed.
-- One real pinned Claude 2.1.248 trial completed a contact confirmation against
-  the actual VODER write handlers, with synthetic provider and database state.
-  Its explicit fixture accepted the form and produced exactly one synthetic
-  contact write. No real accounting record or email was changed.
-
-Architecture and README cognitive accessibility reviews passed. The release
-note passed voice/tone and confidential-information reviews. The observed
-native Claude trial is not three-trial VODER semantic qualification, actual
-human consent, native ChatGPT evidence, or production verification. Those
-journeys remain outstanding and are not prerequisites for claiming only this
-bounded testing API.
-
-The preceding source Quality run
-[37109235141](https://github.com/emseepea/emseepea/actions/runs/37109235141)
-passed on attempt 2. Its first attempt exceeded the transient-allocation budget;
-the unchanged failed job passed on rerun. Release verification run
-[37110502567](https://github.com/emseepea/emseepea/actions/runs/37110502567)
-failed on attempt 2 at the downloaded quickstart's installed-version assertion.
-Neither run verifies this new paired repair.
-
-The dependency-security gate previously passed with two visible unpatched
-development dependency findings. No third-party dependency version changes in
-this repair. The proposed vulnerability-fix eligibility decision permits
-unpatched findings when no published fix is available; this is not a clean scan.
+The source Quality run is
+[37133068543](https://github.com/emseepea/emseepea/actions/runs/37133068543).
+Its final result must be checked before the next integration. No successful
+release-head build, registry publication or application journey is claimed.
 
 ## Required Publication Evidence
 
-- Qualify the exact repair commit and pass its watched source Quality run.
-- Confirm the release pull request contains only the generated package plan.
-- Pass applicable release risk and publication gates.
-- Verify the exact npm package version, package contents, and provenance.
-- Exercise the published confirmation API before reporting package verification.
+- Verify the complete Changesets package plan against this record.
+- Qualify the exact release-metadata commit and pass its watched Quality run.
+- Verify that the release pull request contains only generated package changes.
+- Pass exact release-head semantic, packed-package and dependency gates.
+- Verify published package versions, contents and provenance before promotion.
+- Exercise the registry-published broker before reporting package verification.
 
-## Review Status, Not Release Status
+## Conditional Readiness, Not Publication
 
-The labels below describe conditional readiness, not publication or deployment.
+The labels below describe this bounded source plan. They do not assert that
+the required release-head checks or publication have completed.
 
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
