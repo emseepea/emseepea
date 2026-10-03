@@ -60,15 +60,19 @@ export async function createConversation(testContext, options) {
 
   try {
     for (let trial = 1; trial <= 3; trial += 1) {
+      const environment = environmentForTrial(specification.environment, trial);
       const running = await startSemanticServer({
         ...specification,
-        environment: environmentForTrial(specification.environment, trial),
+        environment,
       }, testContext.signal);
       try {
         const tools = await listMcpTools(running.url, specification, testContext.signal);
         const record = { trial, turns: [] };
         const directory = await mkdtemp(join(tmpdir(), "emseepea-conversation-"));
-        state.trials.push({ running, tools, record, directory, history: [], model: undefined });
+        const serverSecrets = Object.entries(environment ?? {})
+          .filter(([key]) => /token|password|secret|credential|api.?key/i.test(key))
+          .map(([, value]) => value);
+        state.trials.push({ running, tools, record, directory, history: [], model: undefined, serverSecrets });
         evidence.answerTrials.push(record);
       } catch (error) {
         await stopSemanticServer(running.child);
@@ -82,7 +86,7 @@ export async function createConversation(testContext, options) {
   }
 
   return Object.freeze({
-    async send(prompt) {
+    async send(prompt, options) {
       if (typeof prompt !== "string" || !prompt.trim()) throw new Error("send needs a user prompt");
       ensureOpen(state);
       const results = await Promise.allSettled(state.trials.map(async (trial) => {
@@ -94,8 +98,9 @@ export async function createConversation(testContext, options) {
           semanticAuthToken(specification),
           specification.context,
           testContext.signal,
+          trial.serverSecrets,
         );
-        const answer = await trial.model.send(prompt);
+        const answer = await trial.model.send(prompt, options);
         const calls = answer.calls;
         trial.history.push({
           user: prompt,
@@ -111,6 +116,7 @@ export async function createConversation(testContext, options) {
           interactionMode: "native-mcp",
           prompt,
           response: answer.answer,
+          elicitations: answer.elicitations,
           toolCalls: calls.map((call, index) => ({
             ...call,
             result: answer.toolResults[index].content,
@@ -153,6 +159,7 @@ export async function createConversation(testContext, options) {
         }
         const trial = state.trials[index];
         trial.record.error = safeModelFailure(result.reason);
+        if (Array.isArray(result.reason?.elicitations)) trial.record.elicitations = result.reason.elicitations;
         if (Array.isArray(result.reason?.attemptedToolCalls)) {
           trial.record.attemptedToolCalls = result.reason.attemptedToolCalls;
         }
@@ -165,6 +172,7 @@ export async function createConversation(testContext, options) {
       return Object.freeze({
         responses: Object.freeze(trials.map(({ answer }) => answer)),
         toolCalls: Object.freeze(trials.map(({ calls }) => Object.freeze(calls))),
+        elicitations: Object.freeze(trials.map(({ record }) => Object.freeze(record.elicitations))),
         [privateTurn]: trials,
       });
     },
@@ -457,6 +465,12 @@ function safeModelFailure(error) {
     "Model conversation could not start",
     "Model conversation is closed",
     "Model conversation was cancelled",
+    "Unexpected native control request",
+    "Unsupported native elicitation request",
+    "Unexpected or duplicate native elicitation",
+    "Unused scripted elicitation response",
+    "Invalid scripted elicitations",
+    "Invalid scripted elicitation",
   ]);
   if (safeMessages.has(message) || /^Model (?:command|conversation) exited \d{1,3}$/.test(message)) {
     return message.replace(/^./, (character) => character.toLowerCase());
