@@ -7,18 +7,35 @@ It is not a publication, client compatibility, or production claim.
 
 ## Planned Package Set
 
-The generated Changesets plan contains one public release:
+The Changesets plan covers the testing package and all eleven initializer
+templates that include it:
 
-- `@emseepea/testing@0.19.0`
+- `@emseepea/testing@0.20.0`
+- `@emseepea/create-tool-server@0.1.2`
+- `@emseepea/create-api-backed-server@0.1.2`
+- `@emseepea/create-openapi-backed-server@0.1.2`
+- `@emseepea/create-resources-and-prompts-server@0.1.2`
+- `@emseepea/create-progress-streaming-server@0.1.2`
+- `@emseepea/create-html-ui-server@0.1.2`
+- `@emseepea/create-react-ui-server@0.1.2`
+- `@emseepea/create-multi-instance-postgres-server@0.1.2`
+- `@emseepea/create-database-schema-server@0.1.2`
+- `@emseepea/create-mongodb-backed-server@0.1.2`
+- `@emseepea/create-soap-backed-server@0.1.2`
 
-No server, feedback, UI, or initializer package release is planned. References
-to testing in development dependencies do not add packages to this plan.
+No server, feedback, UI or website package release is planned.
 
-Version `0.18.0` was already staged from earlier source. Its immutable package
-and provenance remain unchanged. The source baseline now reflects that occupied
-version; the retained minor changeset plans a fresh `0.19.0` release containing
-scripted confirmations and explicit alternative tool-sequence assertions.
-This replacement still requires normal publication and registry verification.
+Testing versions `0.18.0` and `0.19.0` are already occupied. Their immutable
+packages and provenance remain unchanged. Version `0.19.0` was published under
+`next`, but downloaded-package verification failed: the published tool-server
+initializer still installed testing `0.17.1`, while its source template expected
+`0.18.0`. That candidate was not promoted.
+
+The source baseline now reflects `0.19.0`. The retained minor changeset plans
+fresh testing `0.20.0`; a paired patch changeset releases the eleven updated
+initializer templates as `0.1.2`. Normal versioning updates their testing pins
+to the planned testing version. The installed-version assertion stays intact.
+This repair requires fresh qualification and normal publication verification.
 
 ## Behaviour and Evidence
 
@@ -50,18 +67,22 @@ human consent, native ChatGPT evidence, or production verification. Those
 journeys remain outstanding and are not prerequisites for claiming only this
 bounded testing API.
 
-The exact source Quality run is
-[37091806885](https://github.com/emseepea/emseepea/actions/runs/37091806885).
-Its dependency-security job passed with two visible unpatched development
-dependency findings. The proposed vulnerability-fix eligibility decision
-permits those findings because no published fix is available. This is not a
-clean dependency scan. Successful completion of the entire source Quality run
-is required before this metadata may be committed.
+The preceding source Quality run
+[37109235141](https://github.com/emseepea/emseepea/actions/runs/37109235141)
+passed on attempt 2. Its first attempt exceeded the transient-allocation budget;
+the unchanged failed job passed on rerun. Release verification run
+[37110502567](https://github.com/emseepea/emseepea/actions/runs/37110502567)
+failed on attempt 2 at the downloaded quickstart's installed-version assertion.
+Neither run verifies this new paired repair.
+
+The dependency-security gate previously passed with two visible unpatched
+development dependency findings. No third-party dependency version changes in
+this repair. The proposed vulnerability-fix eligibility decision permits
+unpatched findings when no published fix is available; this is not a clean scan.
 
 ## Required Publication Evidence
 
-- Pass the exact source Quality run before committing this metadata slice.
-- Qualify the exact metadata commit and pass its watched Quality run.
+- Qualify the exact repair commit and pass its watched source Quality run.
 - Confirm the release pull request contains only the generated package plan.
 - Pass applicable release risk and publication gates.
 - Verify the exact npm package version, package contents, and provenance.
