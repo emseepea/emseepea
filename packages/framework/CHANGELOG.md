@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.21.0
+
+### Minor Changes
+
+- [`97cbec5`](https://github.com/emseepea/emseepea/commit/97cbec5aef7e56f1bc63a21a1a0eae9d3e96216f) Thanks [@tompahoward](https://github.com/tompahoward)! - Add opt-in authenticated MCP Events webhook subscriptions with adopter-owned durable storage. Before saving a subscription, the server checks that its HTTPS callback resolves only to public addresses and verifies a signed challenge. It signs deliveries, rechecks access, and retries transient failures within a fixed limit. Basic servers remain unchanged.
+
 ## 0.20.0
 
 ### Minor Changes
