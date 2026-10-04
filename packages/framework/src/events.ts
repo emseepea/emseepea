@@ -9,7 +9,11 @@ export interface McpEventDefinition {
   readonly description: string;
   readonly inputSchema: ZodType;
   readonly payloadSchema: ZodType;
-  readonly matches: (arguments_: Readonly<Record<string, unknown>>, data: Readonly<Record<string, unknown>>) => boolean;
+  readonly matches: (
+    arguments_: Readonly<Record<string, unknown>>,
+    data: Readonly<Record<string, unknown>>,
+    ownerKey: string,
+  ) => boolean;
 }
 
 export interface McpEventSubscription {
@@ -324,7 +328,8 @@ export function createMcpEventRuntime(
       const now = Date.now();
       for (const subscription of subscriptions) {
         if (subscription.expiresAt <= now ||
-            !definition.matches(subscription.arguments, checked.data as Record<string, unknown>)) continue;
+            !definition.matches(subscription.arguments, checked.data as Record<string, unknown>,
+              subscription.ownerKey)) continue;
         if (!await bounded(() => options.authorize({ ownerKey: subscription.ownerKey,
           name, arguments: subscription.arguments, phase: "delivery" }))) continue;
         await bounded(() => options.store.enqueue({

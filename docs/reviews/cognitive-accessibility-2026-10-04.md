@@ -134,3 +134,44 @@ This is a clarity review, not independent verification of the live test.
 | --- | --- |
 | `website/src/content/docs/mcp-events.md` | `5452bdb0c168802b3e0f95b8ae6a7d9acdc69784c123e6132427fe2da43f2ead` |
 | `.changeset/verify-chatgpt-events-smoke.md` | `86bfc25929166db63a3fa6452c862c08766c2870191fb869e126380c44a21a7d` |
+
+## Feedback reply event guidance
+
+Result: PASS. The independent `events_docs_cognitive_review` specialist
+reviewed the package and website instructions for the event-to-protected-read
+sequence, the one-way Markdown limit, and the distinction between AI delivery
+and a person seeing a reply. The `events_docs_a11y_review` specialist found no
+heading or link-purpose blocker. The `events_docs_voice_review` specialist
+passed the revised provider-webhook explanation. This reviews the wording, not
+a live feedback reply journey.
+
+| File | SHA-256 |
+| --- | --- |
+| `packages/feedback/README.md` | `26025ffcf8a6c48c114a0a5dc311c543a8660773c495cb888159a20de68ef840` |
+| `website/src/content/docs/feedback.md` | `a015611ac34269facf05542f6b5b4a7796242b91cd590689891a448d30c2a417` |
+
+## Feedback reply event release notes
+
+Result: PASS. The independent `events_docs_cognitive_review` specialist
+reviewed all three release notes for clear scope and bounded claims. The
+`events_docs_voice_review` specialist also passed the wording. These reviews
+cover public copy, not registry publication or a live reply journey.
+
+| File | SHA-256 |
+| --- | --- |
+| `.changeset/owner-scoped-event-matching.md` | `6dbc5c9add07966102f2be42852a7585f8e4c3fecacc5e8e6f775737b75284e6` |
+| `.changeset/feedback-reply-events.md` | `bddb95093ede8b4d5805a60b2dd9afdd68b7be2c0fb91a13326f4ff79a5f78bf` |
+| `.changeset/feedback-reply-starters.md` | `e8226965e4c81536d83ee50b279592a774cf60e39ea00e324e5b95ea65d385b4` |
+
+## Feedback reply release readiness
+
+Result: PASS. The independent `events_docs_cognitive_review` specialist
+reviewed the final readiness record for the distinction between the published
+base Events feature and the planned feedback reply bridge, the planned package
+set, and the evidence still required. The `events_docs_voice_review` specialist
+passed the revised references and wording. This is a plan review, not
+publication evidence.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `e122b21aa6ddefacb5494a755bb5f9ad0351dfd55c16ff59cb6ce385aba3f0e3` |

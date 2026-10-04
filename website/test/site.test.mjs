@@ -217,6 +217,19 @@ test("event adopters can find the guide and keep their place in navigation", asy
   }
 });
 
+test("feedback guidance explains how a team reply reaches a subscribed client", async () => {
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 320, height: 900 } });
+  try {
+    const page = await context.newPage();
+    await page.goto(origin + base + "feedback/");
+    assert.ok(await page.getByRole("heading", { name: "Notify the AI when a team reply is ready" }).isVisible());
+    assert.ok(await page.getByText(/call get-feedback-thread and present the reply to the person/).isVisible());
+    assert.ok(await page.getByText(/does not prove that a person saw it/).isVisible());
+  } finally {
+    await context.close();
+  }
+});
+
 test("result-card renderer variants remain available in print", async () => {
   const context = await browser.newContext();
   try {

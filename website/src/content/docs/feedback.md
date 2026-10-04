@@ -97,6 +97,27 @@ When a reply is included in a validated tool result, the backend can record
 It does not prove the user read or understood it, and the user does not need to
 press a button or send an acknowledgement.
 
+### Notify the AI when a team reply is ready
+
+Protected conversations can optionally use [MCP Events](/emseepea/mcp-events/)
+to prompt a subscribed AI client to read a team reply. The event includes the
+account or client scope and stable IDs, not the reply text. The client should
+call `get-feedback-thread` and present the reply to the person.
+
+Set up `createFeedbackReplyEventsOptions` from
+`@emseepea/feedback/mcp-events` with the same stable account or client scope
+as the feedback tools. Check access to the exact thread both when subscribing
+and before delivery.
+
+After saving a team reply, call
+`publishFeedbackTeamReplyEvent` from a transactional outbox (a saved queue
+retried after failures) or a provider webhook whose signature, payload, scope,
+and duplicate status you verify.
+
+The one-way Markdown destination has no team reply path. Event delivery or a
+reply offered to an AI does not prove that a person saw it. Test the complete
+reply journey in your own client and deployment.
+
 ## Choose where support works
 
 - PostgreSQL stores scoped threads, ordered messages, offer receipts, and an optional transactional outbox.
