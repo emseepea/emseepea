@@ -30,6 +30,17 @@ release pull request, registry packages or application journeys.
 
 | File | SHA-256 |
 | --- | --- |
-| `docs/reviews/current-release-readiness.md` | `f90f27cd1ce48f4af278e523f451e574740aec06bbf8405c5c5af2b3cbe0703a` |
+| `docs/reviews/current-release-readiness.md` | `f90f27cd1ce48f4af278e523f451e574740aec06bbf8405c5af2b3cbe0703a` |
 | `.changeset/server-external-approval.md` | `c2e34d7eab73d2d5d17981bae2a11b078259e9314678916cef62787f52f2230f` |
 | `.changeset/external-approval-starters.md` | `9263a3df2c37c2b1d1476ac0b82a5be59fdd3b6bb3aed818740885322d37c979` |
+
+## Proposed MCP Events decision
+
+Result: PASS after revision. An independent cognitive-accessibility specialist reviewed the exact staged Architecture Decision Record (ADR) and generated decisions index. The first review found unexplained abbreviations and a dense decision summary. The ADR now expands the necessary terms and separates readiness, supported methods, and unsupported modes. The second review found no remaining cognitive-accessibility blocker.
+
+Scope: source Markdown clarity and cognitive accessibility only. This review does not establish implementation correctness, rendered mobile layout, native ChatGPT compatibility, or production readiness.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/decisions/0109-opt-in-checked-webhook-subscriptions-for-mcp-events.proposed.md` | `8d74a9844145b2865a2381be48127655fd44a1ef0c37170ccee5a3f819e7866c` |
+| `docs/decisions/README.md` | `e4a31c4d24fb5046511e74ee413ae5263a1c8b7793da0d46900f591029b41965` |
