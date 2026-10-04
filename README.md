@@ -33,6 +33,7 @@ Use the current framework to create:
 - protected tools, resources, prompts, and completions that authenticate before application code runs
 - tools that call another service and check its response
 - optional detailed feedback and protected support conversations backed by PostgreSQL, Firestore, GitHub Issues, or Zendesk
+- opt-in, authenticated webhook events with an adopter-owned durable delivery store
 - resources, reusable resource addresses, prompts, and field suggestions
 - bounded notifications when a registered resource changes
 - clear names, descriptions, icons, and usage hints for clients to display
@@ -189,6 +190,7 @@ Publication does not expand these claims.
 - [Typed authentication and optional protected discovery][public-discovery]
 - [Language-model understanding checks][semantic-qualification]
 - [Optional feedback and support conversations](packages/feedback/README.md)
+- [MCP Events setup and limits](website/src/content/docs/mcp-events.md)
 - [Cognitive-accessibility publication rule][cognitive-publication]
 - [Brand style guide](docs/brand/STYLE-GUIDE.md)
 
