@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.21.1
+
+### Patch Changes
+
+- [`68ee96c`](https://github.com/emseepea/emseepea/commit/68ee96c9a6807c14e2c4c53f934fd36c070ac038) Thanks [@tompahoward](https://github.com/tompahoward)! - Pass the subscription owner key to event matchers so adopters can filter events by both owner and record ID.
+
 ## 0.21.0
 
 ### Minor Changes

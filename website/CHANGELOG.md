@@ -1,5 +1,11 @@
 # @emseepea/website
 
+## 0.0.7
+
+### Patch Changes
+
+- [`68ee96c`](https://github.com/emseepea/emseepea/commit/68ee96c9a6807c14e2c4c53f934fd36c070ac038) Thanks [@tompahoward](https://github.com/tompahoward)! - Add optional MCP Events for team replies in protected feedback conversations. Events carry reply IDs, not reply text, and require an exact-thread access check before delivery.
+
 ## 0.0.6
 
 ### Patch Changes
