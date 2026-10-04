@@ -20,9 +20,15 @@ not support polling, streaming, or the draft's `gap` and `terminated` control
 messages.
 
 Em See Pea implements that webhook subset, not the full draft. It does not
-implement polling, streaming, replay, or those control messages. A live ChatGPT
-event-triggered journey has not yet been verified, so test your own client and
-deployment before relying on a trigger.
+implement polling, streaming, replay, or those control messages. In a synthetic
+ChatGPT Work smoke test on 4 October 2026, ChatGPT posted two event-triggered
+replies; the second followed a local server restart and called `get_demo_note`.
+This verifies that test setup, not production readiness or compatibility with
+every client. Test your own client and deployment before relying on a trigger.
+
+The [test server and setup guide](https://github.com/emseepea/emseepea/tree/main/dogfood/events)
+are available in the repository. They use temporary credentials and synthetic
+notes, not a production identity provider.
 
 ## Supply the application pieces
 
