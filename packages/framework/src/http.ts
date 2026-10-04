@@ -146,7 +146,7 @@ function requestUrl(
   return url;
 }
 
-function isAllowedAddress(address: string, family: number): boolean {
+export function isAllowedAddress(address: string, family: number): boolean {
   if (isIP(address) !== family || (family !== 4 && family !== 6)) return false;
   return family === 4
     ? !prohibitedIpv4Addresses.check(address, "ipv4")

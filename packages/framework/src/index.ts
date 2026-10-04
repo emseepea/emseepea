@@ -75,6 +75,8 @@ import { isIP } from "node:net";
 import { isAbsolute, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { z } from "zod";
+import { createMcpEventRuntime, McpEventInputError, type McpEventRuntime, type McpEventsOptions } from "./events.js";
+export type { McpEventDefinition, McpEventDelivery, McpClaimedEventDelivery, McpEventStore, McpEventSubscription, McpEventsOptions } from "./events.js";
 import {
   installObservability,
   observabilityState,
@@ -733,6 +735,7 @@ export interface EmseepeaOptions {
   readonly maxProgressEvents?: number;
   readonly maxProgressEventBytes?: number;
   readonly resourceSubscriptions?: ResourceSubscriptionOptions;
+  readonly events?: McpEventsOptions;
   readonly requestState?: RequestStateOptions;
   readonly clientLogging?: ClientLoggingOptions;
   readonly clientRoots?: { readonly maxRoots?: number };
@@ -926,6 +929,7 @@ interface AppRuntime {
   observabilityLimits: { deliveryTimeoutMs: number } | undefined;
   finishObservability: ((timeoutMs: number) => Promise<void>) | undefined;
   notifyResourceUpdated?: (uri: string) => void;
+  publishMcpEvent?: (name: string, data: Readonly<Record<string, unknown>>) => Promise<void>;
 }
 interface NormalizedOAuth {
   readonly verifier: OAuthTokenVerifier;
@@ -2178,14 +2182,18 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   const readiness = options.readiness;
   const readinessTimeoutMs = callbackTimeout("readiness", readiness, "readinessTimeoutMs", options.readinessTimeoutMs);
   const stopping = new AbortController();
+  let eventRuntime: McpEventRuntime | undefined;
   let pendingReadiness: Promise<boolean> | undefined;
   async function ready(): Promise<boolean> {
     if (stopping.signal.aborted) return false;
-    if (!readiness) return true;
+    if (!readiness && !eventRuntime) return true;
     if (!pendingReadiness) {
       const deadline = Date.now() + readinessTimeoutMs;
       pendingReadiness = runWithDeadline(stopping.signal, deadline, async (signal) => {
-        try { return await readiness({ signal }) === true && Date.now() < deadline; }
+          try {
+            return (!readiness || await readiness({ signal }) === true) &&
+              (!eventRuntime || await eventRuntime.ready()) && Date.now() < deadline;
+          }
         finally { pendingReadiness = undefined; }
       }).catch(() => false);
     }
@@ -2275,6 +2283,10 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   const authentication = options.authentication
     ? normalizeAuthentication(options.authentication)
     : undefined;
+  if (options.events && !authentication) {
+    throw new TypeError("MCP Events require authentication configuration");
+  }
+  eventRuntime = options.events ? createMcpEventRuntime(options.events) : undefined;
   const hasStreaming = tools.some((tool) => tool[TOOL_STREAMING]);
   const hasProgress = hasStreaming || resources.length > 0 || prompts.length > 0;
   if ([
@@ -2291,6 +2303,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   const resourceTemplates = resources.filter((resource) => resource[RESOURCE_KIND] === "template");
   const promptsByName = new Map(prompts.map((prompt) => [prompt[PROMPT_NAME], prompt]));
   const enabledMethods = new Set(["server/discover"]);
+  if (eventRuntime) enabledMethods.add("events/list").add("events/subscribe").add("events/unsubscribe");
   if (tools.length) enabledMethods.add("tools/list").add("tools/call");
   if (resources.length) enabledMethods.add("resources/list").add("resources/read");
   if (resources.some((resource) => resource[RESOURCE_KIND] === "template")) {
@@ -2582,6 +2595,9 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       return;
     }
     const legacy = classification.kind === "legacy";
+    const eventMethod = !legacy && isRecord(request.body) &&
+      (request.body.method === "events/list" || request.body.method === "events/subscribe" ||
+        request.body.method === "events/unsubscribe");
     if (legacy && classification.requestedVersion &&
         !LEGACY_PROTOCOL_VERSIONS.includes(classification.requestedVersion)) {
       await sendRpcError(
@@ -2634,18 +2650,18 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       markObservabilityProtocolError(request);
     }
     let authInfo: AuthInfo | undefined;
-    if (authentication && (protectsCatalogue || access && access !== "public")) {
+    if (authentication && (eventMethod || protectsCatalogue || access && access !== "public")) {
       try {
         authInfo = await verifyAuthenticatedRequest(
           request,
           reply,
-          protectsCatalogue ? [] : (access as ProtectedCapabilityAccess).requiredScopes,
+          eventMethod || protectsCatalogue ? [] : (access as ProtectedCapabilityAccess).requiredScopes,
           authentication,
         );
         (request.raw as typeof request.raw & { auth?: AuthInfo }).auth = authInfo;
       } catch (error) {
         await sendWebResponse(reply, bearerAuthChallengeResponse(safeOAuthError(error), {
-          requiredScopes: protectsCatalogue
+          requiredScopes: eventMethod || protectsCatalogue
             ? []
             : [...(access as ProtectedCapabilityAccess).requiredScopes],
           resourceMetadataUrl: authentication.resourceMetadataUrl,
@@ -2661,6 +2677,94 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
         isRecord(request.body) ? request.body.id : undefined,
       ));
       return;
+    }
+    if (eventRuntime && !legacy && isRecord(request.body) &&
+        (request.body.method === "server/discover" || eventMethod)) {
+      if (!await eventRuntime.ready()) {
+        await sendRpcError(reply, 503, -32603, "Events are unavailable", requestId(request.body.id));
+        return;
+      }
+      if (request.body.method === "server/discover") {
+        const activeTools = protectsCatalogue
+          ? tools.filter((tool) => accessAllows(tool[TOOL_ACCESS], principal)) : tools;
+        const activeResources = protectsCatalogue
+          ? resources.filter((resource) => accessAllows(resource[RESOURCE_ACCESS], principal)) : resources;
+        const activePrompts = protectsCatalogue
+          ? prompts.filter((prompt) => accessAllows(prompt[PROMPT_ACCESS], principal)) : prompts;
+        const capabilities = {
+          ...(activeTools.length ? { tools: { listChanged: false } } : {}),
+          ...(activeResources.length ? { resources: {
+            subscribe: Boolean(resourceSubscriptions), listChanged: false,
+          } } : {}),
+          ...(activePrompts.length ? { prompts: { listChanged: false } } : {}),
+          ...(activeResources.some((resource) => resource[HAS_COMPLETION]) ||
+            activePrompts.some((prompt) => prompt[HAS_COMPLETION]) ? { completions: {} } : {}),
+          ...(clientLogging ? { logging: {} } : {}),
+          events: {},
+        };
+        await reply.code(200).send({
+          jsonrpc: "2.0",
+          id: requestId(request.body.id),
+          result: {
+            supportedVersions: [PROTOCOL_VERSION],
+            capabilities,
+            resultType: "complete",
+            ttlMs: protectsCatalogue ? 0 : cacheHints?.["server/discover"]?.ttlMs ?? 0,
+            cacheScope: protectsCatalogue ? "private" : cacheHints?.["server/discover"]?.cacheScope ?? "private",
+            ...(options.instructions ? { instructions: options.instructions } : {}),
+            _meta: { "io.modelcontextprotocol/serverInfo": serverInfo },
+          },
+        });
+        return;
+      }
+      if (!authInfo) throw new Error("Events reached execution without verified authorization");
+      let ownerKey: string;
+      try { ownerKey = await eventRuntime.ownerKey(authInfo); }
+      catch {
+        await sendRpcError(reply, 500, -32603, "Event owner identity unavailable", requestId(request.body.id));
+        return;
+      }
+      if (request.body.method === "events/list") {
+        try {
+          const events = await eventRuntime.list(ownerKey);
+          await reply.code(200).send({
+            jsonrpc: "2.0",
+            id: requestId(request.body.id),
+            result: { events, _meta: { "io.modelcontextprotocol/serverInfo": serverInfo } },
+          });
+        } catch {
+          await sendRpcError(reply, 503, -32603, "Events are unavailable", requestId(request.body.id));
+        }
+        return;
+      }
+      if (request.body.method === "events/subscribe") {
+        try {
+          const result = await eventRuntime.subscribe(ownerKey, request.body.params);
+          await reply.code(200).send({ jsonrpc: "2.0", id: requestId(request.body.id), result });
+        } catch (error) {
+          if (error instanceof McpEventInputError) {
+            await sendRpcError(reply, error.code === -32015 ? 200 : 400,
+              error.code, error.message, requestId(request.body.id), { reason: error.reason });
+            return;
+          }
+          await sendRpcError(reply, 503, -32603, "Events are unavailable", requestId(request.body.id));
+        }
+        return;
+      }
+      if (request.body.method === "events/unsubscribe") {
+        try {
+          await eventRuntime.unsubscribe(ownerKey, request.body.params);
+          await reply.code(200).send({ jsonrpc: "2.0", id: requestId(request.body.id), result: {} });
+        } catch (error) {
+          if (error instanceof McpEventInputError) {
+            await sendRpcError(reply, 400, error.code, error.message,
+              requestId(request.body.id), { reason: error.reason });
+          } else {
+            await sendRpcError(reply, 503, -32603, "Events are unavailable", requestId(request.body.id));
+          }
+        }
+        return;
+      }
     }
     if (subscriptionTarget) {
       await serveResourceSubscription(request, reply, subscriptionTarget.uri);
@@ -2707,13 +2811,25 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       await sendRpcError(reply, 500, -32603, "Internal error");
     }
   });
-  app.addHook("onClose", async () => sdkHandler.close());
+  let drainingEvents = false;
+  const eventTimer = eventRuntime ? setInterval(() => {
+    if (drainingEvents || stopping.signal.aborted) return;
+    drainingEvents = true;
+    void eventRuntime!.drain().catch(() => {}).finally(() => { drainingEvents = false; });
+  }, 1000) : undefined;
+  eventTimer?.unref();
+  app.addHook("onClose", async () => {
+    if (eventTimer) clearInterval(eventTimer);
+    await sdkHandler.close();
+  });
   runtimes.set(app, {
     deployment,
     requestTimeoutMs: operationTimeoutMs + 5_000,
     stopping,
     observabilityLimits,
     finishObservability,
+    ...(eventRuntime ? { publishMcpEvent: (name: string, data: Readonly<Record<string, unknown>>) =>
+      eventRuntime.publish(name, data) } : {}),
     ...(resourceEvents ? {
       notifyResourceUpdated(uri: string) {
         if (stopping.signal.aborted) throw new Error("Cannot notify from a stopped Em See Pea app");
@@ -2734,6 +2850,17 @@ export function notifyResourceUpdated(app: FastifyInstance, uri: string): void {
   const notify = runtimes.get(app)?.notifyResourceUpdated;
   if (!notify) throw new TypeError("notifyResourceUpdated requires resourceSubscriptions");
   notify(uri);
+}
+
+export async function publishMcpEvent(
+  app: FastifyInstance,
+  name: string,
+  data: Readonly<Record<string, unknown>>,
+): Promise<void> {
+  const runtime = runtimes.get(app);
+  if (!runtime?.publishMcpEvent || runtime.stopping.signal.aborted)
+    throw new TypeError("publishMcpEvent requires an active MCP Events server");
+  await runtime.publishMcpEvent(name, data);
 }
 
 function safeOAuthError(error: unknown): unknown {

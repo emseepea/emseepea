@@ -1016,6 +1016,52 @@ The default limits are 16 active streams, 256 events, 8 KiB per event, a
 `resourceSubscriptions`. Streams and notifications are process-local, with no
 replay or reconnect recovery. List-change subscriptions are not supported.
 
+## Trigger Work from MCP Events
+
+MCP Events are separate from the process-local resource subscriptions above.
+To offer ChatGPT's webhook event mode, pass `events` and OAuth authentication to
+`createEmseepea`. No event methods or outbound callbacks are enabled by default.
+
+An event definition has a fixed name, description, Zod object schemas for
+subscription arguments and event data, and a `matches(arguments, data)` filter.
+The catalogue is fixed for the life of the server; redeploy to change it.
+
+The `events` configuration must also provide:
+
+- `ownerKey(auth)`: a stable, account-specific identifier. Do not use the OAuth
+  client ID or an access token as the subscription owner.
+- `authorize({ ownerKey, name, arguments, phase })`: return `true` only while
+  that owner may see or receive the event. The framework calls it for listing,
+  subscribing, and again before each delivery.
+- `health()`: return `true` only while the durable subscription and delivery
+  store and required outbound delivery are operational. A failure makes event
+  methods and readiness fail closed.
+- `callbackTimeoutMs`: optional deadline for these adopter callbacks, from 1
+  to 10,000 milliseconds (5,000 by default). Timed-out operations fail closed.
+- `store`: an adopter-owned durable implementation of `McpEventStore`. Persist
+  subscriptions and queued deliveries across restarts. An in-memory map is
+  suitable only for a test, not deployment. Its operations must provide:
+  - Atomic subscription `put` and `delete`.
+  - Durable delivery `enqueue`.
+  - Atomic `claimDue` leases across instances.
+  - Idempotent `complete` and `reschedule` that apply only to the current lease.
+
+After a domain change, call `await publishMcpEvent(app, name, data)`. It checks
+the event payload, applies each subscription's filter and current access, then
+queues a stable event ID for matching subscribers. The background worker checks
+access again, signs the exact JSON bytes with Standard Webhooks, and retries
+transient failures with bounded backoff. It does not retry HTTP 410 or 413.
+
+Callbacks must use HTTPS and public addresses. For each connection, the
+framework checks DNS, pins a validated address for TLS, and refuses redirects.
+It verifies a signed challenge before storing a subscription.
+
+This opt-in supports webhook `events/list`, `events/subscribe`, and
+`events/unsubscribe` on the authenticated MCP endpoint. It does not implement
+polling, streaming, replay, or gap/terminated notifications. Local tests cover
+the protocol boundary and delivery logic; a production ChatGPT event-triggered
+journey must be verified separately before claiming that outcome.
+
 ## Tell Clients When They May Reuse Results
 
 By default, clients are told not to reuse lists, discovery details, or resource
