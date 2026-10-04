@@ -44,6 +44,10 @@
       "types": "./dist/webhooks.d.ts",
       "import": "./dist/webhooks.js"
     },
+    "./mcp-events": {
+      "types": "./dist/mcp-events.d.ts",
+      "import": "./dist/mcp-events.js"
+    },
     "./testing-server": "./dist/testing-server.js"
   },
   "files": [
@@ -55,7 +59,7 @@
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.type-tests.json",
     "prepack": "npm run build",
     "test": "npm run build && npm run test:built",
-    "test:built": "node --test test/*.test.mjs",
+    "test:built": "node --test test/*.test.mjs src/*.test.js",
     "test:postgres": "cd ../../examples/multi-instance-postgres-server && node test/with-postgres.mjs node --test ../../packages/feedback/test/postgres.integration.mjs",
     "test:llm": "npm run build && npm run test:llm:built",
     "test:llm:built": "emseepea-test eval",

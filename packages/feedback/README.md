@@ -241,6 +241,37 @@ and cannot change the MCP result. Hook code must honor that signal and deadline.
 For reliable delivery, use the PostgreSQL or Firestore outbox, or GitHub and
 Zendesk native automation.
 
+### Notify an AI client about a team reply
+
+A protected conversation can optionally use MCP Events to tell a subscribed AI
+client that a team reply is ready. The event carries only the account or client
+scope and stable thread, message, and source-event IDs. It does not carry the
+reply text. The client should call `get-feedback-thread` and present the reply
+to the person.
+
+1. Configure `createFeedbackReplyEventsOptions` from
+   `@emseepea/feedback/mcp-events` as the server's `events` option. Use the same
+   stable account or client scope for its `ownerKey` as for
+   `defineFeedbackConversation({ scope })`.
+2. Supply `canReadThread(ownerKey, threadId)` to check access to the exact
+   thread. The check runs when subscribing and again before delivery. Supply
+   your durable MCP Events store and health check as described in the
+   [MCP Events guide](https://emseepea.github.io/emseepea/mcp-events/).
+3. After saving a team reply, pass its typed feedback event to
+   `publishFeedbackTeamReplyEvent(app, event)`. For PostgreSQL or Firestore,
+   publish from the transactional outbox: a saved queue that can be retried
+   after failures. For GitHub or Zendesk, use the checked provider webhook.
+   The helper ignores non-team events and publishes only a reference to a team
+   message.
+
+An outbox retry can publish the same reply more than once. Use the stable
+`sourceEventId` in the event payload to recognise duplicates.
+
+The Markdown destination is one-way and has no team reply to announce. An
+event delivery, or a reply being offered to an AI client, does not prove a
+person saw it. Test the complete reply journey in your own client and
+deployment before relying on it.
+
 ## Effect and Retry Limits
 
 Creating a thread, submitting feedback, and appending a message are
