@@ -132,5 +132,5 @@ This is a clarity review, not independent verification of the live test.
 
 | File | SHA-256 |
 | --- | --- |
-| `website/src/content/docs/mcp-events.md` | `0cadd6d89258230108dd3d1741ee80d072a872ba114083377ec10bfbf14d0f90` |
+| `website/src/content/docs/mcp-events.md` | `5452bdb0c168802b3e0f95b8ae6a7d9acdc69784c123e6132427fe2da43f2ead` |
 | `.changeset/verify-chatgpt-events-smoke.md` | `86bfc25929166db63a3fa6452c862c08766c2870191fb869e126380c44a21a7d` |

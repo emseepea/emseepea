@@ -20,9 +20,11 @@ not support polling, streaming, or the draft's `gap` and `terminated` control
 messages.
 
 Em See Pea implements that webhook subset, not the full draft. It does not
-implement polling, streaming, replay, or those control messages. In a synthetic
-ChatGPT Work smoke test on 4 October 2026, ChatGPT posted two event-triggered
-replies; the second followed a local server restart and called `get_demo_note`.
+implement polling, streaming, replay, or those control messages.
+
+In a synthetic ChatGPT Work smoke test on 4 October 2026, ChatGPT posted two
+event-triggered replies; the second followed a local server restart and called
+`get_demo_note`.
 This verifies that test setup, not production readiness or compatibility with
 every client. Test your own client and deployment before relying on a trigger.
 
