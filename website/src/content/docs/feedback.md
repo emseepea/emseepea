@@ -107,7 +107,9 @@ call `get-feedback-thread` and present the reply to the person.
 Set up `createFeedbackReplyEventsOptions` from
 `@emseepea/feedback/mcp-events` with the same stable account or client scope
 as the feedback tools. Check access to the exact thread both when subscribing
-and before delivery. After saving a team reply, call
+and before delivery.
+
+After saving a team reply, call
 `publishFeedbackTeamReplyEvent` from a transactional outbox (a saved queue
 retried after failures) or a provider webhook whose signature, payload, scope,
 and duplicate status you verify.

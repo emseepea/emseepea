@@ -148,7 +148,7 @@ a live feedback reply journey.
 | File | SHA-256 |
 | --- | --- |
 | `packages/feedback/README.md` | `26025ffcf8a6c48c114a0a5dc311c543a8660773c495cb888159a20de68ef840` |
-| `website/src/content/docs/feedback.md` | `ab8231cfee224ad884dd79ce4cc6169b71b697f754ca5817796718098834c46d` |
+| `website/src/content/docs/feedback.md` | `a015611ac34269facf05542f6b5b4a7796242b91cd590689891a448d30c2a417` |
 
 ## Feedback reply event release notes
 
