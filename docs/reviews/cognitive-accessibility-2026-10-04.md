@@ -134,3 +134,14 @@ This is a clarity review, not independent verification of the live test.
 | --- | --- |
 | `website/src/content/docs/mcp-events.md` | `5452bdb0c168802b3e0f95b8ae6a7d9acdc69784c123e6132427fe2da43f2ead` |
 | `.changeset/verify-chatgpt-events-smoke.md` | `86bfc25929166db63a3fa6452c862c08766c2870191fb869e126380c44a21a7d` |
+
+## Owner-scoped event matching release note
+
+Result: PASS. The independent `feedback_owner_changeset_cognitive`
+specialist reviewed the short release note for plain language, scannability,
+and technical-term clarity. This is a copy review, not a claim that the
+feedback reply bridge or a customer notification has shipped.
+
+| File | SHA-256 |
+| --- | --- |
+| `.changeset/owner-scoped-event-matching.md` | `723df67a99d7d633293e4fc5c0f2c703f4767d16f2b3a82e3146404018efec7e` |
