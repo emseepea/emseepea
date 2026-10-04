@@ -1,5 +1,11 @@
 # @emseepea/website
 
+## 0.0.6
+
+### Patch Changes
+
+- [`eb23a65`](https://github.com/emseepea/emseepea/commit/eb23a65a2c1c18be209f712a6850e6c25534904e) Thanks [@tompahoward](https://github.com/tompahoward)! - Document the bounded live ChatGPT Work MCP Events smoke test and link to its synthetic test server.
+
 ## 0.0.5
 
 ### Patch Changes
