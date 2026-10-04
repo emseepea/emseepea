@@ -1,5 +1,13 @@
 # @emseepea/website
 
+## 0.0.4
+
+### Patch Changes
+
+- [`edb0983`](https://github.com/emseepea/emseepea/commit/edb0983b9b8acff31da75f3095cbe0bae10fca93) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an adopter guide for opt-in MCP Events webhooks, including configuration,
+  the durable store contract, security requirements, supported methods, and
+  verification limits.
+
 ## 0.0.3
 
 ### Patch Changes
