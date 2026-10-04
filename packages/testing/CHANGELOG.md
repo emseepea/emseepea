@@ -1,5 +1,12 @@
 # @emseepea/testing
 
+## 0.20.2
+
+### Patch Changes
+
+- Updated dependencies [[`97cbec5`](https://github.com/emseepea/emseepea/commit/97cbec5aef7e56f1bc63a21a1a0eae9d3e96216f)]:
+  - @emseepea/server@0.21.0
+
 ## 0.20.1
 
 ### Patch Changes
