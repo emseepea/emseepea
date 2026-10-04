@@ -106,3 +106,17 @@ instructions; it improves scanning without changing the meaning.
 | `website/src/content/docs/mcp-events.md` | `ded34aa17acc9f82677714d77a37ca24cad8d42760d5aa8775a46ab931ab4ea0` |
 | `.changeset/document-mcp-events.md` | `a107c3f211f7b2220a5b16edf1e102a93a71e5c460472c3e8b7ad3954a2d9c99` |
 | `docs/reviews/current-release-readiness.md` | `89434945fd509621392c8ba18dc7dc7bf602b8a86002921f14caedf4d6b85404` |
+
+## MCP Events delivery-mode clarification
+
+Result: PASS. The independent `events_clarification_cog` specialist reviewed
+the guide and website changeset. The revised guide separates optional draft
+delivery modes, ChatGPT's current webhook integration, Em See Pea's implemented
+subset, and the unverified live ChatGPT journey. The
+`events_clarification_a11y` review also passed its heading, link-purpose, and
+rendered-page impact checks. The website build and all 11 site tests passed.
+
+| File | SHA-256 |
+| --- | --- |
+| `website/src/content/docs/mcp-events.md` | `ceefb15717b0e2a74314e5983013207b5501b54abee0688dcbaa214e7ae6aeb8` |
+| `.changeset/clarify-mcp-events-modes.md` | `6ae4bc3d311643b1822453134749f397d25d44e3821cc9ac07a9f52ace48b08a` |
