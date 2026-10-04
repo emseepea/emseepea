@@ -91,8 +91,9 @@ The client calls `events/list` and then `events/subscribe` with a public HTTPS
 callback and a client-provided `whsec_` signing secret in the Standard Webhooks
 format. The framework checks Domain Name System (DNS) records and the
 connection address, refuses redirects, sends a signed challenge, and stores
-the subscription only when the callback returns the challenge. Private,
-loopback, and plain HTTP callback addresses are not accepted.
+the subscription only when the callback returns the challenge.
+
+Private, loopback, and plain HTTP callback addresses are not accepted.
 
 Subscriptions last no longer than 24 hours. The client renews one by calling
 `events/subscribe` again before `refreshBefore`; there is no separate refresh
