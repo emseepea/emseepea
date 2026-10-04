@@ -1,5 +1,11 @@
 # @emseepea/website
 
+## 0.0.5
+
+### Patch Changes
+
+- [`f71c60d`](https://github.com/emseepea/emseepea/commit/f71c60d1163ee356485c0ce861b1401f33cca0f9) Thanks [@tompahoward](https://github.com/tompahoward)! - Clarify how Em See Pea's webhook-only MCP Events support relates to the draft extension and ChatGPT's current integration.
+
 ## 0.0.4
 
 ### Patch Changes
