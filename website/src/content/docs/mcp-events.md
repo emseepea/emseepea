@@ -8,12 +8,21 @@ after something changes in your application. This is separate from the
 process-local resource update stream. Events are **off by default**; ordinary
 servers do not make outbound webhook calls.
 
-Em See Pea implements the webhook subset: `events/list`, `events/subscribe`,
-and `events/unsubscribe`. It does not implement polling, streaming, replay,
-gap notifications that report missed events, or termination notifications
-that report an ended subscription. A live ChatGPT event-triggered journey has
-not yet been verified, so test your own client and deployment before relying
-on a trigger.
+The [draft MCP Events extension](https://github.com/modelcontextprotocol/experimental-ext-triggers-events/blob/main/docs/design-sketch-proposal.md)
+defines three alternative delivery modes: polling, push streaming, and webhooks.
+An event can offer webhooks alone; replay is optional. The draft also defines
+`gap` and `terminated` webhook control messages.
+
+[ChatGPT's current Events integration](https://developers.openai.com/plugins/build/mcp-events)
+uses event discovery and `events/list`, `events/subscribe`, and
+`events/unsubscribe` with webhook delivery and callback verification. It does
+not support polling, streaming, or the draft's `gap` and `terminated` control
+messages.
+
+Em See Pea implements that webhook subset, not the full draft. It does not
+implement polling, streaming, replay, or those control messages. A live ChatGPT
+event-triggered journey has not yet been verified, so test your own client and
+deployment before relying on a trigger.
 
 ## Supply the application pieces
 
