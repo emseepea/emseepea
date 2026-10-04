@@ -85,3 +85,22 @@ clarity finding remained. This supersedes the pending-version review above.
 | File | SHA-256 |
 | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `10e78d3537ce854424e70a05475f39df60577e74290032bf659761f4fec4890f` |
+
+## MCP Events adopter guide
+
+Result: PASS after revision. The independent `events_docs_cognitive_review`
+specialist reviewed the root and website guidance and website release note.
+The guide now links explicit authentication prerequisites, explains unsupported
+event modes, separates application-supplied code from framework behavior, and
+ends with a scannable deployment-verification checklist. The independent
+`events_docs_a11y_review` specialist passed the rendered page after a
+navigation entry and current-page assertion were added. This is copy and
+accessibility evidence, not proof of npm publication or a live ChatGPT journey.
+
+| File | SHA-256 |
+| --- | --- |
+| `README.md` | `9c2c5285d6de39e60218192fc1eacc91423ad099b455a0af3405e4ce04065222` |
+| `website/src/content/docs/index.md` | `8c06da85562a13556e2ba8253401b09a390ed3809d712e2458efa1228196a13f` |
+| `website/src/content/docs/mcp-events.md` | `a114186d4a8a76eedfb09308f3946796235050b1314bc05fe7ef281c90f46ca8` |
+| `.changeset/document-mcp-events.md` | `a107c3f211f7b2220a5b16edf1e102a93a71e5c460472c3e8b7ad3954a2d9c99` |
+| `docs/reviews/current-release-readiness.md` | `89434945fd509621392c8ba18dc7dc7bf602b8a86002921f14caedf4d6b85404` |

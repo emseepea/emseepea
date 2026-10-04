@@ -201,6 +201,20 @@ test("marketplace authors can reach the versioning guide without JavaScript", as
   }
 });
 
+test("event adopters can find the guide and keep their place in navigation", async () => {
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 320, height: 900 } });
+  try {
+    const page = await context.newPage();
+    await page.goto(origin + base);
+    await page.getByRole("link", { name: "Add MCP Events", exact: true }).click();
+    assert.equal(new URL(page.url()).pathname, base + "mcp-events/");
+    assert.ok(await page.getByRole("heading", { level: 1, name: "Trigger work from MCP Events" }).isVisible());
+    assert.equal(await page.locator('#starlight__sidebar a[href$="/mcp-events/"][aria-current="page"]').count(), 1);
+  } finally {
+    await context.close();
+  }
+});
+
 test("result-card renderer variants remain available in print", async () => {
   const context = await browser.newContext();
   try {

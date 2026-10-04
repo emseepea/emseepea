@@ -2,11 +2,12 @@
 
 Date: 2026-10-04
 
-This plan covers opt-in MCP Events webhook support in the server, matching
-libraries, and starter dependency versions. It is not a publication or a
-verified production ChatGPT event-triggered journey.
+Opt-in MCP Events webhook support has been released in the server, matching
+libraries, and starter dependency versions. This record now covers the
+follow-up website guide. Neither package publication nor the guide proves a
+live ChatGPT event-triggered journey.
 
-## Planned Package Set
+## Published Package Set
 
 The server minor release advances its dependent libraries. All eleven starter
 projects are included so their generated projects use matching dependencies.
@@ -28,8 +29,25 @@ projects are included so their generated projects use matching dependencies.
 - `@emseepea/create-mongodb-backed-server@0.1.4`
 - `@emseepea/create-soap-backed-server@0.1.4`
 
-No website or Tailwind package release is planned. No third-party dependency
-version changes are included. Published package versions remain immutable.
+The package release did not include the website or Tailwind. No third-party
+dependency version changes were included. Published package versions are
+immutable.
+
+The exact source Quality run `37172921662` passed. Release pull request #137
+at `b41dfbfbb2c756f434b09cff4ff98e06f99f8c02` passed Release run
+`37173472016` on attempt 2, including semantic checks, registry provenance,
+and downloaded-package checks. Publish run `37174863657` passed. All 16
+versions above now resolve from npm `latest`; the server's provenance binds
+`@emseepea/server@0.21.0` to the release pull request head. This verifies
+the published package, not a live subscriber journey.
+
+## Planned Website Guide
+
+A website-only patch changeset adds an MCP Events guide and navigation entry.
+It names the OAuth prerequisite, application-supplied durable store and
+authorization, webhook safety requirements, supported methods, renewal,
+unsupported modes, and deployment-verification checklist. No published npm
+package contents change in this follow-up.
 
 ## Behaviour and Local Evidence
 
@@ -42,7 +60,7 @@ address, signs deliveries, rechecks access, and bounds callback waits and
 delivery retries. Polling, streaming, replay, and gap/terminated notifications
 are not in this release.
 
-Local evidence for the current source candidate:
+Local evidence for the released package source:
 
 - The complete local suite passed: 340 root tests, plus build, typecheck,
   example, and packed-package checks.
@@ -54,24 +72,27 @@ Local evidence for the current source candidate:
   notes. The risk review covered this complete package plan at a residual
   score of 5/25 for commit, push, and release.
 
-These local checks do not establish a successful Quality run, release-head
-build, registry publication, or adopter production journey.
+The exact runs and registry readback above establish package publication. The
+local checks alone did not establish that, and no adopter production journey
+has been verified.
 
-## Required Publication Evidence
+## Required Website Publication Evidence
 
-- Check the complete Changesets plan against these exact package versions.
-- Qualify the exact committed source and pass its watched Quality run.
-- Verify that the release pull request contains only generated package changes.
-- Pass exact release-head semantic, packed-package and dependency gates.
-- Verify registry versions, contents, and provenance before promotion.
-- Exercise the registry-published server event boundary before reporting
-  package verification. An adopter's live ChatGPT trigger needs separate proof.
+- Confirm the website-only Changesets plan and exact source Quality run.
+- Pass the measured website build, accessible rendered-page and navigation
+  checks, and release-head gates.
+- Publish the measured website artifact and verify the deployed MCP Events
+  guide, its links, and its current-page navigation directly.
+- Keep live ChatGPT event-triggered claims separate until a real subscribed
+  client journey is verified.
 
-## Conditional Readiness, Not Publication
+## Conditional Website Readiness, Not Publication
 
-The labels below describe this bounded source plan. They do not assert that
-the required release-head checks or publication have completed.
+The labels below describe the local website guide and reviewed copy. The
+documentation-slice risk review scored commit, push, and release at 5/25,
+within the project's appetite. The website changes have not passed
+exact-commit Quality or deployed-site checks.
 
 - Result: PASS
-- Final result: within appetite, subject to the required exact-commit gates.
-- Release verification: NOT COMPLETE.
+- Final result: within appetite, subject to exact-commit and deployment gates.
+- Website deployment verification: NOT COMPLETE.

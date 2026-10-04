@@ -40,11 +40,15 @@ take over, and which application responsibilities remain yours.
 - Reference material and reusable prompts for assistants.
 - Tools that send progress updates while they work.
 - Optional detailed feedback and durable support conversations.
+- Optional webhook events that notify subscribed clients after an application change.
 - Optional web forms, using native HTML or React.
 
 [Choose an example](./examples/) that matches what you want to build.
 
 [Add feedback](./feedback/) after choosing the application shape.
+
+[Add MCP Events](./mcp-events/) when an authenticated client needs a webhook
+after an application change.
 
 ## Test the choice and meaning, not just the response
 
