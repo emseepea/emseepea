@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 105 decisions: 60 current and 45 historical.
+This project has 106 decisions: 61 current and 45 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -75,6 +75,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.proposed.md): Proposed; human review confirmed.
 - [ADR-0107: Release Gates Require a Mature Available Vulnerability Fix](0107-release-gates-require-a-mature-available-vulnerability-fix.proposed.md): Proposed; human review pending.
 - [ADR-0108: External Approval Uses Encrypted Bound Capsules and Atomic Consumption](0108-external-approval-uses-encrypted-bound-capsules-and-atomic-consumption.proposed.md): Proposed; human review pending.
+- [ADR-0109: Opt-In Checked Webhook Subscriptions for Model Context Protocol Events](0109-opt-in-checked-webhook-subscriptions-for-mcp-events.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -2377,3 +2378,20 @@ Chosen option: **separate encrypted external-approval broker**, because signed r
 - Public-interface tests reject tampering, wrong keys and bindings, oversized or expired state, cancellation and concurrent replay.
 - Shared-store tests prove restart and multiple-instance use, with no business payload in approval records.
 - Actual adopter production use demonstrates that the same approved effect executes only after explicit approval. That evidence is outstanding.
+
+### [ADR-0109: Opt-In Checked Webhook Subscriptions for Model Context Protocol Events](0109-opt-in-checked-webhook-subscriptions-for-mcp-events.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### ADR-0109 Decision
+
+Chosen option: **"Opt-in checked webhook subscriptions"**, because the requested trigger needs durable subscriptions and a single enforceable security boundary.
+
+#### ADR-0109 Checks
+
+- An opt-in server advertises an event catalogue and handles list, subscribe, refresh, and unsubscribe on its authenticated MCP endpoint; a basic server does not advertise or accept those methods.
+- A real production deployment retains a subscription through restart, filters an emitted event, verifies and signs the callback, and has ChatGPT receive the event and perform the user's requested follow-up.
+- Invalid, unauthorized, expired, revoked, and mismatched requests produce no application event or callback delivery. Repeated subscribe and unsubscribe requests do not create duplicate subscriptions or effects.
+- Delivery tests reject local and private addresses, DNS/address changes, redirects, invalid callback challenges, oversized responses, and unsafe secret handling; retries are bounded and retain stable event identifiers.
+- Required store or delivery failure removes readiness, and documentation distinguishes the verified webhook subset from unsupported event modes and replay.

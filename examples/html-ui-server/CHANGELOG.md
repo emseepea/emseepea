@@ -1,5 +1,11 @@
 # @emseepea/create-html-ui-server
 
+## 0.1.4
+
+### Patch Changes
+
+- [`97cbec5`](https://github.com/emseepea/emseepea/commit/97cbec5aef7e56f1bc63a21a1a0eae9d3e96216f) Thanks [@tompahoward](https://github.com/tompahoward)! - Update starter projects to use the MCP Events server and matching testing package versions.
+
 ## 0.1.3
 
 ### Patch Changes
