@@ -120,3 +120,17 @@ rendered-page impact checks. The website build and all 11 site tests passed.
 | --- | --- |
 | `website/src/content/docs/mcp-events.md` | `ceefb15717b0e2a74314e5983013207b5501b54abee0688dcbaa214e7ae6aeb8` |
 | `.changeset/clarify-mcp-events-modes.md` | `6ae4bc3d311643b1822453134749f397d25d44e3821cc9ac07a9f52ace48b08a` |
+
+## MCP Events live smoke wording
+
+Result: PASS. The independent `events_docs_cognitive_review` specialist
+reviewed the updated guide and changeset. The guide identifies the synthetic
+ChatGPT Work test, the two observed replies, the restart and read-tool detail,
+and the boundary between this test and production or other clients. The
+`events_docs_a11y_review` specialist found no heading or link-purpose blocker.
+This is a clarity review, not independent verification of the live test.
+
+| File | SHA-256 |
+| --- | --- |
+| `website/src/content/docs/mcp-events.md` | `5452bdb0c168802b3e0f95b8ae6a7d9acdc69784c123e6132427fe2da43f2ead` |
+| `.changeset/verify-chatgpt-events-smoke.md` | `86bfc25929166db63a3fa6452c862c08766c2870191fb869e126380c44a21a7d` |
