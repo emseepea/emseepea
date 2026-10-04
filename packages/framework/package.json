@@ -40,6 +40,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test:built": "node --test test/*.test.js",
     "prepack": "npm run build"
   },
   "dependencies": {

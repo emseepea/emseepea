@@ -105,6 +105,48 @@ test("event subscription verifies, stores, filters, signs, delivers and unsubscr
   assert.equal(subscriptions.size, 0);
 });
 
+test("event matching can distinguish subscribers with the same filter by owner", async () => {
+  const subscriptions = new Map();
+  const queued = [];
+  const secret = `whsec_${Buffer.alloc(32, 9).toString("base64")}`;
+  const store = {
+    async get(id) { return subscriptions.get(id) ?? null; },
+    async put(row) { subscriptions.set(row.id, row); },
+    async delete(id) { subscriptions.delete(id); },
+    async list(name) { return [...subscriptions.values()].filter((row) => row.name === name); },
+    async enqueue(row) { queued.push(row); },
+    async claimDue() { return []; },
+    async complete() {},
+    async reschedule() {},
+  };
+  const runtime = createMcpEventRuntime({
+    definitions: [{
+      name: "reply.ready", description: "A reply is ready.",
+      inputSchema: z.object({ threadId: z.string() }),
+      payloadSchema: z.object({ scope: z.string(), threadId: z.string() }),
+      matches: (args, data, ownerKey) =>
+        args.threadId === data.threadId && ownerKey === data.scope,
+    }],
+    ownerKey: () => "unused",
+    authorize: () => true,
+    health: () => true,
+    store,
+  }, async (_url, body) => ({
+    status: 200,
+    body: Buffer.from(JSON.stringify({ challenge: JSON.parse(body.toString()).challenge })),
+  }));
+  const params = {
+    name: "reply.ready", arguments: { threadId: "same-id" },
+    delivery: { mode: "webhook", url: "https://callback.example.com/events", secret },
+  };
+  const ownerA = await runtime.subscribe("scope-a", params);
+  await runtime.subscribe("scope-b", params);
+
+  await runtime.publish("reply.ready", { scope: "scope-a", threadId: "same-id" });
+  assert.equal(queued.length, 1);
+  assert.equal(queued[0].subscriptionId, ownerA.id);
+});
+
 test("checked webhook transport refuses private destinations before connecting", async () => {
   await assert.rejects(postCheckedWebhook("https://127.0.0.1/callback", Buffer.from("{}"), {}));
   await assert.rejects(postCheckedWebhook("https://[::1]/callback", Buffer.from("{}"), {}));
