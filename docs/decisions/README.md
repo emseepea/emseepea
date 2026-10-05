@@ -8,8 +8,8 @@ decision's chosen approach, its checks, and any decision it replaces.
 This project has 107 decisions: 62 current and 45 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
-Proposed means production validation has not yet promoted the decision to
-Accepted; it does not mean human approval is pending.
+Proposed means production validation is incomplete. Human review is
+recorded separately.
 
 ## Quick Index
 

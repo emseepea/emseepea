@@ -13,6 +13,7 @@ test("the decision compendium keeps complete decisions and relationships", async
 
   await writeDecision(directory, "0002-new.proposed.md", {
     status: "proposed",
+    oversight: "unconfirmed",
     title: "New Decision",
     supersedes: '["0001-old"]',
     chosen: [
@@ -35,6 +36,7 @@ test("the decision compendium keeps complete decisions and relationships", async
   assert.match(result, /- Replaces: \[ADR-0001: Old Decision\]\(0001-old\.superseded\.md\)/);
   assert.match(result, /- Replaced by: \[ADR-0002: New Decision\]\(0002-new\.proposed\.md\)/);
   assert.match(result, /### \[ADR-0001: Old Decision\][\s\S]*?- Status: Superseded/);
+  assert.match(result, /ADR-0002: New Decision[^\n]*human review unconfirmed/);
 });
 
 test("the generator rejects incomplete or contradictory decisions", async (t) => {
@@ -76,12 +78,13 @@ async function writeDecision(directory, filename, options = {}) {
     chosen = ['Chosen option: **"A complete choice"**, because it is testable.'],
     checks = ["A complete check passes."],
     supersedes,
+    oversight = "confirmed",
   } = options;
 
   const frontmatter = [
     "---",
     `status: "${status}"`,
-    "human-oversight: confirmed",
+    `human-oversight: ${oversight}`,
     ...(supersedes ? [`supersedes: ${supersedes}`] : []),
     "---",
   ];

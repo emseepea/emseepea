@@ -7,6 +7,7 @@ const currentStatuses = new Set(["proposed", "accepted"]);
 const allowedOversight = new Set([
   "confirmed",
   "pending",
+  "unconfirmed",
   "rejected",
   "rejected-pending-supersede",
 ]);
@@ -65,8 +66,8 @@ export async function generateCompendium(decisionsDirectory) {
     `This project has ${decisions.length} decisions: ${current.length} current and ${historical.length} historical.`,
     "",
     "Human review confirmed means the decision's substance was explicitly approved.",
-    "Proposed means production validation has not yet promoted the decision to",
-    "Accepted; it does not mean human approval is pending.",
+    "Proposed means production validation is incomplete. Human review is",
+    "recorded separately.",
     "",
     "## Quick Index",
     "",
