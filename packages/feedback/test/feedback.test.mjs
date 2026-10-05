@@ -54,6 +54,12 @@ test("records useful public detail and application-declared context", async (t) 
   const client = await running.connect();
 
   const listed = await client.listTools();
+  assert.deepEqual(listed.tools[0].annotations, {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  });
   assert.equal(listed.tools[0].inputSchema.properties.detail.description,
     "What happened, what helped or failed, what was harder than it should have been, or what was surprising.");
   assert.deepEqual(listed.tools[0].outputSchema.properties.nextAction, {

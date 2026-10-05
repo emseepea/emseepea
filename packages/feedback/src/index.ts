@@ -432,7 +432,12 @@ export function defineFeedbackSubmission<ContextSchema extends z.ZodType = z.Zod
     description:
       "Record one notable observation about an error, friction, annoyance, unnecessary difficulty, confusion, repetition, an unexpected result, a capability mismatch, a suggestion, or a notable success. " +
       submissionBehaviorGuidance,
-    annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
     inputSchema,
     outputSchema,
   } as const;
