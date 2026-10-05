@@ -1023,16 +1023,22 @@ To offer ChatGPT's webhook event mode, pass `events` and OAuth authentication to
 `createEmseepea`. No event methods or outbound callbacks are enabled by default.
 
 An event definition has a fixed name, description, Zod object schemas for
-subscription arguments and event data, and a `matches(arguments, data)` filter.
+subscription arguments and event data, and a `matches(arguments, data, ownerKey)` filter.
 The catalogue is fixed for the life of the server; redeploy to change it.
+
+An optional `listWire(ownerKey, wire)` projects an authorized owner's catalogue
+entry, or returns `undefined` to hide it. Central list authorization runs
+first. Preserve the checked name, description, webhook delivery mode, and
+object schemas; narrow choices to the owner's authorized records or collections.
 
 The `events` configuration must also provide:
 
 - `ownerKey(auth)`: a stable, account-specific identifier. Do not use the OAuth
   client ID or an access token as the subscription owner.
 - `authorize({ ownerKey, name, arguments, phase })`: return `true` only while
-  that owner may see or receive the event. The framework calls it for listing,
-  subscribing, and again before each delivery.
+  that owner may see or receive the event. Its phases are `list`, `subscribe`,
+  `refresh`, and `delivery`. Repeated subscription uses `refresh` for an existing
+  subscription. The framework rechecks access before enqueue and delivery.
 - `health()`: return `true` only while the durable subscription and delivery
   store and required outbound delivery are operational. A failure makes event
   methods and readiness fail closed.
@@ -1051,6 +1057,16 @@ the event payload, applies each subscription's filter and current access, then
 queues a stable event ID for matching subscribers. The background worker checks
 access again, signs the exact JSON bytes with Standard Webhooks, and retries
 transient failures with bounded backoff. It does not retry HTTP 410 or 413.
+
+To target one account, pass `await publishMcpEvent(app, name, data,
+{ ownerKey: accountScope })`. The key must use the same stable account
+projection as `events.ownerKey`. It narrows matching subscriptions without
+adding the key to the payload. Omit the fourth argument to evaluate all
+matching subscriptions. Authorization still applies in both cases.
+
+The [collection-aware feedback API](https://github.com/emseepea/emseepea/tree/main/packages/feedback#separate-customer-and-internal-feedback)
+uses this audience filter for `feedback.submitted` and keeps customer
+submission-only deployments separate from protected operators.
 
 Callbacks must use HTTPS and public addresses. For each connection, the
 framework checks DNS, pins a validated address for TLS, and refuses redirects.
