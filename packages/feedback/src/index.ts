@@ -6,14 +6,13 @@ import {
 } from "@emseepea/server";
 import { z } from "zod";
 import { beforeDeadline, deadlineSignal } from "./deadline.js";
+import { feedbackCollectionSchema } from "./collections.js";
+
+export * from "./collections.js";
 
 const identifier = z.string().min(1).max(240);
 const timestamp = z.iso.datetime({ offset: true });
 const body = z.string().min(1).max(4_000);
-
-export const feedbackCollectionSchema = z.string()
-  .regex(/^[a-z][a-z0-9._-]{0,63}$/)
-  .describe("Deployment-static feedback collection identifier.");
 
 export const feedbackObservationSchema = z.enum([
   "error",
@@ -70,7 +69,6 @@ export const feedbackConversationSchema = feedbackThreadSchema.extend({
 });
 
 export type FeedbackObservation = z.output<typeof feedbackObservationSchema>;
-export type FeedbackCollection = z.output<typeof feedbackCollectionSchema>;
 export type FeedbackMessage = z.output<typeof feedbackMessageSchema>;
 export type FeedbackThread = z.output<typeof feedbackThreadSchema>;
 export type FeedbackConversation = z.output<typeof feedbackConversationSchema>;
