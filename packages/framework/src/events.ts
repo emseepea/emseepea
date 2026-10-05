@@ -338,7 +338,9 @@ export function createMcpEventRuntime(
       if (audienceOwnerKey !== undefined &&
           (typeof audienceOwnerKey !== "string" || !audienceOwnerKey.trim() ||
             Buffer.byteLength(audienceOwnerKey, "utf8") > 256)) {
-        throw new TypeError("Event audience ownerKey must be a stable nonempty key of at most 256 bytes");
+        throw new TypeError(
+          "Set audience.ownerKey to a stable, non-empty key of at most 256 bytes.",
+        );
       }
       const checked = definition.payloadSchema.safeParse(data);
       if (!checked.success || !checked.data || typeof checked.data !== "object" || Array.isArray(checked.data))
@@ -426,7 +428,10 @@ function checkedListWire(
       wire.inputSchema.type !== "object" ||
       !wire.payloadSchema || typeof wire.payloadSchema !== "object" || Array.isArray(wire.payloadSchema) ||
       wire.payloadSchema.type !== "object") {
-    throw new TypeError("event catalogue projection must preserve the checked event contract");
+    throw new TypeError(
+      "Return an event catalogue projection that preserves the checked event name, " +
+      "description, delivery mode, and object schemas.",
+    );
   }
   return deepFreeze(wire);
 }

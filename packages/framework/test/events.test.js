@@ -115,7 +115,7 @@ test("owner-targeted events never enter another authorized owner's queue", async
   assert.doesNotMatch(queued[0].body, /scope-a|ownerKey/);
   await assert.rejects(() => runtime.publish("feedback.submitted", {
     collection: "internal", submissionId: "submission-2",
-  }, { ownerKey: "" }), /stable nonempty key/i);
+  }, { ownerKey: "" }), /Set audience\.ownerKey to a stable, non-empty key of at most 256 bytes\./);
   assert.equal(queued.length, 1);
 });
 
@@ -144,6 +144,9 @@ test("event catalogue projections remain behind list authorization and preserve 
   assert.deepEqual(await runtime.list("owner-a"), []);
   assert.equal(projected, 0);
   authorized = true;
-  await assert.rejects(() => runtime.list("owner-a"), /preserve the checked event contract/i);
+  await assert.rejects(
+    () => runtime.list("owner-a"),
+    /Return an event catalogue projection that preserves the checked event name, description, delivery mode, and object schemas\./,
+  );
   assert.equal(projected, 1);
 });
