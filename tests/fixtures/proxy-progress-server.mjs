@@ -94,7 +94,7 @@ const running = await serveEmseepea(createEmseepea({
         };
       },
     },
-    verificationTimeoutMs: 100,
+    verificationTimeoutMs: 1_000,
     metadata: {
       resourceServerUrl: new URL("https://api.example/mcp"),
       oauthMetadata: { issuer: "https://auth.example", authorization_endpoint: "https://auth.example/authorize",
