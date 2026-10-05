@@ -1,8 +1,17 @@
 import { publishMcpEvent, type McpEventsOptions } from "@emseepea/server";
 import { z } from "zod";
-import { feedbackEventSchema } from "./index.js";
+import {
+  type FeedbackAdapterContext,
+  feedbackEventSchema,
+  feedbackSubmissionRecordedEventSchema,
+} from "./index.js";
+import type {
+  FeedbackCollection,
+  FeedbackCollectionsDefinition,
+} from "./collections.js";
 
 export const feedbackReplyEventName = "feedback.reply.ready";
+export const feedbackSubmittedEventName = "feedback.submitted";
 
 const identifier = z.string().min(1).max(240);
 const threadArguments = z.strictObject({
@@ -65,5 +74,139 @@ export async function publishFeedbackTeamReplyEvent(
     messageId: checked.data.messageId,
     sourceEventId: checked.data.id,
   }));
+  return true;
+}
+
+export type FeedbackMonitorAuthorizationPhase = "list" | "subscribe" | "refresh" | "delivery";
+
+export interface FeedbackSubmittedEventsOptions {
+  readonly definition: FeedbackCollectionsDefinition;
+  readonly ownerKey: McpEventsOptions["ownerKey"];
+  readonly canMonitorCollection: (request: Readonly<{
+    ownerKey: string;
+    collection: FeedbackCollection;
+    phase: FeedbackMonitorAuthorizationPhase;
+  }>) => boolean | Promise<boolean>;
+  readonly health: McpEventsOptions["health"];
+  readonly store: McpEventsOptions["store"];
+  readonly callbackTimeoutMs?: number;
+}
+
+const maximumMonitoredCollections = 32;
+const submittedReference = z.strictObject({
+  collection: identifier.describe("Feedback collection containing the recorded submission."),
+  submissionId: identifier.describe("Stable identifier within the feedback collection."),
+  sourceEventId: identifier.describe("Identifier of the durable feedback submission event."),
+});
+
+export function createFeedbackSubmittedEventsOptions(
+  options: FeedbackSubmittedEventsOptions,
+): McpEventsOptions | undefined {
+  const collections = options.definition.monitors.map(({ collection }) => collection);
+  if (collections.length === 0) return undefined;
+  if (collections.length > maximumMonitoredCollections) {
+    throw new TypeError(
+      `Configure no more than ${maximumMonitoredCollections} monitored feedback collections.`,
+    );
+  }
+  if (typeof options.canMonitorCollection !== "function") {
+    throw new TypeError(
+      "Provide canMonitorCollection to authorize feedback submission monitoring.",
+    );
+  }
+  const collectionSchema = z.enum(collections as [FeedbackCollection, ...FeedbackCollection[]])
+    .describe("Feedback collection containing the recorded submission.");
+  const subscriptionArguments = submittedSubscriptionArgumentsSchema(collectionSchema, collections.length);
+  const payload = submittedReference.extend({ collection: collectionSchema });
+  const authorizedCollections = async (
+    ownerKey: string,
+    phase: FeedbackMonitorAuthorizationPhase,
+  ): Promise<FeedbackCollection[]> => {
+    const allowed: FeedbackCollection[] = [];
+    for (const collection of collections) {
+      if (await options.canMonitorCollection({ ownerKey, collection, phase })) {
+        allowed.push(collection);
+      }
+    }
+    return allowed.sort();
+  };
+  return {
+    definitions: [{
+      name: feedbackSubmittedEventName,
+      description:
+        "Feedback was recorded in a subscribed collection. Read the exact record with get-feedback-submission before acting on its contents.",
+      inputSchema: subscriptionArguments,
+      payloadSchema: payload,
+      async listWire(ownerKey, wire) {
+        const visible = await authorizedCollections(ownerKey, "list");
+        if (visible.length === 0) return undefined;
+        const visibleCollectionSchema = z.enum(visible as [FeedbackCollection, ...FeedbackCollection[]])
+          .describe("Feedback collection containing the recorded submission.");
+        return Object.freeze({
+          ...wire,
+          inputSchema: jsonObjectSchema(
+            submittedSubscriptionArgumentsSchema(visibleCollectionSchema, visible.length),
+          ),
+          payloadSchema: jsonObjectSchema(submittedReference.extend({ collection: visibleCollectionSchema })),
+        });
+      },
+      matches: (arguments_, data) =>
+        Array.isArray(arguments_.collections) && arguments_.collections.includes(data.collection),
+    }],
+    ownerKey: options.ownerKey,
+    async authorize({ ownerKey, name, arguments: arguments_, phase }) {
+      if (name !== feedbackSubmittedEventName) return false;
+      if (phase === "list") return (await authorizedCollections(ownerKey, phase)).length > 0;
+      const parsed = subscriptionArguments.safeParse(arguments_);
+      if (!parsed.success) return false;
+      for (const collection of parsed.data.collections) {
+        if (!await options.canMonitorCollection({ ownerKey, collection, phase })) return false;
+      }
+      return true;
+    },
+    health: options.health,
+    store: options.store,
+    ...(options.callbackTimeoutMs === undefined ? {} : { callbackTimeoutMs: options.callbackTimeoutMs }),
+  };
+}
+
+function submittedSubscriptionArgumentsSchema(
+  collectionSchema: z.ZodType<FeedbackCollection>,
+  maximum: number,
+) {
+  return z.strictObject({
+    collections: z.array(collectionSchema)
+      .describe("One or more authorized feedback collections to monitor.")
+      .min(1)
+      .max(maximum)
+      .superRefine((selected, context) => {
+        if (new Set(selected).size !== selected.length) {
+          context.addIssue({ code: "custom", message: "List each collection once, then try again." });
+        }
+      })
+      .overwrite((selected) => [...selected].sort()),
+  });
+}
+
+function jsonObjectSchema(schema: z.ZodType): Record<string, unknown> {
+  const json = z.toJSONSchema(schema);
+  if (!json || typeof json !== "object" || Array.isArray(json) || json.type !== "object") {
+    throw new TypeError("feedback submitted event schemas must describe objects");
+  }
+  return json;
+}
+
+/** Publish a body-free submission reference from a validated durable-record event. */
+export async function publishFeedbackSubmittedEvent(
+  app: Parameters<typeof publishMcpEvent>[0],
+  event: unknown,
+  context: Pick<FeedbackAdapterContext, "scope">,
+): Promise<boolean> {
+  const checked = feedbackSubmissionRecordedEventSchema.parse(event);
+  await publishMcpEvent(app, feedbackSubmittedEventName, submittedReference.parse({
+    collection: checked.record.collection,
+    submissionId: checked.record.submissionId,
+    sourceEventId: checked.id,
+  }), { ownerKey: context.scope });
   return true;
 }

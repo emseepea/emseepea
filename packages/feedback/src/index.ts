@@ -333,6 +333,137 @@ export function defineFeedbackCollectionSubmissions<ContextSchema extends z.ZodT
   return Object.freeze(tools);
 }
 
+export interface FeedbackCollectionOperatorOptions<ContextSchema extends z.ZodType = z.ZodNever> {
+  readonly definition: FeedbackCollectionsDefinition;
+  readonly scope?: string | ((principal: Principal | undefined) => string);
+  readonly contextSchema?: ContextSchema;
+  readonly backend: FeedbackCollectionBackend;
+}
+
+const operatorReadError =
+  "Feedback submissions could not be read. Check that you can access the collection. " +
+  "If you requested one submission, check its identifier, then try again.";
+const maximumOperatorResultBytes = 262_144;
+
+export function defineFeedbackCollectionOperators<ContextSchema extends z.ZodType = z.ZodNever>(
+  options: FeedbackCollectionOperatorOptions<ContextSchema>,
+): readonly EmseepeaTool[] {
+  if (options.definition.operators.length === 0) return Object.freeze([]);
+  const collections = options.definition.operators.map(({ collection }) => collection);
+  const collectionSchema = z.enum(collections as [FeedbackCollection, ...FeedbackCollection[]])
+    .describe("Configured feedback collection to read.");
+  const roles = new Map(options.definition.operators.map((role) => [role.collection, role]));
+  const requiredScopes = operatorToolScopes(options.definition.operators);
+  const contextSchema = options.contextSchema;
+  const safeRecordSchema = z.object({
+    collection: collectionSchema,
+    submissionId: identifier.describe("Stable identifier within the feedback collection."),
+    observation: feedbackObservationSchema,
+    detail: body,
+    ...(contextSchema ? {
+      context: contextSchema.optional().describe("Validated application context recorded with the feedback."),
+    } : {}),
+    recordedAt: timestamp,
+  });
+  const listInputSchema = z.strictObject({
+    collection: collectionSchema,
+    cursor: z.string().min(1).max(1_000).optional().describe("Opaque cursor from the previous page."),
+    limit: z.number().int().min(1).max(50).default(20).describe("Maximum submissions to return."),
+  });
+  const getInputSchema = z.strictObject({
+    collection: collectionSchema,
+    submissionId: identifier.describe("Exact submission identifier returned for this collection."),
+  });
+  const pageSchema = z.object({
+    submissions: z.array(safeRecordSchema).max(50),
+    nextCursor: z.string().min(1).max(1_000).optional(),
+  });
+  const access = { access: "protected" as const, requiredScopes };
+
+  const authorize = (collection: FeedbackCollection, principal: Principal | undefined) => {
+    const role = roles.get(collection);
+    if (!role || !principal ||
+        !role.requiredScopes.every((scope) => principal.permissions.includes(scope))) {
+      throw new Error(operatorReadError);
+    }
+  };
+  const adapterContext = (toolContext: ToolContext<"protected">) =>
+    createAdapterContext(options.scope, toolContext);
+  const safeRecord = (value: unknown, collection: FeedbackCollection, scope: string) => {
+    const checked = feedbackSubmissionRecordSchema.safeParse(value);
+    if (!checked.success || checked.data.collection !== collection || checked.data.scope !== scope) {
+      throw new Error(operatorReadError);
+    }
+    const safe = {
+      collection: checked.data.collection,
+      submissionId: checked.data.submissionId,
+      observation: checked.data.observation,
+      detail: checked.data.detail,
+      ...(contextSchema && checked.data.context !== undefined
+        ? { context: checked.data.context as z.output<ContextSchema> }
+        : {}),
+      recordedAt: checked.data.recordedAt,
+    };
+    const parsed = safeRecordSchema.safeParse(safe);
+    if (!parsed.success) throw new Error(operatorReadError);
+    return Object.freeze(parsed.data);
+  };
+  const bounded = <Value>(value: Value): Value => {
+    try {
+      if (Buffer.byteLength(JSON.stringify(value), "utf8") > maximumOperatorResultBytes) {
+        throw new Error(operatorReadError);
+      }
+      return value;
+    } catch (error) {
+      if (error instanceof Error && error.message === operatorReadError) throw error;
+      throw new Error(operatorReadError);
+    }
+  };
+
+  const list = defineTool({
+    name: "list-feedback-submissions",
+    ...access,
+    title: "List Feedback Submissions",
+    description: "List feedback submissions from one configured collection.",
+    annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
+    inputSchema: listInputSchema,
+    outputSchema: pageSchema,
+    async handler(input, toolContext: ToolContext<"protected">) {
+      authorize(input.collection, toolContext.principal);
+      const context = adapterContext(toolContext);
+      const page = await feedbackSubmissionPageSchema.parseAsync(
+        await options.backend.listSubmissions(input, context),
+      );
+      const safePage = {
+        submissions: page.submissions.map((record) => safeRecord(record, input.collection, context.scope)),
+        ...(page.nextCursor === undefined ? {} : { nextCursor: page.nextCursor }),
+      };
+      const parsed = pageSchema.safeParse(safePage);
+      if (!parsed.success) throw new Error(operatorReadError);
+      return { data: bounded(Object.freeze(parsed.data)) };
+    },
+  });
+
+  const get = defineTool({
+    name: "get-feedback-submission",
+    ...access,
+    title: "Read Feedback Submission",
+    description: "Read one feedback submission by its exact collection and submission identifier.",
+    annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
+    inputSchema: getInputSchema,
+    outputSchema: safeRecordSchema,
+    async handler(input, toolContext: ToolContext<"protected">) {
+      authorize(input.collection, toolContext.principal);
+      const context = adapterContext(toolContext);
+      const record = await options.backend.getSubmission(input, context);
+      if (record === undefined) throw new Error(operatorReadError);
+      return { data: bounded(safeRecord(record, input.collection, context.scope)) };
+    },
+  });
+
+  return Object.freeze([list, get]);
+}
+
 const feedbackEventTypeSchema = z.enum([
   "feedback.thread.created",
   "feedback.message.added",
@@ -723,6 +854,20 @@ const submissionCursorSchema = z.strictObject({
   recordedAt: timestamp,
   submissionId: identifier,
 });
+
+function operatorToolScopes(
+  operators: FeedbackCollectionsDefinition["operators"],
+): readonly string[] {
+  const first = operators[0];
+  if (!first) throw new TypeError("Feedback operator tools require at least one operator role");
+  const shared = first.requiredScopes.filter((scope) =>
+    operators.every((operator) => operator.requiredScopes.includes(scope)));
+  if (shared.length > 0) return Object.freeze(shared);
+  throw new TypeError(
+    "Feedback operator roles must share at least one scope used to protect the operator tools. " +
+    "Add a shared operator scope to every configured operator role.",
+  );
+}
 
 function encodeSubmissionCursor(record: FeedbackSubmissionRecord): string {
   return Buffer.from(JSON.stringify({
