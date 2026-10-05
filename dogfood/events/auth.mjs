@@ -16,6 +16,14 @@ const allowedRedirect = (value) => {
   } catch { return false; }
 };
 
+export function feedbackOwnerKey(principal) {
+  const clientId = principal?.clientId;
+  if (typeof clientId !== "string" || clientId.length === 0) {
+    throw new Error("Feedback Events smoke requires a normalized clientId");
+  }
+  return clientId;
+}
+
 export function createDemoAuth({ issuer, resource, pin, signingKey }) {
   const clients = new Map();
   const codes = new Map();
@@ -29,7 +37,7 @@ export function createDemoAuth({ issuer, resource, pin, signingKey }) {
     grant_types_supported: ["authorization_code"],
     code_challenge_methods_supported: ["S256"],
     token_endpoint_auth_methods_supported: ["none"],
-    scopes_supported: ["notes:read", "events:read"],
+    scopes_supported: ["feedback", "events:read"],
     authorization_response_iss_parameter_supported: true,
   };
   const server = createServer((request, response) => {
@@ -48,7 +56,7 @@ export function createDemoAuth({ issuer, resource, pin, signingKey }) {
       response.writeHead(status, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-security-policy": "default-src 'none'; form-action 'self'" });
       const hidden = [...params].filter(([name]) => name !== "pin").map(([name, value]) =>
         `<input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(value)}">`).join("");
-      response.end(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Events smoke-test sign in</title></head><body><main><h1>Events smoke-test sign in</h1><p>Authorize access only to synthetic demo notes.</p><form method="post" action="/authorize">${error ? `<p id="pin-error" role="alert">${error}</p>` : ""}<label for="pin">Temporary test PIN</label><input id="pin" name="pin" type="password" autocomplete="one-time-code" required${error ? ' aria-invalid="true" aria-describedby="pin-error"' : ""}><button>Authorize demo access</button>${hidden}</form></main></body></html>`);
+      response.end(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Temporary feedback test sign in</title></head><body><main><h1>Temporary feedback test sign in</h1><p>Authorize temporary access to synthetic feedback conversations and feedback reply-event monitoring.</p><form method="post" action="/authorize">${error ? `<p id="pin-error" role="alert">${error}</p>` : ""}<label for="pin">Temporary test PIN</label><input id="pin" name="pin" type="password" autocomplete="one-time-code" required${error ? ' aria-invalid="true" aria-describedby="pin-error"' : ""}><button>Authorize temporary feedback access</button>${hidden}</form></main></body></html>`);
     };
     if (request.method === "GET" && url.pathname === "/.well-known/oauth-authorization-server") {
       return json(200, metadata);

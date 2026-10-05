@@ -929,7 +929,11 @@ interface AppRuntime {
   observabilityLimits: { deliveryTimeoutMs: number } | undefined;
   finishObservability: ((timeoutMs: number) => Promise<void>) | undefined;
   notifyResourceUpdated?: (uri: string) => void;
-  publishMcpEvent?: (name: string, data: Readonly<Record<string, unknown>>) => Promise<void>;
+  publishMcpEvent?: (
+    name: string,
+    data: Readonly<Record<string, unknown>>,
+    audience?: Readonly<{ ownerKey: string }>,
+  ) => Promise<void>;
 }
 interface NormalizedOAuth {
   readonly verifier: OAuthTokenVerifier;
@@ -2828,8 +2832,11 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     stopping,
     observabilityLimits,
     finishObservability,
-    ...(eventRuntime ? { publishMcpEvent: (name: string, data: Readonly<Record<string, unknown>>) =>
-      eventRuntime.publish(name, data) } : {}),
+    ...(eventRuntime ? { publishMcpEvent: (
+      name: string,
+      data: Readonly<Record<string, unknown>>,
+      audience?: Readonly<{ ownerKey: string }>,
+    ) => eventRuntime.publish(name, data, audience) } : {}),
     ...(resourceEvents ? {
       notifyResourceUpdated(uri: string) {
         if (stopping.signal.aborted) throw new Error("Cannot notify from a stopped Em See Pea app");
@@ -2856,11 +2863,16 @@ export async function publishMcpEvent(
   app: FastifyInstance,
   name: string,
   data: Readonly<Record<string, unknown>>,
+  /**
+   * Set `audience.ownerKey` to deliver only to subscriptions owned by that stable key.
+   * Omit `audience` to evaluate every matching subscription.
+   */
+  audience?: Readonly<{ ownerKey: string }>,
 ): Promise<void> {
   const runtime = runtimes.get(app);
   if (!runtime?.publishMcpEvent || runtime.stopping.signal.aborted)
     throw new TypeError("publishMcpEvent requires an active MCP Events server");
-  await runtime.publishMcpEvent(name, data);
+  await runtime.publishMcpEvent(name, data, audience);
 }
 
 function safeOAuthError(error: unknown): unknown {

@@ -5,8 +5,6 @@ defines the limits of that label.
 
 Add detailed feedback or a durable support conversation to any Em See Pea
 server. The package is optional. Generated applications do not configure it.
-Their semantic tests install it only as a development dependency so successful
-example journeys can prove that the AI did not record negative feedback.
 
 Use a submission when the team only needs one useful observation. Use a
 conversation when the team must reply and the AI must bring that reply back to
@@ -58,6 +56,199 @@ or expected number of steps is not feedback-worthy.
 
 These are instructions for the AI, not server-enforced guarantees. Qualify the
 behaviour with a native semantic test for every AI client you support.
+
+## Separate Customer and Internal Feedback
+
+A collection is a deployment-configured authorization partition, such as
+`customer` or `internal`. It identifies the feedback destination, not an
+account or person. Declare submission, monitoring, and operator roles
+separately; declaring a collection grants none of those roles automatically.
+
+| Deployment | Submission destination | Monitoring and retrieval |
+| --- | --- | --- |
+| Customer-facing MCP | `customer` only | None |
+| Internal MCP | Explicitly `internal` | Protected access to `internal`, `customer`, or both authorized collections |
+
+The support backend owns the authoritative record, assignment, status,
+replies, notifications, and private notes. Em See Pea reads and writes exact
+records there; it does not create a second support inbox.
+
+Use the same stable account scope for submission and operator adapters and
+the MCP Events `ownerKey`. Resolve it from verified authentication. Do not use
+an access token or assume an OAuth client ID identifies an account. Two
+accounts using the same collection remain separate.
+
+### Configure customer submission only
+
+The imports from `./feedback-integration.js` are application code you provide.
+`feedbackBackend` implements `FeedbackCollectionSubmissionBackend` over your
+durable support storage. It enforces `context.scope` on every write, list,
+lookup, and cursor.
+
+`accountScopeForPrincipal` resolves the authenticated account. `authentication`
+supplies your checked OAuth verifier and metadata.
+
+```ts
+import {
+  defineFeedbackCollections,
+  defineFeedbackCollectionSubmissions,
+} from "@emseepea/feedback";
+import { createEmseepea } from "@emseepea/server";
+import {
+  authentication, feedbackBackend, accountScopeForPrincipal,
+} from "./feedback-integration.js";
+
+const customer = defineFeedbackCollections({
+  collections: ["customer"],
+  submissions: [{
+    collection: "customer", access: "protected",
+    requiredScopes: ["feedback:submit"],
+  }],
+});
+
+const app = createEmseepea({
+  name: "customer-feedback", version: "1.0.0", authentication,
+  tools: defineFeedbackCollectionSubmissions({
+    definition: customer,
+    scope: accountScopeForPrincipal,
+    backend: feedbackBackend,
+  }),
+});
+```
+
+This exposes `submit-customer-feedback` with a fixed destination. The caller
+cannot select a collection. It exposes no operator tools or MCP Events.
+If anonymous submission is intentional, declare `access: "public"` without
+`requiredScopes` and provide a fixed, application-owned storage scope.
+
+### Configure internal submission and protected operators
+
+The application module below also supplies a durable `eventStore`, its
+`eventSystemHealthy` check, and `accountScopeForAuth` using the same account
+projection as `accountScopeForPrincipal`. `canMonitorCollection` checks the
+owner's current permission for the collection and requested lifecycle phase.
+
+Enforce the declared monitor scopes in that callback; the helper does not
+infer grants from the role declaration.
+
+```ts
+import {
+  defineFeedbackCollections,
+  defineFeedbackCollectionSubmissions,
+  defineFeedbackCollectionOperators,
+} from "@emseepea/feedback";
+import {
+  createFeedbackSubmittedEventsOptions,
+  publishFeedbackSubmittedEvent,
+} from "@emseepea/feedback/mcp-events";
+import { createEmseepea } from "@emseepea/server";
+import {
+  authentication, feedbackBackend, accountScopeForPrincipal,
+  accountScopeForAuth, canMonitorCollection, eventStore, eventSystemHealthy,
+} from "./feedback-integration.js";
+
+const internal = defineFeedbackCollections({
+  collections: ["customer", "internal"],
+  submissions: [{
+    collection: "internal", access: "protected",
+    requiredScopes: ["feedback:submit:internal"],
+  }],
+  operators: [
+    { collection: "internal", access: "protected",
+      requiredScopes: ["feedback:operator", "feedback:read:internal"] },
+    { collection: "customer", access: "protected",
+      requiredScopes: ["feedback:operator", "feedback:read:customer"] },
+  ],
+  monitors: [
+    { collection: "internal", access: "protected",
+      requiredScopes: ["feedback:monitor:internal"] },
+    { collection: "customer", access: "protected",
+      requiredScopes: ["feedback:monitor:customer"] },
+  ],
+});
+
+const events = createFeedbackSubmittedEventsOptions({
+  definition: internal,
+  ownerKey: accountScopeForAuth,
+  canMonitorCollection,
+  health: eventSystemHealthy,
+  store: eventStore,
+});
+
+let app: ReturnType<typeof createEmseepea>;
+app = createEmseepea({
+  name: "internal-feedback", version: "1.0.0", authentication, events,
+  tools: [
+    ...defineFeedbackCollectionSubmissions({
+      definition: internal,
+      scope: accountScopeForPrincipal,
+      backend: feedbackBackend,
+      hooks: [(event, context) => publishFeedbackSubmittedEvent(app, event, context)
+        .then(() => undefined)],
+    }),
+    ...defineFeedbackCollectionOperators({
+      definition: internal,
+      scope: accountScopeForPrincipal,
+      backend: feedbackBackend,
+    }),
+  ],
+});
+```
+
+The internal submission tool is `submit-internal-feedback`. Operator roles
+must share a tool-entry scope, here `feedback:operator`. Each call also checks
+every scope for its selected collection before accessing the backend.
+Use protected tool discovery when operator names and schemas must be hidden.
+
+Hooks run after persistence and are best-effort. For reliable notification,
+save the recorded event and its account scope in a transactional outbox and
+call `publishFeedbackSubmittedEvent(app, event, { scope })` from your worker.
+The publisher targets only subscriptions whose `ownerKey` equals that scope.
+Keep the scope in trusted storage, outside the delivered payload.
+
+### Read and monitor exact submissions
+
+`list-feedback-submissions` accepts `{ collection, cursor?, limit? }`.
+The limit defaults to 20 and cannot exceed 50. Pass the returned `nextCursor`
+unchanged for the next page in the same collection and account scope.
+`get-feedback-submission` accepts the exact `{ collection, submissionId }`.
+Unknown, unauthorized, and mismatched records return the same public error.
+
+Results contain `collection`, `submissionId`, `observation`, `detail`, and
+`recordedAt`. Supply `contextSchema` to both tool builders to accept and return
+validated application context. Backend `source` and authorization `scope`
+are excluded; results cannot exceed 256 KiB.
+
+Discover `feedback.submitted` with `events/list`, then subscribe using one of
+these argument sets:
+
+```json
+{ "collections": ["internal"] }
+```
+
+```json
+{ "collections": ["customer"] }
+```
+
+```json
+{ "collections": ["customer", "internal"] }
+```
+
+Use only currently authorized collections. The selection must be non-empty,
+unique, and no larger than 32 configured monitor collections. It is sorted
+before subscription identity is calculated. Discovery, subscription, refresh,
+and delivery each recheck authorization; delivery also rechecks queued work.
+
+The payload is exactly `{ collection, submissionId, sourceEventId }`.
+Retrieve the authoritative record with `get-feedback-submission` before
+acting on it. Use `sourceEventId` to recognize repeated publication. Configure
+callback verification and a durable delivery store as described in the
+[MCP Events guide](https://emseepea.github.io/emseepea/mcp-events/).
+
+`createFeedbackSubmittedEventsOptions` returns `undefined` when no monitor
+role exists. The included `createInMemoryFeedbackCollectionBackend` is
+process-local reference storage; supply a durable collection backend for
+deployment. Existing conversation adapters retain their conversation APIs.
 
 ## Add a Protected Support Conversation
 
@@ -209,11 +400,8 @@ Configure Zendesk's webhook body to match the documented `eventId`, `subdomain`,
 `ticketId`, `scopeTag`, `occurredAt`, and `change` shape exported by the
 TypeScript API.
 
-The included GitHub and Zendesk checks are deterministic HTTP contract tests,
-not evidence from a live customer account. Provider-native assignment,
-categorisation, milestone, status, notification, and email behavior remains the
-provider's responsibility and must be qualified in the account where you deploy
-the adapter.
+Configure assignment, categories, milestones, status, notifications, and email
+in the provider account where you deploy the adapter.
 
 ## Handle Feedback Events
 

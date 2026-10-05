@@ -52,6 +52,75 @@ finish every part of the user's original request before briefly stating the
 specific feedback recorded. A routine successful tool call, structured result,
 or expected number of steps is not feedback-worthy.
 
+## Separate customer and internal feedback
+
+A collection is a deployment-configured authorization partition, such as
+`customer` or `internal`. It fixes where feedback goes; it does not identify
+the account or person. Configure submission, monitoring, and operator roles
+separately.
+
+- Customer-facing MCP: submits customer feedback only, with no monitor or operator capabilities.
+- Internal MCP: submits explicitly internal feedback and monitors or reads internal, customer, or both authorized collections.
+
+The support backend owns the authoritative feedback record and its assignment,
+status, replies, notifications, and private notes. Em See Pea retrieves exact
+records there rather than creating a second support inbox.
+
+Use `defineFeedbackCollections` and `defineFeedbackCollectionSubmissions` to
+create fixed-destination tools. A customer configuration declares only the
+`customer` submission role and exposes `submit-customer-feedback`. An internal
+configuration declares the `internal` submission role and exposes
+`submit-internal-feedback`. Tool inputs cannot change the destination.
+
+Add `defineFeedbackCollectionOperators` only to the protected internal MCP.
+Its `list-feedback-submissions` tool accepts a collection and bounded page
+options. Its `get-feedback-submission` tool retrieves the exact
+`{ collection, submissionId }`. Each call checks collection permissions and
+the authenticated account scope before returning validated feedback fields.
+
+### Trigger operator work when feedback arrives
+
+Configure `createFeedbackSubmittedEventsOptions` from
+`@emseepea/feedback/mcp-events` with explicit monitor roles, current collection
+authorization, health, and a durable [MCP Events store](/emseepea/mcp-events/).
+Operators can subscribe to any of these authorized selections:
+
+```json
+{ "collections": ["internal"] }
+```
+
+```json
+{ "collections": ["customer"] }
+```
+
+```json
+{ "collections": ["customer", "internal"] }
+```
+
+The selection must be non-empty and unique, with at most 32 configured
+collections. Discovery, subscription, refresh, and delivery independently
+check current access.
+
+After persistence, `publishFeedbackSubmittedEvent(app, event, { scope })`
+publishes `feedback.submitted` with only `collection`, `submissionId`, and
+`sourceEventId`. The operator retrieves the exact authoritative record before
+acting on its content. Repeated publication can carry the same `sourceEventId`.
+
+Use the same stable authenticated account scope for submission and operator
+adapters and the event `ownerKey`. Collection names alone do not isolate
+accounts. Resolve the account from verified authentication; do not treat an
+access token or OAuth client ID as an account identity. The publisher sends
+only to subscriptions owned by that scope, even when another account monitors
+the same collection.
+
+Supply a durable collection backend that enforces the scope on every operation
+and cursor. Hooks are best-effort; use a transactional outbox for reliable
+publication. The in-memory collection backend is process-local reference
+storage. No monitor roles means no MCP Events capability.
+
+Follow the [customer and internal configuration examples](https://github.com/emseepea/emseepea/tree/main/packages/feedback#separate-customer-and-internal-feedback)
+for the complete tool and event setup and the application-owned interfaces.
+
 ## Store one-way feedback as Markdown
 
 For an opt-in local file destination, use
@@ -137,10 +206,8 @@ resolve a scope hash and atomically reject duplicate events.
 Use a randomly generated, high-entropy webhook secret of at least 32 UTF-8 bytes
 and store it outside source control.
 
-The repository qualifies these adapters with deterministic HTTP contract tests,
-not a live customer account. Qualify assignment, categories, milestones,
-statuses, notifications, and email in the provider account where you deploy
-them.
+Configure assignment, categories, milestones, status, notifications, and email
+in the provider account where you deploy the adapter.
 
 ## Send email or other events
 

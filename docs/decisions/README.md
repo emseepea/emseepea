@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 106 decisions: 61 current and 45 historical.
+This project has 107 decisions: 62 current and 45 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation has not yet promoted the decision to
@@ -76,6 +76,7 @@ Accepted; it does not mean human approval is pending.
 - [ADR-0107: Release Gates Require a Mature Available Vulnerability Fix](0107-release-gates-require-a-mature-available-vulnerability-fix.proposed.md): Proposed; human review pending.
 - [ADR-0108: External Approval Uses Encrypted Bound Capsules and Atomic Consumption](0108-external-approval-uses-encrypted-bound-capsules-and-atomic-consumption.proposed.md): Proposed; human review pending.
 - [ADR-0109: Opt-In Checked Webhook Subscriptions for Model Context Protocol Events](0109-opt-in-checked-webhook-subscriptions-for-mcp-events.proposed.md): Proposed; human review pending.
+- [ADR-0110: Feedback Collections Are Deployment-Static Authorization Partitions with Independently Composable Submission, Monitoring, and Operator Roles](0110-feedback-collections-as-deployment-static-authorization-partitions.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2395,3 +2396,21 @@ Chosen option: **"Opt-in checked webhook subscriptions"**, because the requested
 - Invalid, unauthorized, expired, revoked, and mismatched requests produce no application event or callback delivery. Repeated subscribe and unsubscribe requests do not create duplicate subscriptions or effects.
 - Delivery tests reject local and private addresses, DNS/address changes, redirects, invalid callback challenges, oversized responses, and unsafe secret handling; retries are bounded and retain stable event identifiers.
 - Required store or delivery failure removes readiness, and documentation distinguishes the verified webhook subset from unsupported event modes and replay.
+
+### [ADR-0110: Feedback Collections Are Deployment-Static Authorization Partitions with Independently Composable Submission, Monitoring, and Operator Roles](0110-feedback-collections-as-deployment-static-authorization-partitions.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0110 Decision
+
+Chosen option: **"Deployment-static collection partitions with independently composable roles"**, because it provides least-privilege composition without turning collection selection into caller-controlled routing.
+
+#### ADR-0110 Checks
+
+- A deployment can enable submission, monitoring, and operator retrieval independently for each collection, including an intentional overlap of roles on one internal MCP.
+- An internal feedback-submission tool accepts no destination selection and records feedback only in the deployment-configured `internal` collection.
+- An operator can subscribe through MCP Events to `internal`, `customer`, or both only when that exact subset is authorized.
+- Monitoring events contain a stable authoritative reference and no feedback body; retrieving the referenced record requires separate operator authority.
+- A customer-facing MCP exposes customer-feedback submission and exposes no event or operator capability.
+- Assignment, status, tags, replies, notifications, and private notes remain in the authoritative support system.

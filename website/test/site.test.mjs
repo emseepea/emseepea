@@ -210,8 +210,9 @@ test("event adopters can find the guide and keep their place in navigation", asy
     assert.equal(new URL(page.url()).pathname, base + "mcp-events/");
     assert.ok(await page.getByRole("heading", { level: 1, name: "Trigger work from MCP Events" }).isVisible());
     assert.equal(await page.locator('#starlight__sidebar a[href$="/mcp-events/"][aria-current="page"]').count(), 1);
-    assert.ok(await page.getByText(/ChatGPT posted two\s+event-triggered\s+replies/).isVisible());
-    assert.ok(await page.getByText(/not production readiness or compatibility with\s+every client/).isVisible());
+    assert.ok(await page.getByText(/Configure authentication, authorization, durable storage, and callback delivery/).isVisible());
+    assert.ok(await page.getByText(/The key restricts delivery to that owner.s matching,\s+authorized subscriptions/).isVisible());
+    assert.ok(await page.getByRole("link", { name: "collection-aware feedback", exact: true }).isVisible());
   } finally {
     await context.close();
   }

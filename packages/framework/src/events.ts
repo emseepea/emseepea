@@ -9,6 +9,11 @@ export interface McpEventDefinition {
   readonly description: string;
   readonly inputSchema: ZodType;
   readonly payloadSchema: ZodType;
+  readonly listWire?: (
+    ownerKey: string,
+    wire: NormalizedEventDefinition["wire"],
+  ) => NormalizedEventDefinition["wire"] | undefined |
+    Promise<NormalizedEventDefinition["wire"] | undefined>;
   readonly matches: (
     arguments_: Readonly<Record<string, unknown>>,
     data: Readonly<Record<string, unknown>>,
@@ -65,7 +70,7 @@ export interface McpEventsOptions {
     readonly ownerKey: string;
     readonly name: string;
     readonly arguments: Readonly<Record<string, unknown>>;
-    readonly phase: "list" | "subscribe" | "delivery";
+    readonly phase: "list" | "subscribe" | "refresh" | "delivery";
   }) => boolean | Promise<boolean>;
   readonly health: () => boolean | Promise<boolean>;
   readonly store: McpEventStore;
@@ -98,7 +103,11 @@ export interface McpEventRuntime {
     readonly truncated: false;
   }>;
   unsubscribe(ownerKey: string, params: unknown): Promise<void>;
-  publish(name: string, data: Readonly<Record<string, unknown>>): Promise<void>;
+  publish(
+    name: string,
+    data: Readonly<Record<string, unknown>>,
+    audience?: Readonly<{ ownerKey: string }>,
+  ): Promise<void>;
   drain(): Promise<void>;
   ready(): Promise<boolean>;
 }
@@ -207,9 +216,13 @@ export function createMcpEventRuntime(
       const allowed = [];
       for (const definition of definitions) {
         if (await bounded(() => options.authorize({ ownerKey, name: definition.name,
-          arguments: {}, phase: "list" })) === true) {
-          allowed.push(definition.wire);
+          arguments: {}, phase: "list" })) !== true) continue;
+        if (definition.listWire) {
+          const wire = await bounded(() => definition.listWire?.(ownerKey, definition.wire));
+          if (wire) allowed.push(checkedListWire(definition, wire));
+          continue;
         }
+        allowed.push(definition.wire);
       }
       return allowed;
     },
@@ -263,11 +276,11 @@ export function createMcpEventRuntime(
       if (ttlMs !== undefined && ttlMs !== null &&
           (!Number.isSafeInteger(ttlMs) || Number(ttlMs) <= 0))
         throw new McpEventInputError(-32602, "invalid_ttl");
-      if (!await bounded(() => options.authorize({ ownerKey, name: valid.definition.name,
-        arguments: valid.arguments, phase: "subscribe" })))
-        throw new McpEventInputError(-32602, "capability_not_found");
       const id = subscriptionIdentity(ownerKey, valid.definition.name, valid.arguments, valid.url);
       const prior = await bounded(() => options.store.get(id));
+      if (!await bounded(() => options.authorize({ ownerKey, name: valid.definition.name,
+        arguments: valid.arguments, phase: prior ? "refresh" : "subscribe" })))
+        throw new McpEventInputError(-32602, "capability_not_found");
       const now = Date.now();
       if (!prior || prior.secret !== valid.secret || !prior.verifiedUntil || prior.verifiedUntil < now) {
         const challenge = randomBytes(32).toString("base64url");
@@ -313,10 +326,22 @@ export function createMcpEventRuntime(
       const prior = await bounded(() => options.store.get(id));
       if (prior && prior.ownerKey === ownerKey) await bounded(() => options.store.delete(id));
     },
-    async publish(name: string, data: Readonly<Record<string, unknown>>) {
+    async publish(
+      name: string,
+      data: Readonly<Record<string, unknown>>,
+      audience?: Readonly<{ ownerKey: string }>,
+    ) {
       if (!await runtime.ready()) throw new Error("Events are unavailable");
       const definition = definitions.find((item) => item.name === name);
       if (!definition) throw new TypeError("Event name is not registered");
+      const audienceOwnerKey = audience?.ownerKey;
+      if (audienceOwnerKey !== undefined &&
+          (typeof audienceOwnerKey !== "string" || !audienceOwnerKey.trim() ||
+            Buffer.byteLength(audienceOwnerKey, "utf8") > 256)) {
+        throw new TypeError(
+          "Set audience.ownerKey to a stable, non-empty key of at most 256 bytes.",
+        );
+      }
       const checked = definition.payloadSchema.safeParse(data);
       if (!checked.success || !checked.data || typeof checked.data !== "object" || Array.isArray(checked.data))
         throw new TypeError("Event data does not match payload schema");
@@ -328,6 +353,7 @@ export function createMcpEventRuntime(
       const now = Date.now();
       for (const subscription of subscriptions) {
         if (subscription.expiresAt <= now ||
+            (audienceOwnerKey !== undefined && subscription.ownerKey !== audienceOwnerKey) ||
             !definition.matches(subscription.arguments, checked.data as Record<string, unknown>,
               subscription.ownerKey)) continue;
         if (!await bounded(() => options.authorize({ ownerKey: subscription.ownerKey,
@@ -389,6 +415,25 @@ function canonical(value: unknown): unknown {
       .map(([key, item]) => [key, canonical(item)]),
   );
   return value;
+}
+
+function checkedListWire(
+  definition: NormalizedEventDefinition,
+  wire: NormalizedEventDefinition["wire"],
+): NormalizedEventDefinition["wire"] {
+  if (!wire || typeof wire !== "object" ||
+      wire.name !== definition.wire.name || wire.description !== definition.wire.description ||
+      !Array.isArray(wire.delivery) || wire.delivery.length !== 1 || wire.delivery[0] !== "webhook" ||
+      !wire.inputSchema || typeof wire.inputSchema !== "object" || Array.isArray(wire.inputSchema) ||
+      wire.inputSchema.type !== "object" ||
+      !wire.payloadSchema || typeof wire.payloadSchema !== "object" || Array.isArray(wire.payloadSchema) ||
+      wire.payloadSchema.type !== "object") {
+    throw new TypeError(
+      "Return an event catalogue projection that preserves the checked event name, " +
+      "description, delivery mode, and object schemas.",
+    );
+  }
+  return deepFreeze(wire);
 }
 
 function deepFreeze<T>(value: T): T {

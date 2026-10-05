@@ -22,15 +22,8 @@ messages.
 Em See Pea implements that webhook subset, not the full draft. It does not
 implement polling, streaming, replay, or those control messages.
 
-In a synthetic ChatGPT Work smoke test on 4 October 2026, ChatGPT posted two
-event-triggered replies; the second followed a local server restart and called
-`get_demo_note`.
-This verifies that test setup, not production readiness or compatibility with
-every client. Test your own client and deployment before relying on a trigger.
-
-The [test server and setup guide](https://github.com/emseepea/emseepea/tree/main/dogfood/events)
-are available in the repository. They use temporary credentials and synthetic
-notes, not a production identity provider.
+Configure authentication, authorization, durable storage, and callback delivery
+for your deployment before relying on a trigger.
 
 ## Supply the application pieces
 
@@ -42,8 +35,8 @@ code. Then provide:
 
 - An account-specific `ownerKey(auth)` that stays the same across token renewal
   and server restarts. A client ID or access token is not an account key.
-- `authorize`, which decides whether that owner may discover, subscribe to, or
-  receive an event. The framework checks it again before delivery.
+- `authorize`, which independently checks `list`, `subscribe`, `refresh`, and
+  `delivery`. The framework checks it before enqueue and again before delivery.
 - `health`, which returns `true` only while your event store and outbound
   delivery dependencies are working. An unhealthy result fails closed.
 - A durable `McpEventStore` shared by all server instances. Its subscription
@@ -101,6 +94,29 @@ currently authorized subscription. The server drains the durable queue while
 running. Delivery is retried within bounds, so receiving clients should handle
 duplicate event IDs safely. Do not put credentials or unnecessary personal data
 in event payloads.
+
+To target one account, pass a fourth argument:
+
+```ts
+await publishMcpEvent(app, "orders.shipped", { orderId }, {
+  ownerKey: accountScope,
+});
+```
+
+`accountScope` must be the same stable account key returned by `events.ownerKey`.
+The key restricts delivery to that owner's matching, authorized subscriptions
+and stays outside the event payload. Omit the fourth argument to evaluate all
+matching subscriptions.
+
+An optional event-definition `listWire(ownerKey, wire)` can narrow the choices
+shown to an authorized owner or hide the entry. Central list authorization
+runs first. Preserve the name, description, delivery mode, and object schemas.
+
+For [collection-aware feedback](/emseepea/feedback/#separate-customer-and-internal-feedback),
+operators subscribe to `feedback.submitted` using `collections: ["internal"]`,
+`collections: ["customer"]`, or both authorized collections. The event carries
+only record references; protected tools retrieve the exact authoritative
+record in the same account scope.
 
 ## Connect a webhook client
 

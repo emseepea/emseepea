@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createMcpEventRuntime } from "../../framework/dist/events.js";
-import { createFeedbackReplyEventsOptions } from "../dist/mcp-events.js";
+import {
+  createFeedbackReplyEventsOptions,
+  createFeedbackSubmittedEventsOptions,
+  feedbackSubmittedEventName,
+} from "../dist/mcp-events.js";
+import { defineFeedbackCollections } from "../dist/index.js";
 
 test("feedback reply events require exact-thread authorization", async () => {
   const checked = [];
@@ -52,4 +57,74 @@ test("revoking exact-thread access cancels a queued team-reply delivery", async 
   await runtime.drain();
   assert.equal(due.length, 0);
   assert.equal(sent.length, 0);
+});
+
+test("feedback submitted subscriptions are canonical, bounded, and authorized per collection and phase", async () => {
+  const checked = [];
+  const definition = defineFeedbackCollections({
+    collections: ["customer", "internal"],
+    monitors: [
+      { collection: "customer", access: "protected", requiredScopes: ["feedback:monitor"] },
+      { collection: "internal", access: "protected", requiredScopes: ["feedback:monitor"] },
+    ],
+  });
+  const options = createFeedbackSubmittedEventsOptions({
+    definition,
+    ownerKey: () => "operator-a",
+    canMonitorCollection: ({ ownerKey, collection, phase }) => {
+      checked.push([ownerKey, collection, phase]);
+      return ownerKey === "operator-a" && collection !== "customer";
+    },
+    health: () => true,
+    store: {},
+  });
+  assert.ok(options);
+  const event = options.definitions[0];
+  assert.equal(event.name, feedbackSubmittedEventName);
+  assert.deepEqual(event.inputSchema.parse({ collections: ["internal", "customer"] }), {
+    collections: ["customer", "internal"],
+  });
+  assert.throws(() => event.inputSchema.parse({ collections: [] }));
+  assert.throws(() => event.inputSchema.parse({ collections: ["internal", "internal"] }));
+  assert.throws(() => event.inputSchema.parse({ collections: ["unknown"] }));
+  assert.equal(await options.authorize({
+    ownerKey: "operator-a", name: feedbackSubmittedEventName,
+    arguments: {}, phase: "list",
+  }), true);
+  assert.equal(await options.authorize({
+    ownerKey: "operator-a", name: feedbackSubmittedEventName,
+    arguments: { collections: ["internal"] }, phase: "subscribe",
+  }), true);
+  assert.equal(await options.authorize({
+    ownerKey: "operator-a", name: feedbackSubmittedEventName,
+    arguments: { collections: ["internal", "customer"] }, phase: "refresh",
+  }), false);
+  assert.equal(await options.authorize({
+    ownerKey: "operator-a", name: feedbackSubmittedEventName,
+    arguments: { collections: ["customer"] }, phase: "delivery",
+  }), false);
+  const listedWire = await event.listWire("operator-a", {
+    name: event.name,
+    description: event.description,
+    delivery: ["webhook"],
+    inputSchema: {},
+    payloadSchema: {},
+  });
+  assert.deepEqual(listedWire.inputSchema.properties.collections.items.enum, ["internal"]);
+  assert.ok(checked.some((entry) => entry[2] === "refresh"));
+  assert.ok(checked.some((entry) => entry[2] === "delivery"));
+});
+
+test("submission-only topology does not create an MCP Events capability", () => {
+  const definition = defineFeedbackCollections({
+    collections: ["customer"],
+    submissions: [{ collection: "customer", access: "public" }],
+  });
+  assert.equal(createFeedbackSubmittedEventsOptions({
+    definition,
+    ownerKey: () => "customer",
+    canMonitorCollection: () => false,
+    health: () => true,
+    store: {},
+  }), undefined);
 });

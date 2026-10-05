@@ -13,9 +13,10 @@ import { z } from "zod";
 
 const now = "2026-09-10T00:00:00.000Z";
 
-test("records useful public detail and application-declared context", async (t) => {
+test("records useful public detail and application-declared context", { timeout: 5_000 }, async (t) => {
   const calls = [];
   const events = [];
+  const stalledHook = Promise.withResolvers();
   const tool = defineFeedbackSubmission({
     access: "public",
     scope: "pea-guide",
@@ -42,7 +43,7 @@ test("records useful public detail and application-declared context", async (t) 
     hooks: [
       (event) => events.push(event),
       () => { throw new Error("email unavailable"); },
-      () => new Promise(() => {}),
+      (_event, context) => { stalledHook.resolve(context.deadlineMs); return new Promise(() => {}); },
     ],
   });
   const running = await startEmseepea(t, createEmseepea({
@@ -54,6 +55,12 @@ test("records useful public detail and application-declared context", async (t) 
   const client = await running.connect();
 
   const listed = await client.listTools();
+  assert.deepEqual(listed.tools[0].annotations, {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  });
   assert.equal(listed.tools[0].inputSchema.properties.detail.description,
     "What happened, what helped or failed, what was harder than it should have been, or what was surprising.");
   assert.deepEqual(listed.tools[0].outputSchema.properties.nextAction, {
@@ -61,16 +68,32 @@ test("records useful public detail and application-declared context", async (t) 
     const: "Start your final response by answering every part of the user's original request from earlier tool results. A response that only discusses feedback is incomplete. Then tell the user, \"I recorded feedback about ...\", with a brief, specific summary of the observation.",
     description: "What the AI should do after the feedback was durably recorded.",
   });
-  const result = await client.callTool({
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: Date.now() });
+  t.mock.method(AbortSignal, "timeout", (milliseconds) => {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(new DOMException("The operation timed out", "TimeoutError")), milliseconds);
+    return controller.signal;
+  });
+  let result;
+  try {
+    const pending = client.callTool({
     name: "submit-feedback",
     arguments: {
       observation: "friction",
       detail: "Finding the seed filter took three attempts.",
       context: { feature: "seed filter" },
     },
-  }, { timeout: 2_000 });
+    }, { timeout: 2_000 });
+    const hookDeadline = await stalledHook.promise;
+    assert.ok(hookDeadline < Date.now() + 150, "hooks must finish before the request deadline");
+    t.mock.timers.tick(hookDeadline - Date.now());
+    result = await pending;
+  } finally {
+    t.mock.timers.reset();
+    t.mock.restoreAll();
+  }
 
-  assert.equal(result.isError, false);
+  assert.equal(result.isError, false, JSON.stringify(result));
   assert.deepEqual(result.structuredContent, {
     id: "feedback-1",
     recordedAt: now,
