@@ -2863,6 +2863,10 @@ export async function publishMcpEvent(
   app: FastifyInstance,
   name: string,
   data: Readonly<Record<string, unknown>>,
+  /**
+   * Set audience.ownerKey to deliver only to subscriptions owned by that stable key.
+   * Omit audience to evaluate every matching subscription.
+   */
   audience?: Readonly<{ ownerKey: string }>,
 ): Promise<void> {
   const runtime = runtimes.get(app);

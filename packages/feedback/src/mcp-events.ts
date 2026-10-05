@@ -199,7 +199,7 @@ function jsonObjectSchema(schema: z.ZodType): Record<string, unknown> {
 
 /**
  * Publish a body-free submission reference from a validated durable-record event.
- * context.scope selects the event owner and must equal the stable key returned by ownerKey.
+ * `context.scope` selects the event owner and must equal the stable key returned by `ownerKey`.
  */
 export async function publishFeedbackSubmittedEvent(
   app: Parameters<typeof publishMcpEvent>[0],
