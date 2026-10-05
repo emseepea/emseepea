@@ -197,6 +197,13 @@ test("operator tools fail closed on mismatched backend records and oversized saf
   assert.equal(wrong.isError, true);
   assert.equal(oversized.isError, true);
   assert.equal(publicError(wrong), publicError(oversized));
+  record.collection = "internal";
+  const wrongId = await client.callTool({
+    name: "get-feedback-submission",
+    arguments: { collection: "internal", submissionId: "requested-id" },
+  });
+  assert.equal(wrongId.isError, true);
+  assert.equal(publicError(wrongId), publicError(wrong));
 });
 
 test("a submission-only customer topology compiles no operator tools", () => {

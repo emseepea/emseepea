@@ -457,7 +457,9 @@ export function defineFeedbackCollectionOperators<ContextSchema extends z.ZodTyp
       const context = adapterContext(toolContext);
       const record = await options.backend.getSubmission(input, context);
       if (record === undefined) throw new Error(operatorReadError);
-      return { data: bounded(safeRecord(record, input.collection, context.scope)) };
+      const safe = safeRecord(record, input.collection, context.scope);
+      if (safe.submissionId !== input.submissionId) throw new Error(operatorReadError);
+      return { data: bounded(safe) };
     },
   });
 
