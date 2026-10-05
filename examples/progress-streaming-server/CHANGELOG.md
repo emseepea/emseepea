@@ -1,5 +1,21 @@
 # @emseepea/create-progress-streaming-server
 
+## 0.1.6
+
+### Patch Changes
+
+- [`632f71b`](https://github.com/emseepea/emseepea/commit/632f71b2c3d0d80fe0def2a0642f680c2d520c84) Thanks [@tompahoward](https://github.com/tompahoward)! - Add collection-aware feedback submission, protected operator retrieval, and
+  owner-scoped `feedback.submitted` events. Customer-facing servers submit
+  customer feedback only. Internal servers submit internal feedback and monitor
+  or read their authorized collections while the support backend remains
+  authoritative.
+
+  Add independently authorized subscription refresh, owner-specific event
+  catalogues, and targeted publication. Document account isolation, exact record
+  retrieval, durable storage, and customer and internal configuration.
+
+  Refresh generated starters to use the updated server and feedback packages.
+
 ## 0.1.5
 
 ### Patch Changes
