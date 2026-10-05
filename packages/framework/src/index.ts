@@ -2864,8 +2864,8 @@ export async function publishMcpEvent(
   name: string,
   data: Readonly<Record<string, unknown>>,
   /**
-   * Set audience.ownerKey to deliver only to subscriptions owned by that stable key.
-   * Omit audience to evaluate every matching subscription.
+   * Set `audience.ownerKey` to deliver only to subscriptions owned by that stable key.
+   * Omit `audience` to evaluate every matching subscription.
    */
   audience?: Readonly<{ ownerKey: string }>,
 ): Promise<void> {
