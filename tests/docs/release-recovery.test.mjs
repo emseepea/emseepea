@@ -178,7 +178,7 @@ test("official recovery generation updates versions, starter pins, changelogs an
   config.changelog = ["@changesets/changelog-git", {}];
   await writeFile(join(directory, ".changeset/config.json"), JSON.stringify(config));
   await run("git", ["-C", directory, "add", ".release/recovery.json", ".changeset/config.json"]);
-  await run("git", ["-C", directory, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Recovery generation fixture"]);
+  await run("git", ["-C", directory, "-c", "core.hooksPath=/dev/null", "-c", "user.name=Recovery Fixture", "-c", "user.email=recovery-fixture@example.com", "commit", "-m", "Recovery generation fixture"]);
   const base = await run("git", ["-C", directory, "rev-parse", "HEAD"]);
   const origin = { sha: base, qualityRunId: "123", recordedAt: "2026-10-06T00:00:00.000Z" };
   await versionPackages({ root: directory, validate: false, env: { ...process.env,
