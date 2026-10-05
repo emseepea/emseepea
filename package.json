@@ -55,6 +55,10 @@
     "lint": "oxlint .",
     "release:next": "changeset publish --tag next"
   },
+  "overrides": {
+    "postcss-nested": { "postcss-selector-parser": "7.1.6" },
+    "oxfmt": { "tinypool": "2.1.2" }
+  },
   "devDependencies": {
     "@opentelemetry/context-async-hooks": "2.10.0",
     "@opentelemetry/sdk-metrics": "2.10.0",

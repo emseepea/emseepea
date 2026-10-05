@@ -20,6 +20,9 @@
     "license:check": "node scripts/check-licenses.mjs",
     "prepack": "npm run build:initializer"
   },
+  "overrides": {
+    "oxfmt": { "tinypool": "2.1.2" }
+  },
   "devDependencies": {
     "@emseepea/feedback": "0.6.0",
     "@emseepea/server": "0.21.1",
