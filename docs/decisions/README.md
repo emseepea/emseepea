@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 107 decisions: 62 current and 45 historical.
+This project has 108 decisions: 63 current and 45 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -77,6 +77,7 @@ recorded separately.
 - [ADR-0108: External Approval Uses Encrypted Bound Capsules and Atomic Consumption](0108-external-approval-uses-encrypted-bound-capsules-and-atomic-consumption.proposed.md): Proposed; human review pending.
 - [ADR-0109: Opt-In Checked Webhook Subscriptions for Model Context Protocol Events](0109-opt-in-checked-webhook-subscriptions-for-mcp-events.proposed.md): Proposed; human review pending.
 - [ADR-0110: Feedback Collections Are Deployment-Static Authorization Partitions with Independently Composable Submission, Monitoring, and Operator Roles](0110-feedback-collections-as-deployment-static-authorization-partitions.proposed.md): Proposed; human review confirmed.
+- [ADR-0111: Checked Replacement Candidates for Unpromoted Failed Releases](0111-checked-replacement-candidates-for-unpromoted-failed-releases.proposed.md): Proposed; human review unconfirmed.
 
 ### Historical decisions
 
@@ -2414,3 +2415,21 @@ Chosen option: **"Deployment-static collection partitions with independently com
 - Monitoring events contain a stable authoritative reference and no feedback body; retrieving the referenced record requires separate operator authority.
 - A customer-facing MCP exposes customer-feedback submission and exposes no event or operator capability.
 - Assignment, status, tags, replies, notifications, and private notes remain in the authoritative support system.
+
+### [ADR-0111: Checked Replacement Candidates for Unpromoted Failed Releases](0111-checked-replacement-candidates-for-unpromoted-failed-releases.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+
+#### ADR-0111 Decision
+
+Chosen option: **checked replacement candidate**, because it permits recovery without importing unpublished version changes into the trunk or reusing immutable versions from another source.
+
+#### ADR-0111 Checks
+
+- A replacement preserves the generated source tree and failed publish ancestry.
+- No replacement begins when any abandoned version has reached latest.
+- Every changed public package has a fresh immutable version from the same qualified replacement head, without claiming an artificial major change.
+- Registry, semantic, initializer and guide checks bind to that exact head.
+- The website deploys the measured checked-source artifact, without rebuilding.
+- The trunk receives the replacement version changes only after publication.
