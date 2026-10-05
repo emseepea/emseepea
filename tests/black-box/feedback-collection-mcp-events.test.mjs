@@ -8,6 +8,7 @@ import {
 } from "@emseepea/feedback/mcp-events";
 import {
   createInMemoryFeedbackCollectionBackend,
+  defineFeedbackCollectionOperators,
   defineFeedbackCollections,
   defineFeedbackCollectionSubmissions,
 } from "@emseepea/feedback";
@@ -41,6 +42,9 @@ test("feedback.submitted publishes body-free references only to authorized colle
       { collection: "customer", access: "protected", requiredScopes: ["feedback:monitor"] },
       { collection: "internal", access: "protected", requiredScopes: ["feedback:monitor"] },
     ],
+    operators: [
+      { collection: "internal", access: "protected", requiredScopes: ["feedback:operator"] },
+    ],
   });
   const events = createFeedbackSubmittedEventsOptions({
     definition,
@@ -71,7 +75,7 @@ test("feedback.submitted publishes body-free references only to authorized colle
     },
   };
   let app;
-  const tools = defineFeedbackCollectionSubmissions({
+  const tools = [...defineFeedbackCollectionSubmissions({
     definition,
     scope: (principal) => principal?.clientId ?? "public",
     backend,
@@ -79,7 +83,11 @@ test("feedback.submitted publishes body-free references only to authorized colle
       order.push("publish");
       await publishFeedbackSubmittedEvent(app, event, context);
     }],
-  });
+  }), ...defineFeedbackCollectionOperators({
+    definition,
+    scope: (principal) => principal?.clientId ?? "public",
+    backend,
+  })];
   app = createEmseepea({
     name: "feedback-collection-events", version: "0.0.0",
     authentication: authentication(), events, tools,
@@ -119,6 +127,17 @@ test("feedback.submitted publishes body-free references only to authorized colle
     });
     assert.match(published.data.sourceEventId, /^feedback\.submission\.recorded:[a-f0-9]{64}$/);
     assert.doesNotMatch(queued[0].body, /workflow|required repeated|detail|observation|context|sourceSystem/);
+
+    const ownerRead = await rpc(running.url, "tools/call", {
+      name: "get-feedback-submission",
+      arguments: { collection: "internal", submissionId: "submission-1" },
+    }, "operator-a");
+    assert.equal(ownerRead.body.result.isError, false);
+    const otherOwnerRead = await rpc(running.url, "tools/call", {
+      name: "get-feedback-submission",
+      arguments: { collection: "internal", submissionId: "submission-1" },
+    }, "operator-b");
+    assert.equal(otherOwnerRead.body.result.isError, true);
 
     allowed.delete("operator-a:internal");
     await rpc(running.url, "tools/call", {
@@ -169,7 +188,7 @@ test("customer submission-only server does not advertise MCP Events", async () =
 function authentication() {
   return {
     verifier: { async verifyAccessToken(token) { return {
-      token, clientId: token, scopes: ["feedback:monitor", "feedback:submit"],
+      token, clientId: token, scopes: ["feedback:monitor", "feedback:operator", "feedback:submit"],
       expiresAt: Math.floor(Date.now() / 1000) + 60,
       resource: new URL("https://api.example/mcp"),
     }; } },

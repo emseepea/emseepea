@@ -113,6 +113,10 @@ test("owner-targeted events never enter another authorized owner's queue", async
   assert.equal(queued.length, 1);
   assert.deepEqual(queued.map((delivery) => delivery.subscriptionId), ["sub-scope-a"]);
   assert.doesNotMatch(queued[0].body, /scope-a|ownerKey/);
+  await assert.rejects(() => runtime.publish("feedback.submitted", {
+    collection: "internal", submissionId: "submission-2",
+  }, { ownerKey: "" }), /stable nonempty key/i);
+  assert.equal(queued.length, 1);
 });
 
 test("event catalogue projections remain behind list authorization and preserve the checked wire", async () => {

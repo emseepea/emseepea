@@ -106,7 +106,7 @@ export interface McpEventRuntime {
   publish(
     name: string,
     data: Readonly<Record<string, unknown>>,
-    audience?: Readonly<{ ownerKey?: string }>,
+    audience?: Readonly<{ ownerKey: string }>,
   ): Promise<void>;
   drain(): Promise<void>;
   ready(): Promise<boolean>;
@@ -329,7 +329,7 @@ export function createMcpEventRuntime(
     async publish(
       name: string,
       data: Readonly<Record<string, unknown>>,
-      audience?: Readonly<{ ownerKey?: string }>,
+      audience?: Readonly<{ ownerKey: string }>,
     ) {
       if (!await runtime.ready()) throw new Error("Events are unavailable");
       const definition = definitions.find((item) => item.name === name);

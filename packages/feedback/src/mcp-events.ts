@@ -81,6 +81,7 @@ export type FeedbackMonitorAuthorizationPhase = "list" | "subscribe" | "refresh"
 
 export interface FeedbackSubmittedEventsOptions {
   readonly definition: FeedbackCollectionsDefinition;
+  /** Return the same stable scope used by feedback submission adapters. */
   readonly ownerKey: McpEventsOptions["ownerKey"];
   readonly canMonitorCollection: (request: Readonly<{
     ownerKey: string;
