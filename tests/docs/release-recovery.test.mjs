@@ -166,7 +166,7 @@ test("official recovery generation updates versions, starter pins, changelogs an
   const exec = promisify(execFile);
   const run = async (command, args) => (await exec(command, args, { encoding: "utf8" })).stdout.trim();
   const directory = await mkdtemp(join(tmpdir(), "emseepea-recovery-integration-"));
-  await run("git", ["worktree", "add", "--detach", directory, "HEAD"]);
+  await run("git", ["worktree", "add", "--detach", directory, receipt.failedSourceSha]);
   t.after(async () => {
     await run("git", ["worktree", "remove", "--force", directory]);
     await rm(directory, { recursive: true, force: true });
