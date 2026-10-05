@@ -95,6 +95,7 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: read
+      actions: read
       id-token: write
     steps:
       - name: Check out the release pull request head
@@ -122,6 +123,8 @@ jobs:
         env:
           BASE_SHA: ${{ inputs.base_sha }}
           HEAD_SHA: ${{ inputs.head_sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EMSEEPEA_SOURCE_QUALITY_RUN_ID: ${{ inputs.quality_run_id }}
         run: node scripts/check-release-pull-request.mjs "$BASE_SHA" "$HEAD_SHA"
       - name: Build packages for publication
         run: npm run build

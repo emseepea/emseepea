@@ -1,0 +1,197 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { execFile } from "node:child_process";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { promisify } from "node:util";
+import { assertRecoveryEligible, finalizeRecovery, recoveryPlan } from "../../scripts/release-recovery.mjs";
+import { versionPackages } from "../../scripts/version-packages.mjs";
+import { publicPackages } from "../../scripts/public-packages.mjs";
+
+const receipt = {
+  "failedPublishSha": "044e9e2d96869b586332dfcd0d840f3ee18314ec",
+  "failedPublishRunId": "37306377237",
+  "previousPublishSha": "261b7a8ff5f43fb341bbac549e51b19c5d09532d",
+  "failedSourceSha": "e23ea4dd6d3e3604bb22da11a7d1e0c66ea1d6bd",
+  "failedReleaseSha": "9923cf5a71fd4a2da330d1aed110e14b479d3792",
+  "occupiedHeadSha": "b7906dd6fb5929224466bd060d56b36c5b7c10b4",
+  "latestVersions": {
+    "@emseepea/server": "0.21.1",
+    "@emseepea/feedback": "0.6.0",
+    "@emseepea/testing": "0.20.3",
+    "@emseepea/react": "0.4.4",
+    "@emseepea/svelte": "0.2.4",
+    "@emseepea/tailwind": "0.1.1",
+    "@emseepea/create-tool-server": "0.1.5",
+    "@emseepea/create-api-backed-server": "0.1.5",
+    "@emseepea/create-openapi-backed-server": "0.1.5",
+    "@emseepea/create-resources-and-prompts-server": "0.1.5",
+    "@emseepea/create-progress-streaming-server": "0.1.5",
+    "@emseepea/create-html-ui-server": "0.1.5",
+    "@emseepea/create-react-ui-server": "0.1.5",
+    "@emseepea/create-multi-instance-postgres-server": "0.1.5",
+    "@emseepea/create-database-schema-server": "0.1.5",
+    "@emseepea/create-mongodb-backed-server": "0.1.5",
+    "@emseepea/create-soap-backed-server": "0.1.5"
+  },
+  "occupiedVersions": {
+    "@emseepea/server": "0.22.0",
+    "@emseepea/feedback": "0.7.0",
+    "@emseepea/testing": "0.20.4",
+    "@emseepea/react": "0.4.5",
+    "@emseepea/svelte": "0.2.5",
+    "@emseepea/create-tool-server": "0.1.6",
+    "@emseepea/create-api-backed-server": "0.1.6",
+    "@emseepea/create-openapi-backed-server": "0.1.6",
+    "@emseepea/create-resources-and-prompts-server": "0.1.6",
+    "@emseepea/create-progress-streaming-server": "0.1.6",
+    "@emseepea/create-html-ui-server": "0.1.6",
+    "@emseepea/create-react-ui-server": "0.1.6",
+    "@emseepea/create-multi-instance-postgres-server": "0.1.6",
+    "@emseepea/create-database-schema-server": "0.1.6",
+    "@emseepea/create-mongodb-backed-server": "0.1.6",
+    "@emseepea/create-soap-backed-server": "0.1.6"
+  },
+  "freshVersions": {
+    "@emseepea/server": "0.22.1",
+    "@emseepea/feedback": "0.7.1",
+    "@emseepea/testing": "0.20.5",
+    "@emseepea/react": "0.4.6",
+    "@emseepea/svelte": "0.2.6",
+    "@emseepea/create-tool-server": "0.1.7",
+    "@emseepea/create-api-backed-server": "0.1.7",
+    "@emseepea/create-openapi-backed-server": "0.1.7",
+    "@emseepea/create-resources-and-prompts-server": "0.1.7",
+    "@emseepea/create-progress-streaming-server": "0.1.7",
+    "@emseepea/create-html-ui-server": "0.1.7",
+    "@emseepea/create-react-ui-server": "0.1.7",
+    "@emseepea/create-multi-instance-postgres-server": "0.1.7",
+    "@emseepea/create-database-schema-server": "0.1.7",
+    "@emseepea/create-mongodb-backed-server": "0.1.7",
+    "@emseepea/create-soap-backed-server": "0.1.7"
+  }
+};
+const source = "a".repeat(40);
+const candidate = "b".repeat(40);
+const final = "c".repeat(40);
+const tree = "d".repeat(40);
+const failed = { id: Number(receipt.failedPublishRunId), head_sha: receipt.failedPublishSha, head_branch: "publish", path: ".github/workflows/publish.yml", event: "push", status: "completed", conclusion: "failure", run_attempt: 1 };
+const jobs = [{ name: "Promote the release to latest", conclusion: "failure", steps: [
+  { name: "Bind promotion to the checked release run", conclusion: "failure" },
+  { name: "Move each package's next tag to latest", conclusion: "skipped" },
+] }];
+
+function harness(overrides = {}) {
+  const calls = [];
+  const run = async (command, args) => {
+    calls.push([command, ...args]);
+    const joined = args.join(" ");
+    if (joined.startsWith("ls-remote")) {
+      if (joined.endsWith("refs/heads/publish")) return `${overrides.publish ?? receipt.failedPublishSha}\trefs/heads/publish`;
+      if (joined.endsWith("refs/heads/main")) return `${overrides.source ?? source}\trefs/heads/main`;
+      return `${candidate}\trefs/heads/changeset-release/publish`;
+    }
+    if (joined === `rev-parse ${receipt.failedPublishSha}^1`) return receipt.previousPublishSha;
+    if (joined === `rev-parse ${receipt.failedPublishSha}^2`) return receipt.failedReleaseSha;
+    if (joined === `show ${receipt.failedPublishSha}:.release/origin.json`) return JSON.stringify({ sha: receipt.failedSourceSha });
+    if (joined === `show ${candidate}:.release/origin.json`) return JSON.stringify({ sha: source, qualityRunId: "123" });
+    if (joined.startsWith(`show ${receipt.previousPublishSha}:`) || joined.startsWith(`show ${receipt.failedPublishSha}:`)) {
+      const item = publicPackages.find(({ path }) => joined.endsWith(`${path}/package.json`));
+      return JSON.stringify({ version: joined.startsWith(`show ${receipt.previousPublishSha}:`) ? receipt.latestVersions[item.name] : receipt.occupiedVersions[item.name] ?? receipt.latestVersions[item.name] });
+    }
+    if (joined.includes("actions/workflows/publish.yml/runs")) return JSON.stringify({ workflow_runs: overrides.runs ?? [failed] });
+    if (joined.includes("/jobs")) return JSON.stringify({ jobs: overrides.jobs ?? jobs });
+    if (joined.includes("git/commits")) return JSON.stringify({ sha: final, tree: { sha: overrides.tree ?? tree }, parents: [{ sha: candidate }, { sha: receipt.failedPublishSha }] });
+    if (joined.startsWith("rev-parse") && joined.endsWith("^{tree}")) return tree;
+    return "";
+  };
+  const readRegistry = async (name) => ({ "dist-tags": { latest: overrides.latest ?? receipt.latestVersions[name] }, versions: {
+    [receipt.occupiedVersions[name]]: { gitHead: receipt.occupiedHeadSha },
+    ...(overrides.occupiedFresh ? { [receipt.freshVersions[name]]: { gitHead: overrides.occupiedFresh } } : {}),
+  } });
+  return { calls, run, readRegistry, sourceSha: source, qualityRunId: "123" };
+}
+
+test("recovery keeps ordinary release types and selects frozen fresh patches only", () => {
+  const ordinary = { releases: Object.entries(receipt.occupiedVersions).map(([name, newVersion]) => ({ name, newVersion, oldVersion: receipt.latestVersions[name], type: name === "@emseepea/server" ? "minor" : "patch", changesets: ["feature"] })) };
+  assert.equal(recoveryPlan(ordinary), ordinary);
+  const plan = recoveryPlan(ordinary, receipt);
+  for (const [index, release] of plan.releases.entries()) assert.deepEqual(release, { ...ordinary.releases[index], newVersion: receipt.freshVersions[release.name] });
+  for (const mutate of [
+    (r) => { delete r.freshVersions["@emseepea/server"]; },
+    (r) => { r.freshVersions["@emseepea/server"] = "1.0.0"; },
+    (r) => { r.freshVersions["@emseepea/server"] = "0.22.0"; },
+    (r) => { r.occupiedVersions["@emseepea/server"] = "0.23.0"; r.freshVersions["@emseepea/server"] = "0.23.1"; },
+  ]) {
+    const changed = structuredClone(receipt); mutate(changed);
+    assert.throws(() => recoveryPlan(ordinary, changed));
+  }
+});
+
+test("recovery refuses moved history, attempted promotion, changed latest and occupied fresh versions", async () => {
+  await assertRecoveryEligible(receipt, harness());
+  for (const overrides of [
+    { publish: source },
+    { runs: [] },
+    { runs: [failed, failed] },
+    { runs: [{ ...failed, status: "in_progress" }] },
+    { runs: [{ ...failed, conclusion: "success" }] },
+    { runs: [{ ...failed, head_sha: source }] },
+    { jobs: [{ ...jobs[0], steps: [jobs[0].steps[0], { ...jobs[0].steps[1], conclusion: "success" }] }] },
+    { latest: "9.0.0" },
+    { occupiedFresh: source },
+  ]) await assert.rejects(() => assertRecoveryEligible(receipt, harness(overrides)));
+  await assertRecoveryEligible(receipt, { ...harness({ occupiedFresh: candidate }), candidateSha: candidate });
+});
+
+test("replacement finalizer preserves the generated tree and updates only non-force candidate history", async () => {
+  const state = harness();
+  await finalizeRecovery({ ...state, receipt, checkPlan: async (base, head, options) => {
+    assert.equal(base, source); assert.equal(head, candidate); assert.equal(options.requireRecoveryAncestry, false);
+  } });
+  const create = state.calls.find(([command, ...args]) => command === "gh" && args.includes("repos/emseepea/emseepea/git/commits"));
+  assert.ok(create.includes(`parents[]=${candidate}`));
+  assert.ok(create.includes(`parents[]=${receipt.failedPublishSha}`));
+  const update = state.calls.find((call) => call.includes("PATCH"));
+  assert.ok(update.includes("force=false"));
+  for (const overrides of [{ tree: source }, { source: candidate }]) {
+    const refused = harness(overrides);
+    await assert.rejects(() => finalizeRecovery({ ...refused, receipt, checkPlan: async () => {} }));
+    assert.equal(refused.calls.some((call) => call.includes("PATCH")), false);
+  }
+});
+
+test("official recovery generation updates versions, starter pins, changelogs and consumes its receipt", { timeout: 180_000 }, async (t) => {
+  const exec = promisify(execFile);
+  const run = async (command, args) => (await exec(command, args, { encoding: "utf8" })).stdout.trim();
+  const directory = await mkdtemp(join(tmpdir(), "emseepea-recovery-integration-"));
+  await run("git", ["worktree", "add", "--detach", directory, "HEAD"]);
+  t.after(async () => {
+    await run("git", ["worktree", "remove", "--force", directory]);
+    await rm(directory, { recursive: true, force: true });
+  });
+  // The fixture source freezes the same recovery input without changing this checkout.
+  await writeFile(join(directory, ".release/recovery.json"), JSON.stringify(receipt));
+  // Exercise official changelog generation without requiring a credential in local tests.
+  const config = JSON.parse(await readFile(join(directory, ".changeset/config.json"), "utf8"));
+  config.changelog = ["@changesets/changelog-git", {}];
+  await writeFile(join(directory, ".changeset/config.json"), JSON.stringify(config));
+  await run("git", ["-C", directory, "add", ".release/recovery.json", ".changeset/config.json"]);
+  await run("git", ["-C", directory, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Recovery generation fixture"]);
+  const base = await run("git", ["-C", directory, "rev-parse", "HEAD"]);
+  const origin = { sha: base, qualityRunId: "123", recordedAt: "2026-10-06T00:00:00.000Z" };
+  await versionPackages({ root: directory, validate: false, env: { ...process.env,
+    GITHUB_SHA: base, GITHUB_RUN_ID: origin.qualityRunId, EMSEEPEA_RELEASE_ORIGIN_TIME: origin.recordedAt,
+  } });
+  const manifest = JSON.parse(await readFile(join(directory, "packages/framework/package.json"), "utf8"));
+  assert.equal(manifest.version, "0.22.1");
+  const starter = JSON.parse(await readFile(join(directory, "examples/tool-server/package.json"), "utf8"));
+  assert.equal(starter.devDependencies["@emseepea/server"], "0.22.1");
+  assert.equal(starter.version, "0.1.7");
+  assert.match(await readFile(join(directory, "packages/framework/CHANGELOG.md"), "utf8"), /## 0\.22\.1/);
+  await assert.rejects(readFile(join(directory, ".release/recovery.json")), { code: "ENOENT" });
+  const lock = JSON.parse(await readFile(join(directory, "package-lock.json"), "utf8"));
+  assert.equal(lock.packages["packages/framework"].version, "0.22.1");
+  assert.deepEqual(JSON.parse(await readFile(join(directory, ".release/origin.json"), "utf8")), origin);
+});

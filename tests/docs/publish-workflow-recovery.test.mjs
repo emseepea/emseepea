@@ -23,6 +23,7 @@ test("a new release pull request waits for the previous publish head to reach ma
       esac
       return 1
     }
+    node() { git merge-base --is-ancestor origin/publish "$GITHUB_SHA"; }
     ${guard?.run ?? "missing_guard"}
   `;
   const env = { ...process.env, GITHUB_SHA: main, PUBLISH_IS_ANCESTOR: "true" };

@@ -288,13 +288,12 @@ jobs:
           fi
       - name: Require the previous publish head on main
         if: steps.release-work.outputs.has_changesets == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if git ls-remote --exit-code --heads origin publish >/dev/null 2>&1; then
             git fetch origin publish
-            git merge-base --is-ancestor origin/publish "$GITHUB_SHA" || {
-              echo "publish has not been merged back into main; finish the previous release before creating another" >&2
-              exit 1
-            }
+            node scripts/release-recovery.mjs
           fi
       - name: Ensure the publish branch exists
         if: steps.release-work.outputs.has_changesets == 'true'
@@ -315,6 +314,12 @@ jobs:
           pr-base-branch: publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Finalize a checked replacement candidate
+        if: steps.release-work.outputs.has_changesets == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/release-recovery.mjs finalize
       - name: Build and publish the release pull request under next
         # ADR-0098: GitHub starts no run for a branch the automation token
         # wrote, so the build cannot be triggered by the push. The dispatch

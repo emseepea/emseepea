@@ -12,6 +12,7 @@ const pullRequest = {
   headRefOid: headSha,
   url: "https://example.test/pull/25",
 };
+const successfulRelease = { head_sha: headSha, head_branch: "changeset-release/publish", event: "workflow_dispatch", conclusion: "success" };
 const plannedStatus = JSON.stringify({ releases: [
   { name: "@emseepea/server", type: "patch", newVersion: "1.0.1" },
 ] });
@@ -45,6 +46,7 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
     if (joined === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
     if (joined === "status --porcelain") return "";
     if (joined.startsWith("pr list")) return JSON.stringify([pullRequest]);
+    if (joined.startsWith("api ")) return JSON.stringify({ workflow_runs: [successfulRelease] });
     if (joined.startsWith("merge-base")) return baseSha;
     if (command === "npm" && joined.startsWith("exec changeset status")) return plannedStatus;
     if (joined === `show ${baseSha}:docs/reviews/current-release-readiness.md`) return releaseReview;
@@ -76,7 +78,7 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
     return "";
   };
 
-  assert.deepEqual(await releaseAndWatch({ run, readStatus: readStatus(), pause: async () => {}, timeoutMs: 10_000 }), {
+  assert.deepEqual(await releaseAndWatch({ run, readStatus: readStatus(), expectedHeadSha: headSha, pause: async () => {}, timeoutMs: 10_000 }), {
     pullRequest: pullRequest.url,
     sha: mergeSha,
     urls: ["https://example.test/publish"],
@@ -87,6 +89,10 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
   ]);
   assert.deepEqual(calls.find(([command, first, second]) => command === "gh" && first === "pr" && second === "merge"), [
     "gh", "pr", "merge", "25", "--repo", "emseepea/emseepea", "--merge", "--match-head-commit", headSha,
+  ]);
+  assert.deepEqual(calls.find(([command, first]) => command === "gh" && first === "api"), [
+    "gh", "api", "-X", "GET", "repos/emseepea/emseepea/actions/workflows/release.yml/runs",
+    "-f", `head_sha=${headSha}`, "-f", "status=success",
   ]);
   assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "run" && second === "watch"), false);
   assert.equal(calls.filter(([command, first, second]) => command === "gh" && first === "run" && second === "view").length, 1);
@@ -113,6 +119,34 @@ test("release and watch rejects a stale readiness record before merging", async 
   const run = checkoutRun({ releaseReview: releaseReview.replace("1.0.1", "1.0.2") }, calls);
   await assert.rejects(() => releaseAndWatch({ run, readStatus: readStatus() }), /package set/);
   assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "pr" && second === "merge"), false);
+});
+
+test("release and watch refuses an unqualified release head before merging", async () => {
+  for (const releaseRuns of [
+    [],
+    [{ ...successfulRelease, conclusion: null }],
+    [{ ...successfulRelease, conclusion: "failure" }],
+    [{ ...successfulRelease, head_sha: baseSha }],
+    [{ ...successfulRelease, head_branch: "main" }],
+    [{ ...successfulRelease, event: "push" }],
+    [successfulRelease, successfulRelease],
+  ]) {
+    const calls = [];
+    await assert.rejects(() => releaseAndWatch({
+      run: checkoutRun({ releaseRuns }, calls), readStatus: readStatus(),
+    }), /exactly one successful Release run/);
+    assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "pr" && second === "merge"), false);
+  }
+});
+
+test("release and watch refuses a regenerated or invalid pinned head", async () => {
+  for (const expectedHeadSha of [baseSha, "not-a-sha"]) {
+    const calls = [];
+    await assert.rejects(() => releaseAndWatch({
+      run: checkoutRun({}, calls), readStatus: readStatus(), expectedHeadSha,
+    }), /approved release head|regular expression/);
+    assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "pr" && second === "merge"), false);
+  }
 });
 
 test("release and watch rejects an empty plan or tampered pull request before merging", async () => {
@@ -164,6 +198,7 @@ function checkoutRun(overrides = {}, calls = []) {
     if (joined === "remote get-url origin") return overrides.remote ?? "https://github.com/emseepea/emseepea.git";
     if (joined === "status --porcelain") return overrides.status ?? "";
     if (joined.startsWith("pr list")) return JSON.stringify(overrides.pullRequests ?? [pullRequest]);
+    if (joined.startsWith("api ")) return JSON.stringify({ workflow_runs: overrides.releaseRuns ?? [successfulRelease] });
     if (joined.startsWith("merge-base")) return baseSha;
     if (command === "npm" && joined.startsWith("exec changeset status")) return overrides.plannedStatus ?? plannedStatus;
     if (joined === `show ${baseSha}:docs/reviews/current-release-readiness.md`) {
