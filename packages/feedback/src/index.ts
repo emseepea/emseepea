@@ -11,6 +11,10 @@ const identifier = z.string().min(1).max(240);
 const timestamp = z.iso.datetime({ offset: true });
 const body = z.string().min(1).max(4_000);
 
+export const feedbackCollectionSchema = z.string()
+  .regex(/^[a-z][a-z0-9._-]{0,63}$/)
+  .describe("Deployment-static feedback collection identifier.");
+
 export const feedbackObservationSchema = z.enum([
   "error",
   "friction",
@@ -66,6 +70,7 @@ export const feedbackConversationSchema = feedbackThreadSchema.extend({
 });
 
 export type FeedbackObservation = z.output<typeof feedbackObservationSchema>;
+export type FeedbackCollection = z.output<typeof feedbackCollectionSchema>;
 export type FeedbackMessage = z.output<typeof feedbackMessageSchema>;
 export type FeedbackThread = z.output<typeof feedbackThreadSchema>;
 export type FeedbackConversation = z.output<typeof feedbackConversationSchema>;
@@ -74,6 +79,69 @@ export interface FeedbackAdapterContext {
   readonly scope: string;
   readonly signal: AbortSignal;
   readonly deadlineMs: number;
+}
+
+export const feedbackSubmissionSourceReferenceSchema = z.strictObject({
+  system: identifier.describe("Stable name of the authoritative source system."),
+  id: identifier.describe("Stable non-secret record identifier in the source system."),
+});
+
+export const feedbackSubmissionRecordSchema = z.object({
+  collection: feedbackCollectionSchema,
+  submissionId: identifier.describe("Stable identifier within the feedback collection."),
+  scope: identifier.describe("Authorization scope associated with the submission."),
+  observation: feedbackObservationSchema,
+  detail: body,
+  context: z.unknown().optional(),
+  recordedAt: timestamp,
+  source: feedbackSubmissionSourceReferenceSchema,
+});
+
+export const feedbackSubmissionReferenceSchema = z.strictObject({
+  collection: feedbackCollectionSchema,
+  submissionId: identifier.describe("Stable identifier within the feedback collection."),
+});
+
+export const feedbackSubmissionRecordedEventSchema = z.strictObject({
+  id: identifier,
+  type: z.literal("feedback.submission.recorded"),
+  occurredAt: timestamp,
+  record: feedbackSubmissionReferenceSchema,
+  source: feedbackSubmissionSourceReferenceSchema,
+});
+
+export const getFeedbackSubmissionQuerySchema = feedbackSubmissionReferenceSchema;
+export const listFeedbackSubmissionsQuerySchema = z.strictObject({
+  collection: feedbackCollectionSchema,
+  cursor: z.string().min(1).max(1_000).optional(),
+  limit: z.number().int().min(1).max(50).default(20),
+});
+export const feedbackSubmissionPageSchema = z.object({
+  submissions: z.array(feedbackSubmissionRecordSchema).max(50),
+  nextCursor: z.string().min(1).max(1_000).optional(),
+});
+
+export type FeedbackSubmissionSourceReference = z.output<
+  typeof feedbackSubmissionSourceReferenceSchema
+>;
+export type FeedbackSubmissionRecord = z.output<typeof feedbackSubmissionRecordSchema>;
+export type FeedbackSubmissionReference = z.output<typeof feedbackSubmissionReferenceSchema>;
+export type FeedbackSubmissionRecordedEvent = z.output<
+  typeof feedbackSubmissionRecordedEventSchema
+>;
+export type GetFeedbackSubmissionQuery = z.output<typeof getFeedbackSubmissionQuerySchema>;
+export type ListFeedbackSubmissionsQuery = z.output<typeof listFeedbackSubmissionsQuerySchema>;
+export type FeedbackSubmissionPage = z.output<typeof feedbackSubmissionPageSchema>;
+
+export interface FeedbackCollectionBackend {
+  getSubmission(
+    query: GetFeedbackSubmissionQuery,
+    context: FeedbackAdapterContext,
+  ): FeedbackSubmissionRecord | undefined | Promise<FeedbackSubmissionRecord | undefined>;
+  listSubmissions(
+    query: ListFeedbackSubmissionsQuery,
+    context: FeedbackAdapterContext,
+  ): FeedbackSubmissionPage | Promise<FeedbackSubmissionPage>;
 }
 
 const feedbackEventTypeSchema = z.enum([
