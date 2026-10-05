@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 import { pathToFileURL } from "node:url";
 import { gt, inc, major, minor, valid } from "semver";
 import { publicPackages } from "./public-packages.mjs";
+import { checkReleasePullRequest } from "./check-release-pull-request.mjs";
 
 const exec = promisify(execFile);
 const execute = async (command, args) => (await exec(command, args, { encoding: "utf8" })).stdout.trim();
@@ -102,7 +103,6 @@ export async function finalizeRecovery({ run = execute, sourceSha = process.env.
   assert.equal(origin.sha, sourceSha, "generated candidate source changed");
   assert.equal(String(origin.qualityRunId), String(qualityRunId), "generated candidate Quality run changed");
   assert.equal((await run("git", ["ls-remote", "origin", "refs/heads/main"])).split("\t")[0], sourceSha, "checked source moved");
-  const { checkReleasePullRequest } = await import("./check-release-pull-request.mjs");
   await (checkPlan ?? checkReleasePullRequest)(sourceSha, generated, { run, requireRecoveryAncestry: false, qualityRunId });
   const tree = await run("git", ["rev-parse", `${generated}^{tree}`]);
   const created = JSON.parse(await run("gh", ["api", "repos/emseepea/emseepea/git/commits", "-f", "message=Checked replacement release candidate", "-f", `tree=${tree}`, "-f", `parents[]=${generated}`, "-f", `parents[]=${receipt.failedPublishSha}`]));

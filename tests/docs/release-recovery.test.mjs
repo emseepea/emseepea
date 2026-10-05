@@ -162,6 +162,39 @@ test("replacement finalizer preserves the generated tree and updates only non-fo
   }
 });
 
+test("finalizer CLI reaches its required plan check without an import deadlock", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "emseepea-recovery-cli-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const preload = join(directory, "preload.mjs");
+  await writeFile(preload, `
+    import childProcess from "node:child_process";
+    import { syncBuiltinESMExports } from "node:module";
+    import { promisify } from "node:util";
+    const receipt = ${JSON.stringify(receipt)};
+    const source = ${JSON.stringify(source)}, candidate = ${JSON.stringify(candidate)}, final = ${JSON.stringify(final)}, tree = ${JSON.stringify(tree)};
+    const failed = ${JSON.stringify(failed)}, jobs = ${JSON.stringify(jobs)}, publicPackages = ${JSON.stringify(publicPackages)};
+    ${harness.toString()}
+    const state = harness();
+    childProcess.execFile = Object.assign(() => { throw new Error("unexpected callback execution"); }, {
+      [promisify.custom]: async (command, args) => {
+        if (args.join(" ") === "ls-tree --name-only " + source + " .release/recovery.json") return { stdout: ".release/recovery.json" };
+        if (args.join(" ") === "show " + source + ":.release/recovery.json") return { stdout: JSON.stringify(receipt) };
+        if (args[0] === "worktree" && args[1] === "add") throw new Error("CLI reached required release plan check");
+        if (args.includes("git/commits") || args.includes("PATCH")) throw new Error("unexpected candidate write");
+        return { stdout: await state.run(command, args) };
+      },
+    });
+    syncBuiltinESMExports();
+    globalThis.fetch = async (url) => ({ ok: true, json: () => state.readRegistry(decodeURIComponent(new URL(url).pathname.slice(1))) });
+  `);
+  const result = await promisify(execFile)(process.execPath, ["--import", preload, "scripts/release-recovery.mjs", "finalize"], {
+    encoding: "utf8", timeout: 15_000, env: { ...process.env, GITHUB_SHA: source, GITHUB_RUN_ID: "123" },
+  }).catch((error) => error);
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /CLI reached required release plan check/);
+  assert.doesNotMatch(result.stderr, /unsettled top-level await|unexpected candidate write/);
+});
+
 test("official recovery generation updates versions, starter pins, changelogs and consumes its receipt", { timeout: 180_000 }, async (t) => {
   const exec = promisify(execFile);
   const run = async (command, args) => (await exec(command, args, { encoding: "utf8" })).stdout.trim();
