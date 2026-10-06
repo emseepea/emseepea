@@ -100,3 +100,14 @@ the new capture; history preserves the P019 headline. Source review only.
 | --- | --- |
 | `docs/problems/README.md` | `bd8f937f5209edb482e4894d202feb0bf71b5e7118cd0f746b17056f7aaab492` |
 | `docs/problems/README-history.md` | `21c1c9a883adab5f2e769b97c089b9fc91d827cefbf5427c864e992b718fc1f1` |
+
+## P021 Backlog Snapshot
+
+Result: PASS. Specialist `/root/retro_problem_capture/ticket_cognitive` reviewed
+the final backlog and history. P021 appears ahead of the two lower-scoring new
+captures, and history preserves the P020 headline. Source review only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/README.md` | `1458a442f2f1b77df7c69bfd62e9c8f1e28a8d6c381cd43bd7c2288f28c8ee6c` |
+| `docs/problems/README-history.md` | `ae73f3cababfe0c2a2a94ef7bc0cc01173e62fb450735e7664a0ccfa5ce9ca2a` |
