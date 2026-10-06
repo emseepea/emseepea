@@ -71,3 +71,7 @@ Previous backlog headline archived when P007 moved to known error:
 ## 2026-09-30
 
 > Last reviewed: 2026-09-29 **P017 known error** — The locked development dependency predates the advisory; the existing security gate blocks publication
+
+## 2026-10-06
+
+> Last reviewed: 2026-10-01 **P007 closed on evidence** — Published server package contains the corrected result-schema guide.
