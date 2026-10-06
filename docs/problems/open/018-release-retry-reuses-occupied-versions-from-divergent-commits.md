@@ -64,7 +64,35 @@ publication; the earlier release-plan step does not prevent it.
 - [ ] Add a failing retry-planning test for occupied versions from another
       release head.
 - [ ] Define a safe way to choose fresh versions before publication.
-- [ ] Verify a retry with one release head and exact package contents.
+- [x] Verify a retry with one release head and exact package contents.
+
+### Recovery Evidence: 2026-10-06
+
+The retry used checked source
+`90fa62594cdb6b479702cffbcdefb43e2082e34e`, whose
+[Quality run 37388530000](https://github.com/emseepea/emseepea/actions/runs/37388530000)
+passed. Frozen candidate `62ac79a3153f9f98c488163ff07a2522fb18c67e`
+has the same Git tree as officially generated candidate
+`dba58275b0cd4d7b2e31c6a571ee31449ca741e5`:
+`c1dcc16120f0891d2d636b3e274f6097857d9248`.
+
+All 16 changed versions were observed on `latest`, with exact registry
+`gitHead` equal to the frozen candidate. The unchanged tailwind package retained
+its earlier version. [Release run 37389531442](https://github.com/emseepea/emseepea/actions/runs/37389531442)
+passed on attempt 2; [Publish run 37404060722](https://github.com/emseepea/emseepea/actions/runs/37404060722)
+passed all jobs. Trunk merge-back is
+`ab8f75fa93fef42a437bfc137b104e092b052bbd`.
+
+This demonstrates recovery of this candidate. The ticket stays Open: a safe
+retry does not by itself establish that every future occupied-version planning
+case is prevented, and the failing planning-test task remains outstanding.
+
+## Proposed Fix Strategy
+
+Retain the current fresh-version recovery contract and exact package-content
+and provenance verification. Add the outstanding occupied-version planning
+regression before treating the general planning defect as resolved. Review the
+existing recovery implementation before proposing additional release controls.
 
 ## Dependencies
 

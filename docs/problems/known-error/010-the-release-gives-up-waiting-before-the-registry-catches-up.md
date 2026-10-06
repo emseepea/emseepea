@@ -189,6 +189,26 @@ red-run noise; it does not close the window during which installs fail.
   so a slow registry cannot leave a published package pinning an absent one.
 - [ ] Create a reproduction test for the chosen wait behaviour.
 
+## Session Update: 2026-10-06
+
+[Release run 37389531442, attempt 1](https://github.com/emseepea/emseepea/actions/runs/37389531442/attempts/1)
+failed when the `@emseepea/create-openapi-server@0.1.7` tarball returned HTTP
+404 even though its registry metadata was already correct. A later direct
+tarball observation returned HTTP 200 without a package or workflow mutation.
+
+Re-running only the failed jobs on the same run and frozen head
+`62ac79a3153f9f98c488163ff07a2522fb18c67e` produced
+[successful attempt 2](https://github.com/emseepea/emseepea/actions/runs/37389531442/attempts/2).
+This repeats the propagation class at the tarball boundary; correct metadata
+alone did not prove that the package could be downloaded.
+
+## Proposed Fix Strategy
+
+Retain direct tarball and exact-head evidence when deciding whether to retry.
+Use a bounded wait that distinguishes metadata visibility from download
+availability, and add a behavioural propagation test before considering this
+ticket resolved. A successful retry does not eliminate the original wait defect.
+
 ## Dependencies
 
 - **Blocks**: (none)
