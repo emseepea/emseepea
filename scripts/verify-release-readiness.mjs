@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { initializerPackages, publicPackages } from "./public-packages.mjs";
+import { readRecovery, recoveryPlan } from "./release-recovery.mjs";
 
 const exec = promisify(execFile);
 
@@ -95,12 +96,12 @@ export async function readPlannedReleaseStatus(cwd = process.cwd(), run = exec) 
   const packages = await getPackages(cwd);
   const result = await readConfig(cwd, packages);
   assert.equal(result.errors, undefined, `Invalid Changesets config: ${result.errors?.join("; ")}`);
-  const plan = assembleReleasePlan(
+  const plan = recoveryPlan(assembleReleasePlan(
     await readChangesets(packages.rootDir),
     packages,
     result.config,
     await readPreState(packages.rootDir),
-  );
+  ), await readRecovery(cwd));
   const manifests = new Map(await Promise.all(publicPackages.map(async ({ name, path }) => [
     name,
     JSON.parse(await readFile(join(cwd, path, "package.json"), "utf8")),
@@ -144,6 +145,7 @@ export function assertReleasePullRequestPlan(status, baseLock, headLock, changed
       // that measured the website build, so it rides into `publish` with the
       // versioned changes. It is generated, not hand-edited.
       && file !== ".release/origin.json"
+      && !(file === ".release/recovery.json" && status.recovery)
       && !/^\.changeset\/[^/]+\.md$/.test(file)
       && !workspaceFiles.has(file)),
     [],

@@ -51,9 +51,13 @@
     "test:eval": "npm run build && npm run test:llm:built --workspaces --if-present",
     "test:eval:ci": "npm run test:llm:built --workspaces --if-present -- --provider claude-ci",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p website/tsconfig.json --noEmit",
-    "version-packages": "changeset version && node scripts/freeze-unplanned-initializers.mjs && node scripts/record-release-origin.mjs && npm install --package-lock-only --ignore-scripts",
+    "version-packages": "node scripts/version-packages.mjs",
     "lint": "oxlint .",
     "release:next": "changeset publish --tag next"
+  },
+  "overrides": {
+    "postcss-nested": { "postcss-selector-parser": "7.1.6" },
+    "oxfmt": { "tinypool": "2.1.2" }
   },
   "devDependencies": {
     "@opentelemetry/context-async-hooks": "2.10.0",
@@ -62,7 +66,7 @@
     "@anthropic-ai/claude-code": "2.1.248",
     "@changesets/changelog-github": "1.0.0",
     "@changesets/cli": "3.0.1",
-    "@emseepea/testing": "0.20.4",
+    "@emseepea/testing": "0.20.5",
     "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "24.13.3",
     "axe-core": "4.13.0",

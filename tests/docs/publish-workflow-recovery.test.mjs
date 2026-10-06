@@ -23,6 +23,7 @@ test("a new release pull request waits for the previous publish head to reach ma
       esac
       return 1
     }
+    node() { git merge-base --is-ancestor origin/publish "$GITHUB_SHA"; }
     ${guard?.run ?? "missing_guard"}
   `;
   const env = { ...process.env, GITHUB_SHA: main, PUBLISH_IS_ANCESTOR: "true" };
@@ -36,13 +37,18 @@ test("a new release pull request waits for the previous publish head to reach ma
   assert.notEqual(refused.status, 0);
 });
 
-test("release dispatch runs for the matching PR head and refuses a mismatch", () => {
+test("release dispatch waits for PR head visibility and refuses mismatch or branch movement", () => {
   const dispatch = quality.jobs["release-pull-request"].steps.find((step) =>
     step.name === "Build and publish the release pull request under next");
   const head = "a".repeat(40);
   const shell = `
     git() { printf '%s\\trefs/heads/changeset-release/publish\\n' "$HEAD_SHA"; }
     gh() { if [ "$1" = pr ]; then printf '%s\\n' "$PR_SHA"; else printf 'DISPATCH:%s\\n' "$*"; fi; }
+    sleep() {
+      printf 'WAIT\\n'
+      if [ "\${PR_CONVERGES:-false}" = true ]; then export PR_SHA="$HEAD_SHA"; fi
+      if [ "\${REMOTE_MOVES:-false}" = true ]; then export HEAD_SHA="${"d".repeat(40)}"; fi
+    }
     ${dispatch.run}
   `;
   const env = { ...process.env, HEAD_SHA: head, PR_SHA: head, GITHUB_REPOSITORY: "emseepea/emseepea", GITHUB_SHA: "b".repeat(40), GITHUB_RUN_ID: "123" };
@@ -53,6 +59,21 @@ test("release dispatch runs for the matching PR head and refuses a mismatch", ()
   const refused = spawnSync("bash", ["-e", "-c", shell], { env: { ...env, PR_SHA: "c".repeat(40) }, encoding: "utf8" });
   assert.notEqual(refused.status, 0);
   assert.doesNotMatch(refused.stdout, /DISPATCH:/);
+  assert.equal(refused.stdout.match(/WAIT/g).length, 11);
+
+  const delayed = spawnSync("bash", ["-e", "-c", shell], {
+    env: { ...env, PR_SHA: "c".repeat(40), PR_CONVERGES: "true" }, encoding: "utf8",
+  });
+  assert.equal(delayed.status, 0, delayed.stderr);
+  assert.match(delayed.stdout, new RegExp(`DISPATCH:workflow run release\\.yml .*head_sha=${head}`));
+  assert.equal(delayed.stdout.match(/WAIT/g).length, 1);
+
+  const moved = spawnSync("bash", ["-e", "-c", shell], {
+    env: { ...env, PR_SHA: "c".repeat(40), PR_CONVERGES: "true", REMOTE_MOVES: "true" }, encoding: "utf8",
+  });
+  assert.notEqual(moved.status, 0);
+  assert.match(moved.stderr, /release branch moved before dispatch/);
+  assert.doesNotMatch(moved.stdout, /DISPATCH:/);
 });
 
 test("promotion passes the bound release run to the original artifact download", () => {

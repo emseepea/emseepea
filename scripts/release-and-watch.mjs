@@ -21,6 +21,7 @@ async function execute(command, args, { timeoutMs } = {}) {
 export async function releaseAndWatch({
   run = execute,
   readStatus,
+  expectedHeadSha = process.env.EMSEEPEA_RELEASE_SHA,
   pause = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   timeoutMs = 3_600_000,
 } = {}) {
@@ -40,6 +41,10 @@ export async function releaseAndWatch({
   assert.equal(pullRequests.length, 1, "expected exactly one open Changesets release pull request");
   const [pullRequest] = pullRequests;
   assert.match(pullRequest.headRefOid, /^[a-f0-9]{40}$/);
+  if (expectedHeadSha !== undefined) {
+    assert.match(expectedHeadSha, /^[a-f0-9]{40}$/);
+    assert.equal(pullRequest.headRefOid, expectedHeadSha, "approved release head changed");
+  }
   // The plan gate's base is the trunk commit the head derives from, which is
   // the merge base of the head and `main`.
   await run("git", ["fetch", "origin", "main", `pull/${pullRequest.number}/head`]);
@@ -47,6 +52,17 @@ export async function releaseAndWatch({
   assert.match(baseSha, /^[a-f0-9]{40}$/);
 
   await checkReleasePullRequest(baseSha, pullRequest.headRefOid, { run, readStatus });
+
+  const releaseRuns = JSON.parse(await run("gh", [
+    "api", "-X", "GET", `repos/${repository}/actions/workflows/release.yml/runs`,
+    "-f", `head_sha=${pullRequest.headRefOid}`, "-f", "status=success",
+  ]));
+  const qualified = (releaseRuns.workflow_runs ?? []).filter((item) =>
+    item.head_sha === pullRequest.headRefOid
+    && item.head_branch === "changeset-release/publish"
+    && item.event === "workflow_dispatch"
+    && item.conclusion === "success");
+  assert.equal(qualified.length, 1, "expected exactly one successful Release run for the release head");
 
   await run("gh", [
     "pr", "merge", String(pullRequest.number), "--repo", repository, "--merge",

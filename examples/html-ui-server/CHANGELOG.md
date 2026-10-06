@@ -1,10 +1,10 @@
 # @emseepea/create-html-ui-server
 
-## 0.1.6
+## 0.1.7
 
 ### Patch Changes
 
-- [`632f71b`](https://github.com/emseepea/emseepea/commit/632f71b2c3d0d80fe0def2a0642f680c2d520c84) Thanks [@tompahoward](https://github.com/tompahoward)! - Add collection-aware feedback submission, protected operator retrieval, and
+- [#142](https://github.com/emseepea/emseepea/pull/142) [`632f71b`](https://github.com/emseepea/emseepea/commit/632f71b2c3d0d80fe0def2a0642f680c2d520c84) Thanks [@github-actions](https://github.com/apps/github-actions)! - Add collection-aware feedback submission, protected operator retrieval, and
   owner-scoped `feedback.submitted` events. Customer-facing servers submit
   customer feedback only. Internal servers submit internal feedback and monitor
   or read their authorized collections while the support backend remains

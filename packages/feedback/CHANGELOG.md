@@ -1,10 +1,10 @@
 # @emseepea/feedback
 
-## 0.7.0
+## 0.7.1
 
 ### Minor Changes
 
-- [`632f71b`](https://github.com/emseepea/emseepea/commit/632f71b2c3d0d80fe0def2a0642f680c2d520c84) Thanks [@tompahoward](https://github.com/tompahoward)! - Add collection-aware feedback submission, protected operator retrieval, and
+- [#142](https://github.com/emseepea/emseepea/pull/142) [`632f71b`](https://github.com/emseepea/emseepea/commit/632f71b2c3d0d80fe0def2a0642f680c2d520c84) Thanks [@github-actions](https://github.com/apps/github-actions)! - Add collection-aware feedback submission, protected operator retrieval, and
   owner-scoped `feedback.submitted` events. Customer-facing servers submit
   customer feedback only. Internal servers submit internal feedback and monitor
   or read their authorized collections while the support backend remains
@@ -18,9 +18,9 @@
 
 ### Patch Changes
 
-- [`e23ea4d`](https://github.com/emseepea/emseepea/commit/e23ea4dd6d3e3604bb22da11a7d1e0c66ea1d6bd) Thanks [@tompahoward](https://github.com/tompahoward)! - Model Context Protocol (MCP) clients will see that recording feedback does not change or delete existing data.
+- [#142](https://github.com/emseepea/emseepea/pull/142) [`e23ea4d`](https://github.com/emseepea/emseepea/commit/e23ea4dd6d3e3604bb22da11a7d1e0c66ea1d6bd) Thanks [@github-actions](https://github.com/apps/github-actions)! - Model Context Protocol (MCP) clients will see that recording feedback does not change or delete existing data.
 - Updated dependencies [[`632f71b`](https://github.com/emseepea/emseepea/commit/632f71b2c3d0d80fe0def2a0642f680c2d520c84)]:
-  - @emseepea/server@0.22.0
+  - @emseepea/server@0.22.1
 
 ## 0.6.0
 
