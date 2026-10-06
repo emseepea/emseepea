@@ -57,10 +57,16 @@ test("review discovery reports Git failures instead of treating them as no chang
 function changedFiles() {
   return [...new Set([...changedAgainstBase(), ...changedInWorktree()])]
     .map((file) => file.replaceAll("\\", "/"))
-    .filter((file) => file && !path.basename(file).includes(" 2."));
+    .filter((file) => file && (process.env.DOCS_REVIEW_BASE || !path.basename(file).includes(" 2.")));
 }
 
 function changedAgainstBase() {
+  const exactBase = process.env.DOCS_REVIEW_BASE;
+  if (exactBase) {
+    assert.match(exactBase, /^[a-f0-9]{40}$/, "documentation review requires an exact base commit");
+    return gitRaw(["diff", "--name-only", "-z", "--diff-filter=ACMRT", exactBase, "HEAD"])
+      .split("\0").filter(Boolean);
+  }
   const base = process.env.GITHUB_BASE_REF;
   if (!base) return changedByLastCommit();
   return git(["diff", "--name-only", "--diff-filter=ACMRT", `origin/${base}...HEAD`]);

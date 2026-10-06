@@ -15,3 +15,34 @@ source-content review, not native ChatGPT journey evidence.
 | `docs/reviews/current-release-readiness.md` | `979d71e2c38f8d14ea04e89abadaaf1e47fbe881da3b6d54f955456a7c38414d` |
 | `packages/testing/README.md` | `4394386357fc6d16b6a6083ed35eb8253b1d88023f00a3ccaf2ebf0719327131` |
 | `website/src/content/docs/ai-tests.md` | `bd0cd69dfdc4e9a9933ae8910fcee7e5b70784cf93949b93358770af89b10264` |
+
+## Docs-Only Qualification
+
+Date: 2026-10-07
+Reviewer: cognitive-accessibility specialist
+Content verdict: PASS. No prose corrections required.
+
+The specialist checked descriptive headings, clear status language, decision
+scope, and the distinction between proposed architecture and actual production
+confirmation. ADR-0106 preserves its historical body. This review is not a
+claim of Web Content Accessibility Guidelines conformance or rendered/mobile
+testing.
+
+The earlier fourteen outgoing Markdown files retain current hash-bound review
+coverage in [the 2026-10-06 review](cognitive-accessibility-2026-10-06.md).
+
+### Reviewed Files
+
+Each SHA-256 identifies the reviewed content. Changed bytes require another
+review.
+
+| File | SHA-256 | Verdict |
+| --- | --- | --- |
+| `docs/decisions/0112-range-bound-docs-only-local-push-qualification.proposed.md` | `628280f77518b6b3c945458007ad252d84c0ffbc5eb23ef344010a6b92a74681` | PASS |
+| `docs/decisions/0106-clean-install-exact-commit-branch-push-gate.superseded.md` | `eb27b4c581bd1ca1e1c17ffbc5ebfd5b924fa3bd11d96f85ca8eec87e8473173` | PASS |
+| `docs/decisions/README.md` | `072355ec87280bc8e3525fa472ea83a39fde4e061bcbe7b7cc7b5f67666f7be8` | PASS |
+| `docs/decisions/0113-operational-docs-only-quality-runs-without-release-authority.proposed.md` | `20018d4cf4277ce5d4d5be3923469104d04ff7a05b7a1e5c64cdbfc921ea2c6a` | PASS |
+| `docs/stories/done/STORY-001-qualify-each-outgoing-branch-tip-before-push.md` | `a18a21b9c9e0b42ef092e9ae8ff4471357b2752756583dee5130f5164035876e` | PASS |
+| `docs/risks/R015-untested-branch-pushes-consume-ci-and-weaken-verification-claims.active.md` | `7057754894577d37308fde1be0e49a622b9b2f11c0eed5f7e8a0224e0205bc02` | PASS |
+| `docs/problems/closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md` | `817bd248c273d89925c1a20ea6cfe1bb6206db4b23db94e7fe69fb19b6d8eeb8` | PASS |
+| `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `741b6f56fd6fa8b28ea614b680cdd51ac2ac3fe5da0d5e6b3e768ac17621a6be` | PASS |

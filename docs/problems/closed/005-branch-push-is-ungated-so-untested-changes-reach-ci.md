@@ -182,7 +182,7 @@ is about no gate existing at the push boundary at all.
 Captured via /wr-itil:capture-problem; expand at next investigation.
 
 - [Risk R015: Untested Branch Pushes Consume Continuous Integration (CI) and Weaken Verification Claims](../../risks/R015-untested-branch-pushes-consume-ci-and-weaken-verification-claims.active.md) records the treated push-boundary risk and residual score of 6 (Medium), outside appetite.
-- [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](../../decisions/0106-clean-install-exact-commit-branch-push-gate.proposed.md) is the ratified treatment decision.
+- [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](../../decisions/0106-clean-install-exact-commit-branch-push-gate.superseded.md) is the ratified treatment decision.
 
 ## Story Maps
 

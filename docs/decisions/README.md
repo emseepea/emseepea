@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 108 decisions: 63 current and 45 historical.
+This project has 110 decisions: 64 current and 46 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -72,12 +72,13 @@ recorded separately.
 - [ADR-0101: Vulnerability Scanning Without a Release Workflow](0101-vulnerability-scanning-without-a-release-workflow.proposed.md): Proposed; human review confirmed.
 - [ADR-0103: Proved Proxy Boundary for Production Deployments](0103-proved-proxy-boundary-for-production-deployments.proposed.md): Proposed; human review confirmed.
 - [ADR-0105: Bounded Stage-Only Token for npm Promotion](0105-bounded-stage-only-token-for-npm-promotion.proposed.md): Proposed; human review confirmed.
-- [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.proposed.md): Proposed; human review confirmed.
 - [ADR-0107: Release Gates Require a Mature Available Vulnerability Fix](0107-release-gates-require-a-mature-available-vulnerability-fix.proposed.md): Proposed; human review pending.
 - [ADR-0108: External Approval Uses Encrypted Bound Capsules and Atomic Consumption](0108-external-approval-uses-encrypted-bound-capsules-and-atomic-consumption.proposed.md): Proposed; human review pending.
 - [ADR-0109: Opt-In Checked Webhook Subscriptions for Model Context Protocol Events](0109-opt-in-checked-webhook-subscriptions-for-mcp-events.proposed.md): Proposed; human review pending.
 - [ADR-0110: Feedback Collections Are Deployment-Static Authorization Partitions with Independently Composable Submission, Monitoring, and Operator Roles](0110-feedback-collections-as-deployment-static-authorization-partitions.proposed.md): Proposed; human review confirmed.
 - [ADR-0111: Checked Replacement Candidates for Unpromoted Failed Releases](0111-checked-replacement-candidates-for-unpromoted-failed-releases.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0112: Range-Bound Docs-Only Local Push Qualification](0112-range-bound-docs-only-local-push-qualification.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0113: Operational Docs-Only Quality Runs Without Release Authority](0113-operational-docs-only-quality-runs-without-release-authority.proposed.md): Proposed; human review unconfirmed.
 
 ### Historical decisions
 
@@ -126,6 +127,7 @@ recorded separately.
 - [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.superseded.md): Superseded; human review confirmed.
 - [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.superseded.md): Superseded; human review confirmed.
 - [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.superseded.md): Superseded; human review confirmed.
+- [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -2329,10 +2331,11 @@ Chosen option: **"A bounded, stage-only promotion token with assisted rotation"*
 - A reminder exists at least 30 days before the recorded token expiry and links the rotation to this repository and secret name.
 - Rotation is not complete until a real promotion succeeds with the replacement token and the prior token is then revoked.
 
-### [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.proposed.md)
+### [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0112: Range-Bound Docs-Only Local Push Qualification](0112-range-bound-docs-only-local-push-qualification.proposed.md)
 
 #### ADR-0106 Decision
 
@@ -2433,3 +2436,35 @@ Chosen option: **checked replacement candidate**, because it permits recovery wi
 - Registry, semantic, initializer and guide checks bind to that exact head.
 - The website deploys the measured checked-source artifact, without rebuilding.
 - The trunk receives the replacement version changes only after publication.
+
+### [ADR-0112: Range-Bound Docs-Only Local Push Qualification](0112-range-bound-docs-only-local-push-qualification.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+- Replaces: [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.superseded.md)
+
+#### ADR-0112 Decision
+
+Chosen option: **"Range-bound docs-only local qualification"**, because operational Markdown does not require a running application or database.
+
+#### ADR-0112 Checks
+
+- Real documentation pushes demonstrate that the exception checks the complete outgoing range without local Docker, then passes exact-commit remote Quality.
+- Real mixed or executable changes retain full qualification.
+- Tests demonstrate that stale bases, wrong destinations, symlinks, and missing cognitive-review evidence do not authorize the reduced route.
+
+### [ADR-0113: Operational Docs-Only Quality Runs Without Release Authority](0113-operational-docs-only-quality-runs-without-release-authority.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+
+#### ADR-0113 Decision
+
+Chosen option: **"Docs-only Quality without release authority"**, because operational Markdown needs checked prose, not a running application, while software releases still need every existing qualification prerequisite.
+
+#### ADR-0113 Checks
+
+- Real operational-documentation pushes complete exact-commit Quality with only classification and documentation checks.
+- Real mixed changes still run every full prerequisite.
+- Reduced Quality success cannot publish packages or generate a release candidate.
+- Behavioural checks reject missing or skipped prerequisites, stale attempts, wrong sources, and incomplete job pagination.

@@ -22,8 +22,61 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  change-scope:
+    name: Classify the complete change
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      docs_only: ${{ steps.scope.outputs.docs_only }}
+      base: ${{ steps.scope.outputs.base }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24.21.0
+      - name: Classify the exact event range
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          echo "docs_only=$(node scripts/docs-only-changes.mjs "$BASE_SHA" "$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
+          echo "base=$BASE_SHA" >> "$GITHUB_OUTPUT"
+
+  documentation:
+    name: Documentation review
+    needs: change-scope
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24.21.0
+      - name: Check documentation in the exact event range
+        env:
+          DOCS_REVIEW_BASE: ${{ needs.change-scope.outputs.base }}
+        run: |
+          if git cat-file -e "$DOCS_REVIEW_BASE^{commit}" 2>/dev/null; then
+            git diff --check "$DOCS_REVIEW_BASE" "$GITHUB_SHA"
+          else
+            unset DOCS_REVIEW_BASE
+          fi
+          node --test tests/docs/published-content-review.test.mjs
+
   vulnerability-scan:
     name: Known dependency vulnerabilities
+    needs: change-scope
+    if: needs.change-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -65,6 +118,8 @@ jobs:
 
   test:
     name: Node.js ${{ matrix.node-version }}
+    needs: change-scope
+    if: needs.change-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     strategy:
@@ -133,7 +188,8 @@ jobs:
         run: node --expose-gc --test tests/load/subscription-sdk.test.mjs
   initializer-qualification:
     name: Standalone initializer / ${{ matrix.example }} / Node.js 24.21.0
-    needs: vulnerability-scan
+    needs: [change-scope, vulnerability-scan]
+    if: needs.change-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     strategy:
@@ -201,6 +257,8 @@ jobs:
 
   website-performance:
     name: Website publication checks
+    needs: change-scope
+    if: needs.change-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -250,8 +308,8 @@ jobs:
     # exists only for a commit whose checks -- including the OSV scan -- passed.
     # That dependency is what binds publication to a passed scan now that the
     # Release workflow is gone. Removing it removes the guarantee.
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    needs: [initializer-qualification, test, website-performance]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.change-scope.outputs.docs_only != 'true' }}
+    needs: [change-scope, documentation, initializer-qualification, test, website-performance]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     # ADR-0099 requires permissions limited to their tasks. These are scoped to
