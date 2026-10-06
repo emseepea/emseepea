@@ -61,3 +61,42 @@ rendered mobile content, or accessibility conformance.
 | `docs/problems/known-error/010-the-release-gives-up-waiting-before-the-registry-catches-up.md` | `77546f33b9a0a43dbd054c157c58ddfaab0137d13413723753ce39ff3bdad970` |
 | `docs/problems/README.md` | `de82913b9822f3cca1361d99723b019af1a91baead0a2490f3368f65317a4481` |
 | `docs/problems/README-history.md` | `a9feb0f89106a55aa475137fe8c888c69996b7f6c7925b2083e9a1851bdb840e` |
+
+## Main Retrospective and Release Briefing
+
+Result: PASS. Specialist `/root/retro_cognitive_review` reviewed all five source
+Markdown files below. The final text separates release evidence, lifecycle
+decisions, and proposed work. Corrections clarified the scope of review and the
+remaining evidence gaps. Dense historical tables retain a narrow-screen reading
+risk. This is a source review, not rendered mobile testing or conformance proof.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/briefing/README.md` | `dde2b737359e264421aefc197a01980f3abb0f9e51b1249c85b4e7ab34ff73c8` |
+| `docs/briefing/releases-and-ci.md` | `a8169294a98f840a585e7b10b8bb49756a6756d981cc57b05597344e65a8069b` |
+| `docs/retros/2026-10-06-ask-hygiene.md` | `1af6707d74cdfbf27f2efc3e3969aa8c856f53dcdfc3e75d5fefc7721a855f5d` |
+| `docs/retros/2026-10-06-context-analysis.md` | `7938ff320d5bff8c35f8b7bbb8b5109347765ada6becebc6e4850e88b834a92f` |
+| `docs/retros/2026-10-06-session-retro.md` | `8a5f13061a22b07dc26c9317d457eef1f2cd4ec76a360115d21c2ce32f8e30ae` |
+
+## Development-Dependency Task Correction
+
+Result: PASS after correction. Specialist
+`/root/retro_problem_capture/ticket_cognitive` re-reviewed P017. The checklist
+now marks exact Quality verification complete and identifies advisory and
+original-scope review as the next action. A passing policy check remains
+distinct from a claim that no vulnerabilities exist.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `60a263e84bf1dfcbea3db7866f8bb59cb4018f80643e3c85691bb8803fac66bf` |
+
+## P020 Backlog Snapshot
+
+Result: PASS. Specialist `/root/retro_problem_capture/ticket_cognitive` reviewed
+the current backlog and history after adding P020. The current headline names
+the new capture; history preserves the P019 headline. Source review only.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/problems/README.md` | `bd8f937f5209edb482e4894d202feb0bf71b5e7118cd0f746b17056f7aaab492` |
+| `docs/problems/README-history.md` | `21c1c9a883adab5f2e769b97c089b9fc91d827cefbf5427c864e992b718fc1f1` |

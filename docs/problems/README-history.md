@@ -75,3 +75,5 @@ Previous backlog headline archived when P007 moved to known error:
 ## 2026-10-06
 
 > Last reviewed: 2026-10-01 **P007 closed on evidence** — Published server package contains the corrected result-schema guide.
+
+> Last reviewed: 2026-10-06 **P019 captured** - Recovery CLI import cycle stops finalization (lightweight aside via `/wr-itil:capture-problem`).
