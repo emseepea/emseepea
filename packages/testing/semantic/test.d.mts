@@ -38,6 +38,8 @@ export interface ElicitationEvidence {
 export interface SemanticConversation {
   /** Sends this exact user message through the same provider-native MCP conversation. */
   send(prompt: string, options?: { elicitations: readonly ScriptedElicitation[] }): Promise<ConversationTurn>;
+  /** Starts a provider-native conversation with no transcript history against the same running test application. */
+  fresh(): Promise<void>;
 }
 
 export function createConversation(

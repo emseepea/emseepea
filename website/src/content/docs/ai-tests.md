@@ -114,6 +114,18 @@ advertised-tool text, an answer wrapper, or prepared MCP material. The native
 client discovers the server's advertised tool names, descriptions, and input
 schemas. Follow-up messages stay in the same conversation.
 
+To verify application-owned saved state without carrying model transcript
+context, start a fresh provider conversation against the same running test
+application:
+
+```js
+await chat.fresh();
+const recalled = await chat.send("What did I save earlier?");
+```
+
+The next `send` creates a new native provider session in every trial. The three
+trial applications remain isolated from one another.
+
 The provider is connected to exactly one loopback MCP server and may use only
 that server's advertised tools. Shell, filesystem, browser, tool search,
 plugins, ambient MCP servers, and unrelated tools are unavailable. Native calls
@@ -138,9 +150,34 @@ npm run lint
 npm run test:llm
 ```
 
-The last command requires the Claude CLI on your command path and a signed-in
-Claude account. If needed, run `claude auth login` first. This package does not
-bundle the CLI or copy your login credentials.
+The default provider requires the Claude CLI on your command path and a
+signed-in Claude account. If needed, run `claude auth login` first. This package
+does not bundle a model CLI or copy login credentials.
+
+Run the same scenarios with Codex CLI by selecting the provider and model:
+
+```sh
+EMSEEPEA_CODEX_MODEL=gpt-5.5 npm run test:llm -- --provider codex-local
+```
+
+`codex-local` uses the current Codex CLI sign-in. The harness links that sign-in
+into a temporary Codex home, ignores user configuration and rules, configures
+only the loopback test MCP server, disables web search and multi-agent tools,
+pre-approves only its discovered tools, and uses a read-only sandbox.
+
+Follow-up turns use `codex exec resume` with the exact session identifier
+returned by the first turn.
+
+For CI, store an OpenAI API key in the CI secret store as `OPENAI_API_KEY` and
+run:
+
+```sh
+EMSEEPEA_CODEX_MODEL=gpt-5.5 npm run test:llm -- --provider codex-ci
+```
+
+Do not place the key in repository configuration or command arguments. Missing
+or rejected authentication fails the evaluation. Choose a model available to
+the account and keep the value stable for comparable evidence.
 
 For your own project, add `@emseepea/testing` as a development dependency and
 set `test:llm` to build your server and run `emseepea-test eval`.
@@ -162,11 +199,22 @@ A wrong selection, rejected call, failed literal assertion, rejected meaning, or
 missing MCP operation fails the test. Failed attempts are not retried or taken
 from a cache.
 
-The conversation model has no shell, files, browser, tool search, plugins,
-ambient MCP servers, or unrelated tools. It has one native connection to the
-target loopback MCP server. This proves native selection for the configured
-provider, model, server, and question, not identical behaviour in every client
-or deployment.
+The Claude conversation model has no shell, files, browser, tool search,
+plugins, ambient MCP servers, or unrelated tools. Codex uses an isolated
+command policy that denies shell launches, an empty shell environment, a
+read-only sandbox, ignored user configuration, disabled web and multi-agent
+features, and exactly one configured MCP server. Any non-target tool event also
+fails the test.
+
+This proves native selection for the recorded provider,
+configured model, CLI version, settings, server revision, and question. Codex
+evidence labels the model as configured because the JSON event stream does not
+identify the resolved model; Claude evidence validates the model from provider
+events.
+
+Codex CLI evidence proves the Codex CLI journey only. It does not prove native
+ChatGPT plugin discovery, OAuth connection, attachment handling, saved-state
+retrieval in ChatGPT, or MCP App card rendering.
 
 Results are saved to `artifacts/llm-eval/evidence.json`. The report contains
 readable test prompts, assistant responses, advertised MCP tool calls and

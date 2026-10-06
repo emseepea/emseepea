@@ -57,6 +57,29 @@ advertised-tool text, an answer wrapper, or prepared MCP material. Exact tool
 assertions come from the provider's native MCP events. Follow-up messages use
 the same conversation.
 
+Call `await conversation.fresh()` to discard provider transcript history while
+keeping the same running test application and its saved data. The next `send`
+starts a new provider-native session in each trial.
+
+The runner supports `claude-local`, `claude-ci`, `codex-local`, and `codex-ci`.
+Codex providers require an explicit `EMSEEPEA_CODEX_MODEL`. For example:
+
+```sh
+EMSEEPEA_CODEX_MODEL=gpt-5.5 emseepea-test --provider codex-local eval
+```
+
+`codex-local` uses the existing Codex CLI sign-in without copying it.
+`codex-ci` requires `OPENAI_API_KEY` from the CI secret store. Both providers
+run `codex exec --json`, resume the actual Codex session for follow-ups, ignore
+user configuration, and pre-approve only the discovered tools from the test
+server.
+
+An isolated command policy denies shell launches and spawned shell environments
+inherit no provider credentials.
+
+Codex CLI evidence proves that CLI journey. It does not prove native ChatGPT
+connection, attachment, retrieval, or MCP App rendering behavior.
+
 Optional `context` is application context, not test guidance. Use it only when
 the deployed application supplies the same context. Leaving it out is the best
 default for testing whether tool names, descriptions, and schemas stand on

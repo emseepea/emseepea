@@ -10,7 +10,7 @@ import {
   startSemanticServer,
   stopSemanticServer,
 } from "./material.mjs";
-import { parseJudgeVerdict, runModel, startModelConversation } from "./provider.mjs";
+import { parseJudgeVerdict, providerModel, providerSettings, runModel, startModelConversation } from "./provider.mjs";
 
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const names = new Set();
@@ -28,7 +28,7 @@ export async function createConversation(testContext, options) {
   names.add(key);
 
   const provider = process.env.EMSEEPEA_EVAL_PROVIDER ?? "claude-local";
-  if (!["claude-local", "claude-ci"].includes(provider)) throw new Error("Unsupported model provider");
+  if (!["claude-local", "claude-ci", "codex-local", "codex-ci"].includes(provider)) throw new Error("Unsupported model provider");
   const smoke = process.env.EMSEEPEA_EVAL_SMOKE === "1";
   if (smoke && provider === "claude-ci") throw new Error("Smoke tests cannot qualify a release");
   const file = process.env.EMSEEPEA_TEST_FILE;
@@ -43,7 +43,9 @@ export async function createConversation(testContext, options) {
     authoritative: provider === "claude-ci",
     smoke,
     provider,
-    model: "claude-sonnet-4-6",
+    configuredModel: providerModel(provider),
+    modelEvidence: provider.startsWith("codex-") ? "configured" : "observed",
+    settings: providerSettings(provider),
     semanticRetries: 0,
     status: "failed",
     caseSha256: hash(JSON.stringify({
@@ -72,7 +74,7 @@ export async function createConversation(testContext, options) {
         const serverSecrets = Object.entries(environment ?? {})
           .filter(([key]) => /token|password|secret|credential|api.?key/i.test(key))
           .map(([, value]) => value);
-        state.trials.push({ running, tools, record, directory, history: [], model: undefined, serverSecrets });
+        state.trials.push({ running, tools, record, directory, history: [], model: undefined, serverSecrets, conversation: 1 });
         evidence.answerTrials.push(record);
       } catch (error) {
         await stopSemanticServer(running.child);
@@ -113,6 +115,7 @@ export async function createConversation(testContext, options) {
         });
         const record = {
           turn: trial.record.turns.length + 1,
+          conversation: trial.conversation,
           interactionMode: "native-mcp",
           prompt,
           response: answer.answer,
@@ -125,6 +128,7 @@ export async function createConversation(testContext, options) {
           promptSha256: hash(prompt),
           answerSha256: hash(answer.answer),
           answerModels: answer.models,
+          answerModelEvidence: answer.modelEvidence ?? "observed",
           answerTurnCount: answer.turnCount,
           answerProviderTurnCount: answer.providerTurnCount,
           answerProviderToolCount: answer.providerToolCount,
@@ -175,6 +179,15 @@ export async function createConversation(testContext, options) {
         elicitations: Object.freeze(trials.map(({ record }) => Object.freeze(record.elicitations))),
         [privateTurn]: trials,
       });
+    },
+    async fresh() {
+      ensureOpen(state);
+      await Promise.all(state.trials.map(async (trial) => {
+        await trial.model?.close();
+        trial.model = undefined;
+        trial.history = [];
+        trial.conversation += 1;
+      }));
     },
   });
 }
@@ -428,6 +441,7 @@ async function judgeTrialMeaning(trial, trialIndex, expected) {
       const response = await isolatedModel(trial.provider, request, "emseepea-judge-", trial.signal);
       Object.assign(record, {
         models: response.models,
+        modelEvidence: response.modelEvidence ?? "observed",
         turnCount: response.turnCount,
         providerTurnCount: response.providerTurnCount,
         providerToolCount: response.providerToolCount,
@@ -453,6 +467,10 @@ function safeModelFailure(error) {
   const message = error instanceof Error ? error.message : "";
   const safeMessages = new Set([
     "Claude subscription authentication is unavailable",
+    "Codex authentication is unavailable",
+    "Codex CI authentication is unavailable",
+    "Codex model is not configured",
+    "Codex provider does not support scripted elicitation",
     "Model command attempted a forbidden action",
     "Model command could not start",
     "Model command exceeded its budget",
@@ -460,6 +478,7 @@ function safeModelFailure(error) {
     "Model command failed during execution",
     "Model command is not signed in",
     "Model command omitted its result event",
+    "Model command omitted its session event",
     "Model command output exceeded its limit",
     "Model command reported an error",
     "Model command returned a non-text answer",
@@ -473,6 +492,10 @@ function safeModelFailure(error) {
     "Model command omitted MCP initialization evidence",
     "Model command omitted an MCP tool result",
     "Model command returned no answer",
+    "Model command returned an incomplete turn",
+    "Model command did not resume the required session",
+    "Model command reported a failed MCP tool call",
+    "Model command exposed a configured secret",
     "Model command used more than three tools",
     "Model conversation already has a pending turn",
     "Model conversation could not start",
