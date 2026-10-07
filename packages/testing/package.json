@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/testing",
-  "version": "0.20.5",
+  "version": "0.21.3",
   "description": "MCP integration and semantic testing helpers",
   "license": "MIT",
   "repository": {
