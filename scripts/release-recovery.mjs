@@ -147,7 +147,7 @@ async function assertStagedCandidateRecoveryEligible(receipt, {
   assert.match(sourceSha, shaPattern, "checked recovery source is missing");
   // The abandoned release candidate is no longer named by the release branch,
   // so a fresh Actions checkout will not contain it even with main history.
-  await run("git", ["fetch", "--depth=2", "origin", receipt.stagedReleaseSha]);
+  await run("git", ["fetch", "origin", receipt.stagedReleaseSha]);
   assert.equal(
     await run("git", ["rev-list", "--parents", "-n", "1", receipt.stagedReleaseSha]),
     `${receipt.stagedReleaseSha} ${receipt.stagedSourceSha}`,

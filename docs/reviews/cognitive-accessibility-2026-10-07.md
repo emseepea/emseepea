@@ -82,12 +82,12 @@ No cognitive-accessibility findings remain.
 
 Result: PASS after revision. An independent cognitive-accessibility specialist
 reviewed the recovery decision, generated compendium, and release-readiness
-record. The final wording distinguishes the abandoned `0.21.1` candidate from
-the planned `0.21.2` release and says the release is not ready until every
+record. The final wording distinguishes the abandoned `0.21.2` candidate from
+the planned `0.21.3` release and says the release is not ready until every
 named publication check passes. No cognitive-accessibility findings remain.
 
 | Reviewed file | SHA-256 |
 | --- | --- |
 | `docs/decisions/0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md` | `acb726c7a53481c89e9ab734aa6db689dbb53b97427178daa2e21b3ef4e6214e` |
 | `docs/decisions/README.md` | `5a7e978476e3d9820c1eb0644983ab57d0eb0f29e04aecf2cf591391a0e72022` |
-| `docs/reviews/current-release-readiness.md` | `0ba1b90b0dc18fb450d0d1cdf2387ebe0d67a42f6cf39f9118f1072839911096` |
+| `docs/reviews/current-release-readiness.md` | `58e4da0b7d8a52e3218fe5d750e0562d8e39933abe98ba1bc992aef8949b00f8` |
