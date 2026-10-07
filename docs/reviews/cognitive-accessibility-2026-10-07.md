@@ -38,6 +38,7 @@ review.
 
 | File | SHA-256 | Verdict |
 | --- | --- | --- |
+| `CONTRIBUTING.md` | `e088dde07f30e9d841693e25c1c67f7b9b1954d5de7178c77ba6fbc721d45bf4` | PASS |
 | `docs/decisions/0112-range-bound-docs-only-local-push-qualification.proposed.md` | `e7a5dbb0a64525474ac7c54d1886c1a65db1f113d67d9409b2fd37e326ecfd04` | PASS |
 | `docs/decisions/0106-clean-install-exact-commit-branch-push-gate.superseded.md` | `eb27b4c581bd1ca1e1c17ffbc5ebfd5b924fa3bd11d96f85ca8eec87e8473173` | PASS |
 | `docs/decisions/README.md` | `cfbefa1410376c7bcbd325ed2d6831a9cb660b5928bbecbd3a429b248141f316` | PASS |

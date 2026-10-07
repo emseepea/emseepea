@@ -32,10 +32,12 @@ async function docsRange(sha) {
 }
 
 async function qualify() {
+  const args = process.argv.slice(3);
+  assert.ok(args.length === 0 || (args.length === 1 && args[0] === "--full"), "usage: branch-push-gate.mjs qualify [--full]");
   assert.equal(await run("git", ["status", "--porcelain=v1", "--untracked-files=all"]), "", "qualification requires a clean checkout");
   const sha = await run("git", ["rev-parse", "HEAD"]);
   assert.match(sha, oidPattern);
-  const docs = await docsRange(sha);
+  const docs = args[0] === "--full" ? undefined : await docsRange(sha);
   if (docs) {
     console.log(`Checking documentation ${docs.base}..${sha} (no local Docker or dependency install)`);
     await run("git", ["diff", "--check", docs.base, sha]);

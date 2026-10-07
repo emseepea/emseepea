@@ -83,8 +83,8 @@ async function evidencePath(repository, sha) {
   return join(repository, await git(repository, "rev-parse", "--git-path", `emseepea-qualified/${sha}`));
 }
 
-async function qualify(fixture, overrides = {}) {
-  return run("node", ["scripts/branch-push-gate.mjs", "qualify"], {
+async function qualify(fixture, overrides = {}, args = []) {
+  return run("node", ["scripts/branch-push-gate.mjs", "qualify", ...args], {
     cwd: fixture.repository,
     env: qualificationEnvironment({ ...fixture, ...overrides }),
   });
@@ -161,6 +161,20 @@ test("docs qualification checks the complete range without invoking npm and bind
   await assert.rejects(() => checkPush(fixture.repository, [`refs/heads/main ${sha} refs/heads/main ${fixture.base}`], "https://wrong.example/repo"), /remote changed/);
   await writeFile(join(fixture.repository, "dirty"), "dirty");
   await assert.rejects(() => checkPush(fixture.repository, [`refs/heads/main ${sha} refs/heads/main ${fixture.base}`], fixture.remote), /clean checkout/);
+});
+
+test("docs branch pushes can explicitly select full qualification", async (t) => {
+  const fixture = await docsFixture(t);
+  const sha = await commitDocs(fixture);
+  for (const args of [["--unknown"], ["--full", "--full"]]) {
+    await assert.rejects(() => qualify(fixture, {}, args), /usage:/);
+    await assert.rejects(() => stat(join(fixture.root, "npm-calls")), { code: "ENOENT" });
+    await assert.rejects(async () => stat(await evidencePath(fixture.repository, sha)), { code: "ENOENT" });
+  }
+  await qualify(fixture, {}, ["--full"]);
+  assert.deepEqual((await readFile(join(fixture.root, "npm-calls"), "utf8")).trim().split("\n"), ["ci", "test"]);
+  assert.equal(await readFile(await evidencePath(fixture.repository, sha), "utf8"), `${sha}\n`);
+  await checkPush(fixture.repository, [`refs/heads/main ${sha} refs/heads/docs-review ${zeroOid}`], fixture.remote);
 });
 
 test("the Quality event classifier selects docs checks but not runtime or release work", async (t) => {
