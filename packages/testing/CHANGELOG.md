@@ -1,5 +1,13 @@
 # @emseepea/testing
 
+## 0.21.3
+
+### Minor Changes
+
+- [`6e56c6f`](https://github.com/emseepea/emseepea/commit/6e56c6f6b78c23b2b416317de44cdc7d1db85c9e) Thanks [@tompahoward](https://github.com/tompahoward)! - Add provider-native Codex CLI semantic conversations, resumable follow-ups, fresh conversations against saved application state, and bounded Codex provenance and failure evidence.
+
+- [`bb6bcdc`](https://github.com/emseepea/emseepea/commit/bb6bcdc64b5d3d8d34c80f0bca32e595a84e4ac7) Thanks [@tompahoward](https://github.com/tompahoward)! - Add bounded MCP CLI journey qualification for OAuth metadata, catalogues, templates, reads, original bytes, resource links, progress, cancellation, and access denial without claiming native ChatGPT evidence.
+
 ## 0.20.5
 
 ### Patch Changes
