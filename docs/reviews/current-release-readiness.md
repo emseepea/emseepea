@@ -83,7 +83,8 @@ Those host-specific journeys remain separate evidence.
 
 - Result: PASS
 - Evidence gathered so far supports the planned release.
-- Final result: NOT READY for publication until the exact-source Source
+- Final result: within appetite, subject to the required exact-commit gates.
+- Publication status: NOT READY until the exact-source Source
   Quality, release pull request Release build, exact merge publication,
   downloaded-package verification, and `latest` verification pass.
 - Planned package: `@emseepea/testing@0.21.2`.
