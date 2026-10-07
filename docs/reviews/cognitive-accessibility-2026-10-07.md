@@ -62,3 +62,18 @@ from native ChatGPT behavior. No cognitive-accessibility findings remain.
 | `.changeset/quiet-cli-qualification.md` | `f16bb4ebb72217c218a46c47a0684e88046d2d312685557a3373bf6ccffd7c2a` |
 | `packages/testing/README.md` | `12d034f9b5af15aaebcfea4180c1906789a2a7f8cef5fc5641292a1f009ea29b` |
 | `website/src/content/docs/ai-tests.md` | `d14515838eb67dee73fe68f8037938cad2d548af9c9199826439653f5e02dc3b` |
+
+## Abandoned staged-candidate recovery
+
+Result: PASS after revision. An independent cognitive-accessibility specialist
+reviewed the proposed decision, regenerated decision compendium, and current
+release-readiness record. The final text defines command-line and release terms,
+uses short steps and lists, distinguishes the abandoned `0.21.0` candidate from
+the planned `0.21.1` release, and states the native ChatGPT evidence boundary.
+No cognitive-accessibility findings remain.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `docs/decisions/0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md` | `4f1a3889b642f3257d95a95418650e01745eb0f8e63c02692123e9469aee558f` |
+| `docs/decisions/README.md` | `e3f615b032d27b3c1aa7189ce0c31731c671f774d20ce1a130b23eac7be8850e` |
+| `docs/reviews/current-release-readiness.md` | `4d50684d77132063b388bd5b017ffb6fa496d8a0d1462051550987c33cb603e8` |

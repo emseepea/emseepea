@@ -26,7 +26,7 @@ import {
   assertReleasePullRequestPlan,
   readPlannedReleaseStatus,
 } from "./verify-release-readiness.mjs";
-import { assertRecoveryEligible } from "./release-recovery.mjs";
+import { assertRecoveryEligible, recoveryRequiresFailedPublishAncestry } from "./release-recovery.mjs";
 
 const exec = promisify(execFile);
 
@@ -136,7 +136,9 @@ export async function checkReleasePullRequest(baseSha, headSha, {
   await assertFullSourceQuality(baseSha, headSha, { run, qualityRunId, requireCompleted: requireRecoveryAncestry });
   if (status.recovery) {
     await assertRecoveryEligible(status.recovery, { run, sourceSha: baseSha, candidateSha: headSha });
-    if (requireRecoveryAncestry) await run("git", ["merge-base", "--is-ancestor", status.recovery.failedPublishSha, headSha]);
+    if (requireRecoveryAncestry && recoveryRequiresFailedPublishAncestry(status.recovery)) {
+      await run("git", ["merge-base", "--is-ancestor", status.recovery.failedPublishSha, headSha]);
+    }
     // Only the generated candidate consumes the source recovery receipt.
     await run("git", ["show", `${baseSha}:.release/recovery.json`]);
     if ((await run("git", ["ls-tree", "--name-only", headSha, ".release/recovery.json"])) !== "") {

@@ -113,6 +113,100 @@ function harness(overrides = {}) {
   return { calls, run, readRegistry, sourceSha: source, qualityRunId: "123" };
 }
 
+const stagedSource = "e".repeat(40);
+const stagedCandidate = "f".repeat(40);
+const publishHead = "9".repeat(40);
+const stagedRunId = "37565328520";
+const stagedReceipt = {
+  type: "staged-candidate",
+  stagedSourceSha: stagedSource,
+  stagedReleaseSha: stagedCandidate,
+  stagedReleaseRunId: stagedRunId,
+  stagedQualityRunId: "37564409521",
+  latestVersions: Object.fromEntries(publicPackages.map(({ name }) => [name, name === "@emseepea/testing" ? "0.20.5" : "1.0.0"])),
+  occupiedVersions: { "@emseepea/testing": "0.21.0" },
+  freshVersions: { "@emseepea/testing": "0.21.1" },
+};
+
+function stagedHarness(overrides = {}) {
+  const calls = [];
+  const release = {
+    id: Number(stagedRunId),
+    head_sha: overrides.releaseHead ?? stagedCandidate,
+    head_branch: "changeset-release/publish",
+    path: ".github/workflows/release.yml",
+    event: "workflow_dispatch",
+    status: overrides.releaseStatus ?? "completed",
+    conclusion: overrides.releaseConclusion ?? "success",
+    run_attempt: 1,
+  };
+  const quality = {
+    id: Number(stagedReceipt.stagedQualityRunId),
+    head_sha: stagedSource,
+    head_branch: "main",
+    path: ".github/workflows/quality.yml",
+    event: "push",
+    status: "completed",
+    conclusion: "success",
+    run_attempt: 1,
+  };
+  const run = async (command, args) => {
+    calls.push([command, ...args]);
+    const joined = args.join(" ");
+    if (joined === `rev-list --parents -n 1 ${stagedCandidate}`) return `${stagedCandidate} ${overrides.parent ?? stagedSource}`;
+    if (joined === `show ${stagedCandidate}:.release/origin.json`) {
+      return JSON.stringify({ sha: overrides.recordedSource ?? stagedSource, qualityRunId: stagedReceipt.stagedQualityRunId });
+    }
+    if (joined === `show ${candidate}:.release/origin.json`) return JSON.stringify({ sha: source, qualityRunId: "123" });
+    if (joined === `show ${stagedSource}:packages/testing/package.json`) return JSON.stringify({ version: "0.20.5" });
+    if (joined === `show ${stagedCandidate}:packages/testing/package.json`) return JSON.stringify({ version: "0.21.0" });
+    if (joined.startsWith(`show ${stagedSource}:`) || joined.startsWith(`show ${stagedCandidate}:`)) {
+      const item = publicPackages.find(({ path }) => joined.endsWith(`${path}/package.json`));
+      return JSON.stringify({ version: stagedReceipt.latestVersions[item.name] });
+    }
+    if (joined === `api repos/emseepea/emseepea/actions/runs/${stagedRunId}`) return JSON.stringify(release);
+    if (joined === `api repos/emseepea/emseepea/actions/runs/${stagedReceipt.stagedQualityRunId}`) return JSON.stringify(quality);
+    if (joined === `merge-base --is-ancestor ${stagedCandidate} ${publishHead}`) {
+      if (overrides.merged) return "";
+      throw Object.assign(new Error("not an ancestor"), { code: 1 });
+    }
+    if (joined.startsWith("ls-remote") && joined.endsWith("refs/heads/publish")) return `${publishHead}\trefs/heads/publish`;
+    if (joined.startsWith("ls-remote") && joined.endsWith("refs/heads/main")) return `${overrides.source ?? source}\trefs/heads/main`;
+    if (joined.startsWith("ls-remote")) return `${candidate}\trefs/heads/changeset-release/publish`;
+    return "";
+  };
+  const readRegistry = async (name) => ({
+    "dist-tags": { latest: overrides.latest ?? stagedReceipt.latestVersions[name] },
+    versions: name === "@emseepea/testing" ? {
+      "0.21.0": {
+        gitHead: overrides.occupiedHead ?? stagedCandidate,
+        dist: {
+          integrity: "sha512-AQ==",
+          attestations: { url: "https://registry.example/attestations" },
+        },
+      },
+      ...(overrides.occupiedFresh ? { "0.21.1": { gitHead: overrides.occupiedFresh } } : {}),
+    } : {},
+  });
+  const readProvenance = async () => ({
+    _type: "https://in-toto.io/Statement/v1",
+    predicateType: "https://slsa.dev/provenance/v1",
+    subject: [{ name: "pkg:npm/%40emseepea/testing@0.21.0", digest: { sha512: "01" } }],
+    predicate: {
+      buildDefinition: {
+        externalParameters: { workflow: {
+          ref: "refs/heads/changeset-release/publish",
+          repository: "https://github.com/emseepea/emseepea",
+          path: ".github/workflows/release.yml",
+        } },
+        resolvedDependencies: [{ digest: { gitCommit: overrides.provenanceHead ?? stagedCandidate } }],
+      },
+      runDetails: { metadata: { invocationId: `https://github.com/emseepea/emseepea/actions/runs/${stagedRunId}/attempts/1` } },
+    },
+  });
+  return { calls, run, readRegistry, readProvenance, sourceSha: source, qualityRunId: "123" };
+}
+
 test("recovery keeps ordinary release types and selects frozen fresh patches only", () => {
   const ordinary = { releases: Object.entries(receipt.occupiedVersions).map(([name, newVersion]) => ({ name, newVersion, oldVersion: receipt.latestVersions[name], type: name === "@emseepea/server" ? "minor" : "patch", changesets: ["feature"] })) };
   assert.equal(recoveryPlan(ordinary), ordinary);
@@ -143,6 +237,34 @@ test("recovery refuses moved history, attempted promotion, changed latest and oc
     { occupiedFresh: source },
   ]) await assert.rejects(() => assertRecoveryEligible(receipt, harness(overrides)));
   await assertRecoveryEligible(receipt, { ...harness({ occupiedFresh: candidate }), candidateSha: candidate });
+});
+
+test("staged-candidate recovery binds the occupied version to one successful release and provenance", async () => {
+  await assertRecoveryEligible(stagedReceipt, stagedHarness());
+  for (const overrides of [
+    { parent: candidate },
+    { recordedSource: candidate },
+    { releaseHead: candidate },
+    { releaseStatus: "in_progress" },
+    { releaseConclusion: "failure" },
+    { latest: "9.0.0" },
+    { occupiedHead: candidate },
+    { provenanceHead: candidate },
+    { merged: true },
+    { occupiedFresh: stagedCandidate },
+  ]) await assert.rejects(() => assertRecoveryEligible(stagedReceipt, stagedHarness(overrides)));
+  await assertRecoveryEligible(stagedReceipt, { ...stagedHarness({ occupiedFresh: candidate }), candidateSha: candidate });
+});
+
+test("staged-candidate finalization keeps ordinary candidate ancestry", async () => {
+  const state = stagedHarness();
+  await finalizeRecovery({ ...state, receipt: stagedReceipt, checkPlan: async (base, head, options) => {
+    assert.equal(base, source);
+    assert.equal(head, candidate);
+    assert.equal(options.requireRecoveryAncestry, false);
+  } });
+  assert.equal(state.calls.some((call) => call.includes("git/commits")), false);
+  assert.equal(state.calls.some((call) => call.includes("PATCH")), false);
 });
 
 test("replacement finalizer preserves the generated tree and updates only non-force candidate history", async () => {
