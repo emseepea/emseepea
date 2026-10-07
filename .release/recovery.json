@@ -1,9 +1,10 @@
 {
   "type": "staged-candidate",
-  "stagedSourceSha": "6972323d9b622d1528177b7d66f73b8a27b8517b",
-  "stagedReleaseSha": "20f69980fb9f8544ee2bd4583bc94aeef1f64d4c",
-  "stagedReleaseRunId": "37565328520",
-  "stagedQualityRunId": "37564409521",
+  "stagedSourceSha": "0f55bc0ab65dd9b663541f47d5a2d972df62bc40",
+  "stagedReleaseSha": "c07b3944e82a3db2b043b37b741b4b8d0de3f8bd",
+  "stagedReleaseRunId": "37612914163",
+  "stagedReleaseRunConclusion": "failure",
+  "stagedQualityRunId": "37611681829",
   "latestVersions": {
     "@emseepea/server": "0.22.1",
     "@emseepea/feedback": "0.7.1",
@@ -24,9 +25,9 @@
     "@emseepea/create-soap-backed-server": "0.1.7"
   },
   "occupiedVersions": {
-    "@emseepea/testing": "0.21.0"
+    "@emseepea/testing": "0.21.1"
   },
   "freshVersions": {
-    "@emseepea/testing": "0.21.1"
+    "@emseepea/testing": "0.21.2"
   }
 }

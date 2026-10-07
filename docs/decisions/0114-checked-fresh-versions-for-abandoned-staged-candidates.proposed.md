@@ -39,7 +39,7 @@ only a staged candidate that was never merged to the publish branch.
   qualifies and is promoted through the ordinary release path.
 - Never reuse an immutable npm version for different package bytes.
 - Record exact commits for the occupied version, the proof of where it came
-  from, the successful staging run, and the replacement plan.
+  from, the staging run, and the replacement plan.
 - Keep the normal release gates and generated candidate structure.
 - Stop recovery if the registry or release history no longer matches the
   checked recovery evidence.
@@ -65,7 +65,7 @@ versions that npm has not already consumed.
 The recovery receipt is a separate kind of receipt from the one used when a
 Publish workflow fails after merge. It records:
 
-- the successful Release run;
+- the terminal Release run that staged the occupied version;
 - the exact abandoned candidate that staged the occupied versions;
 - the checked source that generated that candidate;
 - the unchanged `latest` baseline; and
@@ -73,6 +73,12 @@ Publish workflow fails after merge. It records:
 
 Only public packages in the current release plan may appear in the occupied and
 fresh version maps.
+
+A failed Release run is eligible only when every attempt passed semantic
+evaluation and package publication, failed during registry verification, and
+skipped downloaded-package verification and artifact upload. Registry
+integrity and provenance must still bind the occupied version to that exact
+run and candidate.
 
 For each affected package, choose the next patch version after the occupied
 version. Keep the same major and minor version as the ordinary release plan.
@@ -114,8 +120,10 @@ has consumed an immutable version without changing `latest`.
 The release system must then pass these checks:
 
 - The occupied version's npm `gitHead` value, which is the source commit
-  recorded by npm, and its provenance match the exact successful Release run
-  and candidate recorded in the receipt.
+  recorded by npm, and its provenance match the exact Release run and candidate
+  recorded in the receipt.
+- If that Release run failed, it stopped only in registry verification after
+  staging succeeded.
 - The recorded checked source generated that abandoned candidate and is an
   ancestor of the replacement source.
 - Every `latest` tag still matches the recorded baseline.

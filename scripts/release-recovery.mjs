@@ -92,7 +92,7 @@ async function assertFailedPublishRecoveryEligible(receipt, { run, readRegistry,
   }));
 }
 
-async function assertSuccessfulRun(run, id, expected) {
+async function assertRun(run, id, expected) {
   assert.match(String(id), /^\d+$/, `${expected.path} run is missing`);
   const actual = JSON.parse(await run("gh", ["api", `repos/emseepea/emseepea/actions/runs/${id}`]));
   assert.equal(String(actual.id), String(id));
@@ -101,8 +101,29 @@ async function assertSuccessfulRun(run, id, expected) {
   assert.equal(actual.path, expected.path);
   assert.equal(actual.event, expected.event);
   assert.equal(actual.status, "completed");
-  assert.equal(actual.conclusion, "success");
+  assert.equal(actual.conclusion, expected.conclusion ?? "success");
   assert.ok(Number.isInteger(actual.run_attempt) && actual.run_attempt >= 1);
+  return actual;
+}
+
+function exactlyOne(items, name, description) {
+  const matches = items.filter((item) => item.name === name);
+  assert.equal(matches.length, 1, `expected exactly one ${description}`);
+  return matches[0];
+}
+
+async function assertFailedStagingRun(run, actual) {
+  for (let attempt = 1; attempt <= actual.run_attempt; attempt += 1) {
+    const { jobs } = JSON.parse(await run("gh", ["api", `repos/emseepea/emseepea/actions/runs/${actual.id}/attempts/${attempt}/jobs`]));
+    const semantic = exactlyOne(jobs, "Check whether examples are understood", "staged semantic job");
+    const publish = exactlyOne(jobs, "Publish the release under next", "staged publication job");
+    assert.equal(semantic?.conclusion, "success", "staged semantic evidence did not pass");
+    assert.equal(publish?.conclusion, "failure", "failed staging run did not stop in publication verification");
+    assert.equal(exactlyOne(publish.steps, "Publish the packages under next", "staged publish step").conclusion, "success");
+    assert.equal(exactlyOne(publish.steps, "Verify the packages reached the registry under next", "staged registry verification step").conclusion, "failure");
+    assert.equal(exactlyOne(publish.steps, "Verify the downloaded packages", "staged download verification step").conclusion, "skipped");
+    assert.equal(exactlyOne(publish.steps, "Upload the release artifacts for the promotion", "staged artifact upload step").conclusion, "skipped");
+  }
 }
 
 async function isAncestor(run, ancestor, descendant) {
@@ -143,18 +164,22 @@ async function assertStagedCandidateRecoveryEligible(receipt, {
     false,
     "staged candidate already reached publish",
   );
-  await assertSuccessfulRun(run, receipt.stagedQualityRunId, {
+  await assertRun(run, receipt.stagedQualityRunId, {
     sha: receipt.stagedSourceSha,
     branch: "main",
     path: ".github/workflows/quality.yml",
     event: "push",
   });
-  await assertSuccessfulRun(run, receipt.stagedReleaseRunId, {
+  const releaseConclusion = receipt.stagedReleaseRunConclusion ?? "success";
+  assert.ok(["success", "failure"].includes(releaseConclusion), "staged Release conclusion is not eligible");
+  const release = await assertRun(run, receipt.stagedReleaseRunId, {
     sha: receipt.stagedReleaseSha,
     branch: "changeset-release/publish",
     path: ".github/workflows/release.yml",
     event: "workflow_dispatch",
+    conclusion: releaseConclusion,
   });
+  if (release.conclusion === "failure") await assertFailedStagingRun(run, release);
   assert.deepEqual(Object.keys(receipt.latestVersions).sort(), publicPackages.map(({ name }) => name).sort(), "complete latest baseline is required");
   await Promise.all(publicPackages.map(async ({ name, path }) => {
     const baseline = JSON.parse(await run("git", ["show", `${receipt.stagedSourceSha}:${path}/package.json`]));

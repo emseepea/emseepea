@@ -77,3 +77,17 @@ No cognitive-accessibility findings remain.
 | `docs/decisions/0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md` | `4f1a3889b642f3257d95a95418650e01745eb0f8e63c02692123e9469aee558f` |
 | `docs/decisions/README.md` | `e3f615b032d27b3c1aa7189ce0c31731c671f774d20ce1a130b23eac7be8850e` |
 | `docs/reviews/current-release-readiness.md` | `4d50684d77132063b388bd5b017ffb6fa496d8a0d1462051550987c33cb603e8` |
+
+## Failed staged-candidate recovery
+
+Result: PASS after revision. An independent cognitive-accessibility specialist
+reviewed the recovery decision, generated compendium, and release-readiness
+record. The final wording distinguishes the abandoned `0.21.1` candidate from
+the planned `0.21.2` release and says the release is not ready until every
+named publication check passes. No cognitive-accessibility findings remain.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `docs/decisions/0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md` | `acb726c7a53481c89e9ab734aa6db689dbb53b97427178daa2e21b3ef4e6214e` |
+| `docs/decisions/README.md` | `5a7e978476e3d9820c1eb0644983ab57d0eb0f29e04aecf2cf591391a0e72022` |
+| `docs/reviews/current-release-readiness.md` | `3cb8fcc75763063fe34203e1e304d0422143cdfc160ed1e86f3509e2a3815795` |

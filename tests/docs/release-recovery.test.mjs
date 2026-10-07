@@ -122,10 +122,11 @@ const stagedReceipt = {
   stagedSourceSha: stagedSource,
   stagedReleaseSha: stagedCandidate,
   stagedReleaseRunId: stagedRunId,
+  stagedReleaseRunConclusion: "failure",
   stagedQualityRunId: "37564409521",
   latestVersions: Object.fromEntries(publicPackages.map(({ name }) => [name, name === "@emseepea/testing" ? "0.20.5" : "1.0.0"])),
-  occupiedVersions: { "@emseepea/testing": "0.21.0" },
-  freshVersions: { "@emseepea/testing": "0.21.1" },
+  occupiedVersions: { "@emseepea/testing": "0.21.1" },
+  freshVersions: { "@emseepea/testing": "0.21.2" },
 };
 
 function stagedHarness(overrides = {}) {
@@ -137,8 +138,8 @@ function stagedHarness(overrides = {}) {
     path: ".github/workflows/release.yml",
     event: "workflow_dispatch",
     status: overrides.releaseStatus ?? "completed",
-    conclusion: overrides.releaseConclusion ?? "success",
-    run_attempt: 1,
+    conclusion: overrides.releaseConclusion ?? stagedReceipt.stagedReleaseRunConclusion,
+    run_attempt: 3,
   };
   const quality = {
     id: Number(stagedReceipt.stagedQualityRunId),
@@ -159,13 +160,25 @@ function stagedHarness(overrides = {}) {
     }
     if (joined === `show ${candidate}:.release/origin.json`) return JSON.stringify({ sha: source, qualityRunId: "123" });
     if (joined === `show ${stagedSource}:packages/testing/package.json`) return JSON.stringify({ version: "0.20.5" });
-    if (joined === `show ${stagedCandidate}:packages/testing/package.json`) return JSON.stringify({ version: "0.21.0" });
+    if (joined === `show ${stagedCandidate}:packages/testing/package.json`) return JSON.stringify({ version: "0.21.1" });
     if (joined.startsWith(`show ${stagedSource}:`) || joined.startsWith(`show ${stagedCandidate}:`)) {
       const item = publicPackages.find(({ path }) => joined.endsWith(`${path}/package.json`));
       return JSON.stringify({ version: stagedReceipt.latestVersions[item.name] });
     }
     if (joined === `api repos/emseepea/emseepea/actions/runs/${stagedRunId}`) return JSON.stringify(release);
     if (joined === `api repos/emseepea/emseepea/actions/runs/${stagedReceipt.stagedQualityRunId}`) return JSON.stringify(quality);
+    if (joined.includes(`/actions/runs/${stagedRunId}/attempts/`) && joined.endsWith("/jobs")) {
+      const semantic = { name: "Check whether examples are understood", conclusion: overrides.semanticConclusion ?? "success", steps: [] };
+      const publishStep = { name: "Publish the packages under next", conclusion: overrides.publishConclusion ?? "success" };
+      const publish = { name: "Publish the release under next", conclusion: "failure", steps: [
+        publishStep,
+        ...(overrides.duplicateStep ? [publishStep] : []),
+        { name: "Verify the packages reached the registry under next", conclusion: overrides.verifyConclusion ?? "failure" },
+        { name: "Verify the downloaded packages", conclusion: overrides.downloadConclusion ?? "skipped" },
+        { name: "Upload the release artifacts for the promotion", conclusion: overrides.uploadConclusion ?? "skipped" },
+      ] };
+      return JSON.stringify({ jobs: [semantic, ...(overrides.duplicateSemantic ? [semantic] : []), publish] });
+    }
     if (joined === `merge-base --is-ancestor ${stagedCandidate} ${publishHead}`) {
       if (overrides.merged) return "";
       throw Object.assign(new Error("not an ancestor"), { code: 1 });
@@ -178,20 +191,20 @@ function stagedHarness(overrides = {}) {
   const readRegistry = async (name) => ({
     "dist-tags": { latest: overrides.latest ?? stagedReceipt.latestVersions[name] },
     versions: name === "@emseepea/testing" ? {
-      "0.21.0": {
+      "0.21.1": {
         gitHead: overrides.occupiedHead ?? stagedCandidate,
         dist: {
           integrity: "sha512-AQ==",
           attestations: { url: "https://registry.example/attestations" },
         },
       },
-      ...(overrides.occupiedFresh ? { "0.21.1": { gitHead: overrides.occupiedFresh } } : {}),
+      ...(overrides.occupiedFresh ? { "0.21.2": { gitHead: overrides.occupiedFresh } } : {}),
     } : {},
   });
   const readProvenance = async () => ({
     _type: "https://in-toto.io/Statement/v1",
     predicateType: "https://slsa.dev/provenance/v1",
-    subject: [{ name: "pkg:npm/%40emseepea/testing@0.21.0", digest: { sha512: "01" } }],
+    subject: [{ name: "pkg:npm/%40emseepea/testing@0.21.1", digest: { sha512: "01" } }],
     predicate: {
       buildDefinition: {
         externalParameters: { workflow: {
@@ -239,7 +252,7 @@ test("recovery refuses moved history, attempted promotion, changed latest and oc
   await assertRecoveryEligible(receipt, { ...harness({ occupiedFresh: candidate }), candidateSha: candidate });
 });
 
-test("staged-candidate recovery binds the occupied version to one successful release and provenance", async () => {
+test("staged-candidate recovery binds the occupied version to one eligible terminal release and provenance", async () => {
   const eligible = stagedHarness();
   await assertRecoveryEligible(stagedReceipt, eligible);
   assert.deepEqual(eligible.calls[0], ["git", "fetch", "--depth=2", "origin", stagedCandidate]);
@@ -248,14 +261,32 @@ test("staged-candidate recovery binds the occupied version to one successful rel
     { recordedSource: candidate },
     { releaseHead: candidate },
     { releaseStatus: "in_progress" },
-    { releaseConclusion: "failure" },
+    { releaseConclusion: "success" },
+    { semanticConclusion: "failure" },
+    { publishConclusion: "failure" },
+    { verifyConclusion: "success" },
+    { downloadConclusion: "success" },
+    { uploadConclusion: "success" },
+    { duplicateSemantic: true },
+    { duplicateStep: true },
     { latest: "9.0.0" },
     { occupiedHead: candidate },
     { provenanceHead: candidate },
     { merged: true },
     { occupiedFresh: stagedCandidate },
   ]) await assert.rejects(() => assertRecoveryEligible(stagedReceipt, stagedHarness(overrides)));
+  for (const conclusion of ["cancelled", "timed_out"]) {
+    const unsupported = structuredClone(stagedReceipt);
+    unsupported.stagedReleaseRunConclusion = conclusion;
+    await assert.rejects(
+      () => assertRecoveryEligible(unsupported, stagedHarness({ releaseConclusion: conclusion })),
+      /conclusion is not eligible/,
+    );
+  }
   await assertRecoveryEligible(stagedReceipt, { ...stagedHarness({ occupiedFresh: candidate }), candidateSha: candidate });
+  const successfulReceipt = structuredClone(stagedReceipt);
+  delete successfulReceipt.stagedReleaseRunConclusion;
+  await assertRecoveryEligible(successfulReceipt, stagedHarness({ releaseConclusion: "success" }));
 });
 
 test("staged-candidate finalization keeps ordinary candidate ancestry", async () => {

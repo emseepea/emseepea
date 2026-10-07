@@ -43,13 +43,14 @@ version.
 Changesets calculates one minor npm release. The checked staged-candidate
 recovery advances it to the next fresh patch on the same planned version line:
 
-- `@emseepea/testing@0.21.1`
+- `@emseepea/testing@0.21.2`
 
 No other package or website release is planned. Root and feedback-package test
 dependencies are generated edits, not additional releases.
 
-The abandoned `@emseepea/testing@0.21.0` candidate remains under `next` with
-its original provenance. It is not this release and must not be promoted.
+The abandoned `@emseepea/testing@0.21.1` candidate remains under `next` with
+its original provenance. It is not this release and must not be promoted. Its
+Release run stopped during registry verification after staging succeeded.
 
 ## Required Publication Evidence
 
@@ -57,7 +58,7 @@ Source Quality must pass for the exact source commit. The generated release
 pull request must bind its exact versioned head to that source and pass its
 Release build. Publication must then pass for the exact merge commit.
 
-Verify `@emseepea/testing@0.21.1` from the downloaded registry package. The
+Verify `@emseepea/testing@0.21.2` from the downloaded registry package. The
 verification must cover:
 
 - signature;
@@ -80,6 +81,10 @@ Those host-specific journeys remain separate evidence.
 
 ## Conditional Release Readiness
 
-- Result: PASS
-- Final result: within appetite, subject to the required exact-commit gates.
-- Package publication and `latest` verification: NOT COMPLETE.
+- Result: PASS for the evidence gathered so far.
+- Final result: NOT READY for publication until the exact-source Source
+  Quality, release pull request Release build, exact merge publication,
+  downloaded-package verification, and `latest` verification pass.
+- Planned package: `@emseepea/testing@0.21.2`.
+- Abandoned candidate: `@emseepea/testing@0.21.1` remains under `next`; do not
+  promote it.
