@@ -240,7 +240,9 @@ test("recovery refuses moved history, attempted promotion, changed latest and oc
 });
 
 test("staged-candidate recovery binds the occupied version to one successful release and provenance", async () => {
-  await assertRecoveryEligible(stagedReceipt, stagedHarness());
+  const eligible = stagedHarness();
+  await assertRecoveryEligible(stagedReceipt, eligible);
+  assert.deepEqual(eligible.calls[0], ["git", "fetch", "--depth=2", "origin", stagedCandidate]);
   for (const overrides of [
     { parent: candidate },
     { recordedSource: candidate },
