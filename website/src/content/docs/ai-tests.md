@@ -140,6 +140,72 @@ autonomously called as tools. Give them deterministic protocol tests. Do not
 manually inject their content into a semantic test or claim that doing so proves
 a native user journey.
 
+## Qualify the MCP protocol journey
+
+Use the separate `emseepea-qualify` command when you need repeatable MCP checks
+without a language model or browser. It can verify protected-resource metadata,
+catalogues, templates, authorized reads, original byte hashes, tool-returned
+resource links, progress, completion, client cancellation, and access denial.
+
+Define the endpoint and exact expectations in a project-owned module. Scenario
+modules are trusted application code. Importing one executes it with the
+command process's full authority, including access to that process's
+environment.
+
+```js
+import { defineMcpCliQualification } from "@emseepea/testing";
+
+export default defineMcpCliQualification({
+  name: "synthetic document journey",
+  endpoint: new URL(process.env.TEST_MCP_URL),
+  tokenEnvironment: "TEST_MCP_TOKEN",
+  checkpoints: [
+    { id: "tools", operation: "tools/list", expectedNames: ["get-document"] },
+    {
+      id: "original",
+      operation: "resources/read",
+      uri: "fixture://documents/example.pdf",
+      expectedContents: [{
+        mimeType: "application/pdf",
+        bytes: 1240,
+        sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      }],
+    },
+  ],
+});
+```
+
+Expose the command through a project-local package script:
+
+```json
+{
+  "scripts": {
+    "qualify:mcp": "emseepea-qualify --scenario test/mcp-qualification.mjs --output artifacts/mcp-cli/evidence.json"
+  }
+}
+```
+
+Then run the script:
+
+```sh
+npm run qualify:mcp
+```
+
+The framework reads configured tokens from the named environment variables. It
+does not accept them as command arguments or include values it handles in its
+report. Trusted scenario code keeps normal process access and is responsible
+for anything it reads or writes.
+
+The report retains bounded metadata and hashes rather than resource bytes,
+arguments, credentials, headers, endpoint addresses, or private identities.
+Each checkpoint is `passed`, `failed`, `blocked`, or `incomplete`. Local
+evidence is mode `0600` where supported.
+
+The report is explicitly MCP/CLI evidence. It does not prove ChatGPT connection
+or consent screens, attachment handling, fresh-conversation behavior, Sources
+previews, visible images, link opening, MCP App rendering, viewport behavior, or
+native streaming and cancellation presentation.
+
 ## Run the Checks
 
 In a copied example, install its dependencies and run:

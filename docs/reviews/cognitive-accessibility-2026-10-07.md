@@ -47,3 +47,18 @@ review.
 | `docs/risks/R015-untested-branch-pushes-consume-ci-and-weaken-verification-claims.active.md` | `7057754894577d37308fde1be0e49a622b9b2f11c0eed5f7e8a0224e0205bc02` | PASS |
 | `docs/problems/closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md` | `817bd248c273d89925c1a20ea6cfe1bb6206db4b23db94e7fe69fb19b6d8eeb8` | PASS |
 | `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `741b6f56fd6fa8b28ea614b680cdd51ac2ac3fe5da0d5e6b3e768ac17621a6be` | PASS |
+
+## MCP CLI qualification
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+public release note, package guide, and website guide for MCP CLI
+qualification. The trusted-scenario warning appears before the example, the
+npm-script workflow provides a visible next action, client cancellation is
+named precisely, and the evidence boundary clearly separates MCP/CLI evidence
+from native ChatGPT behavior. No cognitive-accessibility findings remain.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `.changeset/quiet-cli-qualification.md` | `f16bb4ebb72217c218a46c47a0684e88046d2d312685557a3373bf6ccffd7c2a` |
+| `packages/testing/README.md` | `12d034f9b5af15aaebcfea4180c1906789a2a7f8cef5fc5641292a1f009ea29b` |
+| `website/src/content/docs/ai-tests.md` | `d14515838eb67dee73fe68f8037938cad2d548af9c9199826439653f5e02dc3b` |

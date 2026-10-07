@@ -25,6 +25,17 @@ export {
   type PublishedMcpResource,
 } from "./published-contract.js";
 export { assertWcagContrast, wcagContrastRatio } from "./contrast.js";
+export {
+  defineMcpCliQualification,
+  runMcpCliQualification,
+  type McpCliCheckpoint,
+  type McpCliCheckpointEvidence,
+  type McpCliContentExpectation,
+  type McpCliQualificationEvidence,
+  type McpCliQualificationScenario,
+  type McpCliQualificationStatus,
+  type McpCliResourceLinkExpectation,
+} from "./mcp-cli-qualification.js";
 
 export type SupportedProtocolVersion =
   | "2026-07-28"

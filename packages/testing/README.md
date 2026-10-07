@@ -90,6 +90,86 @@ never production. Resources and prompts need deterministic protocol tests;
 this library does not pretend that manually injecting their content proves a
 native user journey.
 
+## Qualify an MCP journey from the command line
+
+Use `emseepea-qualify` for repeatable protocol checks against an explicitly
+configured MCP endpoint. The command can verify OAuth protected-resource
+metadata, tool and resource catalogues, resource templates, exact authorized
+reads, original byte hashes, tool-returned resource links, progress,
+completion, client cancellation, and access denial.
+
+Keep the endpoint, fixture values, expected results, and token environment
+names in an adopter-owned scenario module. Scenario modules are trusted
+application code: importing one executes it with the command process's full
+authority, including access to that process's environment.
+
+```js
+import { defineMcpCliQualification } from "@emseepea/testing";
+
+export default defineMcpCliQualification({
+  name: "synthetic document journey",
+  endpoint: new URL(process.env.TEST_MCP_URL),
+  tokenEnvironment: "TEST_MCP_TOKEN",
+  checkpoints: [
+    { id: "tools", operation: "tools/list", expectedNames: ["get-document"] },
+    { id: "resources", operation: "resources/list", expectedUris: ["fixture://documents/example.pdf"] },
+    {
+      id: "original",
+      operation: "resources/read",
+      uri: "fixture://documents/example.pdf",
+      expectedContents: [{
+        mimeType: "application/pdf",
+        bytes: 1240,
+        sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      }],
+    },
+    {
+      id: "limited-user-denied",
+      operation: "resources/read",
+      uri: "fixture://documents/example.pdf",
+      tokenEnvironment: "TEST_LIMITED_MCP_TOKEN",
+      expect: "denied",
+    },
+  ],
+});
+```
+
+Expose the command through a project-local package script:
+
+```json
+{
+  "scripts": {
+    "qualify:mcp": "emseepea-qualify --scenario test/mcp-qualification.mjs --output artifacts/mcp-cli/evidence.json"
+  }
+}
+```
+
+Run the script with:
+
+```sh
+npm run qualify:mcp
+```
+
+The framework reads configured tokens from the named environment variables. It
+does not accept them as command arguments or include values it handles in its
+evidence. Your trusted scenario code still has normal process access and is
+responsible for anything it reads or writes.
+
+Evidence contains bounded counts, hashes, MIME types, categorical outcomes,
+and checkpoint status. It is written with mode `0600` where supported. Use only
+synthetic or explicitly approved fixture data in scenario names and
+expectations.
+
+Each checkpoint records `passed`, `failed`, `blocked`, or `incomplete`.
+`record` checkpoints can preserve a known missing fixture or unavailable
+authority without turning it into success. The report is always labelled
+`evidenceKind: "mcp-cli"` and `nativeChatgpt: "not-tested"`.
+
+This command does not drive ChatGPT. It cannot prove ChatGPT connection or
+consent screens, attachments, fresh-conversation behavior, Sources previews,
+visible images, generated links, MCP App cards, viewport interactions, or
+native streaming and cancellation presentation.
+
 ## Scripted Confirmation Input
 
 For tools that request form elicitation, supply an explicit simulated human
