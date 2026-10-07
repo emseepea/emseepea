@@ -57,6 +57,29 @@ advertised-tool text, an answer wrapper, or prepared MCP material. Exact tool
 assertions come from the provider's native MCP events. Follow-up messages use
 the same conversation.
 
+Call `await conversation.fresh()` to discard provider transcript history while
+keeping the same running test application and its saved data. The next `send`
+starts a new provider-native session in each trial.
+
+The runner supports `claude-local`, `claude-ci`, `codex-local`, and `codex-ci`.
+Codex providers require an explicit `EMSEEPEA_CODEX_MODEL`. For example:
+
+```sh
+EMSEEPEA_CODEX_MODEL=gpt-5.5 emseepea-test --provider codex-local eval
+```
+
+`codex-local` uses the existing Codex CLI sign-in without copying it.
+`codex-ci` requires `OPENAI_API_KEY` from the CI secret store. Both providers
+run `codex exec --json`, resume the actual Codex session for follow-ups, ignore
+user configuration, and pre-approve only the discovered tools from the test
+server.
+
+An isolated command policy denies shell launches and spawned shell environments
+inherit no provider credentials.
+
+Codex CLI evidence proves that CLI journey. It does not prove native ChatGPT
+connection, attachment, retrieval, or MCP App rendering behavior.
+
 Optional `context` is application context, not test guidance. Use it only when
 the deployed application supplies the same context. Leaving it out is the best
 default for testing whether tool names, descriptions, and schemas stand on
@@ -66,6 +89,86 @@ Point semantic tests only at isolated, effect-safe test servers and fixtures,
 never production. Resources and prompts need deterministic protocol tests;
 this library does not pretend that manually injecting their content proves a
 native user journey.
+
+## Qualify an MCP journey from the command line
+
+Use `emseepea-qualify` for repeatable protocol checks against an explicitly
+configured MCP endpoint. The command can verify OAuth protected-resource
+metadata, tool and resource catalogues, resource templates, exact authorized
+reads, original byte hashes, tool-returned resource links, progress,
+completion, client cancellation, and access denial.
+
+Keep the endpoint, fixture values, expected results, and token environment
+names in an adopter-owned scenario module. Scenario modules are trusted
+application code: importing one executes it with the command process's full
+authority, including access to that process's environment.
+
+```js
+import { defineMcpCliQualification } from "@emseepea/testing";
+
+export default defineMcpCliQualification({
+  name: "synthetic document journey",
+  endpoint: new URL(process.env.TEST_MCP_URL),
+  tokenEnvironment: "TEST_MCP_TOKEN",
+  checkpoints: [
+    { id: "tools", operation: "tools/list", expectedNames: ["get-document"] },
+    { id: "resources", operation: "resources/list", expectedUris: ["fixture://documents/example.pdf"] },
+    {
+      id: "original",
+      operation: "resources/read",
+      uri: "fixture://documents/example.pdf",
+      expectedContents: [{
+        mimeType: "application/pdf",
+        bytes: 1240,
+        sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      }],
+    },
+    {
+      id: "limited-user-denied",
+      operation: "resources/read",
+      uri: "fixture://documents/example.pdf",
+      tokenEnvironment: "TEST_LIMITED_MCP_TOKEN",
+      expect: "denied",
+    },
+  ],
+});
+```
+
+Expose the command through a project-local package script:
+
+```json
+{
+  "scripts": {
+    "qualify:mcp": "emseepea-qualify --scenario test/mcp-qualification.mjs --output artifacts/mcp-cli/evidence.json"
+  }
+}
+```
+
+Run the script with:
+
+```sh
+npm run qualify:mcp
+```
+
+The framework reads configured tokens from the named environment variables. It
+does not accept them as command arguments or include values it handles in its
+evidence. Your trusted scenario code still has normal process access and is
+responsible for anything it reads or writes.
+
+Evidence contains bounded counts, hashes, MIME types, categorical outcomes,
+and checkpoint status. It is written with mode `0600` where supported. Use only
+synthetic or explicitly approved fixture data in scenario names and
+expectations.
+
+Each checkpoint records `passed`, `failed`, `blocked`, or `incomplete`.
+`record` checkpoints can preserve a known missing fixture or unavailable
+authority without turning it into success. The report is always labelled
+`evidenceKind: "mcp-cli"` and `nativeChatgpt: "not-tested"`.
+
+This command does not drive ChatGPT. It cannot prove ChatGPT connection or
+consent screens, attachments, fresh-conversation behavior, Sources previews,
+visible images, generated links, MCP App cards, viewport interactions, or
+native streaming and cancellation presentation.
 
 ## Scripted Confirmation Input
 

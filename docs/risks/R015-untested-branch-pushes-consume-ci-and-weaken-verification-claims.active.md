@@ -82,7 +82,7 @@ monitored rather than being treated as eliminated.
 
 - Criteria: `RISK-POLICY.md`
 - Realised-as: [Problem 005: Branch Push Is Ungated, So Untested Changes Reach Continuous Integration](../problems/closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md)
-- Treatment ADRs: [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](../decisions/0106-clean-install-exact-commit-branch-push-gate.proposed.md) (ratified and implemented 2026-09-24)
+- Treatment ADRs: [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](../decisions/0106-clean-install-exact-commit-branch-push-gate.superseded.md) (ratified and implemented 2026-09-24)
 - Personas affected: [Framework maintainer](../jtbd/framework-maintainer/persona.md)
 - Job served: [JTBD-101: Publish Installable Packages Safely](../jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md)
 

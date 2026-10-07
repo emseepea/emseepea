@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/testing",
-  "version": "0.20.5",
+  "version": "0.21.3",
   "description": "MCP integration and semantic testing helpers",
   "license": "MIT",
   "repository": {
@@ -31,10 +31,12 @@
   },
   "bin": {
     "emseepea-contract": "./published-contract/cli.mjs",
+    "emseepea-qualify": "./mcp-cli/cli.mjs",
     "emseepea-test": "./semantic/cli.mjs"
   },
   "files": [
     "dist",
+    "mcp-cli",
     "published-contract",
     "semantic",
     "LICENSE",

@@ -76,6 +76,6 @@ not change RFC-001's recorded status. The recovery is tracked as P508.
 
 ## Related
 
-- [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](../../decisions/0106-clean-install-exact-commit-branch-push-gate.proposed.md)
+- [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](../../decisions/0106-clean-install-exact-commit-branch-push-gate.superseded.md)
 
 (captured via /wr-itil:capture-story; expand at next /wr-itil:manage-story invocation)

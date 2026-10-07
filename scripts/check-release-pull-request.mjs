@@ -19,19 +19,73 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
+import { parse } from "yaml";
 
 import {
   assertPlannedReleaseReadiness,
   assertReleasePullRequestPlan,
   readPlannedReleaseStatus,
 } from "./verify-release-readiness.mjs";
-import { assertRecoveryEligible } from "./release-recovery.mjs";
+import { assertRecoveryEligible, recoveryRequiresFailedPublishAncestry } from "./release-recovery.mjs";
 
 const exec = promisify(execFile);
 
 async function execute(command, args, options = {}) {
   const { stdout } = await exec(command, args, { encoding: "utf8", ...options });
   return stdout.trim();
+}
+
+export function fullQualityJobNames(workflow) {
+  return ["vulnerability-scan", "test", "initializer-qualification", "website-performance"].flatMap((id) => {
+    const job = workflow.jobs[id];
+    assert.ok(job?.name, `missing full Quality job ${id}`);
+    const matrix = job.strategy?.matrix;
+    if (!matrix) return [job.name];
+    const axes = Object.entries(matrix);
+    assert.equal(axes.length, 1, `unsupported Quality matrix for ${id}`);
+    const [axis, values] = axes[0];
+    assert.ok(Array.isArray(values) && values.length > 0);
+    return values.map((value) => job.name.replace(`\${{ matrix.${axis} }}`, value));
+  });
+}
+
+export async function assertFullSourceQuality(baseSha, headSha, { run = execute, qualityRunId, requireCompleted = true } = {}) {
+  const origin = JSON.parse(await run("git", ["show", `${headSha}:.release/origin.json`]));
+  assert.equal(origin.sha, baseSha, "release Quality source changed");
+  const expectedQuality = qualityRunId ?? process.env.EMSEEPEA_SOURCE_QUALITY_RUN_ID ?? origin.qualityRunId;
+  assert.match(String(expectedQuality), /^\d+$/, "checked Quality run is missing");
+  assert.equal(String(origin.qualityRunId), String(expectedQuality), "candidate Quality run changed");
+  const endpoint = `repos/emseepea/emseepea/actions/runs/${expectedQuality}`;
+  const quality = JSON.parse(await run("gh", ["api", endpoint]));
+  assert.equal(quality.head_sha, baseSha, "release Quality source changed");
+  assert.equal(quality.path, ".github/workflows/quality.yml");
+  assert.equal(quality.event, "push");
+  assert.equal(quality.head_branch, "main");
+  assert.ok(Number.isSafeInteger(quality.run_attempt) && quality.run_attempt > 0, "Quality attempt is missing");
+  if (requireCompleted) {
+    assert.equal(quality.status, "completed", "source Quality has not completed");
+    assert.equal(quality.conclusion, "success", "source Quality did not pass");
+  } else {
+    assert.ok(quality.status === "in_progress" || (quality.status === "completed" && quality.conclusion === "success"), "source Quality did not pass");
+  }
+  const pages = JSON.parse(await run("gh", ["api", "--paginate", "--slurp", `${endpoint}/attempts/${quality.run_attempt}/jobs?per_page=100`]));
+  assert.ok(Array.isArray(pages) && pages.length > 0, "Quality job pages are missing");
+  const jobs = pages.flatMap((page) => page.jobs);
+  assert.ok(pages.every((page) => page.total_count === jobs.length), "incomplete Quality job pages");
+  assert.equal(new Set(jobs.map(({ id }) => id)).size, jobs.length, "ambiguous Quality jobs");
+  const workflow = parse(await run("git", ["show", `${baseSha}:.github/workflows/quality.yml`]));
+  for (const name of fullQualityJobNames(workflow)) {
+    const matches = jobs.filter((job) => job.name === name);
+    assert.equal(matches.length, 1, `missing or ambiguous full Quality job: ${name}`);
+    const job = matches[0];
+    assert.equal(String(job.run_id), String(expectedQuality), "Quality job run changed");
+    assert.equal(job.head_sha, baseSha, "Quality job source changed");
+    assert.equal(job.status, "completed", `full Quality job is incomplete: ${name}`);
+    assert.equal(job.conclusion, "success", `full Quality job did not pass: ${name}`);
+  }
+  const current = JSON.parse(await run("gh", ["api", endpoint]));
+  assert.equal(current.run_attempt, quality.run_attempt, "Quality attempt changed during verification");
+  assert.equal(current.head_sha, baseSha, "Quality source changed during verification");
 }
 
 export async function checkReleasePullRequest(baseSha, headSha, {
@@ -79,26 +133,17 @@ export async function checkReleasePullRequest(baseSha, headSha, {
     changedFiles,
     manifests,
   );
+  await assertFullSourceQuality(baseSha, headSha, { run, qualityRunId, requireCompleted: requireRecoveryAncestry });
   if (status.recovery) {
     await assertRecoveryEligible(status.recovery, { run, sourceSha: baseSha, candidateSha: headSha });
-    if (requireRecoveryAncestry) await run("git", ["merge-base", "--is-ancestor", status.recovery.failedPublishSha, headSha]);
+    if (requireRecoveryAncestry && recoveryRequiresFailedPublishAncestry(status.recovery)) {
+      await run("git", ["merge-base", "--is-ancestor", status.recovery.failedPublishSha, headSha]);
+    }
     // Only the generated candidate consumes the source recovery receipt.
     await run("git", ["show", `${baseSha}:.release/recovery.json`]);
     if ((await run("git", ["ls-tree", "--name-only", headSha, ".release/recovery.json"])) !== "") {
       throw new Error("release candidate did not consume its recovery receipt");
     }
-    const origin = JSON.parse(await run("git", ["show", `${headSha}:.release/origin.json`]));
-    assert.equal(origin.sha, baseSha, "recovery candidate source changed");
-    const expectedQuality = qualityRunId ?? process.env.EMSEEPEA_SOURCE_QUALITY_RUN_ID ?? origin.qualityRunId;
-    assert.match(String(expectedQuality), /^\d+$/, "checked Quality run is missing");
-    assert.equal(String(origin.qualityRunId), String(expectedQuality), "generated candidate Quality run changed");
-    const quality = JSON.parse(await run("gh", ["api", `repos/emseepea/emseepea/actions/runs/${expectedQuality}`]));
-    assert.equal(quality.head_sha, baseSha, "recovery Quality source changed");
-    assert.equal(quality.path, ".github/workflows/quality.yml");
-    assert.equal(quality.event, "push");
-    assert.equal(quality.head_branch, "main");
-    // During finalization this job is still running, but all required jobs succeeded.
-    if (requireRecoveryAncestry) assert.equal(quality.conclusion, "success", "recovery source Quality did not pass");
   }
   return status;
 }

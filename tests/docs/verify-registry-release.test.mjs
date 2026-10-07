@@ -4,11 +4,24 @@ import test from "node:test";
 import {
   assertRegistryPackagesExist,
   assertRegistryState,
+  assertHistoricalCommitsInReleaseHistory,
   assertStatements,
   classifyPublication,
   fetchPackage,
   waitForRegistryTag,
 } from "../../scripts/verify-registry-release.mjs";
+
+test("historical provenance is checked against the release's complete history", () => {
+  const release = "c".repeat(40);
+  const historical = "a".repeat(40);
+  assert.doesNotThrow(() => assertHistoricalCommitsInReleaseHistory(
+    [historical], release, `${release}\n${"b".repeat(40)}\n${historical}`,
+  ));
+  assert.throws(
+    () => assertHistoricalCommitsInReleaseHistory([historical], release, `${release}\n${"b".repeat(40)}`),
+    /historical provenance is not an ancestor/,
+  );
+});
 
 // ADR-0098 publishes under `next` at the release pull request and moves the tag
 // to `latest` on merge. The same verifier runs at both points and must expect a

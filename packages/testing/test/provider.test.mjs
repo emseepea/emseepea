@@ -1,12 +1,17 @@
 import assert from "node:assert/strict";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 
 import {
   conversationInvocation,
   modelInvocation,
   parseClaudeEvents,
+  parseCodexEvents,
   parseJudgeVerdict,
   parseNativeClaudeEvents,
+  providerModel,
 } from "../semantic/provider.mjs";
 
 const result = {
@@ -198,6 +203,90 @@ test("requires exact judge JSON", () => {
     () => parseJudgeVerdict('{"pass":true,"score":0,"reason":"Contradictory."}'),
     /invalid verdict/,
   );
+});
+
+test("Codex events retain native MCP calls and require a complete resumable turn", () => {
+  const events = [
+    { type: "thread.started", thread_id: "thread-1" },
+    { type: "turn.started" },
+    { type: "item.completed", item: { id: "item-1", type: "mcp_tool_call",
+      server: "emseepea_eval", tool: "get-pea", arguments: { name: "Snap" },
+      status: "completed", result: { content: [{ type: "text", text: '{"name":"Snap"}' }] } } },
+    { type: "item.completed", item: { id: "item-2", type: "agent_message", text: "Snap is a pea." } },
+    { type: "turn.completed", usage: { input_tokens: 1, output_tokens: 1 } },
+  ];
+  const parsed = parseCodexEvents(events, [{ name: "get-pea" }], undefined, 0, "gpt-test");
+  assert.equal(parsed.threadId, "thread-1");
+  assert.deepEqual(parsed.models, ["gpt-test"]);
+  assert.equal(parsed.modelEvidence, "configured");
+  assert.deepEqual(parsed.calls, [{ name: "get-pea", arguments: { name: "Snap" } }]);
+  assert.deepEqual(parsed.toolResults, [{ content: [{ type: "text", text: '{"name":"Snap"}' }], isError: false }]);
+  assert.throws(() => parseCodexEvents(events, [{ name: "get-pea" }], "thread-2"), /required session/);
+  assert.throws(() => parseCodexEvents(events.slice(0, -1), [{ name: "get-pea" }]), /incomplete turn/);
+  assert.throws(() => parseCodexEvents(events.map((event) => event.item?.type === "mcp_tool_call"
+    ? { ...event, item: { ...event.item, server: "ambient" } }
+    : event), [{ name: "get-pea" }]), /forbidden tool/);
+  assert.throws(() => parseCodexEvents(events.map((event) => event.item?.type === "mcp_tool_call"
+    ? { ...event, item: { ...event.item, result: { isError: true, content: [] } } }
+    : event), [{ name: "get-pea" }]), /failed MCP tool call/);
+  assert.throws(() => parseCodexEvents(events.map((event) => event.item?.type === "mcp_tool_call"
+    ? { ...event, item: { ...event.item, status: "failed", message: "private failure detail" } }
+    : event), [{ name: "get-pea" }], undefined, 1),
+  (error) => error.message === "Model command reported a failed MCP tool call"
+    && !error.message.includes("private failure detail"));
+  assert.throws(() => parseCodexEvents([
+    { type: "error", message: "Unauthorized: provider-secret-sentinel" },
+  ], [], undefined, 1),
+  (error) => error.message === "Model command is not signed in"
+    && !error.message.includes("provider-secret-sentinel"));
+  assert.throws(() => parseCodexEvents(events, [{ name: "get-pea" }], undefined, 0, "gpt-test", ["Snap"]),
+    /configured secret/);
+});
+
+test("Codex provider requires an explicit model", () => {
+  const previous = process.env.EMSEEPEA_CODEX_MODEL;
+  delete process.env.EMSEEPEA_CODEX_MODEL;
+  try {
+    assert.throws(() => providerModel("codex-local"), /model is not configured/);
+    process.env.EMSEEPEA_CODEX_MODEL = "gpt-test";
+    assert.equal(providerModel("codex-local"), "gpt-test");
+    assert.equal(providerModel("claude-local"), "claude-sonnet-4-6");
+  } finally {
+    restore("EMSEEPEA_CODEX_MODEL", previous);
+  }
+});
+
+test("Codex invocation isolates configuration and pre-approves only discovered tools", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "codex-invocation-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const original = {
+    key: process.env.OPENAI_API_KEY,
+    model: process.env.EMSEEPEA_CODEX_MODEL,
+  };
+  process.env.OPENAI_API_KEY = "private-openai-key";
+  process.env.EMSEEPEA_CODEX_MODEL = "gpt-test";
+  t.after(() => {
+    restore("OPENAI_API_KEY", original.key);
+    restore("EMSEEPEA_CODEX_MODEL", original.model);
+  });
+  const invocation = conversationInvocation("codex-ci", directory,
+    "http://127.0.0.1:4321/mcp", [{ name: "get-pea" }], "private-server-token");
+  assert.equal(invocation.command, "codex");
+  assert.ok(invocation.args.includes("--ignore-user-config"));
+  assert.equal(invocation.args.includes("--ignore-rules"), false);
+  assert.ok(invocation.args.includes("--skip-git-repo-check"));
+  assert.equal(invocation.args[invocation.args.indexOf("--sandbox") + 1], "read-only");
+  assert.ok(invocation.args.includes('shell_environment_policy.inherit="none"'));
+  assert.ok(invocation.args.includes("allow_login_shell=false"));
+  assert.ok(invocation.args.includes('mcp_servers.emseepea_eval.enabled_tools=["get-pea"]'));
+  assert.ok(invocation.args.includes('mcp_servers.emseepea_eval.default_tools_approval_mode="approve"'));
+  assert.ok(invocation.args.includes('mcp_servers.emseepea_eval.tools."get-pea".approval_mode="approve"'));
+  assert.equal(JSON.stringify(invocation.args).includes("private-server-token"), false);
+  assert.equal(JSON.stringify(invocation.args).includes("private-openai-key"), false);
+  assert.equal(invocation.env.OPENAI_API_KEY, "private-openai-key");
+  assert.equal(invocation.env.EMSEEPEA_SEMANTIC_MCP_TOKEN, "private-server-token");
+  assert.equal(invocation.env.CODEX_API_KEY, undefined);
+  assert.deepEqual(invocation.providerSecrets, ["private-openai-key"]);
 });
 
 function restore(name, value) {

@@ -116,6 +116,14 @@ export function provenanceCommit(statement) {
   return commits[0];
 }
 
+export function assertHistoricalCommitsInReleaseHistory(commits, releaseSha, history) {
+  const ancestors = new Set(history.split(/\r?\n/).filter(Boolean));
+  for (const commit of commits) {
+    assert.match(commit, /^[a-f0-9]{40}$/, "historical provenance commit is malformed");
+    assert.ok(ancestors.has(commit), `${commit} historical provenance is not an ancestor of the release`);
+  }
+}
+
 async function capture(path) {
   const packages = await Promise.all(packageFiles.map(async ([name, manifestPath]) => {
     const { version } = JSON.parse(await readFile(manifestPath, "utf8"));
@@ -150,13 +158,10 @@ async function verify(beforePath, afterPath, { tag = "latest" } = {}) {
   };
   const checkStatements = async (after, statements) => {
     const commits = statements.map(provenanceCommit);
-    const ancestorCommits = new Set();
-    for (const [index, item] of before.packages.entries()) {
-      if (changedPackages.has(item.name)) continue;
-      assert.match(commits[index], /^[a-f0-9]{40}$/, `${item.name} provenance commit is malformed`);
-      await exec("git", ["merge-base", "--is-ancestor", commits[index], releaseSha]);
-      ancestorCommits.add(commits[index]);
-    }
+    const historicalCommits = before.packages.flatMap((item, index) => changedPackages.has(item.name) ? [] : [commits[index]]);
+    const history = (await exec("git", ["rev-list", releaseSha], { encoding: "utf8" })).stdout.trim();
+    assertHistoricalCommitsInReleaseHistory(historicalCommits, releaseSha, history);
+    const ancestorCommits = new Set(historicalCommits);
     assertStatements(before, after, statements, { ...expectedRun, ancestorCommits });
     return commits;
   };

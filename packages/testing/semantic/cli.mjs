@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promis
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { discoverTests } from "./discover.mjs";
-import { modelVersion } from "./provider.mjs";
+import { modelVersion, providerModel, providerSettings } from "./provider.mjs";
 
 const negativeFeedbackObservations = new Set([
   "error",
@@ -32,26 +32,29 @@ for (let i = 2; i < process.argv.length; i += 1) {
   else if (arg.startsWith("--")) throw new Error(`Unknown option: ${arg}`);
   else paths.push(arg);
 }
-if (!["claude-local", "claude-ci"].includes(provider)) throw new Error("Unsupported provider");
+if (!["claude-local", "claude-ci", "codex-local", "codex-ci"].includes(provider)) throw new Error("Unsupported provider");
 if ((smoke && provider === "claude-ci") || (modelCommand && !smoke)) throw new Error("Custom model commands are smoke-only");
 if (!paths.length) paths.push("eval");
 const files = await discoverTests(paths);
 const directory = await mkdtemp(join(tmpdir(), "emseepea-evidence-"));
 const evidence = { authoritative: provider === "claude-ci", provider, smoke,
-  model: "claude-sonnet-4-6", semanticRetries: 0, revision: process.env.GITHUB_SHA,
+  configuredModel: providerModel(provider), modelEvidence: provider.startsWith("codex-") ? "configured" : "observed",
+  settings: providerSettings(provider), semanticRetries: 0, revision: process.env.GITHUB_SHA,
   status: "failed", cases: {}, errors: [], startedAt: new Date().toISOString() };
 try {
   const client = JSON.parse(await readFile(new URL("../package.json", import.meta.resolve("@modelcontextprotocol/client")), "utf8"));
   if (client.name !== "@modelcontextprotocol/client" || client.version !== "2.0.0") throw new Error("Unexpected MCP client version");
-  evidence.dependencies = { mcpClient: client.version, claudeCli: smoke ? "simulated" : await modelVersion() };
+  const cliName = provider.startsWith("codex-") ? "codexCli" : "claudeCli";
+  evidence.dependencies = { mcpClient: client.version, [cliName]: smoke ? "simulated" : await modelVersion(provider) };
   if (provider === "claude-ci" && evidence.dependencies.claudeCli !== "2.1.248") throw new Error("Unexpected Claude CLI version");
   let interrupted = false;
   for (const file of files) {
     const displayFile = relative(process.cwd(), file);
     const code = await new Promise((resolveCode) => {
       const environment = { ...process.env, EMSEEPEA_EVAL_PROVIDER: provider, EMSEEPEA_EVAL_SMOKE: smoke ? "1" : "0",
-        EMSEEPEA_EVIDENCE_DIR: directory, EMSEEPEA_TEST_FILE: displayFile,
-        EMSEEPEA_MODEL_COMMAND: modelCommand ? resolve(modelCommand) : "claude" };
+        EMSEEPEA_EVIDENCE_DIR: directory, EMSEEPEA_TEST_FILE: displayFile };
+      if (modelCommand) environment.EMSEEPEA_MODEL_COMMAND = resolve(modelCommand);
+      else delete environment.EMSEEPEA_MODEL_COMMAND;
       delete environment.NODE_TEST_CONTEXT;
       const child = spawn(process.execPath, ["--test", "--test-concurrency=1", file], {
         stdio: "inherit",
@@ -115,6 +118,9 @@ console.log(`Semantic checks ${evidence.status}; evidence: ${output}`);
 function validRecord(record, authoritative, smoke) {
   const isHash = (value) => typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
   if (record.status !== "passed" || record.authoritative !== authoritative || record.smoke !== smoke
+    || record.provider !== evidence.provider || record.configuredModel !== evidence.configuredModel
+    || record.modelEvidence !== evidence.modelEvidence
+    || JSON.stringify(record.settings) !== JSON.stringify(evidence.settings)
     || record.mode !== "conversation" || record.answerTrials?.length !== 3
     || !Number.isInteger(record.judgeVerdicts?.length) || record.judgeVerdicts.length < 9
     || record.judgeVerdicts.length % 3 !== 0
