@@ -77,8 +77,8 @@ recorded separately.
 - [ADR-0109: Opt-In Checked Webhook Subscriptions for Model Context Protocol Events](0109-opt-in-checked-webhook-subscriptions-for-mcp-events.proposed.md): Proposed; human review pending.
 - [ADR-0110: Feedback Collections Are Deployment-Static Authorization Partitions with Independently Composable Submission, Monitoring, and Operator Roles](0110-feedback-collections-as-deployment-static-authorization-partitions.proposed.md): Proposed; human review confirmed.
 - [ADR-0111: Checked Replacement Candidates for Unpromoted Failed Releases](0111-checked-replacement-candidates-for-unpromoted-failed-releases.proposed.md): Proposed; human review unconfirmed.
-- [ADR-0112: Range-Bound Docs-Only Local Push Qualification](0112-range-bound-docs-only-local-push-qualification.proposed.md): Proposed; human review unconfirmed.
-- [ADR-0113: Operational Docs-Only Quality Runs Without Release Authority](0113-operational-docs-only-quality-runs-without-release-authority.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0112: Range-Bound Docs-Only Local Push Qualification](0112-range-bound-docs-only-local-push-qualification.proposed.md): Proposed; human review confirmed.
+- [ADR-0113: Operational Docs-Only Quality Runs Without Release Authority](0113-operational-docs-only-quality-runs-without-release-authority.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2440,7 +2440,7 @@ Chosen option: **checked replacement candidate**, because it permits recovery wi
 ### [ADR-0112: Range-Bound Docs-Only Local Push Qualification](0112-range-bound-docs-only-local-push-qualification.proposed.md)
 
 - Status: Proposed
-- Human review: Unconfirmed
+- Human review: Confirmed
 - Replaces: [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.superseded.md)
 
 #### ADR-0112 Decision
@@ -2456,7 +2456,7 @@ Chosen option: **"Range-bound docs-only local qualification"**, because operatio
 ### [ADR-0113: Operational Docs-Only Quality Runs Without Release Authority](0113-operational-docs-only-quality-runs-without-release-authority.proposed.md)
 
 - Status: Proposed
-- Human review: Unconfirmed
+- Human review: Confirmed
 
 #### ADR-0113 Decision
 

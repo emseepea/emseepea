@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-10-07
-human-oversight: unconfirmed
+human-oversight: confirmed
+oversight-date: 2026-10-07
 decision-makers: ["Tom Howard"]
 consulted: ["Architecture review", "JTBD review"]
 informed: []

@@ -38,10 +38,10 @@ review.
 
 | File | SHA-256 | Verdict |
 | --- | --- | --- |
-| `docs/decisions/0112-range-bound-docs-only-local-push-qualification.proposed.md` | `628280f77518b6b3c945458007ad252d84c0ffbc5eb23ef344010a6b92a74681` | PASS |
+| `docs/decisions/0112-range-bound-docs-only-local-push-qualification.proposed.md` | `e7a5dbb0a64525474ac7c54d1886c1a65db1f113d67d9409b2fd37e326ecfd04` | PASS |
 | `docs/decisions/0106-clean-install-exact-commit-branch-push-gate.superseded.md` | `eb27b4c581bd1ca1e1c17ffbc5ebfd5b924fa3bd11d96f85ca8eec87e8473173` | PASS |
-| `docs/decisions/README.md` | `072355ec87280bc8e3525fa472ea83a39fde4e061bcbe7b7cc7b5f67666f7be8` | PASS |
-| `docs/decisions/0113-operational-docs-only-quality-runs-without-release-authority.proposed.md` | `20018d4cf4277ce5d4d5be3923469104d04ff7a05b7a1e5c64cdbfc921ea2c6a` | PASS |
+| `docs/decisions/README.md` | `cfbefa1410376c7bcbd325ed2d6831a9cb660b5928bbecbd3a429b248141f316` | PASS |
+| `docs/decisions/0113-operational-docs-only-quality-runs-without-release-authority.proposed.md` | `249c6589f264bf2c2cd73c208a9ebd514dd4131f73a7e674271867f42689614b` | PASS |
 | `docs/stories/done/STORY-001-qualify-each-outgoing-branch-tip-before-push.md` | `a18a21b9c9e0b42ef092e9ae8ff4471357b2752756583dee5130f5164035876e` | PASS |
 | `docs/risks/R015-untested-branch-pushes-consume-ci-and-weaken-verification-claims.active.md` | `7057754894577d37308fde1be0e49a622b9b2f11c0eed5f7e8a0224e0205bc02` | PASS |
 | `docs/problems/closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md` | `817bd248c273d89925c1a20ea6cfe1bb6206db4b23db94e7fe69fb19b6d8eeb8` | PASS |
