@@ -90,4 +90,4 @@ named publication check passes. No cognitive-accessibility findings remain.
 | --- | --- |
 | `docs/decisions/0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md` | `acb726c7a53481c89e9ab734aa6db689dbb53b97427178daa2e21b3ef4e6214e` |
 | `docs/decisions/README.md` | `5a7e978476e3d9820c1eb0644983ab57d0eb0f29e04aecf2cf591391a0e72022` |
-| `docs/reviews/current-release-readiness.md` | `3cb8fcc75763063fe34203e1e304d0422143cdfc160ed1e86f3509e2a3815795` |
+| `docs/reviews/current-release-readiness.md` | `6db0deb1275e47e08bfbf25f6ac95bf2b600a3544eafada0659cc2909971a660` |

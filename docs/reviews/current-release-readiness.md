@@ -81,7 +81,8 @@ Those host-specific journeys remain separate evidence.
 
 ## Conditional Release Readiness
 
-- Result: PASS for the evidence gathered so far.
+- Result: PASS
+- Evidence gathered so far supports the planned release.
 - Final result: NOT READY for publication until the exact-source Source
   Quality, release pull request Release build, exact merge publication,
   downloaded-package verification, and `latest` verification pass.
