@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { runInNewContext } from "node:vm";
 import test from "node:test";
 import { parse as parseYaml } from "yaml";
 
@@ -46,13 +47,17 @@ const releaseRecords = await readFile(new URL("../../scripts/publish-release-rec
 const evidence = `${evidenceWriter}\n${evidenceScope}`;
 const exec = promisify(execFile);
 
-test("every GitHub job uses the recorded npm version", () => {
-  for (const source of [quality, workflow]) {
-    const setups = source.match(/- name: Set up Node\.js/g) ?? [];
-    const activations = source.match(/- name: Use the recorded npm version/g) ?? [];
-    assert.equal(activations.length, setups.length);
-    assert.equal((source.match(/corepack enable npm/g) ?? []).length, setups.length);
-    assert.equal((source.match(/packageManager\.slice\(4\)/g) ?? []).length, setups.length);
+test("every GitHub job executing npm activates the recorded version first", () => {
+  for (const source of [quality, releaseBuild, publish]) {
+    for (const job of Object.values(parseYaml(source).jobs)) {
+      const steps = job.steps ?? [];
+      const firstNpm = steps.findIndex(({ run }) => /\bnpm\s/.test(run ?? ""));
+      if (firstNpm < 0) continue;
+      const activations = steps.filter(({ run }) => /corepack enable npm/.test(run ?? ""));
+      assert.equal(activations.length, 1);
+      assert.ok(steps.indexOf(activations[0]) <= firstNpm);
+      assert.match(activations[0].run, /packageManager\.slice\(4\)/);
+    }
   }
 });
 
@@ -72,7 +77,7 @@ test("Quality scans the committed lockfile before initializer qualification", ()
   assert.match(quality, /echo "exit-code=\$scan_exit" >> "\$GITHUB_OUTPUT"/);
   assert.match(quality, /node scripts\/vulnerability-release-gate\.mjs results\.json '\$\{\{ steps\.osv-scan\.outputs\.exit-code \}\}'/);
   assert.match(quality, /vulnerability-scan:[\s\S]*?timeout-minutes: 10/);
-  assert.match(quality, /initializer-qualification:[\s\S]*?needs: vulnerability-scan/);
+  assert.ok(parseYaml(quality).jobs["initializer-qualification"].needs.includes("vulnerability-scan"));
 });
 
 test("the Claude subscription check runs only for the publication revision", () => {
@@ -109,8 +114,21 @@ test("release preparation and publication do not run when release state is unkno
   // quality jobs, and the build is dispatched only by that job. That chain is
   // what binds publication to a passed scan now that Release is retired.
   const job = quality.match(/  release-pull-request:[\s\S]*/)?.[0] ?? "";
-  assert.match(job, /needs: \[initializer-qualification, test, website-performance\]/);
-  assert.match(job, /if: \$\{\{ github\.event_name == 'push' && github\.ref == 'refs\/heads\/main' \}\}/);
+  const preparation = parseYaml(quality).jobs["release-pull-request"];
+  for (const prerequisite of ["change-scope", "documentation", "initializer-qualification", "test", "website-performance"]) {
+    assert.ok(preparation.needs.includes(prerequisite));
+  }
+  const condition = preparation.if.replace(/^\$\{\{\s*|\s*\}\}$/g, "");
+  for (const [event_name, ref, docs_only, expected] of [
+    ["push", "refs/heads/main", "false", true],
+    ["push", "refs/heads/main", "true", false],
+    ["pull_request", "refs/heads/main", "false", false],
+    ["push", "refs/heads/other", "false", false],
+  ]) {
+    assert.equal(runInNewContext(condition.replaceAll("needs.change-scope", 'needs["change-scope"]'), {
+      github: { event_name, ref }, needs: { "change-scope": { outputs: { docs_only } } },
+    }), expected);
+  }
   assert.match(job, /gh workflow run release\.yml/);
   assert.ok(job.indexOf("changesets/action@") < job.indexOf("gh workflow run release.yml"));
   // Publication waits for the semantic evaluation, and the promotion waits for

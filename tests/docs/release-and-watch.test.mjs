@@ -1,11 +1,32 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { parse } from "yaml";
 
+import { fullQualityJobNames } from "../../scripts/check-release-pull-request.mjs";
 import { releaseAndWatch } from "../../scripts/release-and-watch.mjs";
 
 const baseSha = "a".repeat(40);
 const headSha = "b".repeat(40);
 const mergeSha = "c".repeat(40);
+const qualitySource = await readFile(new URL("../../.github/workflows/quality.yml", import.meta.url), "utf8");
+const qualityEndpoint = "repos/emseepea/emseepea/actions/runs/123";
+const qualityJobs = fullQualityJobNames(parse(qualitySource)).map((name, index) => ({
+  id: index + 1, name, run_id: 123, head_sha: baseSha, status: "completed", conclusion: "success",
+}));
+
+function qualityResponse(command, args, jobs = qualityJobs) {
+  if (command === "git" && args.join(" ") === `show ${headSha}:.release/origin.json`) {
+    return JSON.stringify({ sha: baseSha, qualityRunId: "123" });
+  }
+  if (command === "git" && args.join(" ") === `show ${baseSha}:.github/workflows/quality.yml`) return qualitySource;
+  if (command === "gh" && args.at(-1) === qualityEndpoint) {
+    return JSON.stringify({ head_sha: baseSha, path: ".github/workflows/quality.yml", event: "push", head_branch: "main", run_attempt: 1, status: "completed", conclusion: "success" });
+  }
+  if (command === "gh" && args.at(-1) === `${qualityEndpoint}/attempts/1/jobs?per_page=100`) {
+    return JSON.stringify([{ total_count: jobs.length, jobs }]);
+  }
+}
 const pullRequest = {
   number: 25,
   baseRefOid: baseSha,
@@ -42,6 +63,8 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
   let releasePolls = 0;
   const run = async (command, args) => {
     calls.push([command, ...args]);
+    const checkedQuality = qualityResponse(command, args);
+    if (checkedQuality !== undefined) return checkedQuality;
     const joined = args.join(" ");
     if (joined === "remote get-url origin") return "https://github.com/emseepea/emseepea.git";
     if (joined === "status --porcelain") return "";
@@ -90,7 +113,7 @@ test("release and watch binds the Changesets PR and both pipelines to exact comm
   assert.deepEqual(calls.find(([command, first, second]) => command === "gh" && first === "pr" && second === "merge"), [
     "gh", "pr", "merge", "25", "--repo", "emseepea/emseepea", "--merge", "--match-head-commit", headSha,
   ]);
-  assert.deepEqual(calls.find(([command, first]) => command === "gh" && first === "api"), [
+  assert.deepEqual(calls.find(([command, first, ...args]) => command === "gh" && first === "api" && args.includes("repos/emseepea/emseepea/actions/workflows/release.yml/runs")), [
     "gh", "api", "-X", "GET", "repos/emseepea/emseepea/actions/workflows/release.yml/runs",
     "-f", `head_sha=${headSha}`, "-f", "status=success",
   ]);
@@ -137,6 +160,15 @@ test("release and watch refuses an unqualified release head before merging", asy
     }), /exactly one successful Release run/);
     assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "pr" && second === "merge"), false);
   }
+});
+
+test("release and watch refuses documentation-only source Quality before merging", async () => {
+  const calls = [];
+  await assert.rejects(() => releaseAndWatch({
+    run: checkoutRun({ qualityJobs: [{ id: 1, name: "Documentation review", run_id: 123, head_sha: baseSha, status: "completed", conclusion: "success" }] }, calls),
+    readStatus: readStatus(),
+  }), /missing or ambiguous full Quality job/);
+  assert.equal(calls.some(([command, first, second]) => command === "gh" && first === "pr" && second === "merge"), false);
 });
 
 test("release and watch refuses a regenerated or invalid pinned head", async () => {
@@ -194,6 +226,8 @@ test("release and watch times out after an exact workflow run starts", async () 
 function checkoutRun(overrides = {}, calls = []) {
   return async (command, args) => {
     calls.push([command, ...args]);
+    const checkedQuality = qualityResponse(command, args, overrides.qualityJobs);
+    if (checkedQuality !== undefined) return checkedQuality;
     const joined = args.join(" ");
     if (joined === "remote get-url origin") return overrides.remote ?? "https://github.com/emseepea/emseepea.git";
     if (joined === "status --porcelain") return overrides.status ?? "";
