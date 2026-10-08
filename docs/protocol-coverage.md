@@ -613,6 +613,16 @@ events, PostgreSQL, Firestore, and deterministic GitHub and Zendesk HTTP
 contracts. Webhook tests verify authentication, validation, scoping, bounds, and
 deduplicate provider changes.
 
+The PostgreSQL update consumer provides scoped, per-consumer durable
+acknowledgements independently of email dispatch. PostgreSQL integration tests
+cover late commits after a newer event has been consumed, callback and
+acknowledgement retries, reconnection, multiple batches, and a worker reply
+waking live resource subscriptions on two serving instances with independent
+pools. Hints are at least once while outbox rows are retained; application
+scheduling, current authorization checks, and retention remain application
+responsibilities. This consumer does not add equivalent guarantees to other
+feedback backends.
+
 GitHub and Zendesk checks do not prove behavior in a live customer account.
 Provider-native assignment, categories, milestones, status automation,
 notifications, and email require deployment-specific qualification. Feedback

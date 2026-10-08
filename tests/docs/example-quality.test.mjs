@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
+import { valid, lte } from "semver";
 
 import { discoverTests } from "../../packages/testing/semantic/discover.mjs";
 import { fileURLToPath } from "node:url";
@@ -31,7 +32,11 @@ test("every runnable example visibly owns deterministic and LLM checks", async (
     const tsconfig = await readFile(new URL(`${directory.name}/tsconfig.json`, examplesRoot), "utf8");
     assert.doesNotMatch(tsconfig, /\.\.\/\.\./, `${directory.name} TypeScript config depends on the monorepo`);
     assert.ok(manifest.scripts["test:llm"], `${directory.name} has no LLM test command`);
-    assert.equal(manifest.devDependencies?.["@emseepea/testing"], testingManifest.version);
+    // Unreleased initializers deliberately retain their pinned test dependency
+    // when another package is released (freeze-unplanned-initializers.mjs).
+    const testingVersion = manifest.devDependencies?.["@emseepea/testing"];
+    assert.equal(valid(testingVersion), testingVersion, `${directory.name} must pin an exact testing version`);
+    assert.ok(lte(testingVersion, testingManifest.version), `${directory.name} pins a future testing version`);
     assert.doesNotMatch(manifest.scripts["test:llm"], /\.\.\/\.\.|--prefix|-w\s/, `${directory.name} LLM test depends on the monorepo`);
     const cases = await discoverTests([fileURLToPath(new URL(`${directory.name}/eval`, examplesRoot))]);
     assert.ok(cases.length > 0);

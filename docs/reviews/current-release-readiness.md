@@ -1,92 +1,77 @@
 # Current Release Readiness
 
-Date: 2026-10-07
+Date: 2026-10-08
 
-## Command-Line Model Context Protocol (MCP) Qualification
+## Cross-instance PostgreSQL feedback updates
 
-The planned release adds two cumulative capabilities to `@emseepea/testing`:
+The planned release adds `createPostgresFeedbackUpdateConsumer` to
+`@emseepea/feedback/postgres`. Each serving instance can consume committed,
+scoped feedback updates with its own durable acknowledgements and wake its
+local MCP resource subscribers.
 
-- `codex-local` and `codex-ci` providers for genuine Codex command-line
-  interface (CLI) semantic conversations against an isolated test MCP server;
-  and
-- the `emseepea-qualify` command and public qualification APIs for bounded MCP
-  journeys.
+The consumer selects unacknowledged events without a timestamp or sequence
+cursor. A transaction that commits late remains eligible, even after a newer
+event has been consumed. Acknowledgement follows a successful callback;
+callback or connection failures can be retried with the same identity.
 
-Those bounded journeys cover:
+Delivery is at least once while outbox events are retained. Applications own
+polling, current authorization and retention checks, notification callbacks,
+timeouts, and outbox retention. Consumption is independent of email dispatch.
+Only PostgreSQL is supported by this new API.
 
-- OAuth authorization metadata;
-- catalogues;
-- resource templates;
-- resource reads;
-- original bytes and hashes;
-- resource links;
-- progress;
-- cancellation; and
-- access denial.
+## Exact planned package set
 
-The providers preserve exact-session follow-ups and support fresh provider
-conversations against the same running test application. Codex execution uses
-an isolated configuration, a read-only sandbox, a deny-shell policy, an empty
-spawned-shell environment, and only the target server's advertised tools.
+Changesets calculates one minor npm release:
 
-The qualification command records bounded evidence with passed, failed,
-blocked, or incomplete outcomes. Adopter prompts, assertions, credentials, and
-the target MCP remain outside the framework.
+- `@emseepea/feedback@0.8.0`
 
-Architecture, Jobs To Be Done, cognitive-accessibility, and release-recovery
-reviews passed. The release-recovery regression proves that an abandoned
-staged candidate cannot force a newer checked source to reuse an occupied npm
-version.
+No other package or website release is planned. Unchanged initializers retain
+their existing generated-starter dependency pins. The example-quality check
+now permits those exact older testing-package pins, as required by that policy.
 
-## Exact Planned Package Set
+## Validation and review
 
-Changesets calculates one minor npm release. The checked staged-candidate
-recovery advances it to the next fresh patch on the same planned version line:
+Local build, public type contracts, lint, benchmarks, and the PostgreSQL
+integration suite passed. Regression evidence covers late commits, callback
+and acknowledgement retries, reconnects, multiple batches, scope isolation,
+and a worker reply waking live subscriptions on two serving instances.
 
-- `@emseepea/testing@0.21.3`
+Source documentation was reviewed against cognitive-accessibility criteria.
+The package guide separates startup, delivery, recovery, policy, and cleanup
+instructions, and states the PostgreSQL-only support boundary.
 
-No other package or website release is planned. Root and feedback-package test
-dependencies are generated edits, not additional releases.
+The principal risks are duplicate hints, lost hints after premature outbox
+cleanup, and notifying a resource after permissions change. Durable scoped
+receipts, duplicate-tolerant callbacks, explicit retention requirements, and
+application policy checks control these risks. Resource reads remain the
+source of truth. Residual risk is within the project's Low appetite, subject
+to exact-commit qualification and the required publication gates.
 
-The abandoned `@emseepea/testing@0.21.2` candidate remains under `next` with
-its original provenance. It is not this release and must not be promoted. Its
-Release run stopped during registry verification after staging succeeded.
+The cancellation test requires a process reaper in this container. It passes
+unchanged under a Linux child subreaper. This is local execution setup and adds
+no changes to the testing package.
 
-## Required Publication Evidence
+## Required publication evidence
 
-Source Quality must pass for the exact source commit. The generated release
-pull request must bind its exact versioned head to that source and pass its
-Release build. Publication must then pass for the exact merge commit.
+Full local qualification must pass on the clean, exact commit before push.
+GitHub Source Quality must then pass on that source commit, including the
+vulnerability scan and standalone initializer checks.
 
-Verify `@emseepea/testing@0.21.3` from the downloaded registry package. The
-verification must cover:
+The generated release pull request must bind its versioned head to that source
+and pass the Release build. This stages the package under `next` and verifies
+the downloaded package's integrity, signature, provenance, files, types, and
+install behavior. Only that checked head may be merged into `publish`.
 
-- signature;
-- provenance;
-- public files;
-- the `emseepea-qualify` executable;
-- install and import behavior; and
-- the `latest` tag.
+Publication must pass for the merge commit, including promotion to `latest`,
+registry readback, release records, and merge-back to `main`. Local integration
+tests do not replace these remote checks. The PostgreSQL tests do not claim
+native ChatGPT journey coverage or guarantees for other feedback backends.
 
-Command-line qualification does not prove these host-specific journeys:
-
-- native ChatGPT connection;
-- attachment;
-- retrieval;
-- resource preview;
-- streamed-file behavior; or
-- MCP App rendering.
-
-Those host-specific journeys remain separate evidence.
-
-## Conditional Release Readiness
+## Conditional release readiness
 
 - Result: PASS
 - Evidence gathered so far supports the planned release.
 - Final result: within appetite, subject to the required exact-commit gates.
-- Publication status: NOT READY until the exact-source Source
-  Quality, release pull request Release build, exact merge publication,
-  downloaded-package verification, and `latest` verification pass.
-- Planned package: `@emseepea/testing@0.21.3`.
-- Abandoned candidate: `@emseepea/testing@0.21.2` remains under `next`; do not
-  promote it.
+- Publication status: NOT READY until full local qualification, exact-source
+  Source Quality, the release-head Release build, and merge publication pass.
+- Planned package: `@emseepea/feedback@0.8.0`.
