@@ -147,3 +147,23 @@ search and current matches. The exact search-only assertion remains, so any
 feedback call still fails. No failed semantic trial is being retried on the
 old candidate. The corrected source needs new qualification, Source Quality,
 and an authoritative Release evaluation before publication.
+
+## Performance failure diagnostics
+
+Source Quality run 37836406814 failed the Node 22 production-boundary CPU
+budget twice: 5.306 ms and 5.309 ms at the 95th percentile against a 5 ms
+limit. The exact cause remains unproven; no request trace was retained.
+
+The pipeline now retains the original benchmark log, report, and individual
+CPU samples. A failed budget check triggers a separate diagnostic run with
+CPU profiles, garbage-collection logs, phase markers, and timestamps.
+Diagnostic reports are labelled and cannot satisfy the failed gate. Profiling
+changes execution cost, so its timings are diagnostic evidence only. The
+original request count, measurement method, and release budget remain intact.
+Artifacts identify the Node version, source commit, and workflow attempt and
+are retained for 14 days. The fixtures contain synthetic data.
+
+Local verification exercised the unprofiled path and the Node 22 diagnostic
+path. Both produced reports for all four request classes; diagnostic output
+contained four readable CPU profiles, garbage-collection logs, and clock
+markers. This verifies artifact collection, not the cause of the CI failures.

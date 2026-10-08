@@ -77,3 +77,16 @@ claim an independent reviewer or publication success.
 | Reviewed file | SHA-256 | Verdict |
 | --- | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `916a67f77691520862e31d3c933f061a306b50c097c656afe2ddf10a43eb1791` | PASS |
+
+## Performance diagnostics addendum review
+
+Reviewer: implementation agent conducting a specialist source review.
+Result: PASS. The addendum states the observed failure before explaining the
+next evidence collection step. It separates release measurements from
+instrumented diagnostics, gives the retention period, and avoids claiming a
+proven cause. No corrections remain. This review does not claim independence
+or CI success.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `fba626820120d8d9b2e6abfe9bbda342e0dcde883fe43d436e2557315b730341` | PASS |

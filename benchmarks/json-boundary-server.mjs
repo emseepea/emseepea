@@ -1,4 +1,5 @@
 import { Session } from "node:inspector";
+import { performance } from "node:perf_hooks";
 import {
   createEmseepea,
   defineMappedTool,
@@ -99,7 +100,9 @@ process.on("message", async ({ id, type }) => {
   }
 });
 
-process.send({ type: "ready", url: running.url.href });
+process.send({ type: "ready", url: running.url.href,
+  ...(process.env.EMSEEPEA_BENCHMARK_TRACE_DIR ? { timeOriginMs: performance.timeOrigin } : {}),
+});
 
 function inspector(session, method, params = {}) {
   return new Promise((resolve, reject) => session.post(method, params, (error, value) =>

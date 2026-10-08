@@ -177,9 +177,31 @@ jobs:
         env:
           EMSEEPEA_SKIP_PACKED_INITIALIZERS: "true"
       - name: Check the JSON-boundary performance budget
-        run: npm run benchmark:built
+        id: boundary-budget
+        run: |
+          mkdir -p artifacts/benchmark
+          set -o pipefail
+          npm run benchmark:built 2>&1 | tee artifacts/benchmark/budget.log
         env:
           EMSEEPEA_BENCHMARK_PROFILE: github-ubuntu-24.04-standard
+          EMSEEPEA_BENCHMARK_REPORT_DIR: artifacts/benchmark
+      - name: Trace the production boundary after a failed budget check
+        if: failure() && steps.boundary-budget.conclusion == 'failure'
+        run: |
+          set -o pipefail
+          node --expose-gc benchmarks/production-boundary.mjs 2>&1 | tee artifacts/benchmark/diagnostic.log
+        env:
+          EMSEEPEA_BENCHMARK_PROFILE: github-ubuntu-24.04-standard-diagnostic
+          EMSEEPEA_BENCHMARK_REPORT_DIR: artifacts/benchmark
+          EMSEEPEA_BENCHMARK_TRACE_DIR: artifacts/benchmark/traces
+      - name: Retain benchmark evidence
+        if: always() && steps.boundary-budget.outcome != 'skipped'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: benchmark-node-${{ matrix.node-version }}-${{ github.sha }}-attempt-${{ github.run_attempt }}
+          path: artifacts/benchmark
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Check proxy progress under concurrent load and paused readers
         run: npm run test:load:streaming
       - name: Check request logging under concurrent load and paused readers

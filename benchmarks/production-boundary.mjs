@@ -1,17 +1,24 @@
 import assert from "node:assert/strict";
 import { fork } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
 import { request as httpRequest } from "node:http";
 import { cpus } from "node:os";
+import { resolve } from "node:path";
 import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 
 const classes = ["accepted", "rate-limited", "capacity-exhausted", "malformed"];
 const dailyRequests = 8_640_000;
 const results = [];
+const reportDirectory = process.env.EMSEEPEA_BENCHMARK_REPORT_DIR;
+const traceDirectory = process.env.EMSEEPEA_BENCHMARK_TRACE_DIR;
+if (reportDirectory) await mkdir(reportDirectory, { recursive: true });
+if (traceDirectory) await mkdir(traceDirectory, { recursive: true });
 
 for (const requestClass of classes) results.push(await measure(requestClass));
 
 const report = {
+  diagnosticOnly: Boolean(traceDirectory),
   profile: {
     name: process.env.EMSEEPEA_BENCHMARK_PROFILE ?? "local",
     node: process.version,
@@ -30,12 +37,26 @@ const report = {
   status: results.every(({ status }) => status === "PASS") ? "PASS" : "FLAG",
 };
 console.log(JSON.stringify(report, null, 2));
+if (reportDirectory) {
+  await writeFile(resolve(reportDirectory, traceDirectory
+    ? "production-diagnostic.json" : "production-boundary.json"), `${JSON.stringify(report, null, 2)}\n`);
+}
 assert.equal(report.status, "PASS", "production JSON boundary exceeded its budget");
 
 async function measure(requestClass) {
   const child = fork(fileURLToPath(new URL("./json-boundary-server.mjs", import.meta.url)), [
     `--production-class=${requestClass}`,
-  ], { execArgv: ["--expose-gc"], stdio: ["ignore", "inherit", "inherit", "ipc"] });
+  ], { execArgv: ["--expose-gc", ...(traceDirectory ? [
+    "--cpu-prof",
+    `--cpu-prof-dir=${resolve(traceDirectory)}`,
+    `--cpu-prof-name=production-${requestClass}.cpuprofile`,
+    "--trace-gc-nvp",
+  ] : [])], stdio: ["ignore", "inherit", "inherit", "ipc"] });
+  const phase = (name) => {
+    if (traceDirectory) console.error(JSON.stringify({
+      requestClass, pid: child.pid, phase: name, timestampMs: Date.now(),
+    }));
+  };
   let nextMessageId = 0;
   const ask = (type) => {
     const id = ++nextMessageId;
@@ -53,7 +74,12 @@ async function measure(requestClass) {
   const serverUrl = await new Promise((resolve, reject) => {
     child.once("error", reject);
     child.on("message", (message) => {
-      if (message?.type === "ready") resolve(new URL(message.url));
+      if (message?.type === "ready") {
+        if (traceDirectory) console.error(JSON.stringify({
+          requestClass, pid: child.pid, phase: "ready", timeOriginMs: message.timeOriginMs,
+        }));
+        resolve(new URL(message.url));
+      }
     });
   });
   serverUrl.hostname = "127.0.0.1";
@@ -66,6 +92,7 @@ async function measure(requestClass) {
   const request = () => send(serverUrl, requestClass);
 
   try {
+    phase("warmup");
     if (requestClass === "rate-limited") {
       const seeded = await send(serverUrl, "accepted");
       assert.equal(seeded.status, 200, seeded.body);
@@ -80,6 +107,7 @@ async function measure(requestClass) {
     }
 
     const throughput = [];
+    phase("throughput");
     for (let run = 0; run < 3; run += 1) {
       const startedAt = performance.now();
       const deadline = startedAt + 1_000;
@@ -95,18 +123,25 @@ async function measure(requestClass) {
     }
 
     const cpuMs = [];
+    const cpuSamples = [];
+    phase("cpu");
     for (let index = 0; index < 200; index += 1) {
+      const startedAtMs = Date.now();
       await ask("cpu-start");
       assert.equal((await request()).status, expectedStatus);
-      cpuMs.push(await ask("cpu-stop"));
+      const cpuMsPerRequest = await ask("cpu-stop");
+      cpuMs.push(cpuMsPerRequest);
+      cpuSamples.push({ index, startedAtMs, endedAtMs: Date.now(), cpuMs: cpuMsPerRequest });
     }
     const allocations = [];
+    phase("allocations");
     for (let index = 0; index < 80; index += 1) {
       await ask("allocation-start");
       assert.equal((await request()).status, expectedStatus);
       allocations.push(await ask("allocation-stop"));
     }
     const wireBytes = [];
+    phase("wire");
     for (let index = 0; index < 10; index += 1) wireBytes.push((await request()).wireBytes);
 
     const throughputSummary = summary(throughput);
@@ -120,6 +155,7 @@ async function measure(requestClass) {
       expectedStatus,
       throughputRequestsPerSecond: throughputSummary,
       frameworkProcessCpuMsPerRequest: cpuSummary,
+      cpuSamples,
       sampledTransientAllocationBytesPerRequest: allocationSummary,
       frameworkAddedWireBytesPerRequest: wireSummary,
       projectedDailyCpuMsDelta: cpuSummary.p95 * dailyRequests,
@@ -128,7 +164,15 @@ async function measure(requestClass) {
       status,
     };
   } finally {
+    phase("shutdown");
+    // Wait for process exit so V8 has flushed its CPU profile before artifact upload.
+    const exited = new Promise((resolve, reject) => {
+      child.once("exit", (code, signal) => code === 0 ? resolve()
+        : reject(new Error(`benchmark server exited with ${code ?? signal}`)));
+      child.once("error", reject);
+    });
     await ask("shutdown");
+    await exited;
   }
 }
 
