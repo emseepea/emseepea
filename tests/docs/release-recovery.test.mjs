@@ -255,6 +255,7 @@ test("recovery refuses moved history, attempted promotion, changed latest and oc
 test("staged-candidate recovery binds the occupied version to one eligible terminal release and provenance", async () => {
   const eligible = stagedHarness();
   await assertRecoveryEligible(stagedReceipt, eligible);
+  await assertRecoveryEligible(stagedReceipt, stagedHarness({ verifyConclusion: "success", downloadConclusion: "failure" }));
   // A depth-limited fetch would make this commit a shallow boundary and hide
   // older, valid package provenance from the later registry verifier.
   assert.deepEqual(eligible.calls[0], ["git", "fetch", "origin", stagedCandidate]);
@@ -268,6 +269,9 @@ test("staged-candidate recovery binds the occupied version to one eligible termi
     { publishConclusion: "failure" },
     { verifyConclusion: "success" },
     { downloadConclusion: "success" },
+    { verifyConclusion: "success", downloadConclusion: "skipped" },
+    { verifyConclusion: "failure", downloadConclusion: "failure" },
+    { verifyConclusion: "success", downloadConclusion: "cancelled" },
     { uploadConclusion: "success" },
     { duplicateSemantic: true },
     { duplicateStep: true },

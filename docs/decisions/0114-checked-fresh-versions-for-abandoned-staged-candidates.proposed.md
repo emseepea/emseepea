@@ -75,10 +75,16 @@ Only public packages in the current release plan may appear in the occupied and
 fresh version maps.
 
 A failed Release run is eligible only when every attempt passed semantic
-evaluation and package publication, failed during registry verification, and
-skipped downloaded-package verification and artifact upload. Registry
-integrity and provenance must still bind the occupied version to that exact
-run and candidate.
+evaluation and package publication, then stopped in one of two explicit
+verification states:
+
+- registry verification failed, while downloaded-package verification and
+  artifact upload were skipped; or
+- registry verification passed, downloaded-package verification failed, and
+  artifact upload was skipped.
+
+All adjacent states are ineligible. Registry integrity and provenance must
+still bind the occupied version to that exact run and candidate.
 
 For each affected package, choose the next patch version after the occupied
 version. Keep the same major and minor version as the ordinary release plan.
@@ -122,8 +128,10 @@ The release system must then pass these checks:
 - The occupied version's npm `gitHead` value, which is the source commit
   recorded by npm, and its provenance match the exact Release run and candidate
   recorded in the receipt.
-- If that Release run failed, it stopped only in registry verification after
-  staging succeeded.
+- If that Release run failed, it stopped only in one of the two eligible
+  verification states after staging succeeded: registry verification failure
+  before any download check, or downloaded-package verification failure after
+  registry verification passed.
 - The recorded checked source generated that abandoned candidate and is an
   ancestor of the replacement source.
 - Every `latest` tag still matches the recorded baseline.

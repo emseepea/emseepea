@@ -48,15 +48,21 @@ reviews passed for the source change and its public guidance.
 
 ## Exact planned package set
 
-Changesets calculates two npm releases:
+Changesets and the checked staged-candidate recovery calculate two npm
+releases:
 
-- `@emseepea/feedback@0.8.0`
-- `@emseepea/testing@0.21.4`
+- `@emseepea/feedback@0.8.1`
+- `@emseepea/testing@0.21.5`
 
-No initializer package or website release is planned. Initializer manifests
-only align their development-time testing dependency with the already published
-`@emseepea/testing@0.21.3`; their starter dependencies and generated runtime
-contents do not change.
+The earlier staged candidate published `@emseepea/feedback@0.8.0` and
+`@emseepea/testing@0.21.4` under `next`, then failed downloaded-package
+verification before promotion. The recovery receipt binds those occupied
+versions to the exact failed candidate and chooses the next patch versions.
+
+No initializer package or website release is planned. Maintained initializer
+manifests remain aligned with the currently published `0.1.7` initializer
+packages and continue to use `@emseepea/testing@0.20.5` for development. Their
+starter dependencies and generated runtime contents do not change.
 
 ## Validation and review
 
@@ -101,7 +107,7 @@ Publication must pass for the merge commit, including promotion to `latest`,
 registry readback, release records, and merge-back to `main`. Local integration
 tests do not replace these remote checks.
 
-Verify `@emseepea/testing@0.21.4` from the downloaded registry package. The
+Verify `@emseepea/testing@0.21.5` from the downloaded registry package. The
 verification must cover:
 
 - signature and provenance;
@@ -123,5 +129,5 @@ backends.
 - Publication status: NOT READY until full local qualification, exact-source
   Quality, the release pull request Release build, exact merge publication,
   downloaded-package verification, and `latest` verification pass.
-- Planned packages: `@emseepea/feedback@0.8.0` and
-  `@emseepea/testing@0.21.4`.
+- Planned packages: `@emseepea/feedback@0.8.1` and
+  `@emseepea/testing@0.21.5`.

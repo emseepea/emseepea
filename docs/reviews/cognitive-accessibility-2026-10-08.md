@@ -29,7 +29,7 @@ validation and registry evidence. Result: PASS. No corrections remain.
 | `docs/protocol-coverage.md` | `e87beaba75ea5c339c993b986028d6950cf14b3d1a151a962bca77c85572117e` | PASS |
 | `packages/feedback/README.md` | `ac4458fd633fcc60cb525817cb11e762fb4c04cd83f37f80418f1b4e53aa9f82` | PASS |
 | `.changeset/feedback-cross-instance-updates.md` | `2d25f6c1b9c92d0e6410904bfaacf6a9098f246d165560c89b94f3c406a34164` | PASS |
-| `docs/reviews/current-release-readiness.md` | `a6c640ad0f8a75a8ce4974fa5c807f8f817d3ad6d078017effb774ffd80e87cd` | PASS |
+| `docs/reviews/current-release-readiness.md` | `e288bbd496e485929a20648f5a93b31a1922382ae2764b1b705595161703d6b1` | PASS |
 
 ## Embedded resource qualification copy review
 
@@ -41,9 +41,26 @@ ChatGPT behaviour. No cognitive-accessibility findings remain.
 | File | SHA-256 |
 | --- | --- |
 | `.changeset/clean-clouds-qualify.md` | `953bf48c073ea4fbd526e46182f9944ac32d0939ad9c1347ca4778cdff350e8a` |
-| `docs/reviews/current-release-readiness.md` | `a6c640ad0f8a75a8ce4974fa5c807f8f817d3ad6d078017effb774ffd80e87cd` |
+| `docs/reviews/current-release-readiness.md` | `e288bbd496e485929a20648f5a93b31a1922382ae2764b1b705595161703d6b1` |
 | `packages/testing/README.md` | `41cf16bd4fa158851792440b09f5ae39f9f0748edc87088dec81bb152dd0282e` |
 
 This review covers cognitive accessibility and copy clarity only. It does not
 establish test or CI success, publication, registry verification, native
 ChatGPT behaviour, or adopter production verification.
+
+## Staged-candidate recovery copy review
+
+Result: PASS. The recovery decision now presents the two eligible failure
+states as a short list and states that adjacent states are ineligible. The
+release-readiness record separates occupied versions from planned fresh
+versions and explains why initializer packages are not part of the release.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/decisions/0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md` | `a0c0e5a70671830be94b3cdd7d54cc8ffe557fa5633e4605b7c0a1a595ac5e9c` |
+| `docs/decisions/README.md` | `7672393d63f0540722e306df6912069c48001cda089a96b1cbca0fe7ac346cc6` |
+| `docs/reviews/current-release-readiness.md` | `e288bbd496e485929a20648f5a93b31a1922382ae2764b1b705595161703d6b1` |
+
+This review covers cognitive accessibility and copy clarity only. It does not
+ratify ADR-0114 or establish recovery, release, registry, or production
+success.
