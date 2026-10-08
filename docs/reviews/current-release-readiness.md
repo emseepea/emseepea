@@ -19,15 +19,44 @@ polling, current authorization and retention checks, notification callbacks,
 timeouts, and outbox retention. Consumption is independent of email dispatch.
 Only PostgreSQL is supported by this new API.
 
+## Embedded Model Context Protocol resource qualification
+
+The planned `@emseepea/testing` patch extends `emseepea-qualify` so a
+`tools/call` checkpoint can verify embedded MCP resources returned by a tool.
+Adopter scenarios can assert each resource's:
+
+- URI identity;
+- MIME type;
+- decoded byte count; and
+- SHA-256 digest.
+
+The command handles text and base64 resource content, rejects malformed base64,
+and enforces configured byte and collection limits. Evidence retains hashes,
+MIME types, byte counts, and categorical outcomes rather than original resource
+content or clear resource URIs.
+
+Embedded-resource checks inspect only the content returned by the tool. They do
+not dereference the resource URI or grant access. Resource links and authorised
+`resources/read` checks remain separate checkpoints.
+
+The report continues to record `evidenceKind: "mcp-cli"` and
+`nativeChatgpt: "not-tested"`. This release does not claim that ChatGPT opens a
+file, renders an image, displays a Sources entry, or materialises an attachment.
+
+Architecture, Jobs To Be Done, cognitive-accessibility, and pipeline-risk
+reviews passed for the source change and its public guidance.
+
 ## Exact planned package set
 
-Changesets calculates one minor npm release:
+Changesets calculates two npm releases:
 
 - `@emseepea/feedback@0.8.0`
+- `@emseepea/testing@0.21.4`
 
-No other package or website release is planned. Unchanged initializers retain
-their existing generated-starter dependency pins. The example-quality check
-now permits those exact older testing-package pins, as required by that policy.
+No initializer package or website release is planned. Initializer manifests
+only align their development-time testing dependency with the already published
+`@emseepea/testing@0.21.3`; their starter dependencies and generated runtime
+contents do not change.
 
 ## Validation and review
 
@@ -47,9 +76,15 @@ application policy checks control these risks. Resource reads remain the
 source of truth. Residual risk is within the project's Low appetite, subject
 to exact-commit qualification and the required publication gates.
 
-The cancellation test requires a process reaper in this container. It passes
-unchanged under a Linux child subreaper. This is local execution setup and adds
-no changes to the testing package.
+The feedback cancellation test requires a process reaper in this container. It
+passes unchanged under a Linux child subreaper. This is local execution setup
+and adds no changes to the testing package.
+
+The embedded-resource suite covers text and binary content, resource-link
+coexistence, URI and MIME mismatches, byte and digest mismatches, malformed
+base64, collection limits, byte limits, and redacted evidence. The checks never
+dereference returned URIs and preserve the separate authorised `resources/read`
+boundary.
 
 ## Required publication evidence
 
@@ -58,14 +93,27 @@ GitHub Source Quality must then pass on that source commit, including the
 vulnerability scan and standalone initializer checks.
 
 The generated release pull request must bind its versioned head to that source
-and pass the Release build. This stages the package under `next` and verifies
-the downloaded package's integrity, signature, provenance, files, types, and
-install behavior. Only that checked head may be merged into `publish`.
+and pass the Release build. This stages the packages under `next` and verifies
+the downloaded packages' integrity, signatures, provenance, files, types, and
+install behaviour. Only that checked head may be merged into `publish`.
 
 Publication must pass for the merge commit, including promotion to `latest`,
 registry readback, release records, and merge-back to `main`. Local integration
-tests do not replace these remote checks. The PostgreSQL tests do not claim
-native ChatGPT journey coverage or guarantees for other feedback backends.
+tests do not replace these remote checks.
+
+Verify `@emseepea/testing@0.21.4` from the downloaded registry package. The
+verification must cover:
+
+- signature and provenance;
+- public files and type exports;
+- the `emseepea-qualify` executable;
+- embedded text and binary resource qualification;
+- install and import behaviour; and
+- the `latest` tag.
+
+Native ChatGPT rendering and adopter production outcomes remain separate
+evidence. The PostgreSQL tests do not claim guarantees for other feedback
+backends.
 
 ## Conditional release readiness
 
@@ -73,5 +121,7 @@ native ChatGPT journey coverage or guarantees for other feedback backends.
 - Evidence gathered so far supports the planned release.
 - Final result: within appetite, subject to the required exact-commit gates.
 - Publication status: NOT READY until full local qualification, exact-source
-  Source Quality, the release-head Release build, and merge publication pass.
-- Planned package: `@emseepea/feedback@0.8.0`.
+  Quality, the release pull request Release build, exact merge publication,
+  downloaded-package verification, and `latest` verification pass.
+- Planned packages: `@emseepea/feedback@0.8.0` and
+  `@emseepea/testing@0.21.4`.
