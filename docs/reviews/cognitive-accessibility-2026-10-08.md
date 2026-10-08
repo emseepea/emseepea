@@ -90,3 +90,34 @@ or CI success.
 | Reviewed file | SHA-256 | Verdict |
 | --- | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `fba626820120d8d9b2e6abfe9bbda342e0dcde883fe43d436e2557315b730341` | PASS |
+
+## Open Issue Triage and Repairs
+
+Date: 2026-10-08
+
+Reviewer: implementation agent conducting a specialist source review against
+QUALITY.md. This review does not claim independence or rendered/mobile tests.
+
+Result: PASS. The release record identifies the remaining discovery defect,
+the exact security dependency boundary, and the reason initializer patches are
+planned. It lists publication gates and distinguishes a failed Codex trial
+from passing evidence. The release notes describe concrete user outcomes.
+
+The four issue replies distinguish released code from unresolved evidence,
+explain the architecture decision needed, and ask for specific setup or policy
+information. They avoid credential requests in public threads and make the
+next human action explicit. No source-copy corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `.changeset/patched-mcp-client.md` | `4641257a90673cd1d4f6cd8bfcc604e1d47512673e98abfdc2c1cd618134560c` | PASS |
+| `.changeset/explicit-feedback-annotations.md` | `5158c0d795049992079e587f123531f9429359668f1bd7373df87b8b1e222e7b` | PASS |
+| `docs/reviews/current-release-readiness.md` | `fc69529e11abd5b41ff23f8a5b36c9e9eb185a190562203fc9d3c49e6f9303c5` | PASS |
+| `docs/reviews/open-issue-triage-2026-10-08.json` | `1cb16f7c081689bfc5ff54172adfdd0138654a6a6021df8443c3a199f77c2822` | PASS |
+
+| Reviewed issue comment | SHA-256 of exact comment body | Verdict |
+| --- | --- | --- |
+| `emseepea/emseepea#144` | `46fcbbc343f336a0eaa80856661e66243b1226a2dce3611c1151f4e071442cee` | PASS |
+| `emseepea/emseepea#145` | `5c97239dd80739a4ba57a2f86c9b219a62678f7442b9f988aec182a71e1dca98` | PASS |
+| `emseepea/emseepea#146` | `f63d08c2ddd445623bd08f57d419cd1aec21e6e361284f10cbeb57eb68ffcce9` | PASS |
+| `emseepea/emseepea#150` | `8e11d0689a2f4707397bb4c6923d623e95d7d3f6c2ea6493b5794536280e42eb` | PASS |

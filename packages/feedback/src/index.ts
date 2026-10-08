@@ -287,7 +287,7 @@ export function defineFeedbackCollectionSubmissions<ContextSchema extends z.ZodT
       description:
         `Record one feedback observation in the ${label.toLowerCase()} collection configured for this deployment. ` +
         submissionBehaviorGuidance,
-      annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
       inputSchema,
       outputSchema,
     } as const;
@@ -425,7 +425,7 @@ export function defineFeedbackCollectionOperators<ContextSchema extends z.ZodTyp
     ...access,
     title: "List Feedback Submissions",
     description: "List feedback submissions from one configured collection.",
-    annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     inputSchema: listInputSchema,
     outputSchema: pageSchema,
     async handler(input, toolContext: ToolContext<"protected">) {
@@ -449,7 +449,7 @@ export function defineFeedbackCollectionOperators<ContextSchema extends z.ZodTyp
     ...access,
     title: "Read Feedback Submission",
     description: "Read one feedback submission by its exact collection and submission identifier.",
-    annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     inputSchema: getInputSchema,
     outputSchema: safeRecordSchema,
     async handler(input, toolContext: ToolContext<"protected">) {
@@ -694,7 +694,7 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
     title: "Start Feedback Conversation",
     description:
       "Start a durable support conversation for detailed feedback. Use one thread for one observation and openly tell the user it was created. Do not include unrelated chat history, credentials, or raw tool payloads.",
-    annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     inputSchema: createThreadCommandSchema,
     outputSchema: feedbackConversationSchema,
     async handler(input, toolContext: ToolContext<"protected">) {
@@ -713,7 +713,7 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
     title: "Reply to Feedback Conversation",
     description:
       "Append the user's new message to the exact existing feedback thread. Do not repeat an earlier message or invent a thread identifier.",
-    annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     inputSchema: appendMessageCommandSchema,
     outputSchema: feedbackMessageSchema,
     async handler(input, toolContext: ToolContext<"protected">) {
@@ -731,7 +731,7 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
     ...access,
     title: "List Feedback Conversations",
     description: "List feedback conversations for this authenticated client scope.",
-    annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     inputSchema: listThreadsQuerySchema,
     outputSchema: threadPageSchema,
     async handler(input, toolContext: ToolContext<"protected">) {
@@ -749,7 +749,7 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
     title: "Read Feedback Conversation",
     description:
       "Read one feedback conversation and present the meaning of any new team reply to the user. Reading may record that a team reply was offered to this AI client. It does not prove the user saw or understood it.",
-    annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: true },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     inputSchema: getThreadQuerySchema,
     outputSchema: feedbackConversationSchema,
     async handler(input, toolContext: ToolContext<"protected">) {

@@ -43,7 +43,7 @@ const evidence = { authoritative: provider === "claude-ci", provider, smoke,
   status: "failed", cases: {}, errors: [], startedAt: new Date().toISOString() };
 try {
   const client = JSON.parse(await readFile(new URL("../package.json", import.meta.resolve("@modelcontextprotocol/client")), "utf8"));
-  if (client.name !== "@modelcontextprotocol/client" || client.version !== "2.0.0") throw new Error("Unexpected MCP client version");
+  if (client.name !== "@modelcontextprotocol/client" || client.version !== "2.2.0") throw new Error("Unexpected MCP client version");
   const cliName = provider.startsWith("codex-") ? "codexCli" : "claudeCli";
   evidence.dependencies = { mcpClient: client.version, [cliName]: smoke ? "simulated" : await modelVersion(provider) };
   if (provider === "claude-ci" && evidence.dependencies.claudeCli !== "2.1.248") throw new Error("Unexpected Claude CLI version");

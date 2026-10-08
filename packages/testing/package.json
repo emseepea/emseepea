@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "@emseepea/server": "0.22.1",
-    "@modelcontextprotocol/client": "2.0.0"
+    "@modelcontextprotocol/client": "2.2.0"
   },
   "devDependencies": {
     "playwright": "1.62.1"

@@ -67,7 +67,7 @@
     "@changesets/changelog-github": "1.0.0",
     "@changesets/cli": "3.0.1",
     "@emseepea/testing": "0.21.5",
-    "@modelcontextprotocol/client": "2.0.0",
+    "@modelcontextprotocol/client": "2.2.0",
     "@types/node": "24.13.3",
     "axe-core": "4.13.0",
     "playwright": "1.62.1",
