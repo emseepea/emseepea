@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.21.5
+
+### Patch Changes
+
+- [`cc7c4a8`](https://github.com/emseepea/emseepea/commit/cc7c4a87ae5c64e738e3744c0504eb1bb498876f) Thanks [@tompahoward](https://github.com/tompahoward)! - Verify the URI, MIME type, decoded bytes, and SHA-256 integrity of embedded resources returned by MCP tools.
+
 ## 0.21.3
 
 ### Minor Changes
