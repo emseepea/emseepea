@@ -95,8 +95,8 @@ native user journey.
 Use `emseepea-qualify` for repeatable protocol checks against an explicitly
 configured MCP endpoint. The command can verify OAuth protected-resource
 metadata, tool and resource catalogues, resource templates, exact authorized
-reads, original byte hashes, tool-returned resource links, progress,
-completion, client cancellation, and access denial.
+reads, original byte hashes, tool-returned resource links and embedded
+resources, progress, completion, client cancellation, and access denial.
 
 Keep the endpoint, fixture values, expected results, and token environment
 names in an adopter-owned scenario module. Scenario modules are trusted
@@ -118,6 +118,21 @@ export default defineMcpCliQualification({
       operation: "resources/read",
       uri: "fixture://documents/example.pdf",
       expectedContents: [{
+        mimeType: "application/pdf",
+        bytes: 1240,
+        sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      }],
+    },
+    {
+      id: "embedded-original",
+      operation: "tools/call",
+      name: "get-document",
+      expectedResourceLinks: [{
+        uri: "fixture://documents/example.pdf",
+        mimeType: "application/pdf",
+      }],
+      expectedEmbeddedResources: [{
+        uri: "fixture://documents/example.pdf",
         mimeType: "application/pdf",
         bytes: 1240,
         sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
@@ -159,6 +174,10 @@ Evidence contains bounded counts, hashes, MIME types, categorical outcomes,
 and checkpoint status. It is written with mode `0600` where supported. Use only
 synthetic or explicitly approved fixture data in scenario names and
 expectations.
+
+Embedded-resource checks inspect only resource content returned by the tool.
+They do not dereference its URI or grant access to it. Use a separate
+`resources/read` checkpoint to prove authorized retrieval and denial behavior.
 
 Each checkpoint records `passed`, `failed`, `blocked`, or `incomplete`.
 `record` checkpoints can preserve a known missing fixture or unavailable

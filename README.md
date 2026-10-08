@@ -33,6 +33,7 @@ Use the current framework to create:
 - protected tools, resources, prompts, and completions that authenticate before application code runs
 - tools that call another service and check its response
 - optional detailed feedback and protected support conversations backed by PostgreSQL, Firestore, GitHub Issues, or Zendesk
+- scoped PostgreSQL feedback update consumption with durable acknowledgements for each serving instance
 - opt-in, authenticated webhook events with an adopter-owned durable delivery store
 - resources, reusable resource addresses, prompts, and field suggestions
 - bounded notifications when a registered resource changes

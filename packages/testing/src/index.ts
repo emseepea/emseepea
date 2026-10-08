@@ -31,6 +31,7 @@ export {
   type McpCliCheckpoint,
   type McpCliCheckpointEvidence,
   type McpCliContentExpectation,
+  type McpCliEmbeddedResourceExpectation,
   type McpCliQualificationEvidence,
   type McpCliQualificationScenario,
   type McpCliQualificationStatus,

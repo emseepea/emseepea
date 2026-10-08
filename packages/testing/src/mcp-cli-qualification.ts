@@ -26,6 +26,10 @@ export interface McpCliResourceLinkExpectation {
   readonly mimeType?: string;
 }
 
+export interface McpCliEmbeddedResourceExpectation extends McpCliContentExpectation {
+  readonly uri: string;
+}
+
 interface McpCliCheckpointBase {
   readonly id: string;
   readonly tokenEnvironment?: string;
@@ -63,6 +67,8 @@ export type McpCliCheckpoint =
       readonly name: string;
       readonly arguments?: Readonly<Record<string, unknown>>;
       readonly expectedResourceLinks?: readonly McpCliResourceLinkExpectation[];
+      readonly expectedEmbeddedResources?: readonly McpCliEmbeddedResourceExpectation[];
+      readonly maxEmbeddedResourceBytes?: number;
       readonly minimumProgress?: number;
       readonly cancelAfterMs?: number;
       readonly expect?: "success" | "denied" | "cancelled";
@@ -358,6 +364,10 @@ async function runToolCheckpoint(
     uriSha256: sha256(uri),
     ...(mimeType === undefined ? {} : { mimeType }),
   }));
+  const embedded = embeddedResources(
+    result,
+    checkpoint.maxEmbeddedResourceBytes ?? DEFAULT_MAX_CONTENT_BYTES,
+  );
   const observation = {
     toolNameSha256: sha256(checkpoint.name),
     argumentsSha256: sha256(JSON.stringify(checkpoint.arguments ?? {})),
@@ -365,6 +375,7 @@ async function runToolCheckpoint(
     progressTruncated,
     isError: result.isError === true,
     resourceLinks: links,
+    embeddedResources: embedded,
     resultSha256: sha256(JSON.stringify(result)),
   };
   if ((checkpoint.expect ?? "success") !== "success") {
@@ -379,6 +390,10 @@ async function runToolCheckpoint(
   if (checkpoint.expectedResourceLinks !== undefined &&
       !sameLinks(links, checkpoint.expectedResourceLinks)) {
     return frozenEvidence(checkpoint, "failed", "resource-link-mismatch", observation);
+  }
+  if (checkpoint.expectedEmbeddedResources !== undefined &&
+      !sameEmbeddedResources(embedded, checkpoint.expectedEmbeddedResources)) {
+    return frozenEvidence(checkpoint, "failed", "embedded-resource-mismatch", observation);
   }
   return frozenEvidence(checkpoint, "passed", "expectation-met", observation);
 }
@@ -461,6 +476,16 @@ function validateCheckpoint(checkpoint: McpCliCheckpoint, requestTimeoutMs: numb
       }
       if (expected.mimeType !== undefined) validateMimeType(expected.mimeType);
     }
+    validateArrayBound(
+      checkpoint.expectedEmbeddedResources,
+      "expected embedded resources",
+      MAX_CONTENT_EXPECTATIONS,
+    );
+    for (const expected of checkpoint.expectedEmbeddedResources ?? []) {
+      validateResourceUri(expected.uri, "embedded resource URI");
+      validateContentExpectation(expected);
+    }
+    validateContentByteLimit(checkpoint.maxEmbeddedResourceBytes, "maxEmbeddedResourceBytes");
   }
   if (checkpoint.operation === "tools/call") {
     if (!checkpoint.name || checkpoint.name.length > 256) throw new TypeError("tool name is required and bounded");
@@ -505,6 +530,17 @@ function validateContentExpectation(expected: McpCliContentExpectation): void {
   if (expected.mimeType !== undefined) validateMimeType(expected.mimeType);
 }
 
+function validateContentByteLimit(value: number | undefined, label: string): void {
+  if (value !== undefined &&
+      (!Number.isSafeInteger(value) || value < 1 || value > 64 * 1024 * 1024)) {
+    throw new TypeError(`${label} must be an integer from 1 to 67108864`);
+  }
+}
+
+function validateResourceUri(value: string, label: string): void {
+  if (!value || value.length > 4_096) throw new TypeError(`${label} is required and bounded`);
+}
+
 function validateMimeType(value: string): void {
   const hasControlCharacter = [...value].some((character) => {
     const code = character.charCodeAt(0);
@@ -523,6 +559,7 @@ function contentObservation(
   content: { uri: string; mimeType?: string; text?: string; blob?: string },
   maximum: number,
 ): Readonly<Record<string, unknown>> {
+  validateResourceUri(content.uri, "observed resource URI");
   if (content.mimeType !== undefined) validateMimeType(content.mimeType);
   let bytes: Buffer;
   if (typeof content.text === "string") {
@@ -531,6 +568,7 @@ function contentObservation(
     if (content.blob.length > Math.ceil(maximum / 3) * 4 + 4) {
       throw new Error("resource content exceeds configured byte limit");
     }
+    if (!isBase64(content.blob)) throw new Error("resource content blob is not valid base64");
     bytes = Buffer.from(content.blob, "base64");
   } else {
     throw new Error("resource content has no text or blob bytes");
@@ -542,6 +580,12 @@ function contentObservation(
     bytes: bytes.byteLength,
     sha256: sha256(bytes),
   });
+}
+
+function isBase64(value: string): boolean {
+  if (value.length % 4 === 1 || !/^[A-Za-z0-9+/]*={0,2}$/.test(value)) return false;
+  const unpadded = value.replace(/=+$/, "");
+  return Buffer.from(value, "base64").toString("base64").replace(/=+$/, "") === unpadded;
 }
 
 function sameContentExpectations(
@@ -567,6 +611,34 @@ function resourceLinks(result: CallToolResult): Array<{ uri: string; mimeType?: 
     links.push({ uri: content.uri, ...(content.mimeType === undefined ? {} : { mimeType: content.mimeType }) });
   }
   return links;
+}
+
+function embeddedResources(
+  result: CallToolResult,
+  maximum: number,
+): readonly Readonly<Record<string, unknown>>[] {
+  const resources: Readonly<Record<string, unknown>>[] = [];
+  for (const content of result.content) {
+    if (content.type !== "resource") continue;
+    if (resources.length === MAX_CONTENT_EXPECTATIONS) {
+      throw new Error("tool response contains too many embedded resources");
+    }
+    resources.push(contentObservation(content.resource, maximum));
+  }
+  return resources;
+}
+
+function sameEmbeddedResources(
+  observed: readonly Readonly<Record<string, unknown>>[],
+  expected: readonly McpCliEmbeddedResourceExpectation[],
+): boolean {
+  return observed.length === expected.length && observed.every((item, index) => {
+    const wanted = expected[index];
+    return wanted !== undefined && item.uriSha256 === sha256(wanted.uri) &&
+      item.sha256 === wanted.sha256 &&
+      (wanted.bytes === undefined || item.bytes === wanted.bytes) &&
+      (wanted.mimeType === undefined || item.mimeType === wanted.mimeType);
+  });
 }
 
 function sameLinks(

@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { feedbackConversationSchema } from "./index.js";
+import { feedbackConversationSchema, feedbackEventSchema } from "./index.js";
 import type {
   FeedbackAdapterContext,
   FeedbackBackendEvent,
   FeedbackConversationBackend,
   FeedbackSubmissionBackend,
+  FeedbackEvent,
 } from "./index.js";
 import { beforeDeadline } from "./deadline.js";
 
@@ -74,7 +75,17 @@ CREATE TABLE IF NOT EXISTS emseepea_feedback_outbox (
   message_id text,
   author text,
   dispatched_at timestamptz
-);`;
+);
+CREATE TABLE IF NOT EXISTS emseepea_feedback_update_receipts (
+  scope text NOT NULL,
+  consumer_id text NOT NULL,
+  event_id text NOT NULL,
+  acknowledged_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  PRIMARY KEY (scope, consumer_id, event_id)
+);
+CREATE INDEX IF NOT EXISTS emseepea_feedback_outbox_updates
+  ON emseepea_feedback_outbox(scope, occurred_at, event_id)
+  WHERE event_type IN ('feedback.thread.created', 'feedback.message.added', 'feedback.status.changed');`;
 
 export async function migratePostgresFeedback(pool: PostgresFeedbackPool): Promise<void> {
   await pool.query(postgresFeedbackSchema);
@@ -83,6 +94,69 @@ export async function migratePostgresFeedback(pool: PostgresFeedbackPool): Promi
 export interface PostgresFeedbackOptions {
   readonly pool: PostgresFeedbackPool;
   readonly outbox?: boolean;
+}
+
+export interface PostgresFeedbackUpdateConsumerOptions {
+  readonly pool: PostgresFeedbackPool;
+  /** Stable identity for one serving instance, distinct from other independent instances. */
+  readonly consumerId: string;
+  /** Exact scope; construct consumers only for scopes the application is allowed to observe. */
+  readonly scope: string;
+  /** Maximum updates processed by one consume call (default 200, maximum 1000). */
+  readonly batchSize?: number;
+}
+
+/** Durable, at-least-once update hints. Requires migration and writers with outbox: true. */
+export function createPostgresFeedbackUpdateConsumer(options: PostgresFeedbackUpdateConsumerOptions) {
+  const consumerId = z.string().min(1).max(240).parse(options.consumerId);
+  const scope = z.string().min(1).max(240).parse(options.scope);
+  const batchSize = z.number().int().min(1).max(1000).parse(options.batchSize ?? 200);
+  return {
+    /**
+     * Process one bounded batch. A rejected callback or query rejects this call;
+     * retry with the same identity. Successful callbacks are acknowledged separately.
+     * Concurrent calls may deliver duplicates; no ordering or exclusive ownership is promised.
+     */
+    async consume(onUpdate: (event: Readonly<FeedbackEvent>) => void | Promise<void>): Promise<number> {
+      const result = await options.pool.query(`
+        SELECT event_id, event_type, occurred_at, scope, thread_id, message_id, author
+        FROM emseepea_feedback_outbox AS event
+        WHERE event.scope = $1
+          AND event.event_type IN ('feedback.thread.created', 'feedback.message.added', 'feedback.status.changed')
+          AND NOT EXISTS (
+            SELECT 1 FROM emseepea_feedback_update_receipts AS receipt
+            WHERE receipt.scope = event.scope AND receipt.consumer_id = $2
+              AND receipt.event_id = event.event_id
+          )
+        ORDER BY event.occurred_at, event.event_id
+        LIMIT $3
+      `, [scope, consumerId, batchSize]);
+      for (const row of result.rows) {
+        const update = feedbackEventSchema.parse({
+          id: row.event_id,
+          type: row.event_type,
+          occurredAt: iso(z.union([z.date(), z.string()]).parse(row.occurred_at)),
+          scope: row.scope,
+          threadId: row.thread_id,
+          messageId: row.message_id ?? undefined,
+          author: row.author ?? undefined,
+        });
+        await onUpdate(Object.freeze(update));
+        await options.pool.query(`
+          INSERT INTO emseepea_feedback_update_receipts (scope, consumer_id, event_id)
+          VALUES ($1, $2, $3)
+          ON CONFLICT (scope, consumer_id, event_id) DO NOTHING
+        `, [scope, consumerId, update.id]);
+      }
+      return result.rows.length;
+    },
+    /** Remove this identity's receipts after stopping it. Retained events replay if reused. */
+    async forget(): Promise<void> {
+      await options.pool.query(`
+        DELETE FROM emseepea_feedback_update_receipts WHERE scope = $1 AND consumer_id = $2
+      `, [scope, consumerId]);
+    },
+  };
 }
 
 export function createPostgresFeedbackSubmissionBackend<Context = undefined>(

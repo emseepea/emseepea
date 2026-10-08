@@ -2482,10 +2482,11 @@ Chosen option: **checked staged-candidate recovery**. This keeps the existing re
 #### ADR-0114 Checks
 
 - The occupied version's npm `gitHead` value, which is the source commit recorded by npm, and its provenance match the exact Release run and candidate recorded in the receipt.
-- If that Release run failed, it stopped only in registry verification after staging succeeded.
+- If that Release run failed, it stopped only in one of the two eligible verification states after staging succeeded: registry verification failure before any download check, or downloaded-package verification failure after registry verification passed.
 - The recorded checked source generated that abandoned candidate and is an ancestor of the replacement source.
 - Every `latest` tag still matches the recorded baseline.
 - Fresh versions are rejected if they are missing, extra, already occupied, on the wrong version line, or different from the registry evidence.
 - Every public package in the current plan gets only the next fresh patch, with normal dependent manifest and lockfile updates.
+- Every unchanged initializer passes downloaded-package qualification with the exact manifest restored from the checked source, while unrelated manifest differences remain refused.
 - The replacement passes the unchanged quality, semantic, package, registry, signature, provenance, initializer, guide, promotion, and merge-back gates.
 - The replacement package set is promoted under `latest` and independently verified from one exact release head.

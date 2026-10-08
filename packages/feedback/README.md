@@ -341,6 +341,114 @@ application worker can claim those rows, send email or queue work, and set
 `dispatched_at`. Em See Pea does not prescribe a queue, retry schedule, or mail
 provider.
 
+#### Cross-instance resource update hints
+
+`createPostgresFeedbackUpdateConsumer` from `@emseepea/feedback/postgres`
+provides durable, scoped outbox consumption for each serving instance.
+An acknowledgement records that one consumer has handled one event.
+
+Run
+`migratePostgresFeedback(pool)` to add its receipt table and index, and enable
+`outbox: true` on **every writer**, including team-reply workers. No change to
+`@emseepea/server` is required.
+
+```ts
+import { createPostgresFeedbackUpdateConsumer } from "@emseepea/feedback/postgres";
+import { notifyResourceUpdated } from "@emseepea/server";
+
+const consumer = createPostgresFeedbackUpdateConsumer({
+  pool,
+  consumerId: servingInstanceId, // Stable across reconnects; unique per independent instance.
+  scope: authorizedAccountScope,
+  batchSize: 200,
+});
+
+// Call on startup, periodically, and after reconnecting. Retry rejected calls
+// with this same consumer identity. These application functions enforce current
+// authorization, retention/deletion policy, and construct a scope-specific URI.
+async function drainUpdates() {
+  while (await consumer.consume(async (event) => {
+    if (!await mayNotifyCurrentSubscribers(event)) return;
+    notifyResourceUpdated(app, feedbackResourceUri(event.scope, event.threadId));
+  })) { /* Continue until the pending backlog is empty. */ }
+}
+```
+
+The application owns scheduling, shutdown, connection/query timeouts, callback
+timeouts, and retry backoff. The consumer owns durable progress; applications
+do not need to implement a cursor, overlap window, claim protocol, or receipt
+store. Schedule another poll even after an empty batch: transactions may commit
+later. Stop scheduling and await in-flight calls before closing the pool.
+
+##### Delivery and recovery
+
+Each retained, committed `feedback.thread.created`, `feedback.message.added`,
+or `feedback.status.changed` event remains eligible until its callback succeeds
+and its individual acknowledgement is persisted. Earlier successful callbacks
+stay acknowledged if a later callback fails. Database errors and rejected
+callbacks reject `consume`; retrying recovers pending events.
+
+A crash or acknowledgement failure after a successful callback can repeat that
+callback. Use the stable event `id` for optional deduplication; callbacks must
+tolerate duplicates. No ordering, exclusivity, or exactly-once delivery is
+promised. Concurrent calls for the same identity can duplicate work.
+
+##### Late commits and batches
+
+Queries select all unacknowledged events, without a timestamp or sequence
+watermark. `occurredAt` only orders each bounded batch; it is not a commit-order
+cursor. A transaction committed after an empty poll remains eligible for the
+next poll, regardless of its timestamp.
+
+`consume` returns the number acknowledged (up to `batchSize`, default 200,
+maximum 1000). An error rejects the call rather than returning a partial count.
+
+##### Independent consumers
+
+Receipts are keyed by exact `scope`, `consumerId`, and event `id`. Give each
+instance holding independent subscriptions a distinct identity. A restarted
+instance can reuse its identity; a new identity replays all retained events on
+first use. There is no implicit “start now” watermark.
+
+Resource reads remain authoritative; hints are not durable proof that a client
+received a notification. Refresh resource state when establishing a new MCP
+subscription, including after an instance restarts.
+
+##### Isolation and policy
+
+Create a consumer only for an authorized exact scope. Payloads contain
+identifiers, type, timestamp, scope, and optional author, never feedback
+content. Recheck current permissions and retention/deletion rules before
+notifying.
+
+Returning normally deliberately acknowledges a skipped hint; throw for a
+temporary policy-check or notification failure to retry it. First-offer receipt
+events are excluded to avoid read/notification loops.
+
+##### Dispatcher independence and cleanup
+
+Consumption neither reads nor updates `dispatched_at`. Email dispatch must
+retain outbox rows until every consumer that needs them has acknowledged them.
+There is no automatic expiration or outbox deletion. Deleting an unacknowledged
+event loses its hint; deleting a receipt for a retained event makes it eligible
+again.
+
+After stopping a retired consumer, `await consumer.forget()` deletes only its
+scoped receipts. Reusing that identity then replays retained events. Applications
+own outbox retention and may delete orphaned receipts after their corresponding
+events are removed.
+
+##### Backend support
+
+This API supports the PostgreSQL conversation/submission outbox only. It does
+not consume collection-backend MCP Events or provide equivalent delivery
+guarantees for Firestore, Markdown, GitHub, or Zendesk. It requires no dedicated
+LISTEN connection, and works through ordinary pooled queries.
+
+Under sustained arrivals or a permanently failing callback, progress requires
+sufficient polling capacity or resolving the failure; a batch cannot bypass a
+failing earlier callback automatically.
+
 ### Firestore
 
 Pass an initialized `@google-cloud/firestore` database to

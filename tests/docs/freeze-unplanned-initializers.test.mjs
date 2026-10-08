@@ -35,9 +35,10 @@ async function fixture(t, currentInitializer) {
     initializerPath,
     baseInitializer,
     bases,
-    run: () => freezeUnplannedInitializers({
+    run: (options = {}) => freezeUnplannedInitializers({
       root, initializers: [initializer], packages: [feedback],
       readBase: async (path) => bases.get(path),
+      ...options,
     }),
   };
 }
@@ -74,4 +75,55 @@ test("versioning leaves planned initializer releases intact", async (t) => {
   const { run, initializerPath } = await fixture(t, base);
   await run();
   assert.deepEqual(JSON.parse(await readFile(initializerPath, "utf8")), base);
+});
+
+test("staged-candidate recovery restores a stale public dependency pin from the exact source", async (t) => {
+  const { run, initializerPath, baseInitializer } = await fixture(t, {
+    name: initializer.name,
+    version: "0.1.0",
+    starterDependencies: ["@emseepea/server"],
+    devDependencies: { "@emseepea/server": "0.19.0", "@emseepea/feedback": "0.5.3" },
+  });
+
+  await assert.rejects(run(), /unexpected dependency change/i);
+  await run({ restoreFromSource: true, sourceRef: "a".repeat(40) });
+  assert.deepEqual(JSON.parse(await readFile(initializerPath, "utf8")), baseInitializer);
+});
+
+test("staged-candidate recovery requires an exact source and rejects unrelated changes", async (t) => {
+  const first = await fixture(t);
+  await assert.rejects(
+    first.run({ restoreFromSource: true, sourceRef: "HEAD" }),
+    /exact source commit/i,
+  );
+
+  const second = await fixture(t);
+  await writeFile(second.initializerPath, JSON.stringify({
+    ...second.baseInitializer,
+    devDependencies: { ...second.baseInitializer.devDependencies, unrelated: "2.0.0" },
+  }) + "\n");
+  await assert.rejects(
+    second.run({ restoreFromSource: true, sourceRef: "b".repeat(40) }),
+    /unexpected|unplanned/i,
+  );
+
+  const third = await fixture(t);
+  await writeFile(third.initializerPath, JSON.stringify({
+    ...third.baseInitializer,
+    devDependencies: { ...third.baseInitializer.devDependencies, "@emseepea/server": "0.20.0" },
+  }) + "\n");
+  await assert.rejects(
+    third.run({ restoreFromSource: true, sourceRef: "c".repeat(40) }),
+    /starter dependency/i,
+  );
+
+  const fourth = await fixture(t);
+  await writeFile(fourth.initializerPath, JSON.stringify({
+    ...fourth.baseInitializer,
+    description: "unexpected",
+  }) + "\n");
+  await assert.rejects(
+    fourth.run({ restoreFromSource: true, sourceRef: "d".repeat(40) }),
+    /unexpected change/i,
+  );
 });

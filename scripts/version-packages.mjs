@@ -22,7 +22,11 @@ export async function versionPackages({ root = process.cwd(), env = process.env,
   } else {
     await exec("npm", ["exec", "changeset", "version"], { cwd: root, env });
   }
-  await freezeUnplannedInitializers({ root, sourceRef: env.GITHUB_SHA ?? "HEAD" });
+  await freezeUnplannedInitializers({
+    root,
+    sourceRef: env.GITHUB_SHA ?? "HEAD",
+    restoreFromSource: Boolean(receipt),
+  });
   await recordReleaseOrigin(resolve(root, ".release"), env);
   await exec("npm", ["install", "--package-lock-only", "--ignore-scripts"], { cwd: root, env });
   if (receipt) await unlink(resolve(root, ".release/recovery.json"));

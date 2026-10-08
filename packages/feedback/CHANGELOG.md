@@ -1,5 +1,11 @@
 # @emseepea/feedback
 
+## 0.8.1
+
+### Minor Changes
+
+- [`2baf253`](https://github.com/emseepea/emseepea/commit/2baf2531687f836fa2e2314cd33769983dddca46) Thanks [@tompahoward](https://github.com/tompahoward)! - Add scoped PostgreSQL feedback update consumers with durable per-instance acknowledgements. Retained late commits remain eligible without timestamp cursors; callbacks and acknowledgement failures can be retried independently of email dispatch. Document at-least-once delivery, startup/reconnect replay, scope policy checks, retention, and cleanup.
+
 ## 0.7.1
 
 ### Minor Changes

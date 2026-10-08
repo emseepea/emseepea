@@ -51,6 +51,10 @@ test("qualifies protocol catalogues, bytes, links, progress, denial and cancella
   const resource = evidence.checkpoints.find(({ id }) => id === "read-original");
   assert.equal(resource.observation.contents[0].sha256, fixtureHash);
   assert.equal(resource.observation.contents[0].bytes, fixtureBytes.byteLength);
+  const embedded = evidence.checkpoints.find(({ id }) => id === "tool-resource");
+  assert.equal(embedded.observation.embeddedResources[0].sha256, fixtureHash);
+  assert.equal(embedded.observation.embeddedResources[0].bytes, fixtureBytes.byteLength);
+  assert.equal(embedded.observation.embeddedResources[0].uriSha256, sha256(fixtureUri));
   const progress = evidence.checkpoints.find(({ id }) => id === "progress-completes");
   assert.equal(progress.observation.progressCount, 2);
   const saved = await readFile(output, "utf8");
@@ -74,7 +78,10 @@ test("the CLI loads an adopter scenario and keeps native ChatGPT explicitly unte
   checkpoints: [{
     id: "tools",
     operation: "tools/list",
-    expectedNames: ["get-original", "many-links", "run-progress", "wait-for-cancel"],
+    expectedNames: [
+      "get-original", "get-note", "malformed-resource", "many-embedded-resources", "many-links",
+      "oversized-resource", "run-progress", "wait-for-cancel",
+    ],
   }],
 };\n`);
 
@@ -160,7 +167,7 @@ test("does not mistake an unknown resource for access denial", async (t) => {
   assert.notEqual(evidence.checkpoints[0].category, "denial-observed");
 });
 
-test("fails closed on oversized observed content and link collections", async (t) => {
+test("fails closed on malformed or oversized embedded content and bounded collections", async (t) => {
   const running = await startQualificationServer(t);
   process.env.EMSEEPEA_OWNER_TOKEN = "owner-secret-sentinel";
   t.after(() => { delete process.env.EMSEEPEA_OWNER_TOKEN; });
@@ -174,11 +181,54 @@ test("fails closed on oversized observed content and link collections", async (t
     checkpoints: [
       { id: "many-contents", operation: "resources/read", uri: "fixture://documents/many-contents" },
       { id: "many-links", operation: "tools/call", name: "many-links" },
+      { id: "many-embedded", operation: "tools/call", name: "many-embedded-resources" },
+      { id: "malformed", operation: "tools/call", name: "malformed-resource" },
+      {
+        id: "oversized",
+        operation: "tools/call",
+        name: "oversized-resource",
+        maxEmbeddedResourceBytes: 4,
+      },
     ],
   }, output);
   assert.equal(evidence.status, "failed");
-  assert.deepEqual(evidence.checkpoints.map(({ status }) => status), ["failed", "failed"]);
+  assert.deepEqual(evidence.checkpoints.map(({ status }) => status),
+    ["failed", "failed", "failed", "failed", "failed"]);
   assert.ok((await stat(output)).size < 8_192);
+});
+
+test("reports embedded resource identity and content mismatches without retaining bytes", async (t) => {
+  const running = await startQualificationServer(t);
+  process.env.EMSEEPEA_OWNER_TOKEN = "owner-secret-sentinel";
+  t.after(() => { delete process.env.EMSEEPEA_OWNER_TOKEN; });
+  const directory = await mkdtemp(join(tmpdir(), "emseepea-mcp-cli-mismatch-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const output = join(directory, "evidence.json");
+  const expected = { uri: fixtureUri, sha256: fixtureHash, bytes: fixtureBytes.byteLength,
+    mimeType: "application/pdf" };
+  const evidence = await runMcpCliQualification({
+    name: "embedded resource mismatches",
+    endpoint: running.url,
+    tokenEnvironment: "EMSEEPEA_OWNER_TOKEN",
+    checkpoints: [
+      { id: "uri", operation: "tools/call", name: "get-original",
+        expectedEmbeddedResources: [{ ...expected, uri: "fixture://documents/other.pdf" }] },
+      { id: "mime", operation: "tools/call", name: "get-original",
+        expectedEmbeddedResources: [{ ...expected, mimeType: "text/plain" }] },
+      { id: "bytes", operation: "tools/call", name: "get-original",
+        expectedEmbeddedResources: [{ ...expected, bytes: fixtureBytes.byteLength + 1 }] },
+      { id: "hash", operation: "tools/call", name: "get-original",
+        expectedEmbeddedResources: [{ ...expected, sha256: "0".repeat(64) }] },
+    ],
+  }, output);
+  assert.deepEqual(evidence.checkpoints.map(({ status }) => status),
+    ["failed", "failed", "failed", "failed"]);
+  assert.deepEqual(evidence.checkpoints.map(({ category }) => category),
+    Array.from({ length: 4 }, () => "embedded-resource-mismatch"));
+  const saved = await readFile(output, "utf8");
+  assert.equal(saved.includes(fixtureBytes.toString("utf8")), false);
+  assert.equal(saved.includes(fixtureBytes.toString("base64")), false);
+  assert.equal(saved.includes(fixtureUri), false);
 });
 
 function scenario(endpoint) {
@@ -191,7 +241,10 @@ function scenario(endpoint) {
       {
         id: "tools",
         operation: "tools/list",
-        expectedNames: ["get-original", "many-links", "run-progress", "wait-for-cancel"],
+        expectedNames: [
+          "get-original", "get-note", "malformed-resource", "many-embedded-resources", "many-links",
+          "oversized-resource", "run-progress", "wait-for-cancel",
+        ],
       },
       {
         id: "resources",
@@ -210,10 +263,27 @@ function scenario(endpoint) {
         expectedContents: [{ sha256: fixtureHash, bytes: fixtureBytes.byteLength, mimeType: "application/pdf" }],
       },
       {
-        id: "tool-link",
+        id: "tool-resource",
         operation: "tools/call",
         name: "get-original",
         expectedResourceLinks: [{ uri: fixtureUri, mimeType: "application/pdf" }],
+        expectedEmbeddedResources: [{
+          uri: fixtureUri,
+          sha256: fixtureHash,
+          bytes: fixtureBytes.byteLength,
+          mimeType: "application/pdf",
+        }],
+      },
+      {
+        id: "tool-text-resource",
+        operation: "tools/call",
+        name: "get-note",
+        expectedEmbeddedResources: [{
+          uri: "fixture://documents/note.txt",
+          sha256: sha256("synthetic note"),
+          bytes: Buffer.byteLength("synthetic note"),
+          mimeType: "text/plain",
+        }],
       },
       {
         id: "progress-completes",
@@ -308,7 +378,25 @@ async function startQualificationServer(t) {
         description: "Return a link to the synthetic original fixture.",
         inputSchema: z.object({}),
         handler: () => ({
-          content: [{ type: "resource_link", name: "original-pdf", uri: fixtureUri, mimeType: "application/pdf" }],
+          content: [
+            { type: "resource_link", name: "original-pdf", uri: fixtureUri, mimeType: "application/pdf" },
+            {
+              type: "resource",
+              resource: { uri: fixtureUri, mimeType: "application/pdf", blob: fixtureBytes.toString("base64") },
+            },
+          ],
+        }),
+      }),
+      defineTool({
+        ...access,
+        name: "get-note",
+        description: "Return an embedded text fixture.",
+        inputSchema: z.object({}),
+        handler: () => ({
+          content: [{
+            type: "resource",
+            resource: { uri: "fixture://documents/note.txt", mimeType: "text/plain", text: "synthetic note" },
+          }],
         }),
       }),
       defineTool({
@@ -323,6 +411,42 @@ async function startQualificationServer(t) {
             uri: `fixture://documents/${index}`,
             mimeType: "text/plain",
           })),
+        }),
+      }),
+      defineTool({
+        ...access,
+        name: "many-embedded-resources",
+        description: "Return more embedded resources than bounded evidence accepts.",
+        inputSchema: z.object({}),
+        handler: () => ({
+          content: Array.from({ length: 129 }, (_, index) => ({
+            type: "resource",
+            resource: { uri: `fixture://documents/embedded/${index}`, mimeType: "text/plain", text: "x" },
+          })),
+        }),
+      }),
+      defineTool({
+        ...access,
+        name: "malformed-resource",
+        description: "Return invalid base64 for fail-closed qualification.",
+        inputSchema: z.object({}),
+        handler: () => ({
+          content: [{
+            type: "resource",
+            resource: { uri: fixtureUri, mimeType: "application/pdf", blob: "not base64!" },
+          }],
+        }),
+      }),
+      defineTool({
+        ...access,
+        name: "oversized-resource",
+        description: "Return content larger than a checkpoint's configured byte limit.",
+        inputSchema: z.object({}),
+        handler: () => ({
+          content: [{
+            type: "resource",
+            resource: { uri: fixtureUri, mimeType: "application/pdf", blob: fixtureBytes.toString("base64") },
+          }],
         }),
       }),
       defineStreamingTool({

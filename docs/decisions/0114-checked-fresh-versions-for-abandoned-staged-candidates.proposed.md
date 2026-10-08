@@ -75,10 +75,16 @@ Only public packages in the current release plan may appear in the occupied and
 fresh version maps.
 
 A failed Release run is eligible only when every attempt passed semantic
-evaluation and package publication, failed during registry verification, and
-skipped downloaded-package verification and artifact upload. Registry
-integrity and provenance must still bind the occupied version to that exact
-run and candidate.
+evaluation and package publication, then stopped in one of two explicit
+verification states:
+
+- registry verification failed, while downloaded-package verification and
+  artifact upload were skipped; or
+- registry verification passed, downloaded-package verification failed, and
+  artifact upload was skipped.
+
+All adjacent states are ineligible. Registry integrity and provenance must
+still bind the occupied version to that exact run and candidate.
 
 For each affected package, choose the next patch version after the occupied
 version. Keep the same major and minor version as the ordinary release plan.
@@ -87,12 +93,21 @@ Build the replacement candidate from the normal release source history. Use
 the receipt as evidence for the abandoned candidate. Do not make the abandoned
 commit an ancestor of the replacement.
 
+When candidate generation starts from an abandoned release branch, restore
+every unplanned initializer manifest to the exact checked source revision.
+This prevents dependency pins generated for the abandoned candidate from
+silently changing an initializer whose package version is unchanged. Refuse
+unrelated manifest changes, starter dependency changes, unknown dependency
+changes, or restoration without an exact source commit.
+
 ## Consequences
 
 ### Good
 
 - A newer checked source can be released without promoting or republishing an
   abandoned candidate.
+- Unplanned initializer manifests remain identical to the checked source even
+  when the abandoned candidate contained generated dependency pins.
 - Version selection remains deterministic and is shared by generation,
   readiness checks, and registry verification.
 - The publish branch and `latest` remain untouched until ordinary promotion.
@@ -122,8 +137,10 @@ The release system must then pass these checks:
 - The occupied version's npm `gitHead` value, which is the source commit
   recorded by npm, and its provenance match the exact Release run and candidate
   recorded in the receipt.
-- If that Release run failed, it stopped only in registry verification after
-  staging succeeded.
+- If that Release run failed, it stopped only in one of the two eligible
+  verification states after staging succeeded: registry verification failure
+  before any download check, or downloaded-package verification failure after
+  registry verification passed.
 - The recorded checked source generated that abandoned candidate and is an
   ancestor of the replacement source.
 - Every `latest` tag still matches the recorded baseline.
@@ -131,6 +148,9 @@ The release system must then pass these checks:
   the wrong version line, or different from the registry evidence.
 - Every public package in the current plan gets only the next fresh patch, with
   normal dependent manifest and lockfile updates.
+- Every unchanged initializer passes downloaded-package qualification with the
+  exact manifest restored from the checked source, while unrelated manifest
+  differences remain refused.
 - The replacement passes the unchanged quality, semantic, package, registry,
   signature, provenance, initializer, guide, promotion, and merge-back gates.
 - The replacement package set is promoted under `latest` and independently

@@ -118,10 +118,15 @@ async function assertFailedStagingRun(run, actual) {
     const semantic = exactlyOne(jobs, "Check whether examples are understood", "staged semantic job");
     const publish = exactlyOne(jobs, "Publish the release under next", "staged publication job");
     assert.equal(semantic?.conclusion, "success", "staged semantic evidence did not pass");
-    assert.equal(publish?.conclusion, "failure", "failed staging run did not stop in publication verification");
+    assert.equal(publish?.conclusion, "failure", "failed staging run did not stop in staging verification");
     assert.equal(exactlyOne(publish.steps, "Publish the packages under next", "staged publish step").conclusion, "success");
-    assert.equal(exactlyOne(publish.steps, "Verify the packages reached the registry under next", "staged registry verification step").conclusion, "failure");
-    assert.equal(exactlyOne(publish.steps, "Verify the downloaded packages", "staged download verification step").conclusion, "skipped");
+    const registry = exactlyOne(publish.steps, "Verify the packages reached the registry under next", "staged registry verification step").conclusion;
+    const download = exactlyOne(publish.steps, "Verify the downloaded packages", "staged download verification step").conclusion;
+    assert.ok(
+      (registry === "failure" && download === "skipped")
+      || (registry === "success" && download === "failure"),
+      "failed staging run did not stop in an eligible verification step",
+    );
     assert.equal(exactlyOne(publish.steps, "Upload the release artifacts for the promotion", "staged artifact upload step").conclusion, "skipped");
   }
 }
