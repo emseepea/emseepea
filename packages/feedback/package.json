@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/feedback",
-  "version": "0.7.1",
+  "version": "0.8.1",
   "description": "Optional detailed feedback and support conversations for Em See Pea servers",
   "license": "MIT",
   "repository": {
@@ -70,7 +70,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@emseepea/testing": "0.21.3",
+    "@emseepea/testing": "0.21.5",
     "pg": "8.23.0"
   },
   "engines": {
