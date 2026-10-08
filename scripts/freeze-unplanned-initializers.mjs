@@ -19,8 +19,12 @@ export async function freezeUnplannedInitializers({
   initializers = initializerPackages,
   packages = publicPackages,
   sourceRef = process.env.GITHUB_SHA ?? "HEAD",
+  restoreFromSource = false,
   readBase = async (path) => (await exec("git", ["show", `${sourceRef}:${path}`], { cwd: root })).stdout,
 } = {}) {
+  if (restoreFromSource && !/^[0-9a-f]{40}$/.test(sourceRef)) {
+    throw new Error("recovery initializer restoration requires an exact source commit");
+  }
   const packageByName = new Map(packages.map((item) => [item.name, item]));
 
   for (const initializer of initializers) {
@@ -49,6 +53,7 @@ export async function freezeUnplannedInitializers({
       if (!dependency) {
         throw new Error(`${initializer.name}: unexpected dependency change to ${name}`);
       }
+      if (restoreFromSource) continue;
       const dependencyPath = `${dependency.path}/package.json`;
       const dependencyBase = JSON.parse(await readBase(dependencyPath));
       const dependencyCurrent = JSON.parse(await readFile(join(root, dependencyPath), "utf8"));

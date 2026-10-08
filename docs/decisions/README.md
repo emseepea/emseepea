@@ -2487,5 +2487,6 @@ Chosen option: **checked staged-candidate recovery**. This keeps the existing re
 - Every `latest` tag still matches the recorded baseline.
 - Fresh versions are rejected if they are missing, extra, already occupied, on the wrong version line, or different from the registry evidence.
 - Every public package in the current plan gets only the next fresh patch, with normal dependent manifest and lockfile updates.
+- Every unchanged initializer passes downloaded-package qualification with the exact manifest restored from the checked source, while unrelated manifest differences remain refused.
 - The replacement passes the unchanged quality, semantic, package, registry, signature, provenance, initializer, guide, promotion, and merge-back gates.
 - The replacement package set is promoted under `latest` and independently verified from one exact release head.

@@ -93,12 +93,21 @@ Build the replacement candidate from the normal release source history. Use
 the receipt as evidence for the abandoned candidate. Do not make the abandoned
 commit an ancestor of the replacement.
 
+When candidate generation starts from an abandoned release branch, restore
+every unplanned initializer manifest to the exact checked source revision.
+This prevents dependency pins generated for the abandoned candidate from
+silently changing an initializer whose package version is unchanged. Refuse
+unrelated manifest changes, starter dependency changes, unknown dependency
+changes, or restoration without an exact source commit.
+
 ## Consequences
 
 ### Good
 
 - A newer checked source can be released without promoting or republishing an
   abandoned candidate.
+- Unplanned initializer manifests remain identical to the checked source even
+  when the abandoned candidate contained generated dependency pins.
 - Version selection remains deterministic and is shared by generation,
   readiness checks, and registry verification.
 - The publish branch and `latest` remain untouched until ordinary promotion.
@@ -139,6 +148,9 @@ The release system must then pass these checks:
   the wrong version line, or different from the registry evidence.
 - Every public package in the current plan gets only the next fresh patch, with
   normal dependent manifest and lockfile updates.
+- Every unchanged initializer passes downloaded-package qualification with the
+  exact manifest restored from the checked source, while unrelated manifest
+  differences remain refused.
 - The replacement passes the unchanged quality, semantic, package, registry,
   signature, provenance, initializer, guide, promotion, and merge-back gates.
 - The replacement package set is promoted under `latest` and independently

@@ -57,8 +57,8 @@ versions and explains why initializer packages are not part of the release.
 
 | File | SHA-256 |
 | --- | --- |
-| `docs/decisions/0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md` | `a0c0e5a70671830be94b3cdd7d54cc8ffe557fa5633e4605b7c0a1a595ac5e9c` |
-| `docs/decisions/README.md` | `7672393d63f0540722e306df6912069c48001cda089a96b1cbca0fe7ac346cc6` |
+| `docs/decisions/0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md` | `c2bd0e5ca37698ee8805efdac9e2cef0a05988c6853da027023eb94bc07da876` |
+| `docs/decisions/README.md` | `b24f33682b206d802a1e91ebda8625e5f86611ebe85429753186403dbb87e205` |
 | `docs/reviews/current-release-readiness.md` | `e288bbd496e485929a20648f5a93b31a1922382ae2764b1b705595161703d6b1` |
 
 This review covers cognitive accessibility and copy clarity only. It does not
