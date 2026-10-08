@@ -34,7 +34,9 @@ test("records observed friction openly, once, and stops after an objection", asy
   const objection = await chat.send("Do not record any more feedback in this conversation.");
   assertNoToolCalls(objection);
 
-  const repeated = await chat.send("Find that same snap pea variety again.");
+  const repeated = await chat.send(
+    "Search the catalogue again for snap pea varieties and report the current matches.",
+  );
   assertToolNames(repeated, ["search-pea-varieties"]);
   assertResponseContains(repeated, "Highland Snap");
 });

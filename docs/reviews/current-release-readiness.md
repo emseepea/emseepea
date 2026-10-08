@@ -131,3 +131,19 @@ backends.
   downloaded-package verification, and `latest` verification pass.
 - Planned packages: `@emseepea/feedback@0.8.1` and
   `@emseepea/testing@0.21.5`.
+
+## Retained semantic failure and scenario correction
+
+Release run [37768276333](https://github.com/emseepea/emseepea/actions/runs/37768276333)
+failed before publication on candidate
+`d1ec27a2b334aaa5758eb37c030f837d98c1b26d`. The retained artifact archive has
+SHA-256 `4765deaddf3b595ffafa61ec0d66962a041c7cf02299fea4a468c8c4df04aa19`.
+
+All three conversations honored the user's feedback objection. One answered
+“Find that same snap pea variety again” from the previous result, without
+calling the catalogue search. That wording allowed a cached answer but the
+test required a fresh search. The scenario now asks for another catalogue
+search and current matches. The exact search-only assertion remains, so any
+feedback call still fails. No failed semantic trial is being retried on the
+old candidate. The corrected source needs new qualification, Source Quality,
+and an authoritative Release evaluation before publication.
