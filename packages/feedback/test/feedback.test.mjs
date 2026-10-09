@@ -212,12 +212,21 @@ test("keeps protected feedback conversations scoped, append-only, and inspectabl
   }));
   const client = await running.connect("test-token");
 
-  assert.deepEqual((await client.listTools()).tools.map(({ name }) => name), [
+  const listed = (await client.listTools()).tools;
+  assert.deepEqual(listed.map(({ name }) => name), [
     "create-feedback-thread",
     "reply-to-feedback-thread",
     "list-feedback-threads",
     "get-feedback-thread",
   ]);
+  for (const tool of listed) {
+    assert.deepEqual(tool.annotations, {
+      readOnlyHint: tool.name === "list-feedback-threads",
+      destructiveHint: false,
+      idempotentHint: ["list-feedback-threads", "get-feedback-thread"].includes(tool.name),
+      openWorldHint: true,
+    });
+  }
   const created = await client.callTool({
     name: "create-feedback-thread",
     arguments: { subject: "Seed search friction", message: "The filters were difficult to find." },

@@ -166,6 +166,11 @@ test("fixed submission tools route only through compiled collections and emit af
     "submit-customer-feedback",
     "submit-internal-feedback",
   ]);
+  for (const tool of listed.tools) {
+    assert.deepEqual(tool.annotations, {
+      readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true,
+    });
+  }
   const internalTool = listed.tools.find(({ name }) => name === "submit-internal-feedback");
   assert.equal(internalTool.title, "Record Internal Feedback");
   assert.equal("collection" in internalTool.inputSchema.properties, false);
@@ -226,6 +231,9 @@ test("customer-only topology exposes one public submission tool", async (t) => {
     tools,
   }));
   const client = await running.connect();
+  assert.deepEqual((await client.listTools()).tools[0].annotations, {
+    readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true,
+  });
   const listed = await client.listTools();
   assert.equal("collection" in listed.tools[0].inputSchema.properties, false);
   assert.equal("destination" in listed.tools[0].inputSchema.properties, false);

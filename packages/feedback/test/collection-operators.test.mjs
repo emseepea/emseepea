@@ -94,6 +94,9 @@ test("operator tools expose only configured collections and safe validated field
     { name: "get-feedback-submission", title: "Read Feedback Submission" },
   ]);
   for (const tool of listed.tools) {
+    assert.deepEqual(tool.annotations, {
+      readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true,
+    });
     assert.deepEqual(tool.inputSchema.properties.collection.enum, ["customer", "internal"]);
   }
 

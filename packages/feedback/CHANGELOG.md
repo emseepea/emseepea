@@ -1,5 +1,11 @@
 # @emseepea/feedback
 
+## 0.8.2
+
+### Patch Changes
+
+- [`b243edd`](https://github.com/emseepea/emseepea/commit/b243edd94ae68c1151f44f524164b30bf7401c64) Thanks [@tompahoward](https://github.com/tompahoward)! - Explicitly classify collection submissions, conversation operations, and operator reads as non-destructive in MCP tool discovery. Preserve the existing read-only, idempotent, and open-world annotations.
+
 ## 0.8.1
 
 ### Minor Changes

@@ -1,0 +1,74 @@
+{
+  "authoritative": false,
+  "provider": "codex-local",
+  "smoke": false,
+  "configuredModel": "gpt-5.5",
+  "modelEvidence": "configured",
+  "settings": {
+    "approvalPolicy": "never",
+    "loginShell": false,
+    "multiAgent": false,
+    "sandbox": "read-only",
+    "shell": "forbidden",
+    "shellEnvironment": "empty",
+    "userConfig": "ignored",
+    "webSearch": false
+  },
+  "semanticRetries": 0,
+  "status": "failed",
+  "cases": {
+    "8e0027800b56911971ee8010176924b1fecf0be49a32152276eb9c455f03a8d7": {
+      "name": "Codex reads a real catalogue, retains conversation context, and retrieves again in a fresh conversation",
+      "file": "../scratch/emseepea-issue-triage/codex-native.test.mjs",
+      "mode": "conversation",
+      "authoritative": false,
+      "smoke": false,
+      "provider": "codex-local",
+      "configuredModel": "gpt-5.5",
+      "modelEvidence": "configured",
+      "settings": {
+        "approvalPolicy": "never",
+        "loginShell": false,
+        "multiAgent": false,
+        "sandbox": "read-only",
+        "shell": "forbidden",
+        "shellEnvironment": "empty",
+        "userConfig": "ignored",
+        "webSearch": false
+      },
+      "semanticRetries": 0,
+      "status": "failed",
+      "caseSha256": "541f3fb29e84e9ff224ce5c729dd8af566c43c5b081336fde2ee8b373275ee5a",
+      "sourceSha256": "376d60f23790bdea51dd6db85f4963a288abafa288bdf40c59f8613fe6509441",
+      "answerTrials": [
+        {
+          "trial": 1,
+          "turns": [],
+          "error": "model command timed out"
+        },
+        {
+          "trial": 2,
+          "turns": [],
+          "error": "model command timed out"
+        },
+        {
+          "trial": 3,
+          "turns": [],
+          "error": "model command timed out"
+        }
+      ],
+      "judgeVerdicts": [],
+      "failedPhase": "conversation turn"
+    }
+  },
+  "errors": [
+    "Test file failed: ../scratch/emseepea-issue-triage/codex-native.test.mjs",
+    "Missing or failed qualification: ../scratch/emseepea-issue-triage/codex-native.test.mjs"
+  ],
+  "startedAt": "2026-10-08T23:48:10.686Z",
+  "dependencies": {
+    "mcpClient": "2.0.0",
+    "codexCli": "0.159.0"
+  },
+  "finishedAt": "2026-10-08T23:51:12.402Z"
+}
