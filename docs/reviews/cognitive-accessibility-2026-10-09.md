@@ -44,3 +44,22 @@ Result: PASS. The decision and generated index record Tom Howard's explicit rati
 | --- | --- | --- |
 | `docs/decisions/0115-authenticated-private-resource-inventory-listing.proposed.md` | `db896f4bba4e3446ca1f9dad71eab38a231780e974012b13cebfef4e5bbaf021` | PASS |
 | `docs/decisions/README.md` | `a7461077b5eaa055bf16a6b5f75469976444fa2d487073f51b710e92ec2c0a75` | PASS |
+
+## Private resource inventory implementation and release copy
+
+Reviewer: implementation agent conducting a specialist source review against QUALITY.md. This review does not claim independence or rendered/mobile testing.
+
+Result: PASS. The guide leads with the API and next action, then explains application ownership checks, normalized user identity, bounded queries, ordering, authorization, and restart behavior. The examples and package guide link to this detail. The release note describes the additive capability and initializer updates. The readiness record lists each planned public version, states backend risks, and keeps publication conditional on required gates. The resolution draft may be posted only after its publication claims are verified. No copy corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `packages/framework/README.md` | `ecbe09551197f54ef4400e742aba11df3f25e9ad4bd1b6b4c48ee8607bded723` | PASS |
+| `website/src/content/docs/resource-inventory.md` | `28839ca5319e66139141020e7b7ff031b447e74c46efeb92d87ae9159ee07d7e` | PASS |
+| `website/src/content/docs/examples.md` | `2ae579e4f3e8c41ccab47826dc9f8127d72bf21c37b135f3ca2a57399a947f26` | PASS |
+| `.changeset/private-resource-inventory.md` | `8a1f4c83c169ecaab3a437c50f69788950d47df25c1be56e2b37f50a5c26aac1` | PASS |
+| `docs/reviews/current-release-readiness.md` | `7e0a85b5c5c6faf176fe787154824b399f621ab316175b089e29ca682b10cb0a` | PASS |
+| `docs/reviews/private-inventory-resolution-draft-2026-10-09.json` | `1b46028a8c49169f159488137507e003bc485520c35c3d49121f82d564343f17` | PASS |
+
+| Reviewed public message | SHA-256 of exact body | Verdict |
+| --- | --- | --- |
+| `emseepea/emseepea#146` | `dd661da50c0a99e1a2d00c2adf31e8fca137506e22de367cf13dc819d80b1d5b` | PASS, conditional on verified publication |

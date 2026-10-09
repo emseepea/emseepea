@@ -76,6 +76,8 @@ import { isAbsolute, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { z } from "zod";
 import { createMcpEventRuntime, McpEventInputError, type McpEventRuntime, type McpEventsOptions } from "./events.js";
+import { createResourceInventory, ResourceInventoryCursorError, type ResourceInventoryHandler } from "./resource-inventory.js";
+export type { ResourceInventoryEntry, ResourceInventoryPage, ResourceInventoryHandler } from "./resource-inventory.js";
 export type { McpEventDefinition, McpEventDelivery, McpClaimedEventDelivery, McpEventStore, McpEventSubscription, McpEventsOptions } from "./events.js";
 import {
   installObservability,
@@ -197,6 +199,7 @@ const RESOURCE_MATCHES = Symbol("resourceMatches");
 const RESOURCE_ROUTE = Symbol("resourceRoute");
 const RESOURCE_LISTING = Symbol("resourceListing");
 const RESOURCE_ACCESS = Symbol("resourceAccess");
+const RESOURCE_INVENTORY = Symbol("resourceInventory");
 const PROMPT_NAME = Symbol("promptName");
 const PROMPT_ACCESS = Symbol("promptAccess");
 const HAS_COMPLETION = Symbol("hasCompletion");
@@ -267,6 +270,8 @@ function createRequestStateRuntime(options: RequestStateOptions): RequestStateRu
 
 export interface Principal {
   readonly clientId: string;
+  /** Stable subject supplied by the verifier as extra.subject; never raw claims. */
+  readonly subject?: string;
   /** Normalized permissions granted to this MCP resource. */
   readonly permissions: readonly string[];
   readonly resource?: string;
@@ -616,9 +621,9 @@ type ResourceTemplateHandler<Access extends CapabilityAccess> = (
 ) => ReadResourceResult | InputRequiredResult | Promise<ReadResourceResult | InputRequiredResult>;
 export type ResourceTemplateDefinition = ResourceTemplateDefinitionBase & (
   | { readonly access: "public"; readonly requiredScopes?: never;
-      readonly handler: ResourceTemplateHandler<"public"> }
+      readonly handler: ResourceTemplateHandler<"public">; readonly list?: never }
   | { readonly access: "protected"; readonly requiredScopes: readonly string[];
-      readonly handler: ResourceTemplateHandler<"protected"> }
+      readonly handler: ResourceTemplateHandler<"protected">; readonly list?: ResourceInventoryHandler }
 );
 interface ResourceTemplateRoute {
   readonly protocol: string;
@@ -637,6 +642,7 @@ export interface EmseepeaResource {
     readonly value: Readonly<Record<string, unknown>>;
   };
   readonly [RESOURCE_ACCESS]: "public" | ProtectedCapabilityAccess;
+  readonly [RESOURCE_INVENTORY]?: ResourceInventoryHandler;
   readonly [HAS_COMPLETION]: boolean;
   readonly [REGISTER]: (
     server: McpServer,
@@ -1278,6 +1284,10 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
     definition.access,
     definition.requiredScopes,
   );
+  const inventory = definition.list;
+  if (inventory !== undefined && (typeof inventory !== "function" || access === "public" || definition.discoverable === false)) {
+    throw new TypeError("Resource inventory listing requires a discoverable protected template and a callback");
+  }
   const { template, route } = checkedResourceTemplate(definition.uriTemplate);
   const uriTemplate = template.uriTemplate.toString();
   const listing = checkedProtocolValue<ResourceTemplateType>("ResourceTemplate", {
@@ -1311,6 +1321,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
     [DISCOVERABLE]: normalizeDiscoverable("Resource template", definition.discoverable),
     [RESOURCE_NAME]: name,
     [RESOURCE_URI]: uriTemplate,
+    ...(inventory ? { [RESOURCE_INVENTORY]: inventory } : {}),
     [RESOURCE_KIND]: "template",
     [RESOURCE_ACCESS]: access,
     [RESOURCE_MATCHES]: (uri) => template.uriTemplate.match(uri) !== null,
@@ -2305,6 +2316,22 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     .filter((resource) => resource[RESOURCE_KIND] === "static")
     .map((resource) => [resource[RESOURCE_URI], resource]));
   const resourceTemplates = resources.filter((resource) => resource[RESOURCE_KIND] === "template");
+  const inventorySources = resourceTemplates.filter((resource) => resource[RESOURCE_INVENTORY]).map((resource) => {
+    const access = resource[RESOURCE_ACCESS];
+    if (access === "public") throw new TypeError("Resource inventory requires protected access");
+    return Object.freeze({ name: resource[RESOURCE_NAME], uriTemplate: resource[RESOURCE_URI],
+      requiredScopes: Object.freeze([...access.requiredScopes]), matches: resource[RESOURCE_MATCHES]!,
+      list: resource[RESOURCE_INVENTORY]!, });
+  });
+  const inventoryBounds = paginationOptions ?? { pageSize: 50, maxPageBytes: maxApplicationResultBytes };
+  const resourceInventory = inventorySources.length ? createResourceInventory({
+    sources: inventorySources,
+    serverInfo,
+    catalogue: resources.map((resource) => [resource[RESOURCE_LISTING], resource[RESOURCE_ACCESS]]),
+    ...inventoryBounds,
+    maxPageBytes: Math.min(inventoryBounds.maxPageBytes, maxApplicationResultBytes),
+    maxBackendBytes: maxApplicationResultBytes,
+  }) : undefined;
   const promptsByName = new Map(prompts.map((prompt) => [prompt[PROMPT_NAME], prompt]));
   const enabledMethods = new Set(["server/discover"]);
   if (eventRuntime) enabledMethods.add("events/list").add("events/subscribe").add("events/unsubscribe");
@@ -2377,7 +2404,8 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
           ...(activeClientLogging ? { logging: {} } : {}),
         },
         instructions: options.instructions,
-        cacheHints: request?.filterCatalogues || request?.legacy ? undefined : cacheHints,
+        cacheHints: request?.filterCatalogues || request?.legacy ? undefined : resourceInventory
+          ? { ...cacheHints, "resources/list": { ttlMs: 0, cacheScope: "private" } } : cacheHints,
         supportedProtocolVersions: [...SUPPORTED_PROTOCOLS],
         ...(requestState && !request?.legacy ? { requestState: { verify: requestState.verify } } : {}),
       },
@@ -2435,6 +2463,26 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
           : undefined
       : basePagination;
     if (pagination) installListPagination(server, pagination);
+    if (resourceInventory && activeResources.length) server.server.setRequestHandler("resources/list", async (input, context) => {
+      const operation = requestOperations.getStore();
+      const principal = operation?.principal;
+      if (!principal) throw new ProtocolError(ProtocolErrorCode.InvalidParams, "Resource inventory unavailable");
+      const deadlineMs = operation?.deadlineMs ?? Date.now() + operationTimeoutMs;
+      try {
+        const result = await runWithDeadline(AbortSignal.any([
+          context.mcpReq.signal, operation!.signal, stopping.signal,
+        ]), deadlineMs, (signal) => resourceInventory(input.params?.cursor,
+          discoverableResources.filter((resource) => resource[RESOURCE_KIND] === "static" &&
+            accessAllows(resource[RESOURCE_ACCESS], principal)).map((resource) => resource[RESOURCE_LISTING].value),
+          Object.freeze({ principal, signal, deadlineMs })));
+        assertResultSize(result, Math.min(inventoryBounds.maxPageBytes, maxApplicationResultBytes), deadlineMs, operation!.signal);
+        return result;
+      } catch (error) {
+        markCurrentProtocolOutcome("protocol_error");
+        if (error instanceof ResourceInventoryCursorError) throw error;
+        throw new ProtocolError(ProtocolErrorCode.InternalError, "Resource inventory listing failed");
+      }
+    });
     return server;
   }, {
     onerror: () => markCurrentProtocolOutcome("protocol_error"),
@@ -2625,6 +2673,8 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       return;
     }
     const protectsCatalogue = authentication?.discovery === "protected";
+    const inventoryRequest = Boolean(resourceInventory) && isRecord(request.body) && request.body.method === "resources/list";
+    if (inventoryRequest) reply.raw.setHeader("cache-control", "private, no-store");
     let subscriptionTarget: ReturnType<typeof resourceSubscriptionTarget> | undefined;
     if (!legacy && isRecord(request.body) && request.body.method === "subscriptions/listen") {
       try {
@@ -2654,18 +2704,18 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       markObservabilityProtocolError(request);
     }
     let authInfo: AuthInfo | undefined;
-    if (authentication && (eventMethod || protectsCatalogue || access && access !== "public")) {
+    if (authentication && (inventoryRequest || eventMethod || protectsCatalogue || access && access !== "public")) {
       try {
         authInfo = await verifyAuthenticatedRequest(
           request,
           reply,
-          eventMethod || protectsCatalogue ? [] : (access as ProtectedCapabilityAccess).requiredScopes,
+          inventoryRequest || eventMethod || protectsCatalogue ? [] : (access as ProtectedCapabilityAccess).requiredScopes,
           authentication,
         );
         (request.raw as typeof request.raw & { auth?: AuthInfo }).auth = authInfo;
       } catch (error) {
         await sendWebResponse(reply, bearerAuthChallengeResponse(safeOAuthError(error), {
-          requiredScopes: eventMethod || protectsCatalogue
+          requiredScopes: inventoryRequest || eventMethod || protectsCatalogue
             ? []
             : [...(access as ProtectedCapabilityAccess).requiredScopes],
           resourceMetadataUrl: authentication.resourceMetadataUrl,
@@ -2674,6 +2724,13 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       }
     }
     const principal = authInfo ? principalFrom(authInfo) : undefined;
+    if (inventoryRequest && !inventorySources.some((source) => principal &&
+      source.requiredScopes.every((scope) => principal.permissions.includes(scope)))) {
+      await sendWebResponse(reply, bearerAuthChallengeResponse(new OAuthError(OAuthErrorCode.InsufficientScope, "Insufficient scope"), {
+        requiredScopes: [], resourceMetadataUrl: authentication!.resourceMetadataUrl,
+      }));
+      return;
+    }
     if (protectsCatalogue) reply.raw.setHeader("cache-control", "private, no-store");
     if (protectsCatalogue && isCapabilityInvocation(request.body) &&
         (access === undefined || !accessAllows(access, principal))) {
@@ -3056,9 +3113,15 @@ function principalFrom(authInfo: AuthInfo | undefined): Principal {
   ) || new Set(authInfo.scopes).size !== authInfo.scopes.length) {
     throw new TypeError("Authentication verifier returned invalid permissions");
   }
+  const subject = authInfo.extra?.subject;
+  // oxlint-disable-next-line no-control-regex -- Reject untrusted identity control characters.
+  if (subject !== undefined && (typeof subject !== "string" || !subject.trim() || subject.length > 256 || /[\x00-\x1f\x7f]/.test(subject))) {
+    throw new TypeError("Authentication verifier returned an invalid subject");
+  }
   const permissions = Object.freeze([...authInfo.scopes]);
   return Object.freeze({
     clientId: authInfo.clientId,
+    ...(subject === undefined ? {} : { subject: subject as string }),
     permissions,
     resource: authInfo.resource?.href,
   });

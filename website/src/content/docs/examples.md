@@ -231,8 +231,11 @@ for content at predictable URIs, such as `invoice://{invoiceId}`.
 
 `resources/list` returns metadata for static resources registered with the
 server. `resources/templates/list` returns metadata for registered URI
-templates. These methods do not query application records, return resource
-contents, or expand templates into matching resource URIs.
+templates. By default, these methods do not query application records or
+expand templates into matching resource URIs. To list the caller’s private
+records, add an authenticated, bounded
+[resource inventory callback](/emseepea/resource-inventory/) to a protected template.
+Listing returns metadata; use `resources/read` for contents.
 
 For a large or searchable collection, provide a list or search tool that
 validates its inputs and limits the number of results. The tool can return
