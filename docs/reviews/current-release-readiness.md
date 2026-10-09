@@ -66,6 +66,20 @@ candidate failed required selection-evidence registration at teardown
 assertion and retains the exact argument checks. Neither failed candidate is
 retried, and application acceptance assertions are not weakened.
 
+The next live candidate passed the four-read case but failed the CLI’s final
+three-call evidence ceiling (Release run 37929510230). This candidate removes
+that ceiling and the calls-plus-one turn formula from the shared validator.
+It retains positive integer turn evidence and verifies that recorded call
+counts match actual arrays. Regression checks accept forty-call records for
+both providers and reject missing evidence, inconsistent counts, unexpected
+selections, and failed or incomplete judgments. The saved four-read record
+passes the corrected validator offline without another model run.
+
+That same failed candidate also recorded provider process failures in existing
+tool-server cases. Those failures remain saved; their underlying provider
+cause is not established. The new candidate must qualify all cases without
+retrying either the failed candidate or its failed semantic trials.
+
 Full exact-commit qualification, Node.js 22 and 24 Source Quality, vulnerability
 scanning, initializer qualification, and existing performance budgets must pass.
 Release must pass semantic checks and registry integrity, signatures, provenance,

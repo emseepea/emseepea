@@ -16,5 +16,7 @@
 
 Remove the three-call ceiling from native Claude and Codex semantic conversations.
 Remove Claude’s native four-turn flag, which otherwise blocks longer journeys.
-Keep advertised-tool checks, timeouts, output checks, and tool-free judge limits. Add a real four-read
+Keep advertised-tool checks, timeouts, output checks, and tool-free judge limits.
+Remove the CLI evidence validator’s matching ceiling and turn-count formula
+while preserving complete call evidence and independent judgments. Add a real four-read
 qualification journey and update generated projects and testing guidance.

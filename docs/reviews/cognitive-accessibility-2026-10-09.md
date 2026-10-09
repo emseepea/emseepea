@@ -210,3 +210,21 @@ Result: PASS. Release readiness distinguishes successful native reads and meanin
 | Reviewed file | SHA-256 | Verdict |
 | --- | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `6379cab1df15e69944d810823e61ec77fbdb0ac89de6d5d2b8c48907d7ff8ad5` | PASS |
+
+## Remove the final CLI evidence ceiling
+
+Reviewer: implementation agent conducting a specialist source review against QUALITY.md; no independence or rendered testing is claimed.
+
+Result: PASS. The decision and release notes identify the final evidence-validation ceiling and distinguish provider turns from calls. Release readiness records successful four-read assertions separately from failed overall qualification and unknown provider-process failures. It requires a complete passing new candidate without retries of failed semantic trials. The issue reply is conditional on verified publication. No copy corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `docs/decisions/0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md` | `c56a334702d6d19eef83b26e07124c1e19c54a0d0f4809ced5a6a04c628a422d` | PASS |
+| `docs/decisions/README.md` | `008812ddb52861d82b43351693a8e694373cd90a97f8e8d2f731f06339f66662` | PASS |
+| `docs/reviews/current-release-readiness.md` | `770dd6d7a7c32edd75346c07db1cf5ce37543a296f5aca722b53dd4904ff653f` | PASS |
+| `.changeset/native-conversation-call-count.md` | `a18dca014d22e776c51259a80b254fc5290ce11fdd56871393b17aa482d91d1c` | PASS |
+| `docs/reviews/native-call-limit-resolution-draft-2026-10-09.json` | `b7810b2db2a4f8b87dabc961190309b28101c81ecc1cfe50d48f3ddc593e81c0` | PASS |
+
+| Reviewed public message | SHA-256 of exact body | Verdict |
+| --- | --- | --- |
+| `emseepea/emseepea#150` | `bc9ce4dbe4a66f53e9b4924149a9f42fbd9882b5e7c344e43cde7eb6bcb62472` | PASS, conditional on verified publication |

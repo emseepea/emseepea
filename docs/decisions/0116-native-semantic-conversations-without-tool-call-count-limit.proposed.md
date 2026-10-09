@@ -39,7 +39,10 @@ that decision and replaces the unratified draft.
 
 Chosen option: **"Remove the tool-call count limit"**.
 
-Remove the three-call rejection from the native Claude and Codex parsers.
+Remove the three-call rejection from the native Claude and Codex parsers
+and from the CLI evidence validator. The final validator must not reimpose
+a ceiling after successful native execution. Validate call-count consistency
+and positive integer provider-turn evidence without a calls-plus-one formula.
 Introduce no `maxToolCalls` option, replacement ceiling, or environment override.
 Remove Claude's native conversation `--max-turns 4` flag as well. The first
 release candidate retained it and added a four-turn parser check. All three
