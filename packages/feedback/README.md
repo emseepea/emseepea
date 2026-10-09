@@ -288,6 +288,60 @@ reply was included in a validated MCP tool result available to the AI. It does
 not prove the user read or understood it. No acknowledgement button or reply is
 required.
 
+## Match Annotations to Composed Effects
+
+Override feedback tool annotations when your backend or hooks change a tool's
+effects. Existing defaults remain unchanged.
+
+```ts
+const submission = defineFeedbackSubmission({
+  access: "public",
+  annotations: { destructiveHint: true },
+  backend: feedbackBackend,
+  hooks: [sendSubmissionEmail],
+});
+
+const conversations = defineFeedbackConversation({
+  requiredScopes: ["feedback"],
+  annotations: {
+    create: { destructiveHint: true },
+    reply: { destructiveHint: true },
+    list: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
+    get: {
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
+  },
+  backend: conversationBackend,
+  hooks: [sendConversationEmail],
+});
+```
+
+Classify the complete operation, not only the feedback package's built-in
+persistence step. Include backend writes, lifecycle hooks, queues,
+notifications, and external services.
+
+- A `list` or `get` operation that changes lifecycle state is not read-only.
+  Set `readOnlyHint: false`.
+- If the operation cancels notification state, set `destructiveHint: true`.
+- If repeating the operation can produce a different state transition, set
+  `idempotentHint: false`.
+- A `create`, `reply`, or submission operation that can send email must set
+  `destructiveHint: true`.
+- Set `openWorldHint` to `true` when the complete operation can interact with
+  an external system outside the bounded server. Otherwise set it to `false`.
+
+Tool annotations help MCP clients describe and confirm an operation. They do
+not grant access or replace authentication and authorization. MCP discovery
+reports each configured override while unchanged operations keep the package
+defaults.
+
 ## Choose a Backend
 
 ### Markdown files (one-way submissions)

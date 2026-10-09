@@ -75,3 +75,23 @@ Result: PASS. Split long paragraphs at the transition to the next action or cons
 | `packages/framework/README.md` | `3333ab66c85f503d62bf95e8cb8cb3b460038b72a9e7214a7f929f49e59acb50` | PASS |
 | `website/src/content/docs/examples.md` | `3ea3ab07a1df3aeadd02a45c95eca0be209e5c88d73dd2ffa1030ff373bfd8c2` | PASS |
 | `website/src/content/docs/resource-inventory.md` | `d84d124d3c06b1f6a931d6c178138d3454fe3a1ac7d729c2bfdd3d279315d14a` | PASS |
+## Feedback annotation override guidance
+
+Reviewer: independent cognitive-accessibility specialist.
+
+Result: PASS. The guidance follows a clear sequence: when to override, a code
+example, a classification checklist, then the authorization boundary. The
+package and website use the same operation names and annotation terms. They
+distinguish one submission override from the conversation's create, reply,
+list, and get overrides. The text states that annotations help clients describe
+and confirm operations but do not grant access or replace authentication and
+authorization. The release-readiness record separately identifies the package
+plan, remaining gates, evidence boundary, and residual risk. No cognitive-copy
+corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `.changeset/truthful-feedback-annotations.md` | `3e1ac6577f56bc1dafad21868f57e5da504d34b6a84d9aa5422e2b393ab55622` | PASS |
+| `packages/feedback/README.md` | `de0aa706b488f9d0ca07c76717e1a55046824c6905576038a69b7f402a20c3f0` | PASS |
+| `website/src/content/docs/feedback.md` | `72e57ac60b2e3ca4889caaa3a060b0b203b10c74336810db96528112fe54970e` | PASS |
+| `docs/reviews/current-release-readiness.md` | `4e3cca4fbc2b47258236b8c82b738943431dccd812c5eb04bdfbca7864f349f1` | PASS |
