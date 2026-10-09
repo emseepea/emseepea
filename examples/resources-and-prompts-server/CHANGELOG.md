@@ -1,5 +1,11 @@
 # @emseepea/create-resources-and-prompts-server
 
+## 0.1.8
+
+### Patch Changes
+
+- [`b243edd`](https://github.com/emseepea/emseepea/commit/b243edd94ae68c1151f44f524164b30bf7401c64) Thanks [@tompahoward](https://github.com/tompahoward)! - Upgrade the MCP client to 2.2.0 to address GHSA-6qxp-vccf-f47h. Update generated starters to use the patched testing package and client while retaining the existing server SDK and runtime behavior.
+
 ## 0.1.7
 
 ### Patch Changes
