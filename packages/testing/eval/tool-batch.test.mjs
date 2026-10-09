@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertResponseContains, assertResponseMeaning, createConversation } from "@emseepea/testing/semantic";
+import { assertResponseContains, assertResponseMeaning, assertToolNames, createConversation } from "@emseepea/testing/semantic";
 
 test("a native conversation reads four authoritative records in one answer", async (t) => {
   const chat = await createConversation(t, { server: new URL("./batch-server.mjs", import.meta.url) });
   const answer = await chat.send("What are the departure times for the north, east, south, and west routes?");
+  assertToolNames(answer, Array(4).fill("read-departure"));
   // Independent reads may be scheduled in any order, but every trial must
   // call the real MCP tool exactly once for each requested route.
   for (const calls of answer.toolCalls) {

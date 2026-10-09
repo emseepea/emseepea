@@ -200,3 +200,13 @@ Result: PASS. Guides state that native call and turn count ceilings are absent, 
 | Reviewed public message | SHA-256 of exact body | Verdict |
 | --- | --- | --- |
 | `emseepea/emseepea#150` | `6b44ce923447f9f0ee13b4095bd3b4df0632cd4fa374cab0cf22d928df9ce784` | PASS, conditional on verified publication |
+
+## Register four-read selection evidence
+
+Reviewer: implementation agent conducting a specialist source review against QUALITY.md; no independence or rendered testing is claimed.
+
+Result: PASS. Release readiness distinguishes successful native reads and meaning judgments from the failed qualification status. It identifies the missing required selection-evidence registration and states that the correction adds an assertion while retaining exact argument checks. No copy corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `6379cab1df15e69944d810823e61ec77fbdb0ac89de6d5d2b8c48907d7ff8ad5` | PASS |

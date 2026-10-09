@@ -59,8 +59,12 @@ reads and
 correct route-to-time associations in all three trials. Its synthetic evidence
 is uploaded with the existing release evidence. The failed first candidate
 is retained at Release run 37922640488. It is not
-retried; this candidate fixes the native invocation. Application assertions
-are unchanged.
+retried; the next candidate fixed the native invocation. All three trials
+then completed four reads and passed all nine meaning judgments, but that
+candidate failed required selection-evidence registration at teardown
+(Release run 37926188016). This candidate adds the public `assertToolNames`
+assertion and retains the exact argument checks. Neither failed candidate is
+retried, and application acceptance assertions are not weakened.
 
 Full exact-commit qualification, Node.js 22 and 24 Source Quality, vulnerability
 scanning, initializer qualification, and existing performance budgets must pass.
