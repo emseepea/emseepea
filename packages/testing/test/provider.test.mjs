@@ -113,6 +113,7 @@ test("native conversations expose only the target MCP tools without coaching", (
   assert.equal(invocation.args[invocation.args.indexOf("--tools") + 1], "mcp__emseepea_eval__get-pea");
   assert.equal(invocation.args.includes("--json-schema"), false);
   assert.equal(invocation.args.includes("--safe-mode"), false);
+  assert.equal(invocation.args.includes("--max-turns"), false);
   assert.equal(invocation.args.includes("Choose the MCP tool calls"), false);
   const config = JSON.parse(invocation.args[invocation.args.indexOf("--mcp-config") + 1]);
   assert.deepEqual(config, { mcpServers: { emseepea_eval: {
@@ -180,7 +181,7 @@ test("native tool assertions come from provider MCP events", () => {
 
 });
 
-test("native Claude accepts tool batches without a call-count ceiling but retains round and tool checks", () => {
+test("native Claude accepts tool batches and longer provider journeys but retains evidence and tool checks", () => {
   const uses = Array.from({ length: 40 }, (_, index) => ({
     type: "tool_use", id: `call-${index}`, name: "mcp__emseepea_eval__get-pea",
     input: { name: `Pea ${index}` },
@@ -199,9 +200,11 @@ test("native Claude accepts tool batches without a call-count ceiling but retain
   assert.equal(parsed.providerTurnCount, 2);
   assert.equal(parsed.providerToolCount, 40);
   assert.deepEqual(parsed.calls.at(-1), { name: "get-pea", arguments: { name: "Pea 39" } });
-  for (const num_turns of [0, 5]) {
+  assert.equal(parseNativeClaudeEvents([...events.slice(0, -1), { ...result, num_turns: 41 }],
+    [{ name: "get-pea" }]).providerTurnCount, 41);
+  for (const num_turns of [-1, 0, 1.5, "5", Infinity]) {
     assert.throws(() => parseNativeClaudeEvents([...events.slice(0, -1), { ...result, num_turns }],
-      [{ name: "get-pea" }]), /turn limit/);
+      [{ name: "get-pea" }]), /invalid turn count/);
   }
   assert.throws(() => parseNativeClaudeEvents(events, []), /forbidden tool/);
   assert.throws(() => parseNativeClaudeEvents([events[0], events[2]], [{ name: "get-pea" }]),

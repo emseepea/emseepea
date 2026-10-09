@@ -57,14 +57,11 @@ advertised-tool text, an answer wrapper, or prepared MCP material. Exact tool
 assertions come from the provider's native MCP events. Follow-up messages use
 the same conversation.
 
-Native conversations have no framework tool-call count limit. Calls must still
-use advertised MCP tools. Existing time, token, output-size, and provider
-execution limits remain effective.
-
-Claude allows at most four provider rounds;
-a round can contain several tool calls. Removing the call-count limit does
-not extend that round allowance. Exact application assertions still decide
-which calls and results are acceptable.
+Native conversations have no framework tool-call or native provider-turn count
+limit. Calls must still use advertised MCP tools. The per-send timeout,
+cancellation, output checks, model checks, and isolated test environment remain
+effective. Exact application assertions decide which calls and results are
+acceptable. Tool-free judge invocations retain their existing limits.
 
 Call `await conversation.fresh()` to discard provider transcript history while
 keeping the same running test application and its saved data. The next `send`

@@ -41,11 +41,19 @@ Chosen option: **"Remove the tool-call count limit"**.
 
 Remove the three-call rejection from the native Claude and Codex parsers.
 Introduce no `maxToolCalls` option, replacement ceiling, or environment override.
-Claude provider rounds are independent of call count: one round may contain
-several calls. Validate the existing one-to-four provider-round allowance
-instead of assuming one round per tool call plus the final answer.
+Remove Claude's native conversation `--max-turns 4` flag as well. The first
+release candidate retained it and added a four-turn parser check. All three
+live four-read trials were rejected by that parser check with
+`model command exceeded its turn limit`. A turn-count ceiling must not replace
+the removed call-count ceiling. The saved evidence is in
+[the failed Release run](https://github.com/emseepea/emseepea/actions/runs/37922640488).
 
-Existing time, token, output-size, provider-round, cancellation, isolation,
+Accept positive integer native provider-turn counts without a framework
+ceiling or a one-tool-per-round assumption. Record `maxTurns: null` and
+`judgeMaxTurns: 4` in Claude qualification settings. Tool-free judges keep
+their four-turn invocation flag and single-answer validation.
+
+Existing time, token, output-size, cancellation, isolation,
 advertised-tool, argument, result, and model checks remain effective. Judge
 invocations continue to forbid tool use. Three fresh answer trials and
 independent meaning judgments remain required under ADR-0057.
@@ -62,20 +70,21 @@ tool execution or provide rollback for effects.
 ### Good
 
 - Valid batches of four or more calls can qualify without configuration.
-- Parallel calls no longer violate an incorrect provider-round assumption.
+- Provider execution no longer retains the former ceiling indirectly.
 
 ### Bad
 
 - A model may make more calls within the existing execution allowance.
-- Provider limits still constrain sequential journeys. Removing the count
-  ceiling does not guarantee four sequential Claude calls fit four rounds.
+- Timeouts and provider output/context limits still constrain journeys. This
+  decision does not promise unlimited execution or remove those controls.
 
 ## Confirmation
 
 - Claude and Codex parser checks accept more than three advertised calls and
   preserve each call's result and protocol evidence.
-- Unknown tools, missing results, malformed arguments, and exhausted provider
-  rounds still fail. Existing invocation limits remain checked.
+- Unknown tools, missing results, malformed arguments, and invalid provider
+  turn counts still fail. Native invocation tests reject reintroducing the
+  turn-count flag; tool-free judge limits remain checked.
 - A real native conversation reads four synthetic records through MCP and
   returns the correct route-to-time associations in every trial.
 - Full qualification and publication gates pass before issue closure.

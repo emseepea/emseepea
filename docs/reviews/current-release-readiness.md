@@ -9,11 +9,17 @@ semantic parsers. Tom Howard explicitly directed removal instead of the
 previous draft's configurable budget. ADR-0116 records confirmed oversight.
 No new public option or replacement call-count ceiling is introduced.
 
-Claude validates its existing one-to-four provider-round allowance independently
-of the number of tool calls. Parallel batches can contain several calls in one
-round. Existing time, token, output-size, cancellation, model, isolation,
+The first candidate retained Claude's four-turn flag and added a four-turn
+parser check. That parser check rejected all three live four-read trials
+with `model command exceeded its turn limit`.
+This candidate removes that native flag and the parser turn-count ceiling,
+while retaining positive-integer evidence validation. Claude settings record
+`maxTurns: null` and the unchanged `judgeMaxTurns: 4`.
+
+Existing per-send timeouts, output checks, cancellation, model, isolation,
 advertised-tool, and result checks remain effective. Judge calls still forbid
-tools. Application assertions, three trials, and independent judgments remain.
+tools and keep their prior execution limit. Exact application assertions,
+three answer trials, and independent meaning judgments remain required.
 
 ## Planned package set
 
@@ -45,12 +51,16 @@ job, persona, or application execution boundary is introduced.
 
 Parser regression checks accept forty advertised calls through both providers
 and retain all results and hashed protocol evidence. Claude checks also cover
-parallel calls, rejected provider-round counts, and missing results. Existing
-negative checks retain forbidden-tool, authentication, model, and session rules.
-A new live native timetable journey requires exactly four real MCP reads and
+parallel calls, longer native journeys, invalid turn counts, and missing
+results. Existing negative checks retain forbidden-tool, authentication, model, and session rules.
+Invocation tests ensure the native turn flag is absent and the judge flag
+remains. A new live native timetable journey requires exactly four real MCP
+reads and
 correct route-to-time associations in all three trials. Its synthetic evidence
-is uploaded with the existing release evidence. Failed semantic trials are
-not retried and application assertions are not weakened.
+is uploaded with the existing release evidence. The failed first candidate
+is retained at Release run 37922640488. It is not
+retried; this candidate fixes the native invocation. Application assertions
+are unchanged.
 
 Full exact-commit qualification, Node.js 22 and 24 Source Quality, vulnerability
 scanning, initializer qualification, and existing performance budgets must pass.
@@ -59,8 +69,8 @@ and fresh installs. Publish must verify latest and deploy the guide.
 
 Residual risk: a provider may make more calls within existing execution limits.
 Parser count rejection was post-execution and did not protect against effects.
-Use isolated synthetic applications for qualification. Provider rounds still
-bound sequential Claude journeys; this release does not promise unlimited
+Use isolated synthetic applications for qualification. Timeouts and provider
+context/output limits remain; this release does not promise unlimited
 execution. Residual risk is within the Low appetite, conditional on all gates.
 
 ## Conditional release readiness

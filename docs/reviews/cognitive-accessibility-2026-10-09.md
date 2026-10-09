@@ -180,3 +180,23 @@ Result: PASS. The testing guide separates the execution-limit statement from the
 | Reviewed file | SHA-256 | Verdict |
 | --- | --- | --- |
 | `packages/testing/README.md` | `bb8de6761a66956800e92e81655c81e8f7156d9bcacc2347c2dcbd9e314f2dfc` | PASS |
+
+## Complete removal of native count ceilings after live evidence
+
+Reviewer: implementation agent conducting a specialist source review against QUALITY.md. This review does not claim independence or rendered/mobile testing.
+
+Result: PASS. Guides state that native call and turn count ceilings are absent, identify remaining timeout and isolation controls, and distinguish tool-free judge limits. The decision and release readiness accurately identify the failed parser check and link the original candidate evidence. The conditional issue reply describes the repaired candidate without claiming the failed candidate passed or was retried. No copy corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `packages/testing/README.md` | `5fd7de0ff6f604ed214aacf62901e5cd58b58bcff9c0d40cabe2566b44da1904` | PASS |
+| `website/src/content/docs/ai-tests.md` | `a34fd53f6bba051c7e3aad7e2439a18c059fc6964fb94d60a06726d11eab2eb8` | PASS |
+| `docs/decisions/0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md` | `d099a56ea755dfd48a8a77826f21feb11827daa7da2ffe04b33fa5babbf902f4` | PASS |
+| `docs/decisions/README.md` | `008812ddb52861d82b43351693a8e694373cd90a97f8e8d2f731f06339f66662` | PASS |
+| `.changeset/native-conversation-call-count.md` | `20ab6cfcd49f34fd023bef482df079acb07a32f932a9b22e3d4a55df0c213b24` | PASS |
+| `docs/reviews/current-release-readiness.md` | `ac6aa1267c0ac4958506ebad61ca2532a64c90b2ab628d5b43e38dff3508f15e` | PASS |
+| `docs/reviews/native-call-limit-resolution-draft-2026-10-09.json` | `3f34c47f1db1f5d914c9d8faacccca30cd7ef6d472b371b67ad9a10163296d0c` | PASS |
+
+| Reviewed public message | SHA-256 of exact body | Verdict |
+| --- | --- | --- |
+| `emseepea/emseepea#150` | `6b44ce923447f9f0ee13b4095bd3b4df0632cd4fa374cab0cf22d928df9ce784` | PASS, conditional on verified publication |

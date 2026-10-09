@@ -2528,6 +2528,6 @@ Chosen option: **"Remove the tool-call count limit"**.
 #### ADR-0116 Checks
 
 - Claude and Codex parser checks accept more than three advertised calls and preserve each call's result and protocol evidence.
-- Unknown tools, missing results, malformed arguments, and exhausted provider rounds still fail. Existing invocation limits remain checked.
+- Unknown tools, missing results, malformed arguments, and invalid provider turn counts still fail. Native invocation tests reject reintroducing the turn-count flag; tool-free judge limits remain checked.
 - A real native conversation reads four synthetic records through MCP and returns the correct route-to-time associations in every trial.
 - Full qualification and publication gates pass before issue closure.

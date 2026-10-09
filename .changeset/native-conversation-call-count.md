@@ -15,6 +15,6 @@
 ---
 
 Remove the three-call ceiling from native Claude and Codex semantic conversations.
-Keep advertised-tool checks and existing execution limits, and validate Claude
-provider rounds independently of parallel tool-call counts. Add a real four-read
+Remove Claude’s native four-turn flag, which otherwise blocks longer journeys.
+Keep advertised-tool checks, timeouts, output checks, and tool-free judge limits. Add a real four-read
 qualification journey and update generated projects and testing guidance.

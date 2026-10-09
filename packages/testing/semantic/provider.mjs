@@ -50,7 +50,7 @@ export function providerSettings(provider) {
         userConfig: "ignored",
         webSearch: false,
       }
-    : { effort: "low", maxTurns: 4, permissionMode: "dontAsk", userSettings: false };
+    : { effort: "low", maxTurns: null, judgeMaxTurns: 4, permissionMode: "dontAsk", userSettings: false };
 }
 
 export function parseClaudeEvents(stdout, processExitCode = 0) {
@@ -151,11 +151,8 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
   if ((result.permission_denials?.length ?? 0) > 0) {
     throw new Error("Model command attempted a forbidden action");
   }
-  if (!Number.isInteger(result.num_turns)) throw new Error("Model command returned an invalid turn count");
-  // Native rounds can contain several tool calls. Count limits apply to
-  // provider rounds, independently of the number of advertised MCP calls.
-  if (result.num_turns < 1 || result.num_turns > 4) {
-    throw new Error("Model command exceeded its turn limit");
+  if (!Number.isInteger(result.num_turns) || result.num_turns < 1) {
+    throw new Error("Model command returned an invalid turn count");
   }
   const usage = result.modelUsage?.[claudeModel];
   if (usage?.canonicalModel !== claudeModel || usage.provider !== "firstParty") {
@@ -248,7 +245,6 @@ export function conversationInvocation(provider, directory, url, tools, authToke
       "--verbose",
       "--model", claudeModel,
       "--effort", "low",
-      "--max-turns", "4",
       "--strict-mcp-config",
       ...(config ? ["--mcp-config", JSON.stringify(config)] : []),
       "--disable-slash-commands",
