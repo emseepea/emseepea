@@ -496,7 +496,6 @@ function safeModelFailure(error) {
     "Model command did not resume the required session",
     "Model command reported a failed MCP tool call",
     "Model command exposed a configured secret",
-    "Model command used more than three tools",
     "Model conversation already has a pending turn",
     "Model conversation could not start",
     "Model conversation is closed",

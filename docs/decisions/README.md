@@ -81,7 +81,7 @@ recorded separately.
 - [ADR-0113: Operational Docs-Only Quality Runs Without Release Authority](0113-operational-docs-only-quality-runs-without-release-authority.proposed.md): Proposed; human review confirmed.
 - [ADR-0114: Checked Fresh Versions for Abandoned Staged Candidates](0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0115: Authenticated Listing of Private Resource Inventory](0115-authenticated-private-resource-inventory-listing.proposed.md): Proposed; human review confirmed.
-- [ADR-0116: Bounded Native Semantic Tool-Call Budgets](0116-bounded-native-semantic-tool-call-budgets.proposed.md): Proposed; human review pending.
+- [ADR-0116: Native Semantic Conversations Without a Tool-Call Count Limit](0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2516,25 +2516,18 @@ Chosen option: **"Fixed templates with authenticated, live inventory listing"**,
 - Documentation covers the callback contract, ownership responsibility, ordering, cursor expiry and restart, process/instance limits, cleanup, and safe read errors.
 - Normal protocol, packed-consumer, authentication-isolation, qualification, and release gates pass. Native-client success requires its own separate evidence.
 
-### [ADR-0116: Bounded Native Semantic Tool-Call Budgets](0116-bounded-native-semantic-tool-call-budgets.proposed.md)
+### [ADR-0116: Native Semantic Conversations Without a Tool-Call Count Limit](0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
+- Human review: Confirmed
 
 #### ADR-0116 Decision
 
-Chosen option: **"Explicit per-turn budget with a finite ceiling"**, subject to human ratification of all terms below. Supplement ADR-0057's inherited call limit; its native journey, evidence, independent judgments, and no-retry policy remain applicable.
+Chosen option: **"Remove the tool-call count limit"**.
 
 #### ADR-0116 Checks
 
-- Types and runtime validation accept 1–32 and reject zero, negatives, fractions, non-numbers, infinities, and values above 32 before execution.
-- The default rejects a fourth call in both native provider parsers.
-- A configured larger budget admits a valid four-call native conversation where actual provider rounds fit the unchanged independent limit.
-- Unknown tools, wrong servers, invalid calls, missing results, exhausted budgets, and provider limits fail with distinct bounded evidence.
-- Repeated calls and validation retries consume the allowance; application assertions retain their existing exactness and failure behavior.
-- Follow-up sends and `fresh()` use the configured allowance independently.
-- Credential, endpoint, environment, and provider-event sentinels are absent from success and failure evidence, including adversarial invalid payloads.
-- Oversized evidence retains counts, hashes, and explicit truncation markers without altering the original failed outcome.
-- Native batching and provider-round validation are checked with real provider evidence; synthetic parser fixtures are labelled as such.
-- Genuine live acceptance evidence is retained for each provider claimed supported. An unavailable provider remains incomplete rather than passing.
-- Existing Claude scenarios, packed installs, exact-source qualification, vulnerability, performance, semantic release, and publication gates pass.
+- Claude and Codex parser checks accept more than three advertised calls and preserve each call's result and protocol evidence.
+- Unknown tools, missing results, malformed arguments, and exhausted provider rounds still fail. Existing invocation limits remain checked.
+- A real native conversation reads four synthetic records through MCP and returns the correct route-to-time associations in every trial.
+- Full qualification and publication gates pass before issue closure.

@@ -152,3 +152,23 @@ Result: PASS. The final documentation preserves the landed create, reply, list, 
 | Reviewed public message | SHA-256 of exact body | Verdict |
 | --- | --- | --- |
 | `emseepea/emseepea#153` | `5b70d40d52f9c3be73ce0894b348728d318e9bab5faebd400c417b2d500ae2f0` | PASS, conditional on verified publication |
+
+## Remove native semantic tool-call count limits
+
+Reviewer: implementation agent conducting a specialist source review against QUALITY.md. This review does not claim independence or rendered/mobile testing.
+
+Result: PASS. The decision records Tom’s explicit direction and clearly separates tool counts from provider rounds. Guides state the remaining execution limits and the need for exact application assertions. Release readiness and the conditional issue reply identify versions, verification requirements, and the limits of failure evidence. No copy corrections remain. The issue reply must be posted only after verified publication.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `packages/testing/README.md` | `d6b011649b75312522427c726180096c159cfd36d4537aeb9381cf03abebe875` | PASS |
+| `website/src/content/docs/ai-tests.md` | `146805cd5b921c388e666c6f57541e63753317d93517bf5acc2d08d7de294464` | PASS |
+| `docs/decisions/0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md` | `a8e7a1d084fec3fb90ae75d335b9769e74ce7c99f297872054449b566c431b6f` | PASS |
+| `docs/decisions/README.md` | `584ef8cb1c56adf4b71d2aa21051d7f0db84e91d5f6e9c25c0bc465be738211b` | PASS |
+| `.changeset/native-conversation-call-count.md` | `c1bfcbd114d53ca4876f82bed439de37c98c1c296a88c7fcbb805821e96eef94` | PASS |
+| `docs/reviews/current-release-readiness.md` | `50c0e98fc4d9eb92810fdf40f481e93b995a548f1cb71844fd5c258de00b181a` | PASS |
+| `docs/reviews/native-call-limit-resolution-draft-2026-10-09.json` | `d66bfa2cee5e617c1509f3061451f052230e0e9914ff7a5fabe648dbfc36ea95` | PASS |
+
+| Reviewed public message | SHA-256 of exact body | Verdict |
+| --- | --- | --- |
+| `emseepea/emseepea#150` | `a469b94d6bfeb3d93395064903238d329d79833cf68faedeffb0b6adde075e7f` | PASS, conditional on verified publication |

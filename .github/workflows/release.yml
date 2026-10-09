@@ -85,6 +85,7 @@ jobs:
           path: |
             examples/*/artifacts/llm-eval/evidence.json
             packages/feedback/artifacts/llm-eval/evidence.json
+            packages/testing/artifacts/llm-eval/evidence.json
           if-no-files-found: error
           retention-days: 14
 

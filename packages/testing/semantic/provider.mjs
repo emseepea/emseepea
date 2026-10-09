@@ -115,11 +115,6 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
     }
     return { name: publicName, arguments: input };
   });
-  if (toolUses.length > 3) {
-    throw Object.assign(new Error("Model command used more than three tools"), {
-      attemptedToolCalls: calls,
-    });
-  }
   if (init) {
     const available = [...(init.tools ?? [])].sort();
     const expected = [...advertised.keys()].sort();
@@ -157,8 +152,10 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
     throw new Error("Model command attempted a forbidden action");
   }
   if (!Number.isInteger(result.num_turns)) throw new Error("Model command returned an invalid turn count");
-  if (result.num_turns !== toolUses.length + 1) {
-    throw new Error("Model command used an unexpected number of turns");
+  // Native rounds can contain several tool calls. Count limits apply to
+  // provider rounds, independently of the number of advertised MCP calls.
+  if (result.num_turns < 1 || result.num_turns > 4) {
+    throw new Error("Model command exceeded its turn limit");
   }
   const usage = result.modelUsage?.[claudeModel];
   if (usage?.canonicalModel !== claudeModel || usage.provider !== "firstParty") {
@@ -444,7 +441,6 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
   const forbidden = completed.filter((item) => !["agent_message", "reasoning", "mcp_tool_call"].includes(item?.type));
   if (forbidden.length) throw new Error("Model command used a forbidden tool");
   const toolItems = completed.filter(({ type }) => type === "mcp_tool_call");
-  if (toolItems.length > 3) throw new Error("Model command used more than three tools");
   const calls = toolItems.map((item) => {
     if (item.server !== mcpServerName || !advertised.has(item.tool)
       || !item.arguments || typeof item.arguments !== "object" || Array.isArray(item.arguments)) {

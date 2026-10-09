@@ -126,6 +126,12 @@ const recalled = await chat.send("What did I save earlier?");
 The next `send` creates a new native provider session in every trial. The three
 trial applications remain isolated from one another.
 
+Native conversations have no framework tool-call count limit. Existing time,
+token, output-size, and provider execution limits remain effective. Claude
+allows at most four provider rounds; a round can contain several tool calls.
+Removing the call-count limit does not extend that round allowance. Exact
+application assertions still decide which calls and results are acceptable.
+
 The provider is connected to exactly one loopback MCP server and may use only
 that server's advertised tools. Shell, filesystem, browser, tool search,
 plugins, ambient MCP servers, and unrelated tools are unavailable. Native calls

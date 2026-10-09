@@ -46,7 +46,8 @@
     "build": "tsc -p tsconfig.json",
     "prepack": "npm run build",
     "test": "npm run build && npm run test:built",
-    "test:built": "node --test test/*.test.mjs"
+    "test:built": "node --test test/*.test.mjs",
+    "test:llm:built": "emseepea-test eval"
   },
   "dependencies": {
     "@emseepea/server": "0.23.0",
