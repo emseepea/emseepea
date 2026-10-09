@@ -6,7 +6,7 @@ Date: 2026-10-09
 
 Issue #153 adds checked annotation options to `defineFeedbackSubmission` and
 `defineFeedbackConversation`. Submission accepts four optional boolean flags;
-conversation configuration maps exact public tool names to those flags.
+conversation configuration maps create, reply, list, and get to those flags.
 Omitted and undefined values preserve current defaults. Invalid fields, flag
 values, and operation names fail before registration. Definitions capture the
 configuration rather than retain mutable caller objects.
@@ -37,6 +37,10 @@ The private website version moves to 0.0.10 to deploy annotation guidance.
 Server, testing, and UI packages are not planned for release.
 
 ## Architecture and jobs to be done
+
+The merged implementation preserves the API already landed on main and adds
+public-boundary and packed-install coverage. Explicit undefined flags retain
+defaults, and null configuration is rejected.
 
 This is an additive configuration of the existing checked tool contract under
 ADR-0006 and the pluggable backend and hook boundary under ADR-0066. Current

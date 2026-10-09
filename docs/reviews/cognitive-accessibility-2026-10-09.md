@@ -114,3 +114,41 @@ Result: PASS. The defaults table uses shorter column labels, explicit row header
 | Reviewed file | SHA-256 | Verdict |
 | --- | --- | --- |
 | `website/src/content/docs/feedback.md` | `74b0849b18663de51f05a3650f041d529fc8c7c631cb1df701e74cd5786302ec` | PASS |
+## Feedback annotation override guidance
+
+Reviewer: independent cognitive-accessibility specialist.
+
+Result: PASS. The guidance follows a clear sequence: when to override, a code
+example, a classification checklist, then the authorization boundary. The
+package and website use the same operation names and annotation terms. They
+distinguish one submission override from the conversation's create, reply,
+list, and get overrides. The text states that annotations help clients describe
+and confirm operations but do not grant access or replace authentication and
+authorization. The release-readiness record separately identifies the package
+plan, remaining gates, evidence boundary, and residual risk. No cognitive-copy
+corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `.changeset/truthful-feedback-annotations.md` | `3e1ac6577f56bc1dafad21868f57e5da504d34b6a84d9aa5422e2b393ab55622` | PASS |
+| `packages/feedback/README.md` | `de0aa706b488f9d0ca07c76717e1a55046824c6905576038a69b7f402a20c3f0` | PASS |
+| `website/src/content/docs/feedback.md` | `72e57ac60b2e3ca4889caaa3a060b0b203b10c74336810db96528112fe54970e` | PASS |
+| `docs/reviews/current-release-readiness.md` | `4e3cca4fbc2b47258236b8c82b738943431dccd812c5eb04bdfbca7864f349f1` | PASS |
+
+## Reconciled feedback annotation API and release copy
+
+Reviewer: implementation agent conducting a specialist cognitive-accessibility source review against QUALITY.md. This does not claim independence or rendered/mobile testing.
+
+Result: PASS. The final documentation preserves the landed create, reply, list, and get API and explains strict validation, default preservation, and the meaning of open-world classification. The notification section belongs to the support-conversation heading. Readiness covers the complete package plan and separates the pending ADR draft from released behavior. The resolution draft remains conditional on verified publication. No copy corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `packages/feedback/README.md` | `080cbc8cd5b3372f83a2f786d6a6f4051033e56de9d0b8aa3539ea935869ca03` | PASS |
+| `website/src/content/docs/feedback.md` | `596891a0a8a3e5e0c2446dcf0e9c6ab68763f53db9fa5420141647d9860bf1a9` | PASS |
+| `.changeset/feedback-effect-annotations.md` | `52d870caf8aff44338f95707be2ad83d2cff9005c0048ec816100b467bdedcc0` | PASS |
+| `docs/reviews/current-release-readiness.md` | `9c8882d23bc93102dad9d306c8897d211f0a2ad23d0fd5d648951c8e5b7c79b0` | PASS |
+| `docs/reviews/feedback-annotations-resolution-draft-2026-10-09.json` | `f6807006f7bde500e93a8170fcf896f643e74c214440bdeffcfeecde54ef2a6e` | PASS |
+
+| Reviewed public message | SHA-256 of exact body | Verdict |
+| --- | --- | --- |
+| `emseepea/emseepea#153` | `5b70d40d52f9c3be73ce0894b348728d318e9bab5faebd400c417b2d500ae2f0` | PASS, conditional on verified publication |

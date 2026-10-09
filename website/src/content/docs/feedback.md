@@ -137,91 +137,70 @@ or files force-added to Git. Check those before sharing your repository.
 This destination has no team reply path. Choose a conversation backend when
 users need responses.
 
-## Classify your backend’s effects
+## Match annotations to composed effects
 
-Set `annotations` when your backend or event hooks have effects that differ
-from the helper’s defaults. Classify the whole operation, including retention
-updates, notice cancellation, and email delivery. These hints describe behavior;
-they do not change execution, authorization, persistence, or retries.
-
-For submission, pass a partial object with the flags you need to change:
+Override feedback tool annotations when your backend or hooks change a tool's
+effects. Existing defaults remain unchanged.
 
 ```ts
 const submission = defineFeedbackSubmission({
   access: "public",
-  backend: submissionBackend,
-  hooks: [queueEmail],
-  annotations: { destructiveHint: true, openWorldHint: false },
+  annotations: { destructiveHint: true },
+  backend: feedbackBackend,
+  hooks: [sendSubmissionEmail],
 });
-```
 
-`submissionBackend` and `queueEmail` are application-owned. No email is sent
-by setting a hint. Only choose `openWorldHint: false` when the complete
-operation is confined to a bounded private domain.
-
-For conversations, use the exact public MCP tool name as the map key. Each
-operation may have different effects:
-
-```ts
-const conversation = defineFeedbackConversation({
+const feedbackTools = defineFeedbackConversation({
   requiredScopes: ["feedback"],
-  backend: conversationBackend,
   annotations: {
-    "create-feedback-thread": { destructiveHint: true },
-    "reply-to-feedback-thread": { destructiveHint: true },
-    "list-feedback-threads": {
+    create: { destructiveHint: true },
+    reply: { destructiveHint: true },
+    list: {
       readOnlyHint: false,
       destructiveHint: true,
       idempotentHint: false,
       openWorldHint: false,
     },
-    "get-feedback-thread": { idempotentHint: false },
+    get: {
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
   },
+  backend: conversationBackend,
+  hooks: [sendConversationEmail],
 });
 ```
 
-This list configuration fits a backend that writes retention activity and
-cancels an inactivity notice on each read. It remains the application’s
-responsibility to classify the actual backend and hook chain correctly.
-Internet connectivity alone does not determine whether an operation is
-open-world.
+Classify the complete operation, not only the feedback package's built-in
+persistence step. Include backend writes, lifecycle hooks, queues,
+notifications, and external services.
 
-Each flag is optional. Omitted or `undefined` flags keep these defaults:
+- A `list` or `get` operation that changes lifecycle state is not read-only.
+  Set `readOnlyHint: false`.
+- If the operation cancels notification state, set `destructiveHint: true`.
+- If repeating the operation can produce a different state transition, set
+  `idempotentHint: false`.
+- A `create`, `reply`, or submission operation that can send email must set
+  `destructiveHint: true`.
+- Set `openWorldHint` to `true` when the complete operation can interact with
+  an external domain beyond the operation’s declared bounds. Otherwise set
+  it to `false`.
 
-<table tabindex="0" aria-label="Default feedback tool annotations">
+Internet connectivity alone does not make an operation open-world. A bounded
+private account can remain closed-world even when it uses a remote service.
 
-  <thead><tr><th>Tool</th><th>Read-only</th><th>Destructive</th><th>Idempotent</th><th>Open-world</th></tr></thead>
+Overrides accept only the four boolean flags shown above. Omitted or
+`undefined` flags retain current defaults. Invalid flag values or operation
+keys fail at definition time, and later mutation does not change discovery.
+The exported types are `FeedbackToolAnnotationOverrides` and
+`FeedbackConversationAnnotationOverrides`. Collection and operator helpers
+keep their existing annotation contracts.
 
-  <tbody>
-
-    <tr><th scope="row"><code>submit-feedback</code></th><td>false</td><td>false</td><td>false</td><td>true</td></tr>
-
-    <tr><th scope="row"><code>create-feedback-thread</code></th><td>false</td><td>false</td><td>false</td><td>true</td></tr>
-
-    <tr><th scope="row"><code>reply-to-feedback-thread</code></th><td>false</td><td>false</td><td>false</td><td>true</td></tr>
-
-    <tr><th scope="row"><code>list-feedback-threads</code></th><td>true</td><td>false</td><td>true</td><td>true</td></tr>
-
-    <tr><th scope="row"><code>get-feedback-thread</code></th><td>false</td><td>false</td><td>true</td><td>true</td></tr>
-
-  </tbody>
-
-</table>
-
-Use `readOnlyHint: true` only when the operation does not modify state.
-Repeated calls must have no additional effect to claim `idempotentHint: true`.
-Set `destructiveHint` according to the complete operation’s destructive or
-irreversible effects. Descriptions still need to explain those effects to users.
-
-Configuration is checked and captured when the helper is defined. Unsupported
-keys and non-boolean values fail before registration. Mutating the original
-object later does not update discovery; define and deploy the revised tool.
-The exported types are `FeedbackToolAnnotations`,
-`FeedbackConversationToolName`, and `FeedbackConversationAnnotations`.
-
-This option applies to `defineFeedbackSubmission` and
-`defineFeedbackConversation`. It does not override collection or operator
-helper annotations.
+Tool annotations help MCP clients describe and confirm an operation. They do
+not grant access or replace authentication and authorization. MCP discovery
+reports each configured override while unchanged operations keep the package
+defaults.
 
 ## Add a support conversation
 

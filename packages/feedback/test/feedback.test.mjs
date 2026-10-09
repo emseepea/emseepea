@@ -261,6 +261,117 @@ test("keeps protected feedback conversations scoped, append-only, and inspectabl
   assert.doesNotMatch(JSON.stringify(events), /filters|thank you/);
 });
 
+test("publishes configured feedback annotations through MCP discovery", async (t) => {
+  const submissionAnnotations = {
+    destructiveHint: true,
+    openWorldHint: false,
+  };
+  const conversationAnnotations = {
+    create: { destructiveHint: true, openWorldHint: false },
+    reply: { destructiveHint: true, openWorldHint: false },
+    list: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
+    get: {
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
+  };
+  const unusedConversationBackend = {
+    createThread() { throw new Error("not called"); },
+    appendMessage() { throw new Error("not called"); },
+    listThreads() { throw new Error("not called"); },
+    getThread() { throw new Error("not called"); },
+  };
+  const tools = [
+    defineFeedbackSubmission({
+      access: "public",
+      annotations: submissionAnnotations,
+      backend: { submit() { throw new Error("not called"); } },
+    }),
+    ...defineFeedbackConversation({
+      requiredScopes: ["feedback"],
+      annotations: conversationAnnotations,
+      backend: unusedConversationBackend,
+    }),
+  ];
+
+  submissionAnnotations.destructiveHint = false;
+  conversationAnnotations.create.openWorldHint = true;
+  conversationAnnotations.list.readOnlyHint = true;
+
+  const running = await startEmseepea(t, createEmseepea({
+    name: "configured-feedback-annotations-test",
+    version: "0.0.0",
+    tools,
+    authentication: insecureTestAuthentication(["feedback"]),
+  }));
+  const listed = (await (await running.connect("test-token")).listTools()).tools;
+  assert.deepEqual(
+    Object.fromEntries(listed.map(({ name, annotations }) => [name, annotations])),
+    {
+      "submit-feedback": {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      "create-feedback-thread": {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      "reply-to-feedback-thread": {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      "list-feedback-threads": {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+      "get-feedback-thread": {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+    },
+  );
+});
+
+test("rejects invalid feedback annotation configuration at construction", () => {
+  const backend = {
+    createThread() { throw new Error("not called"); },
+    appendMessage() { throw new Error("not called"); },
+    listThreads() { throw new Error("not called"); },
+    getThread() { throw new Error("not called"); },
+  };
+  assert.throws(() => defineFeedbackSubmission({
+    access: "public",
+    annotations: { destructiveHint: "yes" },
+    backend: { submit() { throw new Error("not called"); } },
+  }), /boolean/i);
+  assert.throws(() => defineFeedbackConversation({
+    requiredScopes: ["feedback"],
+    annotations: { archive: { destructiveHint: true } },
+    backend,
+  }), /unrecognized|archive/i);
+  assert.throws(() => defineFeedbackConversation({
+    requiredScopes: ["feedback"],
+    annotations: { list: { recipient: "support@example.com" } },
+    backend,
+  }), /unrecognized|recipient/i);
+});
+
 test("rejects unsafe access and invalid backend output without leaking it", async (t) => {
   assert.throws(() => defineFeedbackSubmission({
     access: "protected",

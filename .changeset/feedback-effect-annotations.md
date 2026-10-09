@@ -14,8 +14,7 @@
 "@emseepea/create-tool-server": patch
 ---
 
-Allow submission and conversation helpers to declare the actual effects of
-adopter backends and hooks through checked, optional tool annotations.
-Conversation overrides are keyed by public MCP tool name; omitted flags retain
-the current defaults. Update generated projects to the new feedback version
-and document configuration and classification responsibilities.
+Complete annotation override validation by preserving defaults for explicitly
+undefined flags and rejecting null configuration. Verify composed lifecycle
+and hook effects through real MCP clients and fresh packed installs. Update
+generated projects to the new feedback version and deploy the guidance.

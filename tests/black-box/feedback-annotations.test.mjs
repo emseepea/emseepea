@@ -6,6 +6,8 @@ import { defineFeedbackConversation, defineFeedbackSubmission } from "@emseepea/
 
 const now = "2026-10-09T00:00:00.000Z";
 const names = ["create-feedback-thread", "reply-to-feedback-thread", "list-feedback-threads", "get-feedback-thread"];
+const operation = { "create-feedback-thread": "create", "reply-to-feedback-thread": "reply",
+  "list-feedback-threads": "list", "get-feedback-thread": "get" };
 const defaults = (name) => ({ readOnlyHint: name === "list-feedback-threads", destructiveHint: false,
   idempotentHint: ["list-feedback-threads", "get-feedback-thread"].includes(name), openWorldHint: true });
 function fixture() {
@@ -31,7 +33,7 @@ async function connect(t, tools, discovery = "public") {
 }
 
 test("conversation discovery preserves defaults with absent, empty, and undefined overrides", async (t) => {
-  for (const annotations of [undefined, {}, { "list-feedback-threads": { readOnlyHint: undefined, destructiveHint: undefined } }]) {
+  for (const annotations of [undefined, {}, { list: { readOnlyHint: undefined, destructiveHint: undefined } }]) {
     const f = fixture();
     const client = await connect(t, defineFeedbackConversation({ requiredScopes: ["feedback"], backend: f.backend, annotations }));
     const tools = (await client.listTools()).tools;
@@ -45,21 +47,21 @@ test("per-tool overrides reach public and protected MCP discovery and preserve c
   for (const discovery of ["public", "protected"]) {
     const f = fixture();
     const annotations = {
-      "create-feedback-thread": { destructiveHint: true },
-      "reply-to-feedback-thread": { idempotentHint: true, openWorldHint: false },
-      "list-feedback-threads": { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
-      "get-feedback-thread": { idempotentHint: false },
+      create: { destructiveHint: true },
+      reply: { idempotentHint: true, openWorldHint: false },
+      list: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
+      get: { idempotentHint: false },
     };
     const tools = defineFeedbackConversation({ requiredScopes: ["feedback"], backend: f.backend, annotations });
     // Definitions capture the checked configuration, not later mutations.
-    annotations["list-feedback-threads"].readOnlyHint = true;
+    annotations.list.readOnlyHint = true;
     const client = await connect(t, tools, discovery);
     const advertised = (await client.listTools()).tools;
     const expected = {
       ...annotations,
-      "list-feedback-threads": { ...annotations["list-feedback-threads"], readOnlyHint: false },
+      list: { ...annotations.list, readOnlyHint: false },
     };
-    for (const tool of advertised) assert.deepEqual(tool.annotations, { ...defaults(tool.name), ...expected[tool.name] });
+    for (const tool of advertised) assert.deepEqual(tool.annotations, { ...defaults(tool.name), ...expected[operation[tool.name]] });
     assert.equal(f.state.activityWrites, 0);
     for (let call = 0; call < 2; call++) {
       const result = await client.callTool({ name: "list-feedback-threads", arguments: {} });
@@ -106,9 +108,9 @@ test("invalid flags and unknown operation names fail before backend or hook exec
     { idempotentHint: null }, { openWorldHint: {} }, { title: "unsupported" }, { destrutiveHint: true }]) {
     assert.throws(() => defineFeedbackSubmission({ access: "public", backend: f.submission, annotations }));
     assert.throws(() => defineFeedbackConversation({ requiredScopes: ["feedback"], backend: f.backend,
-      annotations: { "list-feedback-threads": annotations } }));
+      annotations: { list: annotations } }));
   }
-  for (const annotations of [null, [], false, { listThreads: {} }, { "unknown-operation": {} }])
+  for (const annotations of [null, [], false, { listThreads: {} }, { "list-feedback-threads": {} }, { "unknown-operation": {} }])
     assert.throws(() => defineFeedbackConversation({ requiredScopes: ["feedback"], backend: f.backend, annotations }));
   assert.deepEqual(f.state, { activityWrites: 0, inactivityNotice: true, submissions: 0, notifications: 0 });
 });
