@@ -1,5 +1,17 @@
 # @emseepea/create-multi-instance-postgres-server
 
+## 0.1.9
+
+### Patch Changes
+
+- [`968f41e`](https://github.com/emseepea/emseepea/commit/968f41ec83bda45bd6872a96c1ec8f82930078df) Thanks [@tompahoward](https://github.com/tompahoward)! - Add authenticated private resource inventory listing to protected resource
+  templates. Callbacks receive the validated caller and bounded query position;
+  opaque cursors expire fifteen minutes after the first page and remain local to
+  the serving process. Reads recheck access. Document ownership, authorization,
+  live pagination, and restart behavior.
+
+  Refresh initializer dependency versions for the new server release.
+
 ## 0.1.8
 
 ### Patch Changes

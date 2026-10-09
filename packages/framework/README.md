@@ -1110,10 +1110,20 @@ With public discovery, return suggestions that are safe to expose in that
 catalogue. With protected discovery, the framework authenticates before the
 completion callback runs.
 
-Em See Pea does not enumerate every concrete address that could match a
-resource template or permit unbounded catalogue pages. Applications provide a
-purpose-built search or list tool when clients need concrete records, then the
-client uses `resources/read` for the selected URI.
+A protected, discoverable resource template may add a `list` callback to
+return bounded metadata for the caller’s records. This makes the entire
+`resources/list` method authenticated, including with public discovery. The
+callback receives the validated principal, cancellation signal, deadline,
+and exclusive ordering key. Reads check access again.
+
+See the [private resource inventory guide](https://emseepea.github.io/emseepea/resource-inventory/)
+for the API, ownership rules, page bounds, and cursor limits. Cursors expire
+fifteen minutes after the first page and are local to the serving process;
+pages query live records rather than a snapshot.
+
+Without a callback, static
+listing behavior is unchanged. A purpose-built search tool remains useful
+when clients need searchable record details.
 
 ## Tool That Requires Sign-In
 

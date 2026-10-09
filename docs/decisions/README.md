@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 111 decisions: 65 current and 46 historical.
+This project has 112 decisions: 66 current and 46 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -80,6 +80,7 @@ recorded separately.
 - [ADR-0112: Range-Bound Docs-Only Local Push Qualification](0112-range-bound-docs-only-local-push-qualification.proposed.md): Proposed; human review confirmed.
 - [ADR-0113: Operational Docs-Only Quality Runs Without Release Authority](0113-operational-docs-only-quality-runs-without-release-authority.proposed.md): Proposed; human review confirmed.
 - [ADR-0114: Checked Fresh Versions for Abandoned Staged Candidates](0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0115: Authenticated Listing of Private Resource Inventory](0115-authenticated-private-resource-inventory-listing.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2490,3 +2491,26 @@ Chosen option: **checked staged-candidate recovery**. This keeps the existing re
 - Every unchanged initializer passes downloaded-package qualification with the exact manifest restored from the checked source, while unrelated manifest differences remain refused.
 - The replacement passes the unchanged quality, semantic, package, registry, signature, provenance, initializer, guide, promotion, and merge-back gates.
 - The replacement package set is promoted under `latest` and independently verified from one exact release head.
+
+### [ADR-0115: Authenticated Listing of Private Resource Inventory](0115-authenticated-private-resource-inventory-listing.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0115 Decision
+
+Chosen option: **"Fixed templates with authenticated, live inventory listing"**, ratified on the following terms.
+
+#### ADR-0115 Checks
+
+- The public API accepts optional startup-declared listing callbacks and rejects unenforceable access policies before listening.
+- Real MCP-client tests show two callers see only their authorized URI/name/MIME metadata, including callers with the same scopes but different ownership.
+- Missing or invalid authentication and missing required permissions cause zero unauthorized listing-backend calls. Mixed sources require only applicable scopes.
+- Known or forged cross-owner URIs remain unreadable through direct reads.
+- Pages and backend results obey count and byte bounds across multiple sources and more than one batch. Invalid metadata and template mismatches fail closed.
+- Unchanged inventories enumerate completely in stable order. Concurrent inserts, deletions, cursor replay, and revocation behave as documented without a snapshot.
+- Cross-caller, changed-scope, changed-template, altered, and expired cursors are rejected. Tests prove the 15-minute traversal expiry cannot be extended.
+- A deleted or newly forbidden item cannot be read after appearing in a page.
+- Public capability discovery without inventory listing remains compatible; `listChanged: false` remains truthful and no list-change notifications are sent.
+- Documentation covers the callback contract, ownership responsibility, ordering, cursor expiry and restart, process/instance limits, cleanup, and safe read errors.
+- Normal protocol, packed-consumer, authentication-isolation, qualification, and release gates pass. Native-client success requires its own separate evidence.
