@@ -104,3 +104,13 @@ Result: PASS. Guidance leads with the optional API, uses exact public operation 
 | Reviewed public message | SHA-256 of exact body | Verdict |
 | --- | --- | --- |
 | `emseepea/emseepea#153` | `70f6a6c3be4bb8295b441e4b0b9e18a6e5b859f903b856e6fff2dd925b2c6ae7` | PASS, conditional on verified publication |
+
+## Feedback guide keyboard-accessible defaults table
+
+Reviewer: implementation agent conducting a specialist cognitive-accessibility source review. Browser accessibility checks separately verify rendered output.
+
+Result: PASS. The defaults table uses shorter column labels, explicit row headers, an accessible name, and keyboard focus for horizontal scrolling. The notification section again belongs to the support-conversation heading. API behavior and documented defaults are unchanged. No copy corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `website/src/content/docs/feedback.md` | `74b0849b18663de51f05a3650f041d529fc8c7c631cb1df701e74cd5786302ec` | PASS |

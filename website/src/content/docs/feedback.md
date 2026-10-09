@@ -137,35 +137,6 @@ or files force-added to Git. Check those before sharing your repository.
 This destination has no team reply path. Choose a conversation backend when
 users need responses.
 
-## Add a support conversation
-
-```ts
-import { defineFeedbackConversation } from "@emseepea/feedback";
-import { createGitHubFeedbackBackend } from "@emseepea/feedback/github";
-
-const feedbackTools = defineFeedbackConversation({
-  requiredScopes: ["feedback"],
-  backend: createGitHubFeedbackBackend({
-    owner: "your-organisation",
-    repository: "support",
-    token: () => getGitHubToken(),
-  }),
-});
-
-const app = await createToolServer({
-  additionalTools: feedbackTools,
-  authentication,
-});
-```
-
-Conversations are protected and client-scoped by default. Messages are
-append-only. A support reply never replaces an earlier reply.
-
-When a reply is included in a validated tool result, the backend can record
-`offeredToClientAt`. This proves only that the reply was available to the AI.
-It does not prove the user read or understood it, and the user does not need to
-press a button or send an acknowledgement.
-
 ## Classify your backend’s effects
 
 Set `annotations` when your backend or event hooks have effects that differ
@@ -217,13 +188,25 @@ open-world.
 
 Each flag is optional. Omitted or `undefined` flags keep these defaults:
 
-| Tool | `readOnlyHint` | `destructiveHint` | `idempotentHint` | `openWorldHint` |
-| --- | --- | --- | --- | --- |
-| `submit-feedback` | false | false | false | true |
-| `create-feedback-thread` | false | false | false | true |
-| `reply-to-feedback-thread` | false | false | false | true |
-| `list-feedback-threads` | true | false | true | true |
-| `get-feedback-thread` | false | false | true | true |
+<table tabindex="0" aria-label="Default feedback tool annotations">
+
+  <thead><tr><th>Tool</th><th>Read-only</th><th>Destructive</th><th>Idempotent</th><th>Open-world</th></tr></thead>
+
+  <tbody>
+
+    <tr><th scope="row"><code>submit-feedback</code></th><td>false</td><td>false</td><td>false</td><td>true</td></tr>
+
+    <tr><th scope="row"><code>create-feedback-thread</code></th><td>false</td><td>false</td><td>false</td><td>true</td></tr>
+
+    <tr><th scope="row"><code>reply-to-feedback-thread</code></th><td>false</td><td>false</td><td>false</td><td>true</td></tr>
+
+    <tr><th scope="row"><code>list-feedback-threads</code></th><td>true</td><td>false</td><td>true</td><td>true</td></tr>
+
+    <tr><th scope="row"><code>get-feedback-thread</code></th><td>false</td><td>false</td><td>true</td><td>true</td></tr>
+
+  </tbody>
+
+</table>
 
 Use `readOnlyHint: true` only when the operation does not modify state.
 Repeated calls must have no additional effect to claim `idempotentHint: true`.
@@ -239,6 +222,35 @@ The exported types are `FeedbackToolAnnotations`,
 This option applies to `defineFeedbackSubmission` and
 `defineFeedbackConversation`. It does not override collection or operator
 helper annotations.
+
+## Add a support conversation
+
+```ts
+import { defineFeedbackConversation } from "@emseepea/feedback";
+import { createGitHubFeedbackBackend } from "@emseepea/feedback/github";
+
+const feedbackTools = defineFeedbackConversation({
+  requiredScopes: ["feedback"],
+  backend: createGitHubFeedbackBackend({
+    owner: "your-organisation",
+    repository: "support",
+    token: () => getGitHubToken(),
+  }),
+});
+
+const app = await createToolServer({
+  additionalTools: feedbackTools,
+  authentication,
+});
+```
+
+Conversations are protected and client-scoped by default. Messages are
+append-only. A support reply never replaces an earlier reply.
+
+When a reply is included in a validated tool result, the backend can record
+`offeredToClientAt`. This proves only that the reply was available to the AI.
+It does not prove the user read or understood it, and the user does not need to
+press a button or send an acknowledgement.
 
 ### Notify the AI when a team reply is ready
 
