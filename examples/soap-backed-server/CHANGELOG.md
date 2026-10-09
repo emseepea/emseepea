@@ -1,5 +1,14 @@
 # @emseepea/create-soap-backed-server
 
+## 0.1.10
+
+### Patch Changes
+
+- [`4fa588d`](https://github.com/emseepea/emseepea/commit/4fa588d19832a6388443787e87f27dd48016d56e) Thanks [@tompahoward](https://github.com/tompahoward)! - Complete annotation override validation by preserving defaults for explicitly
+  undefined flags and rejecting null configuration. Verify composed lifecycle
+  and hook effects through real MCP clients and fresh packed installs. Update
+  generated projects to the new feedback version and deploy the guidance.
+
 ## 0.1.9
 
 ### Patch Changes

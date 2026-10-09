@@ -1,5 +1,18 @@
 # @emseepea/feedback
 
+## 0.9.0
+
+### Minor Changes
+
+- [`4fa588d`](https://github.com/emseepea/emseepea/commit/4fa588d19832a6388443787e87f27dd48016d56e) Thanks [@tompahoward](https://github.com/tompahoward)! - Complete annotation override validation by preserving defaults for explicitly
+  undefined flags and rejecting null configuration. Verify composed lifecycle
+  and hook effects through real MCP clients and fresh packed installs. Update
+  generated projects to the new feedback version and deploy the guidance.
+
+### Patch Changes
+
+- [`bebab23`](https://github.com/emseepea/emseepea/commit/bebab238b8cf9f499ca9f994c82ed1891b3f5bcc) Thanks [@tompahoward](https://github.com/tompahoward)! - Add construction-time annotation overrides for one-way submissions and each feedback conversation operation while preserving existing defaults.
+
 ## 0.8.3
 
 ### Patch Changes
