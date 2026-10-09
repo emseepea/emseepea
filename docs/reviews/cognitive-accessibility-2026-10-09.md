@@ -75,3 +75,14 @@ Result: PASS. Split long paragraphs at the transition to the next action or cons
 | `packages/framework/README.md` | `3333ab66c85f503d62bf95e8cb8cb3b460038b72a9e7214a7f929f49e59acb50` | PASS |
 | `website/src/content/docs/examples.md` | `3ea3ab07a1df3aeadd02a45c95eca0be209e5c88d73dd2ffa1030ff373bfd8c2` | PASS |
 | `website/src/content/docs/resource-inventory.md` | `d84d124d3c06b1f6a931d6c178138d3454fe3a1ac7d729c2bfdd3d279315d14a` | PASS |
+
+## ADR-0116 tool-call budget draft
+
+Reviewer: implementation agent conducting a specialist cognitive-accessibility source review. This does not claim independence or live-provider validation.
+
+Result: PASS. The draft identifies the requested human decision, finite per-send allowance, unchanged defaults and independent limits, post-execution detection risk, and bounded failure evidence. It distinguishes native call counts from execution rounds and labels acceptance checks as future requirements. Human oversight remains pending. No copy corrections remain. This copy review does not ratify the decision.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `docs/decisions/0116-bounded-native-semantic-tool-call-budgets.proposed.md` | `cd2e3ced24e30fa21e569a4112b38f2287c60bd60dda151f557ef2984ad4e5cd` | PASS |
+| `docs/decisions/README.md` | `a6e61c712c497e73bfe0437fd03025284e4eae739bd3a0c24f71ae70400796ac` | PASS |
