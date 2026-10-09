@@ -59,7 +59,9 @@ the same conversation.
 
 Native conversations have no framework tool-call count limit. Calls must still
 use advertised MCP tools. Existing time, token, output-size, and provider
-execution limits remain effective. Claude allows at most four provider rounds;
+execution limits remain effective.
+
+Claude allows at most four provider rounds;
 a round can contain several tool calls. Removing the call-count limit does
 not extend that round allowance. Exact application assertions still decide
 which calls and results are acceptable.

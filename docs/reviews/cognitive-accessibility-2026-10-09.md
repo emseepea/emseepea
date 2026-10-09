@@ -172,3 +172,11 @@ Result: PASS. The decision records Tom’s explicit direction and clearly separa
 | Reviewed public message | SHA-256 of exact body | Verdict |
 | --- | --- | --- |
 | `emseepea/emseepea#150` | `a469b94d6bfeb3d93395064903238d329d79833cf68faedeffb0b6adde075e7f` | PASS, conditional on verified publication |
+
+## Native conversation guide paragraph correction
+
+Result: PASS. The testing guide separates the execution-limit statement from the Claude round explanation so each paragraph remains short and scannable. No copy corrections remain. Reviewer: implementation agent; no independence or rendered testing is claimed.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `packages/testing/README.md` | `bb8de6761a66956800e92e81655c81e8f7156d9bcacc2347c2dcbd9e314f2dfc` | PASS |
