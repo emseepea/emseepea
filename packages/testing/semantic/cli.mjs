@@ -103,4 +103,3 @@ try {
 }
 if (evidence.status !== "passed") process.exitCode = 1;
 console.log(`Semantic checks ${evidence.status}; evidence: ${output}`);
-
