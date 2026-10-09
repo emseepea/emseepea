@@ -78,6 +78,41 @@ export type FeedbackMessage = z.output<typeof feedbackMessageSchema>;
 export type FeedbackThread = z.output<typeof feedbackThreadSchema>;
 export type FeedbackConversation = z.output<typeof feedbackConversationSchema>;
 
+export interface FeedbackToolAnnotationOverrides {
+  readonly readOnlyHint?: boolean;
+  readonly destructiveHint?: boolean;
+  readonly idempotentHint?: boolean;
+  readonly openWorldHint?: boolean;
+}
+
+export interface FeedbackConversationAnnotationOverrides {
+  readonly create?: FeedbackToolAnnotationOverrides;
+  readonly reply?: FeedbackToolAnnotationOverrides;
+  readonly list?: FeedbackToolAnnotationOverrides;
+  readonly get?: FeedbackToolAnnotationOverrides;
+}
+
+interface FeedbackToolAnnotations {
+  readonly readOnlyHint: boolean;
+  readonly destructiveHint: boolean;
+  readonly idempotentHint: boolean;
+  readonly openWorldHint: boolean;
+}
+
+const feedbackToolAnnotationOverridesSchema = z.strictObject({
+  readOnlyHint: z.boolean().optional(),
+  destructiveHint: z.boolean().optional(),
+  idempotentHint: z.boolean().optional(),
+  openWorldHint: z.boolean().optional(),
+});
+
+const feedbackConversationAnnotationOverridesSchema = z.strictObject({
+  create: feedbackToolAnnotationOverridesSchema.optional(),
+  reply: feedbackToolAnnotationOverridesSchema.optional(),
+  list: feedbackToolAnnotationOverridesSchema.optional(),
+  get: feedbackToolAnnotationOverridesSchema.optional(),
+});
+
 export interface FeedbackAdapterContext {
   readonly scope: string;
   readonly signal: AbortSignal;
@@ -536,6 +571,7 @@ export interface FeedbackSubmissionOptions<ContextSchema extends z.ZodType = z.Z
   readonly requiredScopes?: readonly string[];
   readonly scope?: string | ((principal: Principal | undefined) => string);
   readonly contextSchema?: ContextSchema;
+  readonly annotations?: FeedbackToolAnnotationOverrides;
   readonly backend: FeedbackSubmissionBackend<z.output<ContextSchema>>;
   readonly hooks?: readonly FeedbackEventHook[];
 }
@@ -543,6 +579,12 @@ export interface FeedbackSubmissionOptions<ContextSchema extends z.ZodType = z.Z
 export function defineFeedbackSubmission<ContextSchema extends z.ZodType = z.ZodUndefined>(
   options: FeedbackSubmissionOptions<ContextSchema>,
 ): EmseepeaTool {
+  const annotations = feedbackToolAnnotations({
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  }, options.annotations);
   const inputSchema = z.strictObject({
     observation: feedbackObservationSchema,
     detail: body.describe(
@@ -565,12 +607,7 @@ export function defineFeedbackSubmission<ContextSchema extends z.ZodType = z.Zod
     description:
       "Record one notable observation about an error, friction, annoyance, unnecessary difficulty, confusion, repetition, an unexpected result, a capability mismatch, a suggestion, or a notable success. " +
       submissionBehaviorGuidance,
-    annotations: {
-      readOnlyHint: false,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: true,
-    },
+    annotations,
     inputSchema,
     outputSchema,
   } as const;
@@ -677,11 +714,41 @@ export interface FeedbackConversationBackend {
 export interface FeedbackConversationOptions {
   readonly requiredScopes: readonly string[];
   readonly scope?: (principal: Principal | undefined) => string;
+  readonly annotations?: FeedbackConversationAnnotationOverrides;
   readonly backend: FeedbackConversationBackend;
   readonly hooks?: readonly FeedbackEventHook[];
 }
 
 export function defineFeedbackConversation(options: FeedbackConversationOptions): readonly EmseepeaTool[] {
+  const configuredAnnotations = feedbackConversationAnnotationOverridesSchema.parse(
+    options.annotations === undefined ? {} : options.annotations,
+  );
+  const annotations = Object.freeze({
+    create: feedbackToolAnnotations({
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    }, configuredAnnotations.create),
+    reply: feedbackToolAnnotations({
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    }, configuredAnnotations.reply),
+    list: feedbackToolAnnotations({
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    }, configuredAnnotations.list),
+    get: feedbackToolAnnotations({
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    }, configuredAnnotations.get),
+  });
   const access = { access: "protected" as const, requiredScopes: options.requiredScopes };
   const contextFor = (context: ToolContext<"protected">) => createAdapterContext(
     options.scope ?? ((principal) => principal?.clientId ?? ""),
@@ -694,7 +761,7 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
     title: "Start Feedback Conversation",
     description:
       "Start a durable support conversation for detailed feedback. Use one thread for one observation and openly tell the user it was created. Do not include unrelated chat history, credentials, or raw tool payloads.",
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    annotations: annotations.create,
     inputSchema: createThreadCommandSchema,
     outputSchema: feedbackConversationSchema,
     async handler(input, toolContext: ToolContext<"protected">) {
@@ -713,7 +780,7 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
     title: "Reply to Feedback Conversation",
     description:
       "Append the user's new message to the exact existing feedback thread. Do not repeat an earlier message or invent a thread identifier.",
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    annotations: annotations.reply,
     inputSchema: appendMessageCommandSchema,
     outputSchema: feedbackMessageSchema,
     async handler(input, toolContext: ToolContext<"protected">) {
@@ -731,7 +798,7 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
     ...access,
     title: "List Feedback Conversations",
     description: "List feedback conversations for this authenticated client scope.",
-    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    annotations: annotations.list,
     inputSchema: listThreadsQuerySchema,
     outputSchema: threadPageSchema,
     async handler(input, toolContext: ToolContext<"protected">) {
@@ -749,7 +816,7 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
     title: "Read Feedback Conversation",
     description:
       "Read one feedback conversation and present the meaning of any new team reply to the user. Reading may record that a team reply was offered to this AI client. It does not prove the user saw or understood it.",
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    annotations: annotations.get,
     inputSchema: getThreadQuerySchema,
     outputSchema: feedbackConversationSchema,
     async handler(input, toolContext: ToolContext<"protected">) {
@@ -763,6 +830,16 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
   });
 
   return Object.freeze([createThread, appendMessage, listThreads, getThread]);
+}
+
+function feedbackToolAnnotations(
+  defaults: FeedbackToolAnnotations,
+  overrides: FeedbackToolAnnotationOverrides | undefined,
+): FeedbackToolAnnotations {
+  const checked = feedbackToolAnnotationOverridesSchema.parse(overrides === undefined ? {} : overrides);
+  return Object.freeze({ ...defaults,
+    ...Object.fromEntries(Object.entries(checked).filter(([, value]) => value !== undefined)),
+  });
 }
 
 function createAdapterContext(

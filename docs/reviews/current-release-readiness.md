@@ -2,76 +2,79 @@
 
 Date: 2026-10-09
 
-## Authenticated private resource inventory
+## Feedback annotations for adopter effects
 
-Issue #146 adds bounded, caller-specific metadata listing to protected resource
-templates through an optional `list` callback. The whole `resources/list`
-method becomes authenticated when inventory is configured. Other methods and
-applications without callbacks keep their existing access rules.
+Issue #153 adds checked annotation options to `defineFeedbackSubmission` and
+`defineFeedbackConversation`. Submission accepts four optional boolean flags;
+conversation configuration maps create, reply, list, and get to those flags.
+Omitted and undefined values preserve current defaults. Invalid fields, flag
+values, and operation names fail before registration. Definitions capture the
+configuration rather than retain mutable caller objects.
 
-Callbacks receive the same validated principal as reads. A verifier may supply
-an optional stable subject for users sharing an OAuth client. Tokens and raw
-claims are not exposed. Authorization excludes inaccessible sources before
-backend work. Reads must recheck ownership, retention, deletion, and access.
-
-Cursors are encrypted and bound to the caller, permission view, catalogue,
-and process. They expire fifteen minutes after the first page without renewal.
-Pages query live records; insertions behind the cursor may be missed. This is
-not a snapshot, durable outbox consumer, list-change notification, or verified
-native ChatGPT Sources integration.
+The framework publishes configured descriptors through actual MCP discovery.
+Annotations do not change persistence, authorization, hook dispatch, retries,
+or execution. Applications remain responsible for classifying the full backend
+and hook chain truthfully. Collection and operator helpers retain their
+existing descriptor contracts.
 
 ## Planned package set
 
-- `@emseepea/server@0.23.0`
-- `@emseepea/create-api-backed-server@0.1.9`
-- `@emseepea/create-database-schema-server@0.1.9`
-- `@emseepea/create-html-ui-server@0.1.9`
-- `@emseepea/create-mongodb-backed-server@0.1.9`
-- `@emseepea/create-multi-instance-postgres-server@0.1.9`
-- `@emseepea/create-openapi-backed-server@0.1.9`
-- `@emseepea/create-progress-streaming-server@0.1.9`
-- `@emseepea/create-react-ui-server@0.1.9`
-- `@emseepea/create-resources-and-prompts-server@0.1.9`
-- `@emseepea/create-soap-backed-server@0.1.9`
-- `@emseepea/create-tool-server@0.1.9`
-- `@emseepea/feedback@0.8.3`
-- `@emseepea/react@0.4.7`
-- `@emseepea/svelte@0.2.7`
-- `@emseepea/testing@0.21.7`
+- `@emseepea/feedback@0.9.0`
+- `@emseepea/create-api-backed-server@0.1.10`
+- `@emseepea/create-database-schema-server@0.1.10`
+- `@emseepea/create-html-ui-server@0.1.10`
+- `@emseepea/create-mongodb-backed-server@0.1.10`
+- `@emseepea/create-multi-instance-postgres-server@0.1.10`
+- `@emseepea/create-openapi-backed-server@0.1.10`
+- `@emseepea/create-progress-streaming-server@0.1.10`
+- `@emseepea/create-react-ui-server@0.1.10`
+- `@emseepea/create-resources-and-prompts-server@0.1.10`
+- `@emseepea/create-soap-backed-server@0.1.10`
+- `@emseepea/create-tool-server@0.1.10`
 
-The dependent package patches adopt the new server version. All eleven
-initializer patches update their generated dependency pins. The private
-website version moves to 0.0.9 to publish the inventory guide and examples.
+All eleven initializer patches update generated feedback dependency pins.
+The private website version moves to 0.0.10 to deploy annotation guidance.
+Server, testing, and UI packages are not planned for release.
 
 ## Architecture and jobs to be done
 
-Tom Howard ratified ADR-0115 on 2026-10-09 and authorized implementation and
-release. It supplements ADR-0064 and ADR-0080 with a narrow opt-in inventory
-exception. JTBD-002 and JTBD-100 cover the server and client interaction;
-JTBD-101 covers checked publication. No new persona or job is needed.
+The merged implementation preserves the API already landed on main and adds
+public-boundary and packed-install coverage. Explicit undefined flags retain
+defaults, and null configuration is rejected.
+
+This is an additive configuration of the existing checked tool contract under
+ADR-0006 and the pluggable backend and hook boundary under ADR-0066. Current
+defaults and deployment-static definitions remain unchanged. JTBD-002 covers
+composition and JTBD-006 covers safely evolving a published contract;
+JTBD-101 covers checked publication. No new architectural boundary is added.
+
+ADR-0116 is a separately requested draft for issue #150. Human oversight is
+pending, and no tool-call budget implementation is part of this release.
+The draft explicitly distinguishes call budgets from provider rounds and
+records the risk of detecting excess native calls after execution.
 
 ## Required checks and residual risk
 
-Public-boundary tests cover real clients, owner isolation for a shared OAuth
-client, zero unauthorized backend calls, mixed source access, tampering,
-permission changes, process binding, fixed expiry, live concurrent writes,
-record revocation, count and byte limits, deadlines, and legacy compatibility.
-The same inventory checks run against fresh packed installs.
+Focused checks cover defaults, partial and complete overrides, all conversation
+operations, public and protected MCP discovery, public and protected submission,
+retention activity and notice cancellation, unchanged hook dispatch, malformed
+configuration, and mutation after definition. Public types reject unsupported
+flags and operation names. The same protocol checks run against fresh packed
+installs, alongside existing feedback authorization and persistence tests.
 
 Full exact-commit qualification must pass, including build, types, protocol,
 packed installs, generated initializers, and documentation checks. Source
-Quality must pass on Node.js 22 and 24, along with vulnerability scanning,
+Quality must pass on Node.js 22 and 24, with vulnerability scanning,
 initializer qualification, and existing performance budgets. Release must pass
 semantic checks and verify registry integrity, signatures, provenance, and
 fresh installs. Publish must verify latest, write release records, deploy the
 website, and merge back to main. Failed semantic trials are not retried.
 
-Application query correctness remains the main risk: adapters must use bounded
-queries, apply record policy, and maintain unique immutable ASCII ordering
-keys. Protocol checks reject malformed pages but cannot establish a backend's
-ownership policy or ordering history. Documentation makes these obligations
-explicit. Process-local cursors require routing to the same instance or a
-fresh listing after restart. Residual risk is within the Low appetite,
+The main residual risk is an adopter declaring inaccurate annotations. The
+framework cannot infer arbitrary backend and hook effects. Documentation
+explains the four flags, includes the lifecycle-write reproduction, and states
+that connectivity alone does not determine open-world behavior. Preserved
+defaults protect compatibility. Residual risk is within the Low appetite,
 conditional on all required exact-commit gates.
 
 ## Conditional release readiness

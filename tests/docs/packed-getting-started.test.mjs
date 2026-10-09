@@ -229,6 +229,8 @@ test("the packed public packages pass fresh-install and getting-started checks",
     run(process.execPath, ["check.mjs"], directory);
     await cp(new URL("tests/black-box/resource-inventory.test.mjs", root), path.join(directory, "resource-inventory.test.mjs"));
     run(process.execPath, ["--test", "resource-inventory.test.mjs"], directory);
+    await cp(new URL("tests/black-box/feedback-annotations.test.mjs", root), path.join(directory, "feedback-annotations.test.mjs"));
+    run(process.execPath, ["--test", "feedback-annotations.test.mjs"], directory);
     await cp(new URL("scripts/verify-installed-package.mjs", root), path.join(directory, "verify-installed-package.mjs"));
     run(process.execPath, ["verify-installed-package.mjs"], directory);
     const installed = JSON.parse(await readFile(path.join(directory, "node_modules/@emseepea/server/package.json"), "utf8"));

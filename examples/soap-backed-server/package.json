@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-soap-backed-server",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Create an Em See Pea server that validates a SOAP service from its XSD contract.",
   "license": "MIT",
   "type": "module",
@@ -20,7 +20,7 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/feedback": "0.8.3",
+    "@emseepea/feedback": "0.9.0",
     "@emseepea/server": "0.23.0",
     "soap": "1.11.0",
     "xml-xsd-engine": "1.7.3",

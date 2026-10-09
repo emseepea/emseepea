@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-resources-and-prompts-server",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Create an Em See Pea server with resources and prompts.",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,7 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/feedback": "0.8.3",
+    "@emseepea/feedback": "0.9.0",
     "@emseepea/server": "0.23.0",
     "zod": "4.4.3",
     "@emseepea/testing": "0.21.7",

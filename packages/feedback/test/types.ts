@@ -7,6 +7,12 @@ import { z } from "zod";
 
 defineFeedbackSubmission({
   access: "public",
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: false,
+    openWorldHint: false,
+  },
   contextSchema: z.strictObject({ feature: z.string() }),
   backend: {
     submit(command) {
@@ -60,3 +66,39 @@ const backend = {
 } satisfies FeedbackConversationBackend;
 
 defineFeedbackConversation({ requiredScopes: ["feedback"], backend });
+
+defineFeedbackConversation({
+  requiredScopes: ["feedback"],
+  annotations: {
+    create: { destructiveHint: true },
+    reply: { destructiveHint: true, openWorldHint: false },
+    list: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+    get: { destructiveHint: true, idempotentHint: false },
+  },
+  backend,
+});
+
+defineFeedbackSubmission({
+  access: "public",
+  // @ts-expect-error annotation values must be booleans
+  annotations: { destructiveHint: "yes" },
+  backend: { submit: () => ({ id: "feedback-1", recordedAt: "2026-09-10T00:00:00.000Z" }) },
+});
+
+defineFeedbackConversation({
+  requiredScopes: ["feedback"],
+  annotations: {
+    // @ts-expect-error conversation annotation operation names are closed
+    archive: { destructiveHint: true },
+  },
+  backend,
+});
+
+defineFeedbackConversation({
+  requiredScopes: ["feedback"],
+  annotations: {
+    // @ts-expect-error annotation keys are closed
+    list: { recipient: "support@example.com" },
+  },
+  backend,
+});
