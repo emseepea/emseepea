@@ -63,3 +63,15 @@ Result: PASS. The guide leads with the API and next action, then explains applic
 | Reviewed public message | SHA-256 of exact body | Verdict |
 | --- | --- | --- |
 | `emseepea/emseepea#146` | `dd661da50c0a99e1a2d00c2adf31e8fca137506e22de367cf13dc819d80b1d5b` | PASS, conditional on verified publication |
+
+## Inventory guide paragraph corrections
+
+Reviewer: implementation agent conducting a specialist cognitive-accessibility source review. This does not claim independence or rendered testing.
+
+Result: PASS. Split long paragraphs at the transition to the next action or constraint. API behavior and the approved architecture are unchanged. No copy corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `packages/framework/README.md` | `3333ab66c85f503d62bf95e8cb8cb3b460038b72a9e7214a7f929f49e59acb50` | PASS |
+| `website/src/content/docs/examples.md` | `3ea3ab07a1df3aeadd02a45c95eca0be209e5c88d73dd2ffa1030ff373bfd8c2` | PASS |
+| `website/src/content/docs/resource-inventory.md` | `d84d124d3c06b1f6a931d6c178138d3454fe3a1ac7d729c2bfdd3d279315d14a` | PASS |

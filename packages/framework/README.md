@@ -1119,7 +1119,9 @@ and exclusive ordering key. Reads check access again.
 See the [private resource inventory guide](https://emseepea.github.io/emseepea/resource-inventory/)
 for the API, ownership rules, page bounds, and cursor limits. Cursors expire
 fifteen minutes after the first page and are local to the serving process;
-pages query live records rather than a snapshot. Without a callback, static
+pages query live records rather than a snapshot.
+
+Without a callback, static
 listing behavior is unchanged. A purpose-built search tool remains useful
 when clients need searchable record details.
 

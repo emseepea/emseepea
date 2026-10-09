@@ -60,7 +60,9 @@ database query or make record ownership decisions.
 A validated verifier may set `AuthInfo.extra.subject` to the stable user ID.
 The framework exposes only that optional `principal.subject`, alongside
 `clientId`, validated `permissions`, and the resource audience. It does not
-forward tokens or other extra claims. The subject must be a nonempty string
+forward tokens or other extra claims.
+
+The subject must be a nonempty string
 of at most 256 characters without control characters. The verifier must
 validate the token and its subject before returning them.
 
@@ -95,7 +97,9 @@ backend work when cancelled.
 `listPagination.pageSize` bounds the combined static and dynamic page count
 (maximum 100). The inventory default is 50. `listPagination.maxPageBytes` and
 `maxApplicationResultBytes` bound response bytes, including MCP result
-metadata. The tighter byte limit applies; the default is 1 MiB. A single
+metadata. The tighter byte limit applies; the default is 1 MiB.
+
+A single
 entry that cannot fit causes an error. Static resources come first, followed
 by eligible inventory sources in registration order.
 
@@ -104,7 +108,9 @@ by eligible inventory sources in registration order.
 Once a server registers an inventory callback, every `resources/list` request
 requires authentication, even with public discovery or legacy MCP clients.
 The framework authorizes each source before calling it and skips inaccessible
-sources. A caller must have access to at least one inventory source; access
+sources.
+
+A caller must have access to at least one inventory source; access
 to every source is not required. The response is private and has a zero cache
 lifetime. Other methods keep their existing authentication rules.
 
