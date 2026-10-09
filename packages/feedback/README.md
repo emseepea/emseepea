@@ -586,3 +586,77 @@ deduplicate them. Receipt failure never hides a support reply from the AI.
 The package makes no claim that an AI will always record feedback, avoid
 duplicates, present a reply, or honor an objection. Native semantic tests
 provide evidence only for the tested client, model, prompts, and revision.
+
+## Classify your backend’s effects
+
+Set `annotations` when your backend or event hooks have effects that differ
+from the helper’s defaults. Classify the whole operation, including retention
+updates, notice cancellation, and email delivery. These hints describe behavior;
+they do not change execution, authorization, persistence, or retries.
+
+For submission, pass a partial object with the flags you need to change:
+
+```ts
+const submission = defineFeedbackSubmission({
+  access: "public",
+  backend: submissionBackend,
+  hooks: [queueEmail],
+  annotations: { destructiveHint: true, openWorldHint: false },
+});
+```
+
+`submissionBackend` and `queueEmail` are application-owned. No email is sent
+by setting a hint. Only choose `openWorldHint: false` when the complete
+operation is confined to a bounded private domain.
+
+For conversations, use the exact public MCP tool name as the map key. Each
+operation may have different effects:
+
+```ts
+const conversation = defineFeedbackConversation({
+  requiredScopes: ["feedback"],
+  backend: conversationBackend,
+  annotations: {
+    "create-feedback-thread": { destructiveHint: true },
+    "reply-to-feedback-thread": { destructiveHint: true },
+    "list-feedback-threads": {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
+    "get-feedback-thread": { idempotentHint: false },
+  },
+});
+```
+
+This list configuration fits a backend that writes retention activity and
+cancels an inactivity notice on each read. It remains the application’s
+responsibility to classify the actual backend and hook chain correctly.
+Internet connectivity alone does not determine whether an operation is
+open-world.
+
+Each flag is optional. Omitted or `undefined` flags keep these defaults:
+
+| Tool | `readOnlyHint` | `destructiveHint` | `idempotentHint` | `openWorldHint` |
+| --- | --- | --- | --- | --- |
+| `submit-feedback` | false | false | false | true |
+| `create-feedback-thread` | false | false | false | true |
+| `reply-to-feedback-thread` | false | false | false | true |
+| `list-feedback-threads` | true | false | true | true |
+| `get-feedback-thread` | false | false | true | true |
+
+Use `readOnlyHint: true` only when the operation does not modify state.
+Repeated calls must have no additional effect to claim `idempotentHint: true`.
+Set `destructiveHint` according to the complete operation’s destructive or
+irreversible effects. Descriptions still need to explain those effects to users.
+
+Configuration is checked and captured when the helper is defined. Unsupported
+keys and non-boolean values fail before registration. Mutating the original
+object later does not update discovery; define and deploy the revised tool.
+The exported types are `FeedbackToolAnnotations`,
+`FeedbackConversationToolName`, and `FeedbackConversationAnnotations`.
+
+This option applies to `defineFeedbackSubmission` and
+`defineFeedbackConversation`. It does not override collection or operator
+helper annotations.

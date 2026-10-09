@@ -86,3 +86,21 @@ Result: PASS. The draft identifies the requested human decision, finite per-send
 | --- | --- | --- |
 | `docs/decisions/0116-bounded-native-semantic-tool-call-budgets.proposed.md` | `cd2e3ced24e30fa21e569a4112b38f2287c60bd60dda151f557ef2984ad4e5cd` | PASS |
 | `docs/decisions/README.md` | `a6e61c712c497e73bfe0437fd03025284e4eae739bd3a0c24f71ae70400796ac` | PASS |
+
+## Feedback annotation configuration and release copy
+
+Reviewer: implementation agent conducting a specialist cognitive-accessibility source review against QUALITY.md. This does not claim independence or rendered/mobile testing.
+
+Result: PASS. Guidance leads with the optional API, uses exact public operation names, and explains partial defaults and full backend/hook classification. The table permits quick comparison, and examples show lifecycle writes and delivery effects. Readiness names each planned public version and keeps publication conditional on required gates. The resolution draft may be posted only after all publication claims are verified. No copy corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `packages/feedback/README.md` | `c2bcc322f4f048493feccc1162d499558f35e37ac806a2b367891b09e36a6ac9` | PASS |
+| `website/src/content/docs/feedback.md` | `c8d577dc133b4ad81150c2364b12cc6cd84d85e45808a6321b02029024eb2969` | PASS |
+| `.changeset/feedback-effect-annotations.md` | `54714fb4741a880879a4fd568c386088fa056699a651b513434d116ab0ffcd7b` | PASS |
+| `docs/reviews/current-release-readiness.md` | `007b8af219e44c529b9e902cd596e5d644501bcc963db493fda44a72513f0e70` | PASS |
+| `docs/reviews/feedback-annotations-resolution-draft-2026-10-09.json` | `d0a4b8dc603952cf530ff877e7fd2e7bb0447491001608c0c061ed3347faf646` | PASS |
+
+| Reviewed public message | SHA-256 of exact body | Verdict |
+| --- | --- | --- |
+| `emseepea/emseepea#153` | `70f6a6c3be4bb8295b441e4b0b9e18a6e5b859f903b856e6fff2dd925b2c6ae7` | PASS, conditional on verified publication |
