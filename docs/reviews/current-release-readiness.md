@@ -22,7 +22,17 @@ checks and records that exact dependency version.
 
 - `@emseepea/feedback@0.8.2`
 - `@emseepea/testing@0.21.6`
-- All eleven `@emseepea/create-*` initializer packages at `0.1.8`.
+- `@emseepea/create-api-backed-server@0.1.8`
+- `@emseepea/create-database-schema-server@0.1.8`
+- `@emseepea/create-html-ui-server@0.1.8`
+- `@emseepea/create-mongodb-backed-server@0.1.8`
+- `@emseepea/create-multi-instance-postgres-server@0.1.8`
+- `@emseepea/create-openapi-backed-server@0.1.8`
+- `@emseepea/create-progress-streaming-server@0.1.8`
+- `@emseepea/create-react-ui-server@0.1.8`
+- `@emseepea/create-resources-and-prompts-server@0.1.8`
+- `@emseepea/create-soap-backed-server@0.1.8`
+- `@emseepea/create-tool-server@0.1.8`
 
 The initializer patches are explicitly planned because their development
 checks previously installed testing 0.20.5 and the affected client. Runtime
@@ -72,7 +82,8 @@ an Em See Pea credential leak or a demonstrated exploit.
 
 ## Conditional release readiness
 
-- Result: PASS, conditional on required qualification and publication gates.
+- Result: PASS
+- Final result: within appetite, subject to the required exact-commit gates.
 - Publication status: NOT READY until full exact-commit qualification,
   Source Quality, Release, and Publish pass.
 - Planned releases: feedback 0.8.2, testing 0.21.6, and eleven initializers 0.1.8.
