@@ -1,5 +1,16 @@
 # @emseepea/create-openapi-backed-server
 
+## 0.1.11
+
+### Patch Changes
+
+- [`a51fbbc`](https://github.com/emseepea/emseepea/commit/a51fbbc76923e4ed32192ce603e51c9d65a481a3) Thanks [@tompahoward](https://github.com/tompahoward)! - Remove the three-call ceiling from native Claude and Codex semantic conversations.
+  Remove Claude’s native four-turn flag, which otherwise blocks longer journeys.
+  Keep advertised-tool checks, timeouts, output checks, and tool-free judge limits.
+  Remove the CLI evidence validator’s matching ceiling and turn-count formula
+  while preserving complete call evidence and independent judgments. Add a real four-read
+  qualification journey and update generated projects and testing guidance.
+
 ## 0.1.10
 
 ### Patch Changes
