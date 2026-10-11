@@ -28,3 +28,26 @@ links each one to its current successor.
 | `docs/decisions/0121-exact-head-qualification-for-automated-trunk-mergeback.proposed.md` | `747895dd6f65bba85749afeeebb000fd286e9f95894a1416dd8746fbfdc0b285` | PASS |
 | `docs/decisions/README.md` | `54cec789fec0a392ff31f57a38f853ac352e2667a0a226eb732d513f87caf02c` | PASS |
 | `docs/risks/R013-release-reaches-publication-before-registry-prerequisites-are-verified.active.md` | `c4afae69f1596382a772cf8e77c16f8bb23693b3545e4722702cbe4aa49edccd` | PASS |
+
+## Additional Scope: Issue #158 ADR-Only Replay
+
+This additional review covers ADR-0118, ADR-0119, and the regenerated decision
+compendium for the issue #158 semantic qualification repair.
+
+PASS. ADR-0118 separates outcome-constrained tool selection from observed
+calls. It states that closed-world maximum counts are checked after completion
+and do not stop dispatch, truncate evidence, or replace ADR-0116. It also keeps
+argument, result, persisted-effect, and response-meaning assertions separate
+from the selection outcome.
+
+ADR-0119 clearly labels `toolOutcomes` as an observation, not a verdict. It
+separates `isError` from recovery or effect proof. The harness adds no private
+provider or transport fields to the documented view, while the exact
+model-visible result may contain application data and therefore remains
+subject to ADR-0057's non-sensitive synthetic-fixture requirement.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/decisions/0118-declarative-outcome-constrained-semantic-tool-selection-assertions.proposed.md` | `a02e4555e3fe7f36fa5892a45a15f1c28777d234c4e5d1196f8b0d8370fb6d98` | PASS |
+| `docs/decisions/0119-read-only-native-tool-outcomes-on-semantic-conversation-turns.proposed.md` | `68002159c51e0fcf9c662a17a99f9e518b8c1afffd0c92c57e81f58351c043eb` | PASS |
+| `docs/decisions/README.md` | `c5118f3c750bb8a8c1c293af55eb061f910fd987fba41fd02bf91c106b5fcd5f` | PASS |

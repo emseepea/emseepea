@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 115 decisions: 67 current and 48 historical.
+This project has 117 decisions: 69 current and 48 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -80,6 +80,8 @@ recorded separately.
 - [ADR-0114: Checked Fresh Versions for Abandoned Staged Candidates](0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0115: Authenticated Listing of Private Resource Inventory](0115-authenticated-private-resource-inventory-listing.proposed.md): Proposed; human review confirmed.
 - [ADR-0116: Native Semantic Conversations Without a Tool-Call Count Limit](0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md): Proposed; human review confirmed.
+- [ADR-0118: Declarative Outcome-Constrained Semantic Tool-Selection Assertions](0118-declarative-outcome-constrained-semantic-tool-selection-assertions.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0119: Read-Only Native Tool Outcomes on Semantic Conversation Turns](0119-read-only-native-tool-outcomes-on-semantic-conversation-turns.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0120: Publish Branch Release with Exact-Head Mergeback Quality](0120-publish-branch-release-with-exact-head-mergeback-quality.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0121: Exact-Head Qualification for Automated Trunk Mergeback](0121-exact-head-qualification-for-automated-trunk-mergeback.proposed.md): Proposed; human review unconfirmed.
 
@@ -2535,6 +2537,42 @@ Chosen option: **"Remove the tool-call count limit"**.
 - Unknown tools, missing results, malformed arguments, and invalid provider turn counts still fail. Native invocation tests reject reintroducing the turn-count flag; tool-free judge limits remain checked.
 - A real native conversation reads four synthetic records through MCP and returns the correct route-to-time associations in every trial.
 - Full qualification and publication gates pass before issue closure.
+
+### [ADR-0118: Declarative Outcome-Constrained Semantic Tool-Selection Assertions](0118-declarative-outcome-constrained-semantic-tool-selection-assertions.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+
+#### ADR-0118 Decision
+
+Chosen option: **"Declarative closed-world selection contracts"**, because it states the application's permitted outcome independently of the model's observed path and can be checked again from retained evidence.
+
+#### ADR-0118 Checks
+
+- Three trials with different valid retrieval orders and recovery calls pass one independently authored selection contract.
+- Unadvertised, omitted, explicitly forbidden, duplicated, and over-cardinality tools fail, as do impossible or conflicting contracts.
+- Tampered contracts, digests, concrete calls, results, or path evidence fail independent evidence validation.
+- Missing argument, result, persisted-effect, or meaning assertions still fail the fixture that requires them.
+- Existing exact assertion tests and published evidence remain compatible.
+- An independently installed package qualifies the synthetic reproduction for issue #158 before the decision is eligible for confirmation.
+
+### [ADR-0119: Read-Only Native Tool Outcomes on Semantic Conversation Turns](0119-read-only-native-tool-outcomes-on-semantic-conversation-turns.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+
+#### ADR-0119 Decision
+
+Chosen option: **"Detached read-only outcome snapshots"**, because it exposes the already retained observation without making the framework own application effect semantics.
+
+#### ADR-0119 Checks
+
+- The three trial arrays and every call index align between `toolCalls`, `toolOutcomes`, and retained evidence.
+- Successful and `isError` results expose only the four documented fields.
+- Nested mutation attempts cannot alter private state, later assertions, or retained evidence.
+- No additional harness- or provider-private fields appear beyond the four documented fields; synthetic fixtures keep model-visible results non-sensitive.
+- Existing conversation-turn and exact-assertion APIs remain compatible.
+- An independently installed package proves expected-error recovery using the public view before the decision is eligible for confirmation.
 
 ### [ADR-0120: Publish Branch Release with Exact-Head Mergeback Quality](0120-publish-branch-release-with-exact-head-mergeback-quality.proposed.md)
 
