@@ -103,3 +103,26 @@ installed-package, and Coglen acceptance checks pass.
 | File | SHA-256 | Result |
 | --- | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `a3112b8bf4adce32a93229c655aba02f84f14e6d6a527b4a19bd3b2e2c4b11c7` | PASS |
+
+## Additional Scope: Codex Local Execution Suppression Changeset
+
+PASS. An independent cognitive-accessibility specialist reviewed the exact
+public changeset text. It is short, direct, and bounded to the npm-facing
+change. It explains both the disabled features and the fail-closed behavior
+without claiming release, runtime verification, or conformance.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/calm-shells-stop.md` | `3b74412d00342cd9ced506c19a93491cd65d79eb5300876cfa3bb0e33328c518` | PASS |
+
+## Additional Scope: Issue #157 First-Slice Release Readiness
+
+PASS. An independent cognitive-accessibility specialist reviewed the exact
+current release-readiness note. It clearly identifies the first issue #157
+slice and planned package, distinguishes local qualification from unpushed and
+unreleased status, lists the remaining exact release gates, and excludes the
+later diagnostic capabilities without implying issue completion.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `4f831dc512c8790cc0e7ff9abb6a76e4714ffc67a976409a67c5760dea1fb8c9` | PASS |

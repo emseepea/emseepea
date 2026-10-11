@@ -305,6 +305,8 @@ test("Codex invocation isolates configuration and pre-approves only discovered t
   assert.equal(invocation.args[invocation.args.indexOf("--sandbox") + 1], "read-only");
   assert.ok(invocation.args.includes('shell_environment_policy.inherit="none"'));
   assert.ok(invocation.args.includes("allow_login_shell=false"));
+  assert.equal(invocation.args.filter((value) => value === "features.shell_tool=false").length, 1);
+  assert.equal(invocation.args.filter((value) => value === "features.unified_exec=false").length, 1);
   assert.ok(invocation.args.includes('mcp_servers.emseepea_eval.enabled_tools=["get-pea"]'));
   assert.ok(invocation.args.includes('mcp_servers.emseepea_eval.default_tools_approval_mode="approve"'));
   assert.ok(invocation.args.includes('mcp_servers.emseepea_eval.tools."get-pea".approval_mode="approve"'));
