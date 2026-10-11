@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.23.1
+
+### Patch Changes
+
+- [`1cd005e`](https://github.com/emseepea/emseepea/commit/1cd005ec02d872dc5889d6dec37d007bd7a592a6) Thanks [@tompahoward](https://github.com/tompahoward)! - Explicitly disable the Codex CLI's stable `shell_tool` and `unified_exec` features during semantic checks. If the installed CLI rejects either setting, qualification fails without retrying with local execution enabled.
+
 ## 0.23.0
 
 ### Minor Changes
