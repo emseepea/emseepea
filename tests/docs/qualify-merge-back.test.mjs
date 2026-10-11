@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { cp, mkdtemp, readFile, realpath, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { parse } from "yaml";
 
 import { fullQualityJobNames } from "../../scripts/check-release-pull-request.mjs";
+import { requiredFullQualityJobNames } from "../../scripts/full-quality-job-names.mjs";
 import { qualifyMergeBack, verifyFullQualityJobs, verifyMergeBackCommit } from "../../scripts/qualify-merge-back.mjs";
 
 const baseSha = "a".repeat(40);
@@ -13,6 +17,31 @@ const url = "https://github.com/emseepea/emseepea/actions/runs/901";
 const correlation = "00000000-0000-4000-8000-000000000001";
 const workflow = parse(await readFile(new URL("../../.github/workflows/quality.yml", import.meta.url), "utf8"));
 const requiredJobNames = fullQualityJobNames(workflow);
+
+test("dependency-free merge-back entry point loads before either bootstrap invocation", async (t) => {
+  const directory = await realpath(await mkdtemp(join(tmpdir(), "emseepea-merge-back-bootstrap-")));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  await cp(new URL("../../scripts/qualify-merge-back.mjs", import.meta.url), join(directory, "qualify-merge-back.mjs"));
+  await cp(new URL("../../scripts/full-quality-job-names.mjs", import.meta.url), join(directory, "full-quality-job-names.mjs"));
+
+  for (const [name, args] of [
+    ["Quality verify", ["verify"]],
+    ["Publish qualification", [baseSha, publishSha, mergeBackSha]],
+  ]) {
+    await t.test(name, () => {
+      const result = spawnSync(process.execPath, [join(directory, "qualify-merge-back.mjs"), ...args], {
+        cwd: directory,
+        encoding: "utf8",
+      });
+      assert.notEqual(result.status, 0);
+      assert.doesNotMatch(result.stderr, /ERR_MODULE_NOT_FOUND|Cannot find package/);
+    });
+  }
+});
+
+test("dependency-free job contract exactly matches the current full Quality workflow", () => {
+  assert.deepEqual(requiredJobNames, requiredFullQualityJobNames);
+});
 
 function fixtureRun({ parents = `${baseSha} ${publishSha}` } = {}) {
   const calls = [];
