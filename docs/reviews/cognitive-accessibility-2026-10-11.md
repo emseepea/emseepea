@@ -80,3 +80,26 @@ prompts, fixtures, or evidence.
 | `packages/testing/README.md` | `c936db80fbd6b9b8aa76277dbdaff0cf214fab954b99d269945010220b3af5f9` | PASS |
 | `website/src/content/docs/ai-tests.md` | `0b659d17c8ecbb783a0d022e2ab5b70be3fd921af410dd8bdf6587d73b57ec5d` | PASS |
 | `.changeset/calm-candidates-align.md` | `03bed0b71598618687d117c2bd9f1cb0096cb78d6bb3144127f4c330c7fe5dd8` | PASS |
+
+## Additional Scope: Current Release Readiness Rewrite
+
+This additional review covers `docs/reviews/current-release-readiness.md`
+after replacing stale issue #150 release scope with exact issue #158
+`@emseepea/testing@0.23.0` readiness.
+
+PASS. The readiness note clearly separates the implemented issue #158 behavior
+from the evidence still required for release and acceptance. It explains that
+declared maximums are checked only after a turn completes and do not stop
+dispatch or truncate evidence. It also states that incomplete or timed-out
+turns remain failed qualification, and that preserving partial provider events
+would be a separate diagnostic capability outside this release.
+
+The `toolOutcomes` wording is cognitively clear: the four fields are
+observations, not proof of recovery, persisted effects, or response meaning.
+The release labels are readable and exact: `PASS` for conditional readiness and
+`NOT READY` until full exact-commit Quality, Release, Publish, registry,
+installed-package, and Coglen acceptance checks pass.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `a3112b8bf4adce32a93229c655aba02f84f14e6d6a527b4a19bd3b2e2c4b11c7` | PASS |
