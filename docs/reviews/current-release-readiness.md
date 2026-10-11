@@ -2,80 +2,94 @@
 
 Date: 2026-10-09
 
-## Feedback annotations for adopter effects
+## Native semantic conversations without a call-count ceiling
 
-Issue #153 adds checked annotation options to `defineFeedbackSubmission` and
-`defineFeedbackConversation`. Submission accepts four optional boolean flags;
-conversation configuration maps create, reply, list, and get to those flags.
-Omitted and undefined values preserve current defaults. Invalid fields, flag
-values, and operation names fail before registration. Definitions capture the
-configuration rather than retain mutable caller objects.
+Issue #150 removes the three-call rejection from Claude and Codex native
+semantic parsers. Tom Howard explicitly directed removal instead of the
+previous draft's configurable budget. ADR-0116 records confirmed oversight.
+No new public option or replacement call-count ceiling is introduced.
 
-The framework publishes configured descriptors through actual MCP discovery.
-Annotations do not change persistence, authorization, hook dispatch, retries,
-or execution. Applications remain responsible for classifying the full backend
-and hook chain truthfully. Collection and operator helpers retain their
-existing descriptor contracts.
+The first candidate retained Claude's four-turn flag and added a four-turn
+parser check. That parser check rejected all three live four-read trials
+with `model command exceeded its turn limit`.
+This candidate removes that native flag and the parser turn-count ceiling,
+while retaining positive-integer evidence validation. Claude settings record
+`maxTurns: null` and the unchanged `judgeMaxTurns: 4`.
+
+Existing per-send timeouts, output checks, cancellation, model, isolation,
+advertised-tool, and result checks remain effective. Judge calls still forbid
+tools and keep their prior execution limit. Exact application assertions,
+three answer trials, and independent meaning judgments remain required.
 
 ## Planned package set
 
-- `@emseepea/feedback@0.9.0`
-- `@emseepea/create-api-backed-server@0.1.10`
-- `@emseepea/create-database-schema-server@0.1.10`
-- `@emseepea/create-html-ui-server@0.1.10`
-- `@emseepea/create-mongodb-backed-server@0.1.10`
-- `@emseepea/create-multi-instance-postgres-server@0.1.10`
-- `@emseepea/create-openapi-backed-server@0.1.10`
-- `@emseepea/create-progress-streaming-server@0.1.10`
-- `@emseepea/create-react-ui-server@0.1.10`
-- `@emseepea/create-resources-and-prompts-server@0.1.10`
-- `@emseepea/create-soap-backed-server@0.1.10`
-- `@emseepea/create-tool-server@0.1.10`
+- `@emseepea/testing@0.22.0`
+- `@emseepea/create-api-backed-server@0.1.11`
+- `@emseepea/create-database-schema-server@0.1.11`
+- `@emseepea/create-html-ui-server@0.1.11`
+- `@emseepea/create-mongodb-backed-server@0.1.11`
+- `@emseepea/create-multi-instance-postgres-server@0.1.11`
+- `@emseepea/create-openapi-backed-server@0.1.11`
+- `@emseepea/create-progress-streaming-server@0.1.11`
+- `@emseepea/create-react-ui-server@0.1.11`
+- `@emseepea/create-resources-and-prompts-server@0.1.11`
+- `@emseepea/create-soap-backed-server@0.1.11`
+- `@emseepea/create-tool-server@0.1.11`
 
-All eleven initializer patches update generated feedback dependency pins.
-The private website version moves to 0.0.10 to deploy annotation guidance.
-Server, testing, and UI packages are not planned for release.
+All eleven initializer patches update their testing dependency pins. The private
+website moves to 0.0.11 to publish the guidance. Server, feedback, and UI packages
+have no planned version change.
 
 ## Architecture and jobs to be done
 
-The merged implementation preserves the API already landed on main and adds
-public-boundary and packed-install coverage. Explicit undefined flags retain
-defaults, and null configuration is rejected.
-
-This is an additive configuration of the existing checked tool contract under
-ADR-0006 and the pluggable backend and hook boundary under ADR-0066. Current
-defaults and deployment-static definitions remain unchanged. JTBD-002 covers
-composition and JTBD-006 covers safely evolving a published contract;
-JTBD-101 covers checked publication. No new architectural boundary is added.
-
-ADR-0116 is a separately requested draft for issue #150. Human oversight is
-pending, and no tool-call budget implementation is part of this release.
-The draft explicitly distinguishes call budgets from provider rounds and
-records the risk of detecting excess native calls after execution.
+ADR-0116 supersedes its unratified configurable-budget draft and supplements
+ADR-0057's native conversation boundary. JTBD-003 covers proving that an AI
+understands application results; JTBD-101 covers checked publication. No new
+job, persona, or application execution boundary is introduced.
 
 ## Required checks and residual risk
 
-Focused checks cover defaults, partial and complete overrides, all conversation
-operations, public and protected MCP discovery, public and protected submission,
-retention activity and notice cancellation, unchanged hook dispatch, malformed
-configuration, and mutation after definition. Public types reject unsupported
-flags and operation names. The same protocol checks run against fresh packed
-installs, alongside existing feedback authorization and persistence tests.
+Parser regression checks accept forty advertised calls through both providers
+and retain all results and hashed protocol evidence. Claude checks also cover
+parallel calls, longer native journeys, invalid turn counts, and missing
+results. Existing negative checks retain forbidden-tool, authentication, model, and session rules.
+Invocation tests ensure the native turn flag is absent and the judge flag
+remains. A new live native timetable journey requires exactly four real MCP
+reads and
+correct route-to-time associations in all three trials. Its synthetic evidence
+is uploaded with the existing release evidence. The failed first candidate
+is retained at Release run 37922640488. It is not
+retried; the next candidate fixed the native invocation. All three trials
+then completed four reads and passed all nine meaning judgments, but that
+candidate failed required selection-evidence registration at teardown
+(Release run 37926188016). This candidate adds the public `assertToolNames`
+assertion and retains the exact argument checks. Neither failed candidate is
+retried, and application acceptance assertions are not weakened.
 
-Full exact-commit qualification must pass, including build, types, protocol,
-packed installs, generated initializers, and documentation checks. Source
-Quality must pass on Node.js 22 and 24, with vulnerability scanning,
-initializer qualification, and existing performance budgets. Release must pass
-semantic checks and verify registry integrity, signatures, provenance, and
-fresh installs. Publish must verify latest, write release records, deploy the
-website, and merge back to main. Failed semantic trials are not retried.
+The next live candidate passed the four-read case but failed the CLI’s final
+three-call evidence ceiling (Release run 37929510230). This candidate removes
+that ceiling and the calls-plus-one turn formula from the shared validator.
+It retains positive integer turn evidence and verifies that recorded call
+counts match actual arrays. Regression checks accept forty-call records for
+both providers and reject missing evidence, inconsistent counts, unexpected
+selections, and failed or incomplete judgments. The saved four-read record
+passes the corrected validator offline without another model run.
 
-The main residual risk is an adopter declaring inaccurate annotations. The
-framework cannot infer arbitrary backend and hook effects. Documentation
-explains the four flags, includes the lifecycle-write reproduction, and states
-that connectivity alone does not determine open-world behavior. Preserved
-defaults protect compatibility. Residual risk is within the Low appetite,
-conditional on all required exact-commit gates.
+That same failed candidate also recorded provider process failures in existing
+tool-server cases. Those failures remain saved; their underlying provider
+cause is not established. The new candidate must qualify all cases without
+retrying either the failed candidate or its failed semantic trials.
+
+Full exact-commit qualification, Node.js 22 and 24 Source Quality, vulnerability
+scanning, initializer qualification, and existing performance budgets must pass.
+Release must pass semantic checks and registry integrity, signatures, provenance,
+and fresh installs. Publish must verify latest and deploy the guide.
+
+Residual risk: a provider may make more calls within existing execution limits.
+Parser count rejection was post-execution and did not protect against effects.
+Use isolated synthetic applications for qualification. Timeouts and provider
+context/output limits remain; this release does not promise unlimited
+execution. Residual risk is within the Low appetite, conditional on all gates.
 
 ## Conditional release readiness
 

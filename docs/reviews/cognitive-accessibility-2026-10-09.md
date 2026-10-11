@@ -152,3 +152,79 @@ Result: PASS. The final documentation preserves the landed create, reply, list, 
 | Reviewed public message | SHA-256 of exact body | Verdict |
 | --- | --- | --- |
 | `emseepea/emseepea#153` | `5b70d40d52f9c3be73ce0894b348728d318e9bab5faebd400c417b2d500ae2f0` | PASS, conditional on verified publication |
+
+## Remove native semantic tool-call count limits
+
+Reviewer: implementation agent conducting a specialist source review against QUALITY.md. This review does not claim independence or rendered/mobile testing.
+
+Result: PASS. The decision records Tom’s explicit direction and clearly separates tool counts from provider rounds. Guides state the remaining execution limits and the need for exact application assertions. Release readiness and the conditional issue reply identify versions, verification requirements, and the limits of failure evidence. No copy corrections remain. The issue reply must be posted only after verified publication.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `packages/testing/README.md` | `d6b011649b75312522427c726180096c159cfd36d4537aeb9381cf03abebe875` | PASS |
+| `website/src/content/docs/ai-tests.md` | `146805cd5b921c388e666c6f57541e63753317d93517bf5acc2d08d7de294464` | PASS |
+| `docs/decisions/0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md` | `a8e7a1d084fec3fb90ae75d335b9769e74ce7c99f297872054449b566c431b6f` | PASS |
+| `docs/decisions/README.md` | `584ef8cb1c56adf4b71d2aa21051d7f0db84e91d5f6e9c25c0bc465be738211b` | PASS |
+| `.changeset/native-conversation-call-count.md` | `c1bfcbd114d53ca4876f82bed439de37c98c1c296a88c7fcbb805821e96eef94` | PASS |
+| `docs/reviews/current-release-readiness.md` | `50c0e98fc4d9eb92810fdf40f481e93b995a548f1cb71844fd5c258de00b181a` | PASS |
+| `docs/reviews/native-call-limit-resolution-draft-2026-10-09.json` | `d66bfa2cee5e617c1509f3061451f052230e0e9914ff7a5fabe648dbfc36ea95` | PASS |
+
+| Reviewed public message | SHA-256 of exact body | Verdict |
+| --- | --- | --- |
+| `emseepea/emseepea#150` | `a469b94d6bfeb3d93395064903238d329d79833cf68faedeffb0b6adde075e7f` | PASS, conditional on verified publication |
+
+## Native conversation guide paragraph correction
+
+Result: PASS. The testing guide separates the execution-limit statement from the Claude round explanation so each paragraph remains short and scannable. No copy corrections remain. Reviewer: implementation agent; no independence or rendered testing is claimed.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `packages/testing/README.md` | `bb8de6761a66956800e92e81655c81e8f7156d9bcacc2347c2dcbd9e314f2dfc` | PASS |
+
+## Complete removal of native count ceilings after live evidence
+
+Reviewer: implementation agent conducting a specialist source review against QUALITY.md. This review does not claim independence or rendered/mobile testing.
+
+Result: PASS. Guides state that native call and turn count ceilings are absent, identify remaining timeout and isolation controls, and distinguish tool-free judge limits. The decision and release readiness accurately identify the failed parser check and link the original candidate evidence. The conditional issue reply describes the repaired candidate without claiming the failed candidate passed or was retried. No copy corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `packages/testing/README.md` | `5fd7de0ff6f604ed214aacf62901e5cd58b58bcff9c0d40cabe2566b44da1904` | PASS |
+| `website/src/content/docs/ai-tests.md` | `a34fd53f6bba051c7e3aad7e2439a18c059fc6964fb94d60a06726d11eab2eb8` | PASS |
+| `docs/decisions/0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md` | `d099a56ea755dfd48a8a77826f21feb11827daa7da2ffe04b33fa5babbf902f4` | PASS |
+| `docs/decisions/README.md` | `008812ddb52861d82b43351693a8e694373cd90a97f8e8d2f731f06339f66662` | PASS |
+| `.changeset/native-conversation-call-count.md` | `20ab6cfcd49f34fd023bef482df079acb07a32f932a9b22e3d4a55df0c213b24` | PASS |
+| `docs/reviews/current-release-readiness.md` | `ac6aa1267c0ac4958506ebad61ca2532a64c90b2ab628d5b43e38dff3508f15e` | PASS |
+| `docs/reviews/native-call-limit-resolution-draft-2026-10-09.json` | `3f34c47f1db1f5d914c9d8faacccca30cd7ef6d472b371b67ad9a10163296d0c` | PASS |
+
+| Reviewed public message | SHA-256 of exact body | Verdict |
+| --- | --- | --- |
+| `emseepea/emseepea#150` | `6b44ce923447f9f0ee13b4095bd3b4df0632cd4fa374cab0cf22d928df9ce784` | PASS, conditional on verified publication |
+
+## Register four-read selection evidence
+
+Reviewer: implementation agent conducting a specialist source review against QUALITY.md; no independence or rendered testing is claimed.
+
+Result: PASS. Release readiness distinguishes successful native reads and meaning judgments from the failed qualification status. It identifies the missing required selection-evidence registration and states that the correction adds an assertion while retaining exact argument checks. No copy corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `6379cab1df15e69944d810823e61ec77fbdb0ac89de6d5d2b8c48907d7ff8ad5` | PASS |
+
+## Remove the final CLI evidence ceiling
+
+Reviewer: implementation agent conducting a specialist source review against QUALITY.md; no independence or rendered testing is claimed.
+
+Result: PASS. The decision and release notes identify the final evidence-validation ceiling and distinguish provider turns from calls. Release readiness records successful four-read assertions separately from failed overall qualification and unknown provider-process failures. It requires a complete passing new candidate without retries of failed semantic trials. The issue reply is conditional on verified publication. No copy corrections remain.
+
+| Reviewed file | SHA-256 | Verdict |
+| --- | --- | --- |
+| `docs/decisions/0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md` | `c56a334702d6d19eef83b26e07124c1e19c54a0d0f4809ced5a6a04c628a422d` | PASS |
+| `docs/decisions/README.md` | `008812ddb52861d82b43351693a8e694373cd90a97f8e8d2f731f06339f66662` | PASS |
+| `docs/reviews/current-release-readiness.md` | `770dd6d7a7c32edd75346c07db1cf5ce37543a296f5aca722b53dd4904ff653f` | PASS |
+| `.changeset/native-conversation-call-count.md` | `a18dca014d22e776c51259a80b254fc5290ce11fdd56871393b17aa482d91d1c` | PASS |
+| `docs/reviews/native-call-limit-resolution-draft-2026-10-09.json` | `b7810b2db2a4f8b87dabc961190309b28101c81ecc1cfe50d48f3ddc593e81c0` | PASS |
+
+| Reviewed public message | SHA-256 of exact body | Verdict |
+| --- | --- | --- |
+| `emseepea/emseepea#150` | `bc9ce4dbe4a66f53e9b4924149a9f42fbd9882b5e7c344e43cde7eb6bcb62472` | PASS, conditional on verified publication |

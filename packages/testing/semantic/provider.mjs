@@ -50,7 +50,7 @@ export function providerSettings(provider) {
         userConfig: "ignored",
         webSearch: false,
       }
-    : { effort: "low", maxTurns: 4, permissionMode: "dontAsk", userSettings: false };
+    : { effort: "low", maxTurns: null, judgeMaxTurns: 4, permissionMode: "dontAsk", userSettings: false };
 }
 
 export function parseClaudeEvents(stdout, processExitCode = 0) {
@@ -115,11 +115,6 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
     }
     return { name: publicName, arguments: input };
   });
-  if (toolUses.length > 3) {
-    throw Object.assign(new Error("Model command used more than three tools"), {
-      attemptedToolCalls: calls,
-    });
-  }
   if (init) {
     const available = [...(init.tools ?? [])].sort();
     const expected = [...advertised.keys()].sort();
@@ -156,9 +151,8 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
   if ((result.permission_denials?.length ?? 0) > 0) {
     throw new Error("Model command attempted a forbidden action");
   }
-  if (!Number.isInteger(result.num_turns)) throw new Error("Model command returned an invalid turn count");
-  if (result.num_turns !== toolUses.length + 1) {
-    throw new Error("Model command used an unexpected number of turns");
+  if (!Number.isInteger(result.num_turns) || result.num_turns < 1) {
+    throw new Error("Model command returned an invalid turn count");
   }
   const usage = result.modelUsage?.[claudeModel];
   if (usage?.canonicalModel !== claudeModel || usage.provider !== "firstParty") {
@@ -251,7 +245,6 @@ export function conversationInvocation(provider, directory, url, tools, authToke
       "--verbose",
       "--model", claudeModel,
       "--effort", "low",
-      "--max-turns", "4",
       "--strict-mcp-config",
       ...(config ? ["--mcp-config", JSON.stringify(config)] : []),
       "--disable-slash-commands",
@@ -444,7 +437,6 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
   const forbidden = completed.filter((item) => !["agent_message", "reasoning", "mcp_tool_call"].includes(item?.type));
   if (forbidden.length) throw new Error("Model command used a forbidden tool");
   const toolItems = completed.filter(({ type }) => type === "mcp_tool_call");
-  if (toolItems.length > 3) throw new Error("Model command used more than three tools");
   const calls = toolItems.map((item) => {
     if (item.server !== mcpServerName || !advertised.has(item.tool)
       || !item.arguments || typeof item.arguments !== "object" || Array.isArray(item.arguments)) {

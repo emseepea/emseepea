@@ -126,6 +126,12 @@ const recalled = await chat.send("What did I save earlier?");
 The next `send` creates a new native provider session in every trial. The three
 trial applications remain isolated from one another.
 
+Native conversations have no framework tool-call or native provider-turn count
+limit. The per-send timeout, cancellation, output checks, model checks, and
+isolated test environment remain effective. Exact application assertions still
+decide which calls and results are acceptable. Tool-free judge invocations
+retain their existing limits.
+
 The provider is connected to exactly one loopback MCP server and may use only
 that server's advertised tools. Shell, filesystem, browser, tool search,
 plugins, ambient MCP servers, and unrelated tools are unavailable. Native calls

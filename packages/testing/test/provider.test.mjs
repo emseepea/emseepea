@@ -113,6 +113,7 @@ test("native conversations expose only the target MCP tools without coaching", (
   assert.equal(invocation.args[invocation.args.indexOf("--tools") + 1], "mcp__emseepea_eval__get-pea");
   assert.equal(invocation.args.includes("--json-schema"), false);
   assert.equal(invocation.args.includes("--safe-mode"), false);
+  assert.equal(invocation.args.includes("--max-turns"), false);
   assert.equal(invocation.args.includes("Choose the MCP tool calls"), false);
   const config = JSON.parse(invocation.args[invocation.args.indexOf("--mcp-config") + 1]);
   assert.deepEqual(config, { mcpServers: { emseepea_eval: {
@@ -178,20 +179,36 @@ test("native tool assertions come from provider MCP events", () => {
   assert.equal(parseNativeClaudeEvents([{ ...expiredAuthentication, is_error: false }], []).answer,
     expiredAuthentication.result);
 
-  const excessive = Array.from({ length: 4 }, (_, index) => ({
-    type: "assistant",
-    message: { content: [{
-      type: "tool_use",
-      id: `call-${index}`,
-      name: "mcp__emseepea_eval__get-pea",
-      input: { name: `Pea ${index}` },
-    }] },
+});
+
+test("native Claude accepts tool batches and longer provider journeys but retains evidence and tool checks", () => {
+  const uses = Array.from({ length: 40 }, (_, index) => ({
+    type: "tool_use", id: `call-${index}`, name: "mcp__emseepea_eval__get-pea",
+    input: { name: `Pea ${index}` },
   }));
-  assert.throws(
-    () => parseNativeClaudeEvents(excessive, tools),
-    (error) => error.message === "Model command used more than three tools"
-      && error.attemptedToolCalls.length === 4,
-  );
+  const events = [
+    { type: "assistant", message: { content: uses } },
+    { type: "user", message: { role: "user", content: uses.map(({ id, input }) => ({
+      type: "tool_result", tool_use_id: id, content: JSON.stringify(input),
+    })) } },
+    { ...result, num_turns: 2, result: "All forty peas are present." },
+  ];
+  const parsed = parseNativeClaudeEvents(events, [{ name: "get-pea" }]);
+  assert.equal(parsed.calls.length, 40);
+  assert.equal(parsed.toolResults.length, 40);
+  assert.equal(parsed.pathEvidence.length, 40);
+  assert.equal(parsed.providerTurnCount, 2);
+  assert.equal(parsed.providerToolCount, 40);
+  assert.deepEqual(parsed.calls.at(-1), { name: "get-pea", arguments: { name: "Pea 39" } });
+  assert.equal(parseNativeClaudeEvents([...events.slice(0, -1), { ...result, num_turns: 41 }],
+    [{ name: "get-pea" }]).providerTurnCount, 41);
+  for (const num_turns of [-1, 0, 1.5, "5", Infinity]) {
+    assert.throws(() => parseNativeClaudeEvents([...events.slice(0, -1), { ...result, num_turns }],
+      [{ name: "get-pea" }]), /invalid turn count/);
+  }
+  assert.throws(() => parseNativeClaudeEvents(events, []), /forbidden tool/);
+  assert.throws(() => parseNativeClaudeEvents([events[0], events[2]], [{ name: "get-pea" }]),
+    /omitted an MCP tool result/);
 });
 
 test("requires exact judge JSON", () => {
@@ -221,6 +238,16 @@ test("Codex events retain native MCP calls and require a complete resumable turn
   assert.equal(parsed.modelEvidence, "configured");
   assert.deepEqual(parsed.calls, [{ name: "get-pea", arguments: { name: "Snap" } }]);
   assert.deepEqual(parsed.toolResults, [{ content: [{ type: "text", text: '{"name":"Snap"}' }], isError: false }]);
+  const batch = Array.from({ length: 40 }, (_, index) => ({
+    ...events[2], item: { ...events[2].item, id: `call-${index}`, arguments: { name: `Pea ${index}` } },
+  }));
+  const batchEvents = [...events.slice(0, 2), ...batch, ...events.slice(3)];
+  const batchResult = parseCodexEvents(batchEvents, [{ name: "get-pea" }]);
+  assert.equal(batchResult.calls.length, 40);
+  assert.equal(batchResult.toolResults.length, 40);
+  assert.equal(batchResult.pathEvidence.length, 40);
+  assert.deepEqual(batchResult.calls.at(-1), { name: "get-pea", arguments: { name: "Pea 39" } });
+  assert.throws(() => parseCodexEvents(batchEvents, []), /forbidden tool/);
   assert.throws(() => parseCodexEvents(events, [{ name: "get-pea" }], "thread-2"), /required session/);
   assert.throws(() => parseCodexEvents(events.slice(0, -1), [{ name: "get-pea" }]), /incomplete turn/);
   assert.throws(() => parseCodexEvents(events.map((event) => event.item?.type === "mcp_tool_call"
