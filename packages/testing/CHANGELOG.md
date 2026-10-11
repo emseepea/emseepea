@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.23.0
+
+### Minor Changes
+
+- [`ff098e4`](https://github.com/emseepea/emseepea/commit/ff098e4ec9d7a895bd211870c2b6f58b7d53b25a) Thanks [@tompahoward](https://github.com/tompahoward)! - Add bounded semantic tool-selection assertions and read-only tool outcomes for data-dependent native MCP journeys.
+
 ## 0.22.0
 
 ### Minor Changes
