@@ -389,6 +389,8 @@ jobs:
       - name: Detect release work
         id: release-work
         run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git update-ref refs/heads/main "$GITHUB_SHA"
           status_file="$(mktemp)"
           npx changeset status --output "$status_file"
           node scripts/detect-release-work.mjs "$status_file" >> "$GITHUB_OUTPUT"
