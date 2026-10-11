@@ -43,15 +43,30 @@ authorized scope.
 
 ## Planned package set
 
-- `@emseepea/feedback@0.10.0`
+- `@emseepea/feedback@0.10.1`
+- `@emseepea/create-api-backed-server@0.1.12`
+- `@emseepea/create-database-schema-server@0.1.12`
+- `@emseepea/create-html-ui-server@0.1.12`
+- `@emseepea/create-mongodb-backed-server@0.1.12`
+- `@emseepea/create-multi-instance-postgres-server@0.1.12`
+- `@emseepea/create-openapi-backed-server@0.1.12`
+- `@emseepea/create-progress-streaming-server@0.1.12`
+- `@emseepea/create-react-ui-server@0.1.12`
+- `@emseepea/create-resources-and-prompts-server@0.1.12`
+- `@emseepea/create-soap-backed-server@0.1.12`
+- `@emseepea/create-tool-server@0.1.12`
 
-No other package has a planned version change.
+The staged `@emseepea/feedback@0.10.0` version is immutable and remains under
+`next`; it was never promoted to `latest`. The checked recovery therefore uses
+the next fresh feedback patch. The initializer patches give the corrected
+`@emseepea/testing@0.23.1` dependency pins new immutable package versions.
 
 ## Verified before push
 
 The feedback package builds successfully. The focused feedback, discovery,
 annotation, durable-record, dogfood, black-box, and packed-install checks pass.
-The release plan contains one publishable package: `@emseepea/feedback@0.10.0`.
+The recovery plan contains the feedback replacement and exactly eleven
+initializer patch packages listed above.
 
 The source contract and docs contain no MCP registration or annotation override
 for `create-feedback-thread`. Tests verify that conversation discovery returns

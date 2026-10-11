@@ -35,3 +35,22 @@ rendered website, screen-reader, production, or release verification.
 | `packages/feedback/README.md` | `aaf819726311eb7f7c860f70d10d6d0d75a0675c1c27d7d8830442e968759905` | PASS |
 | `website/src/content/docs/feedback.md` | `288deea8ba2724de7be9cac9cd1ec5a388c29d42f70cd6390459d225c069f095` | PASS |
 | `docs/reviews/current-release-readiness.md` | `775ae63c29e9502e91fc371379d11f1b860425e1ee9ef49166f004b82f542e48` | PASS |
+
+## Mixed Staged-Candidate Release Recovery
+
+Result: PASS. An independent cognitive-accessibility specialist reviewed the
+exact source content listed below. The attempt history distinguishes failed
+semantic attempts from the single terminal publishing attempt. The recovery
+plan clearly separates the occupied feedback version from the eleven
+initializer packages that remain at their verified registry baseline.
+
+This is a source-content review of defined terms, attempt-history logic,
+package-set partitioning, evidence boundaries, and release-package clarity. It
+is not release or production verification.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/decisions/0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md` | `117850dd1e17f4b5f0909b5dc029b9c7a19722deea6ed56e5b492cb43e2c9204` | PASS |
+| `docs/decisions/README.md` | `8633604b71d7f14e848486160144d7a2574e215056bc7c82a7c576b0cb607464` | PASS |
+| `docs/reviews/current-release-readiness.md` | `b4050c78016e3d740b888a3fc7635349be64bd2ecfd4cd67172312ef0cbaa931` | PASS |
+| `.changeset/repair-initializer-testing-pins.md` | `d4422c5bea921f6e90c7b51a613467fc385068d24ae4bb85abc7a92241d4a347` | PASS |
