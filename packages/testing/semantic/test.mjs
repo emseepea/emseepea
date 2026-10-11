@@ -11,10 +11,27 @@ import {
   stopSemanticServer,
 } from "./material.mjs";
 import { parseJudgeVerdict, providerModel, providerSettings, runModel, startModelConversation } from "./provider.mjs";
+import {
+  canonicalToolNames,
+  normalizeToolSelectionContract,
+  toolSelectionContractSatisfied,
+} from "./selection.mjs";
 
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const names = new Set();
 const privateTurn = Symbol("emseepea-semantic-turn");
+
+function immutableSnapshot(value) {
+  const snapshot = structuredClone(value);
+  const freeze = (entry) => {
+    if (entry && typeof entry === "object" && !Object.isFrozen(entry)) {
+      for (const nested of Object.values(entry)) freeze(nested);
+      Object.freeze(entry);
+    }
+    return entry;
+  };
+  return freeze(snapshot);
+}
 
 export async function createConversation(testContext, options) {
   const specification = validateConversationOptions(options);
@@ -104,13 +121,14 @@ export async function createConversation(testContext, options) {
         );
         const answer = await trial.model.send(prompt, options);
         const calls = answer.calls;
+        const recordedToolCalls = calls.map((call, index) => ({
+          ...call,
+          result: answer.toolResults[index].content,
+          isError: answer.toolResults[index].isError,
+        }));
         trial.history.push({
           user: prompt,
-          toolCalls: calls.map((call, index) => ({
-            ...call,
-            result: answer.toolResults[index].content,
-            isError: answer.toolResults[index].isError,
-          })),
+          toolCalls: recordedToolCalls,
           assistant: answer.answer,
         });
         const record = {
@@ -120,11 +138,8 @@ export async function createConversation(testContext, options) {
           prompt,
           response: answer.answer,
           elicitations: answer.elicitations,
-          toolCalls: calls.map((call, index) => ({
-            ...call,
-            result: answer.toolResults[index].content,
-            isError: answer.toolResults[index].isError,
-          })),
+          toolCalls: recordedToolCalls,
+          toolOutcomesSha256: hash(JSON.stringify(recordedToolCalls)),
           promptSha256: hash(prompt),
           answerSha256: hash(answer.answer),
           answerModels: answer.models,
@@ -148,6 +163,7 @@ export async function createConversation(testContext, options) {
           calls,
           prompt,
           record,
+          tools: trial.tools,
           state,
           evidence,
           provider,
@@ -176,6 +192,9 @@ export async function createConversation(testContext, options) {
       return Object.freeze({
         responses: Object.freeze(trials.map(({ answer }) => answer)),
         toolCalls: Object.freeze(trials.map(({ calls }) => Object.freeze(calls))),
+        toolOutcomes: Object.freeze(trials.map(({ record }) => immutableSnapshot(record.toolCalls.map(
+          ({ name, arguments: args, result, isError }) => ({ name, arguments: args, result, isError }),
+        )))),
         elicitations: Object.freeze(trials.map(({ record }) => Object.freeze(record.elicitations))),
         [privateTurn]: trials,
       });
@@ -194,6 +213,7 @@ export async function createConversation(testContext, options) {
 
 export function assertToolCalls(turn, expected) {
   const trials = turnTrials(turn);
+  ensureNoDeclarativeSelection(trials);
   validateExpectedCalls(expected);
   for (const trial of trials) {
     trial.record.expectedTools = expected.map(({ name }) => name);
@@ -210,6 +230,7 @@ export function assertToolCalls(turn, expected) {
 
 export async function assertToolCallsWithOptionalFeedback(turn, expected) {
   const trials = turnTrials(turn);
+  ensureNoDeclarativeSelection(trials);
   validateExpectedCalls(expected);
   const judgments = [];
   for (let trialIndex = 0; trialIndex < trials.length; trialIndex += 1) {
@@ -266,6 +287,7 @@ export function assertNoToolCalls(turn) {
 
 export function assertOptionalToolCall(turn, name) {
   const trials = turnTrials(turn);
+  ensureNoDeclarativeSelection(trials);
   if (typeof name !== "string" || !name.trim()) {
     throw new Error("Optional tool-call expectation needs a tool name");
   }
@@ -281,6 +303,7 @@ export function assertOptionalToolCall(turn, name) {
 
 export function assertToolNames(turn, expected) {
   const trials = turnTrials(turn);
+  ensureNoDeclarativeSelection(trials);
   const validNames = (names) => Array.isArray(names)
     && names.every((name) => typeof name === "string" && name.trim());
   const alternatives = Array.isArray(expected) ? undefined : expected?.oneOf;
@@ -306,6 +329,40 @@ export function assertToolNames(turn, expected) {
   } catch {
     failAssertion(trials, "tool-name assertion");
     throw new Error("Tool names did not match the expected order and count");
+  }
+}
+
+export function assertToolSelection(turn, contract) {
+  const trials = turnTrials(turn);
+  ensureNoExactSelection(trials);
+  let candidates;
+  try {
+    candidates = trials.map((trial) => {
+      const advertisedToolNames = canonicalToolNames(trial.tools.map(({ name }) => name));
+      return { advertisedToolNames, normalized: normalizeToolSelectionContract(contract, advertisedToolNames) };
+    });
+    if (candidates.some(({ normalized }) => JSON.stringify(normalized)
+      !== JSON.stringify(candidates[0].normalized))) {
+      throw new Error("Tool-selection contract must normalize identically for every trial");
+    }
+  } catch (error) {
+    failAssertion(trials, "tool-selection contract assertion");
+    throw error;
+  }
+  const normalized = candidates[0].normalized;
+  trials.forEach((trial, index) => {
+    const { advertisedToolNames } = candidates[index];
+    trial.record.expectedToolSelection = structuredClone(normalized);
+    trial.record.expectedToolSelectionSha256 = hash(JSON.stringify(normalized));
+    trial.record.advertisedToolNames = advertisedToolNames;
+    trial.record.advertisedToolNamesSha256 = hash(JSON.stringify(advertisedToolNames));
+    if (trial.record.expectedArguments !== undefined || trial.record.expectedFeedback !== undefined) {
+      recordFlexibleExpectation(trial.record);
+    }
+  });
+  if (!trials.every((trial) => toolSelectionContractSatisfied(normalized, trial.calls))) {
+    failAssertion(trials, "tool-selection contract assertion");
+    throw new Error("Tool calls did not satisfy the declared selection contract");
   }
 }
 
@@ -536,6 +593,7 @@ async function closeConversation(state, evidence, output) {
   const complete = !state.failed && state.meaningAssertions > 0 && evidence.answerTrials.length === 3
     && evidence.answerTrials.every(({ turns }) => turns.length > 0
       && turns.every((turn) => Array.isArray(turn.expectedTools)
+        || turn.expectedToolSelection !== undefined
         || turn.expectedOptionalFeedback === true
         || typeof turn.expectedOptionalTool === "string"));
   if (complete) {
@@ -582,7 +640,34 @@ function failAssertion(trials, phase) {
   trials[0].evidence.failedPhase = phase;
 }
 
+function ensureNoDeclarativeSelection(trials) {
+  if (trials.some(({ record }) => record.expectedToolSelection !== undefined)) {
+    failAssertion(trials, "tool-selection contract assertion");
+    throw new Error("Cannot combine exact and declarative tool-selection assertions");
+  }
+}
+
+function ensureNoExactSelection(trials) {
+  const hasExactSelection = ({ record }) => record.expectedCalls !== undefined
+    || record.expectedTools !== undefined
+    || record.expectedOptionalTool !== undefined
+    || record.expectedOptionalFeedback !== undefined
+    || record.expectedToolAlternatives !== undefined;
+  if (trials.some(hasExactSelection)) {
+    failAssertion(trials, "tool-selection contract assertion");
+    throw new Error("Cannot combine exact and declarative tool-selection assertions");
+  }
+}
+
 function recordFlexibleExpectation(record) {
+  if (record.expectedToolSelection !== undefined) {
+    delete record.expectedSelectionSha256;
+    record.expectedOutcomeAssertionsSha256 = hash(JSON.stringify({
+      arguments: record.expectedArguments,
+      feedback: record.expectedFeedback,
+    }));
+    return;
+  }
   record.expectedSelectionSha256 = hash(JSON.stringify({
     tools: record.expectedTools,
     arguments: record.expectedArguments,

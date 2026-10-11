@@ -2552,7 +2552,7 @@ Chosen option: **"Declarative closed-world selection contracts"**, because it st
 - Three trials with different valid retrieval orders and recovery calls pass one independently authored selection contract.
 - Unadvertised, omitted, explicitly forbidden, duplicated, and over-cardinality tools fail, as do impossible or conflicting contracts.
 - Tampered contracts, digests, concrete calls, results, or path evidence fail independent evidence validation.
-- Missing argument, result, persisted-effect, or meaning assertions still fail the fixture that requires them.
+- The synthetic fixture separately asserts required arguments, results, persisted effects, and meaning. Missing or mismatched values fail their assertions.
 - Existing exact assertion tests and published evidence remain compatible.
 - An independently installed package qualifies the synthetic reproduction for issue #158 before the decision is eligible for confirmation.
 

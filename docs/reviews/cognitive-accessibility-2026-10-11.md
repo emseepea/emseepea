@@ -51,3 +51,32 @@ subject to ADR-0057's non-sensitive synthetic-fixture requirement.
 | `docs/decisions/0118-declarative-outcome-constrained-semantic-tool-selection-assertions.proposed.md` | `a02e4555e3fe7f36fa5892a45a15f1c28777d234c4e5d1196f8b0d8370fb6d98` | PASS |
 | `docs/decisions/0119-read-only-native-tool-outcomes-on-semantic-conversation-turns.proposed.md` | `68002159c51e0fcf9c662a17a99f9e518b8c1afffd0c92c57e81f58351c043eb` | PASS |
 | `docs/decisions/README.md` | `c5118f3c750bb8a8c1c293af55eb061f910fd987fba41fd02bf91c106b5fcd5f` | PASS |
+
+## Additional Scope: Issue #158 Implementation Slice
+
+This additional review covers the implemented issue #158 documentation and
+generated decision compendium changes for bounded semantic tool-selection
+assertions and read-only tool outcomes.
+
+PASS. The public wording separates exact tool-call assertions from
+outcome-constrained selection assertions. It states that finite maximums are
+checked after the turn and do not stop tool calls or truncate evidence. It
+also explains that a passing selection assertion proves only the declared tool
+and count rules, not argument correctness, persisted effects, response meaning,
+or recovery from an error.
+
+The `toolOutcomes` wording is clear that outcomes are read-only observations of
+what the model saw. It keeps `isError` separate from recovery or effect proof,
+and it repeats that a later non-error result does not by itself prove recovery
+or a persisted effect. The evidence and privacy boundaries remain explicit:
+public guidance points to isolated non-production fixtures, mode `0600` local
+evidence, bounded metadata and hashes, and no production data or credentials in
+prompts, fixtures, or evidence.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/decisions/0118-declarative-outcome-constrained-semantic-tool-selection-assertions.proposed.md` | `218ab6df13622df0531fcc1ab3f6d30ac1f22114bb3c1643adda15ea233a4d66` | PASS |
+| `docs/decisions/README.md` | `d0fa7f0a66006a22c7fa287f4357788abfba96df79098834721727d903c82c6c` | PASS |
+| `packages/testing/README.md` | `c936db80fbd6b9b8aa76277dbdaff0cf214fab954b99d269945010220b3af5f9` | PASS |
+| `website/src/content/docs/ai-tests.md` | `0b659d17c8ecbb783a0d022e2ab5b70be3fd921af410dd8bdf6587d73b57ec5d` | PASS |
+| `.changeset/calm-candidates-align.md` | `03bed0b71598618687d117c2bd9f1cb0096cb78d6bb3144127f4c330c7fe5dd8` | PASS |

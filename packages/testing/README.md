@@ -29,6 +29,39 @@ sequence in the listed order and count. The evidence retains all alternatives
 and the matched sequence; arguments, meaning, confirmation and feedback still
 need their own assertions.
 
+Use `assertToolSelection` when valid tool order or recovery paths can vary, but
+the permitted tools and call counts are bounded. Its tool-selection contract
+lists required, allowed, and explicitly forbidden tools. Any advertised tool
+that is not required or allowed is rejected.
+
+```js
+assertToolSelection(turn, {
+  required: [
+    { name: "list-candidates", minCalls: 1, maxCalls: 1 },
+    { name: "commit-selection", minCalls: 1, maxCalls: 1 },
+  ],
+  allowed: [{ name: "lookup-candidate", maxCalls: 2 }],
+  forbidden: [],
+  totalCalls: { minCalls: 2, maxCalls: 4 },
+});
+```
+
+The finite maximums are checked after the turn. They do not stop tool calls or
+truncate evidence.
+
+A passing selection assertion proves only that every
+recorded call satisfied the declared tool and count rules. It does not prove
+argument correctness, persisted effects, response meaning, or recovery from an
+error. Keep an exact assertion when order, count, and arguments are
+deterministic, and add the separate assertions your application outcome needs.
+
+Each turn also exposes `toolOutcomes`, aligned by trial and call order with
+`toolCalls`. Each outcome is a read-only snapshot of what the model saw. It
+contains only `name`, `arguments`, the model-visible `result`, and `isError`.
+Use it to check an expected error and the later calls that followed the error.
+A later non-error result does not by itself prove recovery or a persisted
+effect.
+
 For a successful turn that advertises feedback, use
 `assertToolCallsWithOptionalFeedback`. It requires the exact ordered primary
 calls and arguments, then allows no feedback call or one trailing
@@ -60,7 +93,7 @@ the same conversation.
 Native conversations have no framework tool-call or native provider-turn count
 limit. Calls must still use advertised MCP tools. The per-send timeout,
 cancellation, output checks, model checks, and isolated test environment remain
-effective. Exact application assertions decide which calls and results are
+effective. Application assertions decide which calls and results are
 acceptable. Tool-free judge invocations retain their existing limits.
 
 Call `await conversation.fresh()` to discard provider transcript history while

@@ -5,6 +5,30 @@ export interface ToolCall {
   arguments: Record<string, unknown>;
 }
 
+export interface ToolOutcome {
+  readonly name: string;
+  readonly arguments: Readonly<Record<string, unknown>>;
+  readonly result: unknown;
+  readonly isError: boolean;
+}
+
+export interface ToolSelectionContract {
+  readonly required: readonly {
+    readonly name: string;
+    readonly minCalls: number;
+    readonly maxCalls: number;
+  }[];
+  readonly allowed: readonly {
+    readonly name: string;
+    readonly maxCalls: number;
+  }[];
+  readonly forbidden?: readonly string[];
+  readonly totalCalls: {
+    readonly minCalls: number;
+    readonly maxCalls: number;
+  };
+}
+
 export interface ConversationOptions {
   server: URL;
   /** Real application context supplied in production. Never use this as test guidance. */
@@ -18,6 +42,7 @@ export interface ConversationOptions {
 export interface ConversationTurn {
   readonly responses: readonly string[];
   readonly toolCalls: readonly (readonly ToolCall[])[];
+  readonly toolOutcomes: readonly (readonly ToolOutcome[])[];
   readonly elicitations: readonly (readonly ElicitationEvidence[])[];
 }
 
@@ -61,6 +86,8 @@ export function assertToolNames(
   turn: ConversationTurn,
   expected: readonly string[] | { readonly oneOf: readonly (readonly string[])[] },
 ): void;
+/** Requires completed calls to satisfy an independently authored closed-world selection contract. */
+export function assertToolSelection(turn: ConversationTurn, contract: ToolSelectionContract): void;
 export function assertToolArguments(
   turn: ConversationTurn,
   name: string,

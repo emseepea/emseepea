@@ -13,6 +13,8 @@ const helper = new URL("../semantic/test.mjs", import.meta.url).href;
 const server = new URL("../../../examples/tool-server/dist/server.js", import.meta.url).href;
 const protectedServer = new URL("../../../tests/fixtures/protected-inventory-server.mjs", import.meta.url).href;
 const feedbackServer = new URL("../../../examples/api-backed-server/test-support/llm-server.mjs", import.meta.url).href;
+const outcomeServer = new URL("../../../tests/fixtures/semantic-outcome-server.mjs", import.meta.url).href;
+const mcpClientModule = import.meta.resolve("@modelcontextprotocol/client");
 
 test("cancellation stops MCP collection and the server receives no model token", { timeout: 15_000 }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "semantic-cancel-"));
@@ -101,12 +103,15 @@ test("conversation tests assert exact calls, meaning, and no-call follow-ups", {
   const model = join(directory, "model.mjs");
   const modelLog = join(directory, "model-log.jsonl");
   const answerFailureClaim = join(directory, "answer-failure-claim");
+  const variedTrialClaim = join(directory, "varied-trial-");
+  const persistedSelections = join(directory, "persisted-selections.jsonl");
   const file = join(directory, "eval", "meaning.test.mjs");
   const output = join(directory, "evidence.json");
   const directoryPattern = new RegExp(directory.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   await writeFile(model, `#!/usr/bin/env node
 import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
+import { Client, StreamableHTTPClientTransport } from ${JSON.stringify(mcpClientModule)};
 const log = (value) => appendFileSync(${JSON.stringify(modelLog)}, JSON.stringify(value) + "\\n");
 const waitForPeers = async (phase, expected, peerKey = process.pid) => {
   log({ barrier: phase, peerKey, pid: process.pid });
@@ -118,6 +123,17 @@ const waitForPeers = async (phase, expected, peerKey = process.pid) => {
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
   process.exit(24);
+};
+const claimVariedTrial = () => {
+  for (let trial = 1; trial <= 3; trial += 1) {
+    try {
+      writeFileSync(${JSON.stringify(variedTrialClaim)} + trial, String(process.pid), { flag: "wx" });
+      return trial;
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+    }
+  }
+  process.exit(25);
 };
 process.stderr.write("MODEL_STDERR_SENTINEL\\n");
 const result = (answer, calls = 0) => ({
@@ -161,7 +177,11 @@ if (!process.argv.includes("--input-format")) {
   process.stdout.write(JSON.stringify({ type: "system", subtype: "init", tools,
     mcp_servers: [{ name: "emseepea_eval", status: "connected" }] }) + "\\n");
   let turn = 0;
-  createInterface({ input: process.stdin }).on("line", async (line) => {
+  let variedTrial;
+  let liveClient;
+  const input = createInterface({ input: process.stdin });
+  input.on("close", async () => { await liveClient?.close(); });
+  input.on("line", async (line) => {
     turn += 1;
     const input = JSON.parse(line);
     const prompt = input.message.content[0].text;
@@ -201,7 +221,26 @@ if (!process.argv.includes("--input-format")) {
             } }]
             : [];
     const feedbackScenario = context?.startsWith("PRIMARY_WITH_") && !followUp;
-    const calls = feedbackScenario
+    if (context === "VARIED_OUTCOME_SELECTION" && variedTrial === undefined) variedTrial = claimVariedTrial();
+    const calls = context === "VARIED_OUTCOME_SELECTION" && !followUp
+      ? variedTrial === 1
+        ? [
+          { name: "list-candidates", arguments: {} },
+          { name: "commit-selection", arguments: { id: "candidate-1" } },
+        ]
+        : variedTrial === 2
+          ? [
+            { name: "lookup-candidate", arguments: { id: "candidate-1" } },
+            { name: "list-candidates", arguments: {} },
+            { name: "commit-selection", arguments: { id: "candidate-1" } },
+          ]
+          : [
+            { name: "list-candidates", arguments: {} },
+            { name: "lookup-candidate", arguments: { id: "" } },
+            { name: "lookup-candidate", arguments: { id: "candidate-1" } },
+            { name: "commit-selection", arguments: { id: "candidate-1" } },
+          ]
+      : feedbackScenario
       ? [
         { name: "search-pea-taxa", arguments: { query: "pea" } },
         ...(context === "PRIMARY_WITH_WRONG_EXTRA"
@@ -217,18 +256,33 @@ if (!process.argv.includes("--input-format")) {
         ? (forceFollowUpTool ? [{ name: "get-private-inventory-report", arguments: {} }] : [])
         : [{ name: "get-private-inventory-report", arguments: {} }];
     log({ nativeTurn: true, prompt, turn });
-    calls.forEach((call, index) => {
+    if (context === "VARIED_OUTCOME_SELECTION" && !liveClient) {
+      liveClient = new Client({ name: "semantic-outcome-model-fixture", version: "0.0.0" });
+      await liveClient.connect(new StreamableHTTPClientTransport(
+        new URL(config.mcpServers.emseepea_eval.url),
+      ));
+    }
+    for (const [index, call] of calls.entries()) {
       const id = \`call-\${turn}-\${index}\`;
+      const actual = context === "VARIED_OUTCOME_SELECTION"
+        ? await liveClient.callTool({ name: call.name, arguments: call.arguments })
+        : undefined;
+      const variedError = actual?.isError === true;
+      const content = context === "VARIED_OUTCOME_SELECTION"
+        ? actual.structuredContent ?? actual.content
+        : "{\\"onHand\\":120,\\"reserved\\":35,\\"inbound\\":40}";
       process.stdout.write(JSON.stringify({ type: "assistant", message: { content: [{
         type: "tool_use", id, name: \`mcp__emseepea_eval__\${call.name}\`, input: call.arguments,
       }] } }) + "\\n");
       process.stdout.write(JSON.stringify({ type: "user", message: { role: "user", content: [{
         type: "tool_result", tool_use_id: id,
-        is_error: context === "PRIMARY_WITH_FAILED_FEEDBACK" && call.name === "submit-feedback",
-        content: "{\\"onHand\\":120,\\"reserved\\":35,\\"inbound\\":40}",
+        is_error: variedError || (context === "PRIMARY_WITH_FAILED_FEEDBACK" && call.name === "submit-feedback"),
+        content,
       }] } }) + "\\n");
-    });
-    const answer = feedbackScenario
+    }
+    const answer = context === "VARIED_OUTCOME_SELECTION" && !followUp
+      ? "Candidate 1 was selected and persisted after the available candidates were checked."
+      : feedbackScenario
       ? context === "PRIMARY_WITH_UNDISCLOSED_FEEDBACK"
         ? "Pisum sativum was returned from the catalogue."
         : context === "PRIMARY_WITH_NEGATIVE_FEEDBACK"
@@ -254,20 +308,32 @@ if (!process.argv.includes("--input-format")) {
     expectedCalls,
     firstOptionalTool,
     firstToolNames,
+    firstToolSelection,
+    selectionArgumentOrder,
+    selectionFeedbackOrder,
+    selectionMix,
     mutateToolNames = false,
     followUpOptionalTool,
     allowOptionalFeedback = false,
+    inspectOutcomes = false,
+    variedOutcome = false,
+    stateFile,
   } = {}) => `
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   assertNoNegativeFeedback,
   assertNoToolCalls,
   assertOptionalToolCall,
+  assertFeedback,
   assertResponseContains,
   assertResponseMeaning,
   assertToolCalls,
   assertToolCallsWithOptionalFeedback,
+  assertToolArguments,
   assertToolNames,
+  assertToolSelection,
   createConversation,
 } from ${JSON.stringify(helper)};
 
@@ -276,9 +342,24 @@ test("inventory conversation", async (t) => {
     server: new URL(${JSON.stringify(serverUrl)}),
     ${serverUrl === protectedServer ? 'authToken: "example-access-token",' : ""}
     ${context === undefined ? "" : `context: ${JSON.stringify(context)},`}
+    ${stateFile === undefined ? "" : `environment: { SELECTION_STATE_FILE: ${JSON.stringify(stateFile)} },`}
   });
   const inventory = await chat.send("How many packets can we promise now?");
-  ${firstToolNames !== undefined
+  ${firstToolSelection !== undefined && selectionArgumentOrder === "before"
+    ? 'assertToolArguments(inventory, "get-private-inventory-report", {});'
+    : ""}
+  ${firstToolSelection !== undefined && selectionFeedbackOrder === "before"
+    ? 'assertFeedback(inventory, { observation: "notable_success", detailIncludes: ["immediately useful"] });'
+    : ""}
+  ${firstToolSelection !== undefined
+    ? selectionMix === "exact-first"
+      ? `assertToolNames(inventory, ["get-private-inventory-report"]);
+  assertToolSelection(inventory, ${JSON.stringify(firstToolSelection)});`
+      : selectionMix === "declarative-first"
+        ? `assertToolSelection(inventory, ${JSON.stringify(firstToolSelection)});
+  assertToolNames(inventory, ["get-private-inventory-report"]);`
+        : `assertToolSelection(inventory, ${JSON.stringify(firstToolSelection)});`
+    : firstToolNames !== undefined
     ? `const names = ${JSON.stringify(firstToolNames)};
   assertToolNames(inventory, names);
   ${mutateToolNames ? 'names.oneOf[0].push("unexpected-tool"); names.oneOf.push(["other-tool"]);' : ""}`
@@ -288,6 +369,44 @@ test("inventory conversation", async (t) => {
       name: "get-private-inventory-report",
       arguments: expectedArguments,
     }])});`}
+  ${firstToolSelection !== undefined && selectionArgumentOrder === "after"
+    ? 'assertToolArguments(inventory, "get-private-inventory-report", {});'
+    : ""}
+  ${firstToolSelection !== undefined && selectionFeedbackOrder === "after"
+    ? 'assertFeedback(inventory, { observation: "notable_success", detailIncludes: ["immediately useful"] });'
+    : ""}
+  ${inspectOutcomes ? `
+  assert.equal(inventory.toolOutcomes.length, 3);
+  assert.ok(inventory.toolOutcomes.every((outcomes) => outcomes.length === 1));
+  assert.deepEqual(Object.keys(inventory.toolOutcomes[0][0]).sort(), ["arguments", "isError", "name", "result"]);
+  assert.equal(inventory.toolOutcomes[0][0].name, inventory.toolCalls[0][0].name);
+  assert.deepEqual(inventory.toolOutcomes[0][0].arguments, inventory.toolCalls[0][0].arguments);
+  assert.equal(Object.isFrozen(inventory.toolOutcomes[0][0]), true);
+  assert.equal(Object.isFrozen(inventory.toolOutcomes[0][0].arguments), true);
+  assert.throws(() => { inventory.toolOutcomes[0][0].arguments.changed = true; }, TypeError);
+  assert.equal(inventory.toolCalls[0][0].arguments.changed, undefined);` : ""}
+  ${variedOutcome ? `
+  assertToolArguments(inventory, "commit-selection", { id: "candidate-1" });
+  assert.deepEqual(inventory.toolCalls.map((calls) => calls.map(({ name }) => name)).sort((a, b) => a.length - b.length), [
+    ["list-candidates", "commit-selection"],
+    ["lookup-candidate", "list-candidates", "commit-selection"],
+    ["list-candidates", "lookup-candidate", "lookup-candidate", "commit-selection"],
+  ]);
+  const recovered = inventory.toolOutcomes.find((outcomes) => outcomes.some(({ isError }) => isError));
+  assert.ok(recovered);
+  assert.equal(recovered.filter(({ name }) => name === "lookup-candidate").length, 2);
+  assert.ok(recovered.find(({ isError }) => isError).result);
+  assert.equal(recovered.at(-1).name, "commit-selection");
+  assert.equal(recovered.at(-1).isError, false);
+  assert.equal(recovered.at(-1).result.persisted, true);
+  assert.equal(Object.isFrozen(recovered.at(-1).result), true);
+  assert.equal(Object.isFrozen(recovered.at(-1).result.metadata), true);
+  assert.throws(() => { recovered.at(-1).result.metadata.source = "changed"; }, TypeError);
+  assert.ok(inventory.toolOutcomes.every((outcomes) => outcomes.at(-1).name === "commit-selection"
+    && outcomes.at(-1).isError === false && outcomes.at(-1).result.persisted === true));` : ""}
+  ${stateFile !== undefined ? `
+  const persisted = readFileSync(${JSON.stringify(stateFile)}, "utf8").trim().split("\\n").map(JSON.parse);
+  assert.deepEqual(persisted, [{ id: "candidate-1" }, { id: "candidate-1" }, { id: "candidate-1" }]);` : ""}
   ${firstResponseAssertions ? `assertResponseContains(inventory, ${JSON.stringify(literal)});` : ""}
 
   const followUp = await chat.send("How many packets were inbound?");
@@ -373,6 +492,105 @@ test("inventory conversation", async (t) => {
   assert.ok(invocations.filter(({ native }) => native).every(({ tools, config, hasJsonSchema, hasServerToken }) =>
     tools.length === 1 && Object.keys(config.mcpServers).join() === "emseepea_eval"
       && hasJsonSchema === false && hasServerToken === true));
+
+  const selectionContract = {
+    required: [{ name: "get-private-inventory-report", minCalls: 1, maxCalls: 1 }],
+    allowed: [],
+    forbidden: [],
+    totalCalls: { minCalls: 1, maxCalls: 1 },
+  };
+  await writeFile(file, source({ firstToolSelection: selectionContract, inspectOutcomes: true }));
+  const selectedOutcome = run();
+  assert.equal(selectedOutcome.status, 0, selectedOutcome.stdout + selectedOutcome.stderr);
+  const selectedEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+  assert.ok(selectedEvidence.answerTrials.every(({ turns }) =>
+    turns[0].expectedToolSelection.required[0].name === "get-private-inventory-report"
+      && isHash(turns[0].expectedToolSelectionSha256)
+      && turns[0].advertisedToolNames.join() === "get-private-inventory-report"
+      && isHash(turns[0].advertisedToolNamesSha256)));
+
+  for (const selectionArgumentOrder of ["before", "after"]) {
+    await writeFile(file, source({ firstToolSelection: selectionContract, selectionArgumentOrder }));
+    const composedSelection = run();
+    assert.equal(composedSelection.status, 0, composedSelection.stdout + composedSelection.stderr);
+    const composedEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+    assert.ok(composedEvidence.answerTrials.every(({ turns }) =>
+      turns[0].expectedArguments["get-private-inventory-report"]
+        && isHash(turns[0].expectedOutcomeAssertionsSha256)
+        && turns[0].expectedSelectionSha256 === undefined));
+  }
+
+  const feedbackSelectionContract = {
+    required: [
+      { name: "search-pea-taxa", minCalls: 1, maxCalls: 1 },
+      { name: "submit-feedback", minCalls: 1, maxCalls: 1 },
+    ],
+    allowed: [],
+    forbidden: [],
+    totalCalls: { minCalls: 2, maxCalls: 2 },
+  };
+  for (const selectionFeedbackOrder of ["before", "after"]) {
+    await writeFile(file, source({
+      context: "PRIMARY_WITH_POSITIVE_FEEDBACK",
+      serverUrl: feedbackServer,
+      firstToolSelection: feedbackSelectionContract,
+      selectionFeedbackOrder,
+      literal: "Pisum sativum",
+      meaning: "The response says Pisum sativum was returned from the catalogue.",
+    }));
+    const composedFeedback = run();
+    assert.equal(composedFeedback.status, 0, composedFeedback.stdout + composedFeedback.stderr);
+    const composedFeedbackEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+    assert.ok(composedFeedbackEvidence.answerTrials.every(({ turns }) =>
+      turns[0].expectedFeedback.observation.includes("notable_success")
+        && isHash(turns[0].expectedOutcomeAssertionsSha256)
+        && turns[0].expectedSelectionSha256 === undefined));
+  }
+
+  for (const selectionMix of ["exact-first", "declarative-first"]) {
+    await writeFile(file, source({ firstToolSelection: selectionContract, selectionMix }));
+    const mixedSelection = run();
+    assert.equal(mixedSelection.status, 1, `${selectionMix} assertion families must fail closed`);
+    assert.equal(Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0].failedPhase,
+      "tool-selection contract assertion");
+  }
+
+  const variedSelection = {
+    required: [
+      { name: "commit-selection", minCalls: 1, maxCalls: 1 },
+      { name: "list-candidates", minCalls: 1, maxCalls: 1 },
+    ],
+    allowed: [{ name: "lookup-candidate", maxCalls: 2 }],
+    forbidden: [],
+    totalCalls: { minCalls: 2, maxCalls: 4 },
+  };
+  await writeFile(file, source({
+    context: "VARIED_OUTCOME_SELECTION",
+    serverUrl: outcomeServer,
+    firstToolSelection: variedSelection,
+    literal: "selected and persisted",
+    meaning: "Candidate 1 was selected and persisted after checking the available candidates.",
+    variedOutcome: true,
+    stateFile: persistedSelections,
+  }));
+  const varied = run();
+  assert.equal(varied.status, 0, varied.stdout + varied.stderr);
+  const variedEvidence = Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0];
+  assert.deepEqual(variedEvidence.answerTrials.map(({ turns }) => turns[0].toolCallCount).sort(), [2, 3, 4]);
+  assert.ok(variedEvidence.answerTrials.every(({ turns }) =>
+    isHash(turns[0].expectedToolSelectionSha256) && turns[0].toolCalls.at(-1).result.persisted === true));
+
+  for (const firstToolSelection of [
+    { ...selectionContract, required: [{ name: "other-tool", minCalls: 1, maxCalls: 1 }] },
+    { ...selectionContract, allowed: [{ name: "get-private-inventory-report", maxCalls: 1 }] },
+    { ...selectionContract, totalCalls: { minCalls: 2, maxCalls: 2 } },
+  ]) {
+    await writeFile(file, source({ firstToolSelection }));
+    const rejectedSelection = run();
+    assert.equal(rejectedSelection.status, 1, `Invalid selection must fail: ${JSON.stringify(firstToolSelection)}`);
+    assert.equal(Object.values(JSON.parse(await readFile(output, "utf8")).cases)[0].failedPhase,
+      "tool-selection contract assertion");
+  }
 
   for (const firstToolNames of [
     ["get-private-inventory-report"],
