@@ -102,3 +102,35 @@ test("release records finish before the publish head reaches main", () => {
   assert.deepEqual(workflow.jobs["release-records"].needs, ["promote"]);
   assert.deepEqual(workflow.jobs["merge-back"].needs, ["promote", "deploy-website", "release-records"]);
 });
+
+test("merge-back dispatches and waits for full exact-head Quality with narrow authority", () => {
+  const mergeBack = workflow.jobs["merge-back"];
+  assert.equal(mergeBack.permissions.contents, "write");
+  assert.equal(mergeBack.permissions.actions, "write");
+  assert.equal(mergeBack["timeout-minutes"], 120);
+  const merge = mergeBack.steps.find((step) => step.name === "Merge back without fast-forwarding");
+  const qualify = mergeBack.steps.find((step) => step.name === "Qualify the exact merge-back commit");
+  assert.equal(merge.id, "merge");
+  assert.match(qualify.run, /qualify-merge-back\.mjs/);
+  assert.match(qualify.run, /steps\.merge\.outputs\.base_sha/);
+  assert.match(qualify.run, /steps\.merge\.outputs\.publish_sha/);
+  assert.match(qualify.run, /steps\.merge\.outputs\.merge_back_sha/);
+});
+
+test("dispatch Quality is exact-SHA scoped, validates both parents, and cannot release", () => {
+  assert.equal(quality.on.workflow_dispatch.inputs.expected_head_sha.required, true);
+  assert.equal(quality.on.workflow_dispatch.inputs.expected_base_sha.required, true);
+  assert.equal(quality.on.workflow_dispatch.inputs.expected_publish_sha.required, true);
+  assert.equal(quality.on.workflow_dispatch.inputs.dispatch_correlation.required, true);
+  assert.match(quality["run-name"], /inputs\.dispatch_correlation/);
+  assert.match(quality.concurrency.group, /inputs\.expected_head_sha/);
+  const validation = quality.jobs["change-scope"].steps.find((step) =>
+    step.name === "Validate the dispatched merge-back commit");
+  assert.equal(validation.if, "github.event_name == 'workflow_dispatch'");
+  assert.match(validation.run, /GITHUB_SHA/);
+  assert.match(validation.run, /qualify-merge-back\.mjs verify/);
+  for (const id of ["vulnerability-scan", "test", "initializer-qualification", "website-performance"]) {
+    assert.match(quality.jobs[id].if, /github\.event_name == 'workflow_dispatch'/);
+  }
+  assert.match(quality.jobs["release-pull-request"].if, /github\.event_name == 'push'/);
+});

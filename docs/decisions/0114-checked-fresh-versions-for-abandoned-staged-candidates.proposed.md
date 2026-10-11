@@ -26,7 +26,7 @@ That creates a conflict. A later candidate from newer checked source can plan
 the same version, but npm will reject it because the version has already been
 used.
 
-[Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.proposed.md)
+[Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.superseded.md)
 accepts this consequence but does not define how to generate the replacement.
 [Checked Replacement Candidates for Unpromoted Failed Releases](0111-checked-replacement-candidates-for-unpromoted-failed-releases.proposed.md)
 addresses a different state in which a candidate has already merged to the

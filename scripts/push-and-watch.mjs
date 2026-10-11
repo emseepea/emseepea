@@ -15,8 +15,8 @@ const pollIntervalMs = 30_000;
 
 // Every workflow a push to `main` causes to run, whether triggered directly or
 // by another workflow completing. Workflows started by an explicit dispatch are
-// not here: a push does not start them on its own, and ADR-0098 governs the
-// evidence for those. ADR-0100 keeps this a list rather than inferring it,
+// not here: a push does not start them on its own, and ADR-0120 governs the
+// evidence for those. ADR-0121 keeps this a list rather than inferring it,
 // because a rule reading trigger configuration cannot see a chained workflow
 // and would shrink the watch without failing. The drift test in
 // tests/docs/push-and-watch.test.mjs fails when this list and
@@ -57,7 +57,7 @@ export async function pushAndWatch({
   await run("git", ["push", "origin", `${sha}:refs/heads/main`]);
   const remote = (await run("git", ["ls-remote", "origin", "refs/heads/main"])).split("\t")[0];
   assert.match(remote, /^[a-f0-9]{40}$/, "origin/main does not match the pushed commit");
-  // A merge back can land between the push and this check (ADR-0100), so the
+  // A merge back can land between the push and this check (ADR-0121), so the
   // trunk is allowed to have moved past the pushed commit. It is not allowed to
   // have moved somewhere that does not contain it.
   if (remote !== sha) await run("git", ["merge-base", "--is-ancestor", sha, remote]);
