@@ -7,9 +7,10 @@ Remove the duplicate `create-feedback-thread` MCP tool. Use
 conversation. `defineFeedbackConversation` now adds only reply, list, and get
 operations.
 
-Existing stored thread IDs remain valid for reply, list, and get operations.
-For new submissions, the returned submission ID is the canonical thread ID for
-those operations when both helpers use the same authorized scope projection.
+Existing stored threads remain available in list results, and their IDs remain
+valid for reply and get operations. For new submissions, the returned
+submission ID is the canonical thread ID for reply and get. List returns the
+thread when both helpers use the same authorized scope projection.
 Legacy callers should set the required `observation` field to one of the allowed
 category values and set `detail` to `Subject: <subject>\n\n<message>`. The
 complete constructed `detail` value, including the prefix and line breaks, must

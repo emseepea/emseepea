@@ -1,77 +1,79 @@
 # Current Release Readiness
 
-Date: 2026-10-11
+Date: 2026-10-12
 
 ## Release status
 
 Publication status: **NOT READY**.
 
-The local pre-push qualification passed for the evidence listed below.
-Publication remains blocked until every exact-commit gate in
-“Required release evidence” passes.
+The source implementation and focused package checks pass. Publication remains
+pending until the final source commit passes the repository's Quality, Release,
+Publish, registry, installed-package, merge-back, and clean-checkout gates.
 
 The repository's release verifier requires the next two machine-readable
-markers. They mean only that local qualification and release-risk review
-passed. They do not mean that the package is published.
+markers. They record only the current source review result; they do not mean
+that the package is published.
 
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
-- Local pre-push qualification: **PASS**.
-- Release-risk review: **PASS**, conditional on the exact-commit gates below.
+- Local focused verification: **PASS**.
+- Architecture review: **PASS**.
+- Jobs To Be Done review: **PASS**.
+- Cognitive-accessibility review: **PASS** for the recorded source hashes.
+- Release-risk review: required for the final source commit before release.
 
-## Codex local execution suppression
+## Feedback creation tool consolidation
 
-This change adds `features.shell_tool=false` alongside the
-existing `features.unified_exec=false` setting for Codex semantic
-qualification. It disables both currently supported stable local execution
-features. If the installed Codex CLI rejects either setting, qualification
-stops without removing the setting, retrying with weaker configuration, or
-enabling local execution.
+`submit-feedback` is the sole Model Context Protocol (MCP) operation for
+creating new feedback.
+`defineFeedbackConversation` now exposes exactly three MCP tools:
+`reply-to-feedback-thread`, `list-feedback-threads`, and
+`get-feedback-thread`. The removed `create-feedback-thread` operation is not
+discoverable, callable, aliased, or configurable.
 
-The existing read-only sandbox, empty inherited shell environment, forbidden
-shell policy, ignored user configuration, advertised Model Context Protocol
-(MCP) tool allowlist, parser rejection of non-MCP completed items, and evidence
-redaction remain in place. The tested successful semantic path still passes.
+The internal backend `createThread` operation remains available to submission
+adapters. Existing stored threads, identifiers, owner scopes, replies, events,
+hooks, receipts, deadlines, and cancellation behavior remain unchanged.
 
-[ADR-0057, Inspectable Semantic Evidence by Default](../decisions/0057-inspectable-semantic-evidence-by-default.proposed.md)
-continues to govern the raw-stderr and redacted-evidence boundary. This change
-does not add a maximum number of model tool calls or stop a turn because of
-call count. It changes no `toolOutcomes` shape, preserving
-[ADR-0116, Native Semantic Conversations Without a Tool-Call Count Limit](../decisions/0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md)
-and [ADR-0119, Read-Only Native Tool Outcomes on Semantic Conversation Turns](../decisions/0119-read-only-native-tool-outcomes-on-semantic-conversation-turns.proposed.md).
+Adopters creating durable conversations configure `defineFeedbackSubmission`
+and `defineFeedbackConversation` with the same conversation store and the same
+scope projection. The `id` returned by `submit-feedback` is the canonical
+thread identifier for reply and get. List returns the thread under the same
+authorized scope.
 
 ## Planned package set
 
-- `@emseepea/testing@0.23.1`
+- `@emseepea/feedback@0.10.0`
 
 No other package has a planned version change.
 
 ## Verified before push
 
-Exact commit `60334eaeeb75a5590a1ca4fec7714b57e0beafd2` passed the repository's
-local `push:qualify` gate and has not been pushed. Focused provider and Codex
-runner tests passed 13 of 13, the testing package passed 71 of 71 tests, and
-build, lint, architecture, Jobs To Be Done (JTBD), publication-copy,
-cognitive-accessibility, and release-risk reviews passed.
+The feedback package builds successfully. The focused feedback, discovery,
+annotation, durable-record, dogfood, black-box, and packed-install checks pass.
+The release plan contains one publishable package: `@emseepea/feedback@0.10.0`.
 
-The rejection test proves all three qualification trials keep both execution
-features disabled, do not retry with weaker configuration, and do not retain
-private path, endpoint, or credential sentinels.
+The source contract and docs contain no MCP registration or annotation override
+for `create-feedback-thread`. Tests verify that conversation discovery returns
+only reply, list, and get, while submission still creates a durable thread that
+can be retrieved and replied to through the returned identifier.
 
 ## Required release evidence
 
-The exact source commit must pass remote Quality before a release candidate is
-created. Release must pass semantic qualification, publication under the npm
-`next` tag, registry integrity, signatures, provenance, and downloaded-package checks.
-Publish must promote the exact candidate to latest and merge back to main.
-Independent installed-package execution must then prove the released Codex
-configuration and fail-closed rejection behavior.
+The final source commit must pass remote Quality. The release candidate must
+then pass semantic qualification, publication under npm `next`, registry
+integrity, signatures, provenance, and downloaded-package checks. Publish must
+promote the exact candidate to `latest` and merge it back to `main`.
 
-This release does not add categorical process diagnostics or bounded
-forbidden-item summaries. Raw stderr and raw provider events remain excluded.
-[Issue #157](https://github.com/emseepea/emseepea/issues/157) remains incomplete
-until those later diagnostic capabilities pass their own privacy and
-bounded-evidence acceptance checks. Publication also requires exact-commit
-remote `Quality`, Release, and Publish success; the npm `latest` tag and
-`gitHead` value; independent installed-package execution; a clean merge-back;
-and a clean repository.
+An independent clean installation of the published package must verify all of
+the following:
+
+- MCP discovery includes `submit-feedback` and the three conversation tools.
+- MCP discovery excludes `create-feedback-thread`.
+- The removed operation cannot be called through an alias or hidden route.
+- A new submission can be retrieved and replied to using its returned `id`.
+- A thread stored before this release remains listable, readable, and
+  replyable without migration.
+
+Only that published-package evidence can complete the release and the
+confirmation criteria in ADR-0122.

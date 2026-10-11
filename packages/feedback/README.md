@@ -307,10 +307,12 @@ const app = createEmseepea({
 The three tools append a user reply, list scoped threads, and read one exact
 thread. Use `defineFeedbackSubmission` and `submit-feedback` to create every new
 feedback conversation. The returned submission ID is the canonical thread ID
-for reply and read operations when both helpers use the same scope projection.
+for reply and get operations. List returns the thread when both helpers use the
+same authorized scope projection.
 
 `create-feedback-thread` has been removed. Existing stored thread IDs remain
-valid for reply, list, and get operations.
+valid for reply and get operations, and those threads remain available in list
+results.
 
 Legacy callers should set the required `observation` field to one of the
 allowed category values. Set `detail` to

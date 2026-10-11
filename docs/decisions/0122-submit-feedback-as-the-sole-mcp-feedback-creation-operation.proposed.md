@@ -91,12 +91,12 @@ adapter configured for `defineFeedbackConversation`. Both helpers must use the
 same configured backing store and the same scope projection. This conversation
 storage adapter remains the authoritative source for the thread. Every
 successful call through that submission adapter creates a durable conversation.
-The returned submission identifier is the canonical thread identifier accepted
-by the conversation tools. Other submission adapters may keep their existing
-one-way storage behavior and do not gain a conversation implicitly. The package
-keeps the internal backend operation that creates a thread and its existing
-validated input and output types because conversation-producing submission
-adapters still need them.
+The returned submission identifier is the canonical thread identifier for
+reply and get. List returns that thread under the same authorized scope. Other
+submission adapters may keep their existing one-way storage behavior and do not
+gain a conversation implicitly. The package keeps the internal backend
+operation that creates a thread and its existing validated input and output
+types because conversation-producing submission adapters still need them.
 
 Existing stored threads are not migrated or rewritten. Their identifiers,
 messages, sequence, status, and receipts remain unchanged. The same storage

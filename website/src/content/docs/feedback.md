@@ -250,8 +250,13 @@ const app = await createToolServer({
 
 The conversation helper adds reply, list, and get operations. Use
 `defineFeedbackSubmission` and `submit-feedback` to create every new feedback
-conversation. `create-feedback-thread` has been removed. Existing stored thread
-IDs remain valid for reply, list, and get operations.
+conversation. `create-feedback-thread` has been removed.
+
+Existing stored thread IDs remain valid for reply and get operations, and those
+threads remain available in list results.
+
+The ID returned by `submit-feedback` is the canonical thread ID for reply and
+get. List returns that thread under the same authorized scope.
 
 Legacy callers should set the required `observation` field to one of the allowed
 category values. Set `detail` to `Subject: <subject>\n\n<message>`.
