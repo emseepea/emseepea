@@ -1,5 +1,27 @@
 # @emseepea/feedback
 
+## 0.10.1
+
+### Minor Changes
+
+- [`e4e12c1`](https://github.com/emseepea/emseepea/commit/e4e12c12125cf28849ff584f2154f13fb783010f) Thanks [@tompahoward](https://github.com/tompahoward)! - Remove the duplicate `create-feedback-thread` MCP tool. Use
+  `defineFeedbackSubmission` and its `submit-feedback` tool for every new feedback
+  conversation. `defineFeedbackConversation` now adds only reply, list, and get
+  operations.
+
+  Existing stored threads remain available in list results, and their IDs remain
+  valid for reply and get operations. For new submissions, the returned
+  submission ID is the canonical thread ID for reply and get. List returns the
+  thread when both helpers use the same authorized scope projection.
+  Legacy callers should set the required `observation` field to one of the allowed
+  category values and set `detail` to `Subject: <subject>\n\n<message>`. The
+  complete constructed `detail` value, including the prefix and line breaks, must
+  not exceed 4,000 characters. The framework rejects an over-limit `detail` value
+  and does not truncate the subject or message content.
+
+  Move creation-event hooks to `defineFeedbackSubmission`, or share the same hook
+  set with both helpers, so `feedback.thread.created` continues to be dispatched.
+
 ## 0.9.0
 
 ### Minor Changes
