@@ -3,12 +3,10 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
-import { parse } from "yaml";
 
-import { fullQualityJobNames } from "./check-release-pull-request.mjs";
+import { requiredFullQualityJobNames } from "./full-quality-job-names.mjs";
 
 const exec = promisify(execFile);
 const repository = "emseepea/emseepea";
@@ -77,8 +75,7 @@ async function readQualityJobs(item, run) {
 
 export async function verifyFullQualityJobs({ item, jobs, run = execute } = {}) {
   const resolvedJobs = jobs ?? await readQualityJobs(item, run);
-  const workflow = parse(await readFile(new URL("../.github/workflows/quality.yml", import.meta.url), "utf8"));
-  for (const name of fullQualityJobNames(workflow)) {
+  for (const name of requiredFullQualityJobNames) {
     const matches = resolvedJobs.filter((job) => job.name === name);
     assert.equal(matches.length, 1, `missing or ambiguous full Quality job: ${name}`);
     assert.equal(matches[0].status, "completed", `full Quality job did not finish: ${name}`);

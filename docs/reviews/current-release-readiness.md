@@ -2,61 +2,76 @@
 
 Date: 2026-10-11
 
-## Outcome-constrained semantic qualification
+## Release status
 
-Issue #158 adds a closed-world semantic tool-selection assertion for native MCP
-conversations whose valid retrieval or recovery order can vary. Required and
-allowed tools have finite cardinalities, omitted tools are forbidden, and the
-declared maximums are checked only after a turn completes. They do not stop
-dispatch or truncate evidence. Existing exact assertions remain unchanged.
+Publication status: **NOT READY**.
 
-Completed turns also expose detached, recursively immutable `toolOutcomes`.
-Each outcome contains only `name`, `arguments`, the exact model-visible
-`result`, and `isError`. These fields are observations, not proof of recovery,
-persisted effects, or response meaning. Adopters must assert those outcomes
-separately.
+The local pre-push qualification passed for the evidence listed below.
+Publication remains blocked until every exact-commit gate in
+“Required release evidence” passes.
 
-ADR-0118 and ADR-0119 define the boundaries and remain proposed and unconfirmed
-until the released package succeeds in independent adopter use.
+The repository's release verifier requires the next two machine-readable
+markers. They mean only that local qualification and release-risk review
+passed. They do not mean that the package is published.
+
+- Result: PASS
+- Final result: within appetite, subject to the required exact-commit gates.
+- Local pre-push qualification: **PASS**.
+- Release-risk review: **PASS**, conditional on the exact-commit gates below.
+
+## Codex local execution suppression
+
+This change adds `features.shell_tool=false` alongside the
+existing `features.unified_exec=false` setting for Codex semantic
+qualification. It disables both currently supported stable local execution
+features. If the installed Codex CLI rejects either setting, qualification
+stops without removing the setting, retrying with weaker configuration, or
+enabling local execution.
+
+The existing read-only sandbox, empty inherited shell environment, forbidden
+shell policy, ignored user configuration, advertised Model Context Protocol
+(MCP) tool allowlist, parser rejection of non-MCP completed items, and evidence
+redaction remain in place. The tested successful semantic path still passes.
+
+[ADR-0057, Inspectable Semantic Evidence by Default](../decisions/0057-inspectable-semantic-evidence-by-default.proposed.md)
+continues to govern the raw-stderr and redacted-evidence boundary. This change
+does not add a maximum number of model tool calls or stop a turn because of
+call count. It changes no `toolOutcomes` shape, preserving
+[ADR-0116, Native Semantic Conversations Without a Tool-Call Count Limit](../decisions/0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md)
+and [ADR-0119, Read-Only Native Tool Outcomes on Semantic Conversation Turns](../decisions/0119-read-only-native-tool-outcomes-on-semantic-conversation-turns.proposed.md).
 
 ## Planned package set
 
-- `@emseepea/testing@0.23.0`
+- `@emseepea/testing@0.23.1`
 
 No other package has a planned version change.
 
 ## Verified before push
 
-The exact testing-package implementation passed 70 tests, including varied
-valid sequences, forbidden and duplicate calls, invalid contracts, argument
-and result checks, persisted-effect separation, evidence tampering, exact
-assertion compatibility, type checks, and recursively immutable outcomes.
+Exact commit `60334eaeeb75a5590a1ca4fec7714b57e0beafd2` passed the repository's
+local `push:qualify` gate and has not been pushed. Focused provider and Codex
+runner tests passed 13 of 13, the testing package passed 71 of 71 tests, and
+build, lint, architecture, Jobs To Be Done (JTBD), publication-copy,
+cognitive-accessibility, and release-risk reviews passed.
 
-The repository suite reached 405 of 406 passing checks. Its only failure was
-the documentation-density guard for two identical 453-character paragraphs.
-Those paragraphs were split without changing their words; the exact density
-and publication-review checks then passed 5 of 5, and the testing package
-passed 70 of 70 again. Architecture and cognitive-accessibility reviews passed
-for the final feature content.
+The rejection test proves all three qualification trials keep both execution
+features disabled, do not retry with weaker configuration, and do not retain
+private path, endpoint, or credential sentinels.
 
 ## Required release evidence
 
-The exact source commit must pass full Quality before a release candidate is
-created. Release must pass semantic qualification, next-tag publication,
-registry integrity, signatures, provenance, and downloaded-package checks.
+The exact source commit must pass remote Quality before a release candidate is
+created. Release must pass semantic qualification, publication under the npm
+`next` tag, registry integrity, signatures, provenance, and downloaded-package checks.
 Publish must promote the exact candidate to latest and merge back to main.
+Independent installed-package execution must then prove the released Codex
+configuration and fail-closed rejection behavior.
 
-Independent installed-package execution must prove the synthetic #158 journey.
-Coglen must then verify its real native-client outcome assertions before
-ADR-0118 or ADR-0119 can be confirmed or issue #158 can be closed as accepted.
-
-Incomplete or timed-out turns remain failed qualification. Preserving partial
-provider events from those failed turns is a separate diagnostic capability and
-is not claimed by this release.
-
-## Conditional release readiness
-
-- Result: PASS
-- Final result: within appetite, subject to the required exact-commit gates.
-- Publication status: NOT READY until full exact-commit Quality, Release,
-  Publish, registry, installed-package, and Coglen acceptance checks pass.
+This release does not add categorical process diagnostics or bounded
+forbidden-item summaries. Raw stderr and raw provider events remain excluded.
+[Issue #157](https://github.com/emseepea/emseepea/issues/157) remains incomplete
+until those later diagnostic capabilities pass their own privacy and
+bounded-evidence acceptance checks. Publication also requires exact-commit
+remote `Quality`, Release, and Publish success; the npm `latest` tag and
+`gitHead` value; independent installed-package execution; a clean merge-back;
+and a clean repository.

@@ -21,6 +21,7 @@ import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { parse } from "yaml";
 
+import { requiredFullQualityJobNames } from "./full-quality-job-names.mjs";
 import {
   assertPlannedReleaseReadiness,
   assertReleasePullRequestPlan,
@@ -36,7 +37,7 @@ async function execute(command, args, options = {}) {
 }
 
 export function fullQualityJobNames(workflow) {
-  return ["vulnerability-scan", "test", "initializer-qualification", "website-performance"].flatMap((id) => {
+  const names = ["vulnerability-scan", "test", "initializer-qualification", "website-performance"].flatMap((id) => {
     const job = workflow.jobs[id];
     assert.ok(job?.name, `missing full Quality job ${id}`);
     const matrix = job.strategy?.matrix;
@@ -47,6 +48,8 @@ export function fullQualityJobNames(workflow) {
     assert.ok(Array.isArray(values) && values.length > 0);
     return values.map((value) => job.name.replace(`\${{ matrix.${axis} }}`, value));
   });
+  assert.deepEqual(names, requiredFullQualityJobNames, "full Quality job contract drifted");
+  return names;
 }
 
 export async function assertFullSourceQuality(baseSha, headSha, { run = execute, qualityRunId, requireCompleted = true } = {}) {

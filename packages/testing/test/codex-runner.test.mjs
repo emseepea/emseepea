@@ -72,8 +72,51 @@ test("Codex lifecycle", async (t) => {
     assert.equal(runs[0].threadId, runs[1].threadId);
     assert.notEqual(runs[1].threadId, runs[2].threadId);
     assert.equal(new Set(runs.map(({ mcpUrl }) => mcpUrl)).size, 1);
-    assert.ok(runs.every(({ shellEnvironmentEmpty, shellForbidden }) => shellEnvironmentEmpty && shellForbidden));
+    assert.ok(runs.every(({ shellEnvironmentEmpty, shellForbidden, shellToolDisabled, unifiedExecDisabled }) =>
+      shellEnvironmentEmpty && shellForbidden && shellToolDisabled && unifiedExecDisabled));
   }
+});
+
+test("Codex runner fails closed when local shell suppression is rejected", { timeout: 30_000 }, async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "codex-shell-suppression-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const log = join(directory, "invocations.jsonl");
+  const model = join(directory, "reject-shell-feature.mjs");
+  await writeFile(model, `#!/usr/bin/env node
+import { appendFileSync } from "node:fs";
+const configs = process.argv.flatMap((value, index, args) => args[index - 1] === "-c" ? [value] : []);
+appendFileSync(${JSON.stringify(log)}, JSON.stringify({
+  shellToolDisabled: configs.filter((value) => value === "features.shell_tool=false").length,
+  unifiedExecDisabled: configs.filter((value) => value === "features.unified_exec=false").length,
+}) + "\\n");
+process.stderr.write("private-path-/Users/example private-endpoint-https://private.example provider-secret-sentinel\\n");
+process.exit(2);
+`);
+  await chmod(model, 0o755);
+  const evalDirectory = join(directory, "eval");
+  await mkdir(evalDirectory);
+  const file = join(evalDirectory, "rejected.test.mjs");
+  const output = join(directory, "evidence.json");
+  await writeFile(file, `
+import test from "node:test";
+import { createConversation } from ${JSON.stringify(helper)};
+test("suppression rejection", async (t) => {
+  const chat = await createConversation(t, { server: new URL(${JSON.stringify(server)}) });
+  await chat.send("Read Highland Snap.");
+});
+`);
+  const result = runCli(model, output, file, { OPENAI_API_KEY: "provider-secret-sentinel" });
+  assert.equal(result.status, 1);
+  const invocations = (await readFile(log, "utf8")).trim().split("\n").map(JSON.parse);
+  assert.equal(invocations.length, 3);
+  assert.ok(invocations.every(({ shellToolDisabled, unifiedExecDisabled }) =>
+    shellToolDisabled === 1 && unifiedExecDisabled === 1));
+  const evidenceText = await readFile(output, "utf8");
+  for (const sentinel of ["/Users/example", "https://private.example", "provider-secret-sentinel"]) {
+    assert.equal(evidenceText.includes(sentinel), false);
+  }
+  const record = Object.values(JSON.parse(evidenceText).cases)[0];
+  assert.ok(record.answerTrials.every(({ error }) => error === "model command exited 2"));
 });
 
 test("Codex runner never retains provider or server credential sentinels", { timeout: 30_000 }, async (t) => {
@@ -127,7 +170,9 @@ const mcpUrl = urlConfig ? JSON.parse(urlConfig.slice(urlConfig.indexOf("=") + 1
 const rules = readFileSync(join(codexHome, "rules", "default.rules"), "utf8");
 appendFileSync(${JSON.stringify(log)}, JSON.stringify({ codexHome, mcpUrl, prompt, resumed, threadId,
   shellEnvironmentEmpty: configs.includes('shell_environment_policy.inherit="none"'),
-  shellForbidden: rules.includes('decision = "forbidden"') }) + "\\n");
+  shellForbidden: rules.includes('decision = "forbidden"'),
+  shellToolDisabled: configs.filter((value) => value === "features.shell_tool=false").length === 1,
+  unifiedExecDisabled: configs.filter((value) => value === "features.unified_exec=false").length === 1 }) + "\\n");
 const event = (value) => process.stdout.write(JSON.stringify(value) + "\\n");
 event({ type: "thread.started", thread_id: threadId });
 event({ type: "turn.started" });

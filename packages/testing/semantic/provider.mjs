@@ -529,6 +529,7 @@ function codexInvocation(provider, prompt, directory, conversation) {
     "-c", 'shell_environment_policy.inherit="none"',
     "-c", "allow_login_shell=false",
     "-c", "features.multi_agent=false",
+    "-c", "features.shell_tool=false",
     "-c", "features.unified_exec=false",
   ];
   if (conversation?.context) args.push("-c", `developer_instructions=${JSON.stringify(conversation.context)}`);
