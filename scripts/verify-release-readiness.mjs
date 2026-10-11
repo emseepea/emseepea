@@ -72,6 +72,17 @@ export function assertPlannedReleaseReadiness(status, review, { requireReleases 
   const plannedByName = new Map(releases.map(({ name, newVersion }) => [name, newVersion]));
   const cumulative = new Map(untaggedByName);
   for (const [name, newVersion] of plannedByName) cumulative.set(name, newVersion);
+  const testingPackage = "@emseepea/testing";
+  const currentTestingVersion = status.workspaceVersions?.[testingPackage];
+  if (currentTestingVersion && !cumulative.has(testingPackage)) {
+    for (const { name, testingVersion } of status.initializers ?? []) {
+      assert.equal(
+        testingVersion,
+        currentTestingVersion,
+        `${name} must depend on the current version of ${testingPackage}: ${currentTestingVersion} vs ${testingVersion}`,
+      );
+    }
+  }
   for (const { name, starterDependencies } of status.initializers ?? []) {
     for (const dependency of starterDependencies.filter(({ name: dependency }) => cumulative.has(dependency))) {
       assert.ok(cumulative.has(name), `${name} must be released with its updated starter dependencies`);
@@ -120,10 +131,14 @@ export async function readPlannedReleaseStatus(cwd = process.cwd(), run = exec) 
   return {
     ...plan,
     untaggedReleases,
+    workspaceVersions: Object.fromEntries(
+      [...manifests].map(([name, manifest]) => [name, manifest.version]),
+    ),
     initializers: initializerPackages.map(({ name }) => {
       const manifest = manifests.get(name);
       return {
         name,
+        testingVersion: manifest.devDependencies?.["@emseepea/testing"],
         starterDependencies: manifest.starterDependencies.map((dependency) => ({
           name: dependency,
           version: manifest.devDependencies[dependency],

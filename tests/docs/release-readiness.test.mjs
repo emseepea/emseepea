@@ -106,6 +106,35 @@ test("release readiness covers every package planned by Changesets", () => {
   );
 });
 
+test("published testing mergeback requires aligned initializer development pins", () => {
+  const status = {
+    releases: [],
+    untaggedReleases: [],
+    workspaceVersions: { "@emseepea/testing": "0.23.1" },
+    initializers: [{
+      name: "@emseepea/create-tool-server",
+      testingVersion: "0.22.0",
+      starterDependencies: [],
+    }],
+  };
+
+  assert.throws(
+    () => assertPlannedReleaseReadiness(status, ""),
+    /must depend on the current version of @emseepea\/testing: 0\.23\.1 vs 0\.22\.0/,
+  );
+  assert.doesNotThrow(() => assertPlannedReleaseReadiness({
+    ...status,
+    initializers: status.initializers.map((initializer) => ({
+      ...initializer,
+      testingVersion: "0.23.1",
+    })),
+  }, ""));
+  assert.doesNotThrow(() => assertPlannedReleaseReadiness({
+    ...status,
+    untaggedReleases: [{ name: "@emseepea/testing", newVersion: "0.23.1" }],
+  }, ""));
+});
+
 test("website-only releases do not reuse npm package readiness", () => {
   const status = { releases: [
     { name: "@emseepea/website", type: "patch", newVersion: "0.0.1" },
