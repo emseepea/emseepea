@@ -1,4 +1,9 @@
 import { createHash } from "node:crypto";
+import {
+  canonicalToolNames,
+  normalizeToolSelectionContract,
+  toolSelectionContractSatisfied,
+} from "./selection.mjs";
 
 const negativeFeedbackObservations = new Set([
   "error",
@@ -10,6 +15,8 @@ const negativeFeedbackObservations = new Set([
   "unexpected_bad_result",
   "capability_mismatch",
 ]);
+
+const sha256 = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 
 export function validRecord(record, evidence) {
   const { authoritative, smoke } = evidence;
@@ -39,6 +46,10 @@ export function validRecord(record, evidence) {
       && isHash(turn.promptSha256) && isHash(turn.answerSha256)
       && isHash(turn.advertisedToolsSha256) && isHash(turn.selectedCallsSha256)
       && Array.isArray(turn.toolCalls) && turn.toolCalls.length === turn.toolCallCount
+      && turn.selectedCallsSha256 === sha256(turn.toolCalls.map(({ name, arguments: args }) => ({
+        name,
+        arguments: args,
+      })))
       && JSON.stringify(turn.selectedTools)
         === JSON.stringify(turn.toolCalls.map(({ name }) => name))
       && validToolAssertions(turn, isHash)
@@ -46,9 +57,12 @@ export function validRecord(record, evidence) {
       && validFeedbackDisclosure(turn, record.judgeVerdicts, trial.trial, isHash)
       && turn.toolCalls.every((call) => Object.hasOwn(call, "result") && typeof call.isError === "boolean")
       && Array.isArray(turn.pathEvidence) && turn.pathEvidence.length === turn.toolCallCount
-      && turn.pathEvidence.every(({ method, target, requestSha256, responseSha256 }) =>
-        method === "tools/call" && turn.selectedTools.includes(target)
-          && isHash(requestSha256) && isHash(responseSha256))));
+      && turn.pathEvidence.every(({ method, target, requestSha256, responseSha256 }, index) => {
+        const call = turn.toolCalls[index];
+        return method === "tools/call" && target === call.name
+          && requestSha256 === sha256({ method, name: call.name, arguments: call.arguments })
+          && responseSha256 === sha256(call.result);
+      })));
 }
 
 function validToolAssertions(turn, isHash) {
@@ -74,6 +88,30 @@ function validToolAssertions(turn, isHash) {
       && (turn.toolCalls.length === 0
         || (turn.toolCalls.length === 1 && turn.toolCalls[0].name === turn.expectedOptionalTool));
   }
+  if (turn.expectedToolSelection !== undefined) {
+    const advertised = turn.advertisedToolNames;
+    if (!Array.isArray(advertised) || advertised.length !== turn.advertisedToolCount
+      || advertised.some((name) => typeof name !== "string" || !name.trim())
+      || JSON.stringify(advertised) !== JSON.stringify(canonicalToolNames(new Set(advertised)))
+      || !isHash(turn.advertisedToolNamesSha256)
+      || turn.advertisedToolNamesSha256 !== createHash("sha256")
+        .update(JSON.stringify(advertised)).digest("hex")
+      || !isHash(turn.expectedToolSelectionSha256)
+      || !isHash(turn.toolOutcomesSha256)
+      || turn.toolOutcomesSha256 !== createHash("sha256")
+        .update(JSON.stringify(turn.toolCalls)).digest("hex")) return false;
+    let normalized;
+    try {
+      normalized = normalizeToolSelectionContract(turn.expectedToolSelection, advertised);
+    } catch {
+      return false;
+    }
+    if (JSON.stringify(normalized) !== JSON.stringify(turn.expectedToolSelection)
+      || turn.expectedToolSelectionSha256 !== createHash("sha256")
+        .update(JSON.stringify(normalized)).digest("hex")) return false;
+    return toolSelectionContractSatisfied(normalized, turn.toolCalls)
+      && validOutcomeAssertions(turn, "expectedOutcomeAssertionsSha256");
+  }
   if (JSON.stringify(turn.selectedTools) !== JSON.stringify(turn.expectedTools)) return false;
   if (turn.expectedToolAlternatives !== undefined) {
     const alternatives = turn.expectedToolAlternatives;
@@ -88,15 +126,23 @@ function validToolAssertions(turn, isHash) {
     return JSON.stringify(turn.toolCalls.map(({ name, arguments: args }) => ({ name, arguments: args })))
       === JSON.stringify(turn.expectedCalls);
   }
-  if (!isHash(turn.expectedSelectionSha256)) return false;
+  return validOutcomeAssertions(turn, "expectedSelectionSha256", true, isHash);
+}
+
+function validOutcomeAssertions(turn, digestField, includeTools = false, isHash = (value) => (
+  typeof value === "string" && /^[a-f0-9]{64}$/.test(value)
+)) {
+  const hasAssertions = turn.expectedArguments !== undefined || turn.expectedFeedback !== undefined;
+  if (!includeTools && !hasAssertions) return turn[digestField] === undefined;
+  if (!isHash(turn[digestField])) return false;
   const expectedHash = createHash("sha256").update(JSON.stringify({
-    tools: turn.expectedTools,
+    ...(includeTools ? { tools: turn.expectedTools } : {}),
     arguments: turn.expectedArguments,
     feedback: turn.expectedFeedback,
-    ...(turn.expectedToolAlternatives === undefined
+    ...(!includeTools || turn.expectedToolAlternatives === undefined
       ? {} : { alternatives: turn.expectedToolAlternatives }),
   })).digest("hex");
-  if (expectedHash !== turn.expectedSelectionSha256) return false;
+  if (expectedHash !== turn[digestField]) return false;
   for (const [name, expected] of Object.entries(turn.expectedArguments ?? {})) {
     const matches = turn.toolCalls.filter((call) => call.name === name);
     if (matches.length !== 1 || JSON.stringify(matches[0].arguments) !== JSON.stringify(expected)) return false;

@@ -1,4 +1,5 @@
 name: Quality
+run-name: Quality ${{ github.event_name == 'workflow_dispatch' && inputs.dispatch_correlation || github.sha }}
 
 on:
   pull_request:
@@ -7,6 +8,24 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      expected_head_sha:
+        description: Exact merge-back commit to qualify
+        required: true
+        type: string
+      expected_base_sha:
+        description: First parent of the merge-back commit
+        required: true
+        type: string
+      expected_publish_sha:
+        description: Second parent of the merge-back commit
+        required: true
+        type: string
+      dispatch_correlation:
+        description: Unique merge-back qualification invocation
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -18,7 +37,7 @@ env:
   NPM_CONFIG_FETCH_TIMEOUT: "120000"
 
 concurrency:
-  group: quality-${{ github.workflow }}-${{ github.ref }}
+  group: quality-${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && inputs.expected_head_sha || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -39,10 +58,19 @@ jobs:
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 24.21.0
+      - name: Validate the dispatched merge-back commit
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          EMSEEPEA_MERGE_BACK_SHA: ${{ inputs.expected_head_sha }}
+          EMSEEPEA_MERGE_BACK_BASE_SHA: ${{ inputs.expected_base_sha }}
+          EMSEEPEA_MERGE_BACK_PUBLISH_SHA: ${{ inputs.expected_publish_sha }}
+        run: |
+          test "$GITHUB_SHA" = "$EMSEEPEA_MERGE_BACK_SHA"
+          node scripts/qualify-merge-back.mjs verify
       - name: Classify the exact event range
         id: scope
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ inputs.expected_base_sha || github.event.pull_request.base.sha || github.event.before }}
         run: |
           echo "docs_only=$(node scripts/docs-only-changes.mjs "$BASE_SHA" "$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
           echo "base=$BASE_SHA" >> "$GITHUB_OUTPUT"
@@ -76,7 +104,7 @@ jobs:
   vulnerability-scan:
     name: Known dependency vulnerabilities
     needs: change-scope
-    if: needs.change-scope.outputs.docs_only != 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.change-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -119,7 +147,7 @@ jobs:
   test:
     name: Node.js ${{ matrix.node-version }}
     needs: change-scope
-    if: needs.change-scope.outputs.docs_only != 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.change-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     strategy:
@@ -211,7 +239,7 @@ jobs:
   initializer-qualification:
     name: Standalone initializer / ${{ matrix.example }} / Node.js 24.21.0
     needs: [change-scope, vulnerability-scan]
-    if: needs.change-scope.outputs.docs_only != 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.change-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     strategy:
@@ -280,7 +308,7 @@ jobs:
   website-performance:
     name: Website publication checks
     needs: change-scope
-    if: needs.change-scope.outputs.docs_only != 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.change-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:

@@ -1,99 +1,62 @@
 # Current Release Readiness
 
-Date: 2026-10-09
+Date: 2026-10-11
 
-## Native semantic conversations without a call-count ceiling
+## Outcome-constrained semantic qualification
 
-Issue #150 removes the three-call rejection from Claude and Codex native
-semantic parsers. Tom Howard explicitly directed removal instead of the
-previous draft's configurable budget. ADR-0116 records confirmed oversight.
-No new public option or replacement call-count ceiling is introduced.
+Issue #158 adds a closed-world semantic tool-selection assertion for native MCP
+conversations whose valid retrieval or recovery order can vary. Required and
+allowed tools have finite cardinalities, omitted tools are forbidden, and the
+declared maximums are checked only after a turn completes. They do not stop
+dispatch or truncate evidence. Existing exact assertions remain unchanged.
 
-The first candidate retained Claude's four-turn flag and added a four-turn
-parser check. That parser check rejected all three live four-read trials
-with `model command exceeded its turn limit`.
-This candidate removes that native flag and the parser turn-count ceiling,
-while retaining positive-integer evidence validation. Claude settings record
-`maxTurns: null` and the unchanged `judgeMaxTurns: 4`.
+Completed turns also expose detached, recursively immutable `toolOutcomes`.
+Each outcome contains only `name`, `arguments`, the exact model-visible
+`result`, and `isError`. These fields are observations, not proof of recovery,
+persisted effects, or response meaning. Adopters must assert those outcomes
+separately.
 
-Existing per-send timeouts, output checks, cancellation, model, isolation,
-advertised-tool, and result checks remain effective. Judge calls still forbid
-tools and keep their prior execution limit. Exact application assertions,
-three answer trials, and independent meaning judgments remain required.
+ADR-0118 and ADR-0119 define the boundaries and remain proposed and unconfirmed
+until the released package succeeds in independent adopter use.
 
 ## Planned package set
 
-- `@emseepea/testing@0.22.0`
-- `@emseepea/create-api-backed-server@0.1.11`
-- `@emseepea/create-database-schema-server@0.1.11`
-- `@emseepea/create-html-ui-server@0.1.11`
-- `@emseepea/create-mongodb-backed-server@0.1.11`
-- `@emseepea/create-multi-instance-postgres-server@0.1.11`
-- `@emseepea/create-openapi-backed-server@0.1.11`
-- `@emseepea/create-progress-streaming-server@0.1.11`
-- `@emseepea/create-react-ui-server@0.1.11`
-- `@emseepea/create-resources-and-prompts-server@0.1.11`
-- `@emseepea/create-soap-backed-server@0.1.11`
-- `@emseepea/create-tool-server@0.1.11`
+- `@emseepea/testing@0.23.0`
 
-All eleven initializer patches update their testing dependency pins. The private
-website moves to 0.0.11 to publish the guidance. Server, feedback, and UI packages
-have no planned version change.
+No other package has a planned version change.
 
-## Architecture and jobs to be done
+## Verified before push
 
-ADR-0116 supersedes its unratified configurable-budget draft and supplements
-ADR-0057's native conversation boundary. JTBD-003 covers proving that an AI
-understands application results; JTBD-101 covers checked publication. No new
-job, persona, or application execution boundary is introduced.
+The exact testing-package implementation passed 70 tests, including varied
+valid sequences, forbidden and duplicate calls, invalid contracts, argument
+and result checks, persisted-effect separation, evidence tampering, exact
+assertion compatibility, type checks, and recursively immutable outcomes.
 
-## Required checks and residual risk
+The repository suite reached 405 of 406 passing checks. Its only failure was
+the documentation-density guard for two identical 453-character paragraphs.
+Those paragraphs were split without changing their words; the exact density
+and publication-review checks then passed 5 of 5, and the testing package
+passed 70 of 70 again. Architecture and cognitive-accessibility reviews passed
+for the final feature content.
 
-Parser regression checks accept forty advertised calls through both providers
-and retain all results and hashed protocol evidence. Claude checks also cover
-parallel calls, longer native journeys, invalid turn counts, and missing
-results. Existing negative checks retain forbidden-tool, authentication, model, and session rules.
-Invocation tests ensure the native turn flag is absent and the judge flag
-remains. A new live native timetable journey requires exactly four real MCP
-reads and
-correct route-to-time associations in all three trials. Its synthetic evidence
-is uploaded with the existing release evidence. The failed first candidate
-is retained at Release run 37922640488. It is not
-retried; the next candidate fixed the native invocation. All three trials
-then completed four reads and passed all nine meaning judgments, but that
-candidate failed required selection-evidence registration at teardown
-(Release run 37926188016). This candidate adds the public `assertToolNames`
-assertion and retains the exact argument checks. Neither failed candidate is
-retried, and application acceptance assertions are not weakened.
+## Required release evidence
 
-The next live candidate passed the four-read case but failed the CLI’s final
-three-call evidence ceiling (Release run 37929510230). This candidate removes
-that ceiling and the calls-plus-one turn formula from the shared validator.
-It retains positive integer turn evidence and verifies that recorded call
-counts match actual arrays. Regression checks accept forty-call records for
-both providers and reject missing evidence, inconsistent counts, unexpected
-selections, and failed or incomplete judgments. The saved four-read record
-passes the corrected validator offline without another model run.
+The exact source commit must pass full Quality before a release candidate is
+created. Release must pass semantic qualification, next-tag publication,
+registry integrity, signatures, provenance, and downloaded-package checks.
+Publish must promote the exact candidate to latest and merge back to main.
 
-That same failed candidate also recorded provider process failures in existing
-tool-server cases. Those failures remain saved; their underlying provider
-cause is not established. The new candidate must qualify all cases without
-retrying either the failed candidate or its failed semantic trials.
+Independent installed-package execution must prove the synthetic #158 journey.
+Coglen must then verify its real native-client outcome assertions before
+ADR-0118 or ADR-0119 can be confirmed or issue #158 can be closed as accepted.
 
-Full exact-commit qualification, Node.js 22 and 24 Source Quality, vulnerability
-scanning, initializer qualification, and existing performance budgets must pass.
-Release must pass semantic checks and registry integrity, signatures, provenance,
-and fresh installs. Publish must verify latest and deploy the guide.
-
-Residual risk: a provider may make more calls within existing execution limits.
-Parser count rejection was post-execution and did not protect against effects.
-Use isolated synthetic applications for qualification. Timeouts and provider
-context/output limits remain; this release does not promise unlimited
-execution. Residual risk is within the Low appetite, conditional on all gates.
+Incomplete or timed-out turns remain failed qualification. Preserving partial
+provider events from those failed turns is a separate diagnostic capability and
+is not claimed by this release.
 
 ## Conditional release readiness
 
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
-- Publication status: NOT READY until full exact-commit qualification,
-  Source Quality, Release, and Publish pass.
+- Publication status: NOT READY until full exact-commit Quality, Release,
+  Publish, registry, installed-package, and Coglen acceptance checks pass.

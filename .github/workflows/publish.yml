@@ -176,15 +176,17 @@ jobs:
         run: npm run release:deprecate-replaced
 
   merge-back:
-    name: Merge the publish head back into main
-    # ADR-0098 step 4. Nothing reaches main before the package records and
-    # any website in this release have been published.
+    name: Merge the publish head into main and qualify it
+    # ADR-0120: nothing reaches main before the package records and any website
+    # in this release have been published. The exact merge commit then receives
+    # the full Quality workflow before Publish can succeed.
     needs: [promote, deploy-website, release-records]
     if: ${{ always() && needs.promote.result == 'success' && needs.release-records.result == 'success' && needs.deploy-website.result != 'failure' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 120
     permissions:
       contents: write
+      actions: write
     steps:
       - name: Check out the publish head
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -192,7 +194,16 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
       - name: Merge back without fast-forwarding
+        id: merge
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           bash scripts/merge-publish-back.sh "$GITHUB_SHA"
+      - name: Qualify the exact merge-back commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          node scripts/qualify-merge-back.mjs
+          '${{ steps.merge.outputs.base_sha }}'
+          '${{ steps.merge.outputs.publish_sha }}'
+          '${{ steps.merge.outputs.merge_back_sha }}'

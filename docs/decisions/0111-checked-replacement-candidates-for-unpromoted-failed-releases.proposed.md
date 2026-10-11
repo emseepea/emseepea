@@ -21,7 +21,7 @@ still holds pending changesets, but the next release is blocked because the
 failed publish head has not been merged back. Immutable versions published by
 an earlier candidate cannot be republished from a replacement commit.
 
-[Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.proposed.md)
+[Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.superseded.md)
 keeps version changes off the trunk until publication succeeds. Recovery must
 preserve that boundary rather than satisfy an ancestry check by merging an
 unpublished release back early.

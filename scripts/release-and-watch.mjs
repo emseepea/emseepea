@@ -15,7 +15,7 @@ async function execute(command, args, { timeoutMs } = {}) {
   return stdout.trim();
 }
 
-// ADR-0098: a maintainer merges the release pull request into `publish`, and
+// ADR-0120: a maintainer merges the release pull request into `publish`, and
 // that merge is what promotes the packages already on `next` to `latest`. This
 // command performs that merge and watches the publish workflow.
 export async function releaseAndWatch({
@@ -30,7 +30,7 @@ export async function releaseAndWatch({
     /^(?:https:\/\/github\.com\/|git@github\.com:)emseepea\/emseepea(?:\.git)?$/,
   );
   assert.equal(await run("git", ["status", "--porcelain"]), "", "release checkout is not clean");
-  // ADR-0098 no longer requires a checkout on `main`: the release pull request
+  // ADR-0120 does not require a checkout on `main`: the release pull request
   // is based on `publish`, and this command does not push from the local tree.
   // That also unblocks releasing from a worktree (Problem 011).
   const pullRequests = JSON.parse(await run("gh", [

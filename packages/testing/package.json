@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/testing",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "description": "MCP integration and semantic testing helpers",
   "license": "MIT",
   "repository": {
@@ -43,7 +43,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.type-tests.json",
     "prepack": "npm run build",
     "test": "npm run build && npm run test:built",
     "test:built": "node --test test/*.test.mjs",

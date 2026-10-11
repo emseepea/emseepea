@@ -67,8 +67,8 @@ not treat a promotion token as that authority.
   Preflight](../problems/verifying/003-release-workflow-lacks-first-package-trusted-publisher-preflight.md)
 - Treatment Architecture Decision Records (ADRs):
   [ADR-0071: Separate OpenAPI-Backed Example and Initializer](../decisions/0071-separate-openapi-backed-example-and-initializer.proposed.md),
-  [ADR-0098: Publish on Merge to a Publish Branch](../decisions/0098-publish-on-merge-to-a-publish-branch.proposed.md),
-  [ADR-0100: Trunk Push and Watch Under a Publish Branch](../decisions/0100-trunk-push-and-watch-under-a-publish-branch.proposed.md), and
+  [ADR-0120: Publish Branch Release with Exact-Head Mergeback Quality](../decisions/0120-publish-branch-release-with-exact-head-mergeback-quality.proposed.md),
+  [ADR-0121: Exact-Head Qualification for Automated Trunk Mergeback](../decisions/0121-exact-head-qualification-for-automated-trunk-mergeback.proposed.md), and
   [ADR-0105: Bounded Stage-Only Token for npm Promotion](../decisions/0105-bounded-stage-only-token-for-npm-promotion.proposed.md).
 - Personas affected: release maintainers
 

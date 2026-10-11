@@ -104,6 +104,41 @@ call or one feedback call, while rejecting duplicate feedback and every other
 tool. Successful journeys should instead use
 `assertToolCallsWithOptionalFeedback` and `assertNoNegativeFeedback`.
 
+### Assert Bounded Tool Choices
+
+Use `assertToolSelection` when valid tool order or recovery paths can vary, but
+the permitted tools and call counts are bounded. The tool-selection contract
+lists required, allowed, and explicitly forbidden tools. Any advertised tool
+that is not required or allowed is rejected.
+
+```js
+assertToolSelection(turn, {
+  required: [
+    { name: "list-candidates", minCalls: 1, maxCalls: 1 },
+    { name: "commit-selection", minCalls: 1, maxCalls: 1 },
+  ],
+  allowed: [{ name: "lookup-candidate", maxCalls: 2 }],
+  forbidden: [],
+  totalCalls: { minCalls: 2, maxCalls: 4 },
+});
+```
+
+The finite maximums are checked after the turn. They do not stop tool calls or
+truncate evidence.
+
+A passing selection assertion proves only that every
+recorded call satisfied the declared tool and count rules. It does not prove
+argument correctness, persisted effects, response meaning, or recovery from an
+error. Keep an exact assertion when order, count, and arguments are
+deterministic, and add the separate assertions your application outcome needs.
+
+Each turn also exposes `toolOutcomes`, aligned by trial and call order with
+`toolCalls`. Each outcome is a read-only snapshot of what the model saw. It
+contains only `name`, `arguments`, the model-visible `result`, and `isError`.
+Use it to check an expected error and the later calls that followed the error.
+A later non-error result does not by itself prove recovery or a persisted
+effect.
+
 The optional `context` setting represents real application context. It is absent
 by default so test guidance cannot bias the model. Use it only when the deployed
 application supplies the same context.
@@ -128,9 +163,9 @@ trial applications remain isolated from one another.
 
 Native conversations have no framework tool-call or native provider-turn count
 limit. The per-send timeout, cancellation, output checks, model checks, and
-isolated test environment remain effective. Exact application assertions still
-decide which calls and results are acceptable. Tool-free judge invocations
-retain their existing limits.
+isolated test environment remain effective. Application assertions still decide
+which calls and results are acceptable. Tool-free judge invocations retain
+their existing limits.
 
 The provider is connected to exactly one loopback MCP server and may use only
 that server's advertised tools. Shell, filesystem, browser, tool search,

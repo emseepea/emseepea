@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 113 decisions: 67 current and 46 historical.
+This project has 117 decisions: 69 current and 48 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -66,9 +66,7 @@ recorded separately.
 - [ADR-0095: Opt-In Check Policy Modules for Adopter Contracts](0095-opt-in-check-policy-modules-for-adopter-contracts.proposed.md): Proposed; human review confirmed.
 - [ADR-0096: Open-by-Default Published Output Schemas](0096-open-by-default-published-output-schemas.proposed.md): Proposed; human review confirmed.
 - [ADR-0097: Beta Maturity with a Bounded Support Claim](0097-beta-maturity-with-a-bounded-support-claim.proposed.md): Proposed; human review confirmed.
-- [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.proposed.md): Proposed; human review confirmed.
 - [ADR-0099: Website Deploys with the Release](0099-website-deploys-with-the-release.proposed.md): Proposed; human review confirmed.
-- [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.proposed.md): Proposed; human review confirmed.
 - [ADR-0101: Vulnerability Scanning Without a Release Workflow](0101-vulnerability-scanning-without-a-release-workflow.proposed.md): Proposed; human review confirmed.
 - [ADR-0103: Proved Proxy Boundary for Production Deployments](0103-proved-proxy-boundary-for-production-deployments.proposed.md): Proposed; human review confirmed.
 - [ADR-0105: Bounded Stage-Only Token for npm Promotion](0105-bounded-stage-only-token-for-npm-promotion.proposed.md): Proposed; human review confirmed.
@@ -82,6 +80,10 @@ recorded separately.
 - [ADR-0114: Checked Fresh Versions for Abandoned Staged Candidates](0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0115: Authenticated Listing of Private Resource Inventory](0115-authenticated-private-resource-inventory-listing.proposed.md): Proposed; human review confirmed.
 - [ADR-0116: Native Semantic Conversations Without a Tool-Call Count Limit](0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md): Proposed; human review confirmed.
+- [ADR-0118: Declarative Outcome-Constrained Semantic Tool-Selection Assertions](0118-declarative-outcome-constrained-semantic-tool-selection-assertions.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0119: Read-Only Native Tool Outcomes on Semantic Conversation Turns](0119-read-only-native-tool-outcomes-on-semantic-conversation-turns.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0120: Publish Branch Release with Exact-Head Mergeback Quality](0120-publish-branch-release-with-exact-head-mergeback-quality.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0121: Exact-Head Qualification for Automated Trunk Mergeback](0121-exact-head-qualification-for-automated-trunk-mergeback.proposed.md): Proposed; human review unconfirmed.
 
 ### Historical decisions
 
@@ -129,6 +131,8 @@ recorded separately.
 - [ADR-0088: Always-Available Checked Model Context Protocol (MCP) Ping](0088-always-available-checked-mcp-ping.superseded.md): Superseded; human review confirmed.
 - [ADR-0092: Framework-Owned Model Context Protocol App Resource Packaging](0092-framework-owned-mcp-app-resource-packaging.superseded.md): Superseded; human review confirmed.
 - [ADR-0093: Framework-Owned Model Context Protocol App Resource Packaging](0093-framework-owned-mcp-app-resource-packaging.superseded.md): Superseded; human review confirmed.
+- [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.superseded.md): Superseded; human review confirmed.
+- [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.superseded.md): Superseded; human review confirmed.
 - [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.superseded.md): Superseded; human review confirmed.
 - [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.superseded.md): Superseded; human review confirmed.
 
@@ -987,7 +991,7 @@ Chosen option: **"Fast Node matrix plus one full Node 24 initializer job"**, bec
 
 - Status: Superseded
 - Human review: Confirmed
-- Replaced by: [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.proposed.md)
+- Replaced by: [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.superseded.md)
 
 #### ADR-0044 Decision
 
@@ -1092,7 +1096,7 @@ Chosen option: **"Optional deterministic startup discovery"**, because it remove
 
 - Status: Superseded
 - Human review: Confirmed
-- Replaced by: [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.proposed.md)
+- Replaced by: [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.superseded.md)
 
 #### ADR-0049 Decision
 
@@ -2161,11 +2165,12 @@ Chosen option: **"Beta, with the support boundary stated wherever the label appe
 - Check that every published package readme states the maturity boundary.
 - Check that no public wording ties the maturity label to the 1.0 version line.
 
-### [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.proposed.md)
+### [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0049: Exact-Commit Release PR Merge and Pipeline Watch](0049-exact-commit-release-pr-merge-and-pipeline-watch.superseded.md)
+- Replaced by: [ADR-0120: Publish Branch Release with Exact-Head Mergeback Quality](0120-publish-branch-release-with-exact-head-mergeback-quality.proposed.md)
 
 #### ADR-0098 Decision
 
@@ -2217,11 +2222,12 @@ Chosen option: **name the measured revision as the selected one**, because the m
 - Guide checks and the website performance gate pass before publication.
 - A push to `main` without a website changeset deploys nothing.
 
-### [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.proposed.md)
+### [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
 - Replaces: [ADR-0044: Exact-Commit Trunk Push and Pipeline Watch](0044-exact-commit-trunk-push-and-pipeline-watch.superseded.md)
+- Replaced by: [ADR-0121: Exact-Head Qualification for Automated Trunk Mergeback](0121-exact-head-qualification-for-automated-trunk-mergeback.proposed.md)
 
 #### ADR-0100 Decision
 
@@ -2531,3 +2537,87 @@ Chosen option: **"Remove the tool-call count limit"**.
 - Unknown tools, missing results, malformed arguments, and invalid provider turn counts still fail. Native invocation tests reject reintroducing the turn-count flag; tool-free judge limits remain checked.
 - A real native conversation reads four synthetic records through MCP and returns the correct route-to-time associations in every trial.
 - Full qualification and publication gates pass before issue closure.
+
+### [ADR-0118: Declarative Outcome-Constrained Semantic Tool-Selection Assertions](0118-declarative-outcome-constrained-semantic-tool-selection-assertions.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+
+#### ADR-0118 Decision
+
+Chosen option: **"Declarative closed-world selection contracts"**, because it states the application's permitted outcome independently of the model's observed path and can be checked again from retained evidence.
+
+#### ADR-0118 Checks
+
+- Three trials with different valid retrieval orders and recovery calls pass one independently authored selection contract.
+- Unadvertised, omitted, explicitly forbidden, duplicated, and over-cardinality tools fail, as do impossible or conflicting contracts.
+- Tampered contracts, digests, concrete calls, results, or path evidence fail independent evidence validation.
+- The synthetic fixture separately asserts required arguments, results, persisted effects, and meaning. Missing or mismatched values fail their assertions.
+- Existing exact assertion tests and published evidence remain compatible.
+- An independently installed package qualifies the synthetic reproduction for issue #158 before the decision is eligible for confirmation.
+
+### [ADR-0119: Read-Only Native Tool Outcomes on Semantic Conversation Turns](0119-read-only-native-tool-outcomes-on-semantic-conversation-turns.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+
+#### ADR-0119 Decision
+
+Chosen option: **"Detached read-only outcome snapshots"**, because it exposes the already retained observation without making the framework own application effect semantics.
+
+#### ADR-0119 Checks
+
+- The three trial arrays and every call index align between `toolCalls`, `toolOutcomes`, and retained evidence.
+- Successful and `isError` results expose only the four documented fields.
+- Nested mutation attempts cannot alter private state, later assertions, or retained evidence.
+- No additional harness- or provider-private fields appear beyond the four documented fields; synthetic fixtures keep model-visible results non-sensitive.
+- Existing conversation-turn and exact-assertion APIs remain compatible.
+- An independently installed package proves expected-error recovery using the public view before the decision is eligible for confirmation.
+
+### [ADR-0120: Publish Branch Release with Exact-Head Mergeback Quality](0120-publish-branch-release-with-exact-head-mergeback-quality.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+- Replaces: [ADR-0098: Publish on Merge to a Publish Branch](0098-publish-on-merge-to-a-publish-branch.superseded.md)
+
+#### ADR-0120 Decision
+
+Chosen option: **"Publish branch release with exact-head mergeback Quality"**, because it closes the observed evidence gap without rebuilding or republishing the released artifacts.
+
+#### ADR-0120 Checks
+
+- A successful release promotes the previously staged artifacts and does not rebuild or republish them during mergeback qualification.
+- The mergeback commit has the recorded pre-merge `main` SHA as first parent and the released publish SHA as second parent.
+- Publish dispatches Quality with the exact mergeback, base, and publish SHAs.
+- Quality independently validates its event, SHA inputs, and parent relation.
+- Every full Quality job runs for the dispatched mergeback commit, regardless of documentation-only classification.
+- The dispatched run cannot create or publish another release candidate.
+- Publish identifies exactly one newly dispatched run and waits for successful completion.
+- Publish binds the selected run to a unique invocation correlation value and cannot accept a concurrent run for the same commit.
+- Publish verifies one completed successful instance of every full Quality job.
+- Missing, ambiguous, skipped, incomplete, timed-out, cancelled, or failed Quality evidence fails Publish.
+- A different SHA cannot cancel the mergeback SHA's Quality run.
+- Successful actual production use and Tom Howard's explicit ratification are recorded before this decision is accepted.
+
+### [ADR-0121: Exact-Head Qualification for Automated Trunk Mergeback](0121-exact-head-qualification-for-automated-trunk-mergeback.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+- Replaces: [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.superseded.md)
+
+#### ADR-0121 Decision
+
+Chosen option: **"Explicit exact-head qualification for mergeback"**, because an automated trunk write should produce current evidence rather than defer its first verification to unrelated future work.
+
+#### ADR-0121 Checks
+
+- `npm run push:watch` still performs a non-force push of committed `HEAD` and watches exact-SHA Quality evidence for ordinary maintainer work.
+- Release mergeback is the only automated actor permitted to write `main`.
+- The mergeback path verifies both parents before dispatch.
+- The newly dispatched run is selected by workflow identity, event type, exact SHA, unique invocation correlation value, and an ID absent from the pre-dispatch snapshot.
+- More than one new matching run is rejected as ambiguous.
+- A concurrent run for the same commit but a different correlation value is ignored and cannot satisfy qualification.
+- Missing, skipped, duplicate, incomplete, timed-out, cancelled, or failed full Quality jobs fail the mergeback job.
+- Dispatch Quality concurrency is keyed by exact SHA.
+- Behavioral tests cover exact selection, ambiguity, transient reads, timeout, cancellation, failure, parent mismatch, and successful completion.
+- Successful actual production use and Tom Howard's explicit ratification are recorded before this decision is accepted.
