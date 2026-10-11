@@ -237,8 +237,8 @@ test("admin reply route fails closed and one client alone can subscribe and read
   t.after(() => app.close());
 
   const created = await mcpRpc(app, "tools/call", {
-    name: "create-feedback-thread",
-    arguments: { subject: "Synthetic route feedback", message: "Synthetic initial message." },
+    name: "submit-feedback",
+    arguments: { observation: "friction", detail: "Synthetic route feedback: Synthetic initial message." },
   }, "client-a");
   assert.equal(created.statusCode, 200);
   const threadId = created.body.result.structuredContent.id;

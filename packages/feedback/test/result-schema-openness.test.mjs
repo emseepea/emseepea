@@ -74,10 +74,10 @@ test("a conversation backend's stray top-level key is still rejected", async (t)
   const tools = defineFeedbackConversation({
     requiredScopes: ["feedback"],
     backend: {
-      createThread: () => ({ conversation: { ...thread, messages: [] }, surprise: "extra" }),
+      createThread: () => ({ conversation: { ...thread, messages: [] } }),
       appendMessage: () => ({ message: {} }),
       listThreads: () => ({ page: { threads: [] } }),
-      getThread: () => ({ conversation: { ...thread, messages: [] } }),
+      getThread: () => ({ conversation: { ...thread, messages: [] }, surprise: "extra" }),
     },
   });
   const running = await startEmseepea(t, createEmseepea({
@@ -88,8 +88,8 @@ test("a conversation backend's stray top-level key is still rejected", async (t)
   }));
   const client = await running.connect("test-token");
   const result = await client.callTool({
-    name: "create-feedback-thread",
-    arguments: { subject: "Seed search friction", message: "The filters were hard to find." },
+    name: "get-feedback-thread",
+    arguments: { threadId: "t-1" },
   });
   assert.equal(result.isError, true);
 });

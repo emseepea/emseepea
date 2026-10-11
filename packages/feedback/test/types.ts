@@ -70,7 +70,6 @@ defineFeedbackConversation({ requiredScopes: ["feedback"], backend });
 defineFeedbackConversation({
   requiredScopes: ["feedback"],
   annotations: {
-    create: { destructiveHint: true },
     reply: { destructiveHint: true, openWorldHint: false },
     list: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     get: { destructiveHint: true, idempotentHint: false },

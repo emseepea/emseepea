@@ -106,8 +106,8 @@ test("the packed public packages pass fresh-install and getting-started checks",
     );
     await writeFile(path.join(directory, "check.mjs"), `
       import { createEmseepea, defineTool, inputRequired, registerRoutes, serveEmseepea } from "@emseepea/server";
-      import { defineFeedbackSubmission } from "@emseepea/feedback";
-      import { startMcpServer } from "@emseepea/testing";
+      import { defineFeedbackConversation, defineFeedbackSubmission } from "@emseepea/feedback";
+      import { startEmseepea, startMcpServer } from "@emseepea/testing";
       import {
         assertNoToolCalls,
         assertOptionalToolCall,
@@ -127,8 +127,182 @@ test("the packed public packages pass fresh-install and getting-started checks",
           || typeof assertResponseMeaning !== "function") {
         throw new Error("packed testing package is missing its public helpers");
       }
-      if (typeof defineFeedbackSubmission !== "function") {
+      if (typeof defineFeedbackSubmission !== "function" || typeof defineFeedbackConversation !== "function") {
         throw new Error("packed feedback package is missing its public constructor");
+      }
+      const recordedAt = "2026-10-12T00:00:00.000Z";
+      const threads = new Map([[
+        "owner-a:legacy-thread",
+        {
+          id: "legacy-thread",
+          subject: "Stored before tool removal",
+          status: "open",
+          createdAt: recordedAt,
+          updatedAt: recordedAt,
+          messages: [{
+            id: "legacy-message",
+            threadId: "legacy-thread",
+            sequence: 1,
+            author: "user",
+            kind: "comment",
+            body: "Existing stored feedback.",
+            createdAt: recordedAt,
+          }],
+        },
+      ]]);
+      const conversationBackend = {
+        createThread({ subject, message }, context) {
+          const id = "new-thread";
+          const conversation = {
+            id,
+            subject,
+            status: "open",
+            createdAt: recordedAt,
+            updatedAt: recordedAt,
+            messages: [{
+              id: "new-message",
+              threadId: id,
+              sequence: 1,
+              author: "user",
+              kind: "comment",
+              body: message,
+              createdAt: recordedAt,
+            }],
+          };
+          threads.set(\`\${context.scope}:\${id}\`, conversation);
+          return { conversation };
+        },
+        appendMessage({ threadId, message }, context) {
+          const conversation = threads.get(\`\${context.scope}:\${threadId}\`);
+          if (!conversation) throw new Error("not found");
+          const entry = {
+            id: \`message-\${conversation.messages.length + 1}\`,
+            threadId,
+            sequence: conversation.messages.length + 1,
+            author: "user",
+            kind: "comment",
+            body: message,
+            createdAt: recordedAt,
+          };
+          conversation.messages.push(entry);
+          return { message: entry };
+        },
+        listThreads(_query, context) {
+          return { page: { threads: [...threads.entries()]
+            .filter(([key]) => key.startsWith(\`\${context.scope}:\`))
+            .map(([, { messages: _messages, ...thread }]) => thread) } };
+        },
+        getThread({ threadId }, context) {
+          const conversation = threads.get(\`\${context.scope}:\${threadId}\`);
+          if (!conversation) throw new Error("not found");
+          return { conversation };
+        },
+      };
+      const feedbackScope = (principal) => principal?.clientId ?? "";
+      const conversationTools = defineFeedbackConversation({
+        requiredScopes: ["feedback"],
+        scope: feedbackScope,
+        backend: conversationBackend,
+      });
+      const submissionTool = defineFeedbackSubmission({
+        access: "protected",
+        requiredScopes: ["feedback"],
+        scope: feedbackScope,
+        backend: {
+          async submit({ observation, detail }, context) {
+            const result = await conversationBackend.createThread({
+              subject: observation,
+              message: detail,
+            }, context);
+            return { id: result.conversation.id, recordedAt: result.conversation.createdAt };
+          },
+        },
+      });
+      const feedbackApp = createEmseepea({
+        name: "packed-feedback-check",
+        version: "0.0.0",
+        tools: [submissionTool, ...conversationTools],
+        authentication: {
+          verifier: {
+            async verifyAccessToken(token) {
+              return {
+                token,
+                clientId: token,
+                scopes: ["feedback"],
+                expiresAt: Math.floor(Date.now() / 1000) + 60,
+                resource: new URL("https://test.example/mcp"),
+              };
+            },
+          },
+          metadata: {
+            resourceServerUrl: new URL("https://test.example/mcp"),
+            oauthMetadata: {
+              issuer: "https://auth.test.example",
+              authorization_endpoint: "https://auth.test.example/authorize",
+              token_endpoint: "https://auth.test.example/token",
+              response_types_supported: ["code"],
+            },
+          },
+        },
+      });
+      const feedbackRunning = await startEmseepea(feedbackApp);
+      try {
+        const ownerA = await feedbackRunning.connect("owner-a");
+        const names = (await ownerA.listTools()).tools.map(({ name }) => name);
+        if (JSON.stringify(names) !== JSON.stringify([
+          "submit-feedback",
+          "reply-to-feedback-thread",
+          "list-feedback-threads",
+          "get-feedback-thread",
+        ]) || names.includes("create-feedback-thread")) {
+          throw new Error("packed feedback package exposes the wrong tools");
+        }
+        const submitted = await ownerA.callTool({
+          name: "submit-feedback",
+          arguments: { observation: "friction", detail: "A packed-package journey was difficult." },
+        });
+        const threadId = submitted.structuredContent?.id;
+        if (threadId !== "new-thread") throw new Error("packed submission returned the wrong thread ID");
+        const retrieved = await ownerA.callTool({
+          name: "get-feedback-thread",
+          arguments: { threadId },
+        });
+        if (retrieved.structuredContent?.id !== threadId) {
+          throw new Error("packed conversation did not accept the submission ID");
+        }
+        const replied = await ownerA.callTool({
+          name: "reply-to-feedback-thread",
+          arguments: { threadId, message: "This reply uses the returned ID." },
+        });
+        if (replied.structuredContent?.sequence !== 2) {
+          throw new Error("packed conversation did not append the reply");
+        }
+        const listed = await ownerA.callTool({ name: "list-feedback-threads", arguments: {} });
+        if (!listed.structuredContent?.threads?.some(({ id }) => id === "legacy-thread")) {
+          throw new Error("packed conversation did not list the stored legacy thread");
+        }
+        const legacyRead = await ownerA.callTool({
+          name: "get-feedback-thread",
+          arguments: { threadId: "legacy-thread" },
+        });
+        if (legacyRead.structuredContent?.messages?.[0]?.id !== "legacy-message") {
+          throw new Error("packed conversation did not read the stored legacy thread");
+        }
+        const legacyReply = await ownerA.callTool({
+          name: "reply-to-feedback-thread",
+          arguments: { threadId: "legacy-thread", message: "Stored threads remain replyable." },
+        });
+        if (legacyReply.structuredContent?.sequence !== 2) {
+          throw new Error("packed conversation did not reply to the stored legacy thread");
+        }
+        const ownerB = await feedbackRunning.connect("owner-b");
+        const denied = await ownerB.callTool({
+          name: "get-feedback-thread",
+          arguments: { threadId },
+        });
+        if (denied.isError !== true) throw new Error("packed conversation crossed owner scopes");
+      } finally {
+        await feedbackRunning.close();
       }
       if ("sampleMessage" in inputRequired) {
         throw new Error("packed server unexpectedly exposes deprecated MCP Sampling");

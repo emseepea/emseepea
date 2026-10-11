@@ -2,7 +2,10 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineFeedbackConversation } from "@emseepea/feedback";
+import {
+  defineFeedbackConversation,
+  defineFeedbackSubmission,
+} from "@emseepea/feedback";
 import {
   createFeedbackReplyEventsOptions,
   publishFeedbackTeamReplyEvent,
@@ -13,11 +16,31 @@ import { createDemoAuth, feedbackOwnerKey } from "./auth.mjs";
 import { openStore } from "./store.mjs";
 
 export function createFeedbackSmokeApp({ publicMcpUrl, auth, adminToken, store, deployment }) {
-  const feedbackTools = defineFeedbackConversation({
-    requiredScopes: ["feedback"],
-    scope: feedbackOwnerKey,
-    backend: store.feedback,
-  });
+  const feedbackTools = [
+    defineFeedbackSubmission({
+      access: "protected",
+      requiredScopes: ["feedback"],
+      scope: feedbackOwnerKey,
+      backend: {
+        async submit({ observation, detail }, context) {
+          const result = await store.feedback.createThread({
+            subject: observation,
+            message: detail,
+          }, context);
+          return {
+            id: result.conversation.id,
+            recordedAt: result.conversation.createdAt,
+            events: result.events,
+          };
+        },
+      },
+    }),
+    ...defineFeedbackConversation({
+      requiredScopes: ["feedback"],
+      scope: feedbackOwnerKey,
+      backend: store.feedback,
+    }),
+  ];
   const app = createEmseepea({
     name: "emseepea-feedback-events-chatgpt-smoke",
     version: "0.0.1",
