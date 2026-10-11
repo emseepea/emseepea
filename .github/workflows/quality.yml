@@ -389,11 +389,9 @@ jobs:
       - name: Detect release work
         id: release-work
         run: |
-          if find .changeset -maxdepth 1 -type f -name '*.md' ! -name README.md | grep -q .; then
-            echo "has_changesets=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_changesets=false" >> "$GITHUB_OUTPUT"
-          fi
+          status_file="$(mktemp)"
+          npx changeset status --output "$status_file"
+          node scripts/detect-release-work.mjs "$status_file" >> "$GITHUB_OUTPUT"
       - name: Require the previous publish head on main
         if: steps.release-work.outputs.has_changesets == 'true'
         env:
