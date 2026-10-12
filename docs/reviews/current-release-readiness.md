@@ -1,14 +1,15 @@
 # Current Release Readiness
 
-Date: 2026-10-12
+Date: 2026-10-13
 
 ## Release status
 
 Publication status: **NOT READY**.
 
-The source implementation and focused package checks pass. Publication remains
-pending until the final source commit passes the repository's Quality, Release,
-Publish, registry, installed-package, merge-back, and clean-checkout gates.
+The #157 source implementation and focused package checks pass. Publication
+remains pending until the final source commit passes the repository's Quality,
+Release, Publish, registry, installed-package, merge-back, and clean-checkout
+gates.
 
 The repository's release verifier requires the next two machine-readable
 markers. They record only the current source review result; they do not mean
@@ -17,61 +18,38 @@ that the package is published.
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
 - Local focused verification: **PASS**.
-- Architecture review: **PASS**.
-- Jobs To Be Done review: **PASS**.
 - Cognitive-accessibility review: **PASS** for the recorded source hashes.
 - Release-risk review: required for the final source commit before release.
 
-## Feedback creation tool consolidation
+## Bounded Codex diagnostic evidence
 
-`submit-feedback` is the sole Model Context Protocol (MCP) operation for
-creating new feedback.
-`defineFeedbackConversation` now exposes exactly three MCP tools:
-`reply-to-feedback-thread`, `list-feedback-threads`, and
-`get-feedback-thread`. The removed `create-feedback-thread` operation is not
-discoverable, callable, aliased, or configurable.
+`@emseepea/testing` now retains fixed diagnostic categories for failed Codex CLI
+runs: authentication, configuration, host storage, permission or sandbox,
+provider, transport, and unknown. The runner inspects at most 32 KiB of standard
+error to choose the category, then discards the raw text.
 
-The internal backend `createThread` operation remains available to submission
-adapters. Existing stored threads, identifiers, owner scopes, replies, events,
-hooks, receipts, deadlines, and cancellation behavior remain unchanged.
+Forbidden native items retain only capped counts from a fixed item-type list.
+The evidence excludes commands, arguments, results, paths, server and tool
+names, unknown item-type strings, credentials, endpoints, and fixture content.
 
-Adopters creating durable conversations configure `defineFeedbackSubmission`
-and `defineFeedbackConversation` with the same conversation store and the same
-scope projection. The `id` returned by `submit-feedback` is the canonical
-thread identifier for reply and get. List returns the thread under the same
-authorized scope.
+The Codex invocation continues to disable local execution features and reject
+forbidden native items during parsing. Successful native MCP conversations,
+advertised-tool enforcement, failed-call rejection, trial checks, judge checks,
+timeouts, token handling, and cancellation behavior remain unchanged.
 
 ## Planned package set
 
-- `@emseepea/feedback@0.10.1`
-- `@emseepea/create-api-backed-server@0.1.12`
-- `@emseepea/create-database-schema-server@0.1.12`
-- `@emseepea/create-html-ui-server@0.1.12`
-- `@emseepea/create-mongodb-backed-server@0.1.12`
-- `@emseepea/create-multi-instance-postgres-server@0.1.12`
-- `@emseepea/create-openapi-backed-server@0.1.12`
-- `@emseepea/create-progress-streaming-server@0.1.12`
-- `@emseepea/create-react-ui-server@0.1.12`
-- `@emseepea/create-resources-and-prompts-server@0.1.12`
-- `@emseepea/create-soap-backed-server@0.1.12`
-- `@emseepea/create-tool-server@0.1.12`
-
-The staged `@emseepea/feedback@0.10.0` version is immutable and remains under
-`next`; it was never promoted to `latest`. The checked recovery therefore uses
-the next fresh feedback patch. The initializer patches give the corrected
-`@emseepea/testing@0.23.1` dependency pins new immutable package versions.
+- `@emseepea/testing@0.23.2`
 
 ## Verified before push
 
-The feedback package builds successfully. The focused feedback, discovery,
-annotation, durable-record, dogfood, black-box, and packed-install checks pass.
-The recovery plan contains the feedback replacement and exactly eleven
-initializer patch packages listed above.
+The focused `@emseepea/testing` package suite passed 74 tests, including
+one-shot Codex failure categories, resumed conversation failure categories,
+bounded forbidden-item counts, private diagnostic exclusion, credential
+redaction, and existing native MCP parsing behavior.
 
-The source contract and docs contain no MCP registration or annotation override
-for `create-feedback-thread`. Tests verify that conversation discovery returns
-only reply, list, and get, while submission still creates a durable thread that
-can be retrieved and replied to through the returned identifier.
+`decisions:check` passed. The public Markdown changed by #157 passed
+cognitive-accessibility review for the recorded source hashes.
 
 ## Required release evidence
 
@@ -80,15 +58,8 @@ then pass semantic qualification, publication under npm `next`, registry
 integrity, signatures, provenance, and downloaded-package checks. Publish must
 promote the exact candidate to `latest` and merge it back to `main`.
 
-An independent clean installation of the published package must verify all of
-the following:
+An independent clean installation of the published package must verify that
+failed Codex runs expose only the bounded category, forbidden native items expose
+only capped counts, and private diagnostics are not retained.
 
-- MCP discovery includes `submit-feedback` and the three conversation tools.
-- MCP discovery excludes `create-feedback-thread`.
-- The removed operation cannot be called through an alias or hidden route.
-- A new submission can be retrieved and replied to using its returned `id`.
-- A thread stored before this release remains listable, readable, and
-  replyable without migration.
-
-Only that published-package evidence can complete the release and the
-confirmation criteria in ADR-0122.
+Only that published-package evidence can complete #157.

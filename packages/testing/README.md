@@ -116,6 +116,15 @@ server.
 An isolated command policy denies shell launches and spawned shell environments
 inherit no provider credentials.
 
+Failed Codex runs retain only a fixed failure category: authentication,
+configuration, host storage, permission or sandbox, provider, transport, or
+unknown. The runner inspects at most 32 KiB of standard error to derive that
+category and does not store the standard error.
+
+Rejected native items retain only capped counts from a fixed item-type list.
+Commands, arguments, results, paths, server and tool names, and unknown
+item-type strings are excluded.
+
 Codex CLI evidence proves that CLI journey. It does not prove native ChatGPT
 connection, attachment, retrieval, or MCP App rendering behavior.
 

@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.23.2
+
+### Patch Changes
+
+- [`bc20473`](https://github.com/emseepea/emseepea/commit/bc2047316786ade1fce27986b897613d9155f57e) Thanks [@tompahoward](https://github.com/tompahoward)! - Retain bounded categorical Codex failure evidence and capped forbidden-item counts without storing raw provider diagnostics.
+
 ## 0.23.1
 
 ### Patch Changes

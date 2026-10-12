@@ -13,6 +13,17 @@ const providerErrorMessages = new Map([
   ["error_max_turns", "Model command exceeded its turn limit"],
 ]);
 const authenticationFailure = /not logged in|failed to authenticate|oauth session expired/i;
+const codexFailureCategories = new Set([
+  "authentication",
+  "configuration",
+  "host-storage",
+  "permission-or-sandbox",
+  "provider",
+  "transport",
+  "unknown",
+]);
+const stderrLimit = 32 * 1024;
+const forbiddenItemLimit = 64;
 const hasAuthenticationFailure = (events) => events.some((event) => (
   (Array.isArray(event.message?.content)
     && event.message.content.some(({ type, text }) => type === "text" && /not logged in/i.test(text ?? "")))
@@ -388,14 +399,17 @@ export async function runModel(provider, prompt, directory, signal) {
   if (execution.outputLimitExceeded) throw new Error("Model command output exceeded its limit");
   if (execution.errorCode === "ABORT_ERR") throw new Error("Model command was cancelled");
   if (execution.errorCode) throw new Error("Model command could not start");
-  if (execution.code !== 0 && !execution.stdout) throw new Error(`Model command exited ${execution.code}`);
+  if (execution.code !== 0 && !execution.stdout) {
+    throw codexProcessError(execution.code, execution.providerFailureCategory);
+  }
   return provider.startsWith("codex-")
     ? parseCodexEvents(execution.stdout, [], undefined, execution.code,
-      providerModel(provider), invocation.providerSecrets)
+      providerModel(provider), invocation.providerSecrets, execution.providerFailureCategory)
     : parseClaudeEvents(execution.stdout, execution.code);
 }
 
-export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, processExitCode = 0, selectedModel = "test-model", secrets = []) {
+export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, processExitCode = 0,
+  selectedModel = "test-model", secrets = [], providerFailureCategory) {
   let events;
   try {
     events = typeof stdout === "string"
@@ -412,11 +426,13 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
   const authentication = /(?:not logged in|authentication|unauthorized|invalid api key|oauth)/i;
   const errorText = events.flatMap((event) => [event.message, event.error?.message, event.item?.message])
     .filter((value) => typeof value === "string").join("\n");
-  if (authentication.test(errorText)) throw new Error("Model command is not signed in");
+  if (authentication.test(errorText)) {
+    throw codexEvidenceError("Model command is not signed in", "authentication");
+  }
   const failedTool = events.some(({ item }) => item?.type === "mcp_tool_call"
     && (item.status === "failed" || item.result?.isError === true || item.result?.is_error === true));
   if (failedTool) throw new Error("Model command reported a failed MCP tool call");
-  if (processExitCode !== 0) throw new Error(`Model command exited ${processExitCode}`);
+  if (processExitCode !== 0) throw codexProcessError(processExitCode, providerFailureCategory);
   if (events.some(({ type }) => type === "turn.failed" || type === "error")) {
     throw new Error("Model command reported an error");
   }
@@ -435,12 +451,12 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
   const advertised = new Set(advertisedTools.map(({ name }) => name));
   const completed = events.filter(({ type }) => type === "item.completed").map(({ item }) => item);
   const forbidden = completed.filter((item) => !["agent_message", "reasoning", "mcp_tool_call"].includes(item?.type));
-  if (forbidden.length) throw new Error("Model command used a forbidden tool");
+  if (forbidden.length) throw forbiddenItemError(forbidden);
   const toolItems = completed.filter(({ type }) => type === "mcp_tool_call");
   const calls = toolItems.map((item) => {
     if (item.server !== mcpServerName || !advertised.has(item.tool)
       || !item.arguments || typeof item.arguments !== "object" || Array.isArray(item.arguments)) {
-      throw new Error("Model command used a forbidden tool");
+      throw forbiddenItemError([item]);
     }
     if (!item.result || typeof item.result !== "object" || item.status === "failed"
       || item.result.isError === true || item.result.is_error === true) {
@@ -492,7 +508,8 @@ function startCodexConversation(provider, directory, url, tools, authToken, cont
       if (execution.errorCode === "ABORT_ERR") throw new Error("Model command was cancelled");
       if (execution.errorCode) throw new Error("Model conversation could not start");
       const turn = parseCodexEvents(execution.stdout, tools, threadId, execution.code,
-        providerModel(provider), [...invocation.providerSecrets, authToken, ...serverSecrets]);
+        providerModel(provider), [...invocation.providerSecrets, authToken, ...serverSecrets],
+        execution.providerFailureCategory);
       threadId = turn.threadId;
       return { ...turn, elicitations: [] };
     },
@@ -559,8 +576,10 @@ function runProcess(command, args, options) {
   return new Promise((resolve) => {
     const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], ...options });
     let stdout = "";
+    let stderr = Buffer.alloc(0);
     let timedOut = false;
     let outputLimitExceeded = false;
+    let settled = false;
     const timer = setTimeout(() => { timedOut = true; child.kill("SIGKILL"); }, 180_000);
     timer.unref();
     child.stdout.on("data", (chunk) => {
@@ -570,15 +589,85 @@ function runProcess(command, args, options) {
         child.kill("SIGKILL");
       }
     });
-    child.stderr.resume();
-    child.once("error", (error) => {
+    child.stderr.on("data", (chunk) => {
+      if (stderr.length >= stderrLimit) return;
+      const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      stderr = Buffer.concat([stderr, bytes.subarray(0, stderrLimit - stderr.length)]);
+    });
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
       clearTimeout(timer);
-      resolve({ code: 1, errorCode: error.code, outputLimitExceeded, stdout, timedOut });
+      const providerFailureCategory = classifyCodexFailure(stderr.toString("utf8"));
+      stderr = Buffer.alloc(0);
+      resolve({ ...result, providerFailureCategory });
+    };
+    child.once("error", (error) => {
+      finish({ code: 1, errorCode: error.code, outputLimitExceeded, stdout, timedOut });
     });
     child.once("close", (code) => {
-      clearTimeout(timer);
-      resolve({ code: code ?? 1, outputLimitExceeded, stdout, timedOut });
+      finish({ code: code ?? 1, outputLimitExceeded, stdout, timedOut });
     });
+  });
+}
+
+function classifyCodexFailure(stderr) {
+  if (/no space left|disk (?:is )?full|storage (?:capacity|quota)|\benospc\b/i.test(stderr)) {
+    return "host-storage";
+  }
+  if (/not logged in|authenticat|unauthorized|invalid api key|oauth/i.test(stderr)) {
+    return "authentication";
+  }
+  if (/permission denied|operation not permitted|sandbox|\beacces\b|\beperm\b/i.test(stderr)) {
+    return "permission-or-sandbox";
+  }
+  if (/configuration|config(?:uration)? error|unknown (?:feature|field|key)|invalid (?:config|value)/i.test(stderr)) {
+    return "configuration";
+  }
+  if (/connection (?:refused|reset)|network|transport|timed? out|\btls\b|certificate|\bdns\b|\beconn/i.test(stderr)) {
+    return "transport";
+  }
+  if (/provider (?:error|failure|unavailable)|model (?:is )?(?:unavailable|overloaded)|rate limit|service unavailable/i.test(stderr)) {
+    return "provider";
+  }
+  return "unknown";
+}
+
+function codexEvidenceError(message, category) {
+  return Object.assign(new Error(message), {
+    providerFailureCategory: codexFailureCategories.has(category) ? category : "unknown",
+  });
+}
+
+function codexProcessError(code, category) {
+  return codexEvidenceError(`Model command exited ${code}`, category);
+}
+
+function forbiddenItemError(items) {
+  const counts = {
+    commandExecution: 0,
+    computerUse: 0,
+    fileChange: 0,
+    mcpToolCall: 0,
+    other: 0,
+    webSearch: 0,
+  };
+  for (const item of items.slice(0, forbiddenItemLimit)) {
+    const key = new Map([
+      ["command_execution", "commandExecution"],
+      ["computer_tool", "computerUse"],
+      ["file_change", "fileChange"],
+      ["mcp_tool_call", "mcpToolCall"],
+      ["web_search", "webSearch"],
+    ]).get(item?.type) ?? "other";
+    counts[key] += 1;
+  }
+  return Object.assign(new Error("Model command used a forbidden tool"), {
+    forbiddenItemEvidence: Object.freeze({
+      counts: Object.freeze(counts),
+      inspectedCount: Math.min(items.length, forbiddenItemLimit),
+      truncated: items.length > forbiddenItemLimit,
+    }),
   });
 }
 
