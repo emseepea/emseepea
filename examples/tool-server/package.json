@@ -21,7 +21,7 @@
     "@emseepea/feedback": "0.10.1",
     "@emseepea/server": "0.23.0",
     "zod": "4.4.3",
-    "@emseepea/testing": "0.23.1",
+    "@emseepea/testing": "0.23.2",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",
     "oxlint": "1.80.0"

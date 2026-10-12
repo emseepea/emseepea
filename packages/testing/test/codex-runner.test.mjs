@@ -47,11 +47,16 @@ test("Codex lifecycle", async (t) => {
   assert.equal(evidence.modelEvidence, "configured");
   assert.deepEqual(evidence.settings, {
     approvalPolicy: "never",
+    appInstructions: false,
+    apps: false,
     loginShell: false,
     multiAgent: false,
+    plugins: false,
+    remotePlugin: false,
     sandbox: "read-only",
     shell: "forbidden",
     shellEnvironment: "empty",
+    toolSuggest: false,
     userConfig: "ignored",
     webSearch: false,
   });
@@ -72,8 +77,12 @@ test("Codex lifecycle", async (t) => {
     assert.equal(runs[0].threadId, runs[1].threadId);
     assert.notEqual(runs[1].threadId, runs[2].threadId);
     assert.equal(new Set(runs.map(({ mcpUrl }) => mcpUrl)).size, 1);
-    assert.ok(runs.every(({ shellEnvironmentEmpty, shellForbidden, shellToolDisabled, unifiedExecDisabled }) =>
-      shellEnvironmentEmpty && shellForbidden && shellToolDisabled && unifiedExecDisabled));
+    assert.ok(runs.every(({ accountAppsDisabled, appInstructionsDisabled, appsDisabled, multiAgentDisabled,
+      pluginsDisabled, remotePluginDisabled, toolSuggestDisabled,
+      shellEnvironmentEmpty, shellForbidden, shellToolDisabled, unifiedExecDisabled }) =>
+      accountAppsDisabled && appInstructionsDisabled && appsDisabled && multiAgentDisabled && pluginsDisabled
+      && remotePluginDisabled && toolSuggestDisabled && shellEnvironmentEmpty
+      && shellForbidden && shellToolDisabled && unifiedExecDisabled));
   }
 });
 
@@ -86,6 +95,12 @@ test("Codex runner fails closed when local shell suppression is rejected", { tim
 import { appendFileSync } from "node:fs";
 const configs = process.argv.flatMap((value, index, args) => args[index - 1] === "-c" ? [value] : []);
 appendFileSync(${JSON.stringify(log)}, JSON.stringify({
+  accountAppsDisabled: configs.filter((value) => value === "apps._default.enabled=false").length,
+  appInstructionsDisabled: configs.filter((value) => value === "include_apps_instructions=false").length,
+  appsDisabled: configs.filter((value) => value === "features.apps=false").length,
+  pluginsDisabled: configs.filter((value) => value === "features.plugins=false").length,
+  remotePluginDisabled: configs.filter((value) => value === "features.remote_plugin=false").length,
+  toolSuggestDisabled: configs.filter((value) => value === "features.tool_suggest=false").length,
   shellToolDisabled: configs.filter((value) => value === "features.shell_tool=false").length,
   unifiedExecDisabled: configs.filter((value) => value === "features.unified_exec=false").length,
 }) + "\\n");
@@ -109,8 +124,12 @@ test("suppression rejection", async (t) => {
   assert.equal(result.status, 1);
   const invocations = (await readFile(log, "utf8")).trim().split("\n").map(JSON.parse);
   assert.equal(invocations.length, 3);
-  assert.ok(invocations.every(({ shellToolDisabled, unifiedExecDisabled }) =>
-    shellToolDisabled === 1 && unifiedExecDisabled === 1));
+  assert.ok(invocations.every(({ accountAppsDisabled, appInstructionsDisabled, appsDisabled,
+    pluginsDisabled, remotePluginDisabled, toolSuggestDisabled,
+    shellToolDisabled, unifiedExecDisabled }) =>
+    accountAppsDisabled === 1 && appInstructionsDisabled === 1 && appsDisabled === 1
+    && pluginsDisabled === 1 && remotePluginDisabled === 1 && toolSuggestDisabled === 1
+    && shellToolDisabled === 1 && unifiedExecDisabled === 1));
   const evidenceText = await readFile(output, "utf8");
   for (const sentinel of ["/Users/example", "https://private.example", "provider-secret-sentinel"]) {
     assert.equal(evidenceText.includes(sentinel), false);
@@ -236,6 +255,13 @@ const urlConfig = configs.find((value) => value.startsWith("mcp_servers.emseepea
 const mcpUrl = urlConfig ? JSON.parse(urlConfig.slice(urlConfig.indexOf("=") + 1)) : undefined;
 const rules = readFileSync(join(codexHome, "rules", "default.rules"), "utf8");
 appendFileSync(${JSON.stringify(log)}, JSON.stringify({ codexHome, mcpUrl, prompt, resumed, threadId,
+  accountAppsDisabled: configs.filter((value) => value === "apps._default.enabled=false").length === 1,
+  appInstructionsDisabled: configs.filter((value) => value === "include_apps_instructions=false").length === 1,
+  appsDisabled: configs.filter((value) => value === "features.apps=false").length === 1,
+  multiAgentDisabled: configs.filter((value) => value === "features.multi_agent=false").length === 1,
+  pluginsDisabled: configs.filter((value) => value === "features.plugins=false").length === 1,
+  remotePluginDisabled: configs.filter((value) => value === "features.remote_plugin=false").length === 1,
+  toolSuggestDisabled: configs.filter((value) => value === "features.tool_suggest=false").length === 1,
   shellEnvironmentEmpty: configs.includes('shell_environment_policy.inherit="none"'),
   shellForbidden: rules.includes('decision = "forbidden"'),
   shellToolDisabled: configs.filter((value) => value === "features.shell_tool=false").length === 1,

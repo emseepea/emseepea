@@ -109,12 +109,30 @@ EMSEEPEA_CODEX_MODEL=gpt-5.5 emseepea-test --provider codex-local eval
 
 `codex-local` uses the existing Codex CLI sign-in without copying it.
 `codex-ci` requires `OPENAI_API_KEY` from the CI secret store. Both providers
-run `codex exec --json`, resume the actual Codex session for follow-ups, ignore
-user configuration, and pre-approve only the discovered tools from the test
-server.
+support Codex CLI 0.162.0 or later, run `codex exec --json`, resume the actual
+Codex session for follow-ups, ignore user configuration, and pre-approve only
+the discovered tools from the test server.
 
 An isolated command policy denies shell launches and spawned shell environments
-inherit no provider credentials.
+inherit no provider credentials. The runner also disables Codex account apps,
+plugins, remote plugins, multi-agent execution, web search, shell tools, and
+unified execution for each one-shot and resumed native invocation.
+
+The invocation configuration sets the default account-app state to disabled,
+omits account-app instructions, and disables Codex app, plugin, and tool
+suggestion features.
+
+Native-client events are authoritative for the tools that were actually used:
+a turn is accepted only when every application MCP call belongs to the
+configured test server and its expected tools.
+
+Codex may make its two built-in resource-discovery calls through the CLI's
+`codex` server. The runner accepts them only when their native results prove the
+resource and template inventories are empty, and excludes them from application
+assertions and raw evidence.
+
+Any non-empty, unrecognised, account-app, plugin, or other foreign call is
+rejected without storing raw account metadata.
 
 Failed Codex runs retain only a fixed failure category: authentication,
 configuration, host storage, permission or sandbox, provider, transport, or

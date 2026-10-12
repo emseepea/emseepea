@@ -342,7 +342,9 @@ test("inventory conversation", async (t) => {
     server: new URL(${JSON.stringify(serverUrl)}),
     ${serverUrl === protectedServer ? 'authToken: "example-access-token",' : ""}
     ${context === undefined ? "" : `context: ${JSON.stringify(context)},`}
-    ${stateFile === undefined ? "" : `environment: { SELECTION_STATE_FILE: ${JSON.stringify(stateFile)} },`}
+    ${stateFile === undefined
+      ? serverUrl === protectedServer ? 'environment: () => ({ PORT: "0" }),' : ""
+      : `environment: { SELECTION_STATE_FILE: ${JSON.stringify(stateFile)} },`}
   });
   const inventory = await chat.send("How many packets can we promise now?");
   ${firstToolSelection !== undefined && selectionArgumentOrder === "before"
