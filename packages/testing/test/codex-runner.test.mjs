@@ -117,6 +117,73 @@ test("suppression rejection", async (t) => {
   }
   const record = Object.values(JSON.parse(evidenceText).cases)[0];
   assert.ok(record.answerTrials.every(({ error }) => error === "model command exited 2"));
+  assert.ok(record.answerTrials.every(({ providerFailureCategory }) =>
+    providerFailureCategory === "unknown"));
+});
+
+test("Codex runner retains bounded failure evidence from resumed conversations", { timeout: 30_000 }, async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "codex-resumed-diagnostic-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const model = await writeFakeCodex(directory);
+  const evalDirectory = join(directory, "eval");
+  await mkdir(evalDirectory);
+  const file = join(evalDirectory, "resumed-failure.test.mjs");
+  const output = join(directory, "evidence.json");
+  await writeFile(file, `
+import test from "node:test";
+import { assertResponseContains, createConversation } from ${JSON.stringify(helper)};
+test("resumed diagnostic", async (t) => {
+  const chat = await createConversation(t, { server: new URL(${JSON.stringify(server)}) });
+  const first = await chat.send("What was its name?");
+  assertResponseContains(first, "Highland Snap");
+  await chat.send("FAIL_STORAGE");
+});
+`);
+  const result = runCli(model, output, file, { OPENAI_API_KEY: "provider-secret-sentinel" });
+  assert.equal(result.status, 1);
+  const evidenceText = await readFile(output, "utf8");
+  assert.equal(evidenceText.includes("private-resumed-path"), false);
+  const record = Object.values(JSON.parse(evidenceText).cases)[0];
+  assert.ok(record.answerTrials.every(({ error }) => error === "model command exited 2"));
+  assert.ok(record.answerTrials.every(({ providerFailureCategory }) =>
+    providerFailureCategory === "host-storage"));
+  const runs = (await readFile(join(directory, "model-log.jsonl"), "utf8"))
+    .trim().split("\n").map(JSON.parse);
+  for (const group of Map.groupBy(runs, ({ codexHome }) => codexHome).values()) {
+    assert.deepEqual(group.map(({ prompt, resumed }) => ({ prompt, resumed })), [
+      { prompt: "What was its name?", resumed: false },
+      { prompt: "FAIL_STORAGE", resumed: true },
+    ]);
+    assert.equal(group[0].threadId, group[1].threadId);
+  }
+});
+
+test("Codex runner retains only bounded forbidden-item counts", { timeout: 30_000 }, async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "codex-forbidden-evidence-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const model = await writeFakeCodex(directory);
+  const evalDirectory = join(directory, "eval");
+  await mkdir(evalDirectory);
+  const file = join(evalDirectory, "forbidden.test.mjs");
+  const output = join(directory, "evidence.json");
+  await writeFile(file, `
+import test from "node:test";
+import { createConversation } from ${JSON.stringify(helper)};
+test("forbidden item", async (t) => {
+  const chat = await createConversation(t, { server: new URL(${JSON.stringify(server)}) });
+  await chat.send("FORBIDDEN_COMMAND");
+});
+`);
+  const result = runCli(model, output, file, { OPENAI_API_KEY: "provider-secret-sentinel" });
+  assert.equal(result.status, 1);
+  const evidenceText = await readFile(output, "utf8");
+  assert.equal(evidenceText.includes("private-command-sentinel"), false);
+  const record = Object.values(JSON.parse(evidenceText).cases)[0];
+  assert.ok(record.answerTrials.every(({ error }) => error === "model command used a forbidden tool"));
+  assert.ok(record.answerTrials.every(({ forbiddenItemEvidence }) =>
+    forbiddenItemEvidence.inspectedCount === 1
+    && forbiddenItemEvidence.truncated === false
+    && forbiddenItemEvidence.counts.commandExecution === 1));
 });
 
 test("Codex runner never retains provider or server credential sentinels", { timeout: 30_000 }, async (t) => {
@@ -173,11 +240,19 @@ appendFileSync(${JSON.stringify(log)}, JSON.stringify({ codexHome, mcpUrl, promp
   shellForbidden: rules.includes('decision = "forbidden"'),
   shellToolDisabled: configs.filter((value) => value === "features.shell_tool=false").length === 1,
   unifiedExecDisabled: configs.filter((value) => value === "features.unified_exec=false").length === 1 }) + "\\n");
+if (prompt === "FAIL_STORAGE") {
+  process.stderr.write("No space left on device private-resumed-path-/Users/example\\n");
+  process.exit(2);
+}
 const event = (value) => process.stdout.write(JSON.stringify(value) + "\\n");
 event({ type: "thread.started", thread_id: threadId });
 event({ type: "turn.started" });
 let answer;
-if (prompt === "LEAK_PROVIDER") answer = process.env.OPENAI_API_KEY;
+if (prompt === "FORBIDDEN_COMMAND") {
+  event({ type: "item.completed", item: { type: "command_execution", command: "private-command-sentinel" } });
+  answer = "A forbidden command was attempted.";
+}
+else if (prompt === "LEAK_PROVIDER") answer = process.env.OPENAI_API_KEY;
 else if (prompt === "LEAK_SERVER") answer = process.env.EMSEEPEA_SEMANTIC_MCP_TOKEN;
 else if (!mcpUrl) answer = JSON.stringify({ pass: true, score: 1, reason: "The response has the expected meaning." });
 else if (prompt === "What was its name?") answer = "Its name was Highland Snap.";

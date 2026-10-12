@@ -178,7 +178,7 @@ export async function createConversation(testContext, options) {
           return;
         }
         const trial = state.trials[index];
-        trial.record.error = safeModelFailure(result.reason);
+        recordModelFailure(trial.record, result.reason);
         if (Array.isArray(result.reason?.elicitations)) trial.record.elicitations = result.reason.elicitations;
         if (Array.isArray(result.reason?.attemptedToolCalls)) {
           trial.record.attemptedToolCalls = result.reason.attemptedToolCalls;
@@ -508,9 +508,11 @@ async function judgeTrialMeaning(trial, trialIndex, expected) {
       record.verdict = verdict;
       outcomes.push({ failed: !verdict.pass, record });
     } catch (error) {
-      record.error = error instanceof SyntaxError || error.message === "Judge returned an invalid verdict"
-        ? "invalid judge verdict"
-        : safeModelFailure(error);
+      if (error instanceof SyntaxError || error.message === "Judge returned an invalid verdict") {
+        record.error = "invalid judge verdict";
+      } else {
+        recordModelFailure(record, error);
+      }
       outcomes.push({ failed: true, record });
     }
   }
@@ -568,6 +570,24 @@ function safeModelFailure(error) {
     return message.replace(/^./, (character) => character.toLowerCase());
   }
   return "model invocation failed";
+}
+
+function recordModelFailure(record, error) {
+  record.error = safeModelFailure(error);
+  const category = error?.providerFailureCategory;
+  if ([
+    "authentication",
+    "configuration",
+    "host-storage",
+    "permission-or-sandbox",
+    "provider",
+    "transport",
+    "unknown",
+  ].includes(category)) record.providerFailureCategory = category;
+  const evidence = error?.forbiddenItemEvidence;
+  if (evidence && typeof evidence === "object") {
+    record.forbiddenItemEvidence = structuredClone(evidence);
+  }
 }
 
 async function isolatedModel(provider, prompt, prefix, signal) {

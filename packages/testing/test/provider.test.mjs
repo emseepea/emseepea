@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -12,6 +12,7 @@ import {
   parseJudgeVerdict,
   parseNativeClaudeEvents,
   providerModel,
+  runModel,
 } from "../semantic/provider.mjs";
 
 const result = {
@@ -253,6 +254,39 @@ test("Codex events retain native MCP calls and require a complete resumable turn
   assert.throws(() => parseCodexEvents(events.map((event) => event.item?.type === "mcp_tool_call"
     ? { ...event, item: { ...event.item, server: "ambient" } }
     : event), [{ name: "get-pea" }]), /forbidden tool/);
+  assert.throws(() => parseCodexEvents([
+    ...events.slice(0, 2),
+    { type: "item.completed", item: { type: "command_execution", command: "private command" } },
+    ...events.slice(3),
+  ], [{ name: "get-pea" }]), (error) => {
+    assert.equal(error.message, "Model command used a forbidden tool");
+    assert.deepEqual(error.forbiddenItemEvidence, {
+      counts: {
+        commandExecution: 1,
+        computerUse: 0,
+        fileChange: 0,
+        mcpToolCall: 0,
+        other: 0,
+        webSearch: 0,
+      },
+      inspectedCount: 1,
+      truncated: false,
+    });
+    assert.equal(JSON.stringify(error).includes("private command"), false);
+    return true;
+  });
+  const unknownItems = Array.from({ length: 70 }, (_, index) => ({
+    type: "item.completed", item: { type: `private-${index}`, payload: "private payload" },
+  }));
+  assert.throws(() => parseCodexEvents([
+    ...events.slice(0, 2), ...unknownItems, ...events.slice(3),
+  ], [{ name: "get-pea" }]), (error) => {
+    assert.equal(error.forbiddenItemEvidence.counts.other, 64);
+    assert.equal(error.forbiddenItemEvidence.inspectedCount, 64);
+    assert.equal(error.forbiddenItemEvidence.truncated, true);
+    assert.equal(JSON.stringify(error).includes("private-"), false);
+    return true;
+  });
   assert.throws(() => parseCodexEvents(events.map((event) => event.item?.type === "mcp_tool_call"
     ? { ...event, item: { ...event.item, result: { isError: true, content: [] } } }
     : event), [{ name: "get-pea" }]), /failed MCP tool call/);
@@ -268,6 +302,61 @@ test("Codex events retain native MCP calls and require a complete resumable turn
     && !error.message.includes("provider-secret-sentinel"));
   assert.throws(() => parseCodexEvents(events, [{ name: "get-pea" }], undefined, 0, "gpt-test", ["Snap"]),
     /configured secret/);
+});
+
+test("Codex one-shot failures retain a bounded category without stderr", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "codex-failure-category-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const command = join(directory, "fake-codex.mjs");
+  await writeFile(command, `#!/usr/bin/env node
+const scenario = process.argv.at(-1);
+const messages = {
+  AUTHENTICATION: "Failed to authenticate private-token-sentinel",
+  CONFIGURATION: "unknown feature key private-token-sentinel",
+  HOST_STORAGE: "No space left on device private-path-/Users/example private-token-sentinel",
+  PERMISSION: "sandbox permission denied private-token-sentinel",
+  PROVIDER: "provider unavailable private-token-sentinel",
+  TRANSPORT: "connection refused private-endpoint-https://private.example",
+  UNKNOWN: "private opaque failure private-token-sentinel",
+};
+process.stderr.write(scenario === "BEYOND_LIMIT"
+  ? "x".repeat(32 * 1024) + "No space left on device"
+  : messages[scenario]);
+process.exit(2);
+`);
+  await chmod(command, 0o755);
+  const original = {
+    command: process.env.EMSEEPEA_CODEX_COMMAND,
+    key: process.env.OPENAI_API_KEY,
+    model: process.env.EMSEEPEA_CODEX_MODEL,
+  };
+  process.env.EMSEEPEA_CODEX_COMMAND = command;
+  process.env.OPENAI_API_KEY = "private-token-sentinel";
+  process.env.EMSEEPEA_CODEX_MODEL = "gpt-test";
+  t.after(() => {
+    restore("EMSEEPEA_CODEX_COMMAND", original.command);
+    restore("OPENAI_API_KEY", original.key);
+    restore("EMSEEPEA_CODEX_MODEL", original.model);
+  });
+  for (const [scenario, category] of Object.entries({
+    AUTHENTICATION: "authentication",
+    CONFIGURATION: "configuration",
+    HOST_STORAGE: "host-storage",
+    PERMISSION: "permission-or-sandbox",
+    PROVIDER: "provider",
+    TRANSPORT: "transport",
+    UNKNOWN: "unknown",
+    BEYOND_LIMIT: "unknown",
+  })) {
+    await assert.rejects(runModel("codex-local", scenario, directory), (error) => {
+      assert.equal(error.message, "Model command exited 2");
+      assert.equal(error.providerFailureCategory, category);
+      assert.equal(JSON.stringify(error).includes("private-path"), false);
+      assert.equal(JSON.stringify(error).includes("private-token-sentinel"), false);
+      assert.equal(JSON.stringify(error).includes("private.example"), false);
+      return true;
+    });
+  }
 });
 
 test("Codex provider requires an explicit model", () => {
