@@ -68,15 +68,27 @@ Publish workflow fails after merge. It records:
 - the terminal Release run that staged the occupied version;
 - the exact abandoned candidate that staged the occupied versions;
 - the checked source that generated that candidate;
-- the unchanged `latest` baseline; and
-- the fresh versions.
+- the unchanged `latest` baseline;
+- the package versions occupied by the abandoned candidate;
+- any newly planned corrective packages that remain at the recorded baseline;
+  and
+- the fresh versions for the complete current release plan.
 
-Only public packages in the current release plan may appear in the occupied and
-fresh version maps.
+The occupied and baseline package maps must be disjoint. Their union, and the
+fresh version map, must each equal the complete public package set in the
+current release plan. This permits one checked recovery candidate to replace an
+occupied version and publish a newly required corrective patch without
+misrepresenting the corrective package as part of the abandoned candidate.
 
-A failed Release run is eligible only when every attempt passed semantic
-evaluation and package publication, then stopped in one of two explicit
-verification states:
+A failed Release run is eligible only when exactly one attempt published the
+packages under `next`, and that attempt is the final run attempt recorded in
+the receipt. Every earlier attempt must have failed semantic evaluation with
+its dependent publication job skipped. Cancellation, timeout, incomplete
+work, a publication step on an earlier attempt, or any later rerun makes the
+receipt ineligible.
+
+The final publishing attempt must pass semantic evaluation and package
+publication, then stop in one of two explicit verification states:
 
 - registry verification failed, while downloaded-package verification and
   artifact upload were skipped; or
@@ -86,8 +98,12 @@ verification states:
 All adjacent states are ineligible. Registry integrity and provenance must
 still bind the occupied version to that exact run and candidate.
 
-For each affected package, choose the next patch version after the occupied
-version. Keep the same major and minor version as the ordinary release plan.
+For each occupied package, choose the next patch version after the occupied
+version and keep the same major and minor version as the ordinary release plan.
+For each newly planned baseline package, require its recorded version to equal
+both the checked source and current registry `latest`, then keep the ordinary
+next-patch version. Refuse missing, extra, overlapping, or moved entries in
+either set.
 
 Build the replacement candidate from the normal release source history. Use
 the receipt as evidence for the abandoned candidate. Do not make the abandoned
@@ -110,6 +126,8 @@ changes, or restoration without an exact source commit.
   when the abandoned candidate contained generated dependency pins.
 - Version selection remains deterministic and is shared by generation,
   readiness checks, and registry verification.
+- One replacement can safely combine abandoned occupied versions with
+  corrective patches discovered by downloaded-package verification.
 - The publish branch and `latest` remain untouched until ordinary promotion.
 
 ### Neutral
@@ -138,16 +156,22 @@ The release system must then pass these checks:
   recorded by npm, and its provenance match the exact Release run and candidate
   recorded in the receipt.
 - If that Release run failed, it stopped only in one of the two eligible
-  verification states after staging succeeded: registry verification failure
-  before any download check, or downloaded-package verification failure after
-  registry verification passed.
+  verification states after exactly one staging attempt succeeded: registry
+  verification failure before any download check, or downloaded-package
+  verification failure after registry verification passed. Any earlier attempt
+  failed semantic evaluation before publication, and the publishing attempt
+  was the terminal run attempt recorded in the receipt.
 - The recorded checked source generated that abandoned candidate and is an
   ancestor of the replacement source.
 - Every `latest` tag still matches the recorded baseline.
 - Fresh versions are rejected if they are missing, extra, already occupied, on
   the wrong version line, or different from the registry evidence.
-- Every public package in the current plan gets only the next fresh patch, with
-  normal dependent manifest and lockfile updates.
+- The occupied and baseline maps are disjoint and their union exactly matches
+  the current public release plan.
+- Every occupied package gets only the next patch after its abandoned version.
+  Every baseline package stays bound to its checked source and registry
+  `latest`, then gets only the ordinary planned next patch.
+- Normal dependent manifest and lockfile updates remain unchanged.
 - Every unchanged initializer passes downloaded-package qualification with the
   exact manifest restored from the checked source, while unrelated manifest
   differences remain refused.

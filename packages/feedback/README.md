@@ -253,19 +253,47 @@ deployment. Existing conversation adapters retain their conversation APIs.
 ## Add a Protected Support Conversation
 
 ```ts
-import { defineFeedbackConversation } from "@emseepea/feedback";
+import {
+  defineFeedbackConversation,
+  defineFeedbackSubmission,
+} from "@emseepea/feedback";
 import { createGitHubFeedbackBackend } from "@emseepea/feedback/github";
 import { createEmseepea } from "@emseepea/server";
 
-const feedbackTools = defineFeedbackConversation({
-  requiredScopes: ["feedback"],
-  backend: createGitHubFeedbackBackend({
-    owner: "your-organisation",
-    repository: "support",
-    token: () => getGitHubToken(),
-  }),
-  hooks: [sendFeedbackEvent],
+const feedbackBackend = createGitHubFeedbackBackend({
+  owner: "your-organisation",
+  repository: "support",
+  token: () => getGitHubToken(),
 });
+const feedbackScope = (principal) => accountScopeForPrincipal(principal);
+const feedbackHooks = [sendFeedbackEvent];
+const feedbackTools = [
+  defineFeedbackSubmission({
+    access: "protected",
+    requiredScopes: ["feedback"],
+    scope: feedbackScope,
+    backend: {
+      async submit({ observation, detail }, context) {
+        const result = await feedbackBackend.createThread({
+          subject: observation,
+          message: detail,
+        }, context);
+        return {
+          id: result.conversation.id,
+          recordedAt: result.conversation.createdAt,
+          events: result.events,
+        };
+      },
+    },
+    hooks: feedbackHooks,
+  }),
+  ...defineFeedbackConversation({
+    requiredScopes: ["feedback"],
+    scope: feedbackScope,
+    backend: feedbackBackend,
+    hooks: feedbackHooks,
+  }),
+];
 
 const app = createEmseepea({
   name: "pea-guide",
@@ -276,11 +304,34 @@ const app = createEmseepea({
 });
 ```
 
-The four tools create a thread, append a user reply, list scoped threads, and
-read one exact thread. Conversations are protected and default to the
-framework-normalized OAuth client ID as their scope. Supply `scope(principal)`
-when your application has a safer account-level projection. Do not pass tokens,
-raw provider claims, or credentials as a scope.
+The three tools append a user reply, list scoped threads, and read one exact
+thread. Use `defineFeedbackSubmission` and `submit-feedback` to create every new
+feedback conversation. The returned submission ID is the canonical thread ID
+for reply and get operations. List returns the thread when both helpers use the
+same authorized scope projection.
+
+`create-feedback-thread` has been removed. Existing stored thread IDs remain
+valid for reply and get operations, and those threads remain available in list
+results.
+
+Legacy callers should set the required `observation` field to one of the
+allowed category values. Set `detail` to
+`Subject: <subject>\n\n<message>`.
+
+The complete constructed `detail` value, including the prefix and line breaks,
+must not exceed 4,000 characters. The framework rejects an over-limit `detail`
+value and does not truncate the subject or message content.
+
+The submission result provides the stable thread ID and recording time rather
+than the full newly created conversation.
+
+Conversations are protected and default to the framework-normalized OAuth
+client ID as their scope. Supply the same `scope(principal)` mapping to both
+helpers when your application has a safer account-level projection.
+
+A public submission's default `public` scope does not automatically match a
+protected conversation's client-derived default. Do not pass tokens, raw
+provider claims, or credentials as a scope.
 
 Messages are append-only and ordered by stable sequence numbers. Reading a
 thread may record `offeredToClientAt` on a team reply. That timestamp means the
@@ -304,7 +355,6 @@ const submission = defineFeedbackSubmission({
 const conversations = defineFeedbackConversation({
   requiredScopes: ["feedback"],
   annotations: {
-    create: { destructiveHint: true },
     reply: { destructiveHint: true },
     list: {
       readOnlyHint: false,
@@ -332,7 +382,7 @@ notifications, and external services.
 - If the operation cancels notification state, set `destructiveHint: true`.
 - If repeating the operation can produce a different state transition, set
   `idempotentHint: false`.
-- A `create`, `reply`, or submission operation that can send email must set
+- A `reply` or submission operation that can send email must set
   `destructiveHint: true`.
 - Set `openWorldHint` to `true` when the complete operation can interact with
   an external domain beyond the operation’s declared bounds. Otherwise set

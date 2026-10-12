@@ -1,5 +1,12 @@
 # @emseepea/create-database-schema-server
 
+## 0.1.12
+
+### Patch Changes
+
+- [`99785c5`](https://github.com/emseepea/emseepea/commit/99785c5a6a373047a68f3fad8388c79c15a40857) Thanks [@tompahoward](https://github.com/tompahoward)! - Publish new immutable initializer versions whose generated projects use
+  `@emseepea/testing@0.23.1`.
+
 ## 0.1.11
 
 ### Patch Changes

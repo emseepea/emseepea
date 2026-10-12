@@ -199,11 +199,29 @@ test("keeps protected feedback conversations scoped, append-only, and inspectabl
       };
     },
   };
-  const tools = defineFeedbackConversation({
-    requiredScopes: ["feedback"],
-    backend,
-    hooks: [(event) => events.push(event)],
-  });
+  const hooks = [(event) => events.push(event)];
+  const tools = [
+    defineFeedbackSubmission({
+      access: "protected",
+      requiredScopes: ["feedback"],
+      backend: {
+        submit({ observation, detail }, context) {
+          const result = backend.createThread({ subject: observation, message: detail }, context);
+          return {
+            id: result.conversation.id,
+            recordedAt: result.conversation.createdAt,
+            events: result.events,
+          };
+        },
+      },
+      hooks,
+    }),
+    ...defineFeedbackConversation({
+      requiredScopes: ["feedback"],
+      backend,
+      hooks,
+    }),
+  ];
   const running = await startEmseepea(t, createEmseepea({
     name: "conversation-test",
     version: "0.0.0",
@@ -214,7 +232,7 @@ test("keeps protected feedback conversations scoped, append-only, and inspectabl
 
   const listed = (await client.listTools()).tools;
   assert.deepEqual(listed.map(({ name }) => name), [
-    "create-feedback-thread",
+    "submit-feedback",
     "reply-to-feedback-thread",
     "list-feedback-threads",
     "get-feedback-thread",
@@ -228,11 +246,55 @@ test("keeps protected feedback conversations scoped, append-only, and inspectabl
     });
   }
   const created = await client.callTool({
-    name: "create-feedback-thread",
-    arguments: { subject: "Seed search friction", message: "The filters were difficult to find." },
+    name: "submit-feedback",
+    arguments: { observation: "friction", detail: "The filters were difficult to find." },
   });
   assert.equal(created.isError, false);
-  assert.equal(created.structuredContent.messages[0].body, "The filters were difficult to find.");
+  assert.equal(created.structuredContent.id, "thread-1");
+  assert.deepEqual(events, [{
+    id: "feedback.thread.created:thread-1",
+    type: "feedback.thread.created",
+    occurredAt: now,
+    scope: "emseepea-test-client",
+    threadId: "thread-1",
+    author: "user",
+  }]);
+  assert.doesNotMatch(JSON.stringify(events), /filters|difficult/);
+
+  await assert.rejects(client.callTool({
+    name: "create-feedback-thread",
+    arguments: { subject: "Seed search friction", message: "The filters were difficult to find." },
+  }), /not found|unknown|create-feedback-thread/i);
+
+  const legacyConversation = {
+    id: "legacy-thread",
+    subject: "Stored before the tool removal",
+    status: "open",
+    createdAt: now,
+    updatedAt: now,
+    messages: [{
+      id: "legacy-message-1",
+      threadId: "legacy-thread",
+      sequence: 1,
+      author: "user",
+      kind: "comment",
+      body: "This thread must remain usable.",
+      createdAt: now,
+    }],
+  };
+  threads.set("emseepea-test-client:legacy-thread", legacyConversation);
+  const listedThreads = await client.callTool({ name: "list-feedback-threads", arguments: {} });
+  assert.deepEqual(listedThreads.structuredContent.threads.map(({ id }) => id), ["thread-1", "legacy-thread"]);
+  const legacyRead = await client.callTool({
+    name: "get-feedback-thread",
+    arguments: { threadId: "legacy-thread" },
+  });
+  assert.equal(legacyRead.structuredContent.messages[0].id, "legacy-message-1");
+  const legacyReply = await client.callTool({
+    name: "reply-to-feedback-thread",
+    arguments: { threadId: "legacy-thread", message: "It is still usable." },
+  });
+  assert.equal(legacyReply.structuredContent.sequence, 2);
 
   const conversation = threads.get("emseepea-test-client:thread-1");
   conversation.messages.push({
@@ -257,7 +319,13 @@ test("keeps protected feedback conversations scoped, append-only, and inspectabl
   });
   assert.equal(replied.structuredContent.sequence, 3);
   assert.deepEqual(conversation.messages.map(({ author }) => author), ["user", "team", "user"]);
-  assert.ok(events.some(({ type }) => type === "feedback.message.offered-to-client"));
+  assert.deepEqual(events.map(({ id, type }) => ({ id, type })), [{
+    id: "feedback.thread.created:thread-1",
+    type: "feedback.thread.created",
+  }, {
+    id: "feedback.message.offered-to-client:message-2",
+    type: "feedback.message.offered-to-client",
+  }]);
   assert.doesNotMatch(JSON.stringify(events), /filters|thank you/);
 });
 
@@ -267,7 +335,6 @@ test("publishes configured feedback annotations through MCP discovery", async (t
     openWorldHint: false,
   };
   const conversationAnnotations = {
-    create: { destructiveHint: true, openWorldHint: false },
     reply: { destructiveHint: true, openWorldHint: false },
     list: {
       readOnlyHint: false,
@@ -301,7 +368,6 @@ test("publishes configured feedback annotations through MCP discovery", async (t
   ];
 
   submissionAnnotations.destructiveHint = false;
-  conversationAnnotations.create.openWorldHint = true;
   conversationAnnotations.list.readOnlyHint = true;
 
   const running = await startEmseepea(t, createEmseepea({
@@ -315,12 +381,6 @@ test("publishes configured feedback annotations through MCP discovery", async (t
     Object.fromEntries(listed.map(({ name, annotations }) => [name, annotations])),
     {
       "submit-feedback": {
-        readOnlyHint: false,
-        destructiveHint: true,
-        idempotentHint: false,
-        openWorldHint: false,
-      },
-      "create-feedback-thread": {
         readOnlyHint: false,
         destructiveHint: true,
         idempotentHint: false,
@@ -365,6 +425,11 @@ test("rejects invalid feedback annotation configuration at construction", () => 
     annotations: { archive: { destructiveHint: true } },
     backend,
   }), /unrecognized|archive/i);
+  assert.throws(() => defineFeedbackConversation({
+    requiredScopes: ["feedback"],
+    annotations: { create: { destructiveHint: true } },
+    backend,
+  }), /unrecognized|create/i);
   assert.throws(() => defineFeedbackConversation({
     requiredScopes: ["feedback"],
     annotations: { list: { recipient: "support@example.com" } },

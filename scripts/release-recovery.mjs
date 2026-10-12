@@ -22,15 +22,32 @@ export async function readRecovery(root = process.cwd()) {
 export function recoveryPlan(plan, receipt, names = publicPackages.map(({ name }) => name)) {
   if (!receipt) return plan;
   const expected = plan.releases.filter(({ name, type }) => names.includes(name) && type !== "none").map(({ name }) => name).sort();
+  const occupied = Object.keys(receipt.occupiedVersions).sort();
+  const baseline = Object.keys(receipt.baselineVersions ?? {}).sort();
   assert.deepEqual(Object.keys(receipt.freshVersions).sort(), expected, "recovery must replace every changed public package");
-  assert.deepEqual(Object.keys(receipt.occupiedVersions).sort(), expected, "occupied package set changed");
+  if (receipt.type === "staged-candidate") {
+    assert.equal(occupied.some((name) => baseline.includes(name)), false, "occupied and baseline package sets overlap");
+    assert.deepEqual([...occupied, ...baseline].sort(), expected, "recovery package set changed");
+  } else {
+    assert.deepEqual(occupied, expected, "occupied package set changed");
+    assert.deepEqual(baseline, [], "failed-publish recovery cannot declare baseline packages");
+  }
   return { ...plan, recovery: receipt, releases: plan.releases.map((release) => {
     const fresh = receipt.freshVersions[release.name];
     if (!fresh) return release;
-    const occupied = receipt.occupiedVersions[release.name];
-    assert.ok(valid(fresh) && valid(occupied), "recovery version is invalid");
-    assert.equal(fresh, inc(occupied, "patch"), "recovery must use the next fresh patch on its planned line");
-    assert.ok(gt(fresh, release.newVersion), "recovery version must exceed the ordinary plan");
+    const occupiedVersion = receipt.occupiedVersions[release.name];
+    const baselineVersion = receipt.baselineVersions?.[release.name];
+    assert.ok(valid(fresh), "recovery version is invalid");
+    if (occupiedVersion) {
+      assert.ok(valid(occupiedVersion), "recovery version is invalid");
+      assert.equal(fresh, inc(occupiedVersion, "patch"), "recovery must use the next fresh patch on its planned line");
+      assert.ok(gt(fresh, release.newVersion), "recovery version must exceed the ordinary plan");
+    } else {
+      assert.ok(valid(baselineVersion), "recovery baseline version is invalid");
+      assert.equal(baselineVersion, release.oldVersion, "recovery baseline differs from the ordinary plan");
+      assert.equal(fresh, release.newVersion, "baseline recovery must keep the ordinary planned version");
+      assert.equal(fresh, inc(baselineVersion, "patch"), "baseline recovery must use the next patch");
+    }
     assert.equal(major(fresh), major(release.newVersion), "recovery changed the planned major line");
     assert.equal(minor(fresh), minor(release.newVersion), "recovery changed the planned minor line");
     return { ...release, newVersion: fresh };
@@ -112,14 +129,24 @@ function exactlyOne(items, name, description) {
   return matches[0];
 }
 
-async function assertFailedStagingRun(run, actual) {
+async function assertFailedStagingRun(run, actual, publishingAttempt) {
+  assert.equal(publishingAttempt, actual.run_attempt, "publishing attempt is not the terminal run attempt");
+  let successfulPublications = 0;
   for (let attempt = 1; attempt <= actual.run_attempt; attempt += 1) {
     const { jobs } = JSON.parse(await run("gh", ["api", `repos/emseepea/emseepea/actions/runs/${actual.id}/attempts/${attempt}/jobs`]));
     const semantic = exactlyOne(jobs, "Check whether examples are understood", "staged semantic job");
     const publish = exactlyOne(jobs, "Publish the release under next", "staged publication job");
+    if (attempt < publishingAttempt) {
+      assert.equal(semantic?.conclusion, "failure", "earlier staged semantic attempt did not fail");
+      assert.equal(publish?.conclusion, "skipped", "earlier staged publication was not skipped");
+      assert.equal(publish.steps.every(({ conclusion }) => conclusion === "skipped"), true, "earlier staged publication step ran");
+      continue;
+    }
     assert.equal(semantic?.conclusion, "success", "staged semantic evidence did not pass");
     assert.equal(publish?.conclusion, "failure", "failed staging run did not stop in staging verification");
-    assert.equal(exactlyOne(publish.steps, "Publish the packages under next", "staged publish step").conclusion, "success");
+    const publication = exactlyOne(publish.steps, "Publish the packages under next", "staged publish step");
+    assert.equal(publication.conclusion, "success");
+    successfulPublications += 1;
     const registry = exactlyOne(publish.steps, "Verify the packages reached the registry under next", "staged registry verification step").conclusion;
     const download = exactlyOne(publish.steps, "Verify the downloaded packages", "staged download verification step").conclusion;
     assert.ok(
@@ -129,6 +156,7 @@ async function assertFailedStagingRun(run, actual) {
     );
     assert.equal(exactlyOne(publish.steps, "Upload the release artifacts for the promotion", "staged artifact upload step").conclusion, "skipped");
   }
+  assert.equal(successfulPublications, 1, "staged candidate must have exactly one successful publication");
 }
 
 async function isAncestor(run, ancestor, descendant) {
@@ -184,8 +212,13 @@ async function assertStagedCandidateRecoveryEligible(receipt, {
     event: "workflow_dispatch",
     conclusion: releaseConclusion,
   });
-  if (release.conclusion === "failure") await assertFailedStagingRun(run, release);
+  if (release.conclusion === "failure") await assertFailedStagingRun(run, release, receipt.stagedPublishingAttempt);
   assert.deepEqual(Object.keys(receipt.latestVersions).sort(), publicPackages.map(({ name }) => name).sort(), "complete latest baseline is required");
+  const publicNames = publicPackages.map(({ name }) => name);
+  const occupiedNames = Object.keys(receipt.occupiedVersions);
+  const baselineNames = Object.keys(receipt.baselineVersions ?? {});
+  assert.equal(occupiedNames.some((name) => baselineNames.includes(name)), false, "occupied and baseline package sets overlap");
+  assert.ok([...occupiedNames, ...baselineNames].every((name) => publicNames.includes(name)), "recovery names an unknown package");
   await Promise.all(publicPackages.map(async ({ name, path }) => {
     const baseline = JSON.parse(await run("git", ["show", `${receipt.stagedSourceSha}:${path}/package.json`]));
     assert.equal(receipt.latestVersions[name], baseline.version, `${name}: baseline differs from staged source`);
@@ -193,8 +226,14 @@ async function assertStagedCandidateRecoveryEligible(receipt, {
     const metadata = await readRegistry(name);
     assert.equal(metadata["dist-tags"].latest, baseline.version, `${name}: latest baseline changed`);
     const occupied = receipt.occupiedVersions[name];
+    const recordedBaseline = receipt.baselineVersions?.[name];
     if (!occupied) {
       assert.equal(staged.version, baseline.version, `${name}: missing occupied version`);
+      if (recordedBaseline !== undefined) {
+        assert.equal(recordedBaseline, baseline.version, `${name}: recovery baseline changed`);
+        const fresh = metadata.versions[receipt.freshVersions[name]];
+        assert.ok(!fresh || (candidateSha && fresh.gitHead === candidateSha), `${name}: fresh version is already occupied`);
+      }
       return;
     }
     assert.equal(staged.version, occupied, `${name}: staged occupied version changed`);

@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 117 decisions: 69 current and 48 historical.
+This project has 118 decisions: 70 current and 48 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -84,6 +84,7 @@ recorded separately.
 - [ADR-0119: Read-Only Native Tool Outcomes on Semantic Conversation Turns](0119-read-only-native-tool-outcomes-on-semantic-conversation-turns.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0120: Publish Branch Release with Exact-Head Mergeback Quality](0120-publish-branch-release-with-exact-head-mergeback-quality.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0121: Exact-Head Qualification for Automated Trunk Mergeback](0121-exact-head-qualification-for-automated-trunk-mergeback.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0122: Submit Feedback as the Sole Model Context Protocol (MCP) Feedback Creation Operation](0122-submit-feedback-as-the-sole-mcp-feedback-creation-operation.proposed.md): Proposed; human review unconfirmed.
 
 ### Historical decisions
 
@@ -1473,6 +1474,7 @@ Chosen option: **"Framework-redacted observability adapters"**, because one safe
 
 - Status: Proposed
 - Human review: Confirmed
+- Replaced by: [ADR-0122: Submit Feedback as the Sole Model Context Protocol (MCP) Feedback Creation Operation](0122-submit-feedback-as-the-sole-mcp-feedback-creation-operation.proposed.md)
 
 #### ADR-0066 Decision
 
@@ -2490,11 +2492,13 @@ Chosen option: **checked staged-candidate recovery**. This keeps the existing re
 #### ADR-0114 Checks
 
 - The occupied version's npm `gitHead` value, which is the source commit recorded by npm, and its provenance match the exact Release run and candidate recorded in the receipt.
-- If that Release run failed, it stopped only in one of the two eligible verification states after staging succeeded: registry verification failure before any download check, or downloaded-package verification failure after registry verification passed.
+- If that Release run failed, it stopped only in one of the two eligible verification states after exactly one staging attempt succeeded: registry verification failure before any download check, or downloaded-package verification failure after registry verification passed. Any earlier attempt failed semantic evaluation before publication, and the publishing attempt was the terminal run attempt recorded in the receipt.
 - The recorded checked source generated that abandoned candidate and is an ancestor of the replacement source.
 - Every `latest` tag still matches the recorded baseline.
 - Fresh versions are rejected if they are missing, extra, already occupied, on the wrong version line, or different from the registry evidence.
-- Every public package in the current plan gets only the next fresh patch, with normal dependent manifest and lockfile updates.
+- The occupied and baseline maps are disjoint and their union exactly matches the current public release plan.
+- Every occupied package gets only the next patch after its abandoned version. Every baseline package stays bound to its checked source and registry `latest`, then gets only the ordinary planned next patch.
+- Normal dependent manifest and lockfile updates remain unchanged.
 - Every unchanged initializer passes downloaded-package qualification with the exact manifest restored from the checked source, while unrelated manifest differences remain refused.
 - The replacement passes the unchanged quality, semantic, package, registry, signature, provenance, initializer, guide, promotion, and merge-back gates.
 - The replacement package set is promoted under `latest` and independently verified from one exact release head.
@@ -2621,3 +2625,27 @@ Chosen option: **"Explicit exact-head qualification for mergeback"**, because an
 - Dispatch Quality concurrency is keyed by exact SHA.
 - Behavioral tests cover exact selection, ambiguity, transient reads, timeout, cancellation, failure, parent mismatch, and successful completion.
 - Successful actual production use and Tom Howard's explicit ratification are recorded before this decision is accepted.
+
+### [ADR-0122: Submit Feedback as the Sole Model Context Protocol (MCP) Feedback Creation Operation](0122-submit-feedback-as-the-sole-mcp-feedback-creation-operation.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+- Replaces: [ADR-0066: Pluggable Detailed Feedback Conversations and Event Hooks](0066-pluggable-detailed-feedback-conversations-and-event-hooks.proposed.md)
+
+#### ADR-0122 Decision
+
+Chosen option: **"Use `submit-feedback` as the sole MCP feedback creation operation"**, because a single creation tool gives adopters and AI clients a clear contract without weakening the durable conversation capability.
+
+#### ADR-0122 Checks
+
+- Exported TypeScript declarations, MCP discovery output, documentation, examples, and public-contract test fixtures contain no callable or configurable `create-feedback-thread` tool.
+- `defineFeedbackConversation` returns exactly the reply, list, and get tools. Each tool keeps its existing authorization rules, metadata annotations, and input and output schemas.
+- The behavior of `submit-feedback`, `reply-to-feedback-thread`, `list-feedback-threads`, and `get-feedback-thread` does not change based on the order in which those tools are registered or called.
+- The effect and retry rules from ADR-0066 remain unchanged. Calls that create or reply to a thread can change stored data more than once if repeated, so the framework must not retry them automatically. A get operation that records a receipt showing that a team message was included in a validated MCP tool result also changes stored data and must not be retried automatically. Failure to record a receipt does not hide a support reply.
+- A `submit-feedback` result can be retrieved and replied to immediately using its returned identifier when both helpers use the same `scope(principal)` function and the same resulting opaque scope string for that authenticated principal.
+- A thread stored before the tool removal remains listable, readable, and replyable without data migration.
+- Backend, hook, event, deadline, cancellation, owner-isolation, and receipt tests pass for PostgreSQL, Firestore, GitHub Issues, and Zendesk.
+- The published package under review discovers `submit-feedback` plus the three conversation tools and does not discover `create-feedback-thread`.
+- Using the same `scope(principal)` function and resulting opaque scope string, the published package under review passes a submit, get, and reply journey using the returned `id` in an independent installation.
+- The published package under review can also list, get, and reply to a thread stored before the removal in that independent installation.
+- All of this evidence is required before this proposal is accepted.

@@ -16,7 +16,9 @@ fi
 
 max_attempts=3
 for attempt in $(seq 1 "$max_attempts"); do
-  git fetch origin main publish
+  git fetch origin \
+    main:refs/remotes/origin/main \
+    publish:refs/remotes/origin/publish
   actual_publish_sha="$(git rev-parse origin/publish)"
   if [ "$actual_publish_sha" != "$expected_publish_sha" ]; then
     echo "origin/publish moved from $expected_publish_sha to $actual_publish_sha" >&2
@@ -24,6 +26,31 @@ for attempt in $(seq 1 "$max_attempts"); do
   fi
 
   base_main_sha="$(git rev-parse origin/main)"
+  read -r recovered_base_sha recovered_publish_sha recovered_extra_parent \
+    <<<"$(git show -s --format=%P "$base_main_sha")"
+  if [ -n "${recovered_base_sha:-}" ] \
+      && [ "$recovered_publish_sha" = "$expected_publish_sha" ] \
+      && [ -z "${recovered_extra_parent:-}" ]; then
+    git merge-base --is-ancestor "$expected_publish_sha" "$base_main_sha" \
+      || { echo "released publish commit is not an ancestor of main" >&2; exit 1; }
+    if git ls-tree -r --name-only "$base_main_sha" -- .changeset \
+        | grep -E '^\.changeset/[^/]+\.md$' \
+        | grep -v '^\.changeset/README\.md$' | grep -q .; then
+      echo "consumed changesets remain on main" >&2
+      exit 1
+    fi
+    if [ -n "${GITHUB_OUTPUT:-}" ]; then
+      printf 'base_sha=%s\npublish_sha=%s\nmerge_back_sha=%s\n' \
+        "$recovered_base_sha" "$expected_publish_sha" "$base_main_sha" >> "$GITHUB_OUTPUT"
+    fi
+    echo "Recovered the existing merge of $expected_publish_sha into main."
+    exit 0
+  fi
+  if git merge-base --is-ancestor "$expected_publish_sha" "$base_main_sha"; then
+    echo "origin/main contains $expected_publish_sha but is not its exact two-parent merge-back commit. Inspect origin/main before retrying." >&2
+    exit 1
+  fi
+
   git checkout --detach "$base_main_sha"
   if ! git merge --no-ff "$expected_publish_sha" \
       -m "chore(release): merge publish back into main after $expected_publish_sha"; then
@@ -45,7 +72,9 @@ for attempt in $(seq 1 "$max_attempts"); do
     fi
     git merge-base --is-ancestor "$expected_publish_sha" origin/main \
       || { echo "released publish commit is not an ancestor of main" >&2; exit 1; }
-    if find .changeset -maxdepth 1 -type f -name '*.md' ! -name README.md | grep -q .; then
+    if git ls-tree -r --name-only "$merge_back_sha" -- .changeset \
+        | grep -E '^\.changeset/[^/]+\.md$' \
+        | grep -v '^\.changeset/README\.md$' | grep -q .; then
       echo "consumed changesets remain on main" >&2
       exit 1
     fi

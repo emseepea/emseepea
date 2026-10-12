@@ -5,8 +5,8 @@ import { insecureTestAuthentication, startEmseepea } from "@emseepea/testing";
 import { defineFeedbackConversation, defineFeedbackSubmission } from "@emseepea/feedback";
 
 const now = "2026-10-09T00:00:00.000Z";
-const names = ["create-feedback-thread", "reply-to-feedback-thread", "list-feedback-threads", "get-feedback-thread"];
-const operation = { "create-feedback-thread": "create", "reply-to-feedback-thread": "reply",
+const names = ["reply-to-feedback-thread", "list-feedback-threads", "get-feedback-thread"];
+const operation = { "reply-to-feedback-thread": "reply",
   "list-feedback-threads": "list", "get-feedback-thread": "get" };
 const defaults = (name) => ({ readOnlyHint: name === "list-feedback-threads", destructiveHint: false,
   idempotentHint: ["list-feedback-threads", "get-feedback-thread"].includes(name), openWorldHint: true });
@@ -47,7 +47,6 @@ test("per-tool overrides reach public and protected MCP discovery and preserve c
   for (const discovery of ["public", "protected"]) {
     const f = fixture();
     const annotations = {
-      create: { destructiveHint: true },
       reply: { idempotentHint: true, openWorldHint: false },
       list: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
       get: { idempotentHint: false },

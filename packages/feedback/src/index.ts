@@ -86,7 +86,6 @@ export interface FeedbackToolAnnotationOverrides {
 }
 
 export interface FeedbackConversationAnnotationOverrides {
-  readonly create?: FeedbackToolAnnotationOverrides;
   readonly reply?: FeedbackToolAnnotationOverrides;
   readonly list?: FeedbackToolAnnotationOverrides;
   readonly get?: FeedbackToolAnnotationOverrides;
@@ -107,7 +106,6 @@ const feedbackToolAnnotationOverridesSchema = z.strictObject({
 });
 
 const feedbackConversationAnnotationOverridesSchema = z.strictObject({
-  create: feedbackToolAnnotationOverridesSchema.optional(),
   reply: feedbackToolAnnotationOverridesSchema.optional(),
   list: feedbackToolAnnotationOverridesSchema.optional(),
   get: feedbackToolAnnotationOverridesSchema.optional(),
@@ -724,12 +722,6 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
     options.annotations === undefined ? {} : options.annotations,
   );
   const annotations = Object.freeze({
-    create: feedbackToolAnnotations({
-      readOnlyHint: false,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: true,
-    }, configuredAnnotations.create),
     reply: feedbackToolAnnotations({
       readOnlyHint: false,
       destructiveHint: false,
@@ -754,25 +746,6 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
     options.scope ?? ((principal) => principal?.clientId ?? ""),
     context,
   );
-
-  const createThread = defineTool({
-    name: "create-feedback-thread",
-    ...access,
-    title: "Start Feedback Conversation",
-    description:
-      "Start a durable support conversation for detailed feedback. Use one thread for one observation and openly tell the user it was created. Do not include unrelated chat history, credentials, or raw tool payloads.",
-    annotations: annotations.create,
-    inputSchema: createThreadCommandSchema,
-    outputSchema: feedbackConversationSchema,
-    async handler(input, toolContext: ToolContext<"protected">) {
-      const context = contextFor(toolContext);
-      const result = await createThreadResultSchema.parseAsync(
-        await options.backend.createThread(input, context),
-      );
-      await dispatchHooks(options.hooks, result.events ?? [], context);
-      return { data: result.conversation };
-    },
-  });
 
   const appendMessage = defineTool({
     name: "reply-to-feedback-thread",
@@ -829,7 +802,7 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
     },
   });
 
-  return Object.freeze([createThread, appendMessage, listThreads, getThread]);
+  return Object.freeze([appendMessage, listThreads, getThread]);
 }
 
 function feedbackToolAnnotations(

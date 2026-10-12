@@ -25,6 +25,7 @@ import {
   waitForPublication,
 } from "../../scripts/verify-registry-release.mjs";
 import { useRegistryTarballs } from "../../scripts/use-registry-tarballs.mjs";
+import { detectReleaseWork, hasReleaseWork } from "../../scripts/detect-release-work.mjs";
 
 // ADR-0098 retires release.yml and splits its work across the release-pull-
 // request job in Quality, the build that publishes under `next`, and the
@@ -144,9 +145,88 @@ test("release work is derived from changesets and exact package version tags", a
   assert.equal(await hasUntaggedPublishablePackage(undefined, async (tag) => !tag.startsWith("@emseepea/server@")), true);
   // The release pull request is opened only when a changeset is waiting, and
   // the promotion reads what to publish from the plan rather than from prose.
-  assert.match(quality, /echo "has_changesets=true"/);
-  assert.match(quality, /find \.changeset -maxdepth 1 -type f -name '\*\.md' ! -name README\.md/);
+  const detection = quality.match(/- name: Detect release work[\s\S]*?(?=\n\s+- name: Require the previous publish head)/)?.[0] ?? "";
+  assert.match(detection, /test "\$\(git rev-parse HEAD\)" = "\$GITHUB_SHA"/);
+  assert.match(detection, /git update-ref refs\/heads\/main "\$GITHUB_SHA"/);
+  assert.match(quality, /npx changeset status --output "\$status_file"/);
+  assert.match(quality, /node scripts\/detect-release-work\.mjs "\$status_file" >> "\$GITHUB_OUTPUT"/);
+  assert.doesNotMatch(quality, /changeset status[^\n]*(?:\|\| true|continue-on-error)/);
+  assert.ok(detection.indexOf("git rev-parse HEAD") < detection.indexOf("git update-ref refs/heads/main"));
+  assert.ok(detection.indexOf("git update-ref refs/heads/main") < detection.indexOf("npx changeset status"));
+  assert.ok(detection.indexOf("npx changeset status") < detection.indexOf("node scripts/detect-release-work.mjs"));
   assert.match(publish, /read-release-plan\.mjs/);
+});
+
+test("release-work detection distinguishes empty and publishable plans and refuses invalid evidence", async () => {
+  assert.equal(hasReleaseWork({ releases: [] }), false);
+  assert.equal(hasReleaseWork({ releases: [{ name: "@emseepea/feedback", type: "none" }] }), false);
+  assert.equal(hasReleaseWork({ releases: [{ name: "@emseepea/feedback", type: "minor" }] }), true);
+  assert.throws(() => hasReleaseWork({}), /releases must be an array/);
+  assert.throws(() => hasReleaseWork({ releases: [null] }), /release must be an object/);
+  assert.throws(() => hasReleaseWork({ releases: [{}] }), /release type must be a string/);
+  assert.throws(() => hasReleaseWork({ releases: [{ type: "bogus" }] }), /Unknown Changesets release type: bogus/);
+
+  const root = await mkdtemp(join(tmpdir(), "emseepea-release-work-"));
+  try {
+    const empty = join(root, "empty.json");
+    const release = join(root, "release.json");
+    const malformed = join(root, "malformed.json");
+    await writeFile(empty, JSON.stringify({ releases: [] }));
+    await writeFile(release, JSON.stringify({ releases: [{ name: "@emseepea/feedback", type: "minor" }] }));
+    await writeFile(malformed, "not json");
+    assert.equal(await detectReleaseWork(empty), false);
+    assert.equal(await detectReleaseWork(release), true);
+    await assert.rejects(detectReleaseWork(malformed), SyntaxError);
+    await assert.rejects(detectReleaseWork(join(root, "missing.json")), /ENOENT/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("the pinned Changesets CLI resolves an exact local main ref from detached HEAD", async () => {
+  const root = await mkdtemp(join(tmpdir(), "emseepea-detached-release-work-"));
+  const changeset = fileURLToPath(new URL("../../node_modules/.bin/changeset", import.meta.url));
+  const run = async (command, args = []) => (await exec(command, args, { cwd: root })).stdout.trim();
+  try {
+    await mkdir(join(root, ".changeset"));
+    await writeFile(join(root, "package.json"), JSON.stringify({ name: "release-work-fixture", private: false, version: "1.0.0" }));
+    await writeFile(join(root, ".changeset", "config.json"), JSON.stringify({
+      access: "restricted",
+      baseBranch: "main",
+      changelog: false,
+      commit: false,
+      fixed: [],
+      ignore: [],
+      linked: [],
+      updateInternalDependencies: "patch",
+    }));
+    await writeFile(join(root, ".changeset", "empty.md"), "---\n---\n");
+    await run("git", ["init", "--initial-branch=main"]);
+    await run("git", ["config", "user.email", "fixture@example.com"]);
+    await run("git", ["config", "user.name", "Fixture"]);
+    await run("git", ["add", "."]);
+    await run("git", ["commit", "-m", "fixture"]);
+    const head = await run("git", ["rev-parse", "HEAD"]);
+    await run("git", ["checkout", "--detach", head]);
+    await run("git", ["branch", "--delete", "--force", "main"]);
+    assert.equal(await run("git", ["branch", "--show-current"]), "");
+    assert.equal(await run("git", ["remote"]), "");
+
+    await run("git", ["update-ref", "refs/heads/main", head]);
+    assert.equal(await run("git", ["rev-parse", "refs/heads/main"]), head);
+    const empty = join(root, "empty-status.json");
+    await run(changeset, ["status", "--output", empty]);
+    assert.equal(await detectReleaseWork(empty), false);
+
+    await writeFile(join(root, ".changeset", "real.md"), "---\n\"release-work-fixture\": minor\n---\n\nA real release.\n");
+    const release = join(root, "release-status.json");
+    await run(changeset, ["status", "--output", release]);
+    assert.equal(await detectReleaseWork(release), true);
+    assert.equal(await run("git", ["rev-parse", "refs/heads/main"]), head);
+    assert.equal(await run("git", ["remote"]), "");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("versioning uses the shared generation entrypoint", () => {

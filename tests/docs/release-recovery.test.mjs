@@ -123,10 +123,15 @@ const stagedReceipt = {
   stagedReleaseSha: stagedCandidate,
   stagedReleaseRunId: stagedRunId,
   stagedReleaseRunConclusion: "failure",
+  stagedPublishingAttempt: 3,
   stagedQualityRunId: "37564409521",
   latestVersions: Object.fromEntries(publicPackages.map(({ name }) => [name, name === "@emseepea/testing" ? "0.20.5" : "1.0.0"])),
   occupiedVersions: { "@emseepea/testing": "0.21.1" },
-  freshVersions: { "@emseepea/testing": "0.21.2" },
+  baselineVersions: { "@emseepea/create-tool-server": "1.0.0" },
+  freshVersions: {
+    "@emseepea/testing": "0.21.2",
+    "@emseepea/create-tool-server": "1.0.1",
+  },
 };
 
 function stagedHarness(overrides = {}) {
@@ -163,11 +168,22 @@ function stagedHarness(overrides = {}) {
     if (joined === `show ${stagedCandidate}:packages/testing/package.json`) return JSON.stringify({ version: "0.21.1" });
     if (joined.startsWith(`show ${stagedSource}:`) || joined.startsWith(`show ${stagedCandidate}:`)) {
       const item = publicPackages.find(({ path }) => joined.endsWith(`${path}/package.json`));
-      return JSON.stringify({ version: stagedReceipt.latestVersions[item.name] });
+      const version = joined.startsWith(`show ${stagedCandidate}:`) && item.name === "@emseepea/create-tool-server"
+        ? overrides.stagedBaseline ?? stagedReceipt.latestVersions[item.name]
+        : stagedReceipt.latestVersions[item.name];
+      return JSON.stringify({ version });
     }
     if (joined === `api repos/emseepea/emseepea/actions/runs/${stagedRunId}`) return JSON.stringify(release);
     if (joined === `api repos/emseepea/emseepea/actions/runs/${stagedReceipt.stagedQualityRunId}`) return JSON.stringify(quality);
     if (joined.includes(`/actions/runs/${stagedRunId}/attempts/`) && joined.endsWith("/jobs")) {
+      const attempt = Number(joined.match(/\/attempts\/(\d+)\//)?.[1]);
+      if (attempt < stagedReceipt.stagedPublishingAttempt) {
+        return JSON.stringify({ jobs: [
+          { name: "Check whether examples are understood", conclusion: overrides.earlierSemanticConclusion ?? "failure", steps: [] },
+          { name: "Publish the release under next", conclusion: overrides.earlierPublishConclusion ?? "skipped", steps:
+            overrides.earlierPublishStep ? [{ name: "Publish the packages under next", conclusion: overrides.earlierPublishStep }] : [] },
+        ] });
+      }
       const semantic = { name: "Check whether examples are understood", conclusion: overrides.semanticConclusion ?? "success", steps: [] };
       const publishStep = { name: "Publish the packages under next", conclusion: overrides.publishConclusion ?? "success" };
       const publish = { name: "Publish the release under next", conclusion: "failure", steps: [
@@ -199,7 +215,9 @@ function stagedHarness(overrides = {}) {
         },
       },
       ...(overrides.occupiedFresh ? { "0.21.2": { gitHead: overrides.occupiedFresh } } : {}),
-    } : {},
+    } : name === "@emseepea/create-tool-server" && overrides.baselineFresh
+      ? { "1.0.1": { gitHead: overrides.baselineFresh } }
+      : {},
   });
   const readProvenance = async () => ({
     _type: "https://in-toto.io/Statement/v1",
@@ -236,6 +254,28 @@ test("recovery keeps ordinary release types and selects frozen fresh patches onl
   }
 });
 
+test("staged recovery combines occupied versions with newly planned baseline patches", () => {
+  const ordinary = { releases: [
+    { name: "@emseepea/testing", oldVersion: "0.20.5", newVersion: "0.21.1", type: "minor", changesets: ["feature"] },
+    { name: "@emseepea/create-tool-server", oldVersion: "1.0.0", newVersion: "1.0.1", type: "patch", changesets: ["repair"] },
+  ] };
+  const plan = recoveryPlan(ordinary, stagedReceipt);
+  assert.deepEqual(plan.releases.map(({ name, newVersion }) => [name, newVersion]), [
+    ["@emseepea/testing", "0.21.2"],
+    ["@emseepea/create-tool-server", "1.0.1"],
+  ]);
+  for (const mutate of [
+    (r) => { delete r.baselineVersions["@emseepea/create-tool-server"]; },
+    (r) => { r.baselineVersions["@emseepea/testing"] = "0.20.5"; },
+    (r) => { r.baselineVersions["@emseepea/server"] = "1.0.0"; },
+    (r) => { r.baselineVersions["@emseepea/create-tool-server"] = "0.9.0"; },
+    (r) => { r.freshVersions["@emseepea/create-tool-server"] = "1.0.2"; },
+  ]) {
+    const changed = structuredClone(stagedReceipt); mutate(changed);
+    assert.throws(() => recoveryPlan(ordinary, changed));
+  }
+});
+
 test("recovery refuses moved history, attempted promotion, changed latest and occupied fresh versions", async () => {
   await assertRecoveryEligible(receipt, harness());
   for (const overrides of [
@@ -266,6 +306,9 @@ test("staged-candidate recovery binds the occupied version to one eligible termi
     { releaseStatus: "in_progress" },
     { releaseConclusion: "success" },
     { semanticConclusion: "failure" },
+    { earlierSemanticConclusion: "success" },
+    { earlierPublishConclusion: "failure" },
+    { earlierPublishStep: "success" },
     { publishConclusion: "failure" },
     { verifyConclusion: "success" },
     { downloadConclusion: "success" },
@@ -276,11 +319,16 @@ test("staged-candidate recovery binds the occupied version to one eligible termi
     { duplicateSemantic: true },
     { duplicateStep: true },
     { latest: "9.0.0" },
+    { stagedBaseline: "1.0.1" },
     { occupiedHead: candidate },
     { provenanceHead: candidate },
     { merged: true },
     { occupiedFresh: stagedCandidate },
+    { baselineFresh: stagedCandidate },
   ]) await assert.rejects(() => assertRecoveryEligible(stagedReceipt, stagedHarness(overrides)));
+  const wrongPublishingAttempt = structuredClone(stagedReceipt);
+  wrongPublishingAttempt.stagedPublishingAttempt = 2;
+  await assert.rejects(() => assertRecoveryEligible(wrongPublishingAttempt, stagedHarness()), /publishing attempt is not the terminal/);
   for (const conclusion of ["cancelled", "timed_out"]) {
     const unsupported = structuredClone(stagedReceipt);
     unsupported.stagedReleaseRunConclusion = conclusion;
@@ -290,6 +338,10 @@ test("staged-candidate recovery binds the occupied version to one eligible termi
     );
   }
   await assertRecoveryEligible(stagedReceipt, { ...stagedHarness({ occupiedFresh: candidate }), candidateSha: candidate });
+  await assertRecoveryEligible(stagedReceipt, { ...stagedHarness({ baselineFresh: candidate }), candidateSha: candidate });
+  const wrongBaseline = structuredClone(stagedReceipt);
+  wrongBaseline.baselineVersions["@emseepea/create-tool-server"] = "0.9.0";
+  await assert.rejects(() => assertRecoveryEligible(wrongBaseline, stagedHarness()), /recovery baseline changed/);
   const successfulReceipt = structuredClone(stagedReceipt);
   delete successfulReceipt.stagedReleaseRunConclusion;
   await assertRecoveryEligible(successfulReceipt, stagedHarness({ releaseConclusion: "success" }));

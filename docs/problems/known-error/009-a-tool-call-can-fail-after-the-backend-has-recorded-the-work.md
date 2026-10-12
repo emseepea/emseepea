@@ -100,7 +100,8 @@ body). Do not expose `events` as a getter.
   `submissionResultSchema`, `createThreadResultSchema`,
   `appendMessageResultSchema` and `getThreadResultSchema`.
 - `packages/feedback/test/durable-record-survives-bad-event.test.mjs` pins what
-  is already survivable, across the four tools that hand events to hooks.
+  is already survivable across the three remaining tools that hand events to
+  hooks: submission, reply and get.
 - The release note for opening the feedback result schemas states the open case
   so adopters are not left to find it.
 - Captured at the maintainer's direction after a risk review raised it during

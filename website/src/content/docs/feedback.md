@@ -153,7 +153,6 @@ const submission = defineFeedbackSubmission({
 const feedbackTools = defineFeedbackConversation({
   requiredScopes: ["feedback"],
   annotations: {
-    create: { destructiveHint: true },
     reply: { destructiveHint: true },
     list: {
       readOnlyHint: false,
@@ -181,7 +180,7 @@ notifications, and external services.
 - If the operation cancels notification state, set `destructiveHint: true`.
 - If repeating the operation can produce a different state transition, set
   `idempotentHint: false`.
-- A `create`, `reply`, or submission operation that can send email must set
+- A `reply` or submission operation that can send email must set
   `destructiveHint: true`.
 - Set `openWorldHint` to `true` when the complete operation can interact with
   an external domain beyond the operation’s declared bounds. Otherwise set
@@ -205,17 +204,43 @@ defaults.
 ## Add a support conversation
 
 ```ts
-import { defineFeedbackConversation } from "@emseepea/feedback";
+import {
+  defineFeedbackConversation,
+  defineFeedbackSubmission,
+} from "@emseepea/feedback";
 import { createGitHubFeedbackBackend } from "@emseepea/feedback/github";
 
-const feedbackTools = defineFeedbackConversation({
-  requiredScopes: ["feedback"],
-  backend: createGitHubFeedbackBackend({
-    owner: "your-organisation",
-    repository: "support",
-    token: () => getGitHubToken(),
-  }),
+const feedbackBackend = createGitHubFeedbackBackend({
+  owner: "your-organisation",
+  repository: "support",
+  token: () => getGitHubToken(),
 });
+const feedbackScope = (principal) => accountScopeForPrincipal(principal);
+const feedbackTools = [
+  defineFeedbackSubmission({
+    access: "protected",
+    requiredScopes: ["feedback"],
+    scope: feedbackScope,
+    backend: {
+      async submit({ observation, detail }, context) {
+        const result = await feedbackBackend.createThread({
+          subject: observation,
+          message: detail,
+        }, context);
+        return {
+          id: result.conversation.id,
+          recordedAt: result.conversation.createdAt,
+          events: result.events,
+        };
+      },
+    },
+  }),
+  ...defineFeedbackConversation({
+    requiredScopes: ["feedback"],
+    scope: feedbackScope,
+    backend: feedbackBackend,
+  }),
+];
 
 const app = await createToolServer({
   additionalTools: feedbackTools,
@@ -223,8 +248,31 @@ const app = await createToolServer({
 });
 ```
 
-Conversations are protected and client-scoped by default. Messages are
-append-only. A support reply never replaces an earlier reply.
+The conversation helper adds reply, list, and get operations. Use
+`defineFeedbackSubmission` and `submit-feedback` to create every new feedback
+conversation. `create-feedback-thread` has been removed.
+
+Existing stored thread IDs remain valid for reply and get operations, and those
+threads remain available in list results.
+
+The ID returned by `submit-feedback` is the canonical thread ID for reply and
+get. List returns that thread under the same authorized scope.
+
+Legacy callers should set the required `observation` field to one of the allowed
+category values. Set `detail` to `Subject: <subject>\n\n<message>`.
+
+The complete constructed `detail` value, including the prefix and line breaks,
+must not exceed 4,000 characters. The framework rejects an over-limit `detail`
+value and does not truncate the subject or message content.
+
+The submission result provides the stable thread ID and recording time rather
+than the full newly created conversation.
+
+Conversations are protected and client-scoped by default. When a new
+submission will later be retrieved or replied to, give both helpers the same
+`scope(principal)` mapping. A public submission's default `public` scope does
+not automatically match a protected conversation's client-derived default.
+Messages are append-only. A support reply never replaces an earlier reply.
 
 When a reply is included in a validated tool result, the backend can record
 `offeredToClientAt`. This proves only that the reply was available to the AI.
