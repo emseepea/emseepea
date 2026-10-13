@@ -32,9 +32,10 @@ They do not enable browser journeys or install the optional Playwright dependenc
 
 ## Verified adapter behavior
 
-Nine scripted-page contract tests passed, covering explicit opt-in, ownership,
+Ten scripted-page contract tests passed, covering explicit opt-in, ownership,
 server correlation, fixed error categories, bounded evidence, missing access,
-and cleanup. A real Chromium test against an intercepted synthetic DOM passed
+and cleanup. Fresh retrieval rejects inherited user or assistant messages
+before submitting another turn. A real Chromium test against an intercepted synthetic DOM passed
 attachment upload, iframe card visibility, scoped image assertions, and fresh
 conversation retrieval. Type checks and lint passed. These checks are adapter
 evidence, not live ChatGPT qualification.

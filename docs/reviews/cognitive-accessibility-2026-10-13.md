@@ -142,3 +142,12 @@ pending experimental native adapter.
 | File | SHA-256 | Result |
 | --- | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `79c73ab3d582294977ed4b571466edea444fa7bd64b57d750be16420940b76b7` | PASS |
+
+## Fresh Conversation Evidence Correction
+
+Author self-review: the release record now identifies rejection of inherited
+user and assistant messages, and reports the current contract test count.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `3a1481e5c4e710bc63e80f9a774b9a3e490351d04373d742cf85c2054fd60fbd` | PASS |

@@ -20,16 +20,18 @@ function fixture(options = {}) {
   let thread = 0;
   let prompt = "";
   let messages = [];
+  let userMessages = 0;
   let cleanupCount = 0;
   const composer = { async fill(text) { prompt = text; }, async innerText() { return ""; }, async waitFor() {} };
-  const submit = { async click() { thread += 1; url = `https://chatgpt.com/c/${options.sameThread ? "same" : thread}`; messages.push("Saved diagram ready at 08:10 private-response-sentinel"); } };
+  const submit = { async click() { userMessages += 1; thread += 1; url = `https://chatgpt.com/c/${options.sameThread ? "same" : thread}`; messages.push("Saved diagram ready at 08:10 private-response-sentinel"); } };
   const controls = {
     composer, submit,
     assistantMessages: { async count() { return messages.length; }, nth(index) { return { async waitFor() {}, async innerText() { return messages[index]; } }; } },
+    conversationMessages: { async count() { return messages.length + userMessages; } },
     generating: { async isVisible() { return false; } },
     fileInput: { async setInputFiles(file) { assert.equal(file.buffer.toString(), "synthetic PDF bytes"); } },
   };
-  const page = { url: () => url, async goto(next) { url = next; messages = []; } };
+  const page = { url: () => url, async goto(next) { url = next; if (!options.retainMessages) messages = []; if (!options.retainMessages && !options.retainUserOnly) userMessages = 0; } };
   for (const control of Object.values(controls)) control.page = () => page;
   const expected = [{ method: "tools/call", target: "read-diagram", outcome: "success", responseSha256: hash("fixture-result") }];
   const observe = (id = "observe", transform = (call) => call) => ({
@@ -76,6 +78,19 @@ test("initial and fresh journeys retain scoped hash evidence and clean up", asyn
   for (const privateText of ["private-owner", "private-endpoint", "private-fixture", "private-cleanup", "private-response-sentinel", "private-prompt-sentinel", "must-not-retain", endpoint.href]) assert.equal(text.includes(privateText), false);
   assert.equal((await stat(path)).mode & 0o777, 0o600);
   assert.notEqual(result.checkpoints[0].observation.conversationSha256, result.checkpoints[3].observation.conversationSha256);
+});
+
+test("fresh retrieval rejects inherited messages even when the next conversation ID would differ", async (t) => {
+  const path = await output(t);
+  for (const options of [{ retainMessages: true }, { retainUserOnly: true }]) {
+    const f = fixture(options);
+    f.journey.checkpoints.push({ id: "fresh", operation: "fresh-conversation" }, f.send("fresh-read"), f.observe("fresh-observe"));
+    const result = await runNativeChatGptJourney(f.journey, path);
+    assert.equal(result.status, "incomplete");
+    assert.equal(result.checkpoints.find((checkpoint) => checkpoint.id === "fresh").category, "fresh-conversation-unconfirmed");
+    assert.equal(result.checkpoints.some((checkpoint) => checkpoint.id === "fresh-read"), false);
+    assert.equal(f.cleanupCount(), 1);
+  }
 });
 
 test("a simulator, login redirect, and missing human approval cannot pass", async (t) => {

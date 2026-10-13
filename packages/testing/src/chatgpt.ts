@@ -20,6 +20,7 @@ export interface NativeChatGptControls {
   readonly composer: Locator;
   readonly submit: Locator;
   readonly assistantMessages: Locator;
+  readonly conversationMessages: Locator;
   readonly generating: Locator;
   readonly fileInput: Locator;
 }
@@ -123,6 +124,7 @@ export function nativeChatGptControls(page: Page): NativeChatGptControls {
     composer: page.locator("#prompt-textarea"),
     submit: page.getByTestId("send-button"),
     assistantMessages: page.locator('[data-message-author-role="assistant"]'),
+    conversationMessages: page.locator('[data-message-author-role="user"], [data-message-author-role="assistant"]'),
     generating: page.getByTestId("stop-button"),
     fileInput: page.locator('input[type="file"][multiple]'),
   });
@@ -171,6 +173,7 @@ export async function runNativeChatGptJourney(journey: NativeChatGptJourney, out
             await journey.page.goto("https://chatgpt.com/", { waitUntil: "domcontentloaded", timeout });
             await controls.composer.waitFor({ state: "visible", timeout });
             if ((await controls.composer.innerText()).trim()) throw new Outcome("incomplete", "composer-not-empty");
+            if (await controls.conversationMessages.count() !== 0) throw new Outcome("incomplete", "fresh-conversation-unconfirmed");
             freshRequired = priorConversation !== undefined;
             break;
           case "click":
