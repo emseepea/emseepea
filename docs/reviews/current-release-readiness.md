@@ -72,6 +72,12 @@ failed or unqualified. Three broader checks failed before their required
 fixture was built; the unchanged checks passed after that build. None of these
 failures was rewritten as a pass.
 
+The first exact-source full qualification on 9a2a852 failed the README density
+check: two paragraphs exceeded the existing 400-character limit. A diagnostic
+test-stage run passed 439 checks and failed that one check. Paragraph boundaries
+were repaired without changing words. The original failure remains retained;
+qualification of the repaired commit is still required.
+
 This foundation does not qualify general resource-only discovery, independently
 observed authenticated HTTP requests, live ChatGPT, production learner behavior,
 question correctness, ordinal question quality or recovered failed invocations.

@@ -51,7 +51,8 @@
     "resourceOnlyAttempts": 6,
     "firstMixedAggregateCliResult": "FAILED; conversation assertions passed, aggregate validator rejected resource paths. Raw result remains failed.",
     "broaderFixtureAttempt": "35 passed,3 failed before required tool-server fixture build; unchanged checks passed after build.",
-    "noFailedRecordReclassification": true
+    "noFailedRecordReclassification": true,
+    "exactSourceFullQualification": "9a2a852 failed public README density: two paragraphs536/475characters exceed400. Full diagnostic test stage439passed/1failed; paragraph boundaries repaired without changing words. Original failure retained; repaired exact-source qualification required."
   },
   "limits": [
     "No general resource-only qualification.",

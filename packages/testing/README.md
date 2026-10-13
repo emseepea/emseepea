@@ -141,7 +141,9 @@ assertions and raw evidence.
 
 For a Codex conversation that reads resources, set `nativeResources: true` in
 `createConversation` options. This option is off by default; other providers
-reject it. The runner obtains a bounded resource catalogue using the conversation's
+reject it.
+
+The runner obtains a bounded resource catalogue using the conversation's
 authentication and records recognized native resource operations separately
 from application-tool calls. `turn.resourceOperations` contains one operation
 array per trial; `assertNoToolCalls` still refers to application tools.
@@ -156,6 +158,7 @@ names that collide with application tools still fail qualification.
 The [retained genuine AI proof](https://github.com/emseepea/emseepea/blob/main/docs/reviews/native-resource-evidence-2026-10-13.json) covers a synthetic mixed tool/resource journey
 across resumed and fresh model sessions. It does not qualify general resource-only
 discovery, authenticated HTTP correlation or a production learner journey.
+
 Fresh model sessions use the same running test application. This option does
 not recover completed turns from a failed model invocation.
 

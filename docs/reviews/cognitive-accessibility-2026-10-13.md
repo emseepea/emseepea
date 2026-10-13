@@ -273,7 +273,7 @@ synthetic evidence remain explicit. No production or question-quality claim.
 
 | File | SHA-256 | Result |
 | --- | --- | --- |
-| `packages/testing/README.md` | `84de79e374151686bfc1c3c9b4b36bcca1ff38e1631b5e4d8f75e359a979c24d` | PASS |
+| `packages/testing/README.md` | `7f36ebb5e2e368da2d8dccaf0bd1110f796a97b6af0578b12438a60c8a5eb1ec` | PASS |
 | `.changeset/native-resource-evidence-foundation.md` | `edb6c8a107f1de765a407dab19251c76fd44af091739ddac88f53e516571cd2f` | PASS |
-| `docs/reviews/native-resource-evidence-2026-10-13.json` | `fc0dab1ff6cdb43915316b017f63a96fafdf6aa80216d8ac089603b35e39e9da` | PASS |
-| `docs/reviews/current-release-readiness.md` | `eca4430470550a0db40609d457990477260717c1a544d005cc75394cc1871929` | PASS |
+| `docs/reviews/native-resource-evidence-2026-10-13.json` | `c5443c9527530350df71869179b2f6ba8bcb6bef253bdbb00016362e83320eb3` | PASS |
+| `docs/reviews/current-release-readiness.md` | `b1e6f7d0cc9d5c07ca43926b67910b8b4729e44404f6035fb142d4e900dce9a0` | PASS |
