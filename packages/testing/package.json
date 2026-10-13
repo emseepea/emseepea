@@ -27,12 +27,18 @@
     "./semantic": {
       "types": "./semantic/test.d.mts",
       "import": "./semantic/test.mjs"
+    },
+    "./chatgpt": {
+      "types": "./dist/chatgpt.d.ts",
+      "import": "./dist/chatgpt.js"
     }
   },
   "bin": {
     "emseepea-contract": "./published-contract/cli.mjs",
     "emseepea-qualify": "./mcp-cli/cli.mjs",
-    "emseepea-test": "./semantic/cli.mjs"
+    "emseepea-test": "./semantic/cli.mjs",
+    "emseepea-chatgpt-setup": "./chatgpt/setup.mjs",
+    "emseepea-chatgpt": "./chatgpt/run.mjs"
   },
   "files": [
     "dist",
@@ -40,7 +46,8 @@
     "published-contract",
     "semantic",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "chatgpt"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.type-tests.json",
@@ -58,5 +65,13 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "peerDependencies": {
+    "playwright": "1.62.1"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": true
+    }
   }
 }

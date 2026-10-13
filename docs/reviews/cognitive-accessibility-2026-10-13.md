@@ -76,3 +76,16 @@ JTBD reviewer checked the planned release record and synthetic native-client rec
 | File | SHA-256 |
 | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `8597029a0a39b88488e0c2a1014a831d622d7565caaf7147cfafd237bc3c06a6` |
+## Issue #145 Opt-in Adapter Documentation
+
+Author self-review completed for clear setup steps, explicit ownership, and
+accurate evidence limits. This is not a specialist accessibility assessment.
+The documentation distinguishes adapter fixture tests from pending live host
+qualification and explains optional dependencies and local human login.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/opt-in-native-chatgpt.md` | `d62105c9cc835ef7925370132acac0ddbf68252dea80888f82c813492adbe149` | PASS |
+| `packages/testing/README.md` | `f916c9ce537420dab2e1ecdf9c6d103babdad095119822a0834d70955d5d441c` | PASS |
+| `docs/decisions/0123-opt-in-native-chatgpt-browser-journeys.proposed.md` | `9d47419fe5462d6f87799bb71bfbf8a95b943b76aa570b77a1de5da30f6f28fb` | PASS |
+| `docs/decisions/README.md` | `78651a9a4fbaec1df8b20caf9b59dc1a712ab519b383050f01ff2dd0f5b9f936` | PASS |

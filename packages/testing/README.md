@@ -615,3 +615,101 @@ retained. Known configured authentication values are scrubbed from elicitation
 evidence. Arbitrary secrets placed inside test content are not detected.
 Local evidence is written with mode `0600`; repository CI retains it for 14
 days.
+
+## Opt In to Native ChatGPT Browser Journeys
+
+Import `@emseepea/testing/chatgpt` only when you want to test the real ChatGPT
+web experience. Ordinary framework tests do not enable this adapter or install
+its optional Playwright peer dependency. This is an experimental browser
+adapter: ChatGPT controls can change, and live host qualification is pending.
+
+On your own machine, install the optional browser tooling:
+
+```sh
+npm install --save-dev @emseepea/testing playwright@1.62.1
+npx playwright install chromium
+npx emseepea-chatgpt-setup --enable-native-chatgpt --account-owner '<test-account-owner>'
+```
+
+Before publication, run the source checkout with
+`node packages/testing/chatgpt/setup.mjs` using the same arguments.
+The setup command opens a dedicated headed browser. Sign in to the authorized
+ChatGPT test account, complete MFA, check the account, and type `READY` in the
+terminal. Codex CLI login does not sign in to ChatGPT. If bundled Chromium
+cannot complete your account login, use `--browser-channel chrome` with an
+installed Chrome browser. The profile defaults to `~/.emseepea/chatgpt-browser`;
+keep it outside the repository and CI artifacts. The command verifies a
+signed-in control, not the account's identity; the human confirms that identity.
+If that control changes, pass an account-specific `--authenticated-selector`.
+
+Connect your authorized HTTPS MCP endpoint through ChatGPT's current plugin
+installation flow. Complete account consent yourself. A local server requires
+a supported HTTPS tunnel before ChatGPT can reach it. See the
+[official ChatGPT connection instructions](https://developers.openai.com/plugins/deploy/connect-chatgpt).
+Use synthetic fixtures and a dedicated account; starting a fresh conversation
+does not disable account memory. This package does not create an endpoint,
+install a plugin, grant consent, or infer client identity from a user agent.
+
+Create an adopter-owned `.mjs` scenario module that exports `authorization` and
+`createJourney({ page, runId })`. The authorization declares `approved: true`,
+`fixturePolicy: "synthetic"`, an HTTPS `endpoint: new URL(...)`, and the
+`accountOwner`, `endpointOwner`, `fixtureOwner`, and `cleanupOwner` strings.
+Use the same account owner as setup. `createJourney` returns `checkpoints` and
+an asynchronous `cleanup(signal)` callback. The callback must confirm both
+`fixturesRemoved: true` and `conversationsRemoved: true` after observing cleanup.
+The CLI supplies the explicit enable flag, authorized page, run ID, and ownership.
+
+```sh
+npx emseepea-chatgpt --enable-native-chatgpt --scenario ./native-chatgpt.mjs
+```
+
+Before publication, use `node packages/testing/chatgpt/run.mjs` after building
+the package. The command reuses the private profile and writes evidence to
+`artifacts/native-chatgpt/evidence.json`. Exit code 0 means passed, 1 means an
+assertion failed, and 2 means blocked or incomplete.
+
+The exported `NativeChatGptJourneyModule` type describes the scenario contract.
+For direct integration, use `defineNativeChatGptJourney` and
+`runNativeChatGptJourney(journey, outputPath)` with your own authenticated
+Playwright page. The runner never launches a browser by itself. Use these
+checkpoint operations in the order your application requires:
+
+- `human`: wait for the account owner to finish connection or consent.
+- `attach`: upload a synthetic file and observe its ready control.
+- `send`: submit a prompt and assert the completed assistant response.
+- `server-observation`: assert MCP calls after every submitted turn.
+- `visible`, `click`, and `image`: inspect or interact with an application card,
+  including locators inside its iframe. Image assertions receive PNG bytes.
+- `application-state`: compare a declared SHA-256 with independently read state.
+- `fresh-conversation`: start a new conversation, then submit and observe retrieval.
+
+Default controls use ChatGPT's composer and send/stop buttons. Override
+`controls` with locators from the authorized page when the UI changes.
+`timeoutMs` bounds each browser operation or callback (default 30 seconds),
+and `clockSkewMs` allows 0–5000 ms between browser and server clocks (default
+1000 ms). A callback must respect its abort signal; timing it out cannot undo
+an operation already sent to a server.
+
+A server collector receives `runId`, `afterSequence`, `since`, and `signal`.
+Return ordered, run-scoped calls matching the declared method, target, outcome,
+and optional result hash. Each call includes request/result SHA-256 values,
+endpoint SHA-256, sequence, timestamp, and `nativeClient`. Set
+`nativeClient: "verified-chatgpt"` only when your authenticated server boundary
+establishes that the request came through the dedicated ChatGPT connection;
+use `"unverified"` otherwise. A user agent, browser answer, or simulator record
+cannot establish this. Define your run correlation and authenticated boundary
+before attempting live qualification. An unavailable collector or unverified
+client produces incomplete evidence.
+
+Evidence retains bounded hashes and fixed failure categories. It omits raw
+prompts, replies, endpoint addresses, ownership strings, cookies, and arbitrary
+observer metadata. Explicit `image` checkpoints save scoped PNGs alongside
+the evidence; review the selected card for private content before enabling one.
+Files use mode `0600`. Store evidence privately and choose your own retention
+policy. Cleanup is required even after an assertion fails.
+
+The package's scripted-page and intercepted Chromium tests verify the adapter
+contract. They do not prove compatibility with live ChatGPT. Qualify connection,
+real MCP invocation, visible card, durable application state, fresh retrieval,
+and cleanup against your owned account and endpoint before claiming that host
+journey works.

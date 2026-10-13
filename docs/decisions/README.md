@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 118 decisions: 70 current and 48 historical.
+This project has 119 decisions: 71 current and 48 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -85,6 +85,7 @@ recorded separately.
 - [ADR-0120: Publish Branch Release with Exact-Head Mergeback Quality](0120-publish-branch-release-with-exact-head-mergeback-quality.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0121: Exact-Head Qualification for Automated Trunk Mergeback](0121-exact-head-qualification-for-automated-trunk-mergeback.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0122: Submit Feedback as the Sole Model Context Protocol (MCP) Feedback Creation Operation](0122-submit-feedback-as-the-sole-mcp-feedback-creation-operation.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0123: Opt-in Native ChatGPT Browser Journeys](0123-opt-in-native-chatgpt-browser-journeys.proposed.md): Proposed; human review pending.
 
 ### Historical decisions
 
@@ -2649,3 +2650,18 @@ Chosen option: **"Use `submit-feedback` as the sole MCP feedback creation operat
 - Using the same `scope(principal)` function and resulting opaque scope string, the published package under review passes a submit, get, and reply journey using the returned `id` in an independent installation.
 - The published package under review can also list, get, and reply to a thread stored before the removal in that independent installation.
 - All of this evidence is required before this proposal is accepted.
+
+### [ADR-0123: Opt-in Native ChatGPT Browser Journeys](0123-opt-in-native-chatgpt-browser-journeys.proposed.md)
+
+- Status: Proposed
+- Human review: Pending
+
+#### ADR-0123 Decision
+
+Chosen option: **an optional Playwright adapter with adopter-owned scenarios and sessions**, because it can exercise the visible journey while preserving explicit ownership and opt-in execution.
+
+#### ADR-0123 Checks
+
+- The user authorized implementation and explicitly required framework opt-in.
+- Scripted-page and intercepted Chromium tests verify the implementation boundary.
+- Live account login, authenticated endpoint correlation, and full native journey evidence remain pending; this proposed decision records that limit.
