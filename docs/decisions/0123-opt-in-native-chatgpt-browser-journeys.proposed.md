@@ -37,7 +37,7 @@ and sessions**, because it can exercise the visible journey while preserving
 explicit ownership and opt-in execution.
 
 The testing package exposes a separate `/chatgpt` entry point, an optional
-Playwright peer dependency, and explicitly enabled setup and execution commands.
+Playwright dependency, and explicitly enabled setup and execution commands.
 Importing the adapter does not launch a browser. Ordinary tests stay unchanged.
 The headed setup command creates a dedicated local profile and requires human
 login and account confirmation. Authentication state is never exported.

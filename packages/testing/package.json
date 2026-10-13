@@ -65,13 +65,5 @@
   },
   "engines": {
     "node": ">=22"
-  },
-  "peerDependencies": {
-    "playwright": "1.62.1"
-  },
-  "peerDependenciesMeta": {
-    "playwright": {
-      "optional": true
-    }
   }
 }

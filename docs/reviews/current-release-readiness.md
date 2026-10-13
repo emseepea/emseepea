@@ -28,7 +28,7 @@ full source qualification and release gates must pass before publication.
 - `@emseepea/create-tool-server@0.1.15`
 
 The initializer patches update generated projects to use the testing package.
-They do not enable browser journeys or install the optional Playwright peer.
+They do not enable browser journeys or install the optional Playwright dependency.
 
 ## Verified adapter behavior
 

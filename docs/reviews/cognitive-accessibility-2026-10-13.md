@@ -119,3 +119,16 @@ and release record for short paragraphs and accurate package versions.
 | --- | --- | --- |
 | `packages/testing/README.md` | `c913b3932b21a6757ef8346fee9b5befac3faa417dbb2a28b7f921b0c4dcf0bb` | PASS |
 | `docs/reviews/current-release-readiness.md` | `70c50e97820005d8d5ba91150d37c4ca89b27635cdf1e892d8db39d1a2c50bcd` | PASS |
+
+## Optional Browser Dependency Boundary
+
+Author self-review: native users explicitly install the documented Playwright
+version. The package has no peer constraint that could conflict with browser
+tooling used by adopters who leave the native adapter disabled.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `packages/testing/README.md` | `dafe395599f91f9eaa7dea05709525dddaf4e1149c7cf87f2bedd08bd7c85c88` | PASS |
+| `docs/decisions/0123-opt-in-native-chatgpt-browser-journeys.proposed.md` | `f3bf2228aebdc3a622f96baccd6fc91250e04ba3f01a61423113dbb6144dec97` | PASS |
+| `docs/decisions/README.md` | `78651a9a4fbaec1df8b20caf9b59dc1a712ab519b383050f01ff2dd0f5b9f936` | PASS |
+| `docs/reviews/current-release-readiness.md` | `53670913abda71aa08d036cbbca8cc5ba480619051735b4f96519cd0c765a2f9` | PASS |

@@ -620,7 +620,7 @@ days.
 
 Import `@emseepea/testing/chatgpt` only when you want to test the real ChatGPT
 web experience. Ordinary framework tests do not enable this adapter or install
-its optional Playwright peer dependency. This is an experimental browser
+Playwright. This is an experimental browser
 adapter: ChatGPT controls can change, and live host qualification is pending.
 
 On your own machine, install the optional browser tooling:
