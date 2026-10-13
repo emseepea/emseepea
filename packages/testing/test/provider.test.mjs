@@ -448,25 +448,32 @@ test("Codex provider requires an explicit model", () => {
   }
 });
 
-test("Codex provider rejects unsupported CLI versions", async (t) => {
+test("Codex provider records CLI provenance without a version eligibility gate", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "codex-version-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const oldCommand = join(directory, "fake-old-codex.mjs");
   const newCommand = join(directory, "fake-new-codex.mjs");
+  const invalidCommand = join(directory, "fake-invalid-codex.mjs");
   await writeFile(oldCommand, `#!/usr/bin/env node
 process.stdout.write("codex-cli 0.161.9\\n");
 `);
   await writeFile(newCommand, `#!/usr/bin/env node
 process.stdout.write("codex-cli 0.162.0\\n");
 `);
+  await writeFile(invalidCommand, `#!/usr/bin/env node
+process.stdout.write("unavailable\\n");
+`);
   await chmod(oldCommand, 0o755);
   await chmod(newCommand, 0o755);
+  await chmod(invalidCommand, 0o755);
   const originalCommand = process.env.EMSEEPEA_CODEX_COMMAND;
   process.env.EMSEEPEA_CODEX_COMMAND = oldCommand;
   t.after(() => restore("EMSEEPEA_CODEX_COMMAND", originalCommand));
-  await assert.rejects(modelVersion("codex-local"), /Codex CLI 0\.161\.9 is unsupported/);
+  assert.equal(await modelVersion("codex-local"), "0.161.9");
   process.env.EMSEEPEA_CODEX_COMMAND = newCommand;
   assert.equal(await modelVersion("codex-local"), "0.162.0");
+  process.env.EMSEEPEA_CODEX_COMMAND = invalidCommand;
+  await assert.rejects(modelVersion("codex-local"), /Could not verify Codex CLI version/);
 });
 
 test("Codex invocation isolates configuration and pre-approves only discovered tools", async (t) => {

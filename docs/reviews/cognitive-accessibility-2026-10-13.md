@@ -49,3 +49,30 @@ publication and does not claim API-key CI authentication was tested live.
 | `.changeset/codex-isolated-transport.md` | `7cb09cd3579ff79f2afca9d5cfc43756cf41ee7f8b64cbeef537cdf29e33b81f` | PASS |
 | `docs/reviews/current-release-readiness.md` | `c5e0bd018ce1beca76485e2b307243fe8088b49a9bef49569a24fe652580be23` | PASS |
 | `packages/testing/README.md` | `a83335c9a23d43849250f352c60dfb5c3d42af9a833d056bac0999662e0ffb97` | PASS |
+
+## Issue #162 Completed Release Evidence
+
+PASS. Reviewed the updated release record for concrete user availability,
+traceable verification, and clear authentication limits. It names the released
+versions and distinguishes completed checks from the untested API-key path.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `eeb98cb4a1c1a4b8be866a00e11eef523c6654a54aa60b31410cc537fb65479a` | PASS |
+
+## CLI provenance without version eligibility
+
+JTBD reviewer checked the exact README and release note. PASS: they explain that CLI versions identify evidence; invocation and event contracts still decide qualification. No universal compatibility or completed release claim is introduced.
+
+| File | SHA-256 |
+| --- | --- |
+| `packages/testing/README.md` | `3af33a1a52cce14a27561194ed4b346059b178a48417e6bc589db9ba37eb67bf` |
+| `.changeset/testing-cli-behaviour-qualification.md` | `f93db29c21a90da377fb9a33dd200a677333fc041c84da899a17e1ee2e30ce5d` |
+
+## CLI behaviour readiness
+
+JTBD reviewer checked the planned release record and synthetic native-client receipt. PASS: reviewed risk is distinct from pending gates and publication. Initial meaning checks and resumed/fresh literal checks have separate scopes; no broad compatibility or product-quality claim is introduced.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `8597029a0a39b88488e0c2a1014a831d622d7565caaf7147cfafd237bc3c06a6` |

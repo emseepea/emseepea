@@ -109,9 +109,13 @@ EMSEEPEA_CODEX_MODEL=gpt-5.5 emseepea-test --provider codex-local eval
 
 `codex-local` uses the existing Codex CLI sign-in without copying it.
 `codex-ci` requires `OPENAI_API_KEY` from the CI secret store. Both providers
-support Codex CLI 0.162.0 or later, run `codex exec --json`, resume the actual
+record the installed CLI version as provenance, run `codex exec --json`, resume the actual
 Codex session for follow-ups, ignore user configuration, and pre-approve only
 the discovered tools from the test server.
+
+CLI eligibility is established by the invocation and event contracts rather
+than a version cutoff. An unsupported invocation or invalid, incomplete or
+forbidden event still fails qualification.
 
 An isolated command policy denies shell launches and spawned shell environments
 inherit no provider credentials. The runner also disables Codex account apps,

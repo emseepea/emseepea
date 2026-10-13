@@ -6,7 +6,6 @@ import { scriptedElicitations } from "./elicitation.mjs";
 
 const claudeModel = "claude-sonnet-4-6";
 const mcpServerName = "emseepea_eval";
-const minimumCodexCliVersion = "0.162.0";
 const codexEmptyDiscoveryTools = new Map([
   ["list_mcp_resources", "resources"],
   ["list_mcp_resource_templates", "resourceTemplates"],
@@ -44,9 +43,6 @@ export async function modelVersion(provider = "claude-local") {
   const result = await runProcess(command, ["--version"], { env: modelEnvironment({}) });
   const version = result.stdout.trim().match(/(?:codex-cli\s+)?(\d+\.\d+\.\d+)\b/)?.[1];
   if (result.code !== 0 || !version) throw new Error(`Could not verify ${codex ? "Codex" : "Claude"} CLI version`);
-  if (codex && compareVersions(version, minimumCodexCliVersion) < 0) {
-    throw new Error(`Codex CLI ${version} is unsupported; use ${minimumCodexCliVersion} or later`);
-  }
   return version;
 }
 
@@ -675,16 +671,6 @@ function classifyCodexFailure(stderr) {
     return "provider";
   }
   return "unknown";
-}
-
-function compareVersions(left, right) {
-  const a = left.split(".").map(Number);
-  const b = right.split(".").map(Number);
-  for (let index = 0; index < Math.max(a.length, b.length); index += 1) {
-    const difference = (a[index] ?? 0) - (b[index] ?? 0);
-    if (difference !== 0) return difference;
-  }
-  return 0;
 }
 
 function codexEvidenceError(message, category) {
