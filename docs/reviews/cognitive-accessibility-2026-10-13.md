@@ -89,3 +89,13 @@ qualification and explains optional dependencies and local human login.
 | `packages/testing/README.md` | `f916c9ce537420dab2e1ecdf9c6d103babdad095119822a0834d70955d5d441c` | PASS |
 | `docs/decisions/0123-opt-in-native-chatgpt-browser-journeys.proposed.md` | `9d47419fe5462d6f87799bb71bfbf8a95b943b76aa570b77a1de5da30f6f28fb` | PASS |
 | `docs/decisions/README.md` | `78651a9a4fbaec1df8b20caf9b59dc1a712ab519b383050f01ff2dd0f5b9f936` | PASS |
+
+## Issue #145 Candidate Release Record
+
+Author self-review: checked the package set, experimental scope, and pending
+live evidence. No completed-publication claim is made.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/opt-in-native-chatgpt.md` | `94876c68364236ade89f5cfca2423898b9d8040d6397cb4112fed951c257f67f` | PASS |
+| `docs/reviews/current-release-readiness.md` | `b6d9081f22e581573ac632e930e3fdceafc2aae5975827c6e12b26106e987d01` | PASS |
