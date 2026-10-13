@@ -49,7 +49,7 @@ async function main() {
   }
   await chmod(profile, 0o700);
   let context;
-  try { context = await chromium.launchPersistentContext(profile, { headless: false, ...(channel === "chromium" ? {} : { channel }) }); }
+  try { context = await chromium.launchPersistentContext(profile, { headless: false, chromiumSandbox: true, ...(channel === "chromium" ? {} : { channel }) }); }
   catch { throw new Error("headed-browser-unavailable"); }
   const terminal = createInterface({ input: process.stdin, output: process.stdout });
   try {

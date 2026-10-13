@@ -1,54 +1,83 @@
 # Current Release Readiness
 
-Date: 2026-10-13
+Date: 2026-10-14
+
+## Owner-session follow-up — 2026-10-14
+
+Status: **NOT YET RELEASED**. The planned testing patch lets the explicitly
+enabled runner attach to an already-authorized owner browser through Playwright
+CDP. It does not require the profile setup helper. Existing direct integration
+with an adopter-owned Playwright page remains available.
+
+The reported Cloudflare loop occurred in an automation-launched Chrome window
+showing `--no-sandbox`. That warning establishes the launch configuration, not
+the challenge service's reason for rejecting verification. The patch enables
+Chromium's sandbox in the existing launcher and offers attachment without
+launching or changing the owner's browser. No CAPTCHA bypass is implemented.
+
+JTBD-003 applies: developers need evidence from the user's actual host
+experience. Attachment removes a launch constraint while preserving native
+server evidence, natural scenarios, explicit outcomes, and cleanup. ADR-0123
+continues to own the optional Playwright boundary; no browser framework or
+authentication transport is added.
+
+Five attachment tests passed, including a normally spawned Chromium fixture
+with a real CDP connection. They prove zero connection for rejected authority,
+fixed redacted errors, explicit CLI ownership, and preservation of the owner
+browser and original tab after disconnect.
+
+Redirect rejection proves zero
+requests to the redirected destination. Browser defaults are preserved, and
+WebSocket frames and the initial send queue are bounded to 16 MiB. Existing
+scripted and intercepted
+DOM tests retain their previous scope. None of these is live ChatGPT evidence.
+
+Risk review uses RISK-POLICY.md. Residual impact × likelihood is 5 × 1 = 5
+(Low) for the patch, its browser boundary, and the cumulative release change.
+The optional interface remains explicit, literal loopback only, and adopter
+owned.
+
+Credentials, cookies, storage state, endpoint addresses, and existing
+tab content are not retained. Owner browser control is powerful: dedicated
+synthetic-test sessions, private loopback debugging, and bounded connections
+are required. Existing cleanup and release gates remain mandatory. R003, R004,
+R006, R007, and R010 retain their controls. No appetite exception is requested.
+
+Remaining live blockers are an authorized controllable browser session and
+authenticated server-call correlation. The connected Voder sandbox establishes
+connector access only. A normal Chrome window without an exposed supported
+interface cannot be attached by this package. Login, MFA, consent, and CAPTCHA
+remain human actions; the complete issue #145 remains open.
 
 ## Release status
 
-Publication status: **PROPOSED (opt-in native resource evidence foundation)**.
-The next release plans testing 0.25.0 and eleven initializer updates at 0.1.18.
-The option is off by default and is limited to Codex providers. It records
-recognized resource helpers separately from application tools, preserves
-returned contents and supplies them to meaning checks. Strict failed-call,
-secret, foreign-server and incomplete-turn checks remain in force.
+Publication status: **PROPOSED (owner-authorized browser attachment)**.
+The next release plans testing 0.25.1 and eleven initializer updates at 0.1.19.
+The browser adapter remains experimental and explicitly opt-in. Ordinary
+framework tests do not enable it or install browser tooling.
 
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
 
-Fresh independent prospective cumulative risk is 5/25. This assesses the
-reviewed foundation; it does not qualify publication. Reconciliation, final
-source reviews, exact full qualification, fixed performance populations,
-packed consumers and registry gates remain required.
+The current source baseline includes testing 0.25.0, server 0.23.1, feedback
+0.10.2, React 0.4.8, Svelte 0.2.8, and initializers 0.1.18. The native resource
+foundation's retained evidence below belongs to that preceding release.
+Its controls and honest capability limits remain unchanged by this patch.
 
 ## Planned package set
 
-- `@emseepea/create-api-backed-server@0.1.18`
-- `@emseepea/create-database-schema-server@0.1.18`
-- `@emseepea/create-html-ui-server@0.1.18`
-- `@emseepea/create-mongodb-backed-server@0.1.18`
-- `@emseepea/create-multi-instance-postgres-server@0.1.18`
-- `@emseepea/create-openapi-backed-server@0.1.18`
-- `@emseepea/create-progress-streaming-server@0.1.18`
-- `@emseepea/create-react-ui-server@0.1.18`
-- `@emseepea/create-resources-and-prompts-server@0.1.18`
-- `@emseepea/create-soap-backed-server@0.1.18`
-- `@emseepea/create-tool-server@0.1.18`
-- `@emseepea/testing@0.25.0`
-
-## Released baseline
-
-Server 0.23.1, testing 0.24.1, feedback 0.10.2, React 0.4.8, Svelte 0.2.8 and
-eleven initializers 0.1.17 are verified on npm latest. The planned versions
-above are not published. The experimental native browser adapter remains
-explicitly opt-in; testing 0.25.0 does not activate it.
-
-The preceding release removed CLI version cutoffs and reused captured schema
-metadata. It passed source Quality 38416463766, genuine Claude checks and
-packed registry verification in Release build 38418653791, promotion in
-Publish 38423688851, and final main Quality 38424418048 on exact merge-back
-df5e99f. The first publication attempt timed out with a partial registry view;
-all sixteen versions and their source-bound provenance were then verified,
-and only the failed publication job was retried. No AI or performance batch
-was retried. Immutable package integrity remained unchanged on latest.
+- `@emseepea/testing@0.25.1`
+- `@emseepea/create-api-backed-server@0.1.19`
+- `@emseepea/create-database-schema-server@0.1.19`
+- `@emseepea/create-html-ui-server@0.1.19`
+- `@emseepea/create-mongodb-backed-server@0.1.19`
+- `@emseepea/create-multi-instance-postgres-server@0.1.19`
+- `@emseepea/create-openapi-backed-server@0.1.19`
+- `@emseepea/create-progress-streaming-server@0.1.19`
+- `@emseepea/create-react-ui-server@0.1.19`
+- `@emseepea/create-resources-and-prompts-server@0.1.19`
+- `@emseepea/create-soap-backed-server@0.1.19`
+- `@emseepea/create-tool-server@0.1.19`
 
 ## Foundation evidence and boundaries
 

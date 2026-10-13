@@ -42,6 +42,17 @@ Importing the adapter does not launch a browser. Ordinary tests stay unchanged.
 The headed setup command creates a dedicated local profile and requires human
 login and account confirmation. Authentication state is never exported.
 
+An adopter may instead supply an already-authorized Playwright page or attach
+through Playwright's existing CDP implementation. The command accepts only a
+literal loopback browser WebSocket, bounded address and port, and explicit
+browser-owner confirmation matching the account owner. It uses a separate test
+tab, closes that tab, and disconnects without closing the owner browser. It
+never reads cookies or storage state and does not implement CDP or browser
+semantics, login automation, CAPTCHA handling, stealth flags, or remote debugging
+setup. Bounded Node WebSocket framing supplies Playwright's documented transport
+interface and rejects redirects. Playwright preserves the owner's browser
+defaults. The ordinary headed setup preserves Chromium's sandbox.
+
 Adopters declare ownership of account, HTTPS endpoint, synthetic fixtures, and
 cleanup. Their scenario controls assertions, server collection, and cleanup.
 Server evidence must be authenticated and correlated to the specific run.
@@ -71,3 +82,9 @@ pending until account and endpoint owners supply live evidence.
 - Scripted-page and intercepted Chromium tests verify the implementation boundary.
 - Live account login, authenticated endpoint correlation, and full native journey
   evidence remain pending; this proposed decision records that limit.
+
+- A reported security-verification loop in the automation-launched browser
+  motivates the owner-session attachment alternative. Attachment uses a
+  supported browser interface; it does not claim to resolve or bypass the
+  verification service. A normal browser without an exposed authorized
+  interface cannot be controlled by this adapter.
