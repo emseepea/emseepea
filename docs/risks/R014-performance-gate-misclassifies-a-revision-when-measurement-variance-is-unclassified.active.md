@@ -42,8 +42,8 @@ classification control is absent.
   summary and raw CPU sample. Missing, malformed, failed, or cancelled cohorts
   fail closed.
 
-Quality run `38335751990` exercised these controls on Node.js 22 and 24 for
-current `main` commit `11a70ef07844c8bbed432218e590225b9a164d6d` and passed.
+Quality run `38342282754` exercised these controls on Node.js 22 and 24 for
+exact `main` commit `1928f9662d8a2cb7f86cdf0e01e3f71f8e9b30ff` and passed.
 
 ## Residual Risk
 
@@ -73,7 +73,7 @@ passes.
 ## Related
 
 - Criteria: `RISK-POLICY.md`
-- Realised-as: [Problem 015: Production-Boundary CPU Benchmark Gives Conflicting Results for an Unchanged Revision](../problems/verifying/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md)
+- Realised-as: [Problem 015: Production-Boundary CPU Benchmark Gives Conflicting Results for an Unchanged Revision](../problems/closed/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md)
 - Treatment decision: [ADR-0014: Performance Budget for the Initial JSON HTTP Boundary](../decisions/0014-performance-budget-initial-json-http-boundary.proposed.md)
 - Personas affected: release maintainers and adopters relying on qualified
   performance claims
@@ -84,5 +84,6 @@ passes.
   the unchanged failed-job rerun passed. Recorded the missing repeated-run
   variance classification and the resulting above-appetite residual risk.
 - 2026-10-13: Reduced residual risk after commit `808520fb` added fixed
-  three-cohort classification and Quality run `38335751990` passed the control
-  on Node.js 22 and 24 without changing ADR-0014's thresholds.
+  three-cohort classification and Quality run `38342282754` passed the control
+  on Node.js 22 and 24 for exact `main` commit `1928f966` without changing
+  ADR-0014's thresholds.

@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-10-13 **P015 verification pending** - Fixed three-cohort classification passed the production-boundary budget on Node.js 22 and 24.
+> Last reviewed: 2026-10-13 **P015 closed on exact evidence** - Quality run `38342282754` passed the three-cohort production-boundary control on Node.js 22 and 24 for exact `main` commit `1928f966`.
 > Run `/wr-itil:review-problems` to refresh Weighted Shortest Job First (WSJF) rankings.
 
 ## WSJF Rankings
@@ -36,7 +36,6 @@ Fix released, awaiting verification. Sorted by release date, oldest first.
 | ID | Title | Released | Fix summary | Likely verified? |
 |----|-------|----------|-------------|------------------|
 | P003 | Release workflow lacks first-package trusted-publisher preflight | 2026-09-24 | The release checks every public package name before publication and stops with separate bootstrap guidance when a name is absent. | no — not observed |
-| P015 | Production-boundary CPU benchmark gives conflicting results for an unchanged revision | 2026-10-13 | Every request class now uses three complete independent cohorts and the unchanged ADR-0014 limits apply to the pooled population. | yes — observed: Quality run `38335751990` passed on Node.js 22 and 24. |
 
 ## Inbound Upstream Reports
 
@@ -58,3 +57,4 @@ None parked.
 | P005 | [Branch push is ungated, so untested changes reach continuous integration](closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md) | 2026-09-24 | Installed hook accepted exact commit `0c28ae0`; Quality run `35964172151` passed for that SHA. |
 | P002 | [Release readiness verifier only tests fixture-like stable PASS marker](closed/002-release-readiness-verifier-only-tests-fixture-like-stable-pass-marker.md) | 2026-09-29 | Release run `35818485686` passed Prepare package evidence on exact release head `5d163f9be1478f9ebea1558c0e36ab760d0370aa`. |
 | P007 | [The shipped package guide is silent on open-by-default result schemas](closed/007-shipped-package-guide-is-silent-on-open-by-default-result-schemas.md) | 2026-10-01 | Published `@emseepea/server@0.19.1` tarball README contains the corrected guide; packed-package documentation test passed 7/7. |
+| P015 | [Production-boundary CPU benchmark gives conflicting results for an unchanged revision](closed/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md) | 2026-10-13 | Quality run `38342282754` passed the three-cohort production-boundary control on Node.js 22 and 24 for exact `main` commit `1928f966`. |

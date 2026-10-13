@@ -1,6 +1,6 @@
 # Problem 015: Production-Boundary CPU Benchmark Gives Conflicting Results for an Unchanged Revision
 
-**Status**: Verification Pending
+**Status**: Closed (closed-on-evidence 2026-10-13 - Quality run `38342282754`. Recovery: rerun `/wr-itil:transition-problem 015 known-error` to reopen)
 **Reported**: 2026-09-24
 **Priority**: 15 (High) — Impact: 3 × Likelihood: 5
 **Origin**: internal
@@ -83,16 +83,22 @@ publish an npm package. <!-- no-changeset-reference -->
 ## Fix Released
 
 Released to `main` in commit `808520fb0445c12266ba69dba5509921fe2c3c51`
-on 2026-10-13. Quality run `38335751990` passed for current `main` commit
+on 2026-10-13. Quality run `38335751990` passed for the then-current `main` commit
 `11a70ef07844c8bbed432218e590225b9a164d6d`, including the governed
 production-boundary budget on Node.js 22 and 24.
 
-Awaiting lifecycle verification from the retained exact-run evidence.
+## Closure Evidence
+
+Verification completed on exact `main` commit
+`1928f9662d8a2cb7f86cdf0e01e3f71f8e9b30ff`. Quality run
+`38342282754` passed, including the governed production-boundary budget on
+Node.js 22 and 24.
 
 ## Dependencies
 
-- **Blocks**: affected publication and release qualification while the linked
-  residual risk remains above appetite.
+- **Blocks**: none. Publication and release qualification were blocked while
+  residual risk was above appetite; Quality run `38342282754` verified the
+  control.
 - **Blocked by**: (none)
 - **Composes with**: (none)
 

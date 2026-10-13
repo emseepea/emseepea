@@ -26,14 +26,14 @@ cognitive-accessibility findings remain.
 
 ## Problem 015 Benchmark Classification Verification
 
-PASS. A cognitive-accessibility specialist reviewed the current governance
-records. The wording separates the released fix from lifecycle verification,
-names the exact retained Quality evidence, and does not claim more than that
-evidence proves. No cognitive-accessibility findings remain.
+PASS. A cognitive-accessibility specialist reviewed the closed governance
+records. The wording separates the released fix from closure evidence, names
+the exact retained Quality evidence, and does not claim more than that evidence
+proves. No cognitive-accessibility findings remain.
 
 | File | SHA-256 | Result |
 | --- | --- | --- |
-| `docs/problems/README-history.md` | `93902ef6702b46e58715a0c2a3b1ba2041a46d4fbf6be44fc56afe091048584f` | PASS |
-| `docs/problems/README.md` | `9de659c8ae0b1e69eaefacd4b37b26300415d532cd23d9c17e65b425c6e1a6ca` | PASS |
-| `docs/problems/verifying/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md` | `04b2f2825560547772402a381477e7178e2228426c3894187e01412dd12f0950` | PASS |
-| `docs/risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md` | `e8c0ddd919f1cda61ee1bfe815e7597d1e7016fbdf443ed9dcc3cdbd2e551751` | PASS |
+| `docs/problems/README-history.md` | `3e3717c106d2fa75a6f81d57f6e1a3387f5e590e410f715abeb724323c8b8b0e` | PASS |
+| `docs/problems/README.md` | `df0a99356e6593d0f7ba7d53ffd38d76340c8982d9c871960855df81d076eb03` | PASS |
+| `docs/problems/closed/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md` | `8ff71276eba1af1e444842e5448412adbb9e7d1ce409f4b48c435d89a46edb96` | PASS |
+| `docs/risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md` | `ef9fa60a7524e376735a4faf5681e323366db3b1a2584a4b8be47913eca8c2f6` | PASS |
