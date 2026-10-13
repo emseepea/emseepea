@@ -15,8 +15,6 @@ import {
 
 const classes = ["accepted", "rate-limited", "capacity-exhausted", "malformed"];
 const dailyRequests = 8_640_000;
-const cpuBatchCount = 40;
-const cpuRequestsPerBatch = 20;
 const results = [];
 const reportDirectory = process.env.EMSEEPEA_BENCHMARK_REPORT_DIR;
 const traceDirectory = process.env.EMSEEPEA_BENCHMARK_TRACE_DIR;
@@ -45,10 +43,7 @@ const report = {
     durationMs: 1_000,
     cohortCount: productionBoundaryCohortCount,
     throughputRunsPerCohort: 3,
-    cpuBatchCountPerCohort: cpuBatchCount,
-    cpuRequestsPerBatch,
-    cpuMeasuredRequestsPerCohort: cpuBatchCount * cpuRequestsPerBatch,
-    cpuP95: "batch-amortized per-request samples",
+    cpuSamplesPerCohort: 200,
     allocationSamplesPerCohort: 80,
     wireSamplesPerCohort: 10,
   },
@@ -148,16 +143,13 @@ async function measure(requestClass, cohort) {
     const cpuMs = [];
     const cpuSamples = [];
     phase("cpu");
-    for (let index = 0; index < cpuBatchCount; index += 1) {
+    for (let index = 0; index < 200; index += 1) {
       const startedAtMs = Date.now();
       await ask("cpu-start");
-      for (let requestIndex = 0; requestIndex < cpuRequestsPerBatch; requestIndex += 1) {
-        assert.equal((await request()).status, expectedStatus);
-      }
-      const cpuMsPerRequest = await ask("cpu-stop") / cpuRequestsPerBatch;
+      assert.equal((await request()).status, expectedStatus);
+      const cpuMsPerRequest = await ask("cpu-stop");
       cpuMs.push(cpuMsPerRequest);
-      cpuSamples.push({ index, startedAtMs, endedAtMs: Date.now(), requestCount: cpuRequestsPerBatch,
-        cpuMs: cpuMsPerRequest });
+      cpuSamples.push({ index, startedAtMs, endedAtMs: Date.now(), cpuMs: cpuMsPerRequest });
     }
     const allocations = [];
     phase("allocations");

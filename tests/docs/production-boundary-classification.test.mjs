@@ -13,7 +13,7 @@ const cohort = (id, { cpu = 1, throughput = 200, allocation = 1024, wire = 512 }
   requestClass: "accepted",
   expectedStatus: 200,
   throughputSamples: [throughput, throughput + 1, throughput + 2],
-  cpuSamples: Array.from({ length: 20 }, (_, index) => ({ index, requestCount: 20, cpuMs: cpu })),
+  cpuSamples: Array.from({ length: 20 }, (_, index) => ({ index, cpuMs: cpu })),
   allocationSamples: Array.from({ length: 20 }, () => allocation),
   wireSamples: Array.from({ length: 10 }, () => wire),
 });
@@ -70,12 +70,6 @@ test("rejects missing, duplicate, or incomplete cohorts", () => {
   assert.throws(
     () => classifyProductionBoundaryCohorts("accepted", [cohort(1), cohort(2), changedStatus]),
     /expected status changed/,
-  );
-  const invalidCpuBatch = cohort(3);
-  invalidCpuBatch.cpuSamples[0].requestCount = 0;
-  assert.throws(
-    () => classifyProductionBoundaryCohorts("accepted", [cohort(1), cohort(2), invalidCpuBatch]),
-    /CPU sample request counts are invalid/,
   );
   for (const [field, message] of [
     ["throughputSamples", "throughput"],
