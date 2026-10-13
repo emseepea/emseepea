@@ -132,3 +132,13 @@ tooling used by adopters who leave the native adapter disabled.
 | `docs/decisions/0123-opt-in-native-chatgpt-browser-journeys.proposed.md` | `f3bf2228aebdc3a622f96baccd6fc91250e04ba3f01a61423113dbb6144dec97` | PASS |
 | `docs/decisions/README.md` | `78651a9a4fbaec1df8b20caf9b59dc1a712ab519b383050f01ff2dd0f5b9f936` | PASS |
 | `docs/reviews/current-release-readiness.md` | `53670913abda71aa08d036cbbca8cc5ba480619051735b4f96519cd0c765a2f9` | PASS |
+
+## Native Adapter Released Baseline
+
+Author self-review: updated the planned versions after the previous release
+completed, preserving the distinction between that delivered fix and this
+pending experimental native adapter.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `79c73ab3d582294977ed4b571466edea444fa7bd64b57d750be16420940b76b7` | PASS |

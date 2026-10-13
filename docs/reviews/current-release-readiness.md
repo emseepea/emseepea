@@ -15,17 +15,17 @@ full source qualification and release gates must pass before publication.
 ## Planned package set
 
 - `@emseepea/testing@0.24.0`
-- `@emseepea/create-api-backed-server@0.1.15`
-- `@emseepea/create-database-schema-server@0.1.15`
-- `@emseepea/create-html-ui-server@0.1.15`
-- `@emseepea/create-mongodb-backed-server@0.1.15`
-- `@emseepea/create-multi-instance-postgres-server@0.1.15`
-- `@emseepea/create-openapi-backed-server@0.1.15`
-- `@emseepea/create-progress-streaming-server@0.1.15`
-- `@emseepea/create-react-ui-server@0.1.15`
-- `@emseepea/create-resources-and-prompts-server@0.1.15`
-- `@emseepea/create-soap-backed-server@0.1.15`
-- `@emseepea/create-tool-server@0.1.15`
+- `@emseepea/create-api-backed-server@0.1.16`
+- `@emseepea/create-database-schema-server@0.1.16`
+- `@emseepea/create-html-ui-server@0.1.16`
+- `@emseepea/create-mongodb-backed-server@0.1.16`
+- `@emseepea/create-multi-instance-postgres-server@0.1.16`
+- `@emseepea/create-openapi-backed-server@0.1.16`
+- `@emseepea/create-progress-streaming-server@0.1.16`
+- `@emseepea/create-react-ui-server@0.1.16`
+- `@emseepea/create-resources-and-prompts-server@0.1.16`
+- `@emseepea/create-soap-backed-server@0.1.16`
+- `@emseepea/create-tool-server@0.1.16`
 
 The initializer patches update generated projects to use the testing package.
 They do not enable browser journeys or install the optional Playwright dependency.
@@ -70,3 +70,9 @@ fixed authenticated Codex 0.159.2 trials, including initial, resumed, and fresh
 reads. Its supplemental bounded receipt remains in
 [codex-cli-behaviour-2026-10-13.json](codex-cli-behaviour-2026-10-13.json).
 The combined source still requires full qualification and release gates.
+
+
+Testing 0.23.6 and initializers 0.1.15 are now the released baseline. Release
+candidate 7c22d7e passed its unchanged failed-job retry after registry propagation,
+and PR #167 promoted it to latest. The native adapter targets fresh versions
+0.24.0 and 0.1.16 after rebasing onto merge-back fe6076d.
