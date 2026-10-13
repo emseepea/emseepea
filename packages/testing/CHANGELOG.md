@@ -1,5 +1,16 @@
 # @emseepea/testing
 
+## 0.24.1
+
+### Patch Changes
+
+- [`a3a0d6c`](https://github.com/emseepea/emseepea/commit/a3a0d6c8c2d1d75bbb9f970d9e290b287563151f) Thanks [@tompahoward](https://github.com/tompahoward)! - Record MCP-client and Claude CLI versions as provenance without rejecting them by version number. The expected client package identity and valid version metadata remain required. Qualification still depends on native invocation, event, isolation and failure-handling checks.
+
+  Generated starter projects use the corrected testing dependency. This patch does not add native resource-helper support or change failed-call adjudication.
+
+- Updated dependencies [[`a3a0d6c`](https://github.com/emseepea/emseepea/commit/a3a0d6c8c2d1d75bbb9f970d9e290b287563151f)]:
+  - @emseepea/server@0.23.1
+
 ## 0.24.0
 
 ### Minor Changes

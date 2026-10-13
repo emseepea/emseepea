@@ -151,3 +151,102 @@ user and assistant messages, and reports the current contract test count.
 | File | SHA-256 | Result |
 | --- | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `3a1481e5c4e710bc63e80f9a774b9a3e490351d04373d742cf85c2054fd60fbd` | PASS |
+
+## Issue #145 Completed Experimental Release
+
+Author self-review: the record identifies the versions available to users,
+links completed checks, and distinguishes the released adapter from pending
+live host verification. It explains local human login and CI limitations.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `e67a9507939ff479f8fce2f4070c721cf3a2c65a98e603f3d870ac67b27444e1` | PASS |
+
+## Reopened Performance Conflict and Diagnostic Clock
+
+Independent cognitive-accessibility, voice and external-communication review: PASS.
+The records distinguish historical closure, current recurrence, nonqualifying
+diagnostic observations and the above-appetite standing release risk. Shared-clock
+GC overlap is explicitly not causal attribution. The bounded cloud diagnostic
+does not replace the failed original population or qualify publication.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/problems/README.md` | `382bf7457ec2b3c85df42a0059aafe01532eb18643cf5e2c712820f1c92ca7af` | PASS |
+| `docs/problems/README-history.md` | `43228581a748a45c0e4743a28096c4319a636d117a99b4f9dfe81b675573ef53` | PASS |
+| `docs/problems/known-error/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md` | `eb0df4dc9a4f39525a7065c5688a18bc0bf7ef0e30db2707b848723d7a840612` | PASS |
+| `docs/risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md` | `61d40f2a93fb4537bdf1aabfe0b9ca61504a1f82020849950c73cfa1d5d3dbb9` | PASS |
+| `docs/reviews/diagnostic-clock-2026-10-13.json` | `e9a5d547b721339c88402b3b3ec247661ac3222cc3913fd2afc15ebb51857e31` | PASS |
+
+
+## Released Baseline and Open Performance Investigation
+
+Independent cognitive-accessibility, voice and external-communication review: PASS.
+Published versions and passed retry workflows remain historical observations; the
+original failed complete population remains explicit. Diagnostic-only PASS does
+not close P015/R014 or authorize a further package release. Live native-host
+qualification remains pending.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `678c2221eef95644157bfb0ffc80e4c43a6d3fe9b98413a7aa7c8e8f609aad60` | PASS |
+
+## Proposed Complete-Population Performance Control
+
+Independent JTBD, cognitive-accessibility, voice and external-communication review: PASS.
+Proposed control status, retained failures, unchanged limits and unresolved standing
+release risk remain explicit. Contract checks are not performance qualification.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/problems/known-error/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md` | `6bb03a5904ee304e995656c3cb901a0fd8410b412021e7c2ce16f18867b2aec3` | PASS |
+| `docs/risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md` | `0312f7cd6d945f69931f7d852b6fcb2a29de1348a024e8e3c1ad50c47f396b61` | PASS |
+| `docs/reviews/current-release-readiness.md` | `e14fbdad3934bba1a9d8110768acf4b7c05549658b964aa119dfeebc5224683e` | PASS |
+
+## Verified Classification Control and Remaining CLI Guard Removal
+
+Independent JTBD, cognitive-accessibility, voice and external-communication review: PASS.
+Copy distinguishes the verified classification gap from unknown historical
+hardware causation, and selected guard changes from their pending exact gates.
+Original failures and bounded native evidence remain explicit.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `e12a623d7be24744e8b29268be4c49fa45f0f474e80cc0da129b46bd7af3ffc6` | PASS |
+| `docs/risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md` | `dddc328950555b33d5f9f2093c581d511948f23e246d7b879f907781f1ec322c` | PASS |
+| `docs/problems/closed/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md` | `9addfbeeae9fe3e91b7d247fda93be1d6224e0e98cd1a35a1534e685b903733f` | PASS |
+| `docs/problems/README.md` | `89c5c34ad8dc1eda2d21be08d4b7450757ba9158fb1c700cf0949cdbea230446` | PASS |
+| `docs/problems/README-history.md` | `f5d564589f4b18ecb8257275da4fcb2b04879351451b37348b31d3230d77cc49` | PASS |
+| `.changeset/testing-client-and-claude-provenance.md` | `a7a57ac4095d2fcd5ec986b725446a9d0543e637750a022d481a63d242519ad5` | PASS |
+| `docs/reviews/remaining-cli-provenance-2026-10-13.json` | `b2441e6a9b425c4bea9bc4131f92bd62a61b635d944c4dc181878addeb115ed5` | PASS |
+| `docs/reviews/fixed-population-control-verification-2026-10-13.json` | `83abfca2a943ed94b2424485bd17424441b7dcae8d0ae545992673d0cf531025` | PASS |
+
+## Planned Package Set Correction
+
+Independent cognitive-accessibility, voice and external-communication review: PASS.
+The machine-read list identifies only planned versions; published baseline facts
+remain separate. The failed push preflight is retained and no publication is claimed.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `b184eef5d83f641a8fd0d0f9bf0d3dd79908038d460ba007ac76110e9b4e9b65` | PASS |
+
+## Schema Metadata Reuse Candidate
+
+Independent JTBD, cognitive clarity, voice and external-copy review: PASS.
+The combined risk-only assessment is distinct from source and publication gates.
+The original Node 22 failure remains retained; optimization and diagnostic
+evidence make no claim about its cause or verified repair.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `820c1eb33e616bf429735c5586ec113870f2b459b65ae6b24cffd4e911435aad` | PASS |
+| `.changeset/reuse-captured-input-metadata.md` | `a94ffdb877adfb50bb337ddbb9250a60dc381ee1491537b58ba034ecff4a94e3` | PASS |
+| `docs/problems/open/022-accepted-path-cpu-budget-is-unqualified-on-the-node-22-ci-profile.md` | `deff59bce198c9a2068541799d36e0e199d78526918457d9265c754d43d1222d` | PASS |
+| `docs/problems/README.md` | `58e0fa9a14473a5183de3c300730b427c26eb1eb98edabac17acb0750fe3b6d9` | PASS |
+
+Actual dependency propagation reviewed independently: sixteen planned packages; source and publication gates remain separate.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `e040a504accfcd6e8d0b369b51d219047487c8aa9780398d12f799d0558f5768` | PASS |

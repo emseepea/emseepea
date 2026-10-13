@@ -10,10 +10,11 @@ export async function measureProductionBoundaryClass(requestClass, measure) {
   return classifyProductionBoundaryCohorts(requestClass, cohorts);
 }
 
-export function productionBoundaryTraceName(requestClass, cohort) {
+export function productionBoundaryTraceName(requestClass, cohort, population) {
   assert.match(requestClass, /^(?:accepted|rate-limited|capacity-exhausted|malformed)$/);
   assert.ok(Number.isInteger(cohort) && cohort >= 1 && cohort <= productionBoundaryCohortCount);
-  return `production-${requestClass}-cohort-${cohort}.cpuprofile`;
+  if (population !== undefined) assert.ok(Number.isInteger(population) && population >= 1 && population <= 3);
+  return `production-${requestClass}${population === undefined ? "" : `-population-${population}`}-cohort-${cohort}.cpuprofile`;
 }
 
 export function classifyProductionBoundaryCohorts(requestClass, cohorts) {
@@ -54,12 +55,12 @@ export function classifyProductionBoundaryCohorts(requestClass, cohorts) {
   return {
     requestClass,
     expectedStatus: cohorts[0].expectedStatus,
-    cohorts: cohorts.map(({ throughputSamples, allocationSamples, wireSamples, ...item }) => ({
+    cohorts: cohorts.map((item) => ({
       ...item,
-      throughputRequestsPerSecond: summarize(throughputSamples),
+      throughputRequestsPerSecond: summarize(item.throughputSamples),
       frameworkProcessCpuMsPerRequest: summarize(item.cpuSamples.map(({ cpuMs }) => cpuMs)),
-      sampledTransientAllocationBytesPerRequest: summarize(allocationSamples),
-      frameworkAddedWireBytesPerRequest: summarize(wireSamples),
+      sampledTransientAllocationBytesPerRequest: summarize(item.allocationSamples),
+      frameworkAddedWireBytesPerRequest: summarize(item.wireSamples),
     })),
     throughputRequestsPerSecond: throughputSummary,
     frameworkProcessCpuMsPerRequest: cpuSummary,

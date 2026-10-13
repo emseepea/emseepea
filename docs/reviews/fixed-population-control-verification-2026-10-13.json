@@ -1,0 +1,246 @@
+{
+  "source": "b63af5bac00d6f22457e0fdd822d55766c13c3de",
+  "run": 38401142463,
+  "attempt": 1,
+  "thresholdsChanged": false,
+  "resampling": false,
+  "runtimes": [
+    {
+      "node": "v22.23.2",
+      "profile": {
+        "name": "github-ubuntu-24.04-standard",
+        "node": "v22.23.2",
+        "platform": "linux-x64",
+        "cpu": "AMD EPYC 9V45 96-Core Processor",
+        "logicalCpus": 4,
+        "concurrency": 16,
+        "durationMs": 1000,
+        "cohortCount": 3,
+        "throughputRunsPerCohort": 3,
+        "cpuSamplesPerCohort": 200,
+        "allocationSamplesPerCohort": 80,
+        "wireSamplesPerCohort": 10
+      },
+      "populations": [
+        {
+          "population": 1,
+          "status": "PASS",
+          "classes": [
+            {
+              "requestClass": "accepted",
+              "cpuP95": 0.787,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "rate-limited",
+              "cpuP95": 0.116,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "capacity-exhausted",
+              "cpuP95": 0.11,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "malformed",
+              "cpuP95": 0.205,
+              "status": "PASS",
+              "cpuSamples": 600
+            }
+          ]
+        },
+        {
+          "population": 2,
+          "status": "PASS",
+          "classes": [
+            {
+              "requestClass": "accepted",
+              "cpuP95": 1.541,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "rate-limited",
+              "cpuP95": 0.095,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "capacity-exhausted",
+              "cpuP95": 0.113,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "malformed",
+              "cpuP95": 0.233,
+              "status": "PASS",
+              "cpuSamples": 600
+            }
+          ]
+        },
+        {
+          "population": 3,
+          "status": "PASS",
+          "classes": [
+            {
+              "requestClass": "accepted",
+              "cpuP95": 0.848,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "rate-limited",
+              "cpuP95": 0.094,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "capacity-exhausted",
+              "cpuP95": 0.113,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "malformed",
+              "cpuP95": 0.204,
+              "status": "PASS",
+              "cpuSamples": 600
+            }
+          ]
+        }
+      ],
+      "cpuSamples": 7200,
+      "qualifies": true
+    },
+    {
+      "node": "v24.21.0",
+      "profile": {
+        "name": "github-ubuntu-24.04-standard",
+        "node": "v24.21.0",
+        "platform": "linux-x64",
+        "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+        "logicalCpus": 4,
+        "concurrency": 16,
+        "durationMs": 1000,
+        "cohortCount": 3,
+        "throughputRunsPerCohort": 3,
+        "cpuSamplesPerCohort": 200,
+        "allocationSamplesPerCohort": 80,
+        "wireSamplesPerCohort": 10
+      },
+      "populations": [
+        {
+          "population": 1,
+          "status": "PASS",
+          "classes": [
+            {
+              "requestClass": "accepted",
+              "cpuP95": 1.796,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "rate-limited",
+              "cpuP95": 0.183,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "capacity-exhausted",
+              "cpuP95": 0.206,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "malformed",
+              "cpuP95": 0.307,
+              "status": "PASS",
+              "cpuSamples": 600
+            }
+          ]
+        },
+        {
+          "population": 2,
+          "status": "PASS",
+          "classes": [
+            {
+              "requestClass": "accepted",
+              "cpuP95": 1.929,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "rate-limited",
+              "cpuP95": 0.201,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "capacity-exhausted",
+              "cpuP95": 0.221,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "malformed",
+              "cpuP95": 0.299,
+              "status": "PASS",
+              "cpuSamples": 600
+            }
+          ]
+        },
+        {
+          "population": 3,
+          "status": "PASS",
+          "classes": [
+            {
+              "requestClass": "accepted",
+              "cpuP95": 1.85,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "rate-limited",
+              "cpuP95": 0.172,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "capacity-exhausted",
+              "cpuP95": 0.18,
+              "status": "PASS",
+              "cpuSamples": 600
+            },
+            {
+              "requestClass": "malformed",
+              "cpuP95": 0.288,
+              "status": "PASS",
+              "cpuSamples": 600
+            }
+          ]
+        }
+      ],
+      "cpuSamples": 7200,
+      "qualifies": true
+    }
+  ],
+  "artifactZipSha256": {
+    "node22": "fd8904f12bfe5dbd0ecb72798f4619e4e7373db283f1c7173917a9d4a93815e9",
+    "node24": "2cf9980e4195e19ce3f2146339dc7ca2215f2d6d85e2036f83ee5c3b4954a4a6"
+  },
+  "assessment": {
+    "classificationGap": "verified",
+    "standingRisk": 3,
+    "guardReleaseCumulativeRisk": 5,
+    "limits": [
+      "Historical failed population remains valid",
+      "Historical variation cause and hardware normalization are not established",
+      "No performance equivalence or live ChatGPT qualification claim",
+      "Guard source still requires exact qualification and normal release gates"
+    ]
+  }
+}

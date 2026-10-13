@@ -3852,14 +3852,27 @@ function promptArguments(schema: z.ZodObject): readonly Readonly<Record<string, 
 }
 
 function sdkMetadataSchema<Schema extends z.ZodType>(schema: Schema): Schema {
+  // The declaration is captured once, but the SDK reads metadata again for
+  // subsequent registrations and requests. Keep output lazy: an input
+  // transform can be valid even when it has no representable output schema.
+  const documents = new Map<"input" | "output", Record<string, unknown>>();
+  const document = (io: "input" | "output") => {
+    let captured = documents.get(io);
+    if (!captured) {
+      captured = deepFreeze(structuredClone(jsonMetadataSchema(schema, io)));
+      documents.set(io, captured);
+    }
+    return captured;
+  };
+  document("input");
   return {
     "~standard": {
       version: 1,
       vendor: "emseepea",
       validate: (value: unknown) => ({ value }),
       jsonSchema: {
-        input: () => jsonMetadataSchema(schema, "input"),
-        output: () => jsonMetadataSchema(schema, "output"),
+        input: () => document("input"),
+        output: () => document("output"),
       },
     },
   } as unknown as Schema;

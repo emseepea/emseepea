@@ -38,6 +38,10 @@ classification control is absent.
   independent cohorts with a fresh server process and unique trace identity.
   The gate applies the unchanged ADR-0014 limits to the complete pooled sample
   population rather than accepting a failure-triggered retry.
+- **Fixed complete-population classification** — Each invocation collects three
+  complete populations; all must pass. Mixed results are INCONCLUSIVE and
+  incomplete measurements cannot qualify. Diagnostic files are separately
+  named and cannot replace ordinary observations.
 - **Complete retained evidence** — Continuous integration retains every cohort
   summary and raw CPU sample. Missing, malformed, failed, or cancelled cohorts
   fail closed.
@@ -47,7 +51,7 @@ exact `main` commit `1928f9662d8a2cb7f86cdf0e01e3f71f8e9b30ff` and passed.
 
 ## Residual Risk
 
-Impact × Likelihood *after* controls.
+Impact × Likelihood after controls.
 
 - **Impact**: 3 (Moderate)
 - **Likelihood**: 1 (Rare)
@@ -55,12 +59,29 @@ Impact × Likelihood *after* controls.
 - **Residual Band**: Low
 - **Within appetite?**: Yes
 
+Independent assessment re-rated the classification-gap risk after exact main
+`b63af5b` passed first-attempt Quality `38401142463` on Node 22.23.2 and 24.21.0.
+Each runtime retained three complete uninstrumented PASS populations, with
+7,200 CPU samples and complete throughput, allocation and wire observations.
+Artifact ZIP hashes and every entry hash were verified; classifications were
+independently recomputed from raw cohorts. No thresholds changed or measurements
+were resampled. See the [bounded verification receipt](../reviews/fixed-population-control-verification-2026-10-13.json).
+
+The original failed population and later diagnostic pass remain valid evidence.
+Hardware normalization and the cause of historical variation are not established.
+Passing fixed populations do not establish performance equivalence.
+
 ## Treatment
 
-Maintain the fixed three-cohort classification and unchanged ADR-0014 limits.
-Re-open treatment if retained evidence shows a same-revision conflict under the
-complete pooled population, a missing cohort is accepted, or a true regression
-passes.
+Every invocation now collects exactly three complete populations. Each retains
+the existing three-cohort calculation and unchanged ADR-0014 limits. Qualification
+requires all three complete, uninstrumented populations to pass. Disagreement is
+INCONCLUSIVE; missing, malformed, failed or cancelled measurements are INCOMPLETE.
+Raw samples, complete checkpoints and bounded incomplete-cohort receipts remain
+retained. Diagnostic filenames cannot overwrite ordinary evidence.
+
+Reopen treatment if disagreement or incompleteness is accepted, evidence is
+lost, a result-dependent retry qualifies a revision, or a real regression passes.
 
 ## Monitoring
 
@@ -87,3 +108,7 @@ passes.
   three-cohort classification and Quality run `38342282754` passed the control
   on Node.js 22 and 24 for exact `main` commit `1928f966` without changing
   ADR-0014's thresholds.
+
+- 2026-10-13: Reopened treatment after main `30d09eb` failed the accepted CPU budget (5.312 ms pooled p95) and one unchanged diagnostic rerun passed. Preserve both complete populations; no threshold or acceptance change is authorized by the conflict.
+
+- 2026-10-13: Verified fixed complete-population classification on exact b63af5b, first-attempt Quality 38401142463. Independent standing risk 3/25; original conflicts and unresolved hardware causation retained.

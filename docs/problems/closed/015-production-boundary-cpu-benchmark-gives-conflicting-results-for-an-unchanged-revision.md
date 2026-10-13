@@ -1,6 +1,6 @@
 # Problem 015: Production-Boundary CPU Benchmark Gives Conflicting Results for an Unchanged Revision
 
-**Status**: Closed (closed-on-evidence 2026-10-13 - Quality run `38342282754`. Recovery: rerun `/wr-itil:transition-problem 015 known-error` to reopen)
+**Status**: Closed (classification-gap treatment verified 2026-10-13)
 **Reported**: 2026-09-24
 **Priority**: 15 (High) — Impact: 3 × Likelihood: 5
 **Origin**: internal
@@ -12,7 +12,58 @@
 An observed and uncontrolled measurement conflict disrupted continuous
 integration and release qualification.
 
-## Description
+## Current control verification
+
+Fixed complete-population classification reached main in `b63af5b`. First-attempt
+Quality run `38401142463` passed on Node 22.23.2 and 24.21.0. Both retained three
+complete uninstrumented PASS populations and 7,200 CPU samples per runtime,
+with complete throughput, allocation and wire observations. ZIP and entry hashes
+were verified, and classifications recomputed independently from raw cohorts.
+No budget changed and no favourable retry replaced these fixed results.
+
+The treatment closes the missing disagreement-classification control. It does
+not establish the cause of historical variation or hardware normalization. The
+original failed population remains evidence. Reopen if disagreement, incomplete
+evidence or a result-dependent retry is accepted as qualification.
+
+## Reopened evidence
+
+Exact main `30d09eba29605c13f0e95ed14ef43e6a6b239752` failed Quality
+run `38382578560` attempt 1 on Node 22.23.2. Accepted-request pooled 95th-percentile (p95) process CPU per request
+was 5.312 ms against the unchanged 5 ms limit; all three cohorts and
+600 samples were retained. The single unchanged failed-job diagnostic rerun
+passed on attempt 2. Both results remain evidence; the favourable rerun does
+not establish which population represents the revision or erase the failure.
+
+The earlier closure evidence below remains historical evidence. The fixed
+three-cohort control exists, but does not resolve disagreement between complete
+invocations. Garbage collection, allocation and runtime effects are hypotheses;
+the old trace clocks do not prove exact overlap with measured CPU windows.
+
+The reopened investigation added bounded diagnostic records using one Node
+performance clock for garbage collection (GC) and CPU-reading intervals. It leaves
+all budgets, cohorts and ordinary CPU calculations unchanged. Profiled results
+are nonqualifying. No new package release is selected by this instrumentation.
+<!-- no-changeset-reference -->
+
+Require complete ordered CPU windows, finite nested bounds and complete GC
+records before interpretation. Overflow or an unfinished window prevents
+absence claims. Preserve every failure and the earlier closure evidence; do
+not retry measurements until a favourable result appears.
+
+## Complete-population control
+
+Every invocation collects exactly three complete populations, each retaining
+the existing three-cohort calculation. All must pass to qualify; disagreement
+is INCONCLUSIVE and an incomplete population is INCOMPLETE. The budgets stay
+unchanged. No result-dependent retry or pooling across populations is allowed.
+
+The control retains raw samples and incomplete-cohort checkpoints, cancels
+subsequent measurements after external interruption and terminates child
+listeners. A fixed verification invocation must be declared before collection.
+The verified control does not establish performance equivalence.
+
+## Original description
 
 Quality run `35912998949` gave conflicting production-boundary CPU results for
 the same revision. The Node.js 22 job measured accepted-request 95th-percentile
@@ -23,20 +74,20 @@ The evidence does not establish whether the failing or passing measurement was
 representative. Shared-runner contention, runtime variation, and benchmark
 nondeterminism are investigation hypotheses, not established causes.
 
-## Symptoms
+## Original symptoms
 
 - One Node.js 22 measurement exceeded the fixed CPU ceiling.
 - The same revision passed on Node.js 24 and on an unchanged Node.js 22 rerun.
 - The gate reports a pass or fail from one set of CPU samples without an
   independent variance classification.
 
-## Workaround
+## Prior workaround
 
 One bounded failed-job rerun can show whether an unchanged revision produces a
 different result. The rerun is diagnostic evidence only. It does not establish
 which result is representative and does not resolve the missing control.
 
-## Impact Assessment
+## Original impact assessment
 
 - **Who is affected**: maintainers waiting for continuous integration and
   release qualification.
@@ -46,7 +97,7 @@ which result is representative and does not resolve the missing control.
 - **Analytics**: Quality run `35912998949`; Node.js 22 accepted-request p95 CPU
   7.053 ms on the failed attempt; unchanged failed-job rerun passed.
 
-## Root Cause Analysis
+## Original root cause analysis
 
 Architecture Decision Record (ADR) 0014 requires repeated benchmark runs to
 include variance. The current CPU gate collects 200 request samples during one
@@ -58,7 +109,7 @@ hardware normalization may be inadequate. It does not justify weakening the
 5 ms ceiling, changing the pinned profile, or reducing correctness or security
 checks.
 
-### Investigation Tasks
+### Original investigation tasks
 
 - [x] Reproduce same-revision variance across repeated, independently invoked
       benchmark runs on the continuous-integration runner profile.
@@ -69,7 +120,7 @@ checks.
       without weakening its fixed CPU ceiling or acceptance semantics.
 - [x] Re-rate the linked standing risk from exact post-control evidence.
 
-## Fix Strategy
+## Prior fix strategy
 
 Run exactly three independent cohorts for every request class, each with a
 fresh server process and unique trace identity. Classify the complete pooled
@@ -80,14 +131,14 @@ malformed, failed, or cancelled.
 The benchmark control is repository qualification infrastructure and does not
 publish an npm package. <!-- no-changeset-reference -->
 
-## Fix Released
+## Prior fix released
 
 Released to `main` in commit `808520fb0445c12266ba69dba5509921fe2c3c51`
 on 2026-10-13. Quality run `38335751990` passed for the then-current `main` commit
 `11a70ef07844c8bbed432218e590225b9a164d6d`, including the governed
 production-boundary budget on Node.js 22 and 24.
 
-## Closure Evidence
+## Prior closure evidence
 
 Verification completed on exact `main` commit
 `1928f9662d8a2cb7f86cdf0e01e3f71f8e9b30ff`. Quality run
@@ -96,9 +147,7 @@ Node.js 22 and 24.
 
 ## Dependencies
 
-- **Blocks**: none. Publication and release qualification were blocked while
-  residual risk was above appetite; Quality run `38342282754` verified the
-  control.
+- **Blocks**: none after the classification-gap treatment was verified. Every later release still requires its exact qualification and fresh risk assessment.
 - **Blocked by**: (none)
 - **Composes with**: (none)
 

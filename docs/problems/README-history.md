@@ -85,3 +85,15 @@ Previous backlog headline archived when P007 moved to known error:
 > Last reviewed: 2026-10-06 **P021 captured** - Release troubleshooting adds unnecessary controls (lightweight aside via `/wr-itil:capture-problem`).
 
 > Last reviewed: 2026-10-13 **P015 verification pending** - Fixed three-cohort classification passed the production-boundary budget on Node.js 22 and 24.
+
+## 2026-10-13: P015 recurrence
+
+Reopened P015 after Quality run `38382578560` produced a complete failed population and one unchanged passing diagnostic on exact main `30d09eb`. Earlier closure evidence is retained. Neither the diagnostic pass nor investigation instrumentation qualifies the package release.
+
+## 2026-10-13: P015 classification-gap treatment verified
+
+First-attempt Quality 38401142463 passed the fixed three complete populations
+on exact main b63af5b, Node 22.23.2 and 24.21.0. Independent raw-cohort recomputation
+and artifact hashes verified the control. Historical failures remain valid;
+this closes the classification gap without establishing hardware normalization
+or the cause of variation.

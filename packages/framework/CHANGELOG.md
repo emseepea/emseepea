@@ -1,5 +1,13 @@
 # @emseepea/server
 
+## 0.23.1
+
+### Patch Changes
+
+- [`a3a0d6c`](https://github.com/emseepea/emseepea/commit/a3a0d6c8c2d1d75bbb9f970d9e290b287563151f) Thanks [@tompahoward](https://github.com/tompahoward)! - Reuse captured schema metadata across SDK registrations and requests while preserving input validation and published tool descriptions. Output metadata remains lazy so valid input transforms do not require an output JSON Schema.
+
+  Generated starter projects use the updated server dependency. Performance qualification still requires the unchanged budget checks on both supported CI runtimes.
+
 ## 0.23.0
 
 ### Minor Changes

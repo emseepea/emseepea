@@ -1,0 +1,305 @@
+{
+  "purpose": "One matched local optimization experiment; does not qualify failed CI Node22 profile.",
+  "runtime": "v24.19.0",
+  "order": [
+    "baseline",
+    "candidate"
+  ],
+  "invocationsPerArm": 1,
+  "populationCount": 3,
+  "limits": {
+    "throughputMin": 100,
+    "cpuP95MsMax": 5,
+    "allocationP95BytesMax": 262144,
+    "wireMeanBytesMax": 2048
+  },
+  "noRetry": true,
+  "noDiagnosticsInQualification": true,
+  "sourceProtocolSha256": "e0df4ce6cd042da8b92e5bab8953b322ad9b63efa9181287e950018b4561c5f7",
+  "status": "fixed-local-experiment-complete",
+  "retainedFailedQuality": {
+    "runId": 38409314809,
+    "source": "a3a0d6c8c2d1d75bbb9f970d9e290b287563151f",
+    "node22Aggregate": "INCONCLUSIVE",
+    "acceptedCpuP95Ms": [
+      4.212,
+      6.326,
+      4.317
+    ],
+    "archiveSha256": "ff7e198f82cdb753e4bf25f2f394d4cbd5ce0819b68a28dd2300e64b5565b8d7",
+    "entryCount": 154,
+    "node24": "PASS",
+    "noRerun": true
+  },
+  "independentReviews": {
+    "architecture": "PASS",
+    "jtbd": "PASS",
+    "prospectiveCumulativeRisk": 5,
+    "riskConditions": [
+      "full exact-source qualification",
+      "fixed ordinary CI populations on Node22 and Node24",
+      "packed consumers and registry qualification"
+    ],
+    "repairClaim": false,
+    "actualPackageCount": 16
+  },
+  "focusedContractTests": {
+    "passed": 14,
+    "boundaries": [
+      "input transforms without output schema conversion",
+      "recursive metadata and nested invalid input",
+      "repeated SDK discovery",
+      "prompt completion"
+    ],
+    "correctedTestConstructionFailuresRetained": true
+  },
+  "localExperiment": {
+    "qualifiesFailedCiProfile": false,
+    "arms": {
+      "baseline": {
+        "status": "PASS",
+        "profile": {
+          "name": "cloud-matched-metadata-cache",
+          "node": "v24.19.0",
+          "platform": "linux-x64",
+          "cpu": "AMD EPYC 9V74 80-Core Processor",
+          "logicalCpus": 5,
+          "concurrency": 16,
+          "durationMs": 1000,
+          "cohortCount": 3,
+          "throughputRunsPerCohort": 3,
+          "cpuSamplesPerCohort": 200,
+          "allocationSamplesPerCohort": 80,
+          "wireSamplesPerCohort": 10
+        },
+        "manifestSha256": "45d5acad49c25905325897f4e300aab64c385faaa8955a72af957daf07a24f8f",
+        "populations": [
+          {
+            "population": 1,
+            "status": "PASS",
+            "results": [
+              {
+                "requestClass": "accepted",
+                "cpuP95Ms": 1.309,
+                "allocationP95Bytes": 63416,
+                "throughputMin": 984.9550499396488,
+                "wireMeanBytes": 991
+              },
+              {
+                "requestClass": "rate-limited",
+                "cpuP95Ms": 0.247,
+                "allocationP95Bytes": 24416,
+                "throughputMin": 7271.908878048581,
+                "wireMeanBytes": 842
+              },
+              {
+                "requestClass": "capacity-exhausted",
+                "cpuP95Ms": 0.295,
+                "allocationP95Bytes": 24464,
+                "throughputMin": 7566.279339973748,
+                "wireMeanBytes": 855
+              },
+              {
+                "requestClass": "malformed",
+                "cpuP95Ms": 0.429,
+                "allocationP95Bytes": 32904,
+                "throughputMin": 4717.391665472398,
+                "wireMeanBytes": 497
+              }
+            ]
+          },
+          {
+            "population": 2,
+            "status": "PASS",
+            "results": [
+              {
+                "requestClass": "accepted",
+                "cpuP95Ms": 1.62,
+                "allocationP95Bytes": 64512,
+                "throughputMin": 637.0630137507726,
+                "wireMeanBytes": 991
+              },
+              {
+                "requestClass": "rate-limited",
+                "cpuP95Ms": 0.276,
+                "allocationP95Bytes": 23424,
+                "throughputMin": 9338.264103397873,
+                "wireMeanBytes": 842
+              },
+              {
+                "requestClass": "capacity-exhausted",
+                "cpuP95Ms": 0.271,
+                "allocationP95Bytes": 23184,
+                "throughputMin": 8377.885077194629,
+                "wireMeanBytes": 855
+              },
+              {
+                "requestClass": "malformed",
+                "cpuP95Ms": 0.372,
+                "allocationP95Bytes": 32032,
+                "throughputMin": 4925.37207456045,
+                "wireMeanBytes": 497
+              }
+            ]
+          },
+          {
+            "population": 3,
+            "status": "PASS",
+            "results": [
+              {
+                "requestClass": "accepted",
+                "cpuP95Ms": 1.519,
+                "allocationP95Bytes": 61592,
+                "throughputMin": 1051.6075075898032,
+                "wireMeanBytes": 991
+              },
+              {
+                "requestClass": "rate-limited",
+                "cpuP95Ms": 0.319,
+                "allocationP95Bytes": 23744,
+                "throughputMin": 8169.332656020321,
+                "wireMeanBytes": 842
+              },
+              {
+                "requestClass": "capacity-exhausted",
+                "cpuP95Ms": 0.234,
+                "allocationP95Bytes": 23856,
+                "throughputMin": 8337.798883303476,
+                "wireMeanBytes": 855
+              },
+              {
+                "requestClass": "malformed",
+                "cpuP95Ms": 0.359,
+                "allocationP95Bytes": 32160,
+                "throughputMin": 3857.3851900086324,
+                "wireMeanBytes": 497
+              }
+            ]
+          }
+        ]
+      },
+      "candidate": {
+        "status": "PASS",
+        "profile": {
+          "name": "cloud-matched-metadata-cache",
+          "node": "v24.19.0",
+          "platform": "linux-x64",
+          "cpu": "AMD EPYC 9V74 80-Core Processor",
+          "logicalCpus": 5,
+          "concurrency": 16,
+          "durationMs": 1000,
+          "cohortCount": 3,
+          "throughputRunsPerCohort": 3,
+          "cpuSamplesPerCohort": 200,
+          "allocationSamplesPerCohort": 80,
+          "wireSamplesPerCohort": 10
+        },
+        "manifestSha256": "a9f50dc101a46c0b24539c0a730c369bca08845a7173ba5b39f6847dfeb0c160",
+        "populations": [
+          {
+            "population": 1,
+            "status": "PASS",
+            "results": [
+              {
+                "requestClass": "accepted",
+                "cpuP95Ms": 1.135,
+                "allocationP95Bytes": 67640,
+                "throughputMin": 990.794868340605,
+                "wireMeanBytes": 991
+              },
+              {
+                "requestClass": "rate-limited",
+                "cpuP95Ms": 0.272,
+                "allocationP95Bytes": 24664,
+                "throughputMin": 7450.867543521687,
+                "wireMeanBytes": 842
+              },
+              {
+                "requestClass": "capacity-exhausted",
+                "cpuP95Ms": 0.276,
+                "allocationP95Bytes": 25160,
+                "throughputMin": 8290.938841136516,
+                "wireMeanBytes": 855
+              },
+              {
+                "requestClass": "malformed",
+                "cpuP95Ms": 0.338,
+                "allocationP95Bytes": 32448,
+                "throughputMin": 4817.727829045749,
+                "wireMeanBytes": 497
+              }
+            ]
+          },
+          {
+            "population": 2,
+            "status": "PASS",
+            "results": [
+              {
+                "requestClass": "accepted",
+                "cpuP95Ms": 1.095,
+                "allocationP95Bytes": 60840,
+                "throughputMin": 1143.0490405031535,
+                "wireMeanBytes": 991
+              },
+              {
+                "requestClass": "rate-limited",
+                "cpuP95Ms": 0.231,
+                "allocationP95Bytes": 23728,
+                "throughputMin": 8992.576918578377,
+                "wireMeanBytes": 842
+              },
+              {
+                "requestClass": "capacity-exhausted",
+                "cpuP95Ms": 0.365,
+                "allocationP95Bytes": 24032,
+                "throughputMin": 7299.496599307658,
+                "wireMeanBytes": 855
+              },
+              {
+                "requestClass": "malformed",
+                "cpuP95Ms": 0.452,
+                "allocationP95Bytes": 32544,
+                "throughputMin": 4374.0819362751,
+                "wireMeanBytes": 497
+              }
+            ]
+          },
+          {
+            "population": 3,
+            "status": "PASS",
+            "results": [
+              {
+                "requestClass": "accepted",
+                "cpuP95Ms": 1.144,
+                "allocationP95Bytes": 64808,
+                "throughputMin": 864.9791124273178,
+                "wireMeanBytes": 991
+              },
+              {
+                "requestClass": "rate-limited",
+                "cpuP95Ms": 0.234,
+                "allocationP95Bytes": 23728,
+                "throughputMin": 8302.213777056251,
+                "wireMeanBytes": 842
+              },
+              {
+                "requestClass": "capacity-exhausted",
+                "cpuP95Ms": 0.263,
+                "allocationP95Bytes": 24336,
+                "throughputMin": 8996.635381307777,
+                "wireMeanBytes": 855
+              },
+              {
+                "requestClass": "malformed",
+                "cpuP95Ms": 0.378,
+                "allocationP95Bytes": 31840,
+                "throughputMin": 4617.574003634718,
+                "wireMeanBytes": 497
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

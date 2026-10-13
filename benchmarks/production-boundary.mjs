@@ -13,103 +13,108 @@ import {
   productionBoundaryTraceName,
 } from "./production-boundary-classification.mjs";
 
-const classes = ["accepted", "rate-limited", "capacity-exhausted", "malformed"];
+import { measureProductionBoundaryPopulations, productionBoundaryRequestClasses } from "./production-boundary-populations.mjs";
+
+import { readBenchmarkResponse } from "./benchmark-http.mjs";
+import { trackBenchmarkChild } from "./benchmark-child.mjs";
+
+const classes = productionBoundaryRequestClasses;
 const dailyRequests = 8_640_000;
-const results = [];
 const reportDirectory = process.env.EMSEEPEA_BENCHMARK_REPORT_DIR;
 const traceDirectory = process.env.EMSEEPEA_BENCHMARK_TRACE_DIR;
+const checkpointPrefix = traceDirectory ? "diagnostic-production" : "production";
+const stopped = new AbortController();
+const children = new Set();
+const cancel = () => {
+  stopped.abort();
+  for (const child of children) child.kill("SIGTERM");
+};
+process.once("SIGINT", cancel);
+process.once("SIGTERM", cancel);
 if (reportDirectory) await mkdir(reportDirectory, { recursive: true });
 if (traceDirectory) await mkdir(traceDirectory, { recursive: true });
 
-for (const requestClass of classes) {
-  const result = await measureProductionBoundaryClass(requestClass, measure);
-  results.push({
-    ...result,
-    projectedDailyCpuMsDelta: result.frameworkProcessCpuMsPerRequest.p95 * dailyRequests,
-    projectedDailyTransientAllocationBytesDelta:
-      result.sampledTransientAllocationBytesPerRequest.p95 * dailyRequests,
-    projectedDailyWireBytesDelta: result.frameworkAddedWireBytesPerRequest.mean * dailyRequests,
-  });
-}
-const report = {
-  diagnosticOnly: Boolean(traceDirectory),
-  profile: {
-    name: process.env.EMSEEPEA_BENCHMARK_PROFILE ?? "local",
-    node: process.version,
-    platform: `${process.platform}-${process.arch}`,
-    cpu: cpus()[0]?.model ?? "unknown",
-    logicalCpus: cpus().length,
-    concurrency: 16,
-    durationMs: 1_000,
-    cohortCount: productionBoundaryCohortCount,
-    throughputRunsPerCohort: 3,
-    cpuSamplesPerCohort: 200,
-    allocationSamplesPerCohort: 80,
-    wireSamplesPerCohort: 10,
-  },
-  projection: {
-    source: "no data - worst-case assumption",
-    incomingRequestsPerDay: dailyRequests,
-  },
-  results,
-  status: results.every(({ status }) => status === "PASS") ? "PASS" : "FLAG",
-};
+const report = await measureProductionBoundaryPopulations(async (population) => {
+  const results = [];
+  for (const requestClass of classes) {
+    const result = await measureProductionBoundaryClass(requestClass, async (kind, cohort) => {
+      const measured = await measure(kind, cohort, population);
+      if (reportDirectory) await writeFile(resolve(reportDirectory,
+        `${checkpointPrefix}-population-${population}-${kind}-cohort-${cohort}.json`), `${JSON.stringify(measured, null, 2)}\n`);
+      return measured;
+    });
+    results.push({
+      ...result,
+      projectedDailyCpuMsDelta: result.frameworkProcessCpuMsPerRequest.p95 * dailyRequests,
+      projectedDailyTransientAllocationBytesDelta:
+        result.sampledTransientAllocationBytesPerRequest.p95 * dailyRequests,
+      projectedDailyWireBytesDelta: result.frameworkAddedWireBytesPerRequest.mean * dailyRequests,
+    });
+  }
+  const populationReport = {
+    diagnosticOnly: Boolean(traceDirectory),
+    profile: {
+      name: process.env.EMSEEPEA_BENCHMARK_PROFILE ?? "local",
+      node: process.version,
+      platform: `${process.platform}-${process.arch}`,
+      cpu: cpus()[0]?.model ?? "unknown",
+      logicalCpus: cpus().length,
+      concurrency: 16,
+      durationMs: 1_000,
+      cohortCount: productionBoundaryCohortCount,
+      throughputRunsPerCohort: 3,
+      cpuSamplesPerCohort: 200,
+      allocationSamplesPerCohort: 80,
+      wireSamplesPerCohort: 10,
+    },
+    projection: {
+      source: "no data - worst-case assumption",
+      incomingRequestsPerDay: dailyRequests,
+    },
+    results,
+    status: results.every(({ status }) => status === "PASS") ? "PASS" : "FLAG",
+  };
+  if (reportDirectory) await writeFile(resolve(reportDirectory,
+    `${checkpointPrefix}-population-${population}.json`), `${JSON.stringify(populationReport, null, 2)}\n`);
+  return populationReport;
+}, { signal: stopped.signal });
 console.log(JSON.stringify(report, null, 2));
 if (reportDirectory) {
   await writeFile(resolve(reportDirectory, traceDirectory
     ? "production-diagnostic.json" : "production-boundary.json"), `${JSON.stringify(report, null, 2)}\n`);
 }
-assert.equal(report.status, "PASS", "production JSON boundary exceeded its budget");
+assert.equal(report.status, "PASS", "production JSON boundary populations did not all pass");
+if (!traceDirectory) assert.equal(report.qualifies, true, "production boundary qualification is incomplete");
 
-async function measure(requestClass, cohort) {
+async function measure(requestClass, cohort, population) {
+  stopped.signal.throwIfAborted();
   const child = fork(fileURLToPath(new URL("./json-boundary-server.mjs", import.meta.url)), [
     `--production-class=${requestClass}`,
   ], { execArgv: ["--expose-gc", ...(traceDirectory ? [
     "--cpu-prof",
     `--cpu-prof-dir=${resolve(traceDirectory)}`,
-    `--cpu-prof-name=${productionBoundaryTraceName(requestClass, cohort)}`,
+    `--cpu-prof-name=${productionBoundaryTraceName(requestClass, cohort, population)}`,
     "--trace-gc-nvp",
   ] : [])], stdio: ["ignore", "inherit", "inherit", "ipc"] });
+  const lifecycle = trackBenchmarkChild(child);
+  const ask = lifecycle.ask;
+  const throughput = [], cpuSamples = [], allocations = [], wireBytes = [];
+  let currentPhase = "starting";
+  let measurementError;
+  children.add(child);
+  child.once("exit", () => children.delete(child));
   const phase = (name) => {
+    currentPhase = name;
     if (traceDirectory) console.error(JSON.stringify({
-      requestClass, cohort, pid: child.pid, phase: name, timestampMs: Date.now(),
+      requestClass, cohort, population, pid: child.pid, phase: name, timestampMs: Date.now(),
     }));
   };
-  let nextMessageId = 0;
-  const ask = (type) => {
-    const id = ++nextMessageId;
-    return new Promise((resolve, reject) => {
-      const onMessage = (message) => {
-        if (message?.id !== id) return;
-        child.off("message", onMessage);
-        if (message.error) reject(new Error(message.error));
-        else resolve(message.value);
-      };
-      child.on("message", onMessage);
-      child.send({ id, type }, (error) => { if (error) reject(error); });
-    });
-  };
-  const serverUrl = await new Promise((resolve, reject) => {
-    child.once("error", reject);
-    child.on("message", (message) => {
-      if (message?.type === "ready") {
-        if (traceDirectory) console.error(JSON.stringify({
-          requestClass, cohort, pid: child.pid, phase: "ready", timeOriginMs: message.timeOriginMs,
-        }));
-        resolve(new URL(message.url));
-      }
-    });
-  });
-  serverUrl.hostname = "127.0.0.1";
-  const expectedStatus = {
-    accepted: 200,
-    "rate-limited": 429,
-    "capacity-exhausted": 503,
-    malformed: 400,
-  }[requestClass];
-  const request = () => send(serverUrl, requestClass);
-
+  const expectedStatus = { accepted: 200, "rate-limited": 429, "capacity-exhausted": 503, malformed: 400 }[requestClass];
   try {
+    const ready = await lifecycle.ready();
+    const serverUrl = new URL(ready.url);
+    serverUrl.hostname = "127.0.0.1";
+    const request = () => { stopped.signal.throwIfAborted(); return send(serverUrl, requestClass); };
     phase("warmup");
     if (requestClass === "rate-limited") {
       const seeded = await send(serverUrl, "accepted");
@@ -124,7 +129,6 @@ async function measure(requestClass, cohort) {
       assert.equal(warmed.status, expectedStatus, warmed.body);
     }
 
-    const throughput = [];
     phase("throughput");
     for (let run = 0; run < 3; run += 1) {
       const startedAt = performance.now();
@@ -140,25 +144,20 @@ async function measure(requestClass, cohort) {
       throughput.push(completed.reduce((sum, value) => sum + value, 0) / ((performance.now() - startedAt) / 1_000));
     }
 
-    const cpuMs = [];
-    const cpuSamples = [];
     phase("cpu");
     for (let index = 0; index < 200; index += 1) {
       const startedAtMs = Date.now();
       await ask("cpu-start");
       assert.equal((await request()).status, expectedStatus);
       const cpuMsPerRequest = await ask("cpu-stop");
-      cpuMs.push(cpuMsPerRequest);
       cpuSamples.push({ index, startedAtMs, endedAtMs: Date.now(), cpuMs: cpuMsPerRequest });
     }
-    const allocations = [];
     phase("allocations");
     for (let index = 0; index < 80; index += 1) {
       await ask("allocation-start");
       assert.equal((await request()).status, expectedStatus);
       allocations.push(await ask("allocation-stop"));
     }
-    const wireBytes = [];
     phase("wire");
     for (let index = 0; index < 10; index += 1) wireBytes.push((await request()).wireBytes);
 
@@ -171,16 +170,31 @@ async function measure(requestClass, cohort) {
       allocationSamples: allocations,
       wireSamples: wireBytes,
     };
+  } catch (error) {
+    measurementError = error;
+    throw error;
   } finally {
-    phase("shutdown");
-    // Wait for process exit so V8 has flushed its CPU profile before artifact upload.
-    const exited = new Promise((resolve, reject) => {
-      child.once("exit", (code, signal) => code === 0 ? resolve()
-        : reject(new Error(`benchmark server exited with ${code ?? signal}`)));
-      child.once("error", reject);
-    });
-    await ask("shutdown");
-    await exited;
+    let shutdownError;
+    try {
+      const clock = await lifecycle.shutdown();
+      if (traceDirectory) {
+        assert.equal(clock?.diagnosticOnly, true, "missing diagnostic clock observations");
+        await writeFile(resolve(traceDirectory,
+          `production-${requestClass}-population-${population}-cohort-${cohort}.clock.json`), `${JSON.stringify(clock, null, 2)}\n`);
+      }
+    } catch (error) { shutdownError = error; }
+    if (reportDirectory && (measurementError || shutdownError)) {
+      try { await writeFile(resolve(reportDirectory,
+        `${checkpointPrefix}-population-${population}-${requestClass}-cohort-${cohort}-incomplete.json`), `${JSON.stringify({
+          complete: false, population, requestClass, cohort, phase: currentPhase,
+          error: String((measurementError ?? shutdownError).message).slice(0, 256),
+          throughputSamples: throughput, cpuSamples, allocationSamples: allocations, wireSamples: wireBytes,
+        }, null, 2)}\n`); } catch (error) {
+        if (!measurementError) throw error;
+        measurementError.message += "; incomplete checkpoint could not be written";
+      }
+    }
+    if (!measurementError && shutdownError) throw shutdownError;
   }
 }
 
@@ -214,11 +228,8 @@ async function send(url, requestClass) {
   };
   headers["content-length"] = String(Buffer.byteLength(body));
   return new Promise((resolve, reject) => {
-    const outgoing = httpRequest(url, { method: "POST", headers }, (incoming) => {
-      const chunks = [];
-      incoming.on("data", (chunk) => chunks.push(chunk));
-      incoming.on("end", () => {
-        const responseBody = Buffer.concat(chunks);
+    const outgoing = httpRequest(url, { method: "POST", headers, signal: stopped.signal }, (incoming) => {
+      readBenchmarkResponse(incoming).then((responseBody) => {
         const headerBytes = Object.entries(headers).reduce(
           (sum, [name, value]) => sum + Buffer.byteLength(`${name}: ${value}\r\n`), 0,
         ) + incoming.rawHeaders.reduce((sum, value) => sum + Buffer.byteLength(value), 0);
@@ -232,8 +243,9 @@ async function send(url, requestClass) {
           body: responseBody.toString(),
           wireBytes: Buffer.byteLength(body) + responseBody.byteLength + headerBytes - applicationBytes,
         });
-      });
+      }).catch(reject);
     });
+    outgoing.setTimeout(5_000, () => outgoing.destroy(new Error("Benchmark HTTP request timed out")));
     outgoing.on("error", reject);
     outgoing.end(body);
   });

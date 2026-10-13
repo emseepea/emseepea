@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-10-13 **P015 closed on exact evidence** - Quality run `38342282754` passed the three-cohort production-boundary control on Node.js 22 and 24 for exact `main` commit `1928f966`.
+> Last reviewed: 2026-10-13 **P015 control verified** — fixed complete-population classification passed first-attempt Quality `38401142463` on exact main `b63af5b`. Original conflicts remain retained evidence.
 > Run `/wr-itil:review-problems` to refresh Weighted Shortest Job First (WSJF) rankings.
 
 ## WSJF Rankings
@@ -22,6 +22,7 @@ effort, reported date, and ID.
 | 12.0 | P008 | The release package list is transcribed by hand into the readiness record | 12 (High) | Known Error | M | 2026-09-20 | internal |
 | 12.0 | P009 | A tool call can fail after the backend has recorded the work | 12 (High) | Known Error | M | 2026-09-20 | internal |
 | 9.0 | P021 | Release troubleshooting adds unnecessary controls | 9 (Medium) | Open | S | 2026-10-06 | internal |
+| 9.0 | P022 | Accepted-path CPU budget is unqualified on the Node 22 CI profile | 9 (Medium) | Open | S | 2026-10-13 | internal |
 | 6.0 | P019 | Recovery CLI import cycle stops finalization | 6 (Medium) | Open | S | 2026-10-06 | internal |
 | 6.0 | P020 | Release PR head read lags finalization | 6 (Medium) | Open | S | 2026-10-06 | internal |
 | 5.0 | P014 | Direct dependencies have no identified owner or purpose | 10 (High) | Open | M | 2026-09-23 | internal |
@@ -57,4 +58,4 @@ None parked.
 | P005 | [Branch push is ungated, so untested changes reach continuous integration](closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md) | 2026-09-24 | Installed hook accepted exact commit `0c28ae0`; Quality run `35964172151` passed for that SHA. |
 | P002 | [Release readiness verifier only tests fixture-like stable PASS marker](closed/002-release-readiness-verifier-only-tests-fixture-like-stable-pass-marker.md) | 2026-09-29 | Release run `35818485686` passed Prepare package evidence on exact release head `5d163f9be1478f9ebea1558c0e36ab760d0370aa`. |
 | P007 | [The shipped package guide is silent on open-by-default result schemas](closed/007-shipped-package-guide-is-silent-on-open-by-default-result-schemas.md) | 2026-10-01 | Published `@emseepea/server@0.19.1` tarball README contains the corrected guide; packed-package documentation test passed 7/7. |
-| P015 | [Production-boundary CPU benchmark gives conflicting results for an unchanged revision](closed/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md) | 2026-10-13 | Quality run `38342282754` passed the three-cohort production-boundary control on Node.js 22 and 24 for exact `main` commit `1928f966`. |
+| P015 | [Production-boundary CPU benchmark gives conflicting results for an unchanged revision](closed/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md) | 2026-10-13 | Fixed complete-population classification verified on exact b63af5b, first-attempt Quality 38401142463, both governed runtimes. Historical variation cause remains unestablished. |
