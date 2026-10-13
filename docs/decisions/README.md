@@ -2665,3 +2665,4 @@ Chosen option: **an optional Playwright adapter with adopter-owned scenarios and
 - The user authorized implementation and explicitly required framework opt-in.
 - Scripted-page and intercepted Chromium tests verify the implementation boundary.
 - Live account login, authenticated endpoint correlation, and full native journey evidence remain pending; this proposed decision records that limit.
+- A reported security-verification loop in the automation-launched browser motivates the owner-session attachment alternative. Attachment uses a supported browser interface; it does not claim to resolve or bypass the verification service. A normal browser without an exposed authorized interface cannot be controlled by this adapter.

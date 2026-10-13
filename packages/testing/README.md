@@ -670,6 +670,63 @@ The command verifies a
 signed-in control, not the account's identity; the human confirms that identity.
 If that control changes, pass an account-specific `--authenticated-selector`.
 
+### Use an already-authorized browser
+
+If the launched browser repeats a security challenge, stop setup. Complete
+login, MFA, CAPTCHA, and consent yourself in an ordinary browser. The setup
+helper keeps Chromium's sandbox enabled, but cannot guarantee that an
+automation-launched browser will be accepted by the login service.
+
+An existing Playwright integration can pass its owner-authorized `Page` directly
+to `runNativeChatGptJourney`. The adapter does not need to launch that browser.
+It cannot attach to an arbitrary ordinary Chrome window without a supported
+browser control interface.
+
+Chrome versions with GUI remote debugging expose it at
+`chrome://inspect/#remote-debugging`. The browser owner can select "Allow remote
+debugging for this browser instance" and approve the connection in Chrome.
+This needs no command-line browser launch.
+
+The runner must still execute on
+the browser's host; enabling this option does not give a cloud runner access
+to another computer. Use a dedicated test browser and disable debugging when
+finished.
+
+For a Chromium session that the adopter has already opened and exposed through
+Chrome DevTools Protocol (CDP), the execution command can attach locally:
+
+```sh
+npx emseepea-chatgpt --enable-native-chatgpt --scenario ./native-chatgpt.mjs \
+  --connect-cdp 'ws://127.0.0.1:9222/devtools/browser/<browser-id>' \
+  --browser-owner '<test-account-owner>'
+```
+
+This is an alternative to the setup command, not a way to solve a CAPTCHA.
+The browser owner must confirm the signed-in account and complete connection
+consent before attaching. `--browser-owner` must match the scenario's account
+owner. Use a dedicated synthetic-test browser with one browser context.
+
+The command accepts only a browser WebSocket on literal `127.0.0.1`, an explicit
+port from 1024 to 65535, and `/devtools/browser` with an optional browser ID.
+Remote hosts,
+credentials, query strings, redirects, HTTP discovery, and profile options are
+rejected.
+
+WebSocket messages and the initial send queue are capped at 16 MiB.
+Keep the debugging interface and address private, bound to loopback, and
+available only while testing; CDP grants browser control and is not an account
+authorization mechanism.
+
+Attachment opens a separate test tab in the authorized context. It does not
+read or export cookies or storage state, inspect existing tabs, launch Chrome,
+or alter login behavior or the owner's browser defaults.
+
+After the scenario's required cleanup, the runner
+closes its tab and disconnects. The owner browser and its existing tabs remain
+open. Missing browser access or incomplete authentication blocks verification.
+
+### Connect and run the owned scenario
+
 Connect your authorized HTTPS MCP endpoint through ChatGPT's current plugin
 installation flow. Complete account consent yourself. A local server requires
 a supported HTTPS tunnel before ChatGPT can reach it. See the
