@@ -1,5 +1,19 @@
 # @emseepea/create-multi-instance-postgres-server
 
+## 0.1.19
+
+### Patch Changes
+
+- [`dc9c0bf`](https://github.com/emseepea/emseepea/commit/dc9c0bf2b1bc35880a0090568e4ab0b68f7ed0a9) Thanks [@tompahoward](https://github.com/tompahoward)! - Allow the opt-in native ChatGPT runner to attach to an adopter-owned,
+  already-authorized Chromium session through a loopback CDP browser WebSocket.
+  Require matching browser-owner confirmation, use a separate test tab, and
+  disconnect without closing the owner browser.
+
+  Keep Chromium's sandbox enabled
+  in the existing setup and profile runner. Login, MFA, CAPTCHA, consent, server
+  evidence, and cleanup remain adopter-owned; live ChatGPT verification is pending.
+  Initializer patches update generated projects to use the testing package.
+
 ## 0.1.18
 
 ### Patch Changes
