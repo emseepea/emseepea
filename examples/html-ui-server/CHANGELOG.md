@@ -1,5 +1,11 @@
 # @emseepea/create-html-ui-server
 
+## 0.1.14
+
+### Patch Changes
+
+- [`5d51e96`](https://github.com/emseepea/emseepea/commit/5d51e96f1eab5edf6ca815b1d2e7c0d984ad82bd) Thanks [@tompahoward](https://github.com/tompahoward)! - Preserve proxy and certificate-trust settings for isolated semantic model processes so Codex and Claude can authenticate through managed networks. Account apps, plugins, and shell tools remain disabled for Codex; unrelated service credentials remain excluded.
+
 ## 0.1.13
 
 ### Patch Changes
