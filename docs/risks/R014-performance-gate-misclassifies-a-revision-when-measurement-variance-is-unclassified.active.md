@@ -38,6 +38,10 @@ classification control is absent.
   independent cohorts with a fresh server process and unique trace identity.
   The gate applies the unchanged ADR-0014 limits to the complete pooled sample
   population rather than accepting a failure-triggered retry.
+- **Fixed complete-population classification** — Each invocation collects three
+  complete populations; all must pass. Mixed results are INCONCLUSIVE and
+  incomplete measurements cannot qualify. Diagnostic files are separately
+  named and cannot replace ordinary observations.
 - **Complete retained evidence** — Continuous integration retains every cohort
   summary and raw CPU sample. Missing, malformed, failed, or cancelled cohorts
   fail closed.
@@ -47,38 +51,37 @@ exact `main` commit `1928f9662d8a2cb7f86cdf0e01e3f71f8e9b30ff` and passed.
 
 ## Residual Risk
 
-Impact × Likelihood *after* controls.
+Impact × Likelihood after controls.
 
 - **Impact**: 3 (Moderate)
-- **Likelihood**: 5 (Almost certain)
-- **Residual Score**: 15
-- **Residual Band**: High
-- **Within appetite?**: No
+- **Likelihood**: 1 (Rare)
+- **Residual Score**: 3
+- **Residual Band**: Low
+- **Within appetite?**: Yes
 
-The complete same-revision conflict in run `38382578560` reopens treatment.
-The three-cohort control remains, but does not classify conflicts between
-complete invocations. Diagnostic-only instrumentation is separately reviewed
-for safe investigation; it cannot qualify a package release or reduce this
-standing risk by itself.
+Independent assessment re-rated the classification-gap risk after exact main
+`b63af5b` passed first-attempt Quality `38401142463` on Node 22.23.2 and 24.21.0.
+Each runtime retained three complete uninstrumented PASS populations, with
+7,200 CPU samples and complete throughput, allocation and wire observations.
+Artifact ZIP hashes and every entry hash were verified; classifications were
+independently recomputed from raw cohorts. No thresholds changed or measurements
+were resampled. See the [bounded verification receipt](../reviews/fixed-population-control-verification-2026-10-13.json).
+
+The original failed population and later diagnostic pass remain valid evidence.
+Hardware normalization and the cause of historical variation are not established.
+Passing fixed populations do not establish performance equivalence.
 
 ## Treatment
 
-Proposed next control: collect exactly three complete populations in every
-invocation, each containing the existing three fresh-process cohorts per request
-class. Qualify only if all three complete, uninstrumented populations pass the
-unchanged limits. Mixed passing and flagged populations are INCONCLUSIVE; any
-missing, malformed, failed or cancelled population is INCOMPLETE. Retain raw
-samples, complete cohort checkpoints and bounded incomplete-cohort receipts.
-Do not pool away disagreement or retry until a favourable result appears.
+Every invocation now collects exactly three complete populations. Each retains
+the existing three-cohort calculation and unchanged ADR-0014 limits. Qualification
+requires all three complete, uninstrumented populations to pass. Disagreement is
+INCONCLUSIVE; missing, malformed, failed or cancelled measurements are INCOMPLETE.
+Raw samples, complete checkpoints and bounded incomplete-cohort receipts remain
+retained. Diagnostic filenames cannot overwrite ordinary evidence.
 
-This control is not yet verified on both continuous-integration runtimes.
-Residual package-release risk remains 15/25 until fresh independent assessment
-of the fixed evidence. Correlated runner conditions remain a limitation.
-
-Maintain the fixed three-cohort classification and unchanged ADR-0014 limits.
-Re-open treatment if retained evidence shows a same-revision conflict under the
-complete pooled population, a missing cohort is accepted, or a true regression
-passes.
+Reopen treatment if disagreement or incompleteness is accepted, evidence is
+lost, a result-dependent retry qualifies a revision, or a real regression passes.
 
 ## Monitoring
 
@@ -91,7 +94,7 @@ passes.
 ## Related
 
 - Criteria: `RISK-POLICY.md`
-- Realised-as: [Problem 015: Production-Boundary CPU Benchmark Gives Conflicting Results for an Unchanged Revision](../problems/known-error/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md)
+- Realised-as: [Problem 015: Production-Boundary CPU Benchmark Gives Conflicting Results for an Unchanged Revision](../problems/closed/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md)
 - Treatment decision: [ADR-0014: Performance Budget for the Initial JSON HTTP Boundary](../decisions/0014-performance-budget-initial-json-http-boundary.proposed.md)
 - Personas affected: release maintainers and adopters relying on qualified
   performance claims
@@ -107,3 +110,5 @@ passes.
   ADR-0014's thresholds.
 
 - 2026-10-13: Reopened treatment after main `30d09eb` failed the accepted CPU budget (5.312 ms pooled p95) and one unchanged diagnostic rerun passed. Preserve both complete populations; no threshold or acceptance change is authorized by the conflict.
+
+- 2026-10-13: Verified fixed complete-population classification on exact b63af5b, first-attempt Quality 38401142463. Independent standing risk 3/25; original conflicts and unresolved hardware causation retained.

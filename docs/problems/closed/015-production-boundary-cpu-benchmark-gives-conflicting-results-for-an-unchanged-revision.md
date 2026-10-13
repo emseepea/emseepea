@@ -1,6 +1,6 @@
 # Problem 015: Production-Boundary CPU Benchmark Gives Conflicting Results for an Unchanged Revision
 
-**Status**: Known Error (reopened 2026-10-13 on same-revision conflict)
+**Status**: Closed (classification-gap treatment verified 2026-10-13)
 **Reported**: 2026-09-24
 **Priority**: 15 (High) — Impact: 3 × Likelihood: 5
 **Origin**: internal
@@ -11,6 +11,20 @@
 
 An observed and uncontrolled measurement conflict disrupted continuous
 integration and release qualification.
+
+## Current control verification
+
+Fixed complete-population classification reached main in `b63af5b`. First-attempt
+Quality run `38401142463` passed on Node 22.23.2 and 24.21.0. Both retained three
+complete uninstrumented PASS populations and 7,200 CPU samples per runtime,
+with complete throughput, allocation and wire observations. ZIP and entry hashes
+were verified, and classifications recomputed independently from raw cohorts.
+No budget changed and no favourable retry replaced these fixed results.
+
+The treatment closes the missing disagreement-classification control. It does
+not establish the cause of historical variation or hardware normalization. The
+original failed population remains evidence. Reopen if disagreement, incomplete
+evidence or a result-dependent retry is accepted as qualification.
 
 ## Reopened evidence
 
@@ -26,7 +40,7 @@ three-cohort control exists, but does not resolve disagreement between complete
 invocations. Garbage collection, allocation and runtime effects are hypotheses;
 the old trace clocks do not prove exact overlap with measured CPU windows.
 
-The next investigation adds bounded diagnostic records using one Node
+The reopened investigation added bounded diagnostic records using one Node
 performance clock for garbage collection (GC) and CPU-reading intervals. It leaves
 all budgets, cohorts and ordinary CPU calculations unchanged. Profiled results
 are nonqualifying. No new package release is selected by this instrumentation.
@@ -37,9 +51,9 @@ records before interpretation. Overflow or an unfinished window prevents
 absence claims. Preserve every failure and the earlier closure evidence; do
 not retry measurements until a favourable result appears.
 
-## Proposed complete-population control
+## Complete-population control
 
-Every invocation will collect exactly three complete populations, each retaining
+Every invocation collects exactly three complete populations, each retaining
 the existing three-cohort calculation. All must pass to qualify; disagreement
 is INCONCLUSIVE and an incomplete population is INCOMPLETE. The budgets stay
 unchanged. No result-dependent retry or pooling across populations is allowed.
@@ -47,7 +61,7 @@ unchanged. No result-dependent retry or pooling across populations is allowed.
 The control retains raw samples and incomplete-cohort checkpoints, cancels
 subsequent measurements after external interruption and terminates child
 listeners. A fixed verification invocation must be declared before collection.
-This proposed control does not close the problem or establish equivalence.
+The verified control does not establish performance equivalence.
 
 ## Original description
 
@@ -60,20 +74,20 @@ The evidence does not establish whether the failing or passing measurement was
 representative. Shared-runner contention, runtime variation, and benchmark
 nondeterminism are investigation hypotheses, not established causes.
 
-## Symptoms
+## Original symptoms
 
 - One Node.js 22 measurement exceeded the fixed CPU ceiling.
 - The same revision passed on Node.js 24 and on an unchanged Node.js 22 rerun.
 - The gate reports a pass or fail from one set of CPU samples without an
   independent variance classification.
 
-## Workaround
+## Prior workaround
 
 One bounded failed-job rerun can show whether an unchanged revision produces a
 different result. The rerun is diagnostic evidence only. It does not establish
 which result is representative and does not resolve the missing control.
 
-## Impact Assessment
+## Original impact assessment
 
 - **Who is affected**: maintainers waiting for continuous integration and
   release qualification.
@@ -106,7 +120,7 @@ checks.
       without weakening its fixed CPU ceiling or acceptance semantics.
 - [x] Re-rate the linked standing risk from exact post-control evidence.
 
-## Fix Strategy
+## Prior fix strategy
 
 Run exactly three independent cohorts for every request class, each with a
 fresh server process and unique trace identity. Classify the complete pooled
@@ -133,9 +147,7 @@ Node.js 22 and 24.
 
 ## Dependencies
 
-- **Blocks**: further package release qualification while the same-revision
-  measurement conflict remains unresolved. A diagnostic-only investigation
-  slice can be independently reviewed; its green pipeline does not close this problem.
+- **Blocks**: none after the classification-gap treatment was verified. Every later release still requires its exact qualification and fresh risk assessment.
 - **Blocked by**: (none)
 - **Composes with**: (none)
 

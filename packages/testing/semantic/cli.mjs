@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { validRecord } from "./evidence.mjs";
 import { discoverTests } from "./discover.mjs";
-import { modelVersion, providerModel, providerSettings } from "./provider.mjs";
+import { mcpClientVersion, modelVersion, providerModel, providerSettings } from "./provider.mjs";
 
 const paths = [];
 let provider = process.env.EMSEEPEA_EVAL_PROVIDER ?? "claude-local";
@@ -32,10 +32,9 @@ const evidence = { authoritative: provider === "claude-ci", provider, smoke,
   status: "failed", cases: {}, errors: [], startedAt: new Date().toISOString() };
 try {
   const client = JSON.parse(await readFile(new URL("../package.json", import.meta.resolve("@modelcontextprotocol/client")), "utf8"));
-  if (client.name !== "@modelcontextprotocol/client" || client.version !== "2.2.0") throw new Error("Unexpected MCP client version");
+  const clientVersion = mcpClientVersion(client);
   const cliName = provider.startsWith("codex-") ? "codexCli" : "claudeCli";
-  evidence.dependencies = { mcpClient: client.version, [cliName]: smoke ? "simulated" : await modelVersion(provider) };
-  if (provider === "claude-ci" && evidence.dependencies.claudeCli !== "2.1.248") throw new Error("Unexpected Claude CLI version");
+  evidence.dependencies = { mcpClient: clientVersion, [cliName]: smoke ? "simulated" : await modelVersion(provider) };
   let interrupted = false;
   for (const file of files) {
     const displayFile = relative(process.cwd(), file);

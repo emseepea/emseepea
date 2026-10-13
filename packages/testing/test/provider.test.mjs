@@ -7,6 +7,7 @@ import test from "node:test";
 import {
   conversationInvocation,
   modelVersion,
+  mcpClientVersion,
   modelInvocation,
   parseClaudeEvents,
   parseCodexEvents,
@@ -522,3 +523,29 @@ function restore(name, value) {
   if (value === undefined) delete process.env[name];
   else process.env[name] = value;
 }
+
+test("MCP client versions are provenance rather than eligibility cutoffs", () => {
+  for (const version of ["1.0.0", "2.2.0", "99.0.0-next.1"]) {
+    assert.equal(mcpClientVersion({ name: "@modelcontextprotocol/client", version }), version);
+  }
+  for (const metadata of [undefined, {}, { name: "foreign", version: "2.2.0" },
+    { name: "@modelcontextprotocol/client", version: "" },
+    { name: "@modelcontextprotocol/client", version: "  " },
+    { name: "@modelcontextprotocol/client", version: 2 }]) {
+    assert.throws(() => mcpClientVersion(metadata), /Invalid MCP client provenance/);
+  }
+});
+
+test("Claude CLI versions remain provenance without an exact eligibility guard", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "claude-version-provenance-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const original = process.env.EMSEEPEA_MODEL_COMMAND;
+  t.after(() => restore("EMSEEPEA_MODEL_COMMAND", original));
+  for (const version of ["2.0.0", "2.1.248", "3.0.0"]) {
+    const command = join(directory, `claude-${version}.mjs`);
+    await writeFile(command, `#!/usr/bin/env node\nconsole.log(${JSON.stringify(version + " (Claude Code)")});\n`);
+    await chmod(command, 0o755);
+    process.env.EMSEEPEA_MODEL_COMMAND = command;
+    assert.equal(await modelVersion("claude-ci"), version);
+  }
+});

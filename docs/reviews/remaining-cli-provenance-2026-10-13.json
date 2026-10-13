@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "authoritative": false,
+  "provider": "codex-local",
+  "configuredModel": "gpt-5.5",
+  "modelEvidence": "configured",
+  "dependencies": {
+    "mcpClient": "2.2.0",
+    "codexCli": "0.159.2"
+  },
+  "semanticRetries": 0,
+  "caseCount": 1,
+  "trialCount": 3,
+  "nativeTurnCount": 9,
+  "applicationToolCallCount": 18,
+  "meaningJudgmentCount": 9,
+  "fixtureSourceSha256": "bed873ef79183eedaf276c469ed2f38ab890e2b6e741c390770aa2053d8a094f",
+  "boundary": "Synthetic timetable only; configured model evidence. No resource-helper, product-quality or universal-version compatibility claim."
+}

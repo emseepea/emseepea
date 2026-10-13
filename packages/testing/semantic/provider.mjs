@@ -4,6 +4,13 @@ import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 
 import { join } from "node:path";
 import { scriptedElicitations } from "./elicitation.mjs";
 
+export function mcpClientVersion(client) {
+  if (client?.name !== "@modelcontextprotocol/client" || typeof client.version !== "string" || !client.version.trim()) {
+    throw new Error("Invalid MCP client provenance");
+  }
+  return client.version;
+}
+
 const claudeModel = "claude-sonnet-4-6";
 const mcpServerName = "emseepea_eval";
 const codexEmptyDiscoveryTools = new Map([

@@ -202,3 +202,31 @@ release risk remain explicit. Contract checks are not performance qualification.
 | `docs/problems/known-error/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md` | `6bb03a5904ee304e995656c3cb901a0fd8410b412021e7c2ce16f18867b2aec3` | PASS |
 | `docs/risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md` | `0312f7cd6d945f69931f7d852b6fcb2a29de1348a024e8e3c1ad50c47f396b61` | PASS |
 | `docs/reviews/current-release-readiness.md` | `e14fbdad3934bba1a9d8110768acf4b7c05549658b964aa119dfeebc5224683e` | PASS |
+
+## Verified Classification Control and Remaining CLI Guard Removal
+
+Independent JTBD, cognitive-accessibility, voice and external-communication review: PASS.
+Copy distinguishes the verified classification gap from unknown historical
+hardware causation, and selected guard changes from their pending exact gates.
+Original failures and bounded native evidence remain explicit.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `e12a623d7be24744e8b29268be4c49fa45f0f474e80cc0da129b46bd7af3ffc6` | PASS |
+| `docs/risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md` | `dddc328950555b33d5f9f2093c581d511948f23e246d7b879f907781f1ec322c` | PASS |
+| `docs/problems/closed/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md` | `9addfbeeae9fe3e91b7d247fda93be1d6224e0e98cd1a35a1534e685b903733f` | PASS |
+| `docs/problems/README.md` | `89c5c34ad8dc1eda2d21be08d4b7450757ba9158fb1c700cf0949cdbea230446` | PASS |
+| `docs/problems/README-history.md` | `f5d564589f4b18ecb8257275da4fcb2b04879351451b37348b31d3230d77cc49` | PASS |
+| `.changeset/testing-client-and-claude-provenance.md` | `a7a57ac4095d2fcd5ec986b725446a9d0543e637750a022d481a63d242519ad5` | PASS |
+| `docs/reviews/remaining-cli-provenance-2026-10-13.json` | `b2441e6a9b425c4bea9bc4131f92bd62a61b635d944c4dc181878addeb115ed5` | PASS |
+| `docs/reviews/fixed-population-control-verification-2026-10-13.json` | `83abfca2a943ed94b2424485bd17424441b7dcae8d0ae545992673d0cf531025` | PASS |
+
+## Planned Package Set Correction
+
+Independent cognitive-accessibility, voice and external-communication review: PASS.
+The machine-read list identifies only planned versions; published baseline facts
+remain separate. The failed push preflight is retained and no publication is claimed.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `b184eef5d83f641a8fd0d0f9bf0d3dd79908038d460ba007ac76110e9b4e9b65` | PASS |
