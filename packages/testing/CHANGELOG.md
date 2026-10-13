@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.23.4
+
+### Patch Changes
+
+- [`2134824`](https://github.com/emseepea/emseepea/commit/2134824a4f3334c0aff1518e7aac30453da16d0f) Thanks [@tompahoward](https://github.com/tompahoward)! - Isolate Codex semantic tests from account apps and plugins while preserving the configured test MCP server.
+
 ## 0.23.2
 
 ### Patch Changes

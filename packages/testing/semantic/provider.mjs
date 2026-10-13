@@ -6,6 +6,11 @@ import { scriptedElicitations } from "./elicitation.mjs";
 
 const claudeModel = "claude-sonnet-4-6";
 const mcpServerName = "emseepea_eval";
+const minimumCodexCliVersion = "0.162.0";
+const codexEmptyDiscoveryTools = new Map([
+  ["list_mcp_resources", "resources"],
+  ["list_mcp_resource_templates", "resourceTemplates"],
+]);
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const providerErrorMessages = new Map([
   ["error_during_execution", "Model command failed during execution"],
@@ -39,6 +44,9 @@ export async function modelVersion(provider = "claude-local") {
   const result = await runProcess(command, ["--version"], { env: modelEnvironment({}) });
   const version = result.stdout.trim().match(/(?:codex-cli\s+)?(\d+\.\d+\.\d+)\b/)?.[1];
   if (result.code !== 0 || !version) throw new Error(`Could not verify ${codex ? "Codex" : "Claude"} CLI version`);
+  if (codex && compareVersions(version, minimumCodexCliVersion) < 0) {
+    throw new Error(`Codex CLI ${version} is unsupported; use ${minimumCodexCliVersion} or later`);
+  }
   return version;
 }
 
@@ -53,11 +61,16 @@ export function providerSettings(provider) {
   return provider.startsWith("codex-")
     ? {
         approvalPolicy: "never",
+        appInstructions: false,
+        apps: false,
         loginShell: false,
         multiAgent: false,
+        plugins: false,
+        remotePlugin: false,
         sandbox: "read-only",
         shell: "forbidden",
         shellEnvironment: "empty",
+        toolSuggest: false,
         userConfig: "ignored",
         webSearch: false,
       }
@@ -453,7 +466,13 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
   const forbidden = completed.filter((item) => !["agent_message", "reasoning", "mcp_tool_call"].includes(item?.type));
   if (forbidden.length) throw forbiddenItemError(forbidden);
   const toolItems = completed.filter(({ type }) => type === "mcp_tool_call");
-  const calls = toolItems.map((item) => {
+  const discoveryItems = toolItems.filter(({ server, tool }) =>
+    server === "codex" && codexEmptyDiscoveryTools.has(tool));
+  if (discoveryItems.some((item) => !emptyCodexDiscovery(item))) {
+    throw forbiddenItemError(discoveryItems.filter((item) => !emptyCodexDiscovery(item)));
+  }
+  const applicationToolItems = toolItems.filter((item) => !discoveryItems.includes(item));
+  const calls = applicationToolItems.map((item) => {
     if (item.server !== mcpServerName || !advertised.has(item.tool)
       || !item.arguments || typeof item.arguments !== "object" || Array.isArray(item.arguments)) {
       throw forbiddenItemError([item]);
@@ -467,7 +486,7 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
   const messages = completed.filter(({ type }) => type === "agent_message");
   const answer = messages.at(-1)?.text;
   if (typeof answer !== "string") throw new Error("Model command returned no answer");
-  const toolResults = toolItems.map(({ result }) => ({ content: result.content ?? result, isError: false }));
+  const toolResults = applicationToolItems.map(({ result }) => ({ content: result.content ?? result, isError: false }));
   return {
     answer,
     calls,
@@ -485,6 +504,25 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
     providerToolCount: calls.length,
     threadId,
   };
+}
+
+function emptyCodexDiscovery(item) {
+  if (item.status !== "completed" || !item.arguments || typeof item.arguments !== "object"
+    || Array.isArray(item.arguments) || Object.keys(item.arguments).length !== 0
+    || !item.result || typeof item.result !== "object" || Array.isArray(item.result)
+    || item.result.structured_content !== null || Object.keys(item.result).length !== 2
+    || !Array.isArray(item.result.content) || item.result.content.length !== 1) return false;
+  const [content] = item.result.content;
+  if (!content || content.type !== "text" || typeof content.text !== "string"
+    || Object.keys(content).length !== 2) return false;
+  try {
+    const parsed = JSON.parse(content.text);
+    const key = codexEmptyDiscoveryTools.get(item.tool);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      && Object.keys(parsed).length === 1 && Array.isArray(parsed[key]) && parsed[key].length === 0;
+  } catch {
+    return false;
+  }
 }
 
 function startCodexConversation(provider, directory, url, tools, authToken, context, signal, serverSecrets) {
@@ -545,8 +583,14 @@ function codexInvocation(provider, prompt, directory, conversation) {
     "-c", 'web_search="disabled"',
     "-c", 'shell_environment_policy.inherit="none"',
     "-c", "allow_login_shell=false",
+    "-c", "apps._default.enabled=false",
+    "-c", "include_apps_instructions=false",
+    "-c", "features.apps=false",
     "-c", "features.multi_agent=false",
+    "-c", "features.plugins=false",
+    "-c", "features.remote_plugin=false",
     "-c", "features.shell_tool=false",
+    "-c", "features.tool_suggest=false",
     "-c", "features.unified_exec=false",
   ];
   if (conversation?.context) args.push("-c", `developer_instructions=${JSON.stringify(conversation.context)}`);
@@ -631,6 +675,16 @@ function classifyCodexFailure(stderr) {
     return "provider";
   }
   return "unknown";
+}
+
+function compareVersions(left, right) {
+  const a = left.split(".").map(Number);
+  const b = right.split(".").map(Number);
+  for (let index = 0; index < Math.max(a.length, b.length); index += 1) {
+    const difference = (a[index] ?? 0) - (b[index] ?? 0);
+    if (difference !== 0) return difference;
+  }
+  return 0;
 }
 
 function codexEvidenceError(message, category) {

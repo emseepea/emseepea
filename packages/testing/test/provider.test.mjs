@@ -6,6 +6,7 @@ import test from "node:test";
 
 import {
   conversationInvocation,
+  modelVersion,
   modelInvocation,
   parseClaudeEvents,
   parseCodexEvents,
@@ -239,6 +240,35 @@ test("Codex events retain native MCP calls and require a complete resumable turn
   assert.equal(parsed.modelEvidence, "configured");
   assert.deepEqual(parsed.calls, [{ name: "get-pea", arguments: { name: "Snap" } }]);
   assert.deepEqual(parsed.toolResults, [{ content: [{ type: "text", text: '{"name":"Snap"}' }], isError: false }]);
+  const emptyDiscovery = [
+    { type: "item.completed", item: { type: "mcp_tool_call", server: "codex",
+      tool: "list_mcp_resources", arguments: {}, status: "completed",
+      result: { content: [{ type: "text", text: '{"resources":[]}' }], structured_content: null } } },
+    { type: "item.completed", item: { type: "mcp_tool_call", server: "codex",
+      tool: "list_mcp_resource_templates", arguments: {}, status: "completed",
+      result: { content: [{ type: "text", text: '{"resourceTemplates":[]}' }], structured_content: null } } },
+  ];
+  const withEmptyDiscovery = parseCodexEvents([
+    ...events.slice(0, 2), ...emptyDiscovery, ...events.slice(2),
+  ], [{ name: "get-pea" }], undefined, 0, "gpt-test");
+  assert.deepEqual(withEmptyDiscovery.calls, parsed.calls);
+  assert.deepEqual(withEmptyDiscovery.toolResults, parsed.toolResults);
+  const discoveryNearMisses = [
+    { ...emptyDiscovery[0].item, arguments: { server: "private" } },
+    { ...emptyDiscovery[0].item, status: "running" },
+    { ...emptyDiscovery[0].item, result: { ...emptyDiscovery[0].item.result, structured_content: {} } },
+    { ...emptyDiscovery[0].item, result: { ...emptyDiscovery[0].item.result, extra: true } },
+    { ...emptyDiscovery[0].item, result: { ...emptyDiscovery[0].item.result,
+      content: [{ type: "text", text: '{"resources":[]}', extra: true }] } },
+    { ...emptyDiscovery[0].item, result: { ...emptyDiscovery[0].item.result,
+      content: [{ type: "text", text: '{"resources":[{"name":"private"}]}' }] } },
+  ];
+  for (const item of discoveryNearMisses) {
+    assert.throws(() => parseCodexEvents([
+      ...events.slice(0, 2), { type: "item.completed", item }, ...events.slice(2),
+    ], [{ name: "get-pea" }]), (error) => error.message === "Model command used a forbidden tool"
+      && !JSON.stringify(error).includes("private"));
+  }
   const batch = Array.from({ length: 40 }, (_, index) => ({
     ...events[2], item: { ...events[2].item, id: `call-${index}`, arguments: { name: `Pea ${index}` } },
   }));
@@ -254,6 +284,21 @@ test("Codex events retain native MCP calls and require a complete resumable turn
   assert.throws(() => parseCodexEvents(events.map((event) => event.item?.type === "mcp_tool_call"
     ? { ...event, item: { ...event.item, server: "ambient" } }
     : event), [{ name: "get-pea" }]), /forbidden tool/);
+  assert.throws(() => parseCodexEvents([
+    ...events.slice(0, 2),
+    { ...emptyDiscovery[0], item: { ...emptyDiscovery[0].item, tool: "unknown_catalogue" } },
+    ...events.slice(2),
+  ], [{ name: "get-pea" }]), /forbidden tool/);
+  const foreignResource = "private-account-resource-sentinel";
+  assert.throws(() => parseCodexEvents([
+    ...events.slice(0, 2),
+    { ...emptyDiscovery[0], item: { ...emptyDiscovery[0].item, result: {
+      content: [{ type: "text", text: JSON.stringify({ resources: [{ name: foreignResource }] }) }],
+      structured_content: null,
+    } } },
+    ...events.slice(2),
+  ], [{ name: "get-pea" }]), (error) => error.message === "Model command used a forbidden tool"
+    && !JSON.stringify(error).includes(foreignResource));
   assert.throws(() => parseCodexEvents([
     ...events.slice(0, 2),
     { type: "item.completed", item: { type: "command_execution", command: "private command" } },
@@ -372,6 +417,27 @@ test("Codex provider requires an explicit model", () => {
   }
 });
 
+test("Codex provider rejects unsupported CLI versions", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "codex-version-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const oldCommand = join(directory, "fake-old-codex.mjs");
+  const newCommand = join(directory, "fake-new-codex.mjs");
+  await writeFile(oldCommand, `#!/usr/bin/env node
+process.stdout.write("codex-cli 0.161.9\\n");
+`);
+  await writeFile(newCommand, `#!/usr/bin/env node
+process.stdout.write("codex-cli 0.162.0\\n");
+`);
+  await chmod(oldCommand, 0o755);
+  await chmod(newCommand, 0o755);
+  const originalCommand = process.env.EMSEEPEA_CODEX_COMMAND;
+  process.env.EMSEEPEA_CODEX_COMMAND = oldCommand;
+  t.after(() => restore("EMSEEPEA_CODEX_COMMAND", originalCommand));
+  await assert.rejects(modelVersion("codex-local"), /Codex CLI 0\.161\.9 is unsupported/);
+  process.env.EMSEEPEA_CODEX_COMMAND = newCommand;
+  assert.equal(await modelVersion("codex-local"), "0.162.0");
+});
+
 test("Codex invocation isolates configuration and pre-approves only discovered tools", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "codex-invocation-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
@@ -394,7 +460,14 @@ test("Codex invocation isolates configuration and pre-approves only discovered t
   assert.equal(invocation.args[invocation.args.indexOf("--sandbox") + 1], "read-only");
   assert.ok(invocation.args.includes('shell_environment_policy.inherit="none"'));
   assert.ok(invocation.args.includes("allow_login_shell=false"));
+  assert.equal(invocation.args.filter((value) => value === "apps._default.enabled=false").length, 1);
+  assert.equal(invocation.args.filter((value) => value === "include_apps_instructions=false").length, 1);
+  assert.equal(invocation.args.filter((value) => value === "features.apps=false").length, 1);
+  assert.equal(invocation.args.filter((value) => value === "features.multi_agent=false").length, 1);
+  assert.equal(invocation.args.filter((value) => value === "features.plugins=false").length, 1);
+  assert.equal(invocation.args.filter((value) => value === "features.remote_plugin=false").length, 1);
   assert.equal(invocation.args.filter((value) => value === "features.shell_tool=false").length, 1);
+  assert.equal(invocation.args.filter((value) => value === "features.tool_suggest=false").length, 1);
   assert.equal(invocation.args.filter((value) => value === "features.unified_exec=false").length, 1);
   assert.ok(invocation.args.includes('mcp_servers.emseepea_eval.enabled_tools=["get-pea"]'));
   assert.ok(invocation.args.includes('mcp_servers.emseepea_eval.default_tools_approval_mode="approve"'));
