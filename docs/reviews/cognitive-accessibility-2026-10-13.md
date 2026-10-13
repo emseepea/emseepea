@@ -230,3 +230,23 @@ remain separate. The failed push preflight is retained and no publication is cla
 | File | SHA-256 | Result |
 | --- | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `b184eef5d83f641a8fd0d0f9bf0d3dd79908038d460ba007ac76110e9b4e9b65` | PASS |
+
+## Schema Metadata Reuse Candidate
+
+Independent JTBD, cognitive clarity, voice and external-copy review: PASS.
+The combined risk-only assessment is distinct from source and publication gates.
+The original Node 22 failure remains retained; optimization and diagnostic
+evidence make no claim about its cause or verified repair.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `820c1eb33e616bf429735c5586ec113870f2b459b65ae6b24cffd4e911435aad` | PASS |
+| `.changeset/reuse-captured-input-metadata.md` | `a94ffdb877adfb50bb337ddbb9250a60dc381ee1491537b58ba034ecff4a94e3` | PASS |
+| `docs/problems/open/022-accepted-path-cpu-budget-is-unqualified-on-the-node-22-ci-profile.md` | `deff59bce198c9a2068541799d36e0e199d78526918457d9265c754d43d1222d` | PASS |
+| `docs/problems/README.md` | `58e0fa9a14473a5183de3c300730b427c26eb1eb98edabac17acb0750fe3b6d9` | PASS |
+
+Actual dependency propagation reviewed independently: sixteen planned packages; source and publication gates remain separate.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `e040a504accfcd6e8d0b369b51d219047487c8aa9780398d12f799d0558f5768` | PASS |

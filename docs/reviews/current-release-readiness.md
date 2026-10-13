@@ -4,8 +4,8 @@ Date: 2026-10-13
 
 ## Release status
 
-Publication status: **PROPOSED (remaining CLI version-guard removal)**.
-The selected patch plans testing 0.24.1 and eleven initializer updates at 0.1.17.
+Publication status: **PROPOSED (CLI provenance and schema metadata reuse)**.
+The selected patches plan server 0.23.1, testing 0.24.1, three dependent package updates and eleven initializer updates at 0.1.17.
 It removes numeric MCP-client and Claude CLI eligibility checks while retaining
 package identity, version provenance and behavioral qualification.
 
@@ -17,14 +17,22 @@ do not enable it, install Playwright, or constrain an existing browser version.
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
 
-Fresh independent cumulative risk assessment is 5/25 for this guard-removal
-release. Exact-source full qualification, benchmark, remote Quality and normal
-publication gates still apply. The fixed control passed first-attempt main
-Quality 38401142463 on both governed runtimes; that evidence does not substitute
-for the guard patch's own checks.
+Fresh independent combined candidate risk assessment is 5/25. This assesses
+CLI provenance and schema metadata reuse together; it does not qualify release.
+Exact-source tests, fixed populations on both CI runtimes, packed consumers and
+registry gates remain required.
+
+The preceding guard-only assessment was also 5/25. Its exact-source Quality run
+38409314809 returned INCONCLUSIVE on Node 22 and did not qualify publication.
+P022 retains that failure and the investigation boundaries. No result-dependent
+retry or passing diagnostic replaces the failed source qualification.
 
 ## Planned package set
 
+- `@emseepea/feedback@0.10.2`
+- `@emseepea/react@0.4.8`
+- `@emseepea/svelte@0.2.8`
+- `@emseepea/server@0.23.1`
 - `@emseepea/testing@0.24.1`
 - `@emseepea/create-api-backed-server@0.1.17`
 - `@emseepea/create-database-schema-server@0.1.17`
@@ -85,6 +93,13 @@ Publish retried its failed job and dispatched the final full qualification.
 No immutable package version was replaced, and no performance gate was loosened.
 
 ## Retained performance conflict and verified control
+
+Guard-source Quality 38409314809 failed Node 22 with three complete CPU
+populations at 4.212, 6.326 and 4.317 ms p95. The aggregate correctly returned
+INCONCLUSIVE; Node 24 passed. No retry qualifies that source. Publication remains
+pending a reviewed repair and its exact-source pipeline. See
+[P022](../problems/open/022-accepted-path-cpu-budget-is-unqualified-on-the-node-22-ci-profile.md).
+Captured metadata reuse is an optimization candidate, not yet a verified CI repair.
 
 The initial complete Node 22 population on main 30d09eb exceeded the unchanged
 5 ms p95 CPU limit. Passing reruns and the final full workflow remain retained
