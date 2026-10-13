@@ -56,3 +56,17 @@ package checks, registry verification, and promotion must pass against their
 required commits. Publication is pending until these gates complete. The
 previous testing 0.23.5 release completed #162; this candidate preserves that
 transport fix and account-app isolation.
+
+
+## Integrated Codex CLI Compatibility Fix
+
+This candidate also includes the concurrent trunk fix that removes the Codex
+CLI version cutoff. Version metadata remains in evidence, and invocation
+isolation and rejection of forbidden operations, failed calls, and incomplete
+events remain unchanged. It makes no universal CLI compatibility claim.
+
+The trunk change records thirteen passing focused provider tests and three
+fixed authenticated Codex 0.159.2 trials, including initial, resumed, and fresh
+reads. Its supplemental bounded receipt remains in
+[codex-cli-behaviour-2026-10-13.json](codex-cli-behaviour-2026-10-13.json).
+The combined source still requires full qualification and release gates.

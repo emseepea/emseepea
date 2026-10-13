@@ -108,3 +108,14 @@ short paragraphs without changing their requirements.
 | File | SHA-256 | Result |
 | --- | --- | --- |
 | `packages/testing/README.md` | `24026e12078d9a9246817fc5c7d07cc7fdb51c8ff41fdbc96b4d271e73e8be44` | PASS |
+
+## Combined Trunk Candidate
+
+Author self-review: preserved the concurrent Codex fix and its evidence limits,
+and kept the native browser journey experimental. Reviewed the merged README
+and release record for short paragraphs and accurate package versions.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `packages/testing/README.md` | `c913b3932b21a6757ef8346fee9b5befac3faa417dbb2a28b7f921b0c4dcf0bb` | PASS |
+| `docs/reviews/current-release-readiness.md` | `70c50e97820005d8d5ba91150d37c4ca89b27635cdf1e892d8db39d1a2c50bcd` | PASS |
