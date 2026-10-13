@@ -1,5 +1,11 @@
 # @emseepea/create-soap-backed-server
 
+## 0.1.13
+
+### Patch Changes
+
+- [`5daabba`](https://github.com/emseepea/emseepea/commit/5daabbaa0a7a3b83cc0ab0c47e9abf372926ef0b) Thanks [@tompahoward](https://github.com/tompahoward)! - Release the maintained initializers with their current `@emseepea/testing` development dependency.
+
 ## 0.1.12
 
 ### Patch Changes
