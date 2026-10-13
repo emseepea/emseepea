@@ -12,7 +12,7 @@ do not enable it, install Playwright, or constrain an existing browser version.
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
 
-The PASS markers apply to the independently reviewed diagnostic investigation
+The PASS markers apply to the independently reviewed performance-control investigation
 slice now proposed for trunk. No new package release is selected. Standing
 performance-release risk remains outside appetite until the conflicting
 measurements are classified and treatment is verified.
@@ -104,3 +104,12 @@ native journeys on a controlled desktop runner owns its authentication,
 profile protection, endpoint, cleanup, and evidence retention. Keep profiles,
 cookies, credentials, and private learner data outside repositories and CI
 artifacts. The runner does not export authentication state.
+
+## Proposed fixed population verification
+
+The next infrastructure slice collects exactly three complete populations per
+invocation and retains the existing per-population limits. It accepts only three
+complete, uninstrumented passes. Conflicting results are INCONCLUSIVE; failed
+or incomplete measurements cannot qualify. Partial cohort checkpoints and
+child-process cleanup preserve interruption evidence. No further package
+release is selected, and R014 remains outside appetite pending fresh assessment.

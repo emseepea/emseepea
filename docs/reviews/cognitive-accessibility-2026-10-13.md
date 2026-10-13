@@ -190,3 +190,15 @@ qualification remains pending.
 | File | SHA-256 | Result |
 | --- | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `678c2221eef95644157bfb0ffc80e4c43a6d3fe9b98413a7aa7c8e8f609aad60` | PASS |
+
+## Proposed Complete-Population Performance Control
+
+Independent JTBD, cognitive-accessibility, voice and external-communication review: PASS.
+Proposed control status, retained failures, unchanged limits and unresolved standing
+release risk remain explicit. Contract checks are not performance qualification.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/problems/known-error/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md` | `6bb03a5904ee304e995656c3cb901a0fd8410b412021e7c2ce16f18867b2aec3` | PASS |
+| `docs/risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md` | `0312f7cd6d945f69931f7d852b6fcb2a29de1348a024e8e3c1ad50c47f396b61` | PASS |
+| `docs/reviews/current-release-readiness.md` | `e14fbdad3934bba1a9d8110768acf4b7c05549658b964aa119dfeebc5224683e` | PASS |

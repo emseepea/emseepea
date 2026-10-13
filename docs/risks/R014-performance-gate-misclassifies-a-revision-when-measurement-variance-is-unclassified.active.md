@@ -63,6 +63,18 @@ standing risk by itself.
 
 ## Treatment
 
+Proposed next control: collect exactly three complete populations in every
+invocation, each containing the existing three fresh-process cohorts per request
+class. Qualify only if all three complete, uninstrumented populations pass the
+unchanged limits. Mixed passing and flagged populations are INCONCLUSIVE; any
+missing, malformed, failed or cancelled population is INCOMPLETE. Retain raw
+samples, complete cohort checkpoints and bounded incomplete-cohort receipts.
+Do not pool away disagreement or retry until a favourable result appears.
+
+This control is not yet verified on both continuous-integration runtimes.
+Residual package-release risk remains 15/25 until fresh independent assessment
+of the fixed evidence. Correlated runner conditions remain a limitation.
+
 Maintain the fixed three-cohort classification and unchanged ADR-0014 limits.
 Re-open treatment if retained evidence shows a same-revision conflict under the
 complete pooled population, a missing cohort is accepted, or a true regression

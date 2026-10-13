@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "status": "FROZEN_BEFORE_QUALIFYING_COLLECTION",
+  "base": "d91931a3f66076165bdd05d264c176d09a9a8454",
+  "sourceSha256": {
+    "benchmarks/benchmark-child.mjs": "9d86645f27ac2e02ea89914ff9c7e68558312d8ac1a5d3429a38004cb1cf1e2a",
+    "benchmarks/benchmark-http.mjs": "1f465935d76ea208aa8ece4a9c2c126a1d579cd61b0b2d4defce3751c4cfd0b7",
+    "benchmarks/production-boundary.mjs": "c24adec1c5a8bbf8d46108f8eedf29683d56b8a39cd1911c157ea6e8e4c329e3",
+    "benchmarks/production-boundary-classification.mjs": "56f137da870ff0296a67da83f562592c92e748a7e1d2d65a07c4679266006ac5",
+    "benchmarks/production-boundary-populations.mjs": "25521caca41374db1d6e5300959f1ba51c39c41a3767419445e01ea0256eeb76",
+    "benchmarks/json-boundary-server.mjs": "8bc99bc0a02c2e95103965ca47fee640adc58e0ad997577bb56442214c345cd8",
+    "benchmarks/diagnostic-clock.mjs": "d9e04aef51b64243baa48a63cfbd9a37fdddee2bc74cc2c40e96954ec15d55f6"
+  },
+  "invocations": {
+    "local": "one ordinary benchmark:built invocation on installed Node24.19.0",
+    "ci": "one ordinary benchmark:built invocation per governed Node22 and Node24 Quality job; actual runtime and hardware retained"
+  },
+  "populationPolicy": {
+    "populations": 3,
+    "requestClasses": [
+      "accepted",
+      "rate-limited",
+      "capacity-exhausted",
+      "malformed"
+    ],
+    "cohortsPerClass": 3,
+    "acceptance": "Only all three complete uninstrumented populations PASS; mixed INCONCLUSIVE; failed/missing/cancelled/malformed INCOMPLETE",
+    "budgets": "Unchanged existing per-population ADR0014 limits",
+    "noResultDependentRetry": true
+  },
+  "diagnostics": "At most the normal workflow prescribed trace invocation after failure, separately namespaced and nonqualifying; never replaces ordinary measurements",
+  "limits": [
+    "No equivalence claim",
+    "Correlated runner conditions remain possible",
+    "Earlier failed complete populations preserved",
+    "Cancellation smoke is lifecycle evidence only"
+  ]
+}

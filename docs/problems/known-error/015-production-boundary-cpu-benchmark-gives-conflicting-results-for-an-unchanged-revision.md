@@ -37,6 +37,18 @@ records before interpretation. Overflow or an unfinished window prevents
 absence claims. Preserve every failure and the earlier closure evidence; do
 not retry measurements until a favourable result appears.
 
+## Proposed complete-population control
+
+Every invocation will collect exactly three complete populations, each retaining
+the existing three-cohort calculation. All must pass to qualify; disagreement
+is INCONCLUSIVE and an incomplete population is INCOMPLETE. The budgets stay
+unchanged. No result-dependent retry or pooling across populations is allowed.
+
+The control retains raw samples and incomplete-cohort checkpoints, cancels
+subsequent measurements after external interruption and terminates child
+listeners. A fixed verification invocation must be declared before collection.
+This proposed control does not close the problem or establish equivalence.
+
 ## Original description
 
 Quality run `35912998949` gave conflicting production-boundary CPU results for

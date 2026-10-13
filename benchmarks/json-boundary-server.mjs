@@ -67,6 +67,11 @@ const app = createEmseepea({
   } : undefined,
 });
 const running = await serveEmseepea(app, { port: 0 });
+let closing;
+const close = () => closing ??= running.close();
+// Parent death must not leave an orphan benchmark listener. Normal shutdown
+// still sends its receipt before disconnect; close is shared and idempotent.
+process.once("disconnect", () => { void close().catch(() => { process.exitCode = 1; }); });
 let cpuStart;
 let allocationSession;
 const diagnosticClock = process.env.EMSEEPEA_BENCHMARK_TRACE_DIR ? createDiagnosticClock() : undefined;
@@ -99,7 +104,7 @@ process.on("message", async ({ id, type }) => {
     } else if (type === "resource-calls") {
       value = resourceCalls;
     } else if (type === "shutdown") {
-      await running.close();
+      await close();
       value = await diagnosticClock?.finish();
     }
     process.send({ id, value });
