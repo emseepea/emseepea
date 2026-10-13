@@ -1,0 +1,91 @@
+{
+  "purpose": "Narrow native CLI invocation/session contract qualification; not general compatibility or product question-quality qualification",
+  "status": "passed",
+  "provider": "codex-local",
+  "configured_model": "gpt-5.5",
+  "model_evidence": "configured",
+  "authoritative": false,
+  "smoke": false,
+  "dependencies": {
+    "mcpClient": "2.2.0",
+    "codexCli": "0.159.2"
+  },
+  "semantic_retries": 0,
+  "trials": 3,
+  "native_turns": 9,
+  "tool_calls": 18,
+  "meaning_judgments": 9,
+  "meaning_verdicts": [
+    {
+      "pass": true,
+      "score": 1,
+      "reason": "The response correctly pairs each route with its authoritative departure time."
+    },
+    {
+      "pass": true,
+      "score": 1,
+      "reason": "The response correctly pairs each route with its authoritative departure time."
+    },
+    {
+      "pass": true,
+      "score": 1,
+      "reason": "The response correctly pairs each route with its authoritative departure time."
+    },
+    {
+      "pass": true,
+      "score": 1,
+      "reason": "The response correctly pairs north, east, south, and west with their authoritative departure times."
+    },
+    {
+      "pass": true,
+      "score": 1,
+      "reason": "The response correctly pairs each route with its authoritative departure time."
+    },
+    {
+      "pass": true,
+      "score": 1,
+      "reason": "The response correctly pairs north, east, south, and west with their authoritative departure times."
+    },
+    {
+      "pass": true,
+      "score": 1,
+      "reason": "The response correctly pairs each route with its authoritative departure time."
+    },
+    {
+      "pass": true,
+      "score": 1,
+      "reason": "The response correctly pairs each route with its authoritative departure time."
+    },
+    {
+      "pass": true,
+      "score": 1,
+      "reason": "The response correctly pairs north, east, south, and west with the authoritative departure times 08:10, 09:20, 10:30, and 11:40."
+    }
+  ],
+  "case_source_sha256": "91a74f5ac3808e38b6b3e67613441330ee9fbbdb20091ecaa0c697a0840a1d01",
+  "server_source_sha256": "bed873ef79183eedaf276c469ed2f38ab890e2b6e741c390770aa2053d8a094f",
+  "provider_source_sha256": "1e95ebbde4506b7503755db8c0cb4c7051653128a0323e73ec6fe11ebf324512",
+  "raw_evidence_sha256": "b0fb62fdb24c0fc637dd7dcb1e481701e12b1132ecb8071441b1366f7c25541c",
+  "settings": {
+    "approvalPolicy": "never",
+    "appInstructions": false,
+    "apps": false,
+    "loginShell": false,
+    "multiAgent": false,
+    "plugins": false,
+    "remotePlugin": false,
+    "sandbox": "read-only",
+    "shell": "forbidden",
+    "shellEnvironment": "empty",
+    "toolSuggest": false,
+    "userConfig": "ignored",
+    "webSearch": false
+  },
+  "boundaries": [
+    "Three fixed trials each read four timetable routes, resumed to re-read one, then used a fresh session to read one.",
+    "Initial answers had nine independent meaning judgments; resumed/fresh answers had literal exact-value and exact-call assertions.",
+    "Local authenticated Codex evidence is supplemental; normal authoritative release gates still apply.",
+    "Strict rejection of failed calls, forbidden operations and incomplete events is unchanged.",
+    "This slice does not support registered resource-helper reads or completed-turn recovery evidence."
+  ]
+}

@@ -2,90 +2,42 @@
 
 Date: 2026-10-13
 
-## Release status
+## Planned change
 
-Publication status: **RELEASED**. Testing 0.23.5 and the eleven initializer
-patches at 0.1.14 are published under npm latest. Quality, Release, Publish,
-registry verification, and merge-back qualification passed.
+Publication status: **NOT YET RELEASED**. This patch removes the Codex CLI version cutoff from the testing runner. The installed version remains evidence metadata. Invocation isolation and rejection of failed calls, forbidden operations and incomplete events are unchanged.
 
 - Result: PASS
-- Final result: within appetite.
+- Final result: within appetite, subject to the required exact-commit gates.
 
-## Codex account-app isolation
+These markers record the reviewed slice and residual risk of 5/25. They do not claim completed publication. Full local qualification, benchmark, exact-source Quality, authoritative release checks, packed-consumer checks and registry verification must pass before delivery is reported complete.
 
-The runner disables account apps, local and remote plugins, shell tools, web
-search, and multi-agent execution while retaining the configured test MCP
-server. Foreign native calls and non-empty resource inventories still fail.
-Codex CLI 0.162.0 or later is required.
+## Planned package set
 
-This patch preserves the model process's configured proxy and certificate
-settings. It keeps the provider environment restricted and shell environment
-inheritance disabled. Authentication can therefore use the managed network
-without enabling account apps or passing unrelated service credentials.
+- `@emseepea/testing@0.23.6`
+- `@emseepea/create-tool-server@0.1.15`
+- `@emseepea/create-api-backed-server@0.1.15`
+- `@emseepea/create-openapi-backed-server@0.1.15`
+- `@emseepea/create-resources-and-prompts-server@0.1.15`
+- `@emseepea/create-progress-streaming-server@0.1.15`
+- `@emseepea/create-html-ui-server@0.1.15`
+- `@emseepea/create-react-ui-server@0.1.15`
+- `@emseepea/create-multi-instance-postgres-server@0.1.15`
+- `@emseepea/create-database-schema-server@0.1.15`
+- `@emseepea/create-mongodb-backed-server@0.1.15`
+- `@emseepea/create-soap-backed-server@0.1.15`
 
-## Released package set
+The eleven initializer patches propagate the corrected testing dependency into generated starter projects. They do not change initializer application behavior.
 
-- `@emseepea/create-api-backed-server@0.1.14`
-- `@emseepea/create-database-schema-server@0.1.14`
-- `@emseepea/create-html-ui-server@0.1.14`
-- `@emseepea/create-mongodb-backed-server@0.1.14`
-- `@emseepea/create-multi-instance-postgres-server@0.1.14`
-- `@emseepea/create-openapi-backed-server@0.1.14`
-- `@emseepea/create-progress-streaming-server@0.1.14`
-- `@emseepea/create-react-ui-server@0.1.14`
-- `@emseepea/create-resources-and-prompts-server@0.1.14`
-- `@emseepea/create-soap-backed-server@0.1.14`
-- `@emseepea/create-tool-server@0.1.14`
-- `@emseepea/testing@0.23.5`
+## Completed narrow checks
 
-The eleven initializer patches update their generated projects to use the
-corrected testing package.
+All thirteen focused provider tests passed, including retained isolation, forbidden-event and failed-call checks, version metadata and invalid metadata rejection. Server and testing builds passed.
 
-## Verified before push
+Authenticated Codex CLI 0.159.2 completed three fixed trials using configured model gpt-5.5, without semantic retries. Each trial read four synthetic timetable routes, resumed to re-read one route, then read one route in a fresh session. Eighteen exact tool calls and nine native turns passed. Nine meaning judgments cover the initial answers; resumed and fresh answers use literal value and exact-call assertions.
 
-The full local test suite passed, including all workspace suites and 423
-black-box, documentation, and LLM harness tests. Focused provider tests verify
-transport settings, excluded unrelated credentials, and retained shell
-restrictions for both Codex and Claude.
+The bounded receipt is in [the CLI behaviour evidence](codex-cli-behaviour-2026-10-13.json). Local Codex evidence is supplemental and is labeled non-authoritative by the runner; the normal authoritative publication gates remain required. The timetable test does not exercise every forbidden capability. Unchanged executable isolation contracts provide the corresponding negative checks. No universal CLI compatibility is claimed.
 
-Authenticated Codex CLI 0.162.1, configured for gpt-6.1-sol, passed three fresh
-trials. Each made four synthetic timetable reads, resumed for one read, then
-started a fresh session for one read. Independent meaning checks passed. Native
-resource and template discovery returned empty inventories. These observations
-verify the exercised local conversations; they do not claim live API-key CI
-authentication was tested. The local and CI paths share the isolation settings
-and are covered by lifecycle regression tests.
+## Environment repair and evidence limits
 
-Inspect the retained synthetic evidence in
-`docs/reviews/codex-native-isolation-2026-10-13.json` and the inventory summary in
-`docs/reviews/codex-native-inventories-2026-10-13.json`. No account metadata or
-credentials are included.
+The first full local run failed because the required Playwright browser was absent. After installation, a second run exposed an owner-only permission on the synthetic PostgreSQL schema fixture. The fixture is now readable by the database container, and its seven focused tests passed. Both failed-run logs are preserved outside the public repository. Fixture bytes are unchanged; no production configuration or data was changed. Exact-commit full qualification is still required.
 
-## Completed release evidence
-
-- Source Quality passed for 5d51e96: https://github.com/emseepea/emseepea/actions/runs/38345976623
-- Release passed for candidate 7da3391: https://github.com/emseepea/emseepea/actions/runs/38347064747
-- Release PR merged: https://github.com/emseepea/emseepea/pull/166
-- Publish and promotion passed: https://github.com/emseepea/emseepea/actions/runs/38349420205
-- Merge-back Quality passed for 2585aa4: https://github.com/emseepea/emseepea/actions/runs/38349717466
-
-A clean npm installation of @emseepea/testing 0.23.5 passed the three-trial
-authenticated Codex conversation test. Separate initial, resumed, and fresh
-sessions each returned empty native resource and template inventories and
-successfully read the configured synthetic timetable. The latest tag resolves
-to 0.23.5, with the same integrity hash as the tested installation. npm audit
-signatures verified 70 package signatures and 37 attestations.
-
-The first Release publication verification timed out while the SOAP initializer
-was not yet visible. Retrying the failed job against the unchanged candidate
-completed registry and downloaded-package verification. No immutable package
-version was replaced.
-
-The installed-package evidence SHA-256 hashes are:
-
-- Native conversations: 7ab21f3162bfff1e3d35d138075be8b9272da312fbc6f118d666a089409cf893
-- Native inventories: 671edec536b7fdd44b2cf802941bdf76a8c6dc4aec6cbc36fafc17a933e88900
-
-These checks complete the exercised local native-client and release criteria
-for issue #162. Live API-key CI authentication was not separately exercised;
-local and CI invocations share the tested isolation configuration.
+This slice does not add registered resource-helper support or completed-turn recovery capture. Existing strict failure behavior remains. It does not replace any prior failed study comparison or establish product question quality.
