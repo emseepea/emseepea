@@ -1,0 +1,984 @@
+{
+  "authoritative": false,
+  "provider": "codex-local",
+  "smoke": false,
+  "configuredModel": "gpt-6.1-sol",
+  "modelEvidence": "configured",
+  "settings": {
+    "approvalPolicy": "never",
+    "appInstructions": false,
+    "apps": false,
+    "loginShell": false,
+    "multiAgent": false,
+    "plugins": false,
+    "remotePlugin": false,
+    "sandbox": "read-only",
+    "shell": "forbidden",
+    "shellEnvironment": "empty",
+    "toolSuggest": false,
+    "userConfig": "ignored",
+    "webSearch": false
+  },
+  "semanticRetries": 0,
+  "status": "passed",
+  "cases": {
+    "98e529f68d4d406989b820f271a994ba79a0a5460429aff95e9dc92de865ea9c": {
+      "name": "an isolated native conversation reads records across resumed and fresh sessions",
+      "file": "packages/testing/eval/tool-batch.test.mjs",
+      "mode": "conversation",
+      "authoritative": false,
+      "smoke": false,
+      "provider": "codex-local",
+      "configuredModel": "gpt-6.1-sol",
+      "modelEvidence": "configured",
+      "settings": {
+        "approvalPolicy": "never",
+        "appInstructions": false,
+        "apps": false,
+        "loginShell": false,
+        "multiAgent": false,
+        "plugins": false,
+        "remotePlugin": false,
+        "sandbox": "read-only",
+        "shell": "forbidden",
+        "shellEnvironment": "empty",
+        "toolSuggest": false,
+        "userConfig": "ignored",
+        "webSearch": false
+      },
+      "semanticRetries": 0,
+      "status": "passed",
+      "caseSha256": "23a91950d44f6561f5c16385ab4b97907ec42aae31b7d61d162ea98f68464c96",
+      "sourceSha256": "bed873ef79183eedaf276c469ed2f38ab890e2b6e741c390770aa2053d8a094f",
+      "answerTrials": [
+        {
+          "trial": 1,
+          "turns": [
+            {
+              "turn": 1,
+              "conversation": 1,
+              "interactionMode": "native-mcp",
+              "prompt": "In the connected synthetic timetable, what are the north, east, south, and west departure times?",
+              "response": "| Direction | Departure |\n|---|---|\n| North | 08:10 |\n| East | 09:20 |\n| South | 10:30 |\n| West | 11:40 |",
+              "elicitations": [],
+              "toolCalls": [
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "north"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"north\",\"departure\":\"08:10\"}"
+                    }
+                  ],
+                  "isError": false
+                },
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "east"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"east\",\"departure\":\"09:20\"}"
+                    }
+                  ],
+                  "isError": false
+                },
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "south"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"south\",\"departure\":\"10:30\"}"
+                    }
+                  ],
+                  "isError": false
+                },
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "west"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"west\",\"departure\":\"11:40\"}"
+                    }
+                  ],
+                  "isError": false
+                }
+              ],
+              "toolOutcomesSha256": "abb6cae5d2d2a3bd4c41df1633ed5c77ad9bc74c4c10d4490f3c2a59a08bbd18",
+              "promptSha256": "59aa9220a0a644dc097a6c358acbe3f52af88ebe0fe8cb9801a51156cb65c6bb",
+              "answerSha256": "ba372c698d656de94c76ee9fc3a6f1ec99e7fbfcafa73929cac5e41fe513acf1",
+              "answerModels": [
+                "gpt-6.1-sol"
+              ],
+              "answerModelEvidence": "configured",
+              "answerTurnCount": 1,
+              "answerProviderTurnCount": 5,
+              "answerProviderToolCount": 4,
+              "advertisedToolCount": 1,
+              "advertisedToolsSha256": "4c00784a9fcbf27e73f092114a517a4aee317ba832bedd6b9c71e9cd8d663a95",
+              "selectedCallsSha256": "f0306b0c3047cf530b26730331830961ef76ef443537bc898f4ec7521fea8e00",
+              "selectedTools": [
+                "read-departure",
+                "read-departure",
+                "read-departure",
+                "read-departure"
+              ],
+              "toolCallCount": 4,
+              "materialSha256": "1cb95dd44f2126369c3cf4e5a2c01e0c97c270650def522c6ab02551e9a81c00",
+              "pathEvidence": [
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "160ece3299458013d1289d57a5e1ab2cd59677d19856e27e5cc248b06412ea2d",
+                  "responseSha256": "5af5014dd0917b1965a7ff78eeecd88f9f40c1f308502ccae35fa3f0142287c8"
+                },
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "4195fbebdefe39d71421878f094e57159bcab3ae7c660c856141e3f0b0761b49",
+                  "responseSha256": "edc746c5b44c5ad9dc562e3fda9a188f7dc2c19ed0d553978774d1e1fd7e1527"
+                },
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "9838794f490d4115c78792eb64a1313370b33fa212a1a347590ff36224fdd4b6",
+                  "responseSha256": "1c32f4d98e71a5018fe6fdc4d62af924539653c1451d6fe012367ff08497f7c4"
+                },
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "15967b8f495781b30a0ca158d26fb818322cf5b567081847f3c94a2a8d6ee766",
+                  "responseSha256": "107380cde372fccbafca9604400470143dcb31e1b68f4c03e04a9343379063a9"
+                }
+              ],
+              "literalAssertionCount": 4,
+              "meaningAssertionCount": 1,
+              "expectedTools": [
+                "read-departure",
+                "read-departure",
+                "read-departure",
+                "read-departure"
+              ],
+              "expectedSelectionSha256": "bbba4581f902c344445623e7f5a6dfa29826e5d469ffd52a15a8c9b63e8d96f3",
+              "expectedResponseContent": [
+                "11:40"
+              ],
+              "expectedMeaning": "North departs at 08:10, east at 09:20, south at 10:30, and west at 11:40. Each route is paired with its authoritative time."
+            },
+            {
+              "turn": 2,
+              "conversation": 1,
+              "interactionMode": "native-mcp",
+              "prompt": "Re-read the east route from the connected synthetic timetable and report its current departure time.",
+              "response": "The east route’s current departure time is **09:20**.",
+              "elicitations": [],
+              "toolCalls": [
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "east"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"east\",\"departure\":\"09:20\"}"
+                    }
+                  ],
+                  "isError": false
+                }
+              ],
+              "toolOutcomesSha256": "d0d7d2ae1d6d1400c182fe370ed4e50db66b2f854ed05e562086790b86aa9a1a",
+              "promptSha256": "553527feb2d66d2a8f9a686595e6457258e88ec0561e0e7495d9779eef95c070",
+              "answerSha256": "16900eb2eae8ff21e2dc2d0ccfb1a37b6d3b6bf92f4c967f6cf2c309cd189aec",
+              "answerModels": [
+                "gpt-6.1-sol"
+              ],
+              "answerModelEvidence": "configured",
+              "answerTurnCount": 1,
+              "answerProviderTurnCount": 2,
+              "answerProviderToolCount": 1,
+              "advertisedToolCount": 1,
+              "advertisedToolsSha256": "4c00784a9fcbf27e73f092114a517a4aee317ba832bedd6b9c71e9cd8d663a95",
+              "selectedCallsSha256": "81b3aa35692187160cec66e18914116be7de7d718a0357442e10063e40802bb6",
+              "selectedTools": [
+                "read-departure"
+              ],
+              "toolCallCount": 1,
+              "materialSha256": "1c1239a5e7ba41f6b25bc4c0b73f162f465ab6e8e18bd75b209a8310576922d7",
+              "pathEvidence": [
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "4195fbebdefe39d71421878f094e57159bcab3ae7c660c856141e3f0b0761b49",
+                  "responseSha256": "edc746c5b44c5ad9dc562e3fda9a188f7dc2c19ed0d553978774d1e1fd7e1527"
+                }
+              ],
+              "literalAssertionCount": 1,
+              "meaningAssertionCount": 0,
+              "expectedTools": [
+                "read-departure"
+              ],
+              "expectedSelectionSha256": "307de78f40c25e266eb6883417f2b1c38e7ae447827d7a0094912874ca17feb5",
+              "expectedResponseContent": [
+                "09:20"
+              ]
+            },
+            {
+              "turn": 3,
+              "conversation": 2,
+              "interactionMode": "native-mcp",
+              "prompt": "In the connected synthetic timetable, what is the west route's departure time?",
+              "response": "The west route departs at **11:40**.",
+              "elicitations": [],
+              "toolCalls": [
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "west"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"west\",\"departure\":\"11:40\"}"
+                    }
+                  ],
+                  "isError": false
+                }
+              ],
+              "toolOutcomesSha256": "c47149af83a958c21ed15db210e23455822108d57f63a551e808bb96baa3122a",
+              "promptSha256": "3b68bdf5c53fe739fd48224708af869be8c217581b48f1d99406d0b7c2458ae6",
+              "answerSha256": "d587af9bc3e91ce16f0c2c8a3db03f4a7659317a910a257fe99e18abf84add5e",
+              "answerModels": [
+                "gpt-6.1-sol"
+              ],
+              "answerModelEvidence": "configured",
+              "answerTurnCount": 1,
+              "answerProviderTurnCount": 2,
+              "answerProviderToolCount": 1,
+              "advertisedToolCount": 1,
+              "advertisedToolsSha256": "4c00784a9fcbf27e73f092114a517a4aee317ba832bedd6b9c71e9cd8d663a95",
+              "selectedCallsSha256": "b3f4fb3f363bbe31ffe4aa7bd1586d7c8d2551cd866d3bd86a02462eced2f865",
+              "selectedTools": [
+                "read-departure"
+              ],
+              "toolCallCount": 1,
+              "materialSha256": "88a78e59f9118eeeca95f473f6d41f46dd826d0ca1047077073d65d6c08ba1ef",
+              "pathEvidence": [
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "15967b8f495781b30a0ca158d26fb818322cf5b567081847f3c94a2a8d6ee766",
+                  "responseSha256": "107380cde372fccbafca9604400470143dcb31e1b68f4c03e04a9343379063a9"
+                }
+              ],
+              "literalAssertionCount": 1,
+              "meaningAssertionCount": 0,
+              "expectedTools": [
+                "read-departure"
+              ],
+              "expectedSelectionSha256": "307de78f40c25e266eb6883417f2b1c38e7ae447827d7a0094912874ca17feb5",
+              "expectedResponseContent": [
+                "11:40"
+              ]
+            }
+          ]
+        },
+        {
+          "trial": 2,
+          "turns": [
+            {
+              "turn": 1,
+              "conversation": 1,
+              "interactionMode": "native-mcp",
+              "prompt": "In the connected synthetic timetable, what are the north, east, south, and west departure times?",
+              "response": "| Direction | Departure |\n|---|---|\n| North | 08:10 |\n| East | 09:20 |\n| South | 10:30 |\n| West | 11:40 |",
+              "elicitations": [],
+              "toolCalls": [
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "north"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"north\",\"departure\":\"08:10\"}"
+                    }
+                  ],
+                  "isError": false
+                },
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "east"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"east\",\"departure\":\"09:20\"}"
+                    }
+                  ],
+                  "isError": false
+                },
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "south"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"south\",\"departure\":\"10:30\"}"
+                    }
+                  ],
+                  "isError": false
+                },
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "west"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"west\",\"departure\":\"11:40\"}"
+                    }
+                  ],
+                  "isError": false
+                }
+              ],
+              "toolOutcomesSha256": "abb6cae5d2d2a3bd4c41df1633ed5c77ad9bc74c4c10d4490f3c2a59a08bbd18",
+              "promptSha256": "59aa9220a0a644dc097a6c358acbe3f52af88ebe0fe8cb9801a51156cb65c6bb",
+              "answerSha256": "ba372c698d656de94c76ee9fc3a6f1ec99e7fbfcafa73929cac5e41fe513acf1",
+              "answerModels": [
+                "gpt-6.1-sol"
+              ],
+              "answerModelEvidence": "configured",
+              "answerTurnCount": 1,
+              "answerProviderTurnCount": 5,
+              "answerProviderToolCount": 4,
+              "advertisedToolCount": 1,
+              "advertisedToolsSha256": "4c00784a9fcbf27e73f092114a517a4aee317ba832bedd6b9c71e9cd8d663a95",
+              "selectedCallsSha256": "f0306b0c3047cf530b26730331830961ef76ef443537bc898f4ec7521fea8e00",
+              "selectedTools": [
+                "read-departure",
+                "read-departure",
+                "read-departure",
+                "read-departure"
+              ],
+              "toolCallCount": 4,
+              "materialSha256": "1cb95dd44f2126369c3cf4e5a2c01e0c97c270650def522c6ab02551e9a81c00",
+              "pathEvidence": [
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "160ece3299458013d1289d57a5e1ab2cd59677d19856e27e5cc248b06412ea2d",
+                  "responseSha256": "5af5014dd0917b1965a7ff78eeecd88f9f40c1f308502ccae35fa3f0142287c8"
+                },
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "4195fbebdefe39d71421878f094e57159bcab3ae7c660c856141e3f0b0761b49",
+                  "responseSha256": "edc746c5b44c5ad9dc562e3fda9a188f7dc2c19ed0d553978774d1e1fd7e1527"
+                },
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "9838794f490d4115c78792eb64a1313370b33fa212a1a347590ff36224fdd4b6",
+                  "responseSha256": "1c32f4d98e71a5018fe6fdc4d62af924539653c1451d6fe012367ff08497f7c4"
+                },
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "15967b8f495781b30a0ca158d26fb818322cf5b567081847f3c94a2a8d6ee766",
+                  "responseSha256": "107380cde372fccbafca9604400470143dcb31e1b68f4c03e04a9343379063a9"
+                }
+              ],
+              "literalAssertionCount": 4,
+              "meaningAssertionCount": 1,
+              "expectedTools": [
+                "read-departure",
+                "read-departure",
+                "read-departure",
+                "read-departure"
+              ],
+              "expectedSelectionSha256": "bbba4581f902c344445623e7f5a6dfa29826e5d469ffd52a15a8c9b63e8d96f3",
+              "expectedResponseContent": [
+                "11:40"
+              ],
+              "expectedMeaning": "North departs at 08:10, east at 09:20, south at 10:30, and west at 11:40. Each route is paired with its authoritative time."
+            },
+            {
+              "turn": 2,
+              "conversation": 1,
+              "interactionMode": "native-mcp",
+              "prompt": "Re-read the east route from the connected synthetic timetable and report its current departure time.",
+              "response": "The east route’s current departure time is **09:20**.",
+              "elicitations": [],
+              "toolCalls": [
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "east"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"east\",\"departure\":\"09:20\"}"
+                    }
+                  ],
+                  "isError": false
+                }
+              ],
+              "toolOutcomesSha256": "d0d7d2ae1d6d1400c182fe370ed4e50db66b2f854ed05e562086790b86aa9a1a",
+              "promptSha256": "553527feb2d66d2a8f9a686595e6457258e88ec0561e0e7495d9779eef95c070",
+              "answerSha256": "16900eb2eae8ff21e2dc2d0ccfb1a37b6d3b6bf92f4c967f6cf2c309cd189aec",
+              "answerModels": [
+                "gpt-6.1-sol"
+              ],
+              "answerModelEvidence": "configured",
+              "answerTurnCount": 1,
+              "answerProviderTurnCount": 2,
+              "answerProviderToolCount": 1,
+              "advertisedToolCount": 1,
+              "advertisedToolsSha256": "4c00784a9fcbf27e73f092114a517a4aee317ba832bedd6b9c71e9cd8d663a95",
+              "selectedCallsSha256": "81b3aa35692187160cec66e18914116be7de7d718a0357442e10063e40802bb6",
+              "selectedTools": [
+                "read-departure"
+              ],
+              "toolCallCount": 1,
+              "materialSha256": "1c1239a5e7ba41f6b25bc4c0b73f162f465ab6e8e18bd75b209a8310576922d7",
+              "pathEvidence": [
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "4195fbebdefe39d71421878f094e57159bcab3ae7c660c856141e3f0b0761b49",
+                  "responseSha256": "edc746c5b44c5ad9dc562e3fda9a188f7dc2c19ed0d553978774d1e1fd7e1527"
+                }
+              ],
+              "literalAssertionCount": 1,
+              "meaningAssertionCount": 0,
+              "expectedTools": [
+                "read-departure"
+              ],
+              "expectedSelectionSha256": "307de78f40c25e266eb6883417f2b1c38e7ae447827d7a0094912874ca17feb5",
+              "expectedResponseContent": [
+                "09:20"
+              ]
+            },
+            {
+              "turn": 3,
+              "conversation": 2,
+              "interactionMode": "native-mcp",
+              "prompt": "In the connected synthetic timetable, what is the west route's departure time?",
+              "response": "The west route departs at **11:40**.",
+              "elicitations": [],
+              "toolCalls": [
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "west"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"west\",\"departure\":\"11:40\"}"
+                    }
+                  ],
+                  "isError": false
+                }
+              ],
+              "toolOutcomesSha256": "c47149af83a958c21ed15db210e23455822108d57f63a551e808bb96baa3122a",
+              "promptSha256": "3b68bdf5c53fe739fd48224708af869be8c217581b48f1d99406d0b7c2458ae6",
+              "answerSha256": "d587af9bc3e91ce16f0c2c8a3db03f4a7659317a910a257fe99e18abf84add5e",
+              "answerModels": [
+                "gpt-6.1-sol"
+              ],
+              "answerModelEvidence": "configured",
+              "answerTurnCount": 1,
+              "answerProviderTurnCount": 2,
+              "answerProviderToolCount": 1,
+              "advertisedToolCount": 1,
+              "advertisedToolsSha256": "4c00784a9fcbf27e73f092114a517a4aee317ba832bedd6b9c71e9cd8d663a95",
+              "selectedCallsSha256": "b3f4fb3f363bbe31ffe4aa7bd1586d7c8d2551cd866d3bd86a02462eced2f865",
+              "selectedTools": [
+                "read-departure"
+              ],
+              "toolCallCount": 1,
+              "materialSha256": "88a78e59f9118eeeca95f473f6d41f46dd826d0ca1047077073d65d6c08ba1ef",
+              "pathEvidence": [
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "15967b8f495781b30a0ca158d26fb818322cf5b567081847f3c94a2a8d6ee766",
+                  "responseSha256": "107380cde372fccbafca9604400470143dcb31e1b68f4c03e04a9343379063a9"
+                }
+              ],
+              "literalAssertionCount": 1,
+              "meaningAssertionCount": 0,
+              "expectedTools": [
+                "read-departure"
+              ],
+              "expectedSelectionSha256": "307de78f40c25e266eb6883417f2b1c38e7ae447827d7a0094912874ca17feb5",
+              "expectedResponseContent": [
+                "11:40"
+              ]
+            }
+          ]
+        },
+        {
+          "trial": 3,
+          "turns": [
+            {
+              "turn": 1,
+              "conversation": 1,
+              "interactionMode": "native-mcp",
+              "prompt": "In the connected synthetic timetable, what are the north, east, south, and west departure times?",
+              "response": "| Direction | Departure |\n|---|---|\n| North | 08:10 |\n| East | 09:20 |\n| South | 10:30 |\n| West | 11:40 |",
+              "elicitations": [],
+              "toolCalls": [
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "north"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"north\",\"departure\":\"08:10\"}"
+                    }
+                  ],
+                  "isError": false
+                },
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "east"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"east\",\"departure\":\"09:20\"}"
+                    }
+                  ],
+                  "isError": false
+                },
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "south"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"south\",\"departure\":\"10:30\"}"
+                    }
+                  ],
+                  "isError": false
+                },
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "west"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"west\",\"departure\":\"11:40\"}"
+                    }
+                  ],
+                  "isError": false
+                }
+              ],
+              "toolOutcomesSha256": "abb6cae5d2d2a3bd4c41df1633ed5c77ad9bc74c4c10d4490f3c2a59a08bbd18",
+              "promptSha256": "59aa9220a0a644dc097a6c358acbe3f52af88ebe0fe8cb9801a51156cb65c6bb",
+              "answerSha256": "ba372c698d656de94c76ee9fc3a6f1ec99e7fbfcafa73929cac5e41fe513acf1",
+              "answerModels": [
+                "gpt-6.1-sol"
+              ],
+              "answerModelEvidence": "configured",
+              "answerTurnCount": 1,
+              "answerProviderTurnCount": 5,
+              "answerProviderToolCount": 4,
+              "advertisedToolCount": 1,
+              "advertisedToolsSha256": "4c00784a9fcbf27e73f092114a517a4aee317ba832bedd6b9c71e9cd8d663a95",
+              "selectedCallsSha256": "f0306b0c3047cf530b26730331830961ef76ef443537bc898f4ec7521fea8e00",
+              "selectedTools": [
+                "read-departure",
+                "read-departure",
+                "read-departure",
+                "read-departure"
+              ],
+              "toolCallCount": 4,
+              "materialSha256": "1cb95dd44f2126369c3cf4e5a2c01e0c97c270650def522c6ab02551e9a81c00",
+              "pathEvidence": [
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "160ece3299458013d1289d57a5e1ab2cd59677d19856e27e5cc248b06412ea2d",
+                  "responseSha256": "5af5014dd0917b1965a7ff78eeecd88f9f40c1f308502ccae35fa3f0142287c8"
+                },
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "4195fbebdefe39d71421878f094e57159bcab3ae7c660c856141e3f0b0761b49",
+                  "responseSha256": "edc746c5b44c5ad9dc562e3fda9a188f7dc2c19ed0d553978774d1e1fd7e1527"
+                },
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "9838794f490d4115c78792eb64a1313370b33fa212a1a347590ff36224fdd4b6",
+                  "responseSha256": "1c32f4d98e71a5018fe6fdc4d62af924539653c1451d6fe012367ff08497f7c4"
+                },
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "15967b8f495781b30a0ca158d26fb818322cf5b567081847f3c94a2a8d6ee766",
+                  "responseSha256": "107380cde372fccbafca9604400470143dcb31e1b68f4c03e04a9343379063a9"
+                }
+              ],
+              "literalAssertionCount": 4,
+              "meaningAssertionCount": 1,
+              "expectedTools": [
+                "read-departure",
+                "read-departure",
+                "read-departure",
+                "read-departure"
+              ],
+              "expectedSelectionSha256": "bbba4581f902c344445623e7f5a6dfa29826e5d469ffd52a15a8c9b63e8d96f3",
+              "expectedResponseContent": [
+                "11:40"
+              ],
+              "expectedMeaning": "North departs at 08:10, east at 09:20, south at 10:30, and west at 11:40. Each route is paired with its authoritative time."
+            },
+            {
+              "turn": 2,
+              "conversation": 1,
+              "interactionMode": "native-mcp",
+              "prompt": "Re-read the east route from the connected synthetic timetable and report its current departure time.",
+              "response": "The east route’s current departure time is **09:20**.",
+              "elicitations": [],
+              "toolCalls": [
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "east"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"east\",\"departure\":\"09:20\"}"
+                    }
+                  ],
+                  "isError": false
+                }
+              ],
+              "toolOutcomesSha256": "d0d7d2ae1d6d1400c182fe370ed4e50db66b2f854ed05e562086790b86aa9a1a",
+              "promptSha256": "553527feb2d66d2a8f9a686595e6457258e88ec0561e0e7495d9779eef95c070",
+              "answerSha256": "16900eb2eae8ff21e2dc2d0ccfb1a37b6d3b6bf92f4c967f6cf2c309cd189aec",
+              "answerModels": [
+                "gpt-6.1-sol"
+              ],
+              "answerModelEvidence": "configured",
+              "answerTurnCount": 1,
+              "answerProviderTurnCount": 2,
+              "answerProviderToolCount": 1,
+              "advertisedToolCount": 1,
+              "advertisedToolsSha256": "4c00784a9fcbf27e73f092114a517a4aee317ba832bedd6b9c71e9cd8d663a95",
+              "selectedCallsSha256": "81b3aa35692187160cec66e18914116be7de7d718a0357442e10063e40802bb6",
+              "selectedTools": [
+                "read-departure"
+              ],
+              "toolCallCount": 1,
+              "materialSha256": "1c1239a5e7ba41f6b25bc4c0b73f162f465ab6e8e18bd75b209a8310576922d7",
+              "pathEvidence": [
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "4195fbebdefe39d71421878f094e57159bcab3ae7c660c856141e3f0b0761b49",
+                  "responseSha256": "edc746c5b44c5ad9dc562e3fda9a188f7dc2c19ed0d553978774d1e1fd7e1527"
+                }
+              ],
+              "literalAssertionCount": 1,
+              "meaningAssertionCount": 0,
+              "expectedTools": [
+                "read-departure"
+              ],
+              "expectedSelectionSha256": "307de78f40c25e266eb6883417f2b1c38e7ae447827d7a0094912874ca17feb5",
+              "expectedResponseContent": [
+                "09:20"
+              ]
+            },
+            {
+              "turn": 3,
+              "conversation": 2,
+              "interactionMode": "native-mcp",
+              "prompt": "In the connected synthetic timetable, what is the west route's departure time?",
+              "response": "The west route departs at **11:40**.",
+              "elicitations": [],
+              "toolCalls": [
+                {
+                  "name": "read-departure",
+                  "arguments": {
+                    "route": "west"
+                  },
+                  "result": [
+                    {
+                      "type": "text",
+                      "text": "{\"route\":\"west\",\"departure\":\"11:40\"}"
+                    }
+                  ],
+                  "isError": false
+                }
+              ],
+              "toolOutcomesSha256": "c47149af83a958c21ed15db210e23455822108d57f63a551e808bb96baa3122a",
+              "promptSha256": "3b68bdf5c53fe739fd48224708af869be8c217581b48f1d99406d0b7c2458ae6",
+              "answerSha256": "d587af9bc3e91ce16f0c2c8a3db03f4a7659317a910a257fe99e18abf84add5e",
+              "answerModels": [
+                "gpt-6.1-sol"
+              ],
+              "answerModelEvidence": "configured",
+              "answerTurnCount": 1,
+              "answerProviderTurnCount": 2,
+              "answerProviderToolCount": 1,
+              "advertisedToolCount": 1,
+              "advertisedToolsSha256": "4c00784a9fcbf27e73f092114a517a4aee317ba832bedd6b9c71e9cd8d663a95",
+              "selectedCallsSha256": "b3f4fb3f363bbe31ffe4aa7bd1586d7c8d2551cd866d3bd86a02462eced2f865",
+              "selectedTools": [
+                "read-departure"
+              ],
+              "toolCallCount": 1,
+              "materialSha256": "88a78e59f9118eeeca95f473f6d41f46dd826d0ca1047077073d65d6c08ba1ef",
+              "pathEvidence": [
+                {
+                  "method": "tools/call",
+                  "target": "read-departure",
+                  "requestSha256": "15967b8f495781b30a0ca158d26fb818322cf5b567081847f3c94a2a8d6ee766",
+                  "responseSha256": "107380cde372fccbafca9604400470143dcb31e1b68f4c03e04a9343379063a9"
+                }
+              ],
+              "literalAssertionCount": 1,
+              "meaningAssertionCount": 0,
+              "expectedTools": [
+                "read-departure"
+              ],
+              "expectedSelectionSha256": "307de78f40c25e266eb6883417f2b1c38e7ae447827d7a0094912874ca17feb5",
+              "expectedResponseContent": [
+                "11:40"
+              ]
+            }
+          ]
+        }
+      ],
+      "judgeVerdicts": [
+        {
+          "trial": 1,
+          "turn": 1,
+          "judgment": 1,
+          "expectedMeaning": "North departs at 08:10, east at 09:20, south at 10:30, and west at 11:40. Each route is paired with its authoritative time.",
+          "expectationSha256": "99932712eb4d7821c812df4abe4eeea40ccf70e8df76585041f69928be3d6e84",
+          "requestSha256": "70fa4044a91b1f743df0574796fb4030f501342defad748b8b3d5fb0e30486cc",
+          "models": [
+            "gpt-6.1-sol"
+          ],
+          "modelEvidence": "configured",
+          "turnCount": 1,
+          "providerTurnCount": 1,
+          "providerToolCount": 0,
+          "responseSha256": "c0cfa31598964ac33ae96f23b8df91241766372d61529822efb278ae91a08337",
+          "verdict": {
+            "pass": true,
+            "score": 1,
+            "reason": "The response correctly pairs all four directions with their authoritative departure times."
+          }
+        },
+        {
+          "trial": 1,
+          "turn": 1,
+          "judgment": 2,
+          "expectedMeaning": "North departs at 08:10, east at 09:20, south at 10:30, and west at 11:40. Each route is paired with its authoritative time.",
+          "expectationSha256": "99932712eb4d7821c812df4abe4eeea40ccf70e8df76585041f69928be3d6e84",
+          "requestSha256": "70fa4044a91b1f743df0574796fb4030f501342defad748b8b3d5fb0e30486cc",
+          "models": [
+            "gpt-6.1-sol"
+          ],
+          "modelEvidence": "configured",
+          "turnCount": 1,
+          "providerTurnCount": 1,
+          "providerToolCount": 0,
+          "responseSha256": "c0cfa31598964ac33ae96f23b8df91241766372d61529822efb278ae91a08337",
+          "verdict": {
+            "pass": true,
+            "score": 1,
+            "reason": "The response correctly pairs all four directions with their authoritative departure times."
+          }
+        },
+        {
+          "trial": 1,
+          "turn": 1,
+          "judgment": 3,
+          "expectedMeaning": "North departs at 08:10, east at 09:20, south at 10:30, and west at 11:40. Each route is paired with its authoritative time.",
+          "expectationSha256": "99932712eb4d7821c812df4abe4eeea40ccf70e8df76585041f69928be3d6e84",
+          "requestSha256": "70fa4044a91b1f743df0574796fb4030f501342defad748b8b3d5fb0e30486cc",
+          "models": [
+            "gpt-6.1-sol"
+          ],
+          "modelEvidence": "configured",
+          "turnCount": 1,
+          "providerTurnCount": 1,
+          "providerToolCount": 0,
+          "responseSha256": "2c80c595316ec979d85347473664a4ca06326f0c463bf00ffcb4550244c541e4",
+          "verdict": {
+            "pass": true,
+            "score": 1,
+            "reason": "The response correctly pairs all four routes with their authoritative departure times."
+          }
+        },
+        {
+          "trial": 2,
+          "turn": 1,
+          "judgment": 1,
+          "expectedMeaning": "North departs at 08:10, east at 09:20, south at 10:30, and west at 11:40. Each route is paired with its authoritative time.",
+          "expectationSha256": "99932712eb4d7821c812df4abe4eeea40ccf70e8df76585041f69928be3d6e84",
+          "requestSha256": "70fa4044a91b1f743df0574796fb4030f501342defad748b8b3d5fb0e30486cc",
+          "models": [
+            "gpt-6.1-sol"
+          ],
+          "modelEvidence": "configured",
+          "turnCount": 1,
+          "providerTurnCount": 1,
+          "providerToolCount": 0,
+          "responseSha256": "c0cfa31598964ac33ae96f23b8df91241766372d61529822efb278ae91a08337",
+          "verdict": {
+            "pass": true,
+            "score": 1,
+            "reason": "The response correctly pairs all four directions with their authoritative departure times."
+          }
+        },
+        {
+          "trial": 2,
+          "turn": 1,
+          "judgment": 2,
+          "expectedMeaning": "North departs at 08:10, east at 09:20, south at 10:30, and west at 11:40. Each route is paired with its authoritative time.",
+          "expectationSha256": "99932712eb4d7821c812df4abe4eeea40ccf70e8df76585041f69928be3d6e84",
+          "requestSha256": "70fa4044a91b1f743df0574796fb4030f501342defad748b8b3d5fb0e30486cc",
+          "models": [
+            "gpt-6.1-sol"
+          ],
+          "modelEvidence": "configured",
+          "turnCount": 1,
+          "providerTurnCount": 1,
+          "providerToolCount": 0,
+          "responseSha256": "7377b1ee5a4a5dd7d019b59f6f230dce62d0aae7a4786a40e0edb58c45e2ac4e",
+          "verdict": {
+            "pass": true,
+            "score": 1,
+            "reason": "The response pairs all four directions with their authoritative departure times exactly."
+          }
+        },
+        {
+          "trial": 2,
+          "turn": 1,
+          "judgment": 3,
+          "expectedMeaning": "North departs at 08:10, east at 09:20, south at 10:30, and west at 11:40. Each route is paired with its authoritative time.",
+          "expectationSha256": "99932712eb4d7821c812df4abe4eeea40ccf70e8df76585041f69928be3d6e84",
+          "requestSha256": "70fa4044a91b1f743df0574796fb4030f501342defad748b8b3d5fb0e30486cc",
+          "models": [
+            "gpt-6.1-sol"
+          ],
+          "modelEvidence": "configured",
+          "turnCount": 1,
+          "providerTurnCount": 1,
+          "providerToolCount": 0,
+          "responseSha256": "c0cfa31598964ac33ae96f23b8df91241766372d61529822efb278ae91a08337",
+          "verdict": {
+            "pass": true,
+            "score": 1,
+            "reason": "The response correctly pairs all four directions with their authoritative departure times."
+          }
+        },
+        {
+          "trial": 3,
+          "turn": 1,
+          "judgment": 1,
+          "expectedMeaning": "North departs at 08:10, east at 09:20, south at 10:30, and west at 11:40. Each route is paired with its authoritative time.",
+          "expectationSha256": "99932712eb4d7821c812df4abe4eeea40ccf70e8df76585041f69928be3d6e84",
+          "requestSha256": "70fa4044a91b1f743df0574796fb4030f501342defad748b8b3d5fb0e30486cc",
+          "models": [
+            "gpt-6.1-sol"
+          ],
+          "modelEvidence": "configured",
+          "turnCount": 1,
+          "providerTurnCount": 1,
+          "providerToolCount": 0,
+          "responseSha256": "c0cfa31598964ac33ae96f23b8df91241766372d61529822efb278ae91a08337",
+          "verdict": {
+            "pass": true,
+            "score": 1,
+            "reason": "The response correctly pairs all four directions with their authoritative departure times."
+          }
+        },
+        {
+          "trial": 3,
+          "turn": 1,
+          "judgment": 2,
+          "expectedMeaning": "North departs at 08:10, east at 09:20, south at 10:30, and west at 11:40. Each route is paired with its authoritative time.",
+          "expectationSha256": "99932712eb4d7821c812df4abe4eeea40ccf70e8df76585041f69928be3d6e84",
+          "requestSha256": "70fa4044a91b1f743df0574796fb4030f501342defad748b8b3d5fb0e30486cc",
+          "models": [
+            "gpt-6.1-sol"
+          ],
+          "modelEvidence": "configured",
+          "turnCount": 1,
+          "providerTurnCount": 1,
+          "providerToolCount": 0,
+          "responseSha256": "2c80c595316ec979d85347473664a4ca06326f0c463bf00ffcb4550244c541e4",
+          "verdict": {
+            "pass": true,
+            "score": 1,
+            "reason": "The response correctly pairs all four routes with their authoritative departure times."
+          }
+        },
+        {
+          "trial": 3,
+          "turn": 1,
+          "judgment": 3,
+          "expectedMeaning": "North departs at 08:10, east at 09:20, south at 10:30, and west at 11:40. Each route is paired with its authoritative time.",
+          "expectationSha256": "99932712eb4d7821c812df4abe4eeea40ccf70e8df76585041f69928be3d6e84",
+          "requestSha256": "70fa4044a91b1f743df0574796fb4030f501342defad748b8b3d5fb0e30486cc",
+          "models": [
+            "gpt-6.1-sol"
+          ],
+          "modelEvidence": "configured",
+          "turnCount": 1,
+          "providerTurnCount": 1,
+          "providerToolCount": 0,
+          "responseSha256": "2c80c595316ec979d85347473664a4ca06326f0c463bf00ffcb4550244c541e4",
+          "verdict": {
+            "pass": true,
+            "score": 1,
+            "reason": "The response correctly pairs all four routes with their authoritative departure times."
+          }
+        }
+      ]
+    }
+  },
+  "errors": [],
+  "startedAt": "2026-10-13T03:59:29.695Z",
+  "dependencies": {
+    "mcpClient": "2.2.0",
+    "codexCli": "0.162.1"
+  },
+  "finishedAt": "2026-10-13T04:00:35.707Z"
+}

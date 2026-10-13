@@ -118,6 +118,10 @@ inherit no provider credentials. The runner also disables Codex account apps,
 plugins, remote plugins, multi-agent execution, web search, shell tools, and
 unified execution for each one-shot and resumed native invocation.
 
+The isolated model process preserves configured proxy and certificate-trust
+settings so authentication works on managed networks. These transport settings
+do not enable shell tools or inherit unrelated service credentials.
+
 The invocation configuration sets the default account-app state to disabled,
 omits account-app instructions, and disables Codex app, plugin, and tool
 suggestion features.
