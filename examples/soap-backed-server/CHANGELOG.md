@@ -1,5 +1,13 @@
 # @emseepea/create-soap-backed-server
 
+## 0.1.15
+
+### Patch Changes
+
+- [`5b55dca`](https://github.com/emseepea/emseepea/commit/5b55dca36c5257174c1b0da6b20324dea69f3490) Thanks [@tompahoward](https://github.com/tompahoward)! - Record the installed Codex CLI version as provenance without rejecting it by version number. Qualification still requires the configured invocation and valid, complete native events, with forbidden operations and failed calls rejected.
+
+  Generated starter projects use the corrected testing package.
+
 ## 0.1.14
 
 ### Patch Changes
