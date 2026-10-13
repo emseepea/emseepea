@@ -151,3 +151,13 @@ user and assistant messages, and reports the current contract test count.
 | File | SHA-256 | Result |
 | --- | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `3a1481e5c4e710bc63e80f9a774b9a3e490351d04373d742cf85c2054fd60fbd` | PASS |
+
+## Issue #145 Completed Experimental Release
+
+Author self-review: the record identifies the versions available to users,
+links completed checks, and distinguishes the released adapter from pending
+live host verification. It explains local human login and CI limitations.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `e67a9507939ff479f8fce2f4070c721cf3a2c65a98e603f3d870ac67b27444e1` | PASS |
