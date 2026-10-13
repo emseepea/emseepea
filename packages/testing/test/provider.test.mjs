@@ -102,6 +102,37 @@ test("isolates model credentials from ordinary environment variables", () => {
   }
 });
 
+test("model transport preserves proxy and certificate settings without inheriting unrelated credentials", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "model-transport-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const names = ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY",
+    "http_proxy", "https_proxy", "all_proxy", "no_proxy",
+    "SSL_CERT_FILE", "SSL_CERT_DIR", "NODE_EXTRA_CA_CERTS"];
+  const original = new Map([...names, "UNRELATED_SERVICE_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN",
+    "OPENAI_API_KEY", "EMSEEPEA_CODEX_MODEL"]
+    .map((name) => [name, process.env[name]]));
+  try {
+    for (const name of names) process.env[name] = `transport-${name}`;
+    process.env.UNRELATED_SERVICE_TOKEN = "must-not-pass";
+    process.env.CLAUDE_CODE_OAUTH_TOKEN = "test-provider-token";
+    process.env.OPENAI_API_KEY = "test-codex-key";
+    process.env.EMSEEPEA_CODEX_MODEL = "gpt-test";
+    for (const provider of ["claude-ci", "codex-ci"]) {
+      const invocation = modelInvocation(provider, "question", directory);
+      for (const name of names) assert.equal(invocation.env[name], `transport-${name}`);
+      assert.equal(invocation.env.UNRELATED_SERVICE_TOKEN, undefined);
+      if (provider === "codex-ci") {
+        assert.equal(invocation.env.CLAUDE_CODE_OAUTH_TOKEN, undefined);
+        assert.ok(invocation.args.includes('shell_environment_policy.inherit="none"'));
+      } else {
+        assert.equal(invocation.env.OPENAI_API_KEY, undefined);
+      }
+    }
+  } finally {
+    for (const [name, value] of original) restore(name, value);
+  }
+});
+
 test("native conversations expose only the target MCP tools without coaching", () => {
   const tools = [{ name: "get-pea", description: "Get a pea.", inputSchema: { type: "object" } }];
   const invocation = conversationInvocation(

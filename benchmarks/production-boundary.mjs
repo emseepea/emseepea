@@ -7,6 +7,12 @@ import { resolve } from "node:path";
 import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 
+import {
+  measureProductionBoundaryClass,
+  productionBoundaryCohortCount,
+  productionBoundaryTraceName,
+} from "./production-boundary-classification.mjs";
+
 const classes = ["accepted", "rate-limited", "capacity-exhausted", "malformed"];
 const dailyRequests = 8_640_000;
 const results = [];
@@ -15,8 +21,16 @@ const traceDirectory = process.env.EMSEEPEA_BENCHMARK_TRACE_DIR;
 if (reportDirectory) await mkdir(reportDirectory, { recursive: true });
 if (traceDirectory) await mkdir(traceDirectory, { recursive: true });
 
-for (const requestClass of classes) results.push(await measure(requestClass));
-
+for (const requestClass of classes) {
+  const result = await measureProductionBoundaryClass(requestClass, measure);
+  results.push({
+    ...result,
+    projectedDailyCpuMsDelta: result.frameworkProcessCpuMsPerRequest.p95 * dailyRequests,
+    projectedDailyTransientAllocationBytesDelta:
+      result.sampledTransientAllocationBytesPerRequest.p95 * dailyRequests,
+    projectedDailyWireBytesDelta: result.frameworkAddedWireBytesPerRequest.mean * dailyRequests,
+  });
+}
 const report = {
   diagnosticOnly: Boolean(traceDirectory),
   profile: {
@@ -27,7 +41,11 @@ const report = {
     logicalCpus: cpus().length,
     concurrency: 16,
     durationMs: 1_000,
-    runs: 3,
+    cohortCount: productionBoundaryCohortCount,
+    throughputRunsPerCohort: 3,
+    cpuSamplesPerCohort: 200,
+    allocationSamplesPerCohort: 80,
+    wireSamplesPerCohort: 10,
   },
   projection: {
     source: "no data - worst-case assumption",
@@ -43,18 +61,18 @@ if (reportDirectory) {
 }
 assert.equal(report.status, "PASS", "production JSON boundary exceeded its budget");
 
-async function measure(requestClass) {
+async function measure(requestClass, cohort) {
   const child = fork(fileURLToPath(new URL("./json-boundary-server.mjs", import.meta.url)), [
     `--production-class=${requestClass}`,
   ], { execArgv: ["--expose-gc", ...(traceDirectory ? [
     "--cpu-prof",
     `--cpu-prof-dir=${resolve(traceDirectory)}`,
-    `--cpu-prof-name=production-${requestClass}.cpuprofile`,
+    `--cpu-prof-name=${productionBoundaryTraceName(requestClass, cohort)}`,
     "--trace-gc-nvp",
   ] : [])], stdio: ["ignore", "inherit", "inherit", "ipc"] });
   const phase = (name) => {
     if (traceDirectory) console.error(JSON.stringify({
-      requestClass, pid: child.pid, phase: name, timestampMs: Date.now(),
+      requestClass, cohort, pid: child.pid, phase: name, timestampMs: Date.now(),
     }));
   };
   let nextMessageId = 0;
@@ -76,7 +94,7 @@ async function measure(requestClass) {
     child.on("message", (message) => {
       if (message?.type === "ready") {
         if (traceDirectory) console.error(JSON.stringify({
-          requestClass, pid: child.pid, phase: "ready", timeOriginMs: message.timeOriginMs,
+          requestClass, cohort, pid: child.pid, phase: "ready", timeOriginMs: message.timeOriginMs,
         }));
         resolve(new URL(message.url));
       }
@@ -144,24 +162,14 @@ async function measure(requestClass) {
     phase("wire");
     for (let index = 0; index < 10; index += 1) wireBytes.push((await request()).wireBytes);
 
-    const throughputSummary = summary(throughput);
-    const cpuSummary = summary(cpuMs);
-    const allocationSummary = summary(allocations);
-    const wireSummary = summary(wireBytes);
-    const status = throughputSummary.min >= 100 && cpuSummary.p95 <= 5 &&
-      allocationSummary.p95 <= 256 * 1024 && wireSummary.mean <= 2 * 1024 ? "PASS" : "FLAG";
     return {
+      cohort,
       requestClass,
       expectedStatus,
-      throughputRequestsPerSecond: throughputSummary,
-      frameworkProcessCpuMsPerRequest: cpuSummary,
+      throughputSamples: throughput,
       cpuSamples,
-      sampledTransientAllocationBytesPerRequest: allocationSummary,
-      frameworkAddedWireBytesPerRequest: wireSummary,
-      projectedDailyCpuMsDelta: cpuSummary.p95 * dailyRequests,
-      projectedDailyTransientAllocationBytesDelta: allocationSummary.p95 * dailyRequests,
-      projectedDailyWireBytesDelta: wireSummary.mean * dailyRequests,
-      status,
+      allocationSamples: allocations,
+      wireSamples: wireBytes,
     };
   } finally {
     phase("shutdown");
@@ -229,14 +237,4 @@ async function send(url, requestClass) {
     outgoing.on("error", reject);
     outgoing.end(body);
   });
-}
-
-function summary(values) {
-  const sorted = [...values].sort((left, right) => left - right);
-  return {
-    min: sorted[0],
-    mean: sorted.reduce((sum, value) => sum + value, 0) / sorted.length,
-    max: sorted.at(-1),
-    p95: sorted[Math.ceil(sorted.length * 0.95) - 1],
-  };
 }

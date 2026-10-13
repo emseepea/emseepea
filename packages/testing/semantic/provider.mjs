@@ -726,7 +726,13 @@ function forbiddenItemError(items) {
 }
 
 function modelEnvironment(extra) {
+  const transport = Object.fromEntries([
+    "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY",
+    "http_proxy", "https_proxy", "all_proxy", "no_proxy",
+    "SSL_CERT_FILE", "SSL_CERT_DIR", "NODE_EXTRA_CA_CERTS",
+  ].map((name) => [name, process.env[name]]));
   return Object.fromEntries(Object.entries({
+    ...transport,
     CI: "true",
     ENABLE_TOOL_SEARCH: "false",
     LANG: process.env.LANG ?? "C.UTF-8",

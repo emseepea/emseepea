@@ -79,3 +79,9 @@ Previous backlog headline archived when P007 moved to known error:
 > Last reviewed: 2026-10-06 **P019 captured** - Recovery CLI import cycle stops finalization (lightweight aside via `/wr-itil:capture-problem`).
 
 > Last reviewed: 2026-10-06 **P020 captured** - Release PR head read lags finalization (lightweight aside via `/wr-itil:capture-problem`).
+
+## 2026-10-13
+
+> Last reviewed: 2026-10-06 **P021 captured** - Release troubleshooting adds unnecessary controls (lightweight aside via `/wr-itil:capture-problem`).
+
+> Last reviewed: 2026-10-13 **P015 verification pending** - Fixed three-cohort classification passed the production-boundary budget on Node.js 22 and 24.

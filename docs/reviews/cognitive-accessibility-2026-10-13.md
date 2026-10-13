@@ -23,3 +23,29 @@ cognitive-accessibility findings remain.
 | `.changeset/tough-plants-guard.md` | `e0e379235e4503f0680e4913025a3e904459c45183030f2c4dcd7e2f72359f3d` | PASS |
 | `docs/reviews/current-release-readiness.md` | `3710a8980666f691a8bad91045a41dfb4a1f77b3c258093745b18290341b934f` | PASS |
 | `packages/testing/README.md` | `ce3eab451e7e6ba9582a01f56da1b94bf3846463cd48b51f317ee986935f78dd` | PASS |
+
+## Problem 015 Benchmark Classification Verification
+
+PASS. A cognitive-accessibility specialist reviewed the closed governance
+records. The wording separates the released fix from closure evidence, names
+the exact retained Quality evidence, and does not claim more than that evidence
+proves. No cognitive-accessibility findings remain.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/problems/README-history.md` | `3e3717c106d2fa75a6f81d57f6e1a3387f5e590e410f715abeb724323c8b8b0e` | PASS |
+| `docs/problems/README.md` | `df0a99356e6593d0f7ba7d53ffd38d76340c8982d9c871960855df81d076eb03` | PASS |
+| `docs/problems/closed/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md` | `8ff71276eba1af1e444842e5448412adbb9e7d1ce409f4b48c435d89a46edb96` | PASS |
+| `docs/risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md` | `ef9fa60a7524e376735a4faf5681e323366db3b1a2584a4b8be47913eca8c2f6` | PASS |
+
+## Issue #162 Transport Fix and Native Verification
+
+PASS. Reviewed the changed Markdown for clear user impact, concrete verification,
+and accurate limits. The text separates passing local evidence from pending
+publication and does not claim API-key CI authentication was tested live.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/codex-isolated-transport.md` | `7cb09cd3579ff79f2afca9d5cfc43756cf41ee7f8b64cbeef537cdf29e33b81f` | PASS |
+| `docs/reviews/current-release-readiness.md` | `c5e0bd018ce1beca76485e2b307243fe8088b49a9bef49569a24fe652580be23` | PASS |
+| `packages/testing/README.md` | `a83335c9a23d43849250f352c60dfb5c3d42af9a833d056bac0999662e0ffb97` | PASS |

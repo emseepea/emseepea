@@ -83,10 +83,23 @@ setInterval(() => {}, 1000);
   const [code] = await closed;
   assert.equal(code, 1);
   for (let attempt = 0; attempt < 20; attempt += 1) {
+    let terminated = false;
     try {
       process.kill(pid, 0);
+      // Container PID 1 may leave a killed orphan unreaped. A zombie has
+      // terminated, even though kill(pid, 0) still finds its process entry.
+      if (process.platform === "linux") {
+        const stat = await readFile(`/proc/${pid}/stat`, "utf8").catch((error) => {
+          if (error.code === "ENOENT") return "";
+          throw error;
+        });
+        terminated = stat === "" || stat.slice(stat.lastIndexOf(")") + 2).startsWith("Z ");
+      }
     } catch (error) {
       assert.equal(error.code, "ESRCH");
+      terminated = true;
+    }
+    if (terminated) {
       const text = await readFile(output, "utf8").catch(() => assert.fail(`No cancellation evidence: ${errors}`));
       assert.equal(JSON.parse(text).status, "failed");
       return;
