@@ -1,5 +1,17 @@
 # @emseepea/create-multi-instance-postgres-server
 
+## 0.1.17
+
+### Patch Changes
+
+- [`a3a0d6c`](https://github.com/emseepea/emseepea/commit/a3a0d6c8c2d1d75bbb9f970d9e290b287563151f) Thanks [@tompahoward](https://github.com/tompahoward)! - Reuse captured schema metadata across SDK registrations and requests while preserving input validation and published tool descriptions. Output metadata remains lazy so valid input transforms do not require an output JSON Schema.
+
+  Generated starter projects use the updated server dependency. Performance qualification still requires the unchanged budget checks on both supported CI runtimes.
+
+- [`a3a0d6c`](https://github.com/emseepea/emseepea/commit/a3a0d6c8c2d1d75bbb9f970d9e290b287563151f) Thanks [@tompahoward](https://github.com/tompahoward)! - Record MCP-client and Claude CLI versions as provenance without rejecting them by version number. The expected client package identity and valid version metadata remain required. Qualification still depends on native invocation, event, isolation and failure-handling checks.
+
+  Generated starter projects use the corrected testing dependency. This patch does not add native resource-helper support or change failed-call adjudication.
+
 ## 0.1.16
 
 ### Patch Changes
