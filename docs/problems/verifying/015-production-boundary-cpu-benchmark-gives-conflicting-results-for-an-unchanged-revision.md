@@ -67,27 +67,29 @@ checks.
 - [x] Add a failing behavioural check for the confirmed measurement-control gap.
 - [x] Implement the smallest variance classification that satisfies ADR-0014
       without weakening its fixed CPU ceiling or acceptance semantics.
-- [x] Re-rate the linked standing risk from exact post-control evidence.
+- [ ] Re-rate the linked standing risk from exact post-control evidence.
 
 ## Fix Strategy
 
 Run exactly three independent cohorts for every request class, each with a
 fresh server process and unique trace identity. Classify the complete pooled
 sample population against ADR-0014's unchanged thresholds, retain every cohort
-summary and raw CPU sample, and fail closed when any cohort is missing,
-malformed, failed, or cancelled.
+summary and batch-amortized CPU sample, and fail closed when any cohort is
+missing, malformed, failed, or cancelled.
 
 The benchmark control is repository qualification infrastructure and does not
 publish an npm package. <!-- no-changeset-reference -->
 
-## Fix Released
+## Verification Status
 
-Released to `main` in commit `808520fb0445c12266ba69dba5509921fe2c3c51`
-on 2026-10-13. Quality run `38335751990` passed for current `main` commit
-`11a70ef07844c8bbed432218e590225b9a164d6d`, including the governed
-production-boundary budget on Node.js 22 and 24.
+Commit `808520fb0445c12266ba69dba5509921fe2c3c51` added fixed
+three-cohort classification. Quality run `38335751990` passed that change on
+Node.js 22 and 24.
 
-Awaiting lifecycle verification from the retained exact-run evidence.
+Current `main` commit `a3fbaab3db2819f3d196bf9a4f00d2cd35c94a6c` failed
+Quality run `38337687142`. The current fix candidate adds batch-amortized CPU
+samples for the accepted-request class and must pass current-main Quality
+before this problem can move to closed.
 
 ## Dependencies
 

@@ -39,28 +39,30 @@ classification control is absent.
   The gate applies the unchanged ADR-0014 limits to the complete pooled sample
   population rather than accepting a failure-triggered retry.
 - **Complete retained evidence** — Continuous integration retains every cohort
-  summary and raw CPU sample. Missing, malformed, failed, or cancelled cohorts
-  fail closed.
+  summary and batch-amortized CPU sample. Missing, malformed, failed, or
+  cancelled cohorts fail closed.
 
-Quality run `38335751990` exercised these controls on Node.js 22 and 24 for
-current `main` commit `11a70ef07844c8bbed432218e590225b9a164d6d` and passed.
+Quality run `38335751990` exercised the fixed three-cohort control on Node.js
+22 and 24 and passed. Later current-main Quality run `38337687142` failed for
+commit `a3fbaab3db2819f3d196bf9a4f00d2cd35c94a6c`, including an accepted-class
+CPU sample just above the fixed budget. The batch-amortized CPU-sample fix must
+pass current-main Quality before this risk is reduced.
 
 ## Residual Risk
 
 Impact × Likelihood *after* controls.
 
 - **Impact**: 3 (Moderate)
-- **Likelihood**: 1 (Rare)
-- **Residual Score**: 3
-- **Residual Band**: Low
-- **Within appetite?**: Yes
+- **Likelihood**: 5 (Almost certain)
+- **Residual Score**: 15
+- **Residual Band**: High
+- **Within appetite?**: No
 
 ## Treatment
 
 Maintain the fixed three-cohort classification and unchanged ADR-0014 limits.
-Re-open treatment if retained evidence shows a same-revision conflict under the
-complete pooled population, a missing cohort is accepted, or a true regression
-passes.
+Verify the batch-amortized CPU-sample control on current `main`, then re-rate
+residual risk from exact retained Quality evidence.
 
 ## Monitoring
 
@@ -83,6 +85,7 @@ passes.
 - 2026-09-24: Created after one Quality run failed the Node.js 22 CPU budget and
   the unchanged failed-job rerun passed. Recorded the missing repeated-run
   variance classification and the resulting above-appetite residual risk.
-- 2026-10-13: Reduced residual risk after commit `808520fb` added fixed
-  three-cohort classification and Quality run `38335751990` passed the control
-  on Node.js 22 and 24 without changing ADR-0014's thresholds.
+- 2026-10-13: Kept residual risk above appetite after current-main Quality run
+  `38337687142` failed despite the earlier fixed three-cohort classification
+  pass in run `38335751990`. Recorded the batch-amortized CPU-sample control
+  as pending current-main verification.

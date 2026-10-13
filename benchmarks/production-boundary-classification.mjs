@@ -34,6 +34,9 @@ export function classifyProductionBoundaryCohorts(requestClass, cohorts) {
     assert.ok(Number.isInteger(item.expectedStatus), "cohort expected status is missing");
     assert.equal(item.expectedStatus, cohorts[0].expectedStatus, "cohort expected status changed");
     assertMeasurements(item.throughputSamples, "throughput");
+    assert.ok(item.cpuSamples.every(({ requestCount }) =>
+      requestCount === undefined || (Number.isInteger(requestCount) && requestCount > 0)),
+    "CPU sample request counts are invalid");
     assertMeasurements(item.cpuSamples.map(({ cpuMs }) => cpuMs), "CPU");
     assertMeasurements(item.allocationSamples, "allocation");
     assertMeasurements(item.wireSamples, "wire");
