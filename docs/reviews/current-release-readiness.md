@@ -45,7 +45,18 @@ fixed listener.
 
 ## Planned package set
 
-- `@emseepea/testing@0.23.3`
+- `@emseepea/create-api-backed-server@0.1.13`
+- `@emseepea/create-database-schema-server@0.1.13`
+- `@emseepea/create-html-ui-server@0.1.13`
+- `@emseepea/create-mongodb-backed-server@0.1.13`
+- `@emseepea/create-multi-instance-postgres-server@0.1.13`
+- `@emseepea/create-openapi-backed-server@0.1.13`
+- `@emseepea/create-progress-streaming-server@0.1.13`
+- `@emseepea/create-react-ui-server@0.1.13`
+- `@emseepea/create-resources-and-prompts-server@0.1.13`
+- `@emseepea/create-soap-backed-server@0.1.13`
+- `@emseepea/create-tool-server@0.1.13`
+- `@emseepea/testing@0.23.4`
 
 ## Verified before push
 
@@ -61,10 +72,6 @@ The full `@emseepea/testing` package suite passed 75 tests, including:
 `decisions:check`, `git diff --check`, and `changeset status` passed. The public
 Markdown changed by #162 passed cognitive-accessibility review for the recorded
 source hashes.
-
-The dependency drift left by the previous `@emseepea/testing@0.23.2` release is
-also corrected: every example package now depends on the current testing
-package version.
 
 ## Required release evidence
 

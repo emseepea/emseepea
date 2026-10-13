@@ -19,6 +19,7 @@ cognitive-accessibility findings remain.
 
 | File | SHA-256 | Result |
 | --- | --- | --- |
+| `.changeset/lucky-starfishes-initialize.md` | `7f59465aec9991a20c684c278154d2ee8635dc89b8e7de5790d962023e6a31c3` | PASS |
 | `.changeset/tough-plants-guard.md` | `e0e379235e4503f0680e4913025a3e904459c45183030f2c4dcd7e2f72359f3d` | PASS |
-| `docs/reviews/current-release-readiness.md` | `0ad066acbf3361e6dfd4a4b86eb74aa521ee0fc648629f4a4f1f6018bff5792b` | PASS |
+| `docs/reviews/current-release-readiness.md` | `3710a8980666f691a8bad91045a41dfb4a1f77b3c258093745b18290341b934f` | PASS |
 | `packages/testing/README.md` | `ce3eab451e7e6ba9582a01f56da1b94bf3846463cd48b51f317ee986935f78dd` | PASS |
