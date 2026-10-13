@@ -10,7 +10,12 @@ The native browser adapter requires explicit opt-in. Ordinary framework tests
 do not enable it, install Playwright, or constrain an existing browser version.
 
 - Result: PASS
-- Final result: within appetite.
+- Final result: within appetite, subject to the required exact-commit gates.
+
+The PASS markers apply to the independently reviewed diagnostic investigation
+slice now proposed for trunk. No new package release is selected. Standing
+performance-release risk remains outside appetite until the conflicting
+measurements are classified and treatment is verified.
 
 ## Released package set
 
@@ -67,6 +72,22 @@ functional tests passed. The same commit passed the failed-job retry. The
 production boundary implementation and benchmark were unchanged by merge-back.
 Publish retried its failed job and dispatched the final full qualification.
 No immutable package version was replaced, and no performance gate was loosened.
+
+## Open performance investigation
+
+The initial complete Node 22 population on main 30d09eb exceeded the unchanged
+5 ms p95 CPU limit. Passing reruns and the final full workflow remain retained
+observations; they do not erase that failure or establish which population is
+representative. Problem 015 is reopened and R014 records the unresolved
+between-population classification risk. The published package versions remain
+available; a further package release needs a fresh risk assessment after the
+control repair and exact qualification.
+
+Shared-clock diagnostic instrumentation preserves ordinary limits and sample
+populations. Its one fixed cloud run is nonqualifying and uses different
+hardware from the failed GitHub population. See the bounded
+[diagnostic receipt](diagnostic-clock-2026-10-13.json). A green investigation
+pipeline would verify that slice, not close the performance problem.
 
 ## Native host limits and next step
 

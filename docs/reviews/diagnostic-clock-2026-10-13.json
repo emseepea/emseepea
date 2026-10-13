@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "diagnosticOnly": true,
+  "qualification": "NOT_ESTABLISHED",
+  "protocolSha256": "b053297d64f75283e4e3e2b1830a6117776f972a73958112896928b498ec3e72",
+  "attempts": 1,
+  "configuredRuntime": "Node22.23.2",
+  "runnerBoundary": "Cloud diagnostic hardware differs from the original GitHub runner.",
+  "requestClasses": 4,
+  "freshCohorts": 12,
+  "validatedCpuWindows": 2400,
+  "acceptedCpuOver5Ms": 19,
+  "acceptedCpuOver5MsWithDefiniteGcOverlap": 12,
+  "limitations": [
+    "Instrumentation changes execution; performance status is nonqualifying.",
+    "GC overlap is an observation, not causal CPU attribution; seven accepted CPU spikes lacked GC overlap.",
+    "This does not resolve original same-revision budget conflict or qualify a package release."
+  ],
+  "evidenceHashes": {
+    "production-diagnostic.json": "0bfcfc1097645020486e667719f9788bb6e90b1fa826763f6c5d6bff4d63c393",
+    "validated-clock-summary.json": "3aed02fb9c19467c6b1823e70e2383b62d4990b852c3e210ebe883f7f2968900",
+    "manifest.json": "ec3572387a4fe7d638356e561d299816a439ed92511546e21fdafd4320ed25ef"
+  }
+}

@@ -50,10 +50,16 @@ exact `main` commit `1928f9662d8a2cb7f86cdf0e01e3f71f8e9b30ff` and passed.
 Impact × Likelihood *after* controls.
 
 - **Impact**: 3 (Moderate)
-- **Likelihood**: 1 (Rare)
-- **Residual Score**: 3
-- **Residual Band**: Low
-- **Within appetite?**: Yes
+- **Likelihood**: 5 (Almost certain)
+- **Residual Score**: 15
+- **Residual Band**: High
+- **Within appetite?**: No
+
+The complete same-revision conflict in run `38382578560` reopens treatment.
+The three-cohort control remains, but does not classify conflicts between
+complete invocations. Diagnostic-only instrumentation is separately reviewed
+for safe investigation; it cannot qualify a package release or reduce this
+standing risk by itself.
 
 ## Treatment
 
@@ -73,7 +79,7 @@ passes.
 ## Related
 
 - Criteria: `RISK-POLICY.md`
-- Realised-as: [Problem 015: Production-Boundary CPU Benchmark Gives Conflicting Results for an Unchanged Revision](../problems/closed/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md)
+- Realised-as: [Problem 015: Production-Boundary CPU Benchmark Gives Conflicting Results for an Unchanged Revision](../problems/known-error/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md)
 - Treatment decision: [ADR-0014: Performance Budget for the Initial JSON HTTP Boundary](../decisions/0014-performance-budget-initial-json-http-boundary.proposed.md)
 - Personas affected: release maintainers and adopters relying on qualified
   performance claims
@@ -87,3 +93,5 @@ passes.
   three-cohort classification and Quality run `38342282754` passed the control
   on Node.js 22 and 24 for exact `main` commit `1928f966` without changing
   ADR-0014's thresholds.
+
+- 2026-10-13: Reopened treatment after main `30d09eb` failed the accepted CPU budget (5.312 ms pooled p95) and one unchanged diagnostic rerun passed. Preserve both complete populations; no threshold or acceptance change is authorized by the conflict.

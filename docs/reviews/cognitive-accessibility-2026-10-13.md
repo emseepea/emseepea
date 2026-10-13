@@ -161,3 +161,32 @@ live host verification. It explains local human login and CI limitations.
 | File | SHA-256 | Result |
 | --- | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `e67a9507939ff479f8fce2f4070c721cf3a2c65a98e603f3d870ac67b27444e1` | PASS |
+
+## Reopened Performance Conflict and Diagnostic Clock
+
+Independent cognitive-accessibility, voice and external-communication review: PASS.
+The records distinguish historical closure, current recurrence, nonqualifying
+diagnostic observations and the above-appetite standing release risk. Shared-clock
+GC overlap is explicitly not causal attribution. The bounded cloud diagnostic
+does not replace the failed original population or qualify publication.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/problems/README.md` | `382bf7457ec2b3c85df42a0059aafe01532eb18643cf5e2c712820f1c92ca7af` | PASS |
+| `docs/problems/README-history.md` | `43228581a748a45c0e4743a28096c4319a636d117a99b4f9dfe81b675573ef53` | PASS |
+| `docs/problems/known-error/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md` | `eb0df4dc9a4f39525a7065c5688a18bc0bf7ef0e30db2707b848723d7a840612` | PASS |
+| `docs/risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md` | `61d40f2a93fb4537bdf1aabfe0b9ca61504a1f82020849950c73cfa1d5d3dbb9` | PASS |
+| `docs/reviews/diagnostic-clock-2026-10-13.json` | `e9a5d547b721339c88402b3b3ec247661ac3222cc3913fd2afc15ebb51857e31` | PASS |
+
+
+## Released Baseline and Open Performance Investigation
+
+Independent cognitive-accessibility, voice and external-communication review: PASS.
+Published versions and passed retry workflows remain historical observations; the
+original failed complete population remains explicit. Diagnostic-only PASS does
+not close P015/R014 or authorize a further package release. Live native-host
+qualification remains pending.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `678c2221eef95644157bfb0ffc80e4c43a6d3fe9b98413a7aa7c8e8f609aad60` | PASS |

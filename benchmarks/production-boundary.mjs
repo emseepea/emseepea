@@ -179,7 +179,12 @@ async function measure(requestClass, cohort) {
         : reject(new Error(`benchmark server exited with ${code ?? signal}`)));
       child.once("error", reject);
     });
-    await ask("shutdown");
+    const clock = await ask("shutdown");
+    if (traceDirectory) {
+      assert.equal(clock?.diagnosticOnly, true, "missing diagnostic clock observations");
+      await writeFile(resolve(traceDirectory,
+        `production-${requestClass}-cohort-${cohort}.clock.json`), `${JSON.stringify(clock, null, 2)}\n`);
+    }
     await exited;
   }
 }
