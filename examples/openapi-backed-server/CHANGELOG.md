@@ -1,5 +1,11 @@
 # @emseepea/create-openapi-backed-server
 
+## 0.1.16
+
+### Patch Changes
+
+- [`05f263c`](https://github.com/emseepea/emseepea/commit/05f263c4e6558434ef238686d08a566e88b94a01) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an experimental, opt-in Playwright adapter for adopter-owned ChatGPT browser journeys, with dedicated local human-login setup, explicit scenario execution, scoped server observations, application assertions, and required cleanup. Playwright remains optional and ordinary framework tests do not enable browser journeys. Deterministic contract tests and intercepted Chromium fixtures verify the adapter; live ChatGPT host qualification remains pending.
+
 ## 0.1.15
 
 ### Patch Changes

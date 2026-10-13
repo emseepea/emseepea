@@ -76,3 +76,78 @@ JTBD reviewer checked the planned release record and synthetic native-client rec
 | File | SHA-256 |
 | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `8597029a0a39b88488e0c2a1014a831d622d7565caaf7147cfafd237bc3c06a6` |
+## Issue #145 Opt-in Adapter Documentation
+
+Author self-review completed for clear setup steps, explicit ownership, and
+accurate evidence limits. This is not a specialist accessibility assessment.
+The documentation distinguishes adapter fixture tests from pending live host
+qualification and explains optional dependencies and local human login.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/opt-in-native-chatgpt.md` | `d62105c9cc835ef7925370132acac0ddbf68252dea80888f82c813492adbe149` | PASS |
+| `packages/testing/README.md` | `f916c9ce537420dab2e1ecdf9c6d103babdad095119822a0834d70955d5d441c` | PASS |
+| `docs/decisions/0123-opt-in-native-chatgpt-browser-journeys.proposed.md` | `9d47419fe5462d6f87799bb71bfbf8a95b943b76aa570b77a1de5da30f6f28fb` | PASS |
+| `docs/decisions/README.md` | `78651a9a4fbaec1df8b20caf9b59dc1a712ab519b383050f01ff2dd0f5b9f936` | PASS |
+
+## Issue #145 Candidate Release Record
+
+Author self-review: checked the package set, experimental scope, and pending
+live evidence. No completed-publication claim is made.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/opt-in-native-chatgpt.md` | `94876c68364236ade89f5cfca2423898b9d8040d6397cb4112fed951c257f67f` | PASS |
+| `docs/reviews/current-release-readiness.md` | `b6d9081f22e581573ac632e930e3fdceafc2aae5975827c6e12b26106e987d01` | PASS |
+
+## Issue #145 Readability Correction
+
+Author self-review: split setup, collector, and evidence instructions into
+short paragraphs without changing their requirements.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `packages/testing/README.md` | `24026e12078d9a9246817fc5c7d07cc7fdb51c8ff41fdbc96b4d271e73e8be44` | PASS |
+
+## Combined Trunk Candidate
+
+Author self-review: preserved the concurrent Codex fix and its evidence limits,
+and kept the native browser journey experimental. Reviewed the merged README
+and release record for short paragraphs and accurate package versions.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `packages/testing/README.md` | `c913b3932b21a6757ef8346fee9b5befac3faa417dbb2a28b7f921b0c4dcf0bb` | PASS |
+| `docs/reviews/current-release-readiness.md` | `70c50e97820005d8d5ba91150d37c4ca89b27635cdf1e892d8db39d1a2c50bcd` | PASS |
+
+## Optional Browser Dependency Boundary
+
+Author self-review: native users explicitly install the documented Playwright
+version. The package has no peer constraint that could conflict with browser
+tooling used by adopters who leave the native adapter disabled.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `packages/testing/README.md` | `dafe395599f91f9eaa7dea05709525dddaf4e1149c7cf87f2bedd08bd7c85c88` | PASS |
+| `docs/decisions/0123-opt-in-native-chatgpt-browser-journeys.proposed.md` | `f3bf2228aebdc3a622f96baccd6fc91250e04ba3f01a61423113dbb6144dec97` | PASS |
+| `docs/decisions/README.md` | `78651a9a4fbaec1df8b20caf9b59dc1a712ab519b383050f01ff2dd0f5b9f936` | PASS |
+| `docs/reviews/current-release-readiness.md` | `53670913abda71aa08d036cbbca8cc5ba480619051735b4f96519cd0c765a2f9` | PASS |
+
+## Native Adapter Released Baseline
+
+Author self-review: updated the planned versions after the previous release
+completed, preserving the distinction between that delivered fix and this
+pending experimental native adapter.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `79c73ab3d582294977ed4b571466edea444fa7bd64b57d750be16420940b76b7` | PASS |
+
+## Fresh Conversation Evidence Correction
+
+Author self-review: the release record now identifies rejection of inherited
+user and assistant messages, and reports the current contract test count.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `3a1481e5c4e710bc63e80f9a774b9a3e490351d04373d742cf85c2054fd60fbd` | PASS |
