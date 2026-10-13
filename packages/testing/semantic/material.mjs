@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 
+import { collectResourceCatalogue } from "./resources.mjs";
+
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 
 const sha256 = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -115,6 +117,7 @@ export async function listMcpTools(url, testCase, signal) {
     signal?.addEventListener("abort", abort, { once: true });
   });
   try {
+    if (testCase.nativeResources && !client.getServerCapabilities()?.tools) return [];
     const response = await Promise.race([client.listTools(), cancelled]);
     const tools = response.tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
     tools.sort((left, right) => left.name.localeCompare(right.name));
@@ -126,6 +129,15 @@ export async function listMcpTools(url, testCase, signal) {
     signal?.removeEventListener("abort", abort);
     await client.close();
   }
+}
+
+export async function listMcpResourceCatalogue(url, testCase, signal) {
+  signal?.throwIfAborted();
+  const client = await openClient(url, testCase);
+  const abort = () => { void client.close().catch(() => {}); };
+  signal?.addEventListener("abort", abort, { once: true });
+  try { return await collectResourceCatalogue(client, signal); }
+  finally { signal?.removeEventListener("abort", abort); await client.close(); }
 }
 
 function requestFor(operation) {

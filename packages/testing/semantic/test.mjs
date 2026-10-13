@@ -6,11 +6,13 @@ import { dirname, join, resolve } from "node:path";
 import { environmentForTrial, validateConversationOptions } from "./case.mjs";
 import {
   listMcpTools,
+  listMcpResourceCatalogue,
   semanticAuthToken,
   startSemanticServer,
   stopSemanticServer,
 } from "./material.mjs";
 import { parseJudgeVerdict, providerModel, providerSettings, runModel, startModelConversation } from "./provider.mjs";
+import { assertResourceHelperCollisions } from "./resources.mjs";
 import {
   canonicalToolNames,
   normalizeToolSelectionContract,
@@ -46,6 +48,9 @@ export async function createConversation(testContext, options) {
 
   const provider = process.env.EMSEEPEA_EVAL_PROVIDER ?? "claude-local";
   if (!["claude-local", "claude-ci", "codex-local", "codex-ci"].includes(provider)) throw new Error("Unsupported model provider");
+  if (specification.nativeResources && !provider.startsWith("codex-")) {
+    throw new Error("nativeResources requires the Codex provider");
+  }
   const smoke = process.env.EMSEEPEA_EVAL_SMOKE === "1";
   if (smoke && provider === "claude-ci") throw new Error("Smoke tests cannot qualify a release");
   const file = process.env.EMSEEPEA_TEST_FILE;
@@ -57,6 +62,7 @@ export async function createConversation(testContext, options) {
     name,
     file,
     mode: "conversation",
+    ...(specification.nativeResources ? { nativeResources: true } : {}),
     authoritative: provider === "claude-ci",
     smoke,
     provider,
@@ -86,12 +92,15 @@ export async function createConversation(testContext, options) {
       }, testContext.signal);
       try {
         const tools = await listMcpTools(running.url, specification, testContext.signal);
-        const record = { trial, turns: [] };
+        if (specification.nativeResources) assertResourceHelperCollisions(tools);
+        const resourceCatalogue = specification.nativeResources
+          ? await listMcpResourceCatalogue(running.url, specification, testContext.signal) : undefined;
+        const record = { trial, turns: [], ...(resourceCatalogue ? { resourceCatalogue } : {}) };
         const directory = await mkdtemp(join(tmpdir(), "emseepea-conversation-"));
         const serverSecrets = Object.entries(environment ?? {})
           .filter(([key]) => /token|password|secret|credential|api.?key/i.test(key))
           .map(([, value]) => value);
-        state.trials.push({ running, tools, record, directory, history: [], model: undefined, serverSecrets, conversation: 1 });
+        state.trials.push({ running, tools, resourceCatalogue, record, directory, history: [], model: undefined, serverSecrets, conversation: 1 });
         evidence.answerTrials.push(record);
       } catch (error) {
         await stopSemanticServer(running.child);
@@ -118,6 +127,7 @@ export async function createConversation(testContext, options) {
           specification.context,
           testContext.signal,
           trial.serverSecrets,
+          trial.resourceCatalogue,
         );
         const answer = await trial.model.send(prompt, options);
         const calls = answer.calls;
@@ -129,6 +139,7 @@ export async function createConversation(testContext, options) {
         trial.history.push({
           user: prompt,
           toolCalls: recordedToolCalls,
+          resourceOperations: answer.resourceOperations ?? [],
           assistant: answer.answer,
         });
         const record = {
@@ -139,6 +150,9 @@ export async function createConversation(testContext, options) {
           response: answer.answer,
           elicitations: answer.elicitations,
           toolCalls: recordedToolCalls,
+          resourceOperations: answer.resourceOperations ?? [],
+          resourceCatalogueSha256: trial.resourceCatalogue ? hash(JSON.stringify(trial.resourceCatalogue)) : undefined,
+          ...(trial.resourceCatalogue ? { answerProviderResourceOperationCount: answer.providerResourceOperationCount } : {}),
           toolOutcomesSha256: hash(JSON.stringify(recordedToolCalls)),
           promptSha256: hash(prompt),
           answerSha256: hash(answer.answer),
@@ -195,6 +209,7 @@ export async function createConversation(testContext, options) {
         toolOutcomes: Object.freeze(trials.map(({ record }) => immutableSnapshot(record.toolCalls.map(
           ({ name, arguments: args, result, isError }) => ({ name, arguments: args, result, isError }),
         )))),
+        resourceOperations: Object.freeze(trials.map(({ record }) => immutableSnapshot(record.resourceOperations))),
         elicitations: Object.freeze(trials.map(({ record }) => Object.freeze(record.elicitations))),
         [privateTurn]: trials,
       });
