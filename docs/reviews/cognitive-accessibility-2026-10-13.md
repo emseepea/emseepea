@@ -49,3 +49,13 @@ publication and does not claim API-key CI authentication was tested live.
 | `.changeset/codex-isolated-transport.md` | `7cb09cd3579ff79f2afca9d5cfc43756cf41ee7f8b64cbeef537cdf29e33b81f` | PASS |
 | `docs/reviews/current-release-readiness.md` | `c5e0bd018ce1beca76485e2b307243fe8088b49a9bef49569a24fe652580be23` | PASS |
 | `packages/testing/README.md` | `a83335c9a23d43849250f352c60dfb5c3d42af9a833d056bac0999662e0ffb97` | PASS |
+
+## Issue #162 Completed Release Evidence
+
+PASS. Reviewed the updated release record for concrete user availability,
+traceable verification, and clear authentication limits. It names the released
+versions and distinguishes completed checks from the untested API-key path.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `eeb98cb4a1c1a4b8be866a00e11eef523c6654a54aa60b31410cc537fb65479a` | PASS |
