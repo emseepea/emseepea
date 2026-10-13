@@ -22,6 +22,7 @@ test("browser attachment rejects foreign authority and non-loopback interfaces b
   await assert.rejects(attachOwnedBrowser({ chromium: client, endpoint: local, browserOwner: "foreign-owner", accountOwner: owner }), /browser-owner-confirmation-required/);
   assert.equal(connections, 0);
   assert.equal(validateBrowserAttachment(local, owner, owner), local);
+  assert.equal(validateBrowserAttachment("ws://127.0.0.1:9222/devtools/browser", owner, owner), "ws://127.0.0.1:9222/devtools/browser");
 });
 
 test("attachment redacts provider errors and disconnects ambiguous browser contexts", async () => {

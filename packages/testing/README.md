@@ -682,6 +682,16 @@ to `runNativeChatGptJourney`. The adapter does not need to launch that browser.
 It cannot attach to an arbitrary ordinary Chrome window without a supported
 browser control interface.
 
+Chrome versions with GUI remote debugging expose it at
+`chrome://inspect/#remote-debugging`. The browser owner can select "Allow remote
+debugging for this browser instance" and approve the connection in Chrome.
+This needs no command-line browser launch.
+
+The runner must still execute on
+the browser's host; enabling this option does not give a cloud runner access
+to another computer. Use a dedicated test browser and disable debugging when
+finished.
+
 For a Chromium session that the adopter has already opened and exposed through
 Chrome DevTools Protocol (CDP), the execution command can attach locally:
 
@@ -697,7 +707,8 @@ consent before attaching. `--browser-owner` must match the scenario's account
 owner. Use a dedicated synthetic-test browser with one browser context.
 
 The command accepts only a browser WebSocket on literal `127.0.0.1`, an explicit
-port from 1024 to 65535, and a `/devtools/browser/` path. Remote hosts,
+port from 1024 to 65535, and `/devtools/browser` with an optional browser ID.
+Remote hosts,
 credentials, query strings, redirects, HTTP discovery, and profile options are
 rejected.
 

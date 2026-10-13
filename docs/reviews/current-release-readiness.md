@@ -49,6 +49,13 @@ connector access only. A normal Chrome window without an exposed supported
 interface cannot be attached by this package. Login, MFA, consent, and CAPTCHA
 remain human actions; the complete issue #145 remains open.
 
+The first source Quality run passed on dc9c0bf (38479318070). Candidate a9ef2b9
+entered semantic checks in Release run 38480980700. Before npm publication,
+that run was cancelled to admit Chrome's GUI browser endpoint without a browser
+ID. The cancelled run is not release evidence. Corrected source must pass new
+exact-commit gates. GUI debugging still requires owner approval and a runner on
+the browser's host; it does not enable cloud access to the owner's computer.
+
 ## Release status
 
 Publication status: **PROPOSED (owner-authorized browser attachment)**.

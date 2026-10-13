@@ -2,7 +2,7 @@
 // authenticates, exports storage, or bypasses a browser challenge.
 export function validateBrowserAttachment(endpoint, browserOwner, accountOwner) {
   if (typeof accountOwner !== "string" || !accountOwner.trim() || browserOwner !== accountOwner) throw new Error("browser-owner-confirmation-required");
-  if (typeof endpoint !== "string" || endpoint.length > 256 || !/^ws:\/\/127\.0\.0\.1:[0-9]+\/devtools\/browser\/[A-Za-z0-9-]+$/.test(endpoint)) throw new Error("loopback-browser-endpoint-required");
+  if (typeof endpoint !== "string" || endpoint.length > 256 || !/^ws:\/\/127\.0\.0\.1:[0-9]+\/devtools\/browser(?:\/[A-Za-z0-9-]+)?$/.test(endpoint)) throw new Error("loopback-browser-endpoint-required");
   let url;
   try { url = new URL(endpoint); }
   catch { throw new Error("loopback-browser-endpoint-required"); }

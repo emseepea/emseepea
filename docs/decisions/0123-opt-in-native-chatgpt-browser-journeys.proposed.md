@@ -53,6 +53,12 @@ setup. Bounded Node WebSocket framing supplies Playwright's documented transport
 interface and rejects redirects. Playwright preserves the owner's browser
 defaults. The ordinary headed setup preserves Chromium's sandbox.
 
+Chrome's GUI remote-debugging interface can use `/devtools/browser` without a
+browser ID. Both that path and the usual browser-ID path are admitted on
+literal loopback. The owner enables and approves debugging in Chrome; the
+runner must operate on the same host. This does not expose a desktop browser
+to the cloud runner or create a remote-access service.
+
 Adopters declare ownership of account, HTTPS endpoint, synthetic fixtures, and
 cleanup. Their scenario controls assertions, server collection, and cleanup.
 Server evidence must be authenticated and correlated to the specific run.
