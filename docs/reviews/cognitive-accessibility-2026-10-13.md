@@ -99,3 +99,12 @@ live evidence. No completed-publication claim is made.
 | --- | --- | --- |
 | `.changeset/opt-in-native-chatgpt.md` | `94876c68364236ade89f5cfca2423898b9d8040d6397cb4112fed951c257f67f` | PASS |
 | `docs/reviews/current-release-readiness.md` | `b6d9081f22e581573ac632e930e3fdceafc2aae5975827c6e12b26106e987d01` | PASS |
+
+## Issue #145 Readability Correction
+
+Author self-review: split setup, collector, and evidence instructions into
+short paragraphs without changing their requirements.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `packages/testing/README.md` | `24026e12078d9a9246817fc5c7d07cc7fdb51c8ff41fdbc96b4d271e73e8be44` | PASS |
