@@ -1,6 +1,6 @@
 # Problem Backlog
 
-> Last reviewed: 2026-10-06 **P021 captured** - Release troubleshooting adds unnecessary controls (lightweight aside via `/wr-itil:capture-problem`).
+> Last reviewed: 2026-10-13 **P015 verification pending** - Fixed three-cohort classification passed the production-boundary budget on Node.js 22 and 24.
 > Run `/wr-itil:review-problems` to refresh Weighted Shortest Job First (WSJF) rankings.
 
 ## WSJF Rankings
@@ -18,7 +18,6 @@ effort, reported date, and ID.
 | 24.0 | P016 | Feedback deadline test flakes under qualification load | 12 (High) | Open | S | 2026-09-29 | internal |
 | 18.0 | P006 | A strict result schema opens when it is piped from an open object | 9 (Medium) | Known Error | S | 2026-09-20 | internal |
 | 18.0 | P017 | A known vulnerability in a development dependency blocks trunk | 9 (Medium) | Known Error | S | 2026-09-29 | internal |
-| 15.0 | P015 | Production-boundary CPU benchmark gives conflicting results for an unchanged revision | 15 (High) | Known Error | M | 2026-09-24 | internal |
 | 12.0 | P004 | Problem backlog parser couples to an unexplained exact heading | 6 (Medium) | Known Error | S | 2026-09-11 | internal |
 | 12.0 | P008 | The release package list is transcribed by hand into the readiness record | 12 (High) | Known Error | M | 2026-09-20 | internal |
 | 12.0 | P009 | A tool call can fail after the backend has recorded the work | 12 (High) | Known Error | M | 2026-09-20 | internal |
@@ -37,6 +36,7 @@ Fix released, awaiting verification. Sorted by release date, oldest first.
 | ID | Title | Released | Fix summary | Likely verified? |
 |----|-------|----------|-------------|------------------|
 | P003 | Release workflow lacks first-package trusted-publisher preflight | 2026-09-24 | The release checks every public package name before publication and stops with separate bootstrap guidance when a name is absent. | no — not observed |
+| P015 | Production-boundary CPU benchmark gives conflicting results for an unchanged revision | 2026-10-13 | Every request class now uses three complete independent cohorts and the unchanged ADR-0014 limits apply to the pooled population. | yes — observed: Quality run `38335751990` passed on Node.js 22 and 24. |
 
 ## Inbound Upstream Reports
 

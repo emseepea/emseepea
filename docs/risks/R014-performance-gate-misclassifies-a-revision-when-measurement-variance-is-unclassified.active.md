@@ -4,7 +4,7 @@
 **Category**: operational
 **Identified**: 2026-09-24
 **Owner**: Release maintainer
-**Last reviewed**: 2026-09-24
+**Last reviewed**: 2026-10-13
 **Next review**: 2027-03-24
 
 ## Description
@@ -33,33 +33,34 @@ classification control is absent.
   weakening correctness, validation, limits, security, or telemetry redaction
   to meet it.
 - **Multiple runtime jobs** — Quality runs the production-boundary benchmark on
-  Node.js 22 and 24. This produced useful conflicting evidence but did not
-  classify which result was representative.
-- **Retained run evidence** — Continuous integration retains the failed attempt
-  and unchanged rerun result for diagnosis.
+  Node.js 22 and 24.
+- **Fixed repeated-run population** — Every request class always runs three
+  independent cohorts with a fresh server process and unique trace identity.
+  The gate applies the unchanged ADR-0014 limits to the complete pooled sample
+  population rather than accepting a failure-triggered retry.
+- **Complete retained evidence** — Continuous integration retains every cohort
+  summary and raw CPU sample. Missing, malformed, failed, or cancelled cohorts
+  fail closed.
 
-These controls preserve the safety target and evidence. They do not control the
-observed measurement-classification failure.
+Quality run `38335751990` exercised these controls on Node.js 22 and 24 for
+current `main` commit `11a70ef07844c8bbed432218e590225b9a164d6d` and passed.
 
 ## Residual Risk
 
 Impact × Likelihood *after* controls.
 
 - **Impact**: 3 (Moderate)
-- **Likelihood**: 5 (Almost certain)
-- **Residual Score**: 15
-- **Residual Band**: High
-- **Within appetite?**: No
+- **Likelihood**: 1 (Rare)
+- **Residual Score**: 3
+- **Residual Band**: Low
+- **Within appetite?**: Yes
 
 ## Treatment
 
-Mitigate. Add evidence-based repeated-run variance classification that
-satisfies ADR-0014 without weakening the 5 ms ceiling, changing the pinned
-profile, or hiding failed measurements. One bounded rerun may aid diagnosis,
-but it is not an operating control or proof that either result is correct.
-
-The affected publication or release action remains blocked while residual risk
-is above the 5-point appetite.
+Maintain the fixed three-cohort classification and unchanged ADR-0014 limits.
+Re-open treatment if retained evidence shows a same-revision conflict under the
+complete pooled population, a missing cohort is accepted, or a true regression
+passes.
 
 ## Monitoring
 
@@ -72,7 +73,7 @@ is above the 5-point appetite.
 ## Related
 
 - Criteria: `RISK-POLICY.md`
-- Realised-as: [Problem 015: Production-Boundary CPU Benchmark Gives Conflicting Results for an Unchanged Revision](../problems/open/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md)
+- Realised-as: [Problem 015: Production-Boundary CPU Benchmark Gives Conflicting Results for an Unchanged Revision](../problems/verifying/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md)
 - Treatment decision: [ADR-0014: Performance Budget for the Initial JSON HTTP Boundary](../decisions/0014-performance-budget-initial-json-http-boundary.proposed.md)
 - Personas affected: release maintainers and adopters relying on qualified
   performance claims
@@ -82,3 +83,6 @@ is above the 5-point appetite.
 - 2026-09-24: Created after one Quality run failed the Node.js 22 CPU budget and
   the unchanged failed-job rerun passed. Recorded the missing repeated-run
   variance classification and the resulting above-appetite residual risk.
+- 2026-10-13: Reduced residual risk after commit `808520fb` added fixed
+  three-cohort classification and Quality run `38335751990` passed the control
+  on Node.js 22 and 24 without changing ADR-0014's thresholds.
