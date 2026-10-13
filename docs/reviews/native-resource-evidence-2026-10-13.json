@@ -1,0 +1,65 @@
+{
+  "status": "bounded-foundation-review-pending-full-qualification",
+  "option": "nativeResources: true",
+  "default": false,
+  "providerScope": [
+    "codex-local",
+    "codex-ci"
+  ],
+  "exposedLearnerToolsChanged": false,
+  "fixedGenuineProof": {
+    "provider": "codex-local",
+    "configuredModel": "gpt-5.5",
+    "cliVersion": "0.159.2",
+    "authoritative": false,
+    "trials": 3,
+    "turnsPerTrial": 3,
+    "initialMeaningJudgments": 9,
+    "semanticRetries": 0,
+    "applicationCalls": 6,
+    "resourceReads": 9,
+    "protocolSha256": "ae1366dbbb2e37aba61b7e371975516415b8afaad84b2ccd7fd22a42df72cdd9",
+    "evidenceSha256": "236ae6013946d0c8c95d8d3452befd7a55f02ba90972491c2d49a6cf7fcfb33e",
+    "backendTraceSha256": "a62c078a7dbbcd64d65911cd1418f4df3500ee8de767821c07e3c0345874c844",
+    "correlation": "15 events match the fixed proof time window and three retained-server sequences; fresh model sessions use the same application server."
+  },
+  "offlineValidation": {
+    "unchangedEvidenceSha256": "236ae6013946d0c8c95d8d3452befd7a55f02ba90972491c2d49a6cf7fcfb33e",
+    "validatorCode": {
+      "packages/testing/semantic/evidence.mjs": "15251623130c9db1240b90be0ef9a38bc0fac4a106f990967ad9084437dfed14",
+      "packages/testing/semantic/resources.mjs": "63996a56956f195c79ea8758b5a4f87916dcdaf90503d61be179e5b491032b96"
+    },
+    "status": "PASS",
+    "newModelCalls": 0,
+    "failedRecordsReclassified": false
+  },
+  "focusedProtocolTests": {
+    "passed": 42,
+    "failed": 0,
+    "scope": [
+      "registered request URIs and configured helper server",
+      "aggregate and empty resource results",
+      "strict failures, incomplete events and configured secrets",
+      "helper/tool collisions",
+      "bounded catalogue pagination and cancellation",
+      "consistent provider counts and malformed path rejection",
+      "default tool-only runner contracts",
+      "unscoped empty discovery excluded; scoped empty inventories recorded"
+    ]
+  },
+  "retainedFailures": {
+    "resourceOnlyAttempts": 6,
+    "firstMixedAggregateCliResult": "FAILED; conversation assertions passed, aggregate validator rejected resource paths. Raw result remains failed.",
+    "broaderFixtureAttempt": "35 passed,3 failed before required tool-server fixture build; unchanged checks passed after build.",
+    "noFailedRecordReclassification": true
+  },
+  "limits": [
+    "No general resource-only qualification.",
+    "No independently observed authenticated HTTP-hop proof.",
+    "No native ChatGPT or production learner journey proof.",
+    "No recovered completed-turn evidence from failed model invocations.",
+    "No question-correctness or ordinal-quality adjudication.",
+    "Exact-source full qualification and package-release gates still required."
+  ],
+  "reconciledBase": "df5e99f4b3f81310bf1ee2f58380794c202a97b8"
+}

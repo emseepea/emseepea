@@ -9,6 +9,9 @@ export function validateConversationOptions(value) {
   if (value.context !== undefined && typeof value.context !== "string") {
     throw new Error("context must be text");
   }
+  if (value.nativeResources !== undefined && typeof value.nativeResources !== "boolean") {
+    throw new Error("nativeResources must be boolean");
+  }
   for (const key of ["authToken", "authTokenEnvironment"]) {
     if (value[key] !== undefined && (typeof value[key] !== "string" || !value[key].trim())) {
       throw new Error(`${key} must be non-empty text`);

@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { assertResourceHelperCollisions, resourceHelperOperation } from "./resources.mjs";
 import { scriptedElicitations } from "./elicitation.mjs";
 
 export function mcpClientVersion(client) {
@@ -248,9 +249,9 @@ export function modelInvocation(provider, prompt, directory) {
   };
 }
 
-export function conversationInvocation(provider, directory, url, tools, authToken, context) {
+export function conversationInvocation(provider, directory, url, tools, authToken, context, resourceCatalogue) {
   if (provider.startsWith("codex-")) {
-    return codexInvocation(provider, undefined, directory, { url, tools, authToken, context });
+    return codexInvocation(provider, undefined, directory, { url, tools, authToken, context, resourceCatalogue });
   }
   const nativeTools = tools.map(({ name }) => nativeToolName(name));
   const config = nativeTools.length ? {
@@ -288,9 +289,9 @@ export function conversationInvocation(provider, directory, url, tools, authToke
   };
 }
 
-export function startModelConversation(provider, directory, url, tools, authToken, context, signal, serverSecrets = []) {
+export function startModelConversation(provider, directory, url, tools, authToken, context, signal, serverSecrets = [], resourceCatalogue) {
   if (provider.startsWith("codex-")) {
-    return startCodexConversation(provider, directory, url, tools, authToken, context, signal, serverSecrets);
+    return startCodexConversation(provider, directory, url, tools, authToken, context, signal, serverSecrets, resourceCatalogue);
   }
   signal?.throwIfAborted();
   const invocation = conversationInvocation(provider, directory, url, tools, authToken, context);
@@ -425,7 +426,7 @@ export async function runModel(provider, prompt, directory, signal) {
 }
 
 export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, processExitCode = 0,
-  selectedModel = "test-model", secrets = [], providerFailureCategory) {
+  selectedModel = "test-model", secrets = [], providerFailureCategory, resourceCatalogue) {
   let events;
   try {
     events = typeof stdout === "string"
@@ -464,17 +465,23 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
     || events.filter(({ type }) => type === "turn.completed").length !== 1) {
     throw new Error("Model command returned an incomplete turn");
   }
+  if (resourceCatalogue) assertResourceHelperCollisions(advertisedTools);
   const advertised = new Set(advertisedTools.map(({ name }) => name));
   const completed = events.filter(({ type }) => type === "item.completed").map(({ item }) => item);
   const forbidden = completed.filter((item) => !["agent_message", "reasoning", "mcp_tool_call"].includes(item?.type));
   if (forbidden.length) throw forbiddenItemError(forbidden);
   const toolItems = completed.filter(({ type }) => type === "mcp_tool_call");
-  const discoveryItems = toolItems.filter(({ server, tool }) =>
+  const resourceItems = resourceCatalogue ? toolItems.flatMap((item) => {
+    const operation = resourceHelperOperation(item, resourceCatalogue);
+    return operation ? [{ item, operation }] : [];
+  }) : [];
+  const resourceItemSet = new Set(resourceItems.map(({ item }) => item));
+  const discoveryItems = toolItems.filter((item) => !resourceItemSet.has(item)).filter(({ server, tool }) =>
     server === "codex" && codexEmptyDiscoveryTools.has(tool));
   if (discoveryItems.some((item) => !emptyCodexDiscovery(item))) {
     throw forbiddenItemError(discoveryItems.filter((item) => !emptyCodexDiscovery(item)));
   }
-  const applicationToolItems = toolItems.filter((item) => !discoveryItems.includes(item));
+  const applicationToolItems = toolItems.filter((item) => !discoveryItems.includes(item) && !resourceItemSet.has(item));
   const calls = applicationToolItems.map((item) => {
     if (item.server !== mcpServerName || !advertised.has(item.tool)
       || !item.arguments || typeof item.arguments !== "object" || Array.isArray(item.arguments)) {
@@ -494,17 +501,24 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
     answer,
     calls,
     toolResults,
-    pathEvidence: calls.map((call, index) => ({
-      method: "tools/call",
-      target: call.name,
-      requestSha256: hash({ method: "tools/call", name: call.name, arguments: call.arguments }),
-      responseSha256: hash(toolResults[index].content),
-    })),
+    resourceOperations: resourceItems.map(({ operation }) => ({ ...operation, source: "provider-native-helper" })),
+    pathEvidence: toolItems.flatMap((item) => {
+      const native = resourceItems.find((entry) => entry.item === item)?.operation;
+      if (native) return [{ method: native.method, target: native.target, source: "provider-native-helper",
+        requestSha256: hash(native.arguments), responseSha256: hash(native.result) }];
+      const index = applicationToolItems.indexOf(item);
+      if (index < 0) return [];
+      const call = calls[index];
+      return [{ method: "tools/call", target: call.name,
+        requestSha256: hash({ method: "tools/call", name: call.name, arguments: call.arguments }),
+        responseSha256: hash(toolResults[index].content) }];
+    }),
     models: [selectedModel],
     modelEvidence: "configured",
     turnCount: 1,
-    providerTurnCount: calls.length + 1,
+    providerTurnCount: calls.length + resourceItems.length + 1,
     providerToolCount: calls.length,
+    providerResourceOperationCount: resourceItems.length,
     threadId,
   };
 }
@@ -528,14 +542,14 @@ function emptyCodexDiscovery(item) {
   }
 }
 
-function startCodexConversation(provider, directory, url, tools, authToken, context, signal, serverSecrets) {
+function startCodexConversation(provider, directory, url, tools, authToken, context, signal, serverSecrets, resourceCatalogue) {
   let threadId;
   let closed = false;
   return Object.freeze({
     async send(prompt, options) {
       if (closed) throw new Error("Model conversation is closed");
       if (options?.elicitations?.length) throw new Error("Codex provider does not support scripted elicitation");
-      const invocation = conversationInvocation(provider, directory, url, tools, authToken, context);
+      const invocation = conversationInvocation(provider, directory, url, tools, authToken, context, resourceCatalogue);
       const args = threadId
         ? ["exec", "resume", threadId,
           ...withoutOption(withoutOption(invocation.args.slice(1), "--cd"), "--sandbox")]
@@ -550,7 +564,7 @@ function startCodexConversation(provider, directory, url, tools, authToken, cont
       if (execution.errorCode) throw new Error("Model conversation could not start");
       const turn = parseCodexEvents(execution.stdout, tools, threadId, execution.code,
         providerModel(provider), [...invocation.providerSecrets, authToken, ...serverSecrets],
-        execution.providerFailureCategory);
+        execution.providerFailureCategory, resourceCatalogue);
       threadId = turn.threadId;
       return { ...turn, elicitations: [] };
     },
@@ -597,9 +611,9 @@ function codexInvocation(provider, prompt, directory, conversation) {
     "-c", "features.unified_exec=false",
   ];
   if (conversation?.context) args.push("-c", `developer_instructions=${JSON.stringify(conversation.context)}`);
-  if (conversation?.tools.length) {
+  if (conversation && (conversation.tools.length || conversation.resourceCatalogue)) {
     args.push("-c", `mcp_servers.${mcpServerName}.url=${JSON.stringify(conversation.url)}`);
-    args.push("-c", `mcp_servers.${mcpServerName}.enabled_tools=${JSON.stringify(conversation.tools.map(({ name }) => name))}`);
+    if (conversation.tools.length) args.push("-c", `mcp_servers.${mcpServerName}.enabled_tools=${JSON.stringify(conversation.tools.map(({ name }) => name))}`);
     args.push("-c", `mcp_servers.${mcpServerName}.default_tools_approval_mode="approve"`);
     for (const { name } of conversation.tools) {
       args.push("-c", `mcp_servers.${mcpServerName}.tools.${JSON.stringify(name)}.approval_mode="approve"`);

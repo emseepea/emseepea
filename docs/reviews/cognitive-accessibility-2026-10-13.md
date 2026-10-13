@@ -250,3 +250,30 @@ Actual dependency propagation reviewed independently: sixteen planned packages; 
 | File | SHA-256 | Result |
 | --- | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `e040a504accfcd6e8d0b369b51d219047487c8aa9780398d12f799d0558f5768` | PASS |
+
+## Opt-in Native Resource Evidence Foundation
+
+Independent JTBD, cognitive clarity, voice and external-copy review: PASS.
+The option remains off by default. Retained synthetic mixed-path proof, offline
+validation and protocol tests are distinct from general resource-only, authenticated
+HTTP, production learner and repaired-failure qualification. Raw failures remain
+unchanged. Exact-source qualification and package gates are pending.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `packages/testing/README.md` | `a1b79b34a773ef9d1f2e085c6c966117a855b9d8d0b30fec446427820d2960ee` | PASS |
+| `docs/reviews/native-resource-evidence-2026-10-13.json` | `4e2c2a919f765bfd64b16e1ecc7e9bb393d13adf3e7a58f3f8f97e7c2f454d4d` | PASS |
+
+## Native Resource Foundation Reconciled Release Copy
+
+Independent JTBD, cognitive clarity, voice and external-copy review: PASS.
+Published baseline and the next twelve-package plan are distinct. Default-off
+Codex scope, original failures, excluded unscoped empty discovery and bounded
+synthetic evidence remain explicit. No production or question-quality claim.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `packages/testing/README.md` | `84de79e374151686bfc1c3c9b4b36bcca1ff38e1631b5e4d8f75e359a979c24d` | PASS |
+| `.changeset/native-resource-evidence-foundation.md` | `edb6c8a107f1de765a407dab19251c76fd44af091739ddac88f53e516571cd2f` | PASS |
+| `docs/reviews/native-resource-evidence-2026-10-13.json` | `fc0dab1ff6cdb43915316b017f63a96fafdf6aa80216d8ac089603b35e39e9da` | PASS |
+| `docs/reviews/current-release-readiness.md` | `eca4430470550a0db40609d457990477260717c1a544d005cc75394cc1871929` | PASS |

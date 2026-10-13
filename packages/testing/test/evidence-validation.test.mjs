@@ -44,6 +44,87 @@ function fixture(provider) {
   return { evidence, record };
 }
 
+function resourceFixture() {
+  const value = fixture("codex-ci");
+  value.record.nativeResources = true;
+  for (const trial of value.record.answerTrials) {
+    trial.resourceCatalogue = { resources: [{ uri: "notes://welcome" }], resourceTemplates: [] };
+    const turn = trial.turns[0];
+    const operation = { method: "resources/read", target: "notes://welcome", source: "provider-native-helper",
+      arguments: { server: "emseepea_eval", uri: "notes://welcome" },
+      result: { server: "emseepea_eval", uri: "notes://welcome", contents: [{ uri: "notes://welcome", text: "Welcome" }] } };
+    turn.resourceOperations = [operation];
+    turn.resourceCatalogueSha256 = hash(trial.resourceCatalogue);
+    turn.answerProviderResourceOperationCount = 1;
+    turn.answerProviderTurnCount = turn.toolCallCount + turn.resourceOperations.length + 1;
+    turn.pathEvidence.splice(1, 0, { method: operation.method, target: operation.target, source: operation.source,
+      requestSha256: hash(operation.arguments), responseSha256: hash(operation.result) });
+    turn.materialSha256 = hash(turn.pathEvidence);
+  }
+  return value;
+}
+
+test("CLI evidence retains registered resource paths separately from application calls", () => {
+  const { record, evidence } = resourceFixture();
+  assert.equal(validRecord(record, evidence), true);
+  assert.equal(record.answerTrials[0].turns[0].toolCallCount, 40);
+  assert.equal(record.answerTrials[0].turns[0].pathEvidence.length, 41);
+});
+
+test("an empty registered read remains distinct from application-call evidence", () => {
+  const { record, evidence } = resourceFixture();
+  const turn = record.answerTrials[0].turns[0];
+  turn.resourceOperations[0].result.contents = [];
+  turn.pathEvidence[1].responseSha256 = hash(turn.resourceOperations[0].result);
+  turn.materialSha256 = hash(turn.pathEvidence);
+  assert.equal(validRecord(record, evidence), true);
+  assert.equal(turn.toolCallCount, 40);
+  assert.equal(turn.answerProviderResourceOperationCount, 1);
+});
+
+test("resource evidence cannot qualify without opt-in, coherent catalogue, counts and hashes", () => {
+  const mutations = [
+    r => { r.nativeResources = false; },
+    r => { r.provider = "claude-ci"; },
+    r => { delete r.answerTrials[0].resourceCatalogue; },
+    r => { r.answerTrials[0].turns[0].resourceCatalogueSha256 = hash({}); },
+    r => { r.answerTrials[0].turns[0].answerProviderResourceOperationCount = 0; },
+    r => { r.answerTrials[0].turns[0].resourceOperations[0].arguments.server = "other"; },
+    r => { r.answerTrials[0].turns[0].resourceOperations[0].result.uri = "notes://other"; },
+    r => { r.answerTrials[0].turns[0].resourceOperations[0].source = "independent-http-hop"; },
+    r => { r.answerTrials[0].turns[0].resourceOperations.push(r.answerTrials[0].turns[0].resourceOperations[0]); },
+    r => { r.answerTrials[0].turns[0].pathEvidence[1].responseSha256 = hash({}); },
+    r => { r.answerTrials[0].turns[0].pathEvidence.pop(); },
+    r => { r.answerTrials[0].turns[0].materialSha256 = hash({}); },
+    r => { r.status = "failed"; },
+  ];
+  for (const mutate of mutations) {
+    const { record, evidence } = resourceFixture(); mutate(record);
+    assert.equal(validRecord(record, evidence), false);
+  }
+});
+
+test("opted-in resource evidence binds provider turn counts to captured operations", () => {
+  for (const count of [1, 41, 43, 42.5]) {
+    const { record, evidence } = resourceFixture();
+    record.answerTrials[0].turns[0].answerProviderTurnCount = count;
+    assert.equal(validRecord(record, evidence), false);
+  }
+});
+
+test("malformed tool and resource path entries fail validation without throwing", () => {
+  for (const index of [0, 1]) for (const entry of [null, "tools/call", []]) {
+    const { record, evidence } = resourceFixture();
+    const turn = record.answerTrials[0].turns[0];
+    turn.pathEvidence[index] = entry;
+    turn.materialSha256 = hash(turn.pathEvidence);
+    assert.equal(validRecord(record, evidence), false);
+  }
+  const { record, evidence } = fixture("codex-ci");
+  record.answerTrials[0].turns[0].pathEvidence[0] = null;
+  assert.equal(validRecord(record, evidence), false);
+});
+
 test("the CLI evidence validator accepts more than three calls without imposing a round-count formula", () => {
   for (const provider of ["claude-ci", "codex-ci"]) {
     const { evidence, record } = fixture(provider);

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { resourceHelperOperation } from "./resources.mjs";
 import {
   canonicalToolNames,
   normalizeToolSelectionContract,
@@ -21,6 +22,7 @@ const sha256 = (value) => createHash("sha256").update(JSON.stringify(value)).dig
 export function validRecord(record, evidence) {
   const { authoritative, smoke } = evidence;
   const isHash = (value) => typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
+  if (record.nativeResources !== undefined && typeof record.nativeResources !== "boolean") return false;
   if (record.status !== "passed" || record.authoritative !== authoritative || record.smoke !== smoke
     || record.provider !== evidence.provider || record.configuredModel !== evidence.configuredModel
     || record.modelEvidence !== evidence.modelEvidence
@@ -56,13 +58,57 @@ export function validRecord(record, evidence) {
       && validNegativeFeedbackAssertion(turn)
       && validFeedbackDisclosure(turn, record.judgeVerdicts, trial.trial, isHash)
       && turn.toolCalls.every((call) => Object.hasOwn(call, "result") && typeof call.isError === "boolean")
-      && Array.isArray(turn.pathEvidence) && turn.pathEvidence.length === turn.toolCallCount
-      && turn.pathEvidence.every(({ method, target, requestSha256, responseSha256 }, index) => {
-        const call = turn.toolCalls[index];
-        return method === "tools/call" && target === call.name
-          && requestSha256 === sha256({ method, name: call.name, arguments: call.arguments })
-          && responseSha256 === sha256(call.result);
-      })));
+      && validPathEvidence(turn, record, trial, isHash)));
+}
+
+function validPathEvidence(turn, record, trial, isHash) {
+  const operations = turn.resourceOperations ?? [];
+  if (!Array.isArray(operations)) return false;
+  if (record.nativeResources !== true) {
+    if (operations.length) return false;
+  } else {
+    const catalogue = trial.resourceCatalogue;
+    if (!record.provider.startsWith("codex-") || !catalogue
+      || !Array.isArray(catalogue.resources) || !Array.isArray(catalogue.resourceTemplates)
+      || catalogue.resources.length > 4096 || catalogue.resourceTemplates.length > 4096
+      || !catalogue.resources.every(entry => entry && typeof entry.uri === "string" && entry.uri.trim())
+      || !catalogue.resourceTemplates.every(entry => entry && typeof entry.uriTemplate === "string" && entry.uriTemplate.trim())
+      || Buffer.byteLength(JSON.stringify(catalogue)) > 2 * 1_048_576
+      || !isHash(turn.resourceCatalogueSha256) || turn.resourceCatalogueSha256 !== sha256(catalogue)
+      || turn.answerProviderResourceOperationCount !== operations.length
+      || turn.answerProviderTurnCount !== turn.toolCallCount + operations.length + 1
+      || !isHash(turn.materialSha256) || turn.materialSha256 !== sha256(turn.pathEvidence)) return false;
+    const helpers = { "resources/read": "read_mcp_resource", "resources/list": "list_mcp_resources",
+      "resources/templates/list": "list_mcp_resource_templates" };
+    try {
+      for (const operation of operations) {
+        if (!operation || operation.source !== "provider-native-helper"
+          || Object.keys(operation).some(key => !["method", "target", "arguments", "result", "source"].includes(key))) return false;
+        const checked = resourceHelperOperation({ server: "emseepea_eval", status: "completed",
+          tool: helpers[operation.method], arguments: operation.arguments,
+          result: { content: [{ type: "text", text: JSON.stringify(operation.result) }], structured_content: null } }, catalogue);
+        if (!checked || checked.method !== operation.method || checked.target !== operation.target) return false;
+      }
+    } catch { return false; }
+  }
+  if (!Array.isArray(turn.pathEvidence) || turn.pathEvidence.length !== turn.toolCallCount + operations.length) return false;
+  let toolIndex = 0, resourceIndex = 0;
+  for (const path of turn.pathEvidence) {
+    if (!path || typeof path !== "object" || Array.isArray(path)) return false;
+    if (path.method === "tools/call") {
+      const call = turn.toolCalls[toolIndex++];
+      if (!call || path.target !== call.name
+        || path.requestSha256 !== sha256({ method: path.method, name: call.name, arguments: call.arguments })
+        || path.responseSha256 !== sha256(call.result)) return false;
+    } else {
+      const operation = operations[resourceIndex++];
+      if (!operation || path.source !== "provider-native-helper" || path.method !== operation.method
+        || path.target !== operation.target || path.requestSha256 !== sha256(operation.arguments)
+        || path.responseSha256 !== sha256(operation.result)) return false;
+    }
+  }
+  return toolIndex === turn.toolCallCount && resourceIndex === operations.length;
+
 }
 
 function validToolAssertions(turn, isHash) {

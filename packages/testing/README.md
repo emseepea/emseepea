@@ -134,12 +134,32 @@ Native-client events are authoritative for the tools that were actually used:
 a turn is accepted only when every application MCP call belongs to the
 configured test server and its expected tools.
 
-Codex may make its two built-in resource-discovery calls through the CLI's
+With resource capture left off, Codex may make its two built-in resource-discovery calls through the CLI's
 `codex` server. The runner accepts them only when their native results prove the
 resource and template inventories are empty, and excludes them from application
 assertions and raw evidence.
 
-Any non-empty, unrecognised, account-app, plugin, or other foreign call is
+For a Codex conversation that reads resources, set `nativeResources: true` in
+`createConversation` options. This option is off by default; other providers
+reject it. The runner obtains a bounded resource catalogue using the conversation's
+authentication and records recognized native resource operations separately
+from application-tool calls. `turn.resourceOperations` contains one operation
+array per trial; `assertNoToolCalls` still refers to application tools.
+Unscoped empty Codex discovery remains excluded from resource evidence.
+
+Registered reads retain their actual returned contents and request order in
+the evidence and meaning-judge context. Aggregate contents may have distinct
+URIs, and successful empty reads remain empty. Returned URIs do not authorize
+another read. Failed calls, unknown requested URIs, foreign servers and helper
+names that collide with application tools still fail qualification.
+
+The [retained genuine AI proof](https://github.com/emseepea/emseepea/blob/main/docs/reviews/native-resource-evidence-2026-10-13.json) covers a synthetic mixed tool/resource journey
+across resumed and fresh model sessions. It does not qualify general resource-only
+discovery, authenticated HTTP correlation or a production learner journey.
+Fresh model sessions use the same running test application. This option does
+not recover completed turns from a failed model invocation.
+
+Any other non-empty, unrecognised, account-app, plugin, or foreign call is
 rejected without storing raw account metadata.
 
 Failed Codex runs retain only a fixed failure category: authentication,

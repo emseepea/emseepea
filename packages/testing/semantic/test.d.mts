@@ -35,11 +35,22 @@ export interface ConversationOptions {
   context?: string;
   /** Server environment shared by all trials, or isolated values selected by trial number. */
   environment?: Record<string, string> | ((trial: number) => Record<string, string>);
+  /** Opt in to registered native resource-helper evidence. Currently Codex only. */
+  nativeResources?: boolean;
   authToken?: string;
   authTokenEnvironment?: string;
 }
 
+export interface ResourceOperation {
+  readonly method: "resources/list" | "resources/templates/list" | "resources/read";
+  readonly target: string;
+  readonly source: "provider-native-helper";
+  readonly arguments: Readonly<Record<string, unknown>>;
+  readonly result: unknown;
+}
+
 export interface ConversationTurn {
+  readonly resourceOperations: readonly (readonly ResourceOperation[])[];
   readonly responses: readonly string[];
   readonly toolCalls: readonly (readonly ToolCall[])[];
   readonly toolOutcomes: readonly (readonly ToolOutcome[])[];
