@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 119 decisions: 71 current and 48 historical.
+This project has 120 decisions: 71 current and 49 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -85,7 +85,7 @@ recorded separately.
 - [ADR-0120: Publish Branch Release with Exact-Head Mergeback Quality](0120-publish-branch-release-with-exact-head-mergeback-quality.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0121: Exact-Head Qualification for Automated Trunk Mergeback](0121-exact-head-qualification-for-automated-trunk-mergeback.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0122: Submit Feedback as the Sole Model Context Protocol (MCP) Feedback Creation Operation](0122-submit-feedback-as-the-sole-mcp-feedback-creation-operation.proposed.md): Proposed; human review unconfirmed.
-- [ADR-0123: Opt-in Native ChatGPT Browser Journeys](0123-opt-in-native-chatgpt-browser-journeys.proposed.md): Proposed; human review confirmed.
+- [ADR-0124: Opt-in Native ChatGPT Browser Journeys with Bounded Archived Transcripts](0124-opt-in-native-chatgpt-browser-journeys-with-bounded-archived-transcripts.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -137,6 +137,7 @@ recorded separately.
 - [ADR-0100: Trunk Push and Watch Under a Publish Branch](0100-trunk-push-and-watch-under-a-publish-branch.superseded.md): Superseded; human review confirmed.
 - [ADR-0102: Declared Proxy Topology for Production Deployments](0102-declared-proxy-topology-for-production-deployments.superseded.md): Superseded; human review confirmed.
 - [ADR-0106: Clean-Install Exact-Commit Branch Push Gate](0106-clean-install-exact-commit-branch-push-gate.superseded.md): Superseded; human review confirmed.
+- [ADR-0123: Opt-in Native ChatGPT Browser Journeys](0123-opt-in-native-chatgpt-browser-journeys.superseded.md): Superseded; human review confirmed.
 
 ## Decision Details
 
@@ -2651,10 +2652,11 @@ Chosen option: **"Use `submit-feedback` as the sole MCP feedback creation operat
 - The published package under review can also list, get, and reply to a thread stored before the removal in that independent installation.
 - All of this evidence is required before this proposal is accepted.
 
-### [ADR-0123: Opt-in Native ChatGPT Browser Journeys](0123-opt-in-native-chatgpt-browser-journeys.proposed.md)
+### [ADR-0123: Opt-in Native ChatGPT Browser Journeys](0123-opt-in-native-chatgpt-browser-journeys.superseded.md)
 
-- Status: Proposed
+- Status: Superseded
 - Human review: Confirmed
+- Replaced by: [ADR-0124: Opt-in Native ChatGPT Browser Journeys with Bounded Archived Transcripts](0124-opt-in-native-chatgpt-browser-journeys-with-bounded-archived-transcripts.proposed.md)
 
 #### ADR-0123 Decision
 
@@ -2667,3 +2669,23 @@ Chosen option: **an optional Playwright adapter with adopter-owned scenarios and
 - A live authorized ChatGPT account connected to a disposable local HTTP MCP through an HTTPS tunnel. Native discovery, attachment submission, fresh retrieval, MCP App invocation, owner-isolation denial, and in-flight cancellation produced correlated server evidence.
 - ChatGPT issued two `resources/read` requests for tool-returned resource links but reported both as `Unknown resource`. Deterministic protocol reads of the same resources succeeded. The native resource slice therefore remains incomplete and is not reported as a framework resource success.
 - A reported security-verification loop in the automation-launched browser motivates the owner-session attachment alternative. Attachment uses a supported browser interface; it does not claim to resolve or bypass the verification service. A normal browser without an exposed authorized interface cannot be controlled by this adapter.
+
+### [ADR-0124: Opt-in Native ChatGPT Browser Journeys with Bounded Archived Transcripts](0124-opt-in-native-chatgpt-browser-journeys-with-bounded-archived-transcripts.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+- Replaces: [ADR-0123: Opt-in Native ChatGPT Browser Journeys](0123-opt-in-native-chatgpt-browser-journeys.superseded.md)
+
+#### ADR-0124 Decision
+
+Chosen option: **"Opt-in native journeys with bounded archived synthetic transcripts"**, because it preserves real-host evidence and adopter ownership while describing the only available conversation-cleanup state truthfully and constraining its retention.
+
+#### ADR-0124 Checks
+
+- Scripted-page and intercepted Chromium tests verify the adapter boundary.
+- A live authorized ChatGPT account connected to a disposable local HTTP MCP through an HTTPS tunnel. Native discovery, attachment submission, fresh retrieval, MCP App invocation, owner-isolation denial, and in-flight cancellation produced correlated server evidence.
+- ChatGPT issued two `resources/read` requests for tool-returned resource links but reported both as `Unknown resource`. Deterministic protocol reads of the same resources succeeded. The native resource slice remains incomplete and is not reported as a framework resource success.
+- The native host displayed the completed tool result but no intermediate progress updates. Native progress exposure remains incomplete.
+- The disposable plugin was permanently deleted. The endpoint, tunnel, server, and fixture store are absent.
+- Both exact synthetic conversations produced authoritative `archived: true` readback. This confirms reversible archive, not permanent deletion.
+- The retained local evidence omits raw prompts, replies, account identity, plugin identity, and endpoint location.
