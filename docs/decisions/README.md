@@ -85,7 +85,7 @@ recorded separately.
 - [ADR-0120: Publish Branch Release with Exact-Head Mergeback Quality](0120-publish-branch-release-with-exact-head-mergeback-quality.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0121: Exact-Head Qualification for Automated Trunk Mergeback](0121-exact-head-qualification-for-automated-trunk-mergeback.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0122: Submit Feedback as the Sole Model Context Protocol (MCP) Feedback Creation Operation](0122-submit-feedback-as-the-sole-mcp-feedback-creation-operation.proposed.md): Proposed; human review unconfirmed.
-- [ADR-0123: Opt-in Native ChatGPT Browser Journeys](0123-opt-in-native-chatgpt-browser-journeys.proposed.md): Proposed; human review pending.
+- [ADR-0123: Opt-in Native ChatGPT Browser Journeys](0123-opt-in-native-chatgpt-browser-journeys.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2654,7 +2654,7 @@ Chosen option: **"Use `submit-feedback` as the sole MCP feedback creation operat
 ### [ADR-0123: Opt-in Native ChatGPT Browser Journeys](0123-opt-in-native-chatgpt-browser-journeys.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
+- Human review: Confirmed
 
 #### ADR-0123 Decision
 
@@ -2664,5 +2664,6 @@ Chosen option: **an optional Playwright adapter with adopter-owned scenarios and
 
 - The user authorized implementation and explicitly required framework opt-in.
 - Scripted-page and intercepted Chromium tests verify the implementation boundary.
-- Live account login, authenticated endpoint correlation, and full native journey evidence remain pending; this proposed decision records that limit.
+- A live authorized ChatGPT account connected to a disposable local HTTP MCP through an HTTPS tunnel. Native discovery, attachment submission, fresh retrieval, MCP App invocation, owner-isolation denial, and in-flight cancellation produced correlated server evidence.
+- ChatGPT issued two `resources/read` requests for tool-returned resource links but reported both as `Unknown resource`. Deterministic protocol reads of the same resources succeeded. The native resource slice therefore remains incomplete and is not reported as a framework resource success.
 - A reported security-verification loop in the automation-launched browser motivates the owner-session attachment alternative. Attachment uses a supported browser interface; it does not claim to resolve or bypass the verification service. A normal browser without an exposed authorized interface cannot be controlled by this adapter.

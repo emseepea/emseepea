@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.25.2
+
+### Patch Changes
+
+- [`331b351`](https://github.com/emseepea/emseepea/commit/331b3516ba0c48e515c6c2ef8e47c0a453b186fc) Thanks [@tompahoward](https://github.com/tompahoward)! - Document and test that native ChatGPT resource reads remain distinct bounded evidence from tool-returned resource links.
+
 ## 0.25.1
 
 ### Patch Changes

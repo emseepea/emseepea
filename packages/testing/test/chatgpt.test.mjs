@@ -164,6 +164,63 @@ test("collectors cannot replace declared expectations with actual calls", async 
   assert.equal(result.checkpoints[1].category, "server-assertion");
 });
 
+test("tool and resource reads remain distinct bounded native evidence", async (t) => {
+  const path = await output(t);
+  const f = fixture();
+  const expectedCalls = [
+    { method: "tools/call", target: "get-synthetic-material", outcome: "success" },
+    { method: "resources/read", target: "acceptance://issue-145/original-image", outcome: "success" },
+  ];
+  const collect = async ({ runId, afterSequence, since }) => expectedCalls.map((call, index) => ({
+    sequence: afterSequence + index + 1,
+    runId,
+    endpointSha256: hash(endpoint.href),
+    nativeClient: "verified-chatgpt",
+    observedAt: since,
+    ...call,
+    requestSha256: hash(`${call.method}:${call.target}:request`),
+    responseSha256: hash(`${call.method}:${call.target}:response`),
+  }));
+  f.journey.checkpoints = [f.send(), { id: "native-resource", operation: "server-observation", expectedCalls, collect }];
+
+  const result = await runNativeChatGptJourney(f.journey, path);
+
+  assert.equal(result.status, "passed");
+  assert.deepEqual(result.checkpoints[1].observation.calls.map((call) => call.method), ["tools/call", "resources/read"]);
+  assert.equal(result.checkpoints[1].observation.calls[1].targetSha256, hash("acceptance://issue-145/original-image"));
+});
+
+test("a missing native resource read stays incomplete", async (t) => {
+  const path = await output(t);
+  const f = fixture();
+  const expectedCalls = [
+    { method: "tools/call", target: "get-synthetic-material", outcome: "success" },
+    { method: "resources/read", target: "acceptance://issue-145/original-image", outcome: "success" },
+  ];
+  f.journey.checkpoints = [f.send(), {
+    id: "native-resource",
+    operation: "server-observation",
+    expectedCalls,
+    collect: async ({ runId, afterSequence, since }) => [{
+      sequence: afterSequence + 1,
+      runId,
+      endpointSha256: hash(endpoint.href),
+      nativeClient: "verified-chatgpt",
+      observedAt: since,
+      method: "tools/call",
+      target: "get-synthetic-material",
+      requestSha256: hash("tool-request"),
+      responseSha256: hash("tool-response"),
+      outcome: "success",
+    }],
+  }];
+
+  const result = await runNativeChatGptJourney(f.journey, path);
+
+  assert.equal(result.status, "incomplete");
+  assert.equal(result.checkpoints[1].category, "server-observation-missing");
+});
+
 test("fixture uploads, visual assertions, and independent saved state are bounded observations", async (t) => {
   const path = await output(t);
   const file = join(dirnameFor(path), "fixture.pdf");
