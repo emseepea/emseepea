@@ -4,7 +4,7 @@ Date: 2026-10-14
 
 ## Owner-session follow-up — 2026-10-14
 
-Status: **NOT YET RELEASED**. The planned testing patch lets the explicitly
+Status: **RELEASED**. Testing 0.25.1 lets the explicitly
 enabled runner attach to an already-authorized owner browser through Playwright
 CDP. It does not require the profile setup helper. Existing direct integration
 with an adopter-owned Playwright page remains available.
@@ -52,26 +52,26 @@ remain human actions; the complete issue #145 remains open.
 The first source Quality run passed on dc9c0bf (38479318070). Candidate a9ef2b9
 entered semantic checks in Release run 38480980700. Before npm publication,
 that run was cancelled to admit Chrome's GUI browser endpoint without a browser
-ID. The cancelled run is not release evidence. Corrected source must pass new
-exact-commit gates. GUI debugging still requires owner approval and a runner on
+ID. The cancelled run is not release evidence. Corrected source passed new
+source, semantic and registry gates before promotion. GUI debugging still requires owner approval and a runner on
 the browser's host; it does not enable cloud access to the owner's computer.
 
 ## Release status
 
-Publication status: **PROPOSED (owner-authorized browser attachment)**.
-The next release plans testing 0.25.1 and eleven initializer updates at 0.1.19.
+Publication status: **RELEASED (owner-authorized browser attachment)**.
+Testing 0.25.1 and eleven initializer updates at 0.1.19 are on npm latest.
 The browser adapter remains experimental and explicitly opt-in. Ordinary
 framework tests do not enable it or install browser tooling.
 
-- Result: PASS
-- Final result: within appetite, subject to the required exact-commit gates.
+- Result: FAIL
+- Final result: within appetite.
 
-The current source baseline includes testing 0.25.0, server 0.23.1, feedback
+The preceding source baseline included testing 0.25.0, server 0.23.1, feedback
 0.10.2, React 0.4.8, Svelte 0.2.8, and initializers 0.1.18. The native resource
 foundation's retained evidence below belongs to that preceding release.
 Its controls and honest capability limits remain unchanged by this patch.
 
-## Planned package set
+## Released package set
 
 - `@emseepea/testing@0.25.1`
 - `@emseepea/create-api-backed-server@0.1.19`
@@ -85,6 +85,46 @@ Its controls and honest capability limits remain unchanged by this patch.
 - `@emseepea/create-resources-and-prompts-server@0.1.19`
 - `@emseepea/create-soap-backed-server@0.1.19`
 - `@emseepea/create-tool-server@0.1.19`
+
+## Release evidence and unresolved final gate
+
+- Corrected source: b54b279d3b0dd16c19f9835099d39dda7499ddc9
+- Source Quality passed: https://github.com/emseepea/emseepea/actions/runs/38482542927
+- Released candidate: e80861cc7acf43a60d531507897af199e4e18338
+- Semantic, next publication and registry checks passed: https://github.com/emseepea/emseepea/actions/runs/38484097161
+- Release PR merged: https://github.com/emseepea/emseepea/pull/171
+- Promotion and records passed: https://github.com/emseepea/emseepea/actions/runs/38486546839
+- Merge-back commit: fed3be1f516518ee560f712d800ca0f7ba82e45d
+- Final merge-back Quality failed: https://github.com/emseepea/emseepea/actions/runs/38486875204
+
+Full local pre-push qualification passed for the corrected source. The local
+benchmark passed before the GUI endpoint correction; both corrected-source CI
+runtime profiles passed their full performance checks before publication.
+The five attachment tests and existing native adapter checks retain their
+fixture scope and do not establish live ChatGPT compatibility.
+
+A fresh registry installation of testing 0.25.1 imported both default and native
+entries without Playwright installed and exposed the attachment CLI help.
+Its dependency graph verified 70 registry signatures and 37 attestations.
+
+The final Node.js 22.23.2 merge-back performance classifier returned
+INCONCLUSIVE with qualifies=false. Its public-boundary tests passed. Node.js 24,
+all eleven standalone initializers, website, vulnerability and documentation
+checks passed. Publish failed at the required final merge-back gate after
+promotion; the packages remain available on latest. The overall FAIL marker
+records that incomplete pipeline, not a failed attachment assertion.
+
+No performance batch was retried, discarded or reclassified, and no budget was
+weakened. The production framework and benchmark code are unchanged between
+corrected source and merge-back. The performance cause remains unestablished;
+[P022](../problems/open/022-accepted-path-cpu-budget-is-unqualified-on-the-node-22-ci-profile.md)
+retains the existing runtime/profile investigation.
+
+The Node.js 22 benchmark artifact is retained in that failed Quality run as
+`benchmark-node-22.23.2-fed3be1f516518ee560f712d800ca0f7ba82e45d-attempt-1`
+(artifact 11859404598). Local download was blocked by the artifact host, so the
+receipt does not claim a locally parsed population analysis. No native account
+credentials or endpoint addresses are included in this record.
 
 ## Foundation evidence and boundaries
 
@@ -112,7 +152,8 @@ The first exact-source full qualification on 9a2a852 failed the README density
 check: two paragraphs exceeded the existing 400-character limit. A diagnostic
 test-stage run passed 439 checks and failed that one check. Paragraph boundaries
 were repaired without changing words. The original failure remains retained;
-qualification of the repaired commit is still required.
+qualification of the repaired commit was required at that stage. Its later
+release and the current source passed their prepublication gates.
 
 This foundation does not qualify general resource-only discovery, independently
 observed authenticated HTTP requests, live ChatGPT, production learner behavior,

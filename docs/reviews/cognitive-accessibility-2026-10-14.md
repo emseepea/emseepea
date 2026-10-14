@@ -19,3 +19,15 @@ the planned patch from the previously released version. No correction remains.
 | `docs/decisions/0123-opt-in-native-chatgpt-browser-journeys.proposed.md` | `32028fce45505779e73380632727355add3c23dbe9f5893c03782fed2cce88a9` | PASS |
 | `docs/decisions/README.md` | `c7fc321065891383f99a8006fe8b420dddac887212ffebdba65fec9be090482f` | PASS |
 | `docs/reviews/current-release-readiness.md` | `99a268ad84947c97b263b1452d9904608b88556c076a53464a37cf2c37542ed6` | PASS |
+
+## Released owner-session attachment and final gate
+
+Reviewer: implementation agent, focused cognitive-accessibility review; not
+independent. PASS: the receipt leads with actual package availability, keeps
+the failed final gate distinct from successful prepublication checks, preserves
+unqualified evidence and cancellation, and states the remaining native-host
+access limits. No claim of completed live ChatGPT verification is introduced.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `409cf46aa80f4cfb368911d01e7f18501ee6e06ca17658beabaa39eb9b25d8c1` | PASS |
