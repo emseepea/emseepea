@@ -2,6 +2,36 @@
 
 Date: 2026-10-14
 
+## Native resource evidence patch
+
+Status: **READY FOR EXACT-COMMIT QUALIFICATION**. The planned testing 0.25.2
+patch adds behavioral coverage and guidance that keep tool-returned resource
+links distinct from observed native `resources/read` calls. Framework resource
+semantics do not change.
+
+Live acceptance used an authorized ChatGPT account and a disposable local HTTP
+MCP through an HTTPS tunnel. Connection, synthetic attachment submission,
+fresh-conversation retrieval, MCP App invocation, owner-isolation denial, and
+in-flight cancellation produced correlated evidence. ChatGPT returned resource
+links from the tool, then attempted `resources/read`, but did not materialize
+the resources. Record this live resource slice as incomplete, not passed.
+
+Focused testing-package checks passed 12 of 12. Documentation density, decision
+compendium, exact-hash cognitive-accessibility review, and diff checks also
+passed. Commit, push, and release residual risk are each 5 of 25 (Low).
+
+- Result: PASS
+- Final result: within appetite, subject to the required exact-commit gates.
+
+### Planned package set
+
+- `@emseepea/testing@0.25.2`
+
+This patch still requires full exact-head Quality, semantic and release checks,
+publication, registry verification, and merge-back qualification. Run
+`38489008355` checked documentation only. It did not authorize a software
+release.
+
 ## Owner-session follow-up — 2026-10-14
 
 Status: **RELEASED**. Testing 0.25.1 lets the explicitly
@@ -63,28 +93,27 @@ Testing 0.25.1 and eleven initializer updates at 0.1.19 are on npm latest.
 The browser adapter remains experimental and explicitly opt-in. Ordinary
 framework tests do not enable it or install browser tooling.
 
-- Result: FAIL
-- Final result: within appetite.
-
 The preceding source baseline included testing 0.25.0, server 0.23.1, feedback
 0.10.2, React 0.4.8, Svelte 0.2.8, and initializers 0.1.18. The native resource
 foundation's retained evidence below belongs to that preceding release.
 Its controls and honest capability limits remain unchanged by this patch.
 
-## Released package set
+## Previously released package set
 
-- `@emseepea/testing@0.25.1`
-- `@emseepea/create-api-backed-server@0.1.19`
-- `@emseepea/create-database-schema-server@0.1.19`
-- `@emseepea/create-html-ui-server@0.1.19`
-- `@emseepea/create-mongodb-backed-server@0.1.19`
-- `@emseepea/create-multi-instance-postgres-server@0.1.19`
-- `@emseepea/create-openapi-backed-server@0.1.19`
-- `@emseepea/create-progress-streaming-server@0.1.19`
-- `@emseepea/create-react-ui-server@0.1.19`
-- `@emseepea/create-resources-and-prompts-server@0.1.19`
-- `@emseepea/create-soap-backed-server@0.1.19`
-- `@emseepea/create-tool-server@0.1.19`
+| Package | Version |
+| --- | --- |
+| `@emseepea/testing` | `0.25.1` |
+| `@emseepea/create-api-backed-server` | `0.1.19` |
+| `@emseepea/create-database-schema-server` | `0.1.19` |
+| `@emseepea/create-html-ui-server` | `0.1.19` |
+| `@emseepea/create-mongodb-backed-server` | `0.1.19` |
+| `@emseepea/create-multi-instance-postgres-server` | `0.1.19` |
+| `@emseepea/create-openapi-backed-server` | `0.1.19` |
+| `@emseepea/create-progress-streaming-server` | `0.1.19` |
+| `@emseepea/create-react-ui-server` | `0.1.19` |
+| `@emseepea/create-resources-and-prompts-server` | `0.1.19` |
+| `@emseepea/create-soap-backed-server` | `0.1.19` |
+| `@emseepea/create-tool-server` | `0.1.19` |
 
 ## Release evidence and unresolved final gate
 

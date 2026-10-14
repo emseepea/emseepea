@@ -643,8 +643,9 @@ days.
 
 Import `@emseepea/testing/chatgpt` only when you want to test the real ChatGPT
 web experience. Ordinary framework tests do not enable this adapter or install
-Playwright. This is an experimental browser
-adapter: ChatGPT controls can change, and live host qualification is pending.
+Playwright. This is an experimental browser adapter: ChatGPT controls can
+change, so adopters must qualify each capability they rely on against their
+owned account and endpoint.
 
 On your own machine, install the optional browser tooling:
 
@@ -784,6 +785,16 @@ A server collector receives `runId`, `afterSequence`, `since`, and `signal`.
 Return ordered, run-scoped calls matching the declared method, target, outcome,
 and optional result hash. Each call includes request/result SHA-256 values,
 endpoint SHA-256, sequence, timestamp, and `nativeClient`.
+
+Keep deterministic MCP qualification and native-host evidence separate.
+Command-line qualification can prove a resource link's shape, catalogue
+membership, exact `resources/read` result, and original bytes. A native ChatGPT
+journey separately proves whether ChatGPT materializes or rejects that link.
+
+Declare the expected `tools/call` and `resources/read` as distinct server calls.
+If ChatGPT does not issue the expected read, record the checkpoint as
+`incomplete` with category `server-observation-missing`; do not treat the
+tool-returned URI as proof of a native resource read.
 
 Set
 `nativeClient: "verified-chatgpt"` only when your authenticated server boundary
