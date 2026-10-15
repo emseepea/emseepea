@@ -10,6 +10,11 @@ your tool, API, database, SOAP, progress, or user interface. Then install:
 npm install @emseepea/feedback
 ```
 
+Native reply monitoring is optional. Before enabling it, check
+[client availability](/emseepea/mcp-events/#check-client-availability-first)
+and the [remaining production responsibilities](/emseepea/mcp-events/#plan-the-remaining-production-responsibilities).
+Feedback tools and automatic event-triggered execution have different client support.
+
 ## Choose the smaller feedback mode
 
 Use a detailed submission when the team needs one useful observation but does
@@ -285,6 +290,12 @@ Protected conversations can optionally use [MCP Events](/emseepea/mcp-events/)
 to prompt a subscribed AI client to read a team reply. The event includes the
 account or client scope and stable IDs, not the reply text. The client should
 call `get-feedback-thread` and present the reply to the person.
+
+Check [native client availability](/emseepea/mcp-events/#check-client-availability-first)
+before setup. If monitoring is missing, follow
+[Events discovery and connection recovery](/emseepea/mcp-events/#if-events-do-not-appear).
+Successful testing in Work does not prove that ordinary ChatGPT chat supports
+monitoring. Codex tool access does not provide native Events subscriptions.
 
 Set up `createFeedbackReplyEventsOptions` from
 `@emseepea/feedback/mcp-events` with the same stable account or client scope
