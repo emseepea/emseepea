@@ -1,5 +1,12 @@
 # @emseepea/create-api-backed-server
 
+## 0.1.20
+
+### Patch Changes
+
+- [`54e860e`](https://github.com/emseepea/emseepea/commit/54e860e43f4197ef459d54df602475066d83cd0a) Thanks [@tompahoward](https://github.com/tompahoward)! - Use testing 0.25.2 in generated starter projects. Align the initializer pins
+  with the published testing package so the standard trunk push can proceed.
+
 ## 0.1.19
 
 ### Patch Changes

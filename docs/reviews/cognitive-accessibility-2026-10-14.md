@@ -62,3 +62,19 @@ visible and is not reframed as success.
 | File | SHA-256 | Result |
 | --- | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `39929d4beff8ad3f68b29bf38d997646ad1f469abdf3dabdf3dece017b9ef72d` | PASS |
+
+## Archived native-test evidence retention
+
+Reviewer: independent cognitive-accessibility specialist.
+
+PASS. ADR-0124 and the decision compendium explain the current retention
+boundary clearly. ADR-0123 remains unchanged because it is an immutable,
+superseded historical record. Its browser-testing and transport jargon is a
+documented historical limitation. Readers should use the clearer superseding
+ADR-0124 for the current decision and its plain-language safeguards.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/decisions/0123-opt-in-native-chatgpt-browser-journeys.superseded.md` | `8150166cb92d8ba17769096b9fdd74df96210042d1fbf842aebe9f6f62c04754` | HISTORICAL LIMITATION; SUPERSEDED |
+| `docs/decisions/0124-opt-in-native-chatgpt-browser-journeys-with-bounded-archived-transcripts.proposed.md` | `7cda3c6d2447ba86f696d1371e06d839c6151a39a91dcf2970d1e6eebe44c6d2` | PASS |
+| `docs/decisions/README.md` | `9eb49cd2c9c0c8d04f75402877b64b8834e60f7ce4579cd06d62d49b420ed0eb` | PASS |
