@@ -1,5 +1,16 @@
 # @emseepea/create-html-ui-server
 
+## 0.1.21
+
+### Patch Changes
+
+- [`2202043`](https://github.com/emseepea/emseepea/commit/22020432a80c85e3d706b6b66d8e98eb5293a061) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an opt-in Events store conformance helper for disposable synthetic fixtures.
+  Check shared storage, complete subscription writes, queue leases, stale workers,
+  retries, and graceful reopen. Report missing queue evidence as inconclusive.
+  These checks do not establish crash recovery or native client execution.
+
+  Update generated starter projects to use the testing package when released.
+
 ## 0.1.20
 
 ### Patch Changes
