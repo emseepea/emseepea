@@ -5,6 +5,14 @@ import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/cli
 import { serveEmseepea, type AuthenticationOptions } from "@emseepea/server";
 
 export {
+  assertMcpEventStoreConformance,
+  McpEventStoreConformanceError,
+  type McpEventStoreConformanceFixture,
+  type McpEventStoreConformanceFixtureFactory,
+  type McpEventStoreConformanceHandle,
+} from "./mcp-event-store-conformance.js";
+
+export {
   createMcpAppHostSimulator,
   type McpAppHostSimulator,
   type McpAppHostSimulatorOptions,

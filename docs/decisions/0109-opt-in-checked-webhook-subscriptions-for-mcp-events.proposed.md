@@ -1,7 +1,8 @@
 ---
 status: "proposed"
 date: 2026-10-04
-human-oversight: pending
+human-oversight: confirmed
+oversight-date: 2026-10-15
 decision-makers: ["Tom Howard"]
 consulted: ["Architecture review", "JTBD review"]
 informed: []
@@ -10,7 +11,7 @@ reassessment-date: 2027-01-04
 
 # Opt-In Checked Webhook Subscriptions for Model Context Protocol Events
 
-> Captured via /wr-architect:capture-adr. The decision substance was derived from the request and architecture review. Human oversight remains unconfirmed until ratified after successful production use.
+> Captured via /wr-architect:capture-adr. The decision substance was derived from the request and architecture review. Tom Howard ratified this decision on 2026-10-15. Human oversight is confirmed; the proposed lifecycle status records outstanding production validation.
 
 ## Context and Problem Statement
 

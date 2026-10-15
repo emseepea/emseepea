@@ -1,58 +1,101 @@
 # Current Release Readiness
 
-Date: 2026-10-15
+Date: 2026-10-16
 
-## Align initializer testing dependencies
+## Optional Events store conformance helper
 
-Status: **READY FOR EXACT-COMMIT QUALIFICATION**. All eleven initializers
-still pin testing 0.25.1, although testing 0.25.2 is published and tagged.
-The standard trunk push correctly rejects that mismatch.
+Status: **RISK REVIEWED; QUALIFICATION INCOMPLETE**. This increment adds
+an opt-in testing helper for adopter-owned disposable synthetic fixtures. It
+checks subscription writes, competing claims, stale lease fencing, retries,
+and graceful reopen. Missing queue evidence is inconclusive, never a pass.
 
-This repair pins testing 0.25.2 in all eleven initializer manifests and updates
-the lockfile. Generated projects retain that development dependency, so one
-Changeset plans a patch release for each initializer. Changesets computes
-0.1.20 for all eleven. No package version is changed by hand.
+The helper does not establish crash recovery, cross-process coordination,
+native client execution, or production readiness. The two-connection SQLite
+fixture runs in one process. Framework serving code, benchmarks, dependency
+lockfile, and release controls do not change.
 
-The lockfile changes only the eleven workspace pins and removes eleven obsolete
-nested testing installs. Existing platform constraints are retained. No runtime
-logic, readiness guard, workflow, or release script changes.
+Changesets computes testing 0.26.0 and eleven initializer patches to 0.1.21.
+The generated starters retain the testing dependency, so they release together.
+No package version is changed by hand. Architecture and jobs-to-be-done scope
+reviews passed; the public guide and Changeset passed specialist prose review.
 
-Architecture and JTBD scope reviews passed. All eleven generated templates use
-testing 0.25.2. The focused release, initializer, and watcher checks passed
-33 of 33 after building the templates. The first attempt lacked generated
-templates and failed; that result is retained.
+### Retained evidence and failures
 
-Independent advisory risk review passed with commit, push, and release risk
-each 4 of 25: impact 4 multiplied by likelihood 1. The native typed gate must
-still cover the exact repair. This record does not authorize a commit or attest
-to qualification. Prior documentation qualification does not cover this repair.
+The unchanged helper source passed its twelve focused tests. Its fresh packed
+public consumer passed JavaScript execution and TypeScript checks. These are
+bounded checks, not complete publication qualification.
+
+On source base 4410d227, a fresh locked install succeeded. The full test command
+then failed because MongoDB could not start. A disposable diagnostic reproduced
+journal-directory disk exhaustion. After removing only generated dependencies
+from a completed test copy, the unchanged MongoDB example passed 10 of 10.
+
+The separately executed root test stage passed 439 of 440 checks. The packed
+initializer journey failed to start PostgreSQL while free disk was zero.
+Its wrapper removed the service logs, so the exact startup error is unavailable.
+Neither command is recorded as a full pass. All failed results remain retained.
+
+An earlier local benchmark on Node 24.19.0 failed the legacy JSON profile's
+5 ms p95 process-CPU limit. Samples were not printed before the assertion.
+No repeat, relaxed limit, waiver, regression claim, or environmental-cause
+claim replaces that failure. Prescribed-profile qualification remains required.
+
+### Risk review
+
+The fresh read-only advisory review assessed cumulative commit, push, and
+release risk at 5 of 25 each: impact 5 multiplied by likelihood 1. The highest
+risk is an unsupported conformance claim. Bounded evidence, rejecting
+inconclusive results, defective-store tests, and unchanged gates control it.
+
+This is a risk-only PASS within appetite. Qualification remains incomplete.
+The source candidate is based on 66dd31e0; the failed full-suite and root-stage
+results above belong to earlier base 4410d227. They do not qualify this head.
+
+The registered typed pipeline gate must independently bind the exact checkout
+and change. This advisory record is not native gate evidence or authorization
+to commit, push, or release.
 
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
 
 ### Planned package set
 
-- `@emseepea/create-api-backed-server@0.1.20`
-- `@emseepea/create-database-schema-server@0.1.20`
-- `@emseepea/create-html-ui-server@0.1.20`
-- `@emseepea/create-mongodb-backed-server@0.1.20`
-- `@emseepea/create-multi-instance-postgres-server@0.1.20`
-- `@emseepea/create-openapi-backed-server@0.1.20`
-- `@emseepea/create-progress-streaming-server@0.1.20`
-- `@emseepea/create-react-ui-server@0.1.20`
-- `@emseepea/create-resources-and-prompts-server@0.1.20`
-- `@emseepea/create-soap-backed-server@0.1.20`
-- `@emseepea/create-tool-server@0.1.20`
+- `@emseepea/testing@0.26.0`
+- `@emseepea/create-api-backed-server@0.1.21`
+- `@emseepea/create-database-schema-server@0.1.21`
+- `@emseepea/create-html-ui-server@0.1.21`
+- `@emseepea/create-mongodb-backed-server@0.1.21`
+- `@emseepea/create-multi-instance-postgres-server@0.1.21`
+- `@emseepea/create-openapi-backed-server@0.1.21`
+- `@emseepea/create-progress-streaming-server@0.1.21`
+- `@emseepea/create-react-ui-server@0.1.21`
+- `@emseepea/create-resources-and-prompts-server@0.1.21`
+- `@emseepea/create-soap-backed-server@0.1.21`
+- `@emseepea/create-tool-server@0.1.21`
 
 ### Required delivery evidence
 
-After the native typed review admits the exact repair, commit it and run full
-clean-checkout qualification. Require the unchanged exact HEAD to pass
-`npm run push:qualify -- --full` before the standard `npm run push:watch`.
+Monitor disk capacity before installation and during packed initializer tests;
+the local partner currently reports about 3.4 GiB free. Preserve any failed or
+incomplete result. Reclaim only owned generated test material if needed; do not
+change tests or budgets to fit available capacity.
 
-Publication still requires exact-head Quality, packed standalone initializer
-journeys, semantic checks, the normal release pull request, registry checks,
-and merge-back qualification. No new publication is claimed here.
+After the native typed review admits the exact change, complete clean committed-
+head qualification through `npm run push:qualify -- --full` and the standard
+`npm run push:watch`. Run the unchanged benchmark command and require exact-head
+Quality on its prescribed Node 22 and 24 profiles. A prior failure is not a pass.
+
+Publication also requires all packed initializer journeys, semantic checks,
+the normal release pull request, registry integrity and provenance checks,
+promotion, and merge-back qualification. No new publication is claimed here.
+
+## Earlier initializer dependency repair
+
+All eleven initializers are released as 0.1.20. Release run 38727625594 passed
+on its same-run retry; Publish run 38733872240 passed, and merge-back Quality
+38734343096 passed at main 4410d227. The local delivery partner independently
+verified every npm latest tag and release gitHead. This completed repair does
+not qualify the new helper batch.
 
 ## Earlier native resource evidence patch — 2026-10-14
 
@@ -137,10 +180,11 @@ ID. The cancelled run is not release evidence. Corrected source passed new
 source, semantic and registry gates before promotion. GUI debugging still requires owner approval and a runner on
 the browser's host; it does not enable cloud access to the owner's computer.
 
-## Release status
+## Earlier release status — recorded 2026-10-14
 
 Publication status: **RELEASED (owner-authorized browser attachment)**.
-Testing 0.25.1 and eleven initializer updates at 0.1.19 are on npm latest.
+At the time of the 2026-10-14 record, testing 0.25.1 and eleven initializer
+updates at 0.1.19 were on npm latest.
 The browser adapter remains experimental and explicitly opt-in. Ordinary
 framework tests do not enable it or install browser tooling.
 
@@ -166,7 +210,7 @@ Its controls and honest capability limits remain unchanged by this patch.
 | `@emseepea/create-soap-backed-server` | `0.1.19` |
 | `@emseepea/create-tool-server` | `0.1.19` |
 
-## Release evidence and unresolved final gate
+## Earlier release evidence and unresolved final gate — 2026-10-14
 
 - Corrected source: b54b279d3b0dd16c19f9835099d39dda7499ddc9
 - Source Quality passed: https://github.com/emseepea/emseepea/actions/runs/38482542927

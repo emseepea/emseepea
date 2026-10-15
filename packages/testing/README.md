@@ -13,6 +13,60 @@ for setup, test structure, commands, and what a passing check proves.
 Start from the [pea-variety conversation test](https://github.com/emseepea/emseepea/blob/main/examples/tool-server/eval/meaning.test.mjs).
 Keep these tests in `eval/`, separate from ordinary tests in `test/`.
 
+## Check an MCP Events store
+
+Use `assertMcpEventStoreConformance` inside an ordinary `node:test` test to
+check your implementation of the public `McpEventStore` interface. Supply a
+factory for disposable synthetic storage; the helper does not provision a
+database or install a storage adapter.
+
+```js
+import test from "node:test";
+import { assertMcpEventStoreConformance } from "@emseepea/testing";
+import { createEventStoreFixture } from "./fixtures/events-store.js";
+
+test("event store contract", { timeout: 60_000 }, async () => {
+  await assertMcpEventStoreConformance(createEventStoreFixture);
+});
+```
+
+Implement `createEventStoreFixture` in your test support. Each call must return
+fresh, empty storage and these callbacks:
+
+- `open()` returns `{ store, close }`. Each handle accesses the same storage
+  within that fixture and closes independently.
+- `dispose()` removes the fixture after all returned handles have been closed.
+  Closing every handle must allow a later `open()` on that fixture.
+
+The factory is called separately for each scenario. It and `open()` must clean
+up resources allocated before they reject. The helper joins started operations,
+attempts every remaining close and then disposal, and retains categorized check
+and cleanup errors. Backend error details are omitted. Use bounded backend
+operations; a test timeout does not cancel them or guarantee cleanup.
+
+Checks cover complete subscription writes, replacement, event-name isolation,
+deletion, competing claims, retry fields, stale lease fencing, and persistence
+through graceful close and reopen. They use explicit synthetic queue times.
+The helper does not require full claim batches or a particular queue order.
+
+`McpEventStoreConformanceError.code` is `MISMATCH` for an observed contract
+violation, `CALLBACK_FAILED` for a fixture or backend failure, or `INCONCLUSIVE`
+when bounded probing cannot obtain the queue records needed for a check.
+Every outcome except completion rejects the promise. Do not convert an
+inconclusive result into a passing test.
+
+A pass covers the observed operations and fixture topology. Record whether
+handles use one process or multiple processes. The maintained SQLite reference
+uses two synchronous connections in one process; it does not prove overlapping
+execution, crash recovery, or production durability.
+
+The helper does not establish duplicate-enqueue policy, automatic expiry or
+cleanup, safe concurrent renewal, business transaction atomicity, native client
+execution, or production readiness. Runtime expiry and authorization need
+separate tests. Use isolated synthetic fixtures, never production records.
+
+## Test tool selection
+
 Use `createConversation` inside an ordinary `node:test` test. Send one or more
 user prompts, then assert exact tool calls and response meaning with the exported
 semantic assertions.
