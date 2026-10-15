@@ -88,6 +88,8 @@ test("the packed public packages pass fresh-install and getting-started checks",
       "--userconfig", "/dev/null",
       ...tarballs,
       "zod@4.4.3",
+      "typescript@6.0.3",
+      "@types/node@24.13.3",
     ], directory);
     const [consumerLockfile, recordedLockfile] = await Promise.all([
       readFile(path.join(directory, "package-lock.json"), "utf8").then(JSON.parse),
@@ -98,6 +100,44 @@ test("the packed public packages pass fresh-install and getting-started checks",
       [],
       "fresh install resolved a third-party dependency outside the committed repository lockfile",
     );
+
+    await cp(new URL("../../dogfood/events/store.mjs", import.meta.url), path.join(directory, "event-store.mjs"));
+    await writeFile(path.join(directory, "check-event-store.mjs"), `
+      import { mkdtemp, rm } from "node:fs/promises";
+      import { tmpdir } from "node:os";
+      import { join } from "node:path";
+      import { assertMcpEventStoreConformance } from "@emseepea/testing";
+      import { openStore } from "./event-store.mjs";
+      await assertMcpEventStoreConformance(async () => {
+        const directory = await mkdtemp(join(tmpdir(), "emseepea-packed-event-store-"));
+        return {
+          open() {
+            const handle = openStore(join(directory, "events.sqlite"));
+            return { store: handle.subscription, close: () => handle.close() };
+          },
+          dispose: () => rm(directory, { recursive: true, force: true }),
+        };
+      });
+    `);
+    run(process.execPath, ["check-event-store.mjs"], directory);
+    await writeFile(path.join(directory, "check-event-store-types.mts"), `
+      import type { McpEventStore } from "@emseepea/server";
+      import { assertMcpEventStoreConformance, McpEventStoreConformanceError,
+        type McpEventStoreConformanceFixtureFactory } from "@emseepea/testing";
+      declare const store: McpEventStore;
+      const fixture: McpEventStoreConformanceFixtureFactory = () => ({
+        open: () => ({ store, close() {} }), dispose() {},
+      });
+      const result: Promise<void> = assertMcpEventStoreConformance(fixture);
+      const error = new McpEventStoreConformanceError("INCONCLUSIVE", "fixture", "missing evidence");
+      const code: "MISMATCH" | "INCONCLUSIVE" | "CALLBACK_FAILED" = error.code;
+      void result; void code;
+      // @ts-expect-error Handles require a cleanup callback.
+      const invalid: McpEventStoreConformanceFixtureFactory = () => ({ open: () => ({ store }), dispose() {} });
+      void invalid;
+    `);
+    run(process.execPath, [path.join(directory, "node_modules/typescript/bin/tsc"),
+      "--noEmit", "--strict", "--module", "NodeNext", "--target", "ES2023", "check-event-store-types.mts"], directory);
 
     await mkdir(path.join(directory, "routes"));
     await writeFile(

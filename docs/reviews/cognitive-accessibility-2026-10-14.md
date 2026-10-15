@@ -78,3 +78,36 @@ ADR-0124 for the current decision and its plain-language safeguards.
 | `docs/decisions/0123-opt-in-native-chatgpt-browser-journeys.superseded.md` | `8150166cb92d8ba17769096b9fdd74df96210042d1fbf842aebe9f6f62c04754` | HISTORICAL LIMITATION; SUPERSEDED |
 | `docs/decisions/0124-opt-in-native-chatgpt-browser-journeys-with-bounded-archived-transcripts.proposed.md` | `7cda3c6d2447ba86f696d1371e06d839c6151a39a91dcf2970d1e6eebe44c6d2` | PASS |
 | `docs/decisions/README.md` | `9eb49cd2c9c0c8d04f75402877b64b8834e60f7ce4579cd06d62d49b420ed0eb` | PASS |
+
+## Events store conformance helper — 2026-10-15
+
+Result: **PASS**. Independent cognitive-accessibility review found no required
+corrections. The README gives the test entry point, fixture lifecycle, failure
+outcomes, and limits. The Changeset does not claim crash recovery or native
+client execution.
+
+| File | SHA-256 |
+| --- | --- |
+| `packages/testing/README.md` | `f13229122789caf3efdad0c0a73dfde3177c13c3bb6b8f52586db61e8c94b5f7` |
+| `.changeset/events-store-conformance.md` | `12b79ebf20bd48949f70b1dc9594df9ba9ccf7879e2b7b13160855eeee2c1ce5` |
+
+Reviewer: `/root/issue174_docs_accessibility`. This review covers public prose,
+not implementation correctness or completed publication qualification.
+
+## Conformance release readiness — reviewed 2026-10-16
+
+Reviewer: independent cognitive-accessibility specialist. Result: PASS after
+correction. The initial readiness review failed because an older npm-latest
+statement appeared current. Dated historical headings and past-tense wording
+now separate that earlier state from the completed initializer repair.
+
+The current content separates advisory risk-only approval from incomplete
+qualification. It retains the failed benchmark and storage-constrained tests,
+identifies the proposed package batch, and preserves native and exact-head
+gates. This source review does not establish delivery or publication readiness.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/current-release-readiness.md` | `fbdc30885f20bf5a977ef9357b96f864692f934497d2c161b85b47c65e73b359` | PASS |
+| `packages/testing/README.md` | `f13229122789caf3efdad0c0a73dfde3177c13c3bb6b8f52586db61e8c94b5f7` | PASS |
+| `.changeset/events-store-conformance.md` | `12b79ebf20bd48949f70b1dc9594df9ba9ccf7879e2b7b13160855eeee2c1ce5` | PASS |
