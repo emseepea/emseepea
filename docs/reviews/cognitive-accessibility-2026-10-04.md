@@ -175,3 +175,18 @@ publication evidence.
 | File | SHA-256 |
 | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `e122b21aa6ddefacb5494a755bb5f9ad0351dfd55c16ff59cb6ce385aba3f0e3` |
+
+## ADR 0109 ratification — 2026-10-15
+
+Result: **PASS**. Independent read-only cognitive-accessibility review found
+no required corrections. The ADR and generated index clearly separate Tom
+Howard's explicit ratification from outstanding production validation.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/decisions/0109-opt-in-checked-webhook-subscriptions-for-mcp-events.proposed.md` | `9f5c0d3e6fb14fa83ad7b7203faf6aef67ef223580613b5ee6c6d35052a2a1ed` |
+| `docs/decisions/README.md` | `78b1d6940511feba58479578f376c31e57e47cc3d60a9825da808df150674026` |
+
+Reviewer: `/root/issue174_docs_accessibility`. Architecture and JTBD consistency
+review also passed. These reviews do not establish production validation or
+replace the native typed risk gate and exact-commit delivery checks.

@@ -72,7 +72,7 @@ recorded separately.
 - [ADR-0105: Bounded Stage-Only Token for npm Promotion](0105-bounded-stage-only-token-for-npm-promotion.proposed.md): Proposed; human review confirmed.
 - [ADR-0107: Release Gates Require a Mature Available Vulnerability Fix](0107-release-gates-require-a-mature-available-vulnerability-fix.proposed.md): Proposed; human review pending.
 - [ADR-0108: External Approval Uses Encrypted Bound Capsules and Atomic Consumption](0108-external-approval-uses-encrypted-bound-capsules-and-atomic-consumption.proposed.md): Proposed; human review pending.
-- [ADR-0109: Opt-In Checked Webhook Subscriptions for Model Context Protocol Events](0109-opt-in-checked-webhook-subscriptions-for-mcp-events.proposed.md): Proposed; human review pending.
+- [ADR-0109: Opt-In Checked Webhook Subscriptions for Model Context Protocol Events](0109-opt-in-checked-webhook-subscriptions-for-mcp-events.proposed.md): Proposed; human review confirmed.
 - [ADR-0110: Feedback Collections Are Deployment-Static Authorization Partitions with Independently Composable Submission, Monitoring, and Operator Roles](0110-feedback-collections-as-deployment-static-authorization-partitions.proposed.md): Proposed; human review confirmed.
 - [ADR-0111: Checked Replacement Candidates for Unpromoted Failed Releases](0111-checked-replacement-candidates-for-unpromoted-failed-releases.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0112: Range-Bound Docs-Only Local Push Qualification](0112-range-bound-docs-only-local-push-qualification.proposed.md): Proposed; human review confirmed.
@@ -2400,7 +2400,7 @@ Chosen option: **separate encrypted external-approval broker**, because signed r
 ### [ADR-0109: Opt-In Checked Webhook Subscriptions for Model Context Protocol Events](0109-opt-in-checked-webhook-subscriptions-for-mcp-events.proposed.md)
 
 - Status: Proposed
-- Human review: Pending
+- Human review: Confirmed
 
 #### ADR-0109 Decision
 
