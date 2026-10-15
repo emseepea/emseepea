@@ -1,8 +1,60 @@
 # Current Release Readiness
 
-Date: 2026-10-14
+Date: 2026-10-15
 
-## Native resource evidence patch
+## Align initializer testing dependencies
+
+Status: **READY FOR EXACT-COMMIT QUALIFICATION**. All eleven initializers
+still pin testing 0.25.1, although testing 0.25.2 is published and tagged.
+The standard trunk push correctly rejects that mismatch.
+
+This repair pins testing 0.25.2 in all eleven initializer manifests and updates
+the lockfile. Generated projects retain that development dependency, so one
+Changeset plans a patch release for each initializer. Changesets computes
+0.1.20 for all eleven. No package version is changed by hand.
+
+The lockfile changes only the eleven workspace pins and removes eleven obsolete
+nested testing installs. Existing platform constraints are retained. No runtime
+logic, readiness guard, workflow, or release script changes.
+
+Architecture and JTBD scope reviews passed. All eleven generated templates use
+testing 0.25.2. The focused release, initializer, and watcher checks passed
+33 of 33 after building the templates. The first attempt lacked generated
+templates and failed; that result is retained.
+
+Independent advisory risk review passed with commit, push, and release risk
+each 4 of 25: impact 4 multiplied by likelihood 1. The native typed gate must
+still cover the exact repair. This record does not authorize a commit or attest
+to qualification. Prior documentation qualification does not cover this repair.
+
+- Result: PASS
+- Final result: within appetite, subject to the required exact-commit gates.
+
+### Planned package set
+
+- `@emseepea/create-api-backed-server@0.1.20`
+- `@emseepea/create-database-schema-server@0.1.20`
+- `@emseepea/create-html-ui-server@0.1.20`
+- `@emseepea/create-mongodb-backed-server@0.1.20`
+- `@emseepea/create-multi-instance-postgres-server@0.1.20`
+- `@emseepea/create-openapi-backed-server@0.1.20`
+- `@emseepea/create-progress-streaming-server@0.1.20`
+- `@emseepea/create-react-ui-server@0.1.20`
+- `@emseepea/create-resources-and-prompts-server@0.1.20`
+- `@emseepea/create-soap-backed-server@0.1.20`
+- `@emseepea/create-tool-server@0.1.20`
+
+### Required delivery evidence
+
+After the native typed review admits the exact repair, commit it and run full
+clean-checkout qualification. Require the unchanged exact HEAD to pass
+`npm run push:qualify -- --full` before the standard `npm run push:watch`.
+
+Publication still requires exact-head Quality, packed standalone initializer
+journeys, semantic checks, the normal release pull request, registry checks,
+and merge-back qualification. No new publication is claimed here.
+
+## Earlier native resource evidence patch — 2026-10-14
 
 Status: **READY FOR EXACT-COMMIT QUALIFICATION**. The planned testing 0.25.2
 patch adds behavioral coverage and guidance that keep tool-returned resource
@@ -20,12 +72,11 @@ Focused testing-package checks passed 12 of 12. Documentation density, decision
 compendium, exact-hash cognitive-accessibility review, and diff checks also
 passed. Commit, push, and release residual risk are each 5 of 25 (Low).
 
-- Result: PASS
-- Final result: within appetite, subject to the required exact-commit gates.
+The earlier review recorded PASS within appetite, subject to its exact-commit gates.
 
-### Planned package set
+### Earlier package set
 
-- `@emseepea/testing@0.25.2`
+The earlier review covered `@emseepea/testing@0.25.2`.
 
 This patch still requires full exact-head Quality, semantic and release checks,
 publication, registry verification, and merge-back qualification. Run
