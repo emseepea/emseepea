@@ -57,6 +57,29 @@ finish every part of the user's original request before briefly stating the
 specific feedback recorded. A routine successful tool call, structured result,
 or expected number of steps is not feedback-worthy.
 
+## Offer website feedback through WebMCP (experimental)
+
+`@emseepea/feedback/webmcp` can expose one existing feedback submission tool to
+a website's browser agent. Supply your connected MCP client; submissions use
+the same server, authorization and authoritative backend. Your application
+owns the endpoint, authentication and client lifetime. Dispose the registration
+before logout or account/client changes.
+
+The adapter preserves the active tool description and returned `nextAction`:
+encourage notable feedback without an extra permission question, openly disclose
+it, respect objections, avoid routine reports and duplicates, and finish the
+original task. It captures no DOM, URL or chat automatically. Native
+browser-agent tests are still needed to qualify that behaviour.
+
+WebMCP and browser-agent availability are experimental. The adapter targets the
+`document.modelContext` API shape exercised in Chromium 154; this is not a claim
+of general browser or agent support.
+
+Read the
+[WebMCP setup, limits and runnable example](https://github.com/emseepea/emseepea/tree/main/packages/feedback#offer-website-feedback-through-webmcp-experimental)
+before enabling it. Timeouts or cancellation can leave a submission's outcome
+unknown; never automatically retry a write.
+
 ## Separate customer and internal feedback
 
 A collection is a deployment-configured authorization partition, such as

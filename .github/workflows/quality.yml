@@ -175,6 +175,17 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Install the browser used by UI checks
         run: npx playwright install --with-deps chromium
+      - name: Install the qualified native WebMCP browser
+        run: |
+          browser_dir=$(mktemp -d "$RUNNER_TEMP/webmcp-chromium154.XXXXXX")
+          curl --fail --silent --show-error --location --retry 2 --max-time 180 \
+            --output "$browser_dir/chrome-linux64.zip" \
+            https://storage.googleapis.com/chrome-for-testing-public/154.0.8037.57/linux64/chrome-linux64.zip
+          echo "ceee2972074d441ea7c4ba8bcc0eaab77e7e87680f6653d73d3065851fe10302  $browser_dir/chrome-linux64.zip" | sha256sum --check --strict
+          unzip -q "$browser_dir/chrome-linux64.zip" -d "$browser_dir"
+          browser_version=$("$browser_dir/chrome-linux64/chrome" --version)
+          test "${browser_version% }" = "Google Chrome for Testing 154.0.8037.57"
+          echo "WEBMCP_CHROMIUM_PATH=$browser_dir/chrome-linux64/chrome" >> "$GITHUB_ENV"
       - name: Enable cross-architecture container execution
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
       - name: Set up the container builder
