@@ -198,7 +198,7 @@ boundary/documentation/release checks. Generated public files used standard
 permissions (`umask 022`); new prose paragraphs were split to meet the existing
 density guard. No assertion or budget was weakened.
 
-## Current completion blocker
+## Original cloud completion blocker
 
 The optional API, synthetic website and isolated browser bridge are implemented.
 All 27 deterministic adapter, native-browser, bridge and evidence checks pass.
@@ -265,3 +265,71 @@ objective completion while required evidence remains missing.
 Architecture and JTBD reviewers passed this proposed execution-location change
 before dependent work. Risk review passed the written revision at 5/25 residual risk before
 its handoff proceeds. Final staged commit-risk review remains required. The objective and deadline remain unchanged.
+
+## Positive-feedback evidence correction — assessed revision 6
+
+### Learning
+
+The GM's exact-source local run used `gpt-6.1-sol`, Codex 0.162.0,
+Node 24.22.0, npm 12.0.2 and Chromium 154.0.8037.57. Build and all 27 native
+checks passed. The semantic run failed: friction/disclosure/continuation/no
+repeat, objection/continuation and ordinary empty results each passed nine
+judgments; the positive case stopped before native verification or judgments.
+
+The exact sanitized semantic artifact is 109802 bytes, SHA-256
+`0a8eafe63e65c23bef221eb07861ea1d9e87c72df68339592214f34fb9543fac`.
+Its `authoritative: false`, `modelEvidence: configured` and failed status remain
+intact. All three positive trials called the allowed feedback operation, returned
+receipts and disclosed it. Their explicit `variety-search` context and detail
+identify the user-reported helpful catalogue search and time saved. The missing
+literal query word `shelling` alone caused the feedback assertion to fail.
+Native backend correlation and positive meaning judgments remain unestablished.
+
+JTBD review identifies usefulness and specificity as the outcome; neither job
+requires the literal query in the feedback detail. No production-guidance defect
+is established by these complete submission arguments. Preserve the failed run,
+the cloud 401 evidence and the reported Chromium 156 native-API failures.
+
+### Now
+
+Obtain architecture, JTBD and risk assessment of this exact test correction
+before implementation. Keep model-facing prompts, tool guidance, schemas,
+production code, model, trials, judgment count, retries and release gates intact.
+
+In the browser positive case, run native/backend correlation before the detail
+assertion so a later content failure does not hide that independent evidence.
+Keep exactly one successful positive feedback call. Replace the literal query
+requirement with identifying the operation and benefit (`search` and `time`).
+Require independent meaning judgments to establish same-response disclosure of
+the user's reported unexpectedly helpful catalogue search and saved time,
+without claiming measured savings, a support reply or human comprehension.
+Do not require repetition of the earlier query or variety as a condition of
+useful positive feedback. Prior successful task completion stays required.
+
+Record the bounded local evidence and its missing gates accurately. The existing
+MCP-only positive test has a similar query-word proxy; record that observation
+without silently altering its separate qualification contract in this change.
+Chromium 156 fixture compatibility remains a separately reviewed gap; this
+increment qualifies only the exact Chromium 154 path.
+
+### Next
+
+Run deterministic checks and independent code/prose/commit-risk review. Produce
+a small exact follow-up commit and portable handoff. The GM may qualify that new
+test contract once on a clean matching source revision, with three fresh trials
+and all existing native, meaning and failure controls. This is a reviewed test
+contract correction, not a product fix or an unchanged retry. Do not reclassify
+the original failed run, reuse its answers for a passing result or retry an
+incorrect answer within the new run.
+
+### Later
+
+Reassess the actual results and remaining delivery gates. No automatic push,
+merge, release or completed-objective claim follows from this correction.
+
+### Assessment
+
+Independent architecture, JTBD and risk reviews passed revision 6 before its
+dependent edits. Risk assessed the correction and fresh qualification at 5/25
+residual risk. Final implementation, prose and commit-risk review remain
+required before handoff; no fresh inference has run in this cloud checkout.

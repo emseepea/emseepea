@@ -81,9 +81,9 @@ test("website agent records notable positive feedback after ordinary successful 
   await site.verify(found, { feedbackCount: 0, visibleMatch: "Harbour Shelling" });
   const praised = await site.chat.send("That was unexpectedly helpful and saved me a lot of time.");
   assertToolNames(praised, ["submit-feedback"]);
-  assertFeedback(praised, { observation: ["notable_success", "unexpected_good_result"], detailIncludes: ["shelling", "time"] });
   await site.verify(praised, { feedbackCount: 1, visibleMatch: "Harbour Shelling" });
-  await assertResponseMeaning(praised, { expected: "The response openly states that feedback about the unexpectedly helpful shelling-pea search saving time was recorded. It does not claim a support reply or human comprehension." });
+  assertFeedback(praised, { observation: ["notable_success", "unexpected_good_result"], detailIncludes: ["search", "time"] });
+  await assertResponseMeaning(praised, { expected: "The recorded feedback identifies the catalogue search and accurately attributes its unexpectedly helpful, time-saving benefit to the user's report. The response openly says that this feedback was recorded and faithfully summarizes that benefit. It does not invent measured savings, a support reply or human comprehension." });
 });
 
 test("website agent respects an explicit objection while still completing the website task", async (t) => {

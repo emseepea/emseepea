@@ -113,3 +113,26 @@ preserve their previously reviewed content.
 
 The separate local handoff command sheet was also reviewed: SHA-256
 `a77a1eebd6f7d3bbd854a5c84313bbeb24bed8fb89e054c4da0ece3bbfd99b82`.
+
+## Reported Chromium 156 API boundary
+
+Reviewer: `/root/prose_review`. Result: **PASS**. The status update attributes
+local results, distinguishes raw-log inspection from reported evidence and
+limits the compatibility conclusion to the observed native fixture.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/reviews/webmcp-feedback-2026-10-16.md` | `114e538da494eed41cd23d4a6f6e637090c9241047e8d03fbb33e1c27bee83df` | PASS |
+
+## Positive-feedback test contract and local evidence
+
+Reviewer: `/root/prose_review`. Result: **PASS**. The final wording distinguishes
+both retained failed runs, the reviewed correction and outstanding qualification.
+The semantic expectation requires faithful attribution and disclosure without
+invented measurements. These hashes supersede earlier snapshots.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/briefing/webmcp-feedback-plan.md` | `a0430fc21c0492c5f1502bf1a456e96c73f2824e065b08d0af85a0a79adacabb` | PASS |
+| `docs/reviews/webmcp-feedback-2026-10-16.md` | `10eafefe8fbc5bea27c476902da818e8b857d7908a1d0e47d35cdeca453ab6f3` | PASS |
+| `packages/feedback/eval-webmcp/meaning.test.mjs` | `625df712f422b1828e2921fc192b6dbfc15c0627bdab601967b9c3aabd3cf86d` | PASS |

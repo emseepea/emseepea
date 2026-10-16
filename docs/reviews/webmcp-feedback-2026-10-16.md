@@ -58,7 +58,7 @@ assertion or budget was weakened.
 The packed feedback archive includes the browser entry point and its public
 type declarations.
 
-## Agent-level qualification blocker
+## Original cloud authentication blocker
 
 The separate semantic cases exercise this precise path:
 
@@ -79,7 +79,7 @@ response or tool call. Zero answer turns and zero meaning judgments were
 observed. The failed result remains in `artifacts/webmcp-eval.json`; no semantic
 retry or alternative model was used to obtain a passing result.
 
-Usable inference authentication must be supplied before these cases can qualify
+Usable inference authentication is required for cloud execution to qualify
 friction recognition, positive feedback, ordinary operation, disclosure,
 objections, duplicate avoidance and original-task continuation. Existing Claude
 release requirements remain mandatory. Local Codex evidence would qualify only
@@ -113,3 +113,70 @@ ADRs are renumbered 0127/0128 to preserve the GM's reported concurrent allocatio
 of 0125/0126. Product push and release sequencing require GM coordination while
 the other delivery is blocked. The immediate artifact is a portable patch;
 merge, publication and objective completion remain unestablished.
+
+## Local Chromium 156 boundary
+
+The local Em See Pea GM reports that the unchanged 27-check suite on exact
+commit `c9482a33677b1216ef87416e948ec3d7762fa0c6` failed against Chromium
+156.0.8078.4: 16 passed, 10 failed and one was cancelled. No model inference ran.
+The GM retains the raw logs locally; they have not been independently inspected
+in this cloud checkout.
+
+The reported native API returns object-valued tool input schemas and requires
+object input to `executeTool`. The test bridge and browser checks assume the
+string-valued Chromium 154 API, producing schema parsing and invocation errors.
+Native API presence alone therefore does not qualify this fixture on 156.
+This result does not establish that the production registration adapter fails.
+
+The next local check uses unchanged source with Chromium 154.0.8037.57, the exact
+cloud-tested version. Its result can qualify only that observed path. Any 156
+repair requires separate review and fresh native checks before inference;
+failed native execution must never trigger a write retry or backend shortcut.
+
+
+## Verified local semantic failure
+
+The exact local sanitized harness artifact was received and verified as
+109802 bytes, SHA-256
+`0a8eafe63e65c23bef221eb07861ea1d9e87c72df68339592214f34fb9543fac`.
+It is retained separately from the cloud failure. Its status is failed,
+`authoritative` is false and model evidence is configured; none is upgraded.
+The GM reports full build and 27 native checks passed on unchanged source
+`c9482a3`, Chromium 154.0.8037.57, Node 24.22.0, npm 12.0.2 and Codex 0.162.0.
+
+Inspection confirms three semantic cases passed nine judgments each: friction,
+disclosure, continuation and no duplicate; objection and continuation; and an
+ordinary empty result. The positive case failed the feedback-detail assertion
+before native verification or meaning judgments. It has zero praise judgments.
+
+All three positive trials contain one successful `submit-feedback` provider
+outcome with an allowed positive observation, a receipt, explicit context
+`feature: variety-search`, and detail attributing an unexpectedly helpful,
+time-saving catalogue search to the user. All disclose recording feedback.
+The detail omits the literal query word `shelling`, required by the assertion.
+These provider outcomes do not establish the unexecuted positive native/backend
+correlation or passing positive meaning judgments. Overall qualification remains
+failed; a separately reviewed correction must preserve that result.
+
+
+## Reviewed positive-feedback test correction
+
+Architecture, JTBD and risk reviewers passed plan revision 6 after independently
+inspecting the verified local artifact. Applied architecture and JTBD reviews
+passed the resulting two-line test correction. The positive case now verifies
+native/backend correlation before its content assertion, requires the operation
+and benefit rather than the literal query, and independently judges faithful
+user attribution, disclosure and absence of invented measurements.
+
+No production code, model-facing prompt, tool guidance, schema, provider, model,
+trial count, judgment count, retry policy or release gate changed. A fresh local
+run of all 27 deterministic WebMCP checks passed on Chromium 154.0.8037.57;
+syntax and lint checks passed for the corrected semantic file. The original
+full repository checks and benchmarks passed before this test-only correction;
+they have not been rerun in full for the follow-up.
+
+No new semantic inference has run. The original local result remains failed,
+and its positive native correlation and meaning judgments remain unqualified.
+One fresh evaluation of the reviewed new contract is required on its exact
+follow-up commit; old answers cannot qualify it. The separate Chromium 156
+fixture gap and existing release requirements remain unresolved.
