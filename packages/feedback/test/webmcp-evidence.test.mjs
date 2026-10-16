@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertNativeCorrelation, assertObservedSearchFriction } from "../test-support/webmcp-evidence.mjs";
+import { assertNativeCorrelation, assertObservedSearchFriction, assertOrdinaryEmptySearch, ordinaryEmptySearchBound } from "../test-support/webmcp-evidence.mjs";
 
 function fixture() {
   const args = { observation: "friction", detail: "The search required another query." };
@@ -54,4 +54,33 @@ test("friction qualification requires a real observed limitation before feedback
   assert.throws(() => assertObservedSearchFriction([feedback, limited, recovered], { feedbackRequired: true }));
   assert.throws(() => assertObservedSearchFriction([recovered, feedback, recovered], { feedbackRequired: true }));
   assert.throws(() => assertObservedSearchFriction([limited, feedback], { feedbackRequired: true }));
+});
+
+function emptySearch(query, hint = "Try a shorter search.") {
+  return { name: "search-pea-varieties", arguments: { query }, records: [],
+    result: { structuredContent: { matches: [], interfaceNote: hint } },
+    search: { visibleResult: `No varieties found. ${hint}` } };
+}
+
+test("ordinary empty search permits only hinted whole-word shortening with a request-derived bound", () => {
+  const name = "Example Missing Variety";
+  assert.equal(ordinaryEmptySearchBound(name), 3);
+  assert.equal(ordinaryEmptySearchBound("Example"), 1);
+  assertOrdinaryEmptySearch([emptySearch(name)], name);
+  assertOrdinaryEmptySearch([emptySearch(name), emptySearch("Example")], name);
+  assertOrdinaryEmptySearch([emptySearch(name), emptySearch("Missing Variety"), emptySearch("Variety")], name);
+  for (const events of [
+    [], [emptySearch("Example")],
+    [emptySearch(name), emptySearch(name)],
+    [emptySearch(name), emptySearch("Unrelated")],
+    [emptySearch(name), emptySearch("Example Variety")],
+    [emptySearch(name), emptySearch("Exam")],
+    [emptySearch(name, "No refinement hint."), emptySearch("Example")],
+    [emptySearch(name), emptySearch("Example"), emptySearch("Example")],
+    [emptySearch(name), emptySearch("Missing Variety"), emptySearch("Variety"), emptySearch("Variety")],
+    [{ ...emptySearch(name), name: "submit-feedback" }],
+    [{ ...emptySearch(name), records: [{ id: "unexpected-write" }] }],
+    [{ ...emptySearch(name), result: { structuredContent: { matches: ["invented match"] } } }],
+    [{ ...emptySearch(name), search: { visibleResult: "Found: invented match." } }],
+  ]) assert.throws(() => assertOrdinaryEmptySearch(events, name));
 });

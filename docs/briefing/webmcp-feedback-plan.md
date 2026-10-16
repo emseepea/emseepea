@@ -388,3 +388,93 @@ Independent architecture, JTBD and risk reviews passed revision 7 before its
 dependent edit. Risk assessed preparation of the reviewed incremental handoff
 at 5/25 residual risk. Applied implementation, prose and commit-risk reviews
 remain required. No new inference execution is authorized by these assessments.
+
+## Empty-search contract and evidence retention — assessed revision 8
+
+### Learning
+
+Revision 7 remains failed. Its exact 75297-byte semantic artifact was verified
+with SHA-256 `46594ee3a4ecd417b59b328d328624d15c51fe25988c22b3220c8ab04d52450f`.
+Positive feedback and objection each passed nine judgments. All three friction
+commands timed out at the existing 180-second cap; their recorded turn arrays
+are empty. Cause and side effects cannot be inferred from that bounded artifact.
+
+For the ordinary-empty case, all trials searched the requested full name.
+Trial 3 then followed the real result's “Try a shorter search” hint with
+“Example”. Both actual provider outcomes were empty, and no trial called
+feedback. The one-search assertion failed before native verification/judgments.
+No passing result is established by those provider outcomes alone.
+
+Native summaries use fixed case-name filenames and are written only after
+verification. A failure before verification leaves previous-run files behind.
+The GM correctly excluded old friction/empty summaries from revision 7. Fix
+retention and provenance rather than deleting historical evidence or presenting
+an absent current summary as success.
+
+### Now
+
+Obtain independent architecture, JTBD and risk assessments before dependent edits.
+Keep production code, user prompts, provider, model, schemas, 180-second cap,
+judgment counts, fail-closed aggregation and existing release gates unchanged.
+
+Replace the ordinary-empty case's exact one-call assertion with a constrained
+search sequence. Require the requested full name first; any subsequent query
+must be a contiguous whole-word shortening of the previous query, prompted by
+its real empty result and shorter-search hint. Every query must have an actual
+empty native result and visible empty state, with zero feedback writes.
+
+Derive the maximum number of calls from the original name's word count: each
+optional shortening removes at least one word, so “Example Missing Variety”
+permits at most three calls. This admits a legitimate hinted refinement while
+rejecting unrelated queries, repeats, loops, non-empty outcomes and feedback.
+Keep the existing independent meaning judgment of the completed requested task.
+
+Give each semantic invocation a fresh private native-evidence run directory.
+Bind its manifest to the semantic source SHA-256, case names and optional exact
+revision. Print its unique identifier in the test log for matching collection.
+Use fresh case-local execution paths before starting conversations; retain the
+existing bounded synthetic native JSONL files even if startup, a turn or an
+assertion fails. Missing/partial files remain unverified, not proof of no calls.
+
+Write separate numbered native-correlation checkpoints only after existing
+correlation checks succeed. Mark them as native evidence requiring the matching
+semantic result. Do not overwrite legacy files, other runs or earlier
+checkpoints. A checkpoint covers its recorded calls/hashes, not later activity.
+Consumers must collect only the named run and match its source/revision to the
+semantic artifact. Keep private provider logs, credentials and configuration out
+of retained native evidence; preserve all existing per-file/value byte bounds.
+
+Add meaningful deterministic tests for the allowed full-name/refinement paths
+and rejection cases, and for run isolation, provenance, retained partial files
+and immutable checkpoints. Run existing native checks, type/build/lint checks
+appropriate to the fixture, and independent implementation/prose/commit reviews.
+
+### Next
+
+Prepare an exact incremental source artifact and diagnostics handoff for the
+local GM. This correction does not repair or explain the friction timeouts.
+Before any new inference, ask the GM to inspect already preserved local logs
+and available host/process evidence without model calls, credential export or
+sensitive log disclosure. Report only bounded sanitized facts about timing,
+termination, resource failures and any surviving native execution evidence.
+Do not assume authentication failure, no writes, or provider availability.
+
+If no retained evidence identifies a remedy, report the precise blocker:
+friction inference did not finish within the unchanged cap and its partial
+native effects are unavailable. Do not simply repeat that failed execution,
+raise its timeout or represent these source corrections as its resolution.
+Fresh qualification of any corrected source requires a separately assessed
+execution plan and local partner review; no inference follows automatically.
+
+### Later
+
+Reassess actual evidence and remaining delivery gates. Preserve Chromium 156's
+separate API gap and ADR allocation 0127/0128. No push, merge, publication or
+completed-objective claim is authorized by these fixture corrections.
+
+### Assessment
+
+Independent architecture, JTBD and risk reviews passed revision 8 before its
+dependent implementation. Residual plan risk is 5/25. Applied reviews and
+verification remain required before the source artifact handoff; no new
+inference execution is authorized by this assessment.

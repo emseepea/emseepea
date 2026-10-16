@@ -1,20 +1,25 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
   assertFeedback, assertNoToolCalls, assertResponseContains, assertResponseMeaning,
   assertToolNames, assertToolSelection, createConversation,
 } from "@emseepea/testing/semantic";
-import { assertNativeCorrelation, assertObservedSearchFriction } from "../test-support/webmcp-evidence.mjs";
+import { assertNativeCorrelation, assertObservedSearchFriction, assertOrdinaryEmptySearch, ordinaryEmptySearchBound } from "../test-support/webmcp-evidence.mjs";
+import { createNativeEvidenceRun } from "../test-support/webmcp-artifacts.mjs";
+
+const nativeRun = await createNativeEvidenceRun({
+  root: fileURLToPath(new URL("../../../artifacts/webmcp-native/", import.meta.url)),
+  sourceSha256: createHash("sha256").update(await readFile(new URL(import.meta.url))).digest("hex"),
+  revision: process.env.GITHUB_SHA,
+});
+console.info(`WebMCP native evidence run: ${nativeRun.runId}; source SHA-256: ${nativeRun.sourceSha256}`);
 
 async function websiteConversation(t) {
-  const directory = await mkdtemp(join(tmpdir(), "emseepea-webmcp-native-"));
-  t.after(() => rm(directory, { recursive: true, force: true }));
-  const paths = [1, 2, 3].map((trial) => join(directory, `browser-${trial}.jsonl`));
+  const evidence = await nativeRun.createCase(t.name);
+  const { paths } = evidence;
   const chat = await createConversation(t, {
     server: new URL("../eval/webmcp-server.mjs", import.meta.url),
     environment: (trial) => ({ WEBMCP_EVIDENCE_FILE: paths[trial - 1],
@@ -23,7 +28,7 @@ async function websiteConversation(t) {
   const outcomes = [[], [], []];
   return {
     chat,
-    async verify(turn, { feedbackCount, visibleMatch, observedFriction = false, feedbackRequired = false } = {}) {
+    async verify(turn, { feedbackCount, visibleMatch, observedFriction = false, feedbackRequired = false, ordinaryEmptyName } = {}) {
       const summaries = [];
       for (let trial = 0; trial < 3; trial++) {
         const previousCount = outcomes[trial].length;
@@ -33,6 +38,7 @@ async function websiteConversation(t) {
         const events = text.trim().split("\n").filter(Boolean).map((line) => JSON.parse(line));
         const summary = assertNativeCorrelation(outcomes[trial], events);
         if (observedFriction) assertObservedSearchFriction(events.slice(previousCount), { feedbackRequired });
+        if (ordinaryEmptyName) assertOrdinaryEmptySearch(events.slice(previousCount), ordinaryEmptyName);
         if (feedbackCount !== undefined) assert.equal(summary.feedbackCount, feedbackCount);
         if (visibleMatch) {
           const search = events.findLast((event) => event.name === "search-pea-varieties");
@@ -41,13 +47,7 @@ async function websiteConversation(t) {
         summaries.push({ trial: trial + 1, ...summary,
           nativeEvidenceSha256: createHash("sha256").update(text).digest("hex") });
       }
-      const destination = fileURLToPath(new URL("../../../artifacts/webmcp-native/", import.meta.url));
-      await mkdir(destination, { recursive: true });
-      const name = createHash("sha256").update(t.name).digest("hex");
-      await writeFile(join(destination, `${name}.json`), JSON.stringify({
-        name: t.name, path: "provider-native MCP events -> loopback bridge -> native Chromium WebMCP -> website/backend",
-        semanticQualification: "requires the matching semantic harness result", summaries,
-      }, null, 2) + "\n", { mode: 0o600 });
+      await evidence.recordCheckpoint(summaries);
     },
   };
 }
@@ -103,7 +103,12 @@ test("website agent respects an explicit objection while still completing the we
 test("website agent treats a normal empty catalogue result as ordinary operation", async (t) => {
   const site = await websiteConversation(t);
   const empty = await site.chat.send("Check whether the catalogue contains a variety named Example Missing Variety.");
-  assertToolNames(empty, ["search-pea-varieties"]);
-  await site.verify(empty, { feedbackCount: 0 });
+  const name = "Example Missing Variety";
+  const bound = ordinaryEmptySearchBound(name);
+  assertToolSelection(empty, {
+    required: [{ name: "search-pea-varieties", minCalls: 1, maxCalls: bound }],
+    allowed: [], forbidden: ["submit-feedback"], totalCalls: { minCalls: 1, maxCalls: bound },
+  });
+  await site.verify(empty, { feedbackCount: 0, ordinaryEmptyName: name });
   await assertResponseMeaning(empty, { expected: "The response says the catalogue has no variety named Example Missing Variety. It does not report feedback for this expected empty result." });
 });

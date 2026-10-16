@@ -145,7 +145,7 @@ After building, run the optional semantic cases with an explicitly chosen,
 available Codex model:
 
 ```sh
-EMSEEPEA_CODEX_MODEL="chosen-model" node packages/testing/semantic/cli.mjs --provider codex-local --output artifacts/webmcp-eval.json packages/feedback/eval-webmcp/meaning.test.mjs
+GITHUB_SHA="$(git rev-parse HEAD)" EMSEEPEA_CODEX_MODEL="chosen-model" node packages/testing/semantic/cli.mjs --provider codex-local --output artifacts/webmcp-eval.json packages/feedback/eval-webmcp/meaning.test.mjs
 ```
 
 Replace `chosen-model` before running. The fixture requires Chromium with the
@@ -161,12 +161,28 @@ provider tool events and three independent tool-free judgments for each meaning
 assertion, without semantic retries or model coaching. Correlation checks tie
 calls to native results, visible task state and backend writes.
 
-Bounded synthetic
-summaries are written to `artifacts/webmcp-native`; they require a matching
-passing semantic harness result. Missing model, native API or evidence fails
-closed. No semantic pass is claimed here. Local Codex evidence is scoped to this
-path and does not replace credentialed Claude release checks or establish Chrome
-built-in-agent compatibility.
+Choose an unused semantic output filename for each run and preserve previous
+results. Each invocation logs a fresh private `run-...` directory under
+`artifacts/webmcp-native`. Collect only that named directory. Its manifests bind
+run, source SHA-256, case and trial identity. Independently verify the clean
+checkout: a supplied revision is caller-reported; an absent revision is explicit.
+
+Bounded synthetic native execution files remain available after failed startup,
+turns or assertions. The four cases retain at most 12 MiB of raw native evidence,
+plus bounded manifests and checkpoints. Missing or partial files do not prove
+that no call or write occurred. No provider logs, credentials or browser storage
+are collected by this fixture.
+
+Successful native verification writes an immutable numbered checkpoint. It
+covers its stated call counts and exact byte hashes, and does not verify later
+appended activity. Match its run and source with the complete semantic result;
+native correlation alone is insufficient. Legacy flat summary files and other
+run directories are not evidence for the current invocation.
+
+Missing model, native API or evidence fails closed. No semantic pass is claimed
+here. Local Codex evidence is scoped to this path and does not replace
+credentialed Claude release checks or establish Chrome built-in-agent
+compatibility.
 
 ## Separate Customer and Internal Feedback
 

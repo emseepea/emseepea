@@ -234,3 +234,56 @@ syntax and lint passed. Full repository tests and benchmarks have not been
 rerun for this expectation-only follow-up. No further inference has run.
 The incremental handoff does not itself authorize inference, integration or
 release, and all earlier failed evidence remains failed.
+
+## Revision 7 failure and assessed revision 8 correction
+
+The exact revision 7 artifact was received and verified: 75297 bytes, SHA-256
+`46594ee3a4ecd417b59b328d328624d15c51fe25988c22b3220c8ab04d52450f`.
+Its failed status, non-authoritative label, configured model evidence and zero
+retries are unchanged. Positive feedback and objection each passed all nine
+judgments. Friction and ordinary-empty cases remain unqualified.
+
+All three friction trials report “model command timed out” with empty turn
+arrays. Source inspection confirms the existing runner kills the process at
+180 seconds and rejects before parsing captured output. Empty turn arrays
+therefore cannot establish that there were no calls or backend writes, nor
+identify authentication, transport or provider behaviour as the cause.
+
+All ordinary-empty trials queried the requested full name. Trial 3 followed
+the actual shorter-search hint with “Example”; both provider outcomes were
+empty, and no feedback call was made. The exact one-search assertion failed
+before native verification and meaning judgments. Those missing checks remain
+missing, regardless of the plausible refinement.
+
+The GM excluded previous-run friction and empty summaries from the revision 7
+snapshot. Inspection confirms fixed case-name paths and success-only summary
+writes could leave such stale files behind. Only positive and objection native
+summaries are reported current for revision 7; their raw files were not supplied
+in this artifact transfer.
+
+Architecture, JTBD and risk reviews passed revision 8 before implementation.
+The corrected empty-search contract requires the full name first, followed only
+by hinted contiguous whole-word shortenings. Each removes a word, deriving a
+maximum of three calls from the original three-word name. Actual empty native
+results, visible empty state, zero writes and independent meaning checks remain
+required. Repeated or unrelated queries cannot satisfy this contract.
+
+Native evidence now gets a fresh private run directory, source/case/trial
+provenance and explicit absent or caller-reported revision. Existing bounded
+synthetic native files survive pre-verification failures. Verified checkpoints
+are numbered, exclusive and tied to exact bytes and call counts; later activity
+cannot inherit their verification. Previous runs and legacy files are preserved.
+
+Applied architecture and JTBD reviews passed these fixture changes. All 33
+focused deterministic checks passed, including negative refinement paths,
+provenance/isolation, partial-file retention, immutable checkpoints and a real
+native write retained after a simulated pre-verification assertion failure.
+The feedback package build/type checks and focused lint checks passed. Full
+repository tests and benchmarks have not been rerun for this fixture-only change.
+
+No further inference has run. The correction does not repair the friction
+timeouts. The next local action is read-only inspection of already retained
+logs and host/process evidence; unavailable diagnostics must be reported as
+unavailable. A fresh inference plan requires independent assessment after that
+inspection. The 180-second cap, model, prompts, quorum and release gates remain
+unchanged. No blind retry, side-effect absence or completed objective is claimed.

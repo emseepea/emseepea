@@ -150,3 +150,18 @@ These hashes supersede earlier snapshots.
 | `docs/briefing/webmcp-feedback-plan.md` | `8823e222a02f2363d28da51ebf9498e2a950aae1285b4820b43332389e70c3e9` | PASS |
 | `docs/reviews/webmcp-feedback-2026-10-16.md` | `a43fdd2fd162ac7f033604079eadd1bd78beaa31d742c8770954ae59936a86fb` | PASS |
 | `packages/feedback/eval-webmcp/meaning.test.mjs` | `6ec949cc63a43b62fcd30890b3b923f9d5d78fd13c33b117a37fdb92cfc60b01` | PASS |
+
+## Constrained empty-search recovery and retained native evidence
+
+Reviewer: `/root/prose_review`. Result: **PASS**. The guidance identifies the
+current run, explains immutable checkpoints and missing/partial files, and
+separates fixture corrections from unresolved inference timeouts. These hashes
+supersede earlier snapshots; no semantic qualification is established.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/briefing/webmcp-feedback-plan.md` | `e67cc7e711e75ce6abd6f1ad6fd1242d1b31dbd970c6f686fe881ce45ee313ca` | PASS |
+| `docs/reviews/webmcp-feedback-2026-10-16.md` | `07475572ce1d47fdb88531c1fa5b52159e0fa7a6e492e001f147f940c6b720be` | PASS |
+| `packages/feedback/README.md` | `293b20f27cb7e553c60feae8bede0d80963e9d7ad8636c5e15e6710927ccccd5` | PASS |
+| `packages/feedback/test-support/webmcp-artifacts.mjs` | `d8d80e06d05de0f36a0cffce2e87e848a83b48a185c32cdd84871d38472d346f` | PASS |
+| `packages/feedback/eval-webmcp/meaning.test.mjs` | `85d097d3ca0d9782d5e8e14e37f7ab08c27d305ec15a8ab666a185da53ff7f88` | PASS |

@@ -59,3 +59,37 @@ export function assertObservedSearchFriction(events, { feedbackRequired = false 
     assert.ok(feedback > limited, "Feedback must follow the observed limitation");
   }
 }
+
+/** Each optional refinement removes words, giving a bound derived from the request. */
+export function ordinaryEmptySearchBound(name) {
+  assert.ok(typeof name === "string" && name.trim());
+  return name.trim().split(/\s+/).length;
+}
+
+export function assertOrdinaryEmptySearch(events, name) {
+  const words = (query) => query.trim().toLowerCase().split(/\s+/);
+  let previousWords = words(name);
+  assert.ok(events.length >= 1 && events.length <= ordinaryEmptySearchBound(name),
+    "Empty search calls must follow the strictly shortening word-count bound");
+  for (let index = 0; index < events.length; index++) {
+    const event = events[index];
+    assert.equal(event.name, "search-pea-varieties", "Ordinary empty searches cannot submit feedback");
+    assert.equal(typeof event.arguments.query, "string");
+    const currentWords = words(event.arguments.query);
+    if (index === 0) {
+      assert.deepEqual(currentWords, previousWords, "Search the full requested name first");
+    } else {
+      const previous = events[index - 1];
+      assert.ok(previous.result.structuredContent.interfaceNote?.includes("Try a shorter search."),
+        "A refinement must follow the actual shorter-search hint");
+      assert.ok(currentWords.length < previousWords.length, "Each refinement must remove at least one word");
+      assert.ok(previousWords.some((_, start) =>
+        JSON.stringify(previousWords.slice(start, start + currentWords.length)) === JSON.stringify(currentWords)),
+      "Refinements must retain contiguous whole words from the previous query");
+    }
+    assert.deepEqual(event.result.structuredContent.matches, [], "Every native result must actually be empty");
+    assert.ok(event.search.visibleResult.startsWith("No varieties found."), "The website must visibly show an empty result");
+    assert.deepEqual(event.records, [], "Ordinary searches must not write feedback");
+    previousWords = currentWords;
+  }
+}

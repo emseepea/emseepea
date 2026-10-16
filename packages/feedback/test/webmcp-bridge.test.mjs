@@ -9,6 +9,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { createWebMcpBridge } from "../test-support/webmcp-bridge.mjs";
+import { createNativeEvidenceRun } from "../test-support/webmcp-artifacts.mjs";
 
 async function fixture(t, options = {}) {
   const directory = await mkdtemp(join(tmpdir(), "webmcp-bridge-"));
@@ -175,4 +176,30 @@ test("spawned semantic fixture prints only its bridge endpoint and exits on SIGT
   assert.equal(code, 0);
   assert.equal(signal, null);
   await assert.rejects(fetch(endpoint));
+});
+
+test("a real native write survives an assertion failure as private unverified execution evidence", { timeout: 40_000 }, async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "webmcp-failed-native-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const run = await createNativeEvidenceRun({ root, sourceSha256: "a".repeat(64) });
+  const evidence = await run.createCase("failure before verification");
+  const running = await createWebMcpBridge({ evidenceFile: evidence.paths[0] });
+  t.after(() => running.close());
+  const client = new Client({ name: "native-failure-retention", version: "0.0.0" });
+  t.after(() => client.close());
+  await client.connect(new StreamableHTTPClientTransport(running.url));
+  await assert.rejects(async () => {
+    const receipt = await client.callTool({ name: "submit-feedback", arguments: {
+      observation: "friction", detail: "A synthetic observation preceding a failed assertion.",
+    } });
+    assert.equal(receipt.isError, false);
+    throw new Error("Synthetic assertion failed before verification");
+  }, /Synthetic assertion failed/);
+  await client.close();
+  await running.close();
+  const [entry] = await entries(evidence.paths[0]);
+  assert.equal(entry.name, "submit-feedback");
+  assert.equal(entry.records.length, 1);
+  assert.equal(entry.records[0].id, entry.result.structuredContent.id);
+  await assert.rejects(readFile(join(evidence.directory, "correlation-1.json")), /ENOENT/);
 });
