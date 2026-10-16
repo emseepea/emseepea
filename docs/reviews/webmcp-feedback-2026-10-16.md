@@ -287,3 +287,54 @@ logs and host/process evidence; unavailable diagnostics must be reported as
 unavailable. A fresh inference plan requires independent assessment after that
 inspection. The 180-second cap, model, prompts, quorum and release gates remain
 unchanged. No blind retry, side-effect absence or completed objective is claimed.
+
+## Historical timeout investigation closed: cause undetermined
+
+The local GM reverified the retained revision 7 JSON/log hashes and inspected
+the approved evidence inventory. Friction trials contain only timeout errors,
+with no recorded turns or provider-failure category. No contemporaneous host
+resource/process snapshot or friction native checkpoint remains available.
+The GM did not inspect authentication profiles or raw provider logs and did not
+use current disk availability to infer past conditions.
+
+Source inspection confirms buffered output is rejected before parsing when
+the 180-second cap fires. Conversation and old native temporary directories
+were subsequently removed. There is no retained approved evidence establishing
+the historical cause or write effects. Both remain undetermined. That read-only
+investigation is complete; it is not waiting on recoverable diagnostics.
+
+The corrected evidence fixture can retain future native execution files but
+cannot recover the discarded revision 7 data. A proposed one-invocation,
+friction-only diagnostic would examine those new observations under unchanged
+model-command limits. It would remain filtered diagnostic evidence, not complete
+semantic qualification or proof that the historical cause was repaired.
+Independent plan assessment and local partner review precede any execution.
+
+## Reviewed single diagnostic handoff
+
+The GM reports revision 8 independently passed all 33 native/deterministic
+checks on its clean exact commit/tree with Node 24.22.0 and Chromium
+154.0.8037.57. Reported log SHA-256:
+`071b8e49fd6e13e176c5b0028f598d4d502d8369e5d191d94b1d1e19c45bb11d`.
+That local log has not been transferred here. It is fixture evidence, not new
+semantic qualification.
+
+Architecture, JTBD and risk reviews passed the refined revision 9 diagnostic
+and exact launcher. The launcher is 4496 bytes, SHA-256
+`7fdd17eeff0c9c4373e3dfff73b9bdac64828c97e1ffafcb58d15ed8de23fc98`.
+Syntax was checked; it has not been executed here. Source and model-facing
+case prompts remain unchanged.
+
+The launcher requires clean exact revision 8 source, pinned browser and recorded
+CLI versions. An anchored test-name filter selects only friction through the
+existing semantic CLI, with explicit Codex selection. Existing three trials,
+judgments, provider isolation and 180-second command limits remain intact.
+A 20-minute outer CLI deadline signals its existing cancellation handler;
+forced CLI termination records cleanup uncertainty and failure.
+
+Private scope and outcome manifests explicitly deny full qualification even
+if the selected-case CLI result passes. Only the logged native run may be
+collected. Missing or partial native files cannot prove absence of effects.
+The GM must independently verify cleanup of owned processes after the run.
+One locally reviewed diagnostic is permitted; no automatic further inference,
+full qualification or release follows. Historical cause/effects stay undetermined.

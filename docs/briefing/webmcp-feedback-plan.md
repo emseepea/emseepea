@@ -478,3 +478,97 @@ Independent architecture, JTBD and risk reviews passed revision 8 before its
 dependent implementation. Residual plan risk is 5/25. Applied reviews and
 verification remain required before the source artifact handoff; no new
 inference execution is authorized by this assessment.
+
+## Instrumented friction diagnostic — assessed revision 9
+
+### Learning
+
+The local GM completed the read-only revision 7 investigation. Approved retained
+logs contain only the timeout messages; no contemporaneous resource/process
+snapshot or friction native checkpoint survives. The existing provider buffers
+output in memory and rejects before parsing it at the 180-second timeout.
+Conversation and native temporary directories were then removed. Historical
+cause and write effects are undetermined; awaiting further retained diagnostics
+cannot resolve that run.
+
+Revision 8 materially changes observability: native files have private,
+run-specific retained paths before inference begins, even if no verification
+checkpoint is reached. Its 33 deterministic checks passed, including a real
+native write retained after a pre-verification assertion failure. This is not
+a repair of the historical timeout or evidence that it cannot recur.
+
+### Now
+
+Assess one friction-only diagnostic on the reviewed revision 8 code with
+architecture, JTBD and risk reviewers. Do not replay the complete semantic suite
+or alter source to select the diagnostic. Use Node's existing test-name filter
+through the unchanged semantic CLI and fixture, exactly three fresh conversations
+and all existing assertions and independent judgments if reached. Set
+`EMSEEPEA_EVAL_PROVIDER=codex-local` and pass `--provider codex-local` explicitly.
+Select the single case with Node's supported `--test-name-pattern` in
+`NODE_OPTIONS`; do not modify the case source or model invocation. The existing
+model environment excludes `NODE_OPTIONS`.
+
+The learning question is whether completed native execution evidence survives
+on the corrected source, and which tool outcomes are recorded before completion
+or another timeout. The diagnostic may establish recorded completed calls and
+receipt-bearing writes. Missing or partial files cannot establish no calls,
+no in-flight effects or a provider cause. No raw provider logs, credentials,
+profiles, browser storage or transport configuration are collected.
+
+Use clean independently verified revision 8 source
+`a6f5b36f8ff0033c43e47ca12d220aa86918084d`, tree
+`c91ac52a307452f449fc5c33d11799a839c90424`, `gpt-6.1-sol`, Codex local
+authentication and pinned Chromium
+154.0.8037.57. Retain Node 24/npm 12.0.2, provider isolation and the 180-second
+per-command cap. Add a 20-minute outer CLI deadline for this one diagnostic;
+that deadline never extends a model command. On expiry, signal the CLI with
+SIGTERM so its existing cancellation handler stops the owned detached test
+process group. Allow a short cleanup grace period, then record failure and
+unknown cleanup if forced termination is necessary. Preserve this existing
+process-tree cleanup rather than bypassing the CLI with direct test execution. No timeout, model, prompt, tool,
+judgment-count, aggregation or release-policy changes are permitted.
+
+Use a fresh private diagnostic output directory. Let the existing CLI inject
+`EMSEEPEA_TEST_FILE` and `EMSEEPEA_EVIDENCE_DIR`, aggregate the selected case and
+write its result to the fresh diagnostic directory. Keep that CLI JSON intact.
+Save a separate scope manifest identifying this filtered diagnostic and stating
+that it cannot establish full qualification, regardless of CLI result status. Record
+exact commit/tree, actual versions, invocation, exit status and the unique
+native run ID logged by the fixture. Collect only that run directory, retaining
+its manifests, raw synthetic files, checkpoints and hashes alongside the case
+JSON and diagnostic log. Verify source/revision/run linkage independently.
+
+This is one diagnostic invocation, not repeated attempts to obtain a pass.
+It is filtered evidence: skipped cases prevent any full-suite or objective
+qualification claim, even if the selected case passes. Previous failures remain
+failed. No answer is reused, overridden, coached or repeated within the run.
+
+### Next
+
+After plan approval and exact-content handoff, the local GM obtains its normal
+local review before executing the single diagnostic. Inspect the resulting
+retained native records and case outcome once. If the command times out again,
+stop and report observations and remaining unknowns; do not launch another
+inference or increase limits. If it completes, record that current observation
+without declaring the historical cause repaired.
+
+Any full qualification, further diagnostic or runtime/provider correction
+requires a new assessed plan informed by this result. Do not automatically
+proceed from a successful filtered test to full qualification.
+
+### Later
+
+Resolve the remaining ordinary-empty qualification, unexplained runtime boundary
+and existing integration/release gates through their assessed steps. Chromium
+156 and publication remain outside this diagnostic. ADRs remain 0127/0128.
+
+### Assessment
+
+Independent architecture, JTBD and risk reviews passed the refined plan and
+exact launcher. Risk is 5/25 for handoff and one execution after fresh local GM
+review. The launcher is 4496 bytes, SHA-256
+`7fdd17eeff0c9c4373e3dfff73b9bdac64828c97e1ffafcb58d15ed8de23fc98`.
+It was syntax-checked but not executed here. No new inference has run.
+Local review must independently confirm cleanup of owned processes afterward;
+delegating cancellation to the CLI does not itself prove their termination.

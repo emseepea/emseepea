@@ -165,3 +165,20 @@ supersede earlier snapshots; no semantic qualification is established.
 | `packages/feedback/README.md` | `293b20f27cb7e553c60feae8bede0d80963e9d7ad8636c5e15e6710927ccccd5` | PASS |
 | `packages/feedback/test-support/webmcp-artifacts.mjs` | `d8d80e06d05de0f36a0cffce2e87e848a83b48a185c32cdd84871d38472d346f` | PASS |
 | `packages/feedback/eval-webmcp/meaning.test.mjs` | `85d097d3ca0d9782d5e8e14e37f7ab08c27d305ec15a8ab666a185da53ff7f88` | PASS |
+
+## Closed historical diagnosis and single instrumented diagnostic
+
+Reviewer: `/root/prose_review`. Result: **PASS**. The plan and evidence distinguish
+historical uncertainty, the new learning question and filtered diagnostic scope.
+Launcher wording makes clear that missing or partial files cannot establish
+absence of calls or writes. These snapshots supersede earlier hashes.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/briefing/webmcp-feedback-plan.md` | `d1f475ad42dd4c0573eea54d5a14942b486a94fcf0ac038b486c49f374aef02f` | PASS |
+| `docs/reviews/webmcp-feedback-2026-10-16.md` | `538ba69554c9c90a2beb8413c25963b97c04f047948018bd9cae9141f4424e8d` | PASS |
+
+The separately handed-off launcher is 4496 bytes, SHA-256
+`7fdd17eeff0c9c4373e3dfff73b9bdac64828c97e1ffafcb58d15ed8de23fc98`.
+Its diagnostic prose passed review. No execution or semantic qualification is
+established by that review.
