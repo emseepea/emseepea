@@ -1,5 +1,13 @@
 # @emseepea/website
 
+## 0.0.12
+
+### Patch Changes
+
+- [`9b760e9`](https://github.com/emseepea/emseepea/commit/9b760e98fa1c1151e623182fb7c6d2d427704577) Thanks [@tompahoward](https://github.com/tompahoward)! - Publish the client availability guide and production responsibilities checklist
+  for optional feedback events. Explain supported client modes, evidence limits,
+  and the setup responsibilities adopters retain.
+
 ## 0.0.11
 
 ### Patch Changes
