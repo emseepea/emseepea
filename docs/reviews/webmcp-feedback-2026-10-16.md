@@ -437,3 +437,55 @@ the README now identifies the verified Codex-local/gpt-6.1-sol/Chromium 154 path
 ADR-0128 describes fixture architecture without implying Claude qualification.
 Both ADRs remain proposed with human oversight unconfirmed. Exact-candidate
 repository checks and integration coordination remain pending.
+
+
+## Draft PR and native CI browser boundary
+
+Draft PR #178 was created at `cca6d0f`. Quality run `38896010477` failed both
+Node jobs in the native WebMCP checks; fifteen other jobs passed and the
+release-PR job was skipped. The native fixtures preferred an ambient system
+browser despite CI installing Playwright's locked browser. The failed browser
+version was not logged and remains unknown.
+
+Node 22 failed-job log SHA-256:
+`342466669ac7bd2b69225356b073f2ad032e10eaac9208a1fa667c501ba21d3e`.
+Node 24 failed-job log SHA-256:
+`69b356d237bcba56b8cb2e5caecc978f6f3038fbc7e49c8f6d9c9e0d10ac5365`.
+The logs preserve object-schema parsing and string-input rejection failures.
+They do not establish the exact CI browser version or qualify Chromium 156.
+
+The first reviewed correction removed implicit ambient selection. A full
+native run on locked Chromium 151.0.7922.34 passed 31/33 checks, failing the
+existing Chromium 154 requirement and exact annotation preservation because
+151 omitted `consequentialHint`. Its preserved log SHA-256 is
+`2ede1bb7918ecbefaeef14b1685594a190f6223febd9a7002e7142d3bbd51b54`.
+No assertion was weakened. The earlier read-only API probe established only
+native availability and call format, not full contract compatibility.
+
+Architecture, JTBD and risk reviewers passed explicit provisioning of the
+already-qualified 154 browser in the existing CI Node jobs. The official Linux
+archive is pinned by observed, reviewed SHA-256
+`ceee2972074d441ea7c4ba8bcc0eaab77e7e87680f6653d73d3065851fe10302`.
+This is an artifact pin, not an upstream checksum attestation. Digest verification
+precedes extraction; exact version validation precedes explicit selection.
+Existing UI browser installation and every native assertion remain intact.
+
+
+### Verified correction checks
+
+The exact reviewed CI installation step passed locally: official URL download,
+archive digest verification, extraction and exact binary-version validation.
+All 33 existing focused/native checks then passed on official Chrome for Testing
+154.0.8037.57 under Node 24.21.0 and Node 22.23.2, with zero failures,
+cancellations or skips. The explicit existing system-154 path also passed 33/33.
+Browser provenance was recorded before discovery; the endpoint-only stdout
+check passed unchanged. Production, lockfile, semantic prompts, assertions and
+provider implementation remain unchanged. Only test-browser selection/logging
+and CI provisioning changed; no successor semantic run was performed.
+
+Native log SHA-256 values:
+
+- Official 154, Node 24:
+  `d93d83a7421b80c1784094cddcef07ac5505893fe3756843e01d6fe3bc6fa68b`.
+- Official 154, Node 22:
+  `0ed7643a44883d78b205dccce81d5d3e68c5c6586d793bfba9b022d05e86c968`.

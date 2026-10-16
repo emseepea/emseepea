@@ -211,3 +211,17 @@ actions are explicit. These snapshots supersede earlier hashes.
 | `packages/feedback/README.md` | `019aa9321fd4e062a713d21afa6809745e1cf106f4e9f8e094569a4f1152eaeb` | PASS |
 | `docs/decisions/0128-test-only-native-webmcp-browser-bridge-qualification.proposed.md` | `8015e5b338c586e5b698e37e7626e4bc5ffde378429e46da6ae5427a83de5086` | PASS |
 | `docs/decisions/README.md` | `46206b49e8e775bee3708a575eef4eab407b7caa405db0be6bd4600be5c0631d` | PASS |
+
+
+## Explicit native browser provisioning and preserved CI failures
+
+Reviewer: `/root/prose_review`. Result: **PASS**. Setup instructions state the
+explicit Chromium 154 requirement. Evidence separates unknown CI provenance,
+the failed Chromium 151 run and successful native checks from the original
+semantic qualification. These snapshots supersede earlier hashes.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/briefing/webmcp-feedback-plan.md` | `51a101db95cfd1900809aebabe655ce0c0f664666eb05f25582b069f55b6b6b8` | PASS |
+| `docs/reviews/webmcp-feedback-2026-10-16.md` | `6eba6b93428ab05bd89624e6b1c0b92bf7e440916a9b4ef89f426551a2e458e1` | PASS |
+| `packages/feedback/README.md` | `5fed01c51636ead3b5c7de826e58b9789096c87458e724a171d8b2ed0c4e2654` | PASS |

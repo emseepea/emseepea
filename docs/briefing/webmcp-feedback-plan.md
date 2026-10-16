@@ -737,3 +737,71 @@ workspace. The lockfile hash remains
 Final reviews corrected README/ADR wording to distinguish the verified Codex
 path from other fixture configurations. No additional inference is necessary
 for these prose corrections. Exact-candidate qualification remains next.
+
+
+## Assessed revision 12: reproduce the qualified browser in CI
+
+### Evidence and objective
+
+Draft PR #178 was opened under the existing implementation authorization at
+`cca6d0f`. Quality run `38896010477` failed both supported Node jobs during
+native WebMCP checks. Fifteen other jobs passed; the release-PR job was skipped.
+The complete failed job logs remain preserved privately. The launched browser
+version was not logged, so its exact version is unknown.
+
+Both fixtures implicitly preferred an ambient system browser over the
+Playwright browser installed by CI. Object schemas and rejected string inputs
+exposed an API mismatch. Removing that preference was independently reviewed
+and tested once against locked Chromium 151.0.7922.34. It passed 31/33 checks:
+151 omitted `consequentialHint` and failed the existing Chromium 154 requirement.
+That failed run remains evidence; an earlier API-only probe did not qualify 151.
+
+### Now
+
+Provision official Chrome for Testing 154.0.8037.57 explicitly in the existing
+Node CI jobs. Verify the reviewed archive digest before extraction and the exact
+binary version before exporting its WebMCP-only selection path. Preserve the
+ordinary Playwright UI installation. Log actual browser version and selection
+mode on stderr before discovery; retain endpoint-only fixture stdout.
+
+Keep all native assertions, schemas, production code, lockfile, prompts,
+judgment counts and execution limits unchanged. Run all 33 focused checks on
+the official Linux 154 artifact under Node 22 and 24, and on the existing
+system 154 path. Any new failure requires diagnosis before another correction.
+
+### Next
+
+Record the actual results and obtain applied architecture, JTBD, public-prose
+and current staged-tree risk reviews. Commit the correction, then run the full
+clean exact-commit push qualification. Recheck current main's required Quality
+jobs and current checkout risk before an ordinary non-force update to draft
+PR #178. Inspect the new CI result; preserve the failed predecessor.
+
+### Later and assessment
+
+Independent architecture, JTBD and risk reviews passed this bounded plan,
+with residual risk 5/25. No new model inference is requested. Semantic evidence
+remains attached to `a6f5b36` and explicit Chromium 154; successor native checks
+are not a fresh semantic run. Chromium 151 is not fully qualified and 156 remains
+unresolved. Both ADRs remain proposed with human oversight unconfirmed.
+Do not merge, promote, release or alter the shared website release sequence.
+
+
+### Verified correction checks
+
+The exact reviewed CI installation step passed locally: official URL download,
+archive digest verification, extraction and exact binary-version validation.
+All 33 existing focused/native checks then passed on official Chrome for Testing
+154.0.8037.57 under Node 24.21.0 and Node 22.23.2, with zero failures,
+cancellations or skips. The explicit existing system-154 path also passed 33/33.
+Browser provenance was recorded before discovery; the endpoint-only stdout
+check passed unchanged. Production, lockfile, semantic prompts, assertions and
+provider implementation remain unchanged. Only test-browser selection/logging
+and CI provisioning changed; no successor semantic run was performed.
+
+Native log SHA-256 values:
+
+- Official 154, Node 24:
+  `d93d83a7421b80c1784094cddcef07ac5505893fe3756843e01d6fe3bc6fa68b`.
+- Official 154, Node 22:
+  `0ed7643a44883d78b205dccce81d5d3e68c5c6586d793bfba9b022d05e86c968`.

@@ -148,8 +148,13 @@ available Codex model:
 GITHUB_SHA="$(git rev-parse HEAD)" EMSEEPEA_CODEX_MODEL="chosen-model" node packages/testing/semantic/cli.mjs --provider codex-local --output artifacts/webmcp-eval.json packages/feedback/eval-webmcp/meaning.test.mjs
 ```
 
-Replace `chosen-model` before running. The fixture requires Chromium with the
-native WebMCP API; set `WEBMCP_CHROMIUM_PATH` if a specific executable is needed.
+Replace `chosen-model` before running. The full native checks require Chromium
+154.0.8037.57. Set
+`WEBMCP_CHROMIUM_PATH` to that executable before running them. Without an explicit
+path, fixtures use Playwright’s locked browser and log its actual version on
+stderr; the currently locked Chromium 151 does not pass the full native contract.
+
+CI separately installs the verified 154 artifact for these checks.
 
 The verified local path is Codex-local with `gpt-6.1-sol` → one loopback MCP
 browser bridge → native Chromium 154.0.8037.57 WebMCP → the actual demo task and

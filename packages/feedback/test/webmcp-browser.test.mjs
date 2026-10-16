@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import test from "node:test";
@@ -9,7 +8,7 @@ import { createDemo } from "../demo-webmcp/server.mjs";
 
 const require = createRequire(import.meta.url);
 const axe = await readFile(require.resolve("axe-core/axe.min.js"), "utf8");
-const executablePath = process.env.WEBMCP_CHROMIUM_PATH ?? (existsSync("/usr/bin/chromium") ? "/usr/bin/chromium" : undefined);
+const executablePath = process.env.WEBMCP_CHROMIUM_PATH;
 
 async function setup(t, options) {
   const running = await createDemo(options);
@@ -19,6 +18,7 @@ async function setup(t, options) {
     args: ["--no-sandbox", "--enable-features=WebMCP,WebMCPTesting"],
   });
   t.after(() => browser.close());
+  console.error(`WebMCP native test browser: ${browser.version()}; selection: ${executablePath ? "explicit" : "playwright-locked"}`);
   return { running, browser };
 }
 

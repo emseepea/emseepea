@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { existsSync } from "node:fs";
 import { lstat, open } from "node:fs/promises";
 import { isAbsolute, dirname } from "node:path";
 import { chromium } from "playwright";
@@ -44,9 +43,10 @@ export async function createWebMcpBridge({ evidenceFile, demoOptions, operationT
   try {
     evidence = await evidenceSink(evidenceFile);
     demo = await createDemo({ ...demoOptions, port: 0 });
-    const executablePath = process.env.WEBMCP_CHROMIUM_PATH ?? (existsSync("/usr/bin/chromium") ? "/usr/bin/chromium" : undefined);
+    const executablePath = process.env.WEBMCP_CHROMIUM_PATH;
     browser = await chromium.launch({ ...(executablePath ? { executablePath } : {}), args: ["--no-sandbox", "--enable-features=WebMCP,WebMCPTesting"] });
     const browserVersion = browser.version();
+    console.error(`WebMCP native bridge browser: ${browserVersion}; selection: ${executablePath ? "explicit" : "playwright-locked"}`);
     const page = await browser.newPage();
     await page.goto(demo.origin);
     await page.waitForFunction(() => document.querySelector("#feedback-status").textContent.includes("ready"));
