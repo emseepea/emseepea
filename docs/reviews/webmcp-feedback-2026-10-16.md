@@ -338,3 +338,43 @@ collected. Missing or partial native files cannot prove absence of effects.
 The GM must independently verify cleanup of owned processes after the run.
 One locally reviewed diagnostic is permitted; no automatic further inference,
 full qualification or release follows. Historical cause/effects stay undetermined.
+
+
+## Verified instrumented friction result
+
+The one revision 9 diagnostic completed locally on clean exact source
+`a6f5b36f8ff0033c43e47ca12d220aa86918084d`, tree
+`c91ac52a307452f449fc5c33d11799a839c90424`, with Codex-local/gpt-6.1-sol and
+Chromium 154.0.8037.57. Its private transport is 76120 bytes, SHA-256
+`b65b9e4863a56386f645fefe57da3f763fde87af070d285c74e13c65e8628a53`.
+The package hash and all 11 contained file hashes were verified outside the
+product repository. The exact synthetic evidence remains private.
+
+Independent reapplication of native correlation and observed-friction assertions
+confirmed all three trials: actual visible limitation, Highland Snap recovery,
+one receipt after three first-turn calls, then the same single receipt after
+five cumulative calls. Both immutable checkpoint hashes match their JSONL
+prefixes. All nine recorded judgments pass. Run `run-LzWq0n`, semantic source
+hash and selected-case revision agree. The local GM independently reports no
+remaining owned processes and a clean checkout; no process snapshot was
+transferred here.
+
+This remains filtered diagnostic evidence, with `authoritative: false`,
+`modelEvidence: configured` and `fullQualification: false`. Historical revision 7
+timeout cause and effects remain undetermined. No complete qualification on
+revision 8 has yet run. Independently assessed plan revision 10 permits one complete run
+without changing source, prompts, assertions, model-command limits or judgments.
+Earlier failures and separate cloud, compatibility and release gates remain.
+
+
+Architecture, JTBD and risk reviews passed the exact revision 10 launcher,
+4486 bytes, SHA-256
+`ac904c1c89cf180061565cbba274e60c803f3db08dbdf50269d117ddf5b84063`.
+Risk is 5/25. Syntax was checked; no inference ran here. The launcher requires
+empty NODE_OPTIONS, explicit Codex selection and the clean exact revision 8
+checkout. It invokes the complete file once through the existing semantic CLI,
+with the existing 180-second model cap and a 38-minute outer bound. Private
+manifests leave qualification unestablished pending independent review of all
+four cases, 12 fresh trials, 36 judgments, matching native effects and cleanup.
+Fresh local review precedes execution. Stop after the invocation regardless of
+outcome; no automatic replay, product push or release follows.

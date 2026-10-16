@@ -572,3 +572,79 @@ review. The launcher is 4496 bytes, SHA-256
 It was syntax-checked but not executed here. No new inference has run.
 Local review must independently confirm cleanup of owned processes afterward;
 delegating cancellation to the CLI does not itself prove their termination.
+
+
+## First complete qualification on retained-evidence source — assessed revision 10
+
+### Learning
+
+The one approved friction diagnostic completed on exact revision 8 source
+`a6f5b36f8ff0033c43e47ca12d220aa86918084d`, tree
+`c91ac52a307452f449fc5c33d11799a839c90424`. The transferred private package
+is 76120 bytes, SHA-256
+`b65b9e4863a56386f645fefe57da3f763fde87af070d285c74e13c65e8628a53`.
+All 11 contained file hashes were verified. Independent reapplication of native
+correlation and observed-friction assertions matched all three provider trials:
+three calls and one receipt after the first turn, five calls and the same single
+receipt after the repeat. Both checkpoint hashes matched the corresponding raw
+JSONL prefixes. All nine recorded judgments passed. Run `run-LzWq0n` and its
+source hash match the selected-case evidence. Cleanup is independently reported
+by the local GM; the transferred package does not contain a process snapshot.
+
+This is one filtered diagnostic, with `authoritative: false`,
+`modelEvidence: configured` and `fullQualification: false`. Historical revision 7
+timeout cause and effects remain undetermined. The diagnostic supports testing
+the complete corrected fixture; it does not repair that history or establish
+performance reliability. No complete suite has yet run against revision 8.
+
+### Now
+
+Obtain independent architecture, JTBD and risk assessment of one first complete
+four-case qualification invocation on that same exact source/tree. No product,
+provider, prompt, assertion, judgment quorum or timeout change is proposed.
+Use the existing semantic CLI with explicit `codex-local`, `gpt-6.1-sol`, Node
+24.22.0/npm 12.0.2/Codex 0.162.0 and native Chromium 154.0.8037.57. Require a clean
+checkout, record actual versions and exclude custom model commands and test
+filters. Run all four cases, three fresh trials per case and all nine existing
+judgments per case (36 total when every assertion reaches judgment). Preserve
+the 180-second model-command cap and existing 38-minute CLI deadline/cancellation
+handler. Any additional external deadline may only terminate earlier, never
+extend those limits. Independently inspect owned-process cleanup afterward.
+
+Use a new private output directory and intact CLI result; record exact invocation,
+source/tree, versions, start/end, exit status and logged native run ID. Collect
+only that run's manifests, checkpoints and bounded synthetic JSONL files, even
+on failure before verification. Hash retained bytes and verify matching case,
+trial, source and run linkage. Missing checkpoints or partial logs do not prove
+absence of side effects. Keep previous evidence and fixed legacy summaries
+separate; never reuse them as current evidence. Do not collect raw provider logs,
+credentials, profiles, browser storage or unrelated artifacts.
+
+### Next
+
+After independent assessment and exact launcher review, hand off one invocation
+for fresh local review and execution. Stop afterward regardless of outcome. A
+complete local pass requires all four named cases, all 12 fresh trials, all 36
+passing judgments, matching native/backend effects and successful cleanup; a
+partial/filtered result cannot substitute. Any timeout, assertion failure,
+missing evidence or cleanup uncertainty remains a failure requiring a new
+reviewed diagnosis, with no replay or changed limits. Do not combine older case
+passes with this run to manufacture a complete result.
+
+### Later
+
+A complete local pass would establish bounded local qualification only. Preserve
+`authoritative: false` and `modelEvidence: configured`; cloud authentication,
+existing vulnerability/integration checks, exact-commit full push qualification,
+ADR oversight and existing release gates remain separate. Chromium 156 support,
+product push and release are outside this execution plan. ADRs stay 0127/0128.
+Coordinate with the GM before any subsequent product push.
+
+### Assessment
+
+Independent architecture, JTBD and risk reviews passed this plan and exact
+launcher. Residual risk is 5/25. The launcher is 4486 bytes, SHA-256
+`ac904c1c89cf180061565cbba274e60c803f3db08dbdf50269d117ddf5b84063`.
+It was syntax-checked and independently inspected, not executed here. Fresh
+local review precedes the one invocation; no subsequent replay or release is
+authorized by this assessment.
