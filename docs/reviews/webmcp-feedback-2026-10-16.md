@@ -378,3 +378,62 @@ manifests leave qualification unestablished pending independent review of all
 four cases, 12 fresh trials, 36 judgments, matching native effects and cleanup.
 Fresh local review precedes execution. Stop after the invocation regardless of
 outcome; no automatic replay, product push or release follows.
+
+
+## Verified complete local synthetic suite
+
+The reviewed launcher ran once against clean exact revision
+`a6f5b36f8ff0033c43e47ca12d220aa86918084d`, tree
+`c91ac52a307452f449fc5c33d11799a839c90424`, using Codex-local/gpt-6.1-sol,
+Node 24.22.0/npm 12.0.2/Codex 0.162.0 and Chromium 154.0.8037.57.
+The GM reports exit 0 after 215.44 seconds, without outer deadline or forced
+termination. No further inference followed.
+
+The private transport is 200448 bytes, SHA-256
+`9f62d7ca59a273b0703cee1f8841bb70d86158525a1745a98d5fbc2082fdd002`.
+Its package hash and all 28 file hashes were verified outside the repository.
+Independent reapplication of native correlation and case-specific assertions
+confirmed all 12 trials. All six checkpoints match their exact raw JSONL
+prefixes; final checkpoints cover the current files. All four case names,
+36 passing tool-free judgments, source hash and revision agree with native run
+`run-8jC7yx`. Each friction/positive trial wrote one real backend receipt;
+objection/ordinary-empty trials wrote none, with no duplicate feedback.
+
+The GM's independent review records a clean checkout and zero matching owned
+processes afterward. A process snapshot was not transferred here. This is
+bounded local synthetic qualification only: `authoritative: false`,
+`modelEvidence: configured`, zero semantic retries. It does not establish hosted
+agent, production, Chromium 156 or release qualification. Earlier failed runs
+remain failed and the historical timeout cause/effects remain undetermined.
+The next assessed step is the existing dependency and integration controls.
+
+
+## Dependency policy verification and final claim review
+
+The workflow-pinned OSV image scanned the exact committed lockfile copy, SHA-256
+`d7fc745345f34832cb06f93202e857b8ea82ff1a00f767b176cd2afec37ab0d3`.
+The scanner completed with findings (exit 1), producing a 30796-byte report,
+SHA-256 `e1e6af0136033f4d2f02127ecc8654de70ab1fee911ee3b93d8e27ecb214f50e`.
+No scanner operational failure was treated as an empty result.
+
+The first unchanged maturity-gate command failed because Node fetch attempted
+direct registry connections outside this environment's required proxy route.
+Its log remains preserved, SHA-256
+`002ff6d284942fcd81e9318c4481b60b91578b123ad3ab22097b118316603edf`.
+Architecture, JTBD and risk reviewers passed the environment-only correction:
+run the same gate against the same report with Node's supported
+`--use-env-proxy`, preserving inherited CA validation. The corrected command
+passed (exit 0); its output SHA-256 is
+`ebe0cbc46edaf6a535638449b12fbf5d2cd8db15233a459dec53f5671304ca68`.
+
+All five advisories remain reported. Three Handlebars advisories have fixes not
+yet 14 days old; braces and http-cache-semantics have no published fix. The
+existing policy allows this result; it is not vulnerability-free clearance.
+No audit fix or lockfile mutation occurred. Every locked package version,
+resolved URL and integrity hash matches origin/main.
+
+Final architecture/JTBD review found no runtime blocker and corrected one claim:
+the README now identifies the verified Codex-local/gpt-6.1-sol/Chromium 154 path;
+ADR-0128 describes fixture architecture without implying Claude qualification.
+Both ADRs remain proposed with human oversight unconfirmed. Exact-candidate
+repository checks and integration coordination remain pending.

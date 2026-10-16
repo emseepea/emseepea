@@ -195,3 +195,19 @@ supersede earlier snapshots. This is prose review, not qualification evidence.
 | --- | --- | --- |
 | `docs/briefing/webmcp-feedback-plan.md` | `b9c122d7e5b1eb9d86e53402d28ed54f4625e94a0917087e4c0fa3cd777a7832` | PASS |
 | `docs/reviews/webmcp-feedback-2026-10-16.md` | `e7e1346228ec92cd4624225f1e4b38dbe570c7bcef3f41f57775276ec5edbbf6` | PASS |
+
+
+## Complete local evidence and dependency readiness
+
+Reviewer: `/root/prose_review`. Result: **PASS**. The revised guidance scopes the
+verified Codex/Chromium path, links to evidence, preserves prior failures and
+separates policy allowance from a vulnerability-free result. Remaining delivery
+actions are explicit. These snapshots supersede earlier hashes.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/briefing/webmcp-feedback-plan.md` | `1986778323c79bde1531875de573f9efae6ba4d6ddd0602c81a18dcac3f45e90` | PASS |
+| `docs/reviews/webmcp-feedback-2026-10-16.md` | `3ac675528626815481f0803eddcd955e593c0685f3dc5800619266e5fec52e18` | PASS |
+| `packages/feedback/README.md` | `019aa9321fd4e062a713d21afa6809745e1cf106f4e9f8e094569a4f1152eaeb` | PASS |
+| `docs/decisions/0128-test-only-native-webmcp-browser-bridge-qualification.proposed.md` | `8015e5b338c586e5b698e37e7626e4bc5ffde378429e46da6ae5427a83de5086` | PASS |
+| `docs/decisions/README.md` | `46206b49e8e775bee3708a575eef4eab407b7caa405db0be6bd4600be5c0631d` | PASS |

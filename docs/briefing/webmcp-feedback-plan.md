@@ -648,3 +648,92 @@ launcher. Residual risk is 5/25. The launcher is 4486 bytes, SHA-256
 It was syntax-checked and independently inspected, not executed here. Fresh
 local review precedes the one invocation; no subsequent replay or release is
 authorized by this assessment.
+
+
+## Dependency and integration readiness — assessed revision 11
+
+### Learning
+
+The one complete local invocation on exact revision 8 source passed. The private
+transport is 200448 bytes, SHA-256
+`9f62d7ca59a273b0703cee1f8841bb70d86158525a1745a98d5fbc2082fdd002`.
+All 28 contained file hashes were verified. Independent reapplication of native
+correlation and case-specific friction/empty-result assertions confirmed all
+12 trials. All six immutable checkpoints match their exact raw JSONL prefixes,
+and the final checkpoints cover the current files. All four named cases and
+36 tool-free passing judgments belong to run `run-8jC7yx` and the exact semantic
+source hash. Friction and notable-positive trials each wrote one receipt;
+objection and ordinary-empty trials wrote none. No duplicate occurred. The local
+GM independently reports a clean checkout and no remaining owned processes;
+the transferred review records this report, without a process snapshot.
+
+The result establishes the bounded local synthetic suite on Chromium
+154.0.8037.57 with Codex-local/gpt-6.1-sol. Keep `authoritative: false` and
+`modelEvidence: configured`. Previous failures and the unknown revision 7
+timeout cause/effects remain unchanged. No further inference is planned.
+Fresh origin/main is still `9b760e98fa1c1151e623182fb7c6d2d427704577`, with
+maximum ADR 0124; retain WebMCP 0127/0128 and the GM's reserved 0125/0126.
+
+### Now
+
+Assess and execute the existing pinned OSV lockfile scan and unchanged
+14-day fix-maturity gate before integration. Copy the exact committed lockfile
+to a new private scratch directory, verify its hash against the checkout and
+record scanner image digest, command, actual time, exit code and full report.
+Use the workflow's pinned image
+`ghcr.io/google/osv-scanner-action@sha256:4cc9d6b5a6bb3a81c38c8d1610f6855512ddd1ba5af77083a856f171dbd0d463`
+and existing `scripts/vulnerability-release-gate.mjs`. Scanner operational errors
+are failures, not empty vulnerability results. Preserve the scanner and maturity
+gate output; do not run audit fix or mutate the lockfile. An eligible fix or
+operational blocker requires a separately assessed correction/diagnosis.
+
+### Next
+
+Record verified local qualification and the actual dependency result accurately.
+Obtain final independent implementation and public-prose reviews, confirm ADR
+oversight requirements and coordinate the integration sequence with the GM.
+On the final clean candidate, run the repository's full exact-commit push
+qualification and applicable supported-Node/benchmark checks, preserving their
+outputs. Never manufacture a marker, bypass hooks or substitute local model
+evidence for existing release CI. Assess any failures before changing scope.
+
+### Later
+
+Prepare the reviewable integration artifact only after its required controls
+pass and coordination is settled. No product push, merge or release is part of
+this revision. Preserve proposed/unconfirmed ADR status until explicit oversight
+exists. Chromium 156 compatibility and cloud authentication remain separate.
+
+### Assessment
+
+Independent architecture, JTBD and risk reviews passed the dependency check
+and integration-readiness sequence. Residual risk is 5/25. No new inference,
+automatic remediation, product push, merge or release is authorized.
+
+
+### Assessed operational diagnosis and result
+
+The pinned OSV scan completed with exit 1 and a nonempty vulnerability report.
+The first unchanged maturity-gate command failed operationally: Node fetch
+attempted direct npm-registry connections, which this managed environment cannot
+route. The runtime requires inherited HTTP/HTTPS proxy settings and CA trust.
+Node 24.21.0 supports `--use-env-proxy`; independent architecture, JTBD and
+risk reviews passed rerunning only the unchanged gate
+with that flag, the same scanner report and unchanged limits. Preserve the first
+failure separately. This changes runtime networking configuration, not gate
+logic, scan results, fix maturity or the product lockfile. Any actual eligible
+fix remains blocking and needs its own assessed correction.
+
+
+The unchanged gate passed through that proxy configuration (exit 0). Its report
+still contains five advisories: three Handlebars findings have fixes not yet
+14 days old; braces and http-cache-semantics have no published fix. This is
+policy allowance, not a vulnerability-free result. Scanner report SHA-256:
+`e1e6af0136033f4d2f02127ecc8654de70ab1fee911ee3b93d8e27ecb214f50e`.
+All package versions, resolved URLs and integrity hashes match origin/main;
+only existing development dependencies were exposed directly in the feedback
+workspace. The lockfile hash remains
+`d7fc745345f34832cb06f93202e857b8ea82ff1a00f767b176cd2afec37ab0d3`.
+Final reviews corrected README/ADR wording to distinguish the verified Codex
+path from other fixture configurations. No additional inference is necessary
+for these prose corrections. Exact-candidate qualification remains next.

@@ -44,7 +44,7 @@ Chosen option: **Test-only loopback MCP bridge to native website WebMCP**,
 because it exercises the actual native execution path while preserving the
 semantic harness's one-server application-tool boundary.
 
-The qualified path is Codex or Claude CLI → the sole loopback MCP browser bridge
+The fixture path is a supported CLI → the sole loopback MCP browser bridge
 → native Chromium WebMCP → the actual synthetic demo task or feedback
 adapter/backend. This is test infrastructure, not a new production API or a
 claim of compatibility with Chrome's built-in agent.

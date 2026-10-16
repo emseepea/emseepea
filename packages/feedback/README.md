@@ -151,8 +151,9 @@ GITHUB_SHA="$(git rev-parse HEAD)" EMSEEPEA_CODEX_MODEL="chosen-model" node pack
 Replace `chosen-model` before running. The fixture requires Chromium with the
 native WebMCP API; set `WEBMCP_CHROMIUM_PATH` if a specific executable is needed.
 
-The tested path is Codex or Claude CLI → one loopback MCP browser bridge →
-native Chromium WebMCP → the actual demo task and feedback adapter/backend.
+The verified local path is Codex-local with `gpt-6.1-sol` → one loopback MCP
+browser bridge → native Chromium 154.0.8037.57 WebMCP → the actual demo task and
+feedback adapter/backend.
 The model sees only page-registered application tools. Playwright stays inside
 the fixture; the model receives no browser automation tools.
 
@@ -179,8 +180,11 @@ appended activity. Match its run and source with the complete semantic result;
 native correlation alone is insufficient. Legacy flat summary files and other
 run directories are not evidence for the current invocation.
 
-Missing model, native API or evidence fails closed. No semantic pass is claimed
-here. Local Codex evidence is scoped to this path and does not replace
+Missing model, native API or evidence fails closed. The verified local synthetic
+suite passed all four cases, 12 trials and 36 judgments on the named path; see
+the [qualification record](../../docs/reviews/webmcp-feedback-2026-10-16.md#verified-complete-local-synthetic-suite).
+
+Local Codex evidence is scoped to this path and does not replace
 credentialed Claude release checks or establish Chrome built-in-agent
 compatibility.
 
