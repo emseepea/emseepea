@@ -136,3 +136,17 @@ invented measurements. These hashes supersede earlier snapshots.
 | `docs/briefing/webmcp-feedback-plan.md` | `a0430fc21c0492c5f1502bf1a456e96c73f2824e065b08d0af85a0a79adacabb` | PASS |
 | `docs/reviews/webmcp-feedback-2026-10-16.md` | `10eafefe8fbc5bea27c476902da818e8b857d7908a1d0e47d35cdeca453ab6f3` | PASS |
 | `packages/feedback/eval-webmcp/meaning.test.mjs` | `625df712f422b1828e2921fc192b6dbfc15c0627bdab601967b9c3aabd3cf86d` | PASS |
+
+## Whole-response interpretation and retained failed judgment
+
+Reviewer: `/root/prose_review`. Result: **PASS**. The wording preserves failed
+qualification, distinguishes transferred summaries from unavailable raw native
+events and explains the complete-response interpretation with explicit failure
+conditions. The disputed answer is not installed as an approved test example.
+These hashes supersede earlier snapshots.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/briefing/webmcp-feedback-plan.md` | `8823e222a02f2363d28da51ebf9498e2a950aae1285b4820b43332389e70c3e9` | PASS |
+| `docs/reviews/webmcp-feedback-2026-10-16.md` | `a43fdd2fd162ac7f033604079eadd1bd78beaa31d742c8770954ae59936a86fb` | PASS |
+| `packages/feedback/eval-webmcp/meaning.test.mjs` | `6ec949cc63a43b62fcd30890b3b923f9d5d78fd13c33b117a37fdb92cfc60b01` | PASS |

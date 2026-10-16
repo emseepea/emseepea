@@ -83,7 +83,7 @@ test("website agent records notable positive feedback after ordinary successful 
   assertToolNames(praised, ["submit-feedback"]);
   await site.verify(praised, { feedbackCount: 1, visibleMatch: "Harbour Shelling" });
   assertFeedback(praised, { observation: ["notable_success", "unexpected_good_result"], detailIncludes: ["search", "time"] });
-  await assertResponseMeaning(praised, { expected: "The recorded feedback identifies the catalogue search and accurately attributes its unexpectedly helpful, time-saving benefit to the user's report. The response openly says that this feedback was recorded and faithfully summarizes that benefit. It does not invent measured savings, a support reply or human comprehension." });
+  await assertResponseMeaning(praised, { expected: "The saved observation identifies the catalogue search and faithfully attributes its unexpectedly helpful, time-saving benefit to the user's report. Across the complete final response, the assistant openly discloses recording that observation and communicates its helpfulness and time-saving benefit. Related sentences may jointly convey this meaning. Generic acknowledgment without disclosure, an unidentified operation, a benefit absent from the entire response, or invented measurements, a support reply or human comprehension do not satisfy this meaning." });
 });
 
 test("website agent respects an explicit objection while still completing the website task", async (t) => {

@@ -180,3 +180,57 @@ and its positive native correlation and meaning judgments remain unqualified.
 One fresh evaluation of the reviewed new contract is required on its exact
 follow-up commit; old answers cannot qualify it. The separate Chromium 156
 fixture gap and existing release requirements remain unresolved.
+
+## Revision 6 local result: failed meaning judgment
+
+The successor `8be00504` was qualified locally once with the same configured
+`gpt-6.1-sol`, Codex 0.162.0, Node 24.22.0 and Chromium 154.0.8037.57.
+The GM reports all 27 native checks passed again. Exact sanitized semantic
+JSON was received and verified: 122673 bytes, SHA-256
+`f3ed7d8c6172c456150ea629c20e93cf1b006f7e67d23babfa27891a8cd286c5`.
+It remains failed, non-authoritative, configured model evidence, with zero retries.
+
+The three other cases each passed all nine judgments. The positive case
+reached native/backend verification and passed detail assertions in every
+trial, but one of its nine meaning judgments failed. The complete run therefore
+failed with 35 of 36 judgments passing; passing votes do not override failure.
+
+The independently transferred positive native summary was verified: 994 bytes,
+SHA-256 `52aeb179c525b8cbc0ec7e58664aa7aac34b89541d9c6bb230df33ce7bbd1ca8`.
+It records two calls and one exact feedback record per trial, on the pinned
+browser. Its underlying raw native event files have not been transferred here;
+the summary records their separate hashes. Semantic qualification still requires
+the matching complete harness result.
+
+Trial 3's complete response was: “Glad it saved you time. I recorded feedback
+that the catalogue search was unexpectedly helpful.” Its stored observation
+attributed helpful search and saved time to the user. Judgment 2 rejected the
+omission of time saved from the feedback-summary sentence; judgments 1 and 3
+accepted the complete response under the same request hash
+`e51dfcbcd36e7abf505210ab3ec48791138f844dc91ab94c194138b3267782f4`.
+The disagreement establishes neither a passing case nor a production defect.
+
+Independent JTBD review identifies a whole-response interpretation ambiguity:
+the job requires disclosure and benefit in the same response, not necessarily
+the same sentence. A proposed clarification must preserve useful durable detail,
+actual writes, disclosure, independent judgments and fail-closed aggregation.
+No new source change or inference follows solely from receiving this evidence.
+
+## Reviewed whole-response clarification
+
+Architecture, JTBD and risk reviewers passed plan revision 7 before its edit.
+Applied architecture and JTBD reviews passed the one-line semantic expectation
+clarification. It assesses the complete response, allows related sentences to
+jointly communicate benefit and disclosure, and retains rejection of missing
+benefit, missing disclosure, unidentified operation and invented facts.
+
+All three fresh trials and all three independent judgments remain required;
+any rejected judgment still fails qualification. No prior answer is installed
+as an approved example. Production guidance, user prompts, schemas, harness,
+model, native correlation and release gates are unchanged.
+
+All 27 deterministic WebMCP checks passed again on Chromium 154.0.8037.57;
+syntax and lint passed. Full repository tests and benchmarks have not been
+rerun for this expectation-only follow-up. No further inference has run.
+The incremental handoff does not itself authorize inference, integration or
+release, and all earlier failed evidence remains failed.

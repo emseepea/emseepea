@@ -333,3 +333,58 @@ Independent architecture, JTBD and risk reviews passed revision 6 before its
 dependent edits. Risk assessed the correction and fresh qualification at 5/25
 residual risk. Final implementation, prose and commit-risk review remain
 required before handoff; no fresh inference has run in this cloud checkout.
+
+## Whole-response interpretation — assessed revision 7
+
+### Learning
+
+The verified revision 6 run remains failed. All positive native/backend checks
+and detail assertions passed; eight of nine positive meaning judgments passed.
+One rejected a response that acknowledges time saved in one sentence and
+confirms recorded helpful-search feedback in the next. The other two judges
+accepted the same complete response under an identical request hash.
+
+The verified semantic artifact and positive native summary are retained privately
+with their original failed status and authority labels. See the implementation
+evidence report for hashes and limits. No majority override or unchanged retry
+is proposed. JTBD review finds no requirement for a single-sentence disclosure
+and no established production-guidance defect.
+
+### Now
+
+Assess this narrow interpretation clarification with architecture, JTBD and risk
+reviewers before implementation. In the positive case's meaning expectation,
+explicitly assess the whole response: benefit acknowledgment and disclosure may
+be in separate sentences. Keep the substantive requirements that the saved
+observation identifies the operation and faithfully attributes the benefit to
+the user, and that the complete response discloses recording and communicates
+the notable benefit without invented measurements or human involvement.
+
+Generic acknowledgment without disclosure, an unidentified operation, a benefit
+absent throughout the response, or invented facts still fails. Keep three fresh
+trials, three independent judgments and rejection if any judgment fails.
+No model-facing conversation prompt, production guidance, schema, harness,
+provider, model, native correlation, browser version or release gate changes.
+Do not quote the disputed answer as an approved answer in the test expectation.
+
+### Next
+
+After assessment, make only the reviewed expectation clarification, run syntax,
+lint, native and documentation checks, and obtain applied code/prose/commit-risk
+reviews. Prepare an exact incremental commit and portable handoff. Any further
+qualification must evaluate that new reviewed contract on fresh conversations;
+previous answers and failed judgments remain untouched. No inference execution
+is authorized merely by receipt of the local evidence.
+
+### Later
+
+Reassess the actual outcome and remaining delivery gates, including the separate
+Chromium 156 fixture gap. Keep ADR allocation 0127/0128. Do not push, merge,
+release or claim objective completion from this interpretation clarification.
+
+### Assessment
+
+Independent architecture, JTBD and risk reviews passed revision 7 before its
+dependent edit. Risk assessed preparation of the reviewed incremental handoff
+at 5/25 residual risk. Applied implementation, prose and commit-risk reviews
+remain required. No new inference execution is authorized by these assessments.
