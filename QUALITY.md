@@ -132,6 +132,20 @@ Accessibility Guidelines (WCAG) conformance.
   events. Selection instructions, JSON call plans, answer wrappers, prepared
   MCP material, shell, filesystem, browser, tool search, plugins, ambient MCP
   servers, and unrelated tools are forbidden.
+- The optional native WebMCP semantic fixture may internally use Playwright to
+  discover and execute the synthetic website's native WebMCP tools. The model
+  still connects to one loopback MCP bridge and sees only the page-registered
+  application tools; it receives no browser, shell or other ambient tools.
+  Correlate native provider tool events with real native WebMCP results, visible
+  task state and authoritative fixture backend writes. Keep user messages
+  unchanged, three fresh trials, three independent tool-free meaning judgments,
+  no model coaching and no semantic retries. Fail closed when the chosen model,
+  native API or correlation evidence is unavailable. Local Codex evidence is
+  scoped to this CLI-to-native-browser path and is not release authority or a
+  claim of Chrome built-in-agent compatibility. The existing credentialed
+  Claude release requirements remain in force. This fixture may run separately
+  with explicit local opt-in; it stays out of ordinary tests and the Node.js
+  compatibility matrix and does not replace support-conversation qualification.
 - Resources and prompts retain deterministic protocol tests. They must not be
   described as semantically qualified until a supported provider offers an
   automatable native journey that represents how users select and consume them.

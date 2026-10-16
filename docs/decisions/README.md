@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 120 decisions: 71 current and 49 historical.
+This project has 122 decisions: 73 current and 49 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -86,6 +86,8 @@ recorded separately.
 - [ADR-0121: Exact-Head Qualification for Automated Trunk Mergeback](0121-exact-head-qualification-for-automated-trunk-mergeback.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0122: Submit Feedback as the Sole Model Context Protocol (MCP) Feedback Creation Operation](0122-submit-feedback-as-the-sole-mcp-feedback-creation-operation.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0124: Opt-in Native ChatGPT Browser Journeys with Bounded Archived Transcripts](0124-opt-in-native-chatgpt-browser-journeys-with-bounded-archived-transcripts.proposed.md): Proposed; human review confirmed.
+- [ADR-0127: Optional WebMCP Feedback through an Existing MCP Client](0127-optional-webmcp-feedback-through-existing-mcp.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0128: Test-only Native WebMCP Browser Bridge Qualification](0128-test-only-native-webmcp-browser-bridge-qualification.proposed.md): Proposed; human review unconfirmed.
 
 ### Historical decisions
 
@@ -2689,3 +2691,36 @@ Chosen option: **"Opt-in native journeys with bounded archived synthetic transcr
 - The disposable plugin was permanently deleted. The endpoint, tunnel, server, and fixture store are absent.
 - Both exact synthetic conversations produced authoritative `archived: true` readback. This confirms reversible archive, not permanent deletion.
 - The retained local evidence omits raw prompts, replies, account identity, plugin identity, and endpoint location.
+
+### [ADR-0127: Optional WebMCP Feedback through an Existing MCP Client](0127-optional-webmcp-feedback-through-existing-mcp.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+
+#### ADR-0127 Decision
+
+Chosen option: **Bridge one tool through an existing connected MCP client**, because it preserves the server's feedback contract and authorization through one optional browser adapter.
+
+#### ADR-0127 Checks
+
+- Qualification requires deterministic adapter and server boundary checks, a browser-bundled official MCP client, and native WebMCP calls from a synthetic website using the same HTTP server/backend as an independent MCP client.
+- Record exact browser versions and results with the delivery evidence. The repository example uses synthetic, process-local records.
+- Native API tests alone do not qualify browser-agent behaviour. Separate native agent journeys must establish notable feedback recognition, disclosure, objection handling, duplicate avoidance and observable task continuation.
+- Missing evidence remains unqualified; this decision makes no closed-loop WebMCP support-conversation or published-release claim.
+
+### [ADR-0128: Test-only Native WebMCP Browser Bridge Qualification](0128-test-only-native-webmcp-browser-bridge-qualification.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+
+#### ADR-0128 Decision
+
+Chosen option: **Test-only loopback MCP bridge to native website WebMCP**, because it exercises the actual native execution path while preserving the semantic harness's one-server application-tool boundary.
+
+#### ADR-0128 Checks
+
+- Verify the model sees exactly the page-registered application tools through one loopback server and has no ambient browser or shell access.
+- Verify real native discovery/execution and correlation of provider events, native results, visible task state and backend writes.
+- Verify unchanged prompts, three fresh trials, independent tool-free judges, no model coaching, no semantic retries and fail-closed missing evidence.
+- Record the chosen model, browser version and matching semantic/native results before claiming a scoped pass. Keep unexecuted or failed slices unqualified.
+- Preserve the existing Claude release gate and distinguish local Codex results from release qualification and Chrome built-in-agent support.
