@@ -4144,19 +4144,62 @@ async function runWithDeadline<Result>(
   work: (signal: AbortSignal) => Result | Promise<Result>,
 ): Promise<Result> {
   const remainingMs = deadlineMs - Date.now();
-  const deadlineSignal = remainingMs > 0 ? AbortSignal.timeout(remainingMs) : AbortSignal.abort();
   const invocationSignal = requestOperations.getStore()?.signal;
-  const signal = AbortSignal.any([
-    requestSignal,
-    deadlineSignal,
-    ...(invocationSignal ? [invocationSignal] : []),
-  ]);
   return new Promise<Result>((resolve, reject) => {
-    const onAbort = () => reject(new Error("Tool execution cancelled"));
+    const controller = new AbortController();
+    const signal = controller.signal;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let settled = false;
+    const abortFrom = (source: AbortSignal) => {
+      if (!signal.aborted) controller.abort(source.reason);
+    };
+    const onRequestAbort = () => abortFrom(requestSignal);
+    const onInvocationAbort = () => {
+      if (invocationSignal) abortFrom(invocationSignal);
+    };
+    const onAbort = () => finishReject(new Error("Tool execution cancelled"));
+    const cleanup = () => {
+      if (timer !== undefined) clearTimeout(timer);
+      requestSignal.removeEventListener("abort", onRequestAbort);
+      if (invocationSignal && invocationSignal !== requestSignal) {
+        invocationSignal.removeEventListener("abort", onInvocationAbort);
+      }
+      signal.removeEventListener("abort", onAbort);
+    };
+    function finishResolve(value: Result) {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(value);
+    }
+    function finishReject(error: unknown) {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    }
+
+    if (requestSignal.aborted) {
+      abortFrom(requestSignal);
+    } else if (remainingMs <= 0) {
+      controller.abort(new DOMException("The operation was aborted due to timeout", "TimeoutError"));
+    } else if (invocationSignal?.aborted) {
+      abortFrom(invocationSignal);
+    } else {
+      requestSignal.addEventListener("abort", onRequestAbort, { once: true });
+      if (invocationSignal && invocationSignal !== requestSignal) {
+        invocationSignal.addEventListener("abort", onInvocationAbort, { once: true });
+      }
+      timer = setTimeout(() => {
+        if (!signal.aborted) {
+          controller.abort(new DOMException("The operation was aborted due to timeout", "TimeoutError"));
+        }
+      }, remainingMs);
+    }
+
     if (signal.aborted) return onAbort();
     signal.addEventListener("abort", onAbort, { once: true });
-    Promise.resolve().then(() => work(signal)).then(resolve, reject)
-      .finally(() => signal.removeEventListener("abort", onAbort));
+    Promise.resolve().then(() => work(signal)).then(finishResolve, finishReject);
   });
 }
 
