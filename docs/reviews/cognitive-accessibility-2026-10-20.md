@@ -14,3 +14,22 @@ change and its evidence boundaries clearly. No required correction remains.
 
 This review covers technical source prose only. It does not verify the
 underlying facts, rendered WCAG conformance, or full release qualification.
+
+## Ratified Events delivery contracts
+
+Reviewer: independent cognitive-accessibility specialist.
+
+Result: **PASS**. The two ratified decisions use descriptive headings,
+consistent terminology, and explicit evidence boundaries. The generated
+decision index preserves those distinctions. No required correction remains.
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `docs/decisions/0125-atomic-events-publication-with-durable-source-identity.proposed.md` | `cf17e8ef676b1debcefad87356a479e99137f989b0856fb274aed52683e05645` | PASS |
+| `docs/decisions/0126-explicit-external-events-delivery-ownership.proposed.md` | `78af66e2d3fbdcdc03972d687fec900c94bb7c8468c5616dd8031ae052884a94` | PASS |
+| `docs/decisions/README.md` | `2196eae57ee75840069e8c52d4f07f9c1bb5474042ffb8fa6663d2c8b39133e4` | PASS |
+
+This review covers source content only. It does not verify rendered
+navigation, screen-reader behaviour, implementation, publication, or
+production acceptance. Dense technical concepts should be explained in a
+simpler implementation guide when the corresponding runtime is documented.

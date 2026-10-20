@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 120 decisions: 71 current and 49 historical.
+This project has 122 decisions: 73 current and 49 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -86,6 +86,8 @@ recorded separately.
 - [ADR-0121: Exact-Head Qualification for Automated Trunk Mergeback](0121-exact-head-qualification-for-automated-trunk-mergeback.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0122: Submit Feedback as the Sole Model Context Protocol (MCP) Feedback Creation Operation](0122-submit-feedback-as-the-sole-mcp-feedback-creation-operation.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0124: Opt-in Native ChatGPT Browser Journeys with Bounded Archived Transcripts](0124-opt-in-native-chatgpt-browser-journeys-with-bounded-archived-transcripts.proposed.md): Proposed; human review confirmed.
+- [ADR-0125: Atomic Events Publication with Durable Source Identity](0125-atomic-events-publication-with-durable-source-identity.proposed.md): Proposed; human review confirmed.
+- [ADR-0126: Explicit External Events Delivery Ownership](0126-explicit-external-events-delivery-ownership.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2689,3 +2691,40 @@ Chosen option: **"Opt-in native journeys with bounded archived synthetic transcr
 - The disposable plugin was permanently deleted. The endpoint, tunnel, server, and fixture store are absent.
 - Both exact synthetic conversations produced authoritative `archived: true` readback. This confirms reversible archive, not permanent deletion.
 - The retained local evidence omits raw prompts, replies, account identity, plugin identity, and endpoint location.
+
+### [ADR-0125: Atomic Events Publication with Durable Source Identity](0125-atomic-events-publication-with-durable-source-identity.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0125 Decision
+
+Chosen option: **"Atomic publication with durable source identity"**, because source changes and their fixed notification outcomes must survive failure together.
+
+#### ADR-0125 Checks
+
+- The business change, source receipt and frozen eligible intents commit together, including a durable zero-recipient outcome.
+- Identical replay preserves source, delivery and callback identities; conflicting replay fails closed.
+- Caller-owned transactions retain ownership; renewal, new subscription generations, expiry and deletion respect the recorded audience.
+- Completed intents do not become pending again within the retained replay-protection boundary.
+- Privacy erasure and replay-protection limits remain explicit; delivery-time authorization can only narrow eligibility.
+- Successful actual production use demonstrates these properties before the decision becomes accepted; synthetic tests, CI and publication alone do not establish acceptance.
+
+### [ADR-0126: Explicit External Events Delivery Ownership](0126-explicit-external-events-delivery-ownership.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0126 Decision
+
+Chosen option: **"Explicit external ownership with optional task composition"**, because request-driven services need delivery that does not depend on idle process CPU.
+
+#### ADR-0126 Checks
+
+- External mode creates no SDK delivery timer, while basic servers and existing internal-mode callers retain their documented behavior.
+- Configured worker and reconciliation invocation require independent authenticated authority and fixed namespace before database or callback work.
+- Normal task dispatch and scheduled bounded recovery deliver eligible committed intents while the request service is idle.
+- Durable reservations, stable identities and fencing preserve the four-attempt cap through crashes, ambiguity and competing invocations.
+- Pause, cancellation, deadlines and shutdown retain the documented in-flight limits and checked callback protections.
+- Native client execution and business effects have independent evidence; callback acceptance is never substituted for them.
+- Successful actual production use demonstrates the architecture before acceptance; synthetic qualification, CI and publication alone are insufficient.
