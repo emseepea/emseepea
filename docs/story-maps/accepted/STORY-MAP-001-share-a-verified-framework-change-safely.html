@@ -7,9 +7,9 @@
   <meta name="story-map-id" content="STORY-MAP-001">
   <meta name="status" content="accepted">
   <meta name="persona" content="framework-maintainer">
-  <meta name="problems" content="P005,P017">
-  <meta name="rfcs" content="RFC-001,RFC-003">
-  <meta name="jtbd" content="JTBD-101">
+  <meta name="problems" content="P005,P017,P022">
+  <meta name="rfcs" content="RFC-001,RFC-003,RFC-004">
+  <meta name="jtbd" content="JTBD-100,JTBD-101">
   <meta name="reported" content="2026-09-24">
   <meta name="decision-makers" content="Tom Howard">
   <meta name="human-oversight" content="confirmed">
@@ -19,9 +19,9 @@
 <body>
   <main>
     <h1 id="story-map-title">Share a verified framework change safely</h1>
-    <p class="orient"><strong>Agreed.</strong> 2 releases, 2 stories, one release per row.</p>
-    <div id="story-map"><div class="scroll" tabindex="0" role="region" aria-label="Story map grid"><table class="map"><caption>Share a verified framework change safely — 5 journey activities across 2 releases</caption><thead><tr><td class="corner"></td><th class="act" scope="col">Prepare the revision</th><th class="act" scope="col">Establish clean dependencies</th><th class="act" scope="col">Prove the exact commit</th><th class="act" scope="col">Share the revision</th><th class="act" scope="col">Confirm the remote checks</th></tr></thead><tbody><tr><th class="slice" scope="row"><span class="badge b-live"><span class="b-glyph" aria-hidden="true">✓</span>Delivered: RFC-001</span> <span class="s-name">Reject unqualified branch pushes — delivered with exact-commit evidence</span><span class="s-problems">closes <a href="../../problems/closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md" class="ref-link">P005</a></span></th><td class="cell empty"><span class="vh">No stories for Prepare the revision in Reject unqualified branch pushes — delivered with exact-commit evidence.</span></td><td class="cell empty"><span class="vh">No stories for Establish clean dependencies in Reject unqualified branch pushes — delivered with exact-commit evidence.</span></td><td class="cell empty"><span class="vh">No stories for Prove the exact commit in Reject unqualified branch pushes — delivered with exact-commit evidence.</span></td><td class="cell"><ul class="tasks" role="list"><li><div class="task" data-story-id="STORY-001" data-rfc="RFC-001" data-jtbd="JTBD-101" data-status="done"><div class="t-status ts-done"><span class="ts-glyph" aria-hidden="true">✓</span>Done</div><a href="../../stories/done/STORY-001-qualify-each-outgoing-branch-tip-before-push.md" class="ref-link"><span class="t-title">Qualify each outgoing branch tip before push</span></a><div class="t-value"><div class="v-line v-inorder"><span class="v-lead">In order to </span>keep locally reproducible failures out of remote continuous integration</div><div class="v-line v-asa"><span class="v-lead">as </span>a framework maintainer</div><div class="v-line v-iwant"><span class="v-lead">I want </span>each outgoing branch tip checked from a clean install before push.</div></div><div class="t-ref">Traces: <a href="../../decisions/0106-clean-install-exact-commit-branch-push-gate.superseded.md" class="ref-link">ADR-0106</a></div></div></li></ul></td><td class="cell empty"><span class="vh">No stories for Confirm the remote checks in Reject unqualified branch pushes — delivered with exact-commit evidence.</span></td></tr><tr><th class="slice" scope="row"><span class="badge b-next"><span class="b-glyph" aria-hidden="true">→</span>Proposed: RFC-003</span> <span class="s-name">Resolve the vulnerable lockfile dependency</span><span class="s-problems">closes <a href="../../problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md" class="ref-link">P017</a></span></th><td class="cell empty"><span class="vh">No stories for Prepare the revision in Resolve the vulnerable lockfile dependency.</span></td><td class="cell"><ul class="tasks" role="list"><li><div class="task" data-story-id="STORY-003" data-rfc="RFC-003" data-jtbd="JTBD-101" data-status="in-progress"><div class="t-status ts-prog"><span class="ts-glyph" aria-hidden="true">◑</span>In progress</div><a href="../../stories/in-progress/STORY-003-resolve-the-vulnerable-lockfile-dependency.md" class="ref-link"><span class="t-title">Resolve the vulnerable lockfile dependency</span></a><div class="t-value"><div class="v-line v-inorder"><span class="v-lead">In order to </span>keep safe releases moving</div><div class="v-line v-asa"><span class="v-lead">as </span>a framework maintainer</div><div class="v-line v-iwant"><span class="v-lead">I want </span>the locked development dependency updated within its compatible range and checked by the existing security and exact-commit gates.</div></div></div></li></ul></td><td class="cell empty"><span class="vh">No stories for Prove the exact commit in Resolve the vulnerable lockfile dependency.</span></td><td class="cell empty"><span class="vh">No stories for Share the revision in Resolve the vulnerable lockfile dependency.</span></td><td class="cell empty"><span class="vh">No stories for Confirm the remote checks in Resolve the vulnerable lockfile dependency.</span></td></tr></tbody></table></div></div>
-<p class="traces" id="story-map-traces"><span class="tr-group"><strong>Jobs:</strong> <a href="../../jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md" class="ref-link">JTBD-101</a></span></p>
+    <p class="orient"><strong>Agreed.</strong> 3 releases, 3 stories, one release per row.</p>
+    <div id="story-map"><div class="scroll" tabindex="0" role="region" aria-label="Story map grid"><table class="map"><caption>Share a verified framework change safely — 5 journey activities across 3 releases</caption><thead><tr><td class="corner"></td><th class="act" scope="col">Prepare the revision</th><th class="act" scope="col">Establish clean dependencies</th><th class="act" scope="col">Prove the exact commit</th><th class="act" scope="col">Share the revision</th><th class="act" scope="col">Confirm the remote checks</th></tr></thead><tbody><tr><th class="slice" scope="row"><span class="badge b-live"><span class="b-glyph" aria-hidden="true">✓</span>Delivered: RFC-001</span> <span class="s-name">Reject unqualified branch pushes — delivered with exact-commit evidence</span><span class="s-problems">closes <a href="../../problems/closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md" class="ref-link">P005</a></span></th><td class="cell empty"><span class="vh">No stories for Prepare the revision in Reject unqualified branch pushes — delivered with exact-commit evidence.</span></td><td class="cell empty"><span class="vh">No stories for Establish clean dependencies in Reject unqualified branch pushes — delivered with exact-commit evidence.</span></td><td class="cell empty"><span class="vh">No stories for Prove the exact commit in Reject unqualified branch pushes — delivered with exact-commit evidence.</span></td><td class="cell"><ul class="tasks" role="list"><li><div class="task" data-story-id="STORY-001" data-rfc="RFC-001" data-jtbd="JTBD-101" data-status="done"><div class="t-status ts-done"><span class="ts-glyph" aria-hidden="true">✓</span>Done</div><a href="../../stories/done/STORY-001-qualify-each-outgoing-branch-tip-before-push.md" class="ref-link"><span class="t-title">Qualify each outgoing branch tip before push</span></a><div class="t-value"><div class="v-line v-inorder"><span class="v-lead">In order to </span>keep locally reproducible failures out of remote continuous integration</div><div class="v-line v-asa"><span class="v-lead">as </span>a framework maintainer</div><div class="v-line v-iwant"><span class="v-lead">I want </span>each outgoing branch tip checked from a clean install before push.</div></div><div class="t-ref">Traces: <a href="../../decisions/0106-clean-install-exact-commit-branch-push-gate.superseded.md" class="ref-link">ADR-0106</a></div></div></li></ul></td><td class="cell empty"><span class="vh">No stories for Confirm the remote checks in Reject unqualified branch pushes — delivered with exact-commit evidence.</span></td></tr><tr><th class="slice" scope="row"><span class="badge b-next"><span class="b-glyph" aria-hidden="true">→</span>Proposed: RFC-003</span> <span class="s-name">Resolve the vulnerable lockfile dependency</span><span class="s-problems">closes <a href="../../problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md" class="ref-link">P017</a></span></th><td class="cell empty"><span class="vh">No stories for Prepare the revision in Resolve the vulnerable lockfile dependency.</span></td><td class="cell"><ul class="tasks" role="list"><li><div class="task" data-story-id="STORY-003" data-rfc="RFC-003" data-jtbd="JTBD-101" data-status="in-progress"><div class="t-status ts-prog"><span class="ts-glyph" aria-hidden="true">◑</span>In progress</div><a href="../../stories/in-progress/STORY-003-resolve-the-vulnerable-lockfile-dependency.md" class="ref-link"><span class="t-title">Resolve the vulnerable lockfile dependency</span></a><div class="t-value"><div class="v-line v-inorder"><span class="v-lead">In order to </span>keep safe releases moving</div><div class="v-line v-asa"><span class="v-lead">as </span>a framework maintainer</div><div class="v-line v-iwant"><span class="v-lead">I want </span>the locked development dependency updated within its compatible range and checked by the existing security and exact-commit gates.</div></div></div></li></ul></td><td class="cell empty"><span class="vh">No stories for Prove the exact commit in Resolve the vulnerable lockfile dependency.</span></td><td class="cell empty"><span class="vh">No stories for Share the revision in Resolve the vulnerable lockfile dependency.</span></td><td class="cell empty"><span class="vh">No stories for Confirm the remote checks in Resolve the vulnerable lockfile dependency.</span></td></tr><tr><th class="slice" scope="row"><span class="badge b-next"><span class="b-glyph" aria-hidden="true">→</span>Proposed: RFC-004</span> <span class="s-name">Restore Node 22 accepted-path qualification</span><span class="s-problems">closes <a href="../../problems/open/022-accepted-path-cpu-budget-is-unqualified-on-the-node-22-ci-profile.md" class="ref-link">P022</a></span></th><td class="cell empty"><span class="vh">No stories for Prepare the revision in Restore Node 22 accepted-path qualification.</span></td><td class="cell empty"><span class="vh">No stories for Establish clean dependencies in Restore Node 22 accepted-path qualification.</span></td><td class="cell"><ul class="tasks" role="list"><li><div class="task" data-story-id="STORY-004" data-rfc="RFC-004" data-jtbd="JTBD-100" data-status="draft"><div class="t-status ts-draft">Draft</div><a href="../../stories/draft/STORY-004-reduce-accepted-path-deadline-overhead.md" class="ref-link"><span class="t-title">Reduce accepted-path deadline overhead</span></a><div class="t-value"><div class="v-line v-inorder"><span class="v-lead">In order to </span>keep exact-source releases flowing</div><div class="v-line v-asa"><span class="v-lead">as </span>a framework maintainer</div><div class="v-line v-iwant"><span class="v-lead">I want </span>accepted requests to retain cancellation and deadline safety without unnecessary allocation pressure on the supported Node 22 runtime.</div></div></div></li></ul></td><td class="cell empty"><span class="vh">No stories for Share the revision in Restore Node 22 accepted-path qualification.</span></td><td class="cell empty"><span class="vh">No stories for Confirm the remote checks in Restore Node 22 accepted-path qualification.</span></td></tr></tbody></table></div></div>
+<p class="traces" id="story-map-traces"><span class="tr-group"><strong>Jobs:</strong> <a href="../../jtbd/framework-maintainer/JTBD-100-extend-the-supported-protocol.proposed.md" class="ref-link">JTBD-100</a>, <a href="../../jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md" class="ref-link">JTBD-101</a></span></p>
   </main>
 
 
@@ -69,6 +69,11 @@
       "id": "refresh-vulnerable-lockfile",
       "name": "Resolve the vulnerable lockfile dependency",
       "rfc": "RFC-003"
+    },
+    {
+      "id": "repair-node22-deadline-overhead",
+      "name": "Restore Node 22 accepted-path qualification",
+      "rfc": "RFC-004"
     }
   ],
   "tasks": [
@@ -88,10 +93,19 @@
       "rfc": "RFC-003",
       "jtbd": "JTBD-101",
       "storyId": "STORY-003"
+    },
+    {
+      "activity": "prove",
+      "release": "repair-node22-deadline-overhead",
+      "title": "Reduce accepted-path deadline overhead",
+      "rfc": "RFC-004",
+      "jtbd": "JTBD-100",
+      "storyId": "STORY-004"
     }
   ],
   "traces": {
     "jtbd": [
+      "JTBD-100",
       "JTBD-101"
     ]
   }
@@ -101,7 +115,8 @@
 {
   "rows": {
     "reject-unqualified-pushes": "delivered",
-    "refresh-vulnerable-lockfile": "proposed"
+    "refresh-vulnerable-lockfile": "proposed",
+    "repair-node22-deadline-overhead": "proposed"
   },
   "rowProblems": {
     "reject-unqualified-pushes": [
@@ -109,15 +124,20 @@
     ],
     "refresh-vulnerable-lockfile": [
       "P017"
+    ],
+    "repair-node22-deadline-overhead": [
+      "P022"
     ]
   },
   "mapProblems": [
     "P005",
-    "P017"
+    "P017",
+    "P022"
   ],
   "status": {
     "STORY-001": "done",
-    "STORY-003": "in-progress"
+    "STORY-003": "in-progress",
+    "STORY-004": "draft"
   },
   "values": {
     "STORY-001": {
@@ -163,15 +183,40 @@
           "t": "the locked development dependency updated within its compatible range and checked by the existing security and exact-commit gates."
         }
       ]
+    },
+    "STORY-004": {
+      "leads": [
+        "In order to",
+        "as",
+        "I want"
+      ],
+      "value": [
+        {
+          "t": "keep exact-source releases flowing"
+        }
+      ],
+      "who": [
+        {
+          "t": "a framework maintainer"
+        }
+      ],
+      "want": [
+        {
+          "t": "accepted requests to retain cancellation and deadline safety without unnecessary allocation pressure on the supported Node 22 runtime."
+        }
+      ]
     }
   },
   "hrefs": {
     "STORY-001": "../../stories/done/STORY-001-qualify-each-outgoing-branch-tip-before-push.md",
     "STORY-003": "../../stories/in-progress/STORY-003-resolve-the-vulnerable-lockfile-dependency.md",
+    "STORY-004": "../../stories/draft/STORY-004-reduce-accepted-path-deadline-overhead.md",
     "JTBD-101": "../../jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md",
     "ADR-0106": "../../decisions/0106-clean-install-exact-commit-branch-push-gate.superseded.md",
+    "JTBD-100": "../../jtbd/framework-maintainer/JTBD-100-extend-the-supported-protocol.proposed.md",
     "P005": "../../problems/closed/005-branch-push-is-ungated-so-untested-changes-reach-ci.md",
-    "P017": "../../problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md"
+    "P017": "../../problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md",
+    "P022": "../../problems/open/022-accepted-path-cpu-budget-is-unqualified-on-the-node-22-ci-profile.md"
   }
 }
   </script>

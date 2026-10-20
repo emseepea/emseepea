@@ -10,6 +10,7 @@ Active stories are listed by story, problem, job, release slice, and story map.
 
 | ID | Title | Problems | JTBD | RFCs | Story Maps | Effort | Accepted by |
 |----|-------|----------|------|------|------------|--------|-------------|
+| STORY-004 | [Reduce Accepted-Path Deadline Overhead](draft/STORY-004-reduce-accepted-path-deadline-overhead.md) | [P022](../problems/open/022-accepted-path-cpu-budget-is-unqualified-on-the-node-22-ci-profile.md) | [JTBD-100](../jtbd/framework-maintainer/JTBD-100-extend-the-supported-protocol.proposed.md) | RFC-004 | [STORY-MAP-001](../story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html) | S | Pending map ratification |
 | STORY-003 | [Resolve the Vulnerable Lockfile Dependency](in-progress/STORY-003-resolve-the-vulnerable-lockfile-dependency.md) | [P017](../problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md) | [JTBD-101](../jtbd/framework-maintainer/JTBD-101-publish-installable-packages-safely.proposed.md) | RFC-003 | [STORY-MAP-001](../story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html) | S | Tom Howard |
 
 ## Done
