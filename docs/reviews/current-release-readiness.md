@@ -45,6 +45,14 @@ Full qualification, benchmarks, exact-commit Quality, semantic release checks,
 publication, registry verification and merge-back remain required. No new
 publication is claimed here.
 
+### Current planned publication
+
+Changesets currently plans `@emseepea/testing` 0.26.1 and
+`@emseepea/website` 0.0.12. `@emseepea/website` is private and is not published
+to npm. The current public npm package list is:
+
+- `@emseepea/testing@0.26.1`
+
 ## Optional Events store conformance helper
 
 Status: **RISK REVIEWED; QUALIFICATION INCOMPLETE**. This increment adds
@@ -57,10 +65,11 @@ native client execution, or production readiness. The two-connection SQLite
 fixture runs in one process. Framework serving code, benchmarks, dependency
 lockfile, and release controls do not change.
 
-Changesets computes testing 0.26.0 and eleven initializer patches to 0.1.21.
-The generated starters retain the testing dependency, so they release together.
-No package version is changed by hand. Architecture and jobs-to-be-done scope
-reviews passed; the public guide and Changeset passed specialist prose review.
+At the time of this retained evidence, Changesets computed testing 0.26.0 and
+eleven initializer patches to 0.1.21. The generated starters retained the
+testing dependency, so they released together. No package version was changed
+by hand. Architecture and jobs-to-be-done scope reviews passed; the public guide
+and Changeset passed specialist prose review.
 
 ### Retained evidence and failures
 
@@ -101,20 +110,22 @@ to commit, push, or release.
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
 
-### Planned package set
+### Retained earlier package set
 
-- `@emseepea/testing@0.26.0`
-- `@emseepea/create-api-backed-server@0.1.21`
-- `@emseepea/create-database-schema-server@0.1.21`
-- `@emseepea/create-html-ui-server@0.1.21`
-- `@emseepea/create-mongodb-backed-server@0.1.21`
-- `@emseepea/create-multi-instance-postgres-server@0.1.21`
-- `@emseepea/create-openapi-backed-server@0.1.21`
-- `@emseepea/create-progress-streaming-server@0.1.21`
-- `@emseepea/create-react-ui-server@0.1.21`
-- `@emseepea/create-resources-and-prompts-server@0.1.21`
-- `@emseepea/create-soap-backed-server@0.1.21`
-- `@emseepea/create-tool-server@0.1.21`
+| Package | Version |
+| --- | --- |
+| `@emseepea/testing` | `0.26.0` |
+| `@emseepea/create-api-backed-server` | `0.1.21` |
+| `@emseepea/create-database-schema-server` | `0.1.21` |
+| `@emseepea/create-html-ui-server` | `0.1.21` |
+| `@emseepea/create-mongodb-backed-server` | `0.1.21` |
+| `@emseepea/create-multi-instance-postgres-server` | `0.1.21` |
+| `@emseepea/create-openapi-backed-server` | `0.1.21` |
+| `@emseepea/create-progress-streaming-server` | `0.1.21` |
+| `@emseepea/create-react-ui-server` | `0.1.21` |
+| `@emseepea/create-resources-and-prompts-server` | `0.1.21` |
+| `@emseepea/create-soap-backed-server` | `0.1.21` |
+| `@emseepea/create-tool-server` | `0.1.21` |
 
 ### Required delivery evidence
 
