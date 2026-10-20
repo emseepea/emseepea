@@ -10,10 +10,16 @@ change and its evidence boundaries clearly. No required correction remains.
 | File | SHA-256 | Result |
 | --- | --- | --- |
 | `.changeset/native-claude-failure-categories.md` | `6b3db67f6cc1ba3a05d9fe21a180839921d9ce2dcf517cfb3687ad91e8400c99` | PASS |
-| `docs/reviews/current-release-readiness.md` | `1dfbb1653f80243b322e166b3756d39a4bdee9bd1bf677b301c0302545ad74b8` | PASS |
+| `docs/reviews/current-release-readiness.md` | `fa4de8ab4b8ab446598fd3b04d4df81c2be4f96dd6ecefe1f46e8cf4881239fe` | PASS |
 
 This review covers technical source prose only. It does not verify the
 underlying facts, rendered WCAG conformance, or full release qualification.
+
+The updated planned-publication section was re-reviewed. Its introductory
+summary, explicit public package list and private website distinction are
+clear. Historical package sets remain separately labeled. No blocking clarity
+issue remains under COGA guidance and the Markdown Accessibility Extension
+(`accessibility-agents-markdown`).
 
 ## Ratified Events delivery contracts
 
@@ -50,3 +56,20 @@ Extension (`accessibility-agents-markdown`).
 
 This review covers the release note's source prose only. It does not verify
 runtime behavior, rendered WCAG conformance, publication, or production use.
+
+## Initializer starter alignment release note
+
+Reviewer: independent cognitive-accessibility specialist.
+
+Result: **PASS**. The short release note identifies generated starter
+dependencies across all initializer packages and explains their alignment
+with the server release. No blocking
+clarity issue remains under COGA guidance and the Markdown Accessibility
+Extension (`accessibility-agents-markdown`).
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/align-tool-server-starter.md` | `198ade1965557f055b41877966e7cb906fdd42799123d4e99e6f8ac28be47364` | PASS |
+
+This review covers source prose only. It does not verify generated dependency
+versions, runtime behavior, publication, or rendered WCAG conformance.

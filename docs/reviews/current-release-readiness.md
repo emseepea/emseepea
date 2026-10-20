@@ -47,11 +47,31 @@ publication is claimed here.
 
 ### Current planned publication
 
-Changesets currently plans `@emseepea/testing` 0.26.1 and
-`@emseepea/website` 0.0.12. `@emseepea/website` is private and is not published
-to npm. The current public npm package list is:
+The current Changesets plan includes `@emseepea/server` 0.24.0 for the external
+Events lifecycle release. All eleven initializer packages are planned for
+0.1.22 patch releases so their generated starter dependencies remain aligned.
+The plan also retains `@emseepea/testing` 0.26.1, `@emseepea/feedback` 0.10.3,
+`@emseepea/react` 0.4.9, `@emseepea/svelte` 0.2.9, and private
+`@emseepea/website` 0.0.12. The website package is not published to npm.
 
+The planned public npm package list is:
+
+- `@emseepea/server@0.24.0`
 - `@emseepea/testing@0.26.1`
+- `@emseepea/feedback@0.10.3`
+- `@emseepea/react@0.4.9`
+- `@emseepea/svelte@0.2.9`
+- `@emseepea/create-api-backed-server@0.1.22`
+- `@emseepea/create-database-schema-server@0.1.22`
+- `@emseepea/create-html-ui-server@0.1.22`
+- `@emseepea/create-mongodb-backed-server@0.1.22`
+- `@emseepea/create-multi-instance-postgres-server@0.1.22`
+- `@emseepea/create-openapi-backed-server@0.1.22`
+- `@emseepea/create-progress-streaming-server@0.1.22`
+- `@emseepea/create-react-ui-server@0.1.22`
+- `@emseepea/create-resources-and-prompts-server@0.1.22`
+- `@emseepea/create-soap-backed-server@0.1.22`
+- `@emseepea/create-tool-server@0.1.22`
 
 ## Optional Events store conformance helper
 
