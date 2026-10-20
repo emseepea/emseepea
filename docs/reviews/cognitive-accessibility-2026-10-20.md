@@ -33,3 +33,20 @@ This review covers source content only. It does not verify rendered
 navigation, screen-reader behaviour, implementation, publication, or
 production acceptance. Dense technical concepts should be explained in a
 simpler implementation guide when the corresponding runtime is documented.
+
+## External Events lifecycle release note
+
+Reviewer: independent cognitive-accessibility specialist.
+
+Result: **PASS**. The release note identifies the optional capability, the
+adopter benefit, the conditions that reject unsafe work, and compatibility
+with existing configuration. No blocking clarity issue or required prose
+correction remains under COGA guidance and the Markdown Accessibility
+Extension (`accessibility-agents-markdown`).
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/add-external-events-lifecycle.md` | `b6ff4315e36e0f0a03d662cddcf84f74441710b956356804135344eb141090e9` | PASS |
+
+This review covers the release note's source prose only. It does not verify
+runtime behavior, rendered WCAG conformance, publication, or production use.

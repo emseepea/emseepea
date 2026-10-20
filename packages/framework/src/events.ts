@@ -147,61 +147,9 @@ export function createMcpEventRuntime(
       if (timer) clearTimeout(timer);
     }
   };
-  const names = new Set<string>();
-  const definitions = Object.freeze(options.definitions.map((definition) => {
-    if (!definition || typeof definition.name !== "string" ||
-        !/^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$/.test(definition.name) ||
-        names.has(definition.name) || typeof definition.description !== "string" ||
-        !definition.description.trim() || typeof definition.matches !== "function" ||
-        !(definition.inputSchema instanceof z.ZodType) ||
-        !(definition.payloadSchema instanceof z.ZodType)) {
-      throw new TypeError("events require unique named definitions with schemas and a matcher");
-    }
-    names.add(definition.name);
-    const inputSchema = z.toJSONSchema(definition.inputSchema);
-    const payloadSchema = z.toJSONSchema(definition.payloadSchema);
-    if (!inputSchema || typeof inputSchema !== "object" || Array.isArray(inputSchema) ||
-        inputSchema.type !== "object" || !payloadSchema || typeof payloadSchema !== "object" ||
-        Array.isArray(payloadSchema) || payloadSchema.type !== "object") {
-      throw new TypeError("event schemas must describe objects");
-    }
-    const wire = Object.freeze({
-      name: definition.name,
-      description: definition.description,
-      delivery: Object.freeze(["webhook"] as const),
-      inputSchema: deepFreeze(inputSchema),
-      payloadSchema: deepFreeze(payloadSchema),
-    });
-    return Object.freeze({ ...definition, wire });
-  }));
-  const subscriptionIdentity = (ownerKey: string, name: string,
-    args: Readonly<Record<string, unknown>>, url: string) =>
-    `sub_${createHash("sha256").update(JSON.stringify([ownerKey, name, canonical(args), url])).digest("hex")}`;
-  const validateUnsubscribe = (params: unknown) => {
-    if (!params || typeof params !== "object" || Array.isArray(params))
-      throw new McpEventInputError(-32602, "invalid_params");
-    const request = params as Record<string, unknown>;
-    const definition = definitions.find((item) => item.name === request.name);
-    if (!definition || !request.arguments || typeof request.arguments !== "object" ||
-        Array.isArray(request.arguments)) throw new McpEventInputError(-32602, "invalid_params");
-    const parsed = definition.inputSchema.safeParse(request.arguments);
-    if (!parsed.success || !parsed.data || typeof parsed.data !== "object" || Array.isArray(parsed.data))
-      throw new McpEventInputError(-32602, "invalid_arguments");
-    const delivery = request.delivery;
-    if (!delivery || typeof delivery !== "object" || Array.isArray(delivery) ||
-        (delivery as Record<string, unknown>).mode !== "webhook" ||
-        typeof (delivery as Record<string, unknown>).url !== "string")
-      throw new McpEventInputError(-32602, "invalid_delivery");
-    let url: URL;
-    const callbackUrl = (delivery as Record<string, unknown>).url;
-    if (typeof callbackUrl !== "string") throw new McpEventInputError(-32602, "invalid_delivery");
-    try { url = new URL(callbackUrl); }
-    catch { throw new McpEventInputError(-32602, "invalid_delivery"); }
-    if (url.protocol !== "https:" || url.username || url.password || url.hash ||
-        url.port && url.port !== "443" || isIP(url.hostname) !== 0)
-      throw new McpEventInputError(-32602, "invalid_delivery");
-    return { definition, arguments: parsed.data as Record<string, unknown>, url: url.href };
-  };
+  const definitions = normalizeMcpEventDefinitions(options.definitions);
+  const subscriptionIdentity = mcpEventSubscriptionIdentity;
+  const validateUnsubscribe = (params: unknown) => validateMcpEventUnsubscribe(definitions, params);
   const runtime: McpEventRuntime = {
     definitions,
     async ownerKey(auth: AuthInfo) {
@@ -226,49 +174,7 @@ export function createMcpEventRuntime(
       }
       return allowed;
     },
-    validateSubscription(params: unknown) {
-      if (!params || typeof params !== "object" || Array.isArray(params)) {
-        throw new McpEventInputError(-32602, "invalid_params");
-      }
-      const request = params as Record<string, unknown>;
-      const definition = definitions.find((item) => item.name === request.name);
-      if (!definition || !request.arguments || typeof request.arguments !== "object" ||
-          Array.isArray(request.arguments) ||
-          request.cursor !== null && request.cursor !== undefined) {
-        throw new McpEventInputError(-32602, "invalid_params");
-      }
-      const parsed = definition.inputSchema.safeParse(request.arguments);
-      if (!parsed.success || !parsed.data || typeof parsed.data !== "object" ||
-          Array.isArray(parsed.data)) {
-        throw new McpEventInputError(-32602, "invalid_arguments");
-      }
-      const delivery = request.delivery;
-      if (!delivery || typeof delivery !== "object" || Array.isArray(delivery)) {
-        throw new McpEventInputError(-32602, "invalid_delivery");
-      }
-      const { mode, url, secret } = delivery as Record<string, unknown>;
-      if (mode !== "webhook" || typeof url !== "string" || typeof secret !== "string" ||
-          !/^whsec_[A-Za-z0-9+/]+={0,2}$/.test(secret)) {
-        throw new McpEventInputError(-32602, "invalid_delivery");
-      }
-      const decoded = Buffer.from(secret.slice(6), "base64");
-      if (decoded.length < 24 || decoded.length > 64 ||
-          decoded.toString("base64") !== secret.slice(6)) {
-        throw new McpEventInputError(-32602, "invalid_secret");
-      }
-      let callback: URL;
-      try { callback = new URL(url); }
-      catch { throw new McpEventInputError(-32015, "invalid_url"); }
-      if (callback.protocol !== "https:" || callback.username || callback.password ||
-          callback.hash || callback.port && callback.port !== "443" ||
-          Buffer.byteLength(callback.href, "utf8") > 8192 ||
-          !callback.hostname || isIP(callback.hostname) !== 0 ||
-          callback.hostname === "localhost" || callback.hostname.endsWith(".localhost") ||
-          callback.hostname.endsWith(".local")) {
-        throw new McpEventInputError(-32015, "invalid_url");
-      }
-      return { definition, arguments: parsed.data as Record<string, unknown>, url: callback.href, secret };
-    },
+    validateSubscription(params: unknown) { return validateMcpEventSubscription(definitions, params); },
     async subscribe(ownerKey: string, params: unknown) {
       const valid = runtime.validateSubscription(params);
       const request = params as Record<string, unknown>;
@@ -283,32 +189,7 @@ export function createMcpEventRuntime(
         throw new McpEventInputError(-32602, "capability_not_found");
       const now = Date.now();
       if (!prior || prior.secret !== valid.secret || !prior.verifiedUntil || prior.verifiedUntil < now) {
-        const challenge = randomBytes(32).toString("base64url");
-        const messageId = `msg_verification_${randomBytes(16).toString("hex")}`;
-        const body = Buffer.from(JSON.stringify({ type: "verification", challenge }));
-        const timestamp = Math.floor(now / 1000);
-        try {
-          const response = await webhookPost(valid.url, body, {
-            "webhook-id": messageId,
-            "webhook-timestamp": String(timestamp),
-            "webhook-signature": signWebhook(valid.secret, messageId, timestamp, body),
-            "X-MCP-Subscription-Id": id,
-          });
-          if (response.status < 200 || response.status > 299) {
-            throw new McpEventInputError(-32015, "challenge_failed");
-          }
-          const answer: unknown = JSON.parse(response.body.toString("utf8"));
-          const actual = answer && typeof answer === "object" && !Array.isArray(answer)
-            ? (answer as Record<string, unknown>).challenge : undefined;
-          if (typeof actual !== "string" ||
-              !timingSafeEqual(createHash("sha256").update(actual).digest(),
-                createHash("sha256").update(challenge).digest())) {
-            throw new McpEventInputError(-32015, "challenge_failed");
-          }
-        } catch (error) {
-          if (error instanceof McpEventInputError) throw error;
-          throw new McpEventInputError(-32015, "challenge_failed");
-        }
+        await verifyMcpEventCallback(valid.url, valid.secret, id, now, webhookPost);
       }
       const expiresAt = now + Math.min(typeof ttlMs === "number" ? ttlMs : 86_400_000, 86_400_000);
       await bounded(() => options.store.put({
@@ -417,7 +298,7 @@ function canonical(value: unknown): unknown {
   return value;
 }
 
-function checkedListWire(
+export function checkedListWire(
   definition: NormalizedEventDefinition,
   wire: NormalizedEventDefinition["wire"],
 ): NormalizedEventDefinition["wire"] {
@@ -442,4 +323,138 @@ function deepFreeze<T>(value: T): T {
     Object.freeze(value);
   }
   return value;
+}
+
+export function normalizeMcpEventDefinitions(inputs: readonly McpEventDefinition[]) {
+  const names = new Set<string>();
+  const definitions = Object.freeze(inputs.map((definition) => {
+    if (!definition || typeof definition.name !== "string" ||
+        !/^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$/.test(definition.name) ||
+        names.has(definition.name) || typeof definition.description !== "string" ||
+        !definition.description.trim() || typeof definition.matches !== "function" ||
+        !(definition.inputSchema instanceof z.ZodType) ||
+        !(definition.payloadSchema instanceof z.ZodType)) {
+      throw new TypeError("events require unique named definitions with schemas and a matcher");
+    }
+    names.add(definition.name);
+    const inputSchema = z.toJSONSchema(definition.inputSchema);
+    const payloadSchema = z.toJSONSchema(definition.payloadSchema);
+    if (!inputSchema || typeof inputSchema !== "object" || Array.isArray(inputSchema) ||
+        inputSchema.type !== "object" || !payloadSchema || typeof payloadSchema !== "object" ||
+        Array.isArray(payloadSchema) || payloadSchema.type !== "object") {
+      throw new TypeError("event schemas must describe objects");
+    }
+    const wire = Object.freeze({
+      name: definition.name,
+      description: definition.description,
+      delivery: Object.freeze(["webhook"] as const),
+      inputSchema: deepFreeze(inputSchema),
+      payloadSchema: deepFreeze(payloadSchema),
+    });
+    return Object.freeze({ ...definition, wire });
+  }));
+  return definitions;
+}
+
+export function mcpEventSubscriptionIdentity(ownerKey: string, name: string, args: Readonly<Record<string, unknown>>, url: string): string {
+  return `sub_${createHash("sha256").update(JSON.stringify([ownerKey, name, canonical(args), url])).digest("hex")}`;
+}
+
+export function validateMcpEventUnsubscribe(definitions: readonly NormalizedEventDefinition[], params: unknown) {
+    if (!params || typeof params !== "object" || Array.isArray(params))
+      throw new McpEventInputError(-32602, "invalid_params");
+    const request = params as Record<string, unknown>;
+    const definition = definitions.find((item) => item.name === request.name);
+    if (!definition || !request.arguments || typeof request.arguments !== "object" ||
+        Array.isArray(request.arguments)) throw new McpEventInputError(-32602, "invalid_params");
+    const parsed = definition.inputSchema.safeParse(request.arguments);
+    if (!parsed.success || !parsed.data || typeof parsed.data !== "object" || Array.isArray(parsed.data))
+      throw new McpEventInputError(-32602, "invalid_arguments");
+    const delivery = request.delivery;
+    if (!delivery || typeof delivery !== "object" || Array.isArray(delivery) ||
+        (delivery as Record<string, unknown>).mode !== "webhook" ||
+        typeof (delivery as Record<string, unknown>).url !== "string")
+      throw new McpEventInputError(-32602, "invalid_delivery");
+    let url: URL;
+    const callbackUrl = (delivery as Record<string, unknown>).url;
+    if (typeof callbackUrl !== "string") throw new McpEventInputError(-32602, "invalid_delivery");
+    try { url = new URL(callbackUrl); }
+    catch { throw new McpEventInputError(-32602, "invalid_delivery"); }
+    if (url.protocol !== "https:" || url.username || url.password || url.hash ||
+        url.port && url.port !== "443" || isIP(url.hostname) !== 0)
+      throw new McpEventInputError(-32602, "invalid_delivery");
+    return { definition, arguments: parsed.data as Record<string, unknown>, url: url.href };
+}
+
+export function validateMcpEventSubscription(definitions: readonly NormalizedEventDefinition[], params: unknown) {
+      if (!params || typeof params !== "object" || Array.isArray(params)) {
+        throw new McpEventInputError(-32602, "invalid_params");
+      }
+      const request = params as Record<string, unknown>;
+      const definition = definitions.find((item) => item.name === request.name);
+      if (!definition || !request.arguments || typeof request.arguments !== "object" ||
+          Array.isArray(request.arguments) ||
+          request.cursor !== null && request.cursor !== undefined) {
+        throw new McpEventInputError(-32602, "invalid_params");
+      }
+      const parsed = definition.inputSchema.safeParse(request.arguments);
+      if (!parsed.success || !parsed.data || typeof parsed.data !== "object" ||
+          Array.isArray(parsed.data)) {
+        throw new McpEventInputError(-32602, "invalid_arguments");
+      }
+      const delivery = request.delivery;
+      if (!delivery || typeof delivery !== "object" || Array.isArray(delivery)) {
+        throw new McpEventInputError(-32602, "invalid_delivery");
+      }
+      const { mode, url, secret } = delivery as Record<string, unknown>;
+      if (mode !== "webhook" || typeof url !== "string" || typeof secret !== "string" ||
+          !/^whsec_[A-Za-z0-9+/]+={0,2}$/.test(secret)) {
+        throw new McpEventInputError(-32602, "invalid_delivery");
+      }
+      const decoded = Buffer.from(secret.slice(6), "base64");
+      if (decoded.length < 24 || decoded.length > 64 ||
+          decoded.toString("base64") !== secret.slice(6)) {
+        throw new McpEventInputError(-32602, "invalid_secret");
+      }
+      let callback: URL;
+      try { callback = new URL(url); }
+      catch { throw new McpEventInputError(-32015, "invalid_url"); }
+      if (callback.protocol !== "https:" || callback.username || callback.password ||
+          callback.hash || callback.port && callback.port !== "443" ||
+          Buffer.byteLength(callback.href, "utf8") > 8192 ||
+          !callback.hostname || isIP(callback.hostname) !== 0 ||
+          callback.hostname === "localhost" || callback.hostname.endsWith(".localhost") ||
+          callback.hostname.endsWith(".local")) {
+        throw new McpEventInputError(-32015, "invalid_url");
+      }
+      return { definition, arguments: parsed.data as Record<string, unknown>, url: callback.href, secret };
+}
+
+export async function verifyMcpEventCallback(url: string, secret: string, id: string, now: number, webhookPost: typeof postCheckedWebhook): Promise<void> {
+        const challenge = randomBytes(32).toString("base64url");
+        const messageId = `msg_verification_${randomBytes(16).toString("hex")}`;
+        const body = Buffer.from(JSON.stringify({ type: "verification", challenge }));
+        const timestamp = Math.floor(now / 1000);
+        try {
+          const response = await webhookPost(url, body, {
+            "webhook-id": messageId,
+            "webhook-timestamp": String(timestamp),
+            "webhook-signature": signWebhook(secret, messageId, timestamp, body),
+            "X-MCP-Subscription-Id": id,
+          });
+          if (response.status < 200 || response.status > 299) {
+            throw new McpEventInputError(-32015, "challenge_failed");
+          }
+          const answer: unknown = JSON.parse(response.body.toString("utf8"));
+          const actual = answer && typeof answer === "object" && !Array.isArray(answer)
+            ? (answer as Record<string, unknown>).challenge : undefined;
+          if (typeof actual !== "string" ||
+              !timingSafeEqual(createHash("sha256").update(actual).digest(),
+                createHash("sha256").update(challenge).digest())) {
+            throw new McpEventInputError(-32015, "challenge_failed");
+          }
+        } catch (error) {
+          if (error instanceof McpEventInputError) throw error;
+          throw new McpEventInputError(-32015, "challenge_failed");
+        }
 }

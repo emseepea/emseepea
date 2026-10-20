@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
+import { createConnection } from "node:net";
+import { once } from "node:events";
 import test from "node:test";
 import { createEmseepea, defineStreamingTool, defineTool, serveEmseepea } from "@emseepea/server";
 import { insecureTestAuthentication } from "@emseepea/testing";
@@ -24,6 +26,43 @@ async function ready(running) {
   assert.equal(await response.text(), response.status === 200 ? "ready\n" : "not ready\n");
   return response.status;
 }
+
+test("shutdown closes a TCP connection that has never sent an HTTP request", async (t) => {
+  const app = createEmseepea(options);
+  let requests = 0;
+  app.server.on("request", () => { requests += 1; });
+  const running = await serveEmseepea(app, { port: 0, shutdownTimeoutMs: 200 });
+  t.after(() => running.close());
+  const accepted = once(app.server, "connection");
+  const socket = createConnection({ host: running.url.hostname, port: Number(running.url.port) });
+  t.after(() => socket.destroy());
+  await Promise.all([once(socket, "connect"), accepted]);
+  const closed = once(socket, "close");
+  await running.close();
+  await closed;
+  assert.equal(requests, 0);
+  assert.equal(socket.destroyed, true);
+  assert.equal(app.server.listening, false);
+});
+
+test("shutdown preserves an admitted HTTP request until it finishes within the budget", async (t) => {
+  let enter, release;
+  const entered = new Promise((resolve) => { enter = resolve; });
+  const held = new Promise((resolve) => { release = resolve; });
+  const app = createEmseepea(options);
+  app.get("/synthetic-held", async () => { enter(); await held; return "finished"; });
+  const running = await serveEmseepea(app, { port: 0, shutdownTimeoutMs: 200 });
+  t.after(() => { release(); return running.close(); });
+  const response = fetch(new URL("/synthetic-held", running.url));
+  await entered;
+  let closed = false;
+  const closing = running.close().then(() => { closed = true; });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(closed, false);
+  release();
+  assert.equal(await (await response).text(), "finished");
+  await closing;
+});
 
 test("invalid operation callbacks and timeouts are rejected before listening", async () => {
   for (const value of [null, false, "callback", {}]) {
@@ -129,12 +168,25 @@ test("shutdown aborts work, stops admission, shares one close, and flushes obser
   }, { shutdownTimeoutMs: 40, observabilityFlushTimeoutMs: 100 });
   const response = await fetch(running.url, callOptions("shutdown", "normal", { authToken: "test-token" }));
   const reader = response.body.getReader();
-  await reader.read();
+  const chunks = [(await reader.read()).value];
+  let bytes = chunks[0].byteLength;
   const closing = running.close();
   assert.equal(closing, running.close());
   await closing;
   assert.equal(cancelled, true);
   assert.equal(flushed, 1);
   await assert.rejects(fetch(new URL("/readyz", running.url)));
-  await assert.rejects(async () => { while (!(await reader.read()).done) { /* Drain. */ } }, /terminated/);
+  while (true) {
+    const next = await reader.read();
+    if (next.done) break;
+    bytes += next.value.byteLength;
+    assert.ok(bytes <= 1_400_000);
+    chunks.push(next.value);
+  }
+  const wire = Buffer.concat(chunks).toString("utf8");
+  const messages = wire.split(/\r?\n/).filter((line) => line.startsWith("data:"))
+    .map((line) => JSON.parse(line.slice(5).trim()));
+  const terminal = messages.filter((message) => message.id === "shutdown");
+  assert.equal(terminal.length, 1);
+  assert.equal(terminal[0].result.isError, true);
 });
