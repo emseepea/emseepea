@@ -112,3 +112,22 @@ Markdown Accessibility Extension (`accessibility-agents-markdown`).
 
 This review covers source prose only. It does not establish runtime behavior,
 publication, rendered WCAG conformance, or completion of issue #174.
+
+## PostgreSQL Events delivery release note
+
+Reviewer: independent cognitive-accessibility specialist.
+
+Result: **PASS**. The release note clearly identifies optional delivery,
+explicit migration and invocation requirements, authorization rechecks,
+durable receipts and the four-attempt limit. It states separately that source
+or subscription erasure and activation of a complete durable delivery
+composition are not provided. No blocking comprehension issue remains under
+COGA guidance and the Markdown Accessibility Extension
+(`accessibility-agents-markdown`).
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/add-postgres-event-delivery.md` | `67218df71de128588e4bc8796476d951c58968764917e2503fc20d7d895dcff5` | PASS |
+
+This review covers source prose only. It does not verify runtime behavior,
+publication, rendered WCAG conformance, or completion of issue #174.

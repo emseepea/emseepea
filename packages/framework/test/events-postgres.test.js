@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { z } from 'zod';
-import { createPostgresEventCapture, postgresEventCaptureMigrations } from '../dist/events-postgres.js';
+import {
+  createPostgresEventCapture,
+  createPostgresEventDelivery,
+  PostgresEventDeliveryMigrationError,
+  postgresEventCaptureMigrations,
+} from '../dist/events-postgres.js';
 const definition = { name: 'synthetic.reply', description: 'Synthetic reply reference.',
   inputSchema: z.strictObject({ threadId: z.string() }),
   payloadSchema: z.strictObject({ threadId: z.string(), messageId: z.string() }),
@@ -12,6 +17,10 @@ const publication = () => ({ sourceEventId: 'reply:123:version:1', sourceVersion
   ownerKey: 'owner:1', occurredAt: '2026-10-16T00:00:00.000Z', data: { threadId: 'thread:1', messageId: 'message:1' } });
 const identity = { backend: '1', xid: '100', isolation: 'repeatable read', statement_ms: '1500', lock_ms: '500' };
 const rejectsCode = (promise, code) => assert.rejects(promise, (error) => error?.code === code);
+test('postgres public boundary exposes explicit delivery composition', () => {
+  assert.equal(typeof createPostgresEventDelivery, 'function');
+  assert.equal(typeof PostgresEventDeliveryMigrationError, 'function');
+});
 test('capture-only boundary cannot advertise native Events or start delivery', () => {
   const api = create();
   assert.deepEqual(Object.keys(api).sort(), ['bindTransaction', 'captureInTransaction']);

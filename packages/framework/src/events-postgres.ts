@@ -2,6 +2,14 @@ import { createHash } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import type { McpEventDefinition } from "./events.js";
 export { postgresEventCaptureMigrations, migratePostgresEventCapture } from "./events-postgres-migrations.js";
+export {
+  createPostgresEventDelivery,
+  createPostgresEventDeliveryMigrator,
+  PostgresEventDeliveryMigrationError,
+  type PostgresEventDelivery,
+  type PostgresEventDeliveryOptions,
+  type PostgresEventDeliveryOutcome,
+} from "./events-postgres-delivery.js";
 
 export interface PostgresEventClient {
   query<Row extends Record<string, unknown> = Record<string, unknown>>(

@@ -4,5 +4,8 @@
     "noEmit": true,
     "rootDir": "."
   },
-  "include": ["test/events-external.types.test.ts"]
+  "include": [
+    "test/events-external.types.test.ts",
+    "test/events-postgres-delivery.types.test.ts"
+  ]
 }
