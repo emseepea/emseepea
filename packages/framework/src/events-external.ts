@@ -258,4 +258,3 @@ export function createExternalMcpEventRuntime(options: ExternalMcpEventsOptions,
     },
   });
 }
-

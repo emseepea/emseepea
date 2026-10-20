@@ -12,6 +12,4 @@ test('registration closes at preparation and unregister removes only an unstarte
 test('different root applications never share budgets or owner results',async()=>{const a={},b={};let calls=0;registerAppShutdownOwner(a,async()=>{calls++;return true;});prepareAppShutdown(a,100);prepareAppShutdown(b,500);assert.equal(await startAppShutdown(b),true);assert.equal(calls,0);assert.equal(await startAppShutdown(a),true);assert.equal(calls,1);});
 
 test('synchronous owner overrun cannot report success before timer dispatch',async()=>{const root={};let input;registerAppShutdownOwner(root,async value=>{input=value;const end=performance.now()+15;while(performance.now()<end){}return true;});prepareAppShutdown(root,5);assert.equal(await startAppShutdown(root),false);assert.equal(input.signal.aborted,true);});
-
 test('incomplete aggregate ends its cleanup window and aborts remaining permission',async()=>{const root={};let input;registerAppShutdownOwner(root,async value=>{input=value;return false;});assert.equal(await startAppShutdown(root),false);assert.equal(input.signal.aborted,true);});
-

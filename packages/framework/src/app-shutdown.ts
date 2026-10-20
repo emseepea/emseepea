@@ -29,4 +29,3 @@ export function startAppShutdown(root:object):Promise<boolean> {
  value.result=Promise.race([actual.then(answers=>{if(performance.now()>=budget.end||!answers.every(Boolean)){budget.controller.abort();return false;}return true;}),expired]).finally(()=>{if(timer)clearTimeout(timer);});
  return value.result;
 }
-

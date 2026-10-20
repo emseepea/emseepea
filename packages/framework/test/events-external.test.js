@@ -222,4 +222,3 @@ test('expired external cleanup budget still attempts adapter shutdown once',asyn
 test('synchronous lifecycle shutdown overrun is false before timer dispatch',async()=>{const f=fixture();let signal;f.options.lifecycle.settle=async input=>{signal=input.signal;const end=performance.now()+15;while(performance.now()<end){}return true;};assert.equal(await f.runtime.settle({signal:new AbortController().signal,deadlineMs:Date.now()+5}),false);assert.equal(signal.aborted,true);});
 
 test('an incomplete external adapter ends its cleanup window without claiming raw cancellation',async()=>{const f=fixture();let input;f.options.lifecycle.settle=async value=>{input=value;return false;};assert.equal(await f.runtime.settle({signal:new AbortController().signal,deadlineMs:Date.now()+500}),false);assert.equal(input.signal.aborted,true);});
-

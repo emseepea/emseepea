@@ -42,4 +42,3 @@ test('authenticated external RPC retains permission-shaped discovery and owner-s
     assert.equal(f.calls.observe+f.calls.activate,0);
   } finally { await server.close(); }
 });
-

@@ -20,4 +20,3 @@ test('server close reports an external lifecycle that did not settle',async()=>{
       lifecycle:{async observe(){throw new Error('No operation expected');},async activate(){throw new Error('No operation expected');},async revoke(){throw new Error('No operation expected');}}}});
   await assert.rejects(app.close(),/External Events shutdown has unfinished operations/);
 });
-
