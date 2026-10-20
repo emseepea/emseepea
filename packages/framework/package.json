@@ -31,6 +31,10 @@
     "./external-approval": {
       "types": "./dist/external-approval.d.ts",
       "import": "./dist/external-approval.js"
+    },
+    "./events-postgres": {
+      "types": "./dist/events-postgres.d.ts",
+      "import": "./dist/events-postgres.js"
     }
   },
   "files": [
@@ -42,6 +46,7 @@
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.type-tests.json",
     "test": "npm run test:built",
     "test:built": "node --test test/*.test.js",
+    "test:postgres": "node test/with-postgres-capture.mjs",
     "prepack": "npm run build"
   },
   "dependencies": {

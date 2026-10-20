@@ -73,3 +73,22 @@ Extension (`accessibility-agents-markdown`).
 
 This review covers source prose only. It does not verify generated dependency
 versions, runtime behavior, publication, or rendered WCAG conformance.
+
+## PostgreSQL Events capture release note
+
+Reviewer: independent cognitive-accessibility specialist.
+
+Result: **PASS**. The release note names the optional storage capability,
+expands Model Context Protocol (MCP), identifies the public entry point and
+transaction requirements, and clearly states that native subscriptions and
+event delivery are outside this release. The specialist transaction terms
+are appropriate for the developer audience. No wording correction is required
+under COGA guidance and the Markdown Accessibility Extension
+(`accessibility-agents-markdown`).
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/add-postgres-event-capture.md` | `f3b4fdf8b9de27dac5b969617f2b1b63f4f30f5600e1f279a4288193521b0be9` | PASS |
+
+This review covers source prose only. It does not verify transaction behavior,
+runtime qualification, rendered WCAG conformance, or publication.
