@@ -57,6 +57,142 @@ or expected number of steps is not feedback-worthy.
 These are instructions for the AI, not server-enforced guarantees. Qualify the
 behaviour with a native semantic test for every AI client you support.
 
+## Offer Website Feedback through WebMCP (Experimental)
+
+Use `@emseepea/feedback/webmcp` to offer one existing MCP feedback tool to a
+website's browser agent. It forwards submissions through your connected MCP
+client to the same server and authoritative backend. It does not create a
+second feedback service or a website login integration.
+
+```ts
+import { registerFeedbackWebMcp } from "@emseepea/feedback/webmcp";
+
+// client is your already-connected official MCP client.
+const feedback = await registerFeedbackWebMcp({ client });
+
+// Dispose before logout, account changes, or replacing the client.
+function removeFeedback() {
+  if (feedback.available) feedback.dispose();
+}
+```
+
+Your application owns the client, its allowed endpoint, authentication and
+lifetime. The adapter never closes it. The server still checks authorization,
+account scope and input, including any bounded application-declared context.
+It does not automatically capture the DOM, URL, chat, credentials or page state.
+
+Registration defaults to `submit-feedback`. Use trusted deployment
+configuration to select a fixed collection tool, for example
+`toolName: "submit-customer-feedback"`. Never let an agent or user input select
+the destination. The adapter registers no operator or event tools.
+
+The options are `{ client, modelContext?, toolName?, signal?, timeoutMs? }`:
+
+- `modelContext` defaults to experimental `document.modelContext`. When absent,
+  registration returns `{ available: false }`; the website can keep its usual
+  feedback UI. Other registration failures reject with a safe error.
+- `signal` ends the registration lifetime. `dispose()` cancels pending work and
+  removes this registration. Dispose before logout or account/client changes.
+- `timeoutMs` defaults to 10,000 and accepts integers from 1 to 60,000. Discovery
+  and calls have bounded deadlines. Discovery traverses at most eight catalogue
+  pages once per registration; it does not poll the server.
+
+The server's input schema and active description are preserved. Guidance
+encourages agents to record notable helpful, difficult, surprising or wrong
+experiences without an extra permission question, disclose the specific feedback
+in the same response, respect objections, avoid duplicates and routine reports,
+and complete the original task.
+
+Successful results retain the receipt and
+`nextAction`. Propagating this guidance does not establish that a browser agent
+will follow it; native browser-agent semantic qualification remains required.
+
+Only one submission may be in flight. Each execution dispatches at most one
+MCP call and never automatically retries. A timeout, cancellation or missing
+receipt can leave persistence unknown: feedback may already have been saved.
+Do not claim it was recorded or retry automatically. Cancellation does not
+prove rollback.
+
+An existing WebMCP tool with the selected name is a registration
+error; the adapter does not replace tools it does not own.
+
+WebMCP is experimental. This adapter targets the `document.modelContext` API
+shape exercised in Chromium 154; that does not establish support in other
+browsers or agents, or guarantee compatibility with later API revisions.
+
+### Run the synthetic website example
+
+From a repository checkout with dependencies installed:
+
+```sh
+npm run build
+node packages/feedback/demo-webmcp/server.mjs
+```
+
+Follow [Chrome's WebMCP setup guide](https://developer.chrome.com/docs/ai/webmcp#get-started)
+to enable the experimental API, then open the printed loopback URL. The example
+bundles the official browser MCP client with esbuild and uses the same HTTP
+server an independent MCP client can connect to.
+
+It uses synthetic data and
+process-local storage, cleared when the server stops. Its public demo does not
+implement login. Use server-derived account scope and your existing client
+authentication for a protected deployment.
+
+### Qualify the native WebMCP path
+
+After building, run the optional semantic cases with an explicitly chosen,
+available Codex model:
+
+```sh
+GITHUB_SHA="$(git rev-parse HEAD)" EMSEEPEA_CODEX_MODEL="chosen-model" node packages/testing/semantic/cli.mjs --provider codex-local --output artifacts/webmcp-eval.json packages/feedback/eval-webmcp/meaning.test.mjs
+```
+
+Replace `chosen-model` before running. The full native checks require Chromium
+154.0.8037.57. Set
+`WEBMCP_CHROMIUM_PATH` to that executable before running them. Without an explicit
+path, fixtures use Playwright’s locked browser and log its actual version on
+stderr; the currently locked Chromium 151 does not pass the full native contract.
+
+CI separately installs the verified 154 artifact for these checks.
+
+The verified local path is Codex-local with `gpt-6.1-sol` → one loopback MCP
+browser bridge → native Chromium 154.0.8037.57 WebMCP → the actual demo task and
+feedback adapter/backend.
+The model sees only page-registered application tools. Playwright stays inside
+the fixture; the model receives no browser automation tools.
+
+The existing harness uses three fresh trials, unchanged user messages, native
+provider tool events and three independent tool-free judgments for each meaning
+assertion, without semantic retries or model coaching. Correlation checks tie
+calls to native results, visible task state and backend writes.
+
+Choose an unused semantic output filename for each run and preserve previous
+results. Each invocation logs a fresh private `run-...` directory under
+`artifacts/webmcp-native`. Collect only that named directory. Its manifests bind
+run, source SHA-256, case and trial identity. Independently verify the clean
+checkout: a supplied revision is caller-reported; an absent revision is explicit.
+
+Bounded synthetic native execution files remain available after failed startup,
+turns or assertions. The four cases retain at most 12 MiB of raw native evidence,
+plus bounded manifests and checkpoints. Missing or partial files do not prove
+that no call or write occurred. No provider logs, credentials or browser storage
+are collected by this fixture.
+
+Successful native verification writes an immutable numbered checkpoint. It
+covers its stated call counts and exact byte hashes, and does not verify later
+appended activity. Match its run and source with the complete semantic result;
+native correlation alone is insufficient. Legacy flat summary files and other
+run directories are not evidence for the current invocation.
+
+Missing model, native API or evidence fails closed. The verified local synthetic
+suite passed all four cases, 12 trials and 36 judgments on the named path; see
+the [qualification record](../../docs/reviews/webmcp-feedback-2026-10-16.md#verified-complete-local-synthetic-suite).
+
+Local Codex evidence is scoped to this path and does not replace
+credentialed Claude release checks or establish Chrome built-in-agent
+compatibility.
+
 ## Separate Customer and Internal Feedback
 
 A collection is a deployment-configured authorization partition, such as

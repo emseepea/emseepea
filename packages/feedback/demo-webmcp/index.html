@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Website feedback demo — Em See Pea</title>
+  <style>
+    :root { color-scheme: light dark; --bg: #ffffff; --fg: #172b24; --surface: #eff5f0; --border: #53675d; --accent: #145c38; --button: #ffffff; --focus: #933800; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #14221b; --fg: #ecf4ef; --surface: #20372a; --border: #acc3b3; --accent: #a3e8bb; --button: #14221b; --focus: #ffcb8a; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font: 1.1rem/1.6 system-ui, sans-serif; }
+    main { max-width: 46rem; margin: auto; padding: 1.5rem; }
+    h1, h2 { line-height: 1.2; }
+    section { margin: 2rem 0; padding: 1.2rem; background: var(--surface); border: 1px solid var(--border); border-radius: .5rem; }
+    label { display: block; font-weight: 600; }
+    input { width: 100%; margin: .5rem 0 1rem; padding: .65rem; background: var(--bg); color: var(--fg); border: 2px solid var(--border); border-radius: .25rem; font: inherit; }
+    button { min-height: 44px; padding: .65rem 1rem; background: var(--accent); color: var(--button); border: 2px solid var(--accent); border-radius: .25rem; font: inherit; cursor: pointer; }
+    button:disabled { opacity: .7; cursor: default; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+    a { color: var(--accent); }
+    .skip { position: absolute; top: -5rem; left: 1rem; padding: .5rem; background: var(--bg); }
+    .skip:focus { top: .5rem; }
+    #search-results, #feedback-status { min-height: 3rem; }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main-content">Skip to main content</a>
+  <main id="main-content" tabindex="-1">
+    <h1>Website feedback demo</h1>
+    <p>Find a pea variety while a compatible browser agent can report useful feedback about the experience.</p>
+    <p>This loopback demo uses synthetic data. Feedback is held in server memory and disappears when the server stops. Do not enter personal or confidential information.</p>
+    <section aria-labelledby="search-heading">
+      <h2 id="search-heading">Find a pea variety</h2>
+      <p>Try finding a sugar snap variety. This sample has a deliberately limited search so you can encounter a useful feedback opportunity.</p>
+      <form id="search-form">
+        <label for="query">Variety search</label>
+        <input id="query" name="query" type="search" required maxlength="100" autocomplete="off">
+        <button type="submit">Search varieties</button>
+      </form>
+      <p id="search-results" role="status" aria-live="polite">Search results will appear here.</p>
+    </section>
+    <section aria-labelledby="feedback-heading">
+      <h2 id="feedback-heading">Agent feedback</h2>
+      <p>Compatible agents are encouraged to report notable helpful, difficult, surprising or wrong experiences, then finish your task and tell you what they recorded. Ask the agent to stop if you do not want feedback recorded.</p>
+      <p>No page, address, conversation or account data is collected automatically. The feedback tool accepts an observation, a bounded description and an optional feature name.</p>
+      <p id="feedback-status" role="status" aria-live="polite">Connecting agent feedback…</p>
+      <button id="disable-feedback" type="button" disabled>Disable agent feedback</button>
+    </section>
+  </main>
+  <script type="module" src="/browser.js"></script>
+</body>
+</html>
