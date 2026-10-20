@@ -150,3 +150,22 @@ COGA guidance and the Markdown Accessibility Extension
 This review covers the release note's source prose only. It does not verify
 runtime behavior, publication, rendered WCAG conformance, provider support or
 completion of issue #174.
+
+## Cloud Tasks transport release note
+
+Reviewer: independent cognitive-accessibility specialist.
+
+Result: **PASS**. The release note uses short sentences to identify the
+dormant internal adapter, its trusted configuration and bounded behavior. It
+separates the work in this increment from worker composition, scheduling,
+feedback, erasure and production activation. No blocking comprehension issue
+remains under COGA guidance and the Markdown Accessibility Extension
+(`accessibility-agents-markdown`).
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/add-dormant-cloud-tasks-transport.md` | `e0c06c1fdaccf135de525d1a128fb1c44711a3debc9b0a2363857dbccdf12981` | PASS |
+
+This review covers the release note's source prose only. It does not verify
+runtime behavior, publication, rendered WCAG conformance, provider support or
+completion of issue #174.

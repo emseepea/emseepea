@@ -67,5 +67,17 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "peerDependencies": {
+    "google-auth-library": "11.3.1",
+    "google-logging-utils": "2.1.0"
+  },
+  "peerDependenciesMeta": {
+    "google-auth-library": {
+      "optional": true
+    },
+    "google-logging-utils": {
+      "optional": true
+    }
   }
 }
