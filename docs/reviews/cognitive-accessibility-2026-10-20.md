@@ -131,3 +131,22 @@ COGA guidance and the Markdown Accessibility Extension
 
 This review covers source prose only. It does not verify runtime behavior,
 publication, rendered WCAG conformance, or completion of issue #174.
+
+## PostgreSQL Events dispatch release note
+
+Reviewer: independent cognitive-accessibility specialist.
+
+Result: **PASS**. The release note identifies the optional dormant ledger,
+explains the explicit migration and bounded reconciliation behavior in short
+sentences, and separates this increment from routes, scheduling, provider
+integration and production use. No blocking comprehension issue remains under
+COGA guidance and the Markdown Accessibility Extension
+(`accessibility-agents-markdown`).
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/add-postgres-event-dispatch.md` | `750dd746a128837d168486ba8450dd5ea7d836784b2b72a9ffb6d893bb744dda` | PASS |
+
+This review covers the release note's source prose only. It does not verify
+runtime behavior, publication, rendered WCAG conformance, provider support or
+completion of issue #174.

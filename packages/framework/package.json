@@ -53,6 +53,7 @@
     "test:postgres": "node test/with-postgres-capture.mjs",
     "test:postgres:lifecycle": "node test/with-postgres-lifecycle.mjs",
     "test:postgres:delivery": "node test/with-postgres-delivery.mjs",
+    "test:postgres:dispatch": "node test/with-postgres-dispatch.mjs",
     "prepack": "npm run build"
   },
   "dependencies": {

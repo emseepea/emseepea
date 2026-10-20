@@ -10,6 +10,10 @@ export {
   type PostgresEventDeliveryOptions,
   type PostgresEventDeliveryOutcome,
 } from "./events-postgres-delivery.js";
+export {
+  createPostgresEventDispatchMigrator,
+  PostgresEventDispatchMigrationError,
+} from "./events-postgres-dispatch-migrations.js";
 
 export interface PostgresEventClient {
   query<Row extends Record<string, unknown> = Record<string, unknown>>(
