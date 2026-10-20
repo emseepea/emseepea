@@ -92,3 +92,23 @@ under COGA guidance and the Markdown Accessibility Extension
 
 This review covers source prose only. It does not verify transaction behavior,
 runtime qualification, rendered WCAG conformance, or publication.
+
+## PostgreSQL Events lifecycle release note
+
+Reviewer: independent cognitive-accessibility specialist.
+
+Result: **PASS**. The release note identifies the optional PostgreSQL
+foundation, its configuration requirements and the subscription state it
+persists. It explicitly distinguishes this increment from event delivery,
+native client configuration, feedback integration, group erasure and issue
+completion. The revised note expands Model Context Protocol (MCP) and uses
+shorter sentences. Technical terminology is appropriate for this developer
+release note. No blocking comprehension issue remains under COGA guidance and the
+Markdown Accessibility Extension (`accessibility-agents-markdown`).
+
+| File | SHA-256 | Result |
+| --- | --- | --- |
+| `.changeset/add-postgres-event-lifecycle.md` | `366cf966671c3a663cc8a435208d95bef4737f8fdd991f8bca682b27ebbcf78a` | PASS |
+
+This review covers source prose only. It does not establish runtime behavior,
+publication, rendered WCAG conformance, or completion of issue #174.

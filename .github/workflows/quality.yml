@@ -297,6 +297,9 @@ jobs:
       - name: Check the PostgreSQL Events capture foundation
         if: ${{ matrix.example == 'tool-server' }}
         run: npm run test:postgres -w @emseepea/server
+      - name: Check the PostgreSQL Events lifecycle foundation
+        if: ${{ matrix.example == 'tool-server' }}
+        run: npm run test:postgres:lifecycle -w @emseepea/server
       - name: Enforce integration example performance budgets
         if: ${{ matrix.example == 'tool-server' }}
         run: |
