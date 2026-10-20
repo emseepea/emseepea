@@ -61,7 +61,7 @@ test("the initialized quickstart passes its documented checks", {
     assert.ok(["packed", "registry"].includes(packageSource), `unknown package source: ${packageSource}`);
     if (packageSource === "packed") {
       const initializer = await packPackage("examples/tool-server", directory);
-      await exec("npm", ["exec", "--yes", "--offline", "--userconfig", "/dev/null", "--package", initializer, "--", "create-tool-server", "my-mcp"], {
+      await exec("npm", ["exec", "--yes", "--offline", "--userconfig", "/dev/null", `--package=${initializer}`, "--", "create-tool-server", "my-mcp"], {
         cwd: directory, timeout: 600_000, maxBuffer: 1024 * 1024,
       });
     } else {

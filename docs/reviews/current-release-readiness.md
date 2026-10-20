@@ -1,6 +1,49 @@
 # Current Release Readiness
 
-Date: 2026-10-16
+Date: 2026-10-20
+
+## Native Claude failure diagnostics
+
+Status: **LOCAL FULL TEST PASS; RELEASE QUALIFICATION INCOMPLETE**.
+The testing package now reports fixed failure categories for missing results,
+provider execution errors, exhausted budgets, turn limits and non-text answers.
+Unknown provider error subtypes use a fixed generic message. Provider payloads
+are not copied into diagnostic errors. Existing authentication, model, tool and
+evidence checks remain unchanged.
+
+The new twelve-case regression test first passed five cases and failed seven
+against the original parser. After the parser change, all 49 focused parser,
+resource and evidence checks passed on Node.js 24.22.0. These use synthetic
+fixtures, not actual model responses. Lint and whitespace checks also passed.
+
+The normal local `npm test` command then exited unsuccessfully. Builds, type
+checks and the preceding workspace tests passed, but the website stage recorded
+15 passes and one cancellation: its page-by-page accessibility check exceeded
+the existing 180-second timeout. The later root test stage did not run.
+
+A separate timing diagnostic subsequently completed the same accessibility
+matrix, assertions and screenshots in about 25 seconds without changing the
+test source or timeout. This does not identify the cause of the original timeout
+or replace the failed full-suite result. The first instrumented diagnostic had
+a missing local binding and failed; the corrected diagnostic is separate.
+
+A fresh exact-runtime run on 20 October 2026 used Node.js 24.22.0 and npm
+12.0.2. `npm ci` completed, and the unchanged `npm test` command then exited
+successfully. The website stage passed all 16 tests, including the accessibility
+matrix in about 25 seconds, and the later root stage passed all 440 tests. This
+successful rerun does not establish the cause of the earlier timeout. Release
+qualification and publication evidence remain outstanding.
+
+The earlier release failure still has no established cause. Its 66 failed
+trial records contain a generic no-answer error, not recorded model answers
+or judge verdicts. The diagnostic change improves future failure reporting;
+it does not establish that authentication or release execution is repaired.
+
+A patch Changeset covers `@emseepea/testing`; Changesets must calculate the
+resulting package versions and dependent updates. No version is edited by hand.
+Full qualification, benchmarks, exact-commit Quality, semantic release checks,
+publication, registry verification and merge-back remain required. No new
+publication is claimed here.
 
 ## Optional Events store conformance helper
 
