@@ -10,7 +10,7 @@ story-maps: [STORY-MAP-001]
 estimated-effort: S
 ---
 
-# STORY-004: Reduce Accepted-Path Deadline Overhead
+# STORY-004: Pass the Request Performance Check on Node 22
 
 **Reported**: 2026-10-20
 **Problems**: P022
@@ -21,9 +21,9 @@ estimated-effort: S
 
 ## User value
 
-In order to keep exact-source releases flowing, as a framework maintainer, I
-want accepted requests to retain cancellation and deadline safety without
-unnecessary allocation pressure on the supported Node 22 runtime.
+In order to publish releases safely, as a framework maintainer, I want valid
+requests to stay within the existing Node 22 performance limit. Cancellation
+and timeouts must keep working.
 
 ## Acceptance criteria
 

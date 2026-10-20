@@ -64,4 +64,4 @@ this mixed result as designed. The runtime/profile cause remains unresolved.
 
 | ID | Title | Status |
 |----|-------|--------|
-| STORY-004 | STORY-004: Reduce Accepted-Path Deadline Overhead | draft |
+| STORY-004 | STORY-004: Pass the Request Performance Check on Node 22 | draft |
