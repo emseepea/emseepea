@@ -1,5 +1,5 @@
 ---
-status: draft
+status: accepted
 story-id: reduce-accepted-path-deadline-overhead
 reported: 2026-10-20
 decision-makers: [Tom Howard]
@@ -62,7 +62,7 @@ the qualifying evidence; the local matched experiment is diagnostic evidence.
 ## Dependencies
 
 - **Blocks**: P022 verification and the pending package release.
-- **Blocked by**: STORY-MAP-001 ratification of RFC-004.
+- **Blocked by**: (none). Tom ratified RFC-004 through STORY-MAP-001.
 
 ## Related
 

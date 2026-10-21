@@ -1,5 +1,11 @@
 # Story Review History
 
+## 2026-10-21
+
+Previous story headline archived when STORY-004 reached accepted:
+
+> Last reviewed: 2026-10-02 **STORY-002 done** — Published package, packed test, and phone-width review confirm the guide correction.
+
 ## 2026-10-02
 
 Previous story headline archived when STORY-002 reached done:

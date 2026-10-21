@@ -1,9 +1,10 @@
 # Cognitive Accessibility Review - 2026-10-21
 
-## Node 22 request performance story
+## Node 22 request performance story acceptance
 
 Result: PASS. An independent cognitive-accessibility specialist reviewed the
-final story-map row, story title, value statement, reverse traces and indexes.
+final accepted story, story-map row, value statement, reverse traces and
+indexes.
 The wording states the release outcome, the existing Node 22 performance limit
 and the cancellation and timeout behaviours that must remain intact. It removes
 the unexplained phrases "accepted-path deadline overhead", "exact-source
@@ -19,16 +20,16 @@ Reviewed files:
 
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
-| `docs/stories/draft/STORY-004-reduce-accepted-path-deadline-overhead.md` | `741ced5f150712b03a5671c946d6aed6cb5c785fdb0c2bff9651a0e60c50abe1` |
-| `docs/stories/README.md` | `05eafbc2075c0c5fcfa4f5c98b3d2acda4d8e4cd8cf0abf29a01bdf5878e48f9` |
-| `docs/problems/open/022-accepted-path-cpu-budget-is-unqualified-on-the-node-22-ci-profile.md` | `872e4f9422c52592ee8f292c71b2d0f6ce6a417cabf9897f9082c7101b011b01` |
-| `docs/jtbd/framework-maintainer/JTBD-100-extend-the-supported-protocol.proposed.md` | `2b5593a1a059c4ff240eeacf0532ac58cd48cfdd6d9eb2a9dd5a647f2e6d8f38` |
-| `docs/story-maps/README.md` | `02705c458afc10bd2e7ab21a0be9d2eb8b13541c75d99d445a2e41ee75f443d3` |
-| `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `56f6f232e65c553ae50d8f7756734565f73883eb048b255c05040c879041b6a8` |
+| `docs/stories/accepted/STORY-004-reduce-accepted-path-deadline-overhead.md` | `1de8964f14d151ceeeb41e70d3963a33e45fd98564d2ea19843718f5e6e929e5` |
+| `docs/stories/README.md` | `dcbeca7989217c7fd6fb5ee9cf3bbf5dd908072a810d8a6029e51ea420e833c2` |
+| `docs/stories/README-history.md` | `394bf0872a3566574f343d81979159ccd5c982c4e730032be0908c784fe8d1a0` |
+| `docs/problems/open/022-accepted-path-cpu-budget-is-unqualified-on-the-node-22-ci-profile.md` | `af29ae209e059e9c46c22854d04aec8762b058df35f92f0057242f858978c44c` |
+| `docs/jtbd/framework-maintainer/JTBD-100-extend-the-supported-protocol.proposed.md` | `2a562d8bba9ec2d6236f210f4fc3f271cbe2da5bf29f5c5f0467512eb2832773` |
+| `docs/story-maps/accepted/STORY-MAP-001-share-a-verified-framework-change-safely.html` | `0f4f7c8a8bf772834814d5039d80404ca25d510356097f3baca9c30e3bbfa2c2` |
 
-Reviewer: independent cognitive-accessibility specialist using the
-`accessibility-agents-web` review workflow. The specialist also reviewed this
-evidence wording.
+Reviewer: independent cognitive-accessibility specialist using the installed
+cognitive-accessibility specialist reference. The specialist reviewed the
+source text and this evidence wording.
 
 ## Mature dependency repair story and problem record
 
