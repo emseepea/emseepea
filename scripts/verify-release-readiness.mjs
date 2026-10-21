@@ -41,17 +41,19 @@ export function assertReadinessMarkers(review) {
   );
 }
 
-export function assertReleaseReadiness(registryBefore, review) {
+export function assertReleaseReadiness(registryBefore, review, versionAllocations = []) {
+  const plannedVersions = new Map(versionAllocations.map(({ name, plannedVersion, newVersion }) => [`${name}@${newVersion}`, `${name}@${plannedVersion}`]));
+  const reviewedVersion = ({ name, version }) => plannedVersions.get(`${name}@${version}`) ?? `${name}@${version}`;
   const pending = registryBefore.packages
     .filter(({ present }) => !present)
-    .map(({ name, version }) => `${name}@${version}`)
+    .map(reviewedVersion)
     .sort();
   if (pending.length === 0) return;
   assertReadinessMarkers(review);
   const reviewed = [...new Set([...review.matchAll(/^- `([^`]+@[^`]+)`$/gm)]
     .map(([, spec]) => spec))]
     .sort();
-  const targets = new Set(registryBefore.packages.map(({ name, version }) => `${name}@${version}`));
+  const targets = new Set(registryBefore.packages.map(reviewedVersion));
   assert.deepEqual(
     reviewed.filter((spec) => !targets.has(spec)),
     [],
@@ -224,5 +226,6 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   assertReleaseReadiness(
     JSON.parse(await readFile(registryPath, "utf8")),
     await readFile(reviewPath, "utf8"),
+    JSON.parse(await readFile(".release/origin.json", "utf8")).versionAllocations,
   );
 }

@@ -77,7 +77,7 @@ recorded separately.
 - [ADR-0111: Checked Replacement Candidates for Unpromoted Failed Releases](0111-checked-replacement-candidates-for-unpromoted-failed-releases.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0112: Range-Bound Docs-Only Local Push Qualification](0112-range-bound-docs-only-local-push-qualification.proposed.md): Proposed; human review confirmed.
 - [ADR-0113: Operational Docs-Only Quality Runs Without Release Authority](0113-operational-docs-only-quality-runs-without-release-authority.proposed.md): Proposed; human review confirmed.
-- [ADR-0114: Checked Fresh Versions for Abandoned Staged Candidates](0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0114: Choose Unused npm Versions Automatically](0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0115: Authenticated Listing of Private Resource Inventory](0115-authenticated-private-resource-inventory-listing.proposed.md): Proposed; human review confirmed.
 - [ADR-0116: Native Semantic Conversations Without a Tool-Call Count Limit](0116-native-semantic-conversations-without-tool-call-count-limit.proposed.md): Proposed; human review confirmed.
 - [ADR-0118: Declarative Outcome-Constrained Semantic Tool-Selection Assertions](0118-declarative-outcome-constrained-semantic-tool-selection-assertions.proposed.md): Proposed; human review unconfirmed.
@@ -2484,28 +2484,22 @@ Chosen option: **"Docs-only Quality without release authority"**, because operat
 - Reduced Quality success cannot publish packages or generate a release candidate.
 - Behavioural checks reject missing or skipped prerequisites, stale attempts, wrong sources, and incomplete job pagination.
 
-### [ADR-0114: Checked Fresh Versions for Abandoned Staged Candidates](0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md)
+### [ADR-0114: Choose Unused npm Versions Automatically](0114-checked-fresh-versions-for-abandoned-staged-candidates.proposed.md)
 
 - Status: Proposed
 - Human review: Unconfirmed
 
 #### ADR-0114 Decision
 
-Chosen option: **checked staged-candidate recovery**. This keeps the existing release planner and release gates in use. Those gates include qualification checks, provenance checks, promotion, and merge-back. It also chooses package versions that npm has not already consumed.
+Chosen option: **choose unused versions automatically**.
 
 #### ADR-0114 Checks
 
-- The occupied version's npm `gitHead` value, which is the source commit recorded by npm, and its provenance match the exact Release run and candidate recorded in the receipt.
-- If that Release run failed, it stopped only in one of the two eligible verification states after exactly one staging attempt succeeded: registry verification failure before any download check, or downloaded-package verification failure after registry verification passed. Any earlier attempt failed semantic evaluation before publication, and the publishing attempt was the terminal run attempt recorded in the receipt.
-- The recorded checked source generated that abandoned candidate and is an ancestor of the replacement source.
-- Every `latest` tag still matches the recorded baseline.
-- Fresh versions are rejected if they are missing, extra, already occupied, on the wrong version line, or different from the registry evidence.
-- The occupied and baseline maps are disjoint and their union exactly matches the current public release plan.
-- Every occupied package gets only the next patch after its abandoned version. Every baseline package stays bound to its checked source and registry `latest`, then gets only the ordinary planned next patch.
-- Normal dependent manifest and lockfile updates remain unchanged.
-- Every unchanged initializer passes downloaded-package qualification with the exact manifest restored from the checked source, while unrelated manifest differences remain refused.
-- The replacement passes the unchanged quality, semantic, package, registry, signature, provenance, initializer, guide, promotion, and merge-back gates.
-- The replacement package set is promoted under `latest` and independently verified from one exact release head.
+- Real generation encounters versions consumed by an abandoned attempt and automatically selects unused patches on the intended version lines.
+- Generated manifests, dependency pins, changelogs and lockfile agree with the candidate's fixed selections.
+- Invalid selections and conflicting published versions are rejected before publication; retries of the same candidate remain supported.
+- The replacement passes the existing Quality, semantic, registry, signatures, provenance, downloaded-package, promotion and merge-back checks.
+- Selected packages reach `latest`, and independent installation verifies their versions and source commits. Local fixtures and staging alone do not prove successful production use.
 
 ### [ADR-0115: Authenticated Listing of Private Resource Inventory](0115-authenticated-private-resource-inventory-listing.proposed.md)
 

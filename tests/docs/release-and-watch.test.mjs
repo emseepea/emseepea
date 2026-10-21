@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { parse } from "yaml";
 
-import { fullQualityJobNames } from "../../scripts/check-release-pull-request.mjs";
+import { checkReleasePullRequest, fullQualityJobNames } from "../../scripts/check-release-pull-request.mjs";
 import { releaseAndWatch } from "../../scripts/release-and-watch.mjs";
 
 const baseSha = "a".repeat(40);
@@ -57,6 +57,27 @@ const releaseFiles = [
   "packages/server/CHANGELOG.md",
   "packages/server/package.json",
 ].join("\n");
+
+test("candidate verification checks automatic unused versions against the original reviewed source intent", async () => {
+  const allocation = { name: "@emseepea/server", plannedVersion: "1.0.1", occupiedVersions: ["1.0.1"], newVersion: "1.0.2" };
+  const run = async (command, args) => {
+    const joined = args.join(" ");
+    if (joined === `show ${headSha}:.release/origin.json`) return JSON.stringify({ sha: baseSha, qualityRunId: "123", versionAllocations: [allocation] });
+    const quality = qualityResponse(command, args);
+    if (quality !== undefined) return quality;
+    if (joined === `show ${baseSha}:docs/reviews/current-release-readiness.md`) return releaseReview;
+    if (joined === `show ${baseSha}:package-lock.json`) return baseLock;
+    if (joined === `show ${headSha}:package-lock.json`) return headLock.replace("1.0.1", "1.0.2");
+    if (joined === `show ${baseSha}:packages/server/package.json`) return baseManifest;
+    if (joined === `show ${headSha}:packages/server/package.json`) return headManifest.replace("1.0.1", "1.0.2");
+    if (joined === `diff --name-only ${baseSha} ${headSha}`) return releaseFiles;
+    return "";
+  };
+  const result = await checkReleasePullRequest(baseSha, headSha, { run, readStatus: readStatus() });
+  assert.equal(result.releases[0].newVersion, "1.0.2");
+  allocation.newVersion = "1.0.3";
+  await assert.rejects(() => checkReleasePullRequest(baseSha, headSha, { run, readStatus: readStatus() }), /first unused patch/);
+});
 
 test("release and watch binds the Changesets PR and both pipelines to exact commits", async () => {
   const calls = [];

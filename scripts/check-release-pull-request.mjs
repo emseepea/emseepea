@@ -28,6 +28,7 @@ import {
   readPlannedReleaseStatus,
 } from "./verify-release-readiness.mjs";
 import { assertRecoveryEligible, recoveryRequiresFailedPublishAncestry } from "./release-recovery.mjs";
+import { applyVersionAllocations } from "./allocate-release-versions.mjs";
 
 const exec = promisify(execFile);
 
@@ -117,6 +118,10 @@ export async function checkReleasePullRequest(baseSha, headSha, {
     await run("git", ["show", `${baseSha}:docs/reviews/current-release-readiness.md`]),
     { requireReleases: true },
   );
+
+  const origin = JSON.parse(await run("git", ["show", `${headSha}:.release/origin.json`]));
+  assert.ok(!status.recovery || !origin.versionAllocations, "manual recovery and automatic allocation cannot be combined");
+  status = applyVersionAllocations(status, origin.versionAllocations);
 
   const changedFiles = (await run("git", ["diff", "--name-only", baseSha, headSha]))
     .split("\n")

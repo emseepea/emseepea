@@ -10,15 +10,22 @@ import { readPlannedReleaseStatus } from "./verify-release-readiness.mjs";
 import { assertRecoveryEligible, readRecovery } from "./release-recovery.mjs";
 import { freezeUnplannedInitializers } from "./freeze-unplanned-initializers.mjs";
 import { recordReleaseOrigin } from "./record-release-origin.mjs";
+import { allocateReleaseVersions } from "./allocate-release-versions.mjs";
 
 const exec = promisify(execFile);
-export async function versionPackages({ root = process.cwd(), env = process.env, validate = true } = {}) {
+export async function versionPackages({ root = process.cwd(), env = process.env, validate = true, readRegistry } = {}) {
   const receipt = await readRecovery(root);
+  const allocation = receipt ? undefined : await allocateReleaseVersions(await readPlannedReleaseStatus(root), { readRegistry });
   if (receipt) {
     if (validate) await assertRecoveryEligible(receipt, { sourceSha: env.GITHUB_SHA });
     const packages = await getPackages(root);
     const { config } = await readConfig(root, packages);
     await applyReleasePlan(await readPlannedReleaseStatus(root), packages, config, undefined, resolve(dirname(fileURLToPath(import.meta.url)), ".."));
+  } else if (allocation.allocations.length) {
+    if (!/^[a-f0-9]{40}$/.test(env.GITHUB_SHA ?? "")) throw new Error("version allocation requires an exact source commit");
+    const packages = await getPackages(root);
+    const { config } = await readConfig(root, packages);
+    await applyReleasePlan(allocation.plan, packages, config, undefined, resolve(dirname(fileURLToPath(import.meta.url)), ".."));
   } else {
     await exec("npm", ["exec", "changeset", "version"], { cwd: root, env });
   }
@@ -27,7 +34,7 @@ export async function versionPackages({ root = process.cwd(), env = process.env,
     sourceRef: env.GITHUB_SHA ?? "HEAD",
     restoreFromSource: Boolean(receipt),
   });
-  await recordReleaseOrigin(resolve(root, ".release"), env);
+  await recordReleaseOrigin(resolve(root, ".release"), env, allocation?.allocations);
   await exec("npm", ["install", "--package-lock-only", "--ignore-scripts"], { cwd: root, env });
   if (receipt) await unlink(resolve(root, ".release/recovery.json"));
 }
