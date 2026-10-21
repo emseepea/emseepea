@@ -1,5 +1,25 @@
 # @emseepea/server
 
+## 0.24.1
+
+### Minor Changes
+
+- [`166390c`](https://github.com/emseepea/emseepea/commit/166390c92b423fbf455db4a9037bf8d08e1f4e7d) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an internal Cloud Tasks adapter for the PostgreSQL Events dispatch ledger. It remains dormant. Tasks contain only the delivery identifier. The adapter uses fixed, trusted queue, endpoint and OpenID Connect settings. It limits credential access, requests, responses and concurrent work. It also supports cancellation and shutdown.
+
+  This increment adds no public export or routes. It does not connect the adapter to a worker or add worker identity verification. Automatic scheduling, feedback, erasure and production activation remain outside this increment.
+
+- [`eaad8df`](https://github.com/emseepea/emseepea/commit/eaad8df4c5b5eaa61fbf0bb5c05931e56b562e7c) Thanks [@tompahoward](https://github.com/tompahoward)! - Add opt-in external lifecycle storage for MCP Events. Adopters can persist subscription identity and activation state outside the server process. The framework continues to reject unsafe work when authorization, callback verification, request deadlines, cancellation, or bounded shutdown checks fail. Existing in-memory Events configuration remains compatible.
+
+- [`d363798`](https://github.com/emseepea/emseepea/commit/d36379823b3ba96777f668e163212a785542dced) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an opt-in dormant PostgreSQL-backed worker for delivering captured Model Context Protocol (MCP) Events to checked webhook subscriptions. The worker requires an explicit migration and invocation. It does not create routes, timers, provider jobs, or activate delivery automatically. It rechecks current subscription authority before each attempt, preserves durable retry and terminal receipts, and limits each delivery to four reserved attempts. This increment does not provide source or subscription erasure. It also does not activate a complete durable delivery composition.
+
+- [`7ae0881`](https://github.com/emseepea/emseepea/commit/7ae088187a799c6919319200506575b69870d4fc) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an optional, dormant PostgreSQL dispatch ledger for external Model Context Protocol (MCP) Events delivery. An explicit migration records stable provider task identity, a configuration fingerprint, time-limited leases and reconciliation outcomes. The provider-neutral reconciler can target one existing delivery. It can also inspect up to 100 due deliveries per invocation and honours an explicit pause signal. It creates no routes, timers, provider jobs, credentials or automatic scheduling. This increment does not activate Cloud Tasks, deletion, feedback backends, native execution or production use.
+
+### Patch Changes
+
+- [`08b27b5`](https://github.com/emseepea/emseepea/commit/08b27b59c2cc7213eb1329d67283ce31967b18a1) Thanks [@tompahoward](https://github.com/tompahoward)! - Add opt-in PostgreSQL 17 storage for capturing external Model Context Protocol (MCP) Events. The `@emseepea/server/events-postgres` subpath atomically records a stable source identity and the eligible subscription-generation intents in a caller-owned transaction using `REPEATABLE READ` or `SERIALIZABLE` isolation. This release does not configure native client subscriptions or deliver events.
+
+- [`2625c56`](https://github.com/emseepea/emseepea/commit/2625c56bc3b4d384fd8d6b17ec1221f679a783d1) Thanks [@tompahoward](https://github.com/tompahoward)! - Add opt-in PostgreSQL 17 storage for external Model Context Protocol (MCP) Events subscription lifecycles. It uses explicit migrations and separate observation and mutation pools. It persists owner-scoped subscription generations, renewals, revocations, and callback credentials. This release does not deliver events, configure a native client, integrate feedback, perform group erasure, or complete issue [#174](https://github.com/emseepea/emseepea/issues/174).
+
 ## 0.23.1
 
 ### Patch Changes
