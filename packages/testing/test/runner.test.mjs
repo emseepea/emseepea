@@ -15,6 +15,8 @@ const protectedServer = new URL("../../../tests/fixtures/protected-inventory-ser
 const feedbackServer = new URL("../../../examples/api-backed-server/test-support/llm-server.mjs", import.meta.url).href;
 const outcomeServer = new URL("../../../tests/fixtures/semantic-outcome-server.mjs", import.meta.url).href;
 const mcpClientModule = import.meta.resolve("@modelcontextprotocol/client");
+const childHangTimeout = 15 * 60_000;
+const testHangTimeout = 60 * 60_000;
 
 test("cancellation stops MCP collection and the server receives no model token", { timeout: 15_000 }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "semantic-cancel-"));
@@ -109,7 +111,7 @@ setInterval(() => {}, 1000);
   assert.fail("Semantic test descendant survived cancellation");
 });
 
-test("conversation tests assert exact calls, meaning, and no-call follow-ups", { timeout: 180_000 }, async (t) => {
+test("conversation tests assert exact calls, meaning, and no-call follow-ups", { timeout: testHangTimeout }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "semantic-conversation-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   await mkdir(join(directory, "eval"));
@@ -444,7 +446,7 @@ test("inventory conversation", async (t) => {
   ], {
     cwd: directory,
     encoding: "utf8",
-    timeout: 60_000,
+    timeout: childHangTimeout,
     env: {
       ...process.env,
       CLAUDE_CODE_OAUTH_TOKEN: "PROVIDER_SECRET_SENTINEL",

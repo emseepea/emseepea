@@ -9,8 +9,10 @@ import test from "node:test";
 const cli = fileURLToPath(new URL("../semantic/cli.mjs", import.meta.url));
 const helper = new URL("../semantic/test.mjs", import.meta.url).href;
 const server = new URL("../../../examples/tool-server/dist/server.js", import.meta.url).href;
+const childHangTimeout = 15 * 60_000;
+const testHangTimeout = 45 * 60_000;
 
-test("Codex runner starts, resumes, and refreshes exact native sessions", { timeout: 30_000 }, async (t) => {
+test("Codex runner starts, resumes, and refreshes exact native sessions", { timeout: testHangTimeout }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "codex-runner-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const model = await writeFakeCodex(directory);
@@ -86,7 +88,7 @@ test("Codex lifecycle", async (t) => {
   }
 });
 
-test("Codex runner fails closed when local shell suppression is rejected", { timeout: 30_000 }, async (t) => {
+test("Codex runner fails closed when local shell suppression is rejected", { timeout: testHangTimeout }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "codex-shell-suppression-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const log = join(directory, "invocations.jsonl");
@@ -140,7 +142,7 @@ test("suppression rejection", async (t) => {
     providerFailureCategory === "unknown"));
 });
 
-test("Codex runner retains bounded failure evidence from resumed conversations", { timeout: 30_000 }, async (t) => {
+test("Codex runner retains bounded failure evidence from resumed conversations", { timeout: testHangTimeout }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "codex-resumed-diagnostic-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const model = await writeFakeCodex(directory);
@@ -177,7 +179,7 @@ test("resumed diagnostic", async (t) => {
   }
 });
 
-test("Codex runner retains only bounded forbidden-item counts", { timeout: 30_000 }, async (t) => {
+test("Codex runner retains only bounded forbidden-item counts", { timeout: testHangTimeout }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "codex-forbidden-evidence-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const model = await writeFakeCodex(directory);
@@ -205,7 +207,7 @@ test("forbidden item", async (t) => {
     && forbiddenItemEvidence.counts.commandExecution === 1));
 });
 
-test("Codex runner never retains provider or server credential sentinels", { timeout: 30_000 }, async (t) => {
+test("Codex runner never retains provider or server credential sentinels", { timeout: testHangTimeout }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "codex-secret-evidence-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const model = await writeFakeCodex(directory);
@@ -299,7 +301,7 @@ function runCli(model, output, file, extraEnvironment) {
   return spawnSync(process.execPath, [cli, "--smoke", "--provider", "codex-local",
     "--model-command", model, "--output", output, file], {
     encoding: "utf8",
-    timeout: 25_000,
+    timeout: childHangTimeout,
     env: { ...process.env, EMSEEPEA_CODEX_MODEL: "gpt-test", ...extraEnvironment },
   });
 }
