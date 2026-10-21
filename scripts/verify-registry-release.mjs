@@ -34,6 +34,14 @@ export function assertRegistryPackagesExist(packages) {
   ].join(" "));
 }
 
+export function assertPublicationVersions(packages, { changedPackages, releaseSha }) {
+  for (const item of packages) {
+    if (!changedPackages.has(item.name) || !item.present) continue;
+    assert.equal(item.gitHead, releaseSha,
+      `${item.name}@${item.version} is already published from another commit; generate a release with unused versions before publishing any package`);
+  }
+}
+
 export async function waitForPublication(before, read, wait = waitForPropagation) {
   let after;
   for (let attempt = 1; attempt <= 60; attempt += 1) {
@@ -124,7 +132,10 @@ export function assertHistoricalCommitsInReleaseHistory(commits, releaseSha, his
   }
 }
 
-async function capture(path) {
+async function capture(path, { tag }) {
+  const context = tag === "next"
+    ? await releaseVersionContext({ releaseSha: process.env.EMSEEPEA_RELEASE_SHA ?? process.env.GITHUB_SHA })
+    : undefined;
   const packages = await Promise.all(packageFiles.map(async ([name, manifestPath]) => {
     const { version } = JSON.parse(await readFile(manifestPath, "utf8"));
     const metadata = await fetchPackage(name);
@@ -133,10 +144,12 @@ async function capture(path) {
       version,
       registered: Boolean(metadata),
       present: Boolean(metadata?.versions?.[version]),
+      gitHead: metadata?.versions?.[version]?.gitHead,
       latest: metadata?.["dist-tags"]?.latest ?? "",
     };
   }));
   assertRegistryPackagesExist(packages);
+  if (context) assertPublicationVersions(packages, context);
   await writeJson(path, { packages: packages.map(({ registered: _registered, ...item }) => item) });
 }
 
@@ -306,7 +319,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     ? args
     : args.filter((value, index) => index !== tagIndex && index !== tagIndex + 1);
   const [command, firstPath, secondPath] = positional;
-  if (command === "capture" && firstPath) await capture(firstPath);
+  if (command === "capture" && firstPath) await capture(firstPath, { tag });
   else if (command === "verify" && firstPath && secondPath) await verify(firstPath, secondPath, { tag });
   else {
     throw new Error(

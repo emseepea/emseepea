@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   assertRegistryPackagesExist,
+  assertPublicationVersions,
   assertRegistryState,
   assertHistoricalCommitsInReleaseHistory,
   assertStatements,
@@ -10,6 +11,23 @@ import {
   fetchPackage,
   waitForRegistryTag,
 } from "../../scripts/verify-registry-release.mjs";
+
+test("publication rejects conflicting occupied versions before publishing the remaining packages", () => {
+  const releaseSha = "b".repeat(40);
+  const context = { releaseSha, changedPackages: new Set(["@emseepea/server", "@emseepea/testing"]) };
+  const packages = [
+    { name: "@emseepea/server", version: "0.24.0", present: false },
+    { name: "@emseepea/testing", version: "0.26.1", present: true, gitHead: "a".repeat(40) },
+    { name: "@emseepea/tailwind", version: "0.1.1", present: true, gitHead: "c".repeat(40) },
+  ];
+  assert.throws(() => assertPublicationVersions(packages, context), /testing@0\.26\.1 is already published from another commit/);
+  packages[1].gitHead = undefined;
+  assert.throws(() => assertPublicationVersions(packages, context), /already published from another commit/);
+  packages[1].gitHead = releaseSha;
+  assert.doesNotThrow(() => assertPublicationVersions(packages, context));
+  packages[1].present = false;
+  assert.doesNotThrow(() => assertPublicationVersions(packages, context));
+});
 
 test("historical provenance is checked against the release's complete history", () => {
   const release = "c".repeat(40);
