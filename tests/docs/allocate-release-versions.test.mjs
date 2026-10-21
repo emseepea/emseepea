@@ -63,14 +63,19 @@ test("automatic allocation generates consistent manifests, starter pins, changel
   const config = JSON.parse(await readFile(configPath, "utf8"));
   config.changelog = ["@changesets/changelog-git", {}];
   await writeFile(configPath, JSON.stringify(config));
+  await writeFile(join(root, ".changeset/automatic-allocation-fixture.md"),
+    `---\n${publicPackages.map(({ name }) => `"${name}": patch`).join("\n")}\n---\n\nSynthetic allocation fixture.\n`);
   const sha = await run(["-C", root, "rev-parse", "HEAD"]);
   const original = await readPlannedReleaseStatus(root);
   const versions = new Map(original.releases.map(({ name, newVersion }) => [name, newVersion]));
+  assert.deepEqual(publicPackages.filter(({ name }) => versions.has(name)).map(({ name }) => name),
+    publicPackages.map(({ name }) => name));
   await versionPackages({ root, env: { ...process.env, GITHUB_SHA: sha, GITHUB_RUN_ID: "123" },
     readRegistry: async (name) => ({ versions: { [versions.get(name)]: { gitHead: "a".repeat(40) } } }),
   });
   const origin = JSON.parse(await readFile(join(root, ".release/origin.json"), "utf8"));
   assert.equal(origin.sha, sha);
+  assert.deepEqual(origin.versionAllocations.map(({ name }) => name).sort(), publicPackages.map(({ name }) => name).sort());
   const selected = applyVersionAllocations(original, origin.versionAllocations);
   const lock = JSON.parse(await readFile(join(root, "package-lock.json"), "utf8"));
   for (const item of publicPackages.filter(({ name }) => versions.has(name))) {
