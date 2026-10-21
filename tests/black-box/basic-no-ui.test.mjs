@@ -34,6 +34,8 @@ test("tool access must be explicit", () => {
 
 test("the no-UI beachhead works through the public HTTP boundary", async () => {
   let handlerCalls = 0;
+  let completedSignal;
+  let timeoutReason;
 
   const tool = defineTool({
     name: "lookup-bean",
@@ -50,7 +52,11 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     async handler({ id, delayMs = 0 }, { signal }) {
       handlerCalls += 1;
       if (delayMs > 0) {
-        await delay(delayMs, undefined, { signal });
+        try {
+          await delay(delayMs, undefined, { signal });
+        } finally {
+          timeoutReason = signal.reason;
+        }
       }
       if (id === "invalid-output") {
         return { text: "must-not-leak", data: { id } };
@@ -61,6 +67,7 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
       if (id === "invalid-text") return { text: 42, data: { id, roast: "medium" } };
       if (id === "undefined-text") return { text: undefined, data: { id, roast: "medium" } };
       if (id === "bean-client") return { text: `${id}: medium`, data: { id, roast: "medium" } };
+      completedSignal = signal;
       return { data: { id, roast: "medium" } };
     },
   });
@@ -118,6 +125,8 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     });
     assert.equal(call.body.result.isError, false);
     assert.equal(handlerCalls, 1);
+    await delay(550);
+    assert.equal(completedSignal.aborted, false);
 
     for (const accept of [
       undefined,
@@ -280,6 +289,7 @@ test("the no-UI beachhead works through the public HTTP boundary", async () => {
     assert.equal(timedOut.response.status, 200);
     assert.equal(timedOut.body.result.isError, true);
     assert.doesNotMatch(JSON.stringify(timedOut.body), /AbortError|stack|timed out/i);
+    assert.equal(timeoutReason?.name, "TimeoutError");
 
     const beforeDeniedRequests = handlerCalls;
     const badOrigin = await rpc(

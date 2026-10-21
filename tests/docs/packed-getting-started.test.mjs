@@ -675,7 +675,7 @@ test("every packed initializer creates a standalone checked project", {
         "--yes",
         "--offline",
         "--userconfig", "/dev/null",
-        "--package", tarballs.get(initializer.name),
+        `--package=${tarballs.get(initializer.name)}`,
         "--",
         initializer.key,
         "my-server",

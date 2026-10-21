@@ -12,6 +12,8 @@ export interface DatabaseSchemaExampleOptions extends EmseepeaExtensions {
   readonly access?: AccessPolicy;
 }
 
+export const databaseStatementTimeoutMs = 1_500;
+
 export async function createDatabaseSchemaExample(options: DatabaseSchemaExampleOptions) {
   const { databaseUrl: databaseUrlOption, access = { access: "public" }, ...extensions } = options;
   const databaseUrl = z.string().url().refine(
@@ -24,7 +26,7 @@ export async function createDatabaseSchemaExample(options: DatabaseSchemaExample
     idleTimeoutMillis: 10_000,
     max: 4,
     query_timeout: 2_000,
-    statement_timeout: 1_500,
+    statement_timeout: databaseStatementTimeoutMs,
   });
   database.on("error", () => {
     // Readiness and tool calls report provider failure without exposing details.

@@ -173,9 +173,11 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
     };
   });
   if (hasAuthenticationFailure(events)) throw new Error("Model command is not signed in");
-  if (result?.is_error || typeof result?.result !== "string") {
-    throw new Error("Model command returned no answer");
+  if (!result) throw new Error("Model command omitted its result event");
+  if (result.is_error) {
+    throw new Error(providerErrorMessages.get(result.subtype) ?? "Model command reported an error");
   }
+  if (typeof result.result !== "string") throw new Error("Model command returned a non-text answer");
   if ((result.permission_denials?.length ?? 0) > 0) {
     throw new Error("Model command attempted a forbidden action");
   }

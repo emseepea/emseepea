@@ -52,3 +52,16 @@ this mixed result as designed. The runtime/profile cause remains unresolved.
 
 - [P015 classification treatment](../closed/015-production-boundary-cpu-benchmark-gives-conflicting-results-for-an-unchanged-revision.md)
 - [R014 performance classification risk](../../risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md)
+
+## Story Maps
+
+| ID | Title | Status |
+|----|-------|--------|
+| STORY-MAP-001 | STORY-MAP-001: Share a verified framework change safely | accepted |
+
+
+## Stories
+
+| ID | Title | Status |
+|----|-------|--------|
+| STORY-004 | STORY-004: Pass the Request Performance Check on Node 22 | accepted |

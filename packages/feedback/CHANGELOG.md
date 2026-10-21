@@ -1,5 +1,12 @@
 # @emseepea/feedback
 
+## 0.10.4
+
+### Patch Changes
+
+- Updated dependencies [[`166390c`](https://github.com/emseepea/emseepea/commit/166390c92b423fbf455db4a9037bf8d08e1f4e7d), [`eaad8df`](https://github.com/emseepea/emseepea/commit/eaad8df4c5b5eaa61fbf0bb5c05931e56b562e7c), [`08b27b5`](https://github.com/emseepea/emseepea/commit/08b27b59c2cc7213eb1329d67283ce31967b18a1), [`d363798`](https://github.com/emseepea/emseepea/commit/d36379823b3ba96777f668e163212a785542dced), [`7ae0881`](https://github.com/emseepea/emseepea/commit/7ae088187a799c6919319200506575b69870d4fc), [`2625c56`](https://github.com/emseepea/emseepea/commit/2625c56bc3b4d384fd8d6b17ec1221f679a783d1)]:
+  - @emseepea/server@0.24.1
+
 ## 0.10.2
 
 ### Patch Changes

@@ -31,3 +31,16 @@ Public and backend data contracts must stay separate and checked.
 ## What Maintainers Do Today
 
 Maintainers rely on software development kit (SDK) types and one-off integration checks.
+
+## Story Maps
+
+| ID | Title | Status |
+|----|-------|--------|
+| STORY-MAP-001 | STORY-MAP-001: Share a verified framework change safely | accepted |
+
+
+## Stories
+
+| ID | Title | Status |
+|----|-------|--------|
+| STORY-004 | STORY-004: Pass the Request Performance Check on Node 22 | accepted |

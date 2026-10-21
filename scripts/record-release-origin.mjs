@@ -18,8 +18,9 @@ export function releaseOrigin(env = process.env) {
   };
 }
 
-export async function recordReleaseOrigin(directory = ".release", env = process.env) {
+export async function recordReleaseOrigin(directory = ".release", env = process.env, versionAllocations = []) {
   const origin = releaseOrigin(env);
+  if (versionAllocations.length) origin.versionAllocations = versionAllocations;
   if (!origin.sha) return undefined;
   await mkdir(directory, { recursive: true });
   await writeFile(`${directory}/origin.json`, `${JSON.stringify(origin, null, 2)}\n`);

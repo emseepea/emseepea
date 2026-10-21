@@ -73,9 +73,21 @@ import { readFileSync } from "node:fs";
 import { readdir, realpath } from "node:fs/promises";
 import { isIP } from "node:net";
 import { isAbsolute, join } from "node:path";
+import { performance } from "node:perf_hooks";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { z } from "zod";
+import { prepareAppShutdown, remainingAppShutdown, startAppShutdown, registerAppShutdownOwner } from "./app-shutdown.js";
 import { createMcpEventRuntime, McpEventInputError, type McpEventRuntime, type McpEventsOptions } from "./events.js";
+import { createExternalMcpEventRuntime, type ExternalMcpEventsOptions, type ExternalMcpEventRuntime } from "./events-external.js";
+export { ExternalMcpEventError } from "./events-external.js";
+export type {
+  ExternalMcpEventsOptions,
+  ExternalMcpEventLifecycle,
+  ExternalMcpEventInvocation,
+  ExternalMcpEventIdentity,
+  ExternalMcpEventObservation,
+  ExternalMcpEventActivation,
+} from "./events-external.js";
 import { createResourceInventory, ResourceInventoryCursorError, type ResourceInventoryHandler } from "./resource-inventory.js";
 export type { ResourceInventoryEntry, ResourceInventoryPage, ResourceInventoryHandler } from "./resource-inventory.js";
 export type { McpEventDefinition, McpEventDelivery, McpClaimedEventDelivery, McpEventStore, McpEventSubscription, McpEventsOptions } from "./events.js";
@@ -748,6 +760,9 @@ export interface EmseepeaOptions {
   readonly operationTimeoutMs?: number;
   readonly deployment?: DeploymentProfile;
   readonly authentication?: AuthenticationOptions;
+}
+export interface ExternalEmseepeaOptions extends Omit<EmseepeaOptions, "events"> {
+  readonly events: ExternalMcpEventsOptions;
 }
 export interface RequestStateOptions {
   readonly key: Uint8Array | string;
@@ -2191,13 +2206,17 @@ function installListPagination(server: McpServer, pagination: CompiledListPagina
   );
 }
 
-export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
+export function createEmseepea(options: ExternalEmseepeaOptions): FastifyInstance;
+export function createEmseepea(options: EmseepeaOptions): FastifyInstance;
+export function createEmseepea(options: EmseepeaOptions | ExternalEmseepeaOptions): FastifyInstance {
   const observability = normalizeObservability(options.observability);
   const callerClassifications = normalizeCallerClassifications(options.callerClassifications);
   const readiness = options.readiness;
   const readinessTimeoutMs = callbackTimeout("readiness", readiness, "readinessTimeoutMs", options.readinessTimeoutMs);
   const stopping = new AbortController();
-  let eventRuntime: McpEventRuntime | undefined;
+  let eventRuntime: McpEventRuntime | ExternalMcpEventRuntime | undefined;
+  let internalEventRuntime: McpEventRuntime | undefined;
+  let externalEventRuntime: ExternalMcpEventRuntime | undefined;
   let pendingReadiness: Promise<boolean> | undefined;
   async function ready(): Promise<boolean> {
     if (stopping.signal.aborted) return false;
@@ -2301,7 +2320,13 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   if (options.events && !authentication) {
     throw new TypeError("MCP Events require authentication configuration");
   }
-  eventRuntime = options.events ? createMcpEventRuntime(options.events) : undefined;
+  if (options.events) {
+    if ("mode" in options.events) {
+      eventRuntime = externalEventRuntime = createExternalMcpEventRuntime(options.events);
+    } else {
+      eventRuntime = internalEventRuntime = createMcpEventRuntime(options.events);
+    }
+  }
   const hasStreaming = tools.some((tool) => tool[TOOL_STREAMING]);
   const hasProgress = hasStreaming || resources.length > 0 || prompts.length > 0;
   if ([
@@ -2491,6 +2516,21 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
   });
   const nodeHandler = toNodeHandler(sdkHandler);
   const app = createMcpFastifyApp({ host: deployment.mode === "loopback" ? "127.0.0.1" : "0.0.0.0" });
+  const unstartedSockets = new Set<import("node:net").Socket>();
+  app.server.on("connection", (socket) => {
+    if (stopping.signal.aborted) {
+      socket.destroy();
+      return;
+    }
+    unstartedSockets.add(socket);
+    socket.once("close", () => unstartedSockets.delete(socket));
+  });
+  app.server.on("request", (request, response) => {
+    unstartedSockets.delete(request.socket);
+    response.once("finish", () => {
+      if (stopping.signal.aborted) queueMicrotask(() => app.server.closeIdleConnections());
+    });
+  });
   async function serveResourceSubscription(
     request: FastifyRequest,
     reply: FastifyReply,
@@ -2593,7 +2633,10 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       .code(available ? 200 : 503).send(available ? "ready\n" : "not ready\n");
   });
   app.addHook("preClose", async () => {
+    prepareAppShutdown(app);
+    void startAppShutdown(app);
     stopping.abort();
+    for (const socket of unstartedSockets) socket.destroy();
     await Promise.all([...activeSubscriptions].map((handler) => handler.close()));
   });
   if (authentication) {
@@ -2617,6 +2660,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     handler: async (_request, reply) => { await reply.header("allow", "POST").code(405).send(); },
   });
   app.post("/mcp", { bodyLimit: maxRequestBytes }, async (request, reply) => {
+    const admittedAt = performance.now();
     if (deployment.mode === "production-behind-proxy" &&
         !validateProductionRequest(request, reply, deployment, limiter!)) return;
     const protocolVersionHeader = singleHeader(request.raw.rawHeaders, "mcp-protocol-version");
@@ -2741,7 +2785,17 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     }
     if (eventRuntime && !legacy && isRecord(request.body) &&
         (request.body.method === "server/discover" || eventMethod)) {
-      if (!await eventRuntime.ready()) {
+      const disconnectedEvents = new AbortController();
+      const abortEvents = () => disconnectedEvents.abort();
+      request.raw.once("aborted", abortEvents);
+      reply.raw.once("close", abortEvents);
+      if (requestAlreadyClosed(request, reply)) abortEvents();
+      try {
+      const requestEvents = externalEventRuntime ? externalEventRuntime.forInvocation({
+        signal: AbortSignal.any([stopping.signal, disconnectedEvents.signal]),
+        deadlineMs: Date.now() + Math.max(0, operationTimeoutMs - (performance.now() - admittedAt)),
+      }) : eventRuntime;
+      if (!await requestEvents.ready()) {
         await sendRpcError(reply, 503, -32603, "Events are unavailable", requestId(request.body.id));
         return;
       }
@@ -2780,14 +2834,14 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       }
       if (!authInfo) throw new Error("Events reached execution without verified authorization");
       let ownerKey: string;
-      try { ownerKey = await eventRuntime.ownerKey(authInfo); }
+      try { ownerKey = await requestEvents.ownerKey(authInfo); }
       catch {
         await sendRpcError(reply, 500, -32603, "Event owner identity unavailable", requestId(request.body.id));
         return;
       }
       if (request.body.method === "events/list") {
         try {
-          const events = await eventRuntime.list(ownerKey);
+          const events = await requestEvents.list(ownerKey);
           await reply.code(200).send({
             jsonrpc: "2.0",
             id: requestId(request.body.id),
@@ -2800,7 +2854,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       }
       if (request.body.method === "events/subscribe") {
         try {
-          const result = await eventRuntime.subscribe(ownerKey, request.body.params);
+          const result = await requestEvents.subscribe(ownerKey, request.body.params);
           await reply.code(200).send({ jsonrpc: "2.0", id: requestId(request.body.id), result });
         } catch (error) {
           if (error instanceof McpEventInputError) {
@@ -2814,7 +2868,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       }
       if (request.body.method === "events/unsubscribe") {
         try {
-          await eventRuntime.unsubscribe(ownerKey, request.body.params);
+          await requestEvents.unsubscribe(ownerKey, request.body.params);
           await reply.code(200).send({ jsonrpc: "2.0", id: requestId(request.body.id), result: {} });
         } catch (error) {
           if (error instanceof McpEventInputError) {
@@ -2825,6 +2879,10 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
           }
         }
         return;
+      }
+      } finally {
+        request.raw.off("aborted", abortEvents);
+        reply.raw.off("close", abortEvents);
       }
     }
     if (subscriptionTarget) {
@@ -2848,7 +2906,7 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
       await requestOperations.run(
         {
           deadlineMs: Date.now() + operationTimeoutMs,
-          signal: disconnected.signal,
+          signal: AbortSignal.any([disconnected.signal, stopping.signal]),
           principal,
           filterCatalogues: protectsCatalogue,
           capability,
@@ -2873,15 +2931,23 @@ export function createEmseepea(options: EmseepeaOptions): FastifyInstance {
     }
   });
   let drainingEvents = false;
-  const eventTimer = eventRuntime ? setInterval(() => {
+  const eventTimer = internalEventRuntime ? setInterval(() => {
     if (drainingEvents || stopping.signal.aborted) return;
     drainingEvents = true;
-    void eventRuntime!.drain().catch(() => {}).finally(() => { drainingEvents = false; });
+    void internalEventRuntime!.drain().catch(() => {}).finally(() => { drainingEvents = false; });
   }, 1000) : undefined;
   eventTimer?.unref();
+  let externalSettled = true;
+  if (externalEventRuntime) registerAppShutdownOwner(app, async (invocation) => {
+    try { return externalSettled = await externalEventRuntime!.settle(invocation); }
+    catch { return externalSettled = false; }
+  });
   app.addHook("onClose", async () => {
     if (eventTimer) clearInterval(eventTimer);
+    const ownersSettled = await startAppShutdown(app);
     await sdkHandler.close();
+    if (!externalSettled) throw new Error("External Events shutdown has unfinished operations");
+    if (!ownersSettled) throw new Error("APP_SHUTDOWN_INCOMPLETE");
   });
   runtimes.set(app, {
     deployment,
@@ -3174,10 +3240,13 @@ export async function serveEmseepea(
   return {
     url: new URL(`http://${urlHost}:${address.port}/mcp`),
     close: () => {
+      if (closing) return closing;
+      prepareAppShutdown(app, shutdownTimeoutMs);
       runtime.stopping.abort();
-      return closing ??= closeApp(
+      void startAppShutdown(app);
+      return closing = closeApp(
         app,
-        shutdownTimeoutMs,
+        remainingAppShutdown(app),
         observabilityFlushTimeoutMs,
         runtime.finishObservability,
       );
@@ -4075,14 +4144,62 @@ async function runWithDeadline<Result>(
   work: (signal: AbortSignal) => Result | Promise<Result>,
 ): Promise<Result> {
   const remainingMs = deadlineMs - Date.now();
-  const deadlineSignal = remainingMs > 0 ? AbortSignal.timeout(remainingMs) : AbortSignal.abort();
-  const signal = AbortSignal.any([requestSignal, deadlineSignal]);
+  const invocationSignal = requestOperations.getStore()?.signal;
   return new Promise<Result>((resolve, reject) => {
-    const onAbort = () => reject(new Error("Tool execution cancelled"));
+    const controller = new AbortController();
+    const signal = controller.signal;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let settled = false;
+    const abortFrom = (source: AbortSignal) => {
+      if (!signal.aborted) controller.abort(source.reason);
+    };
+    const onRequestAbort = () => abortFrom(requestSignal);
+    const onInvocationAbort = () => {
+      if (invocationSignal) abortFrom(invocationSignal);
+    };
+    const onAbort = () => finishReject(new Error("Tool execution cancelled"));
+    const cleanup = () => {
+      if (timer !== undefined) clearTimeout(timer);
+      requestSignal.removeEventListener("abort", onRequestAbort);
+      if (invocationSignal && invocationSignal !== requestSignal) {
+        invocationSignal.removeEventListener("abort", onInvocationAbort);
+      }
+      signal.removeEventListener("abort", onAbort);
+    };
+    function finishResolve(value: Result) {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(value);
+    }
+    function finishReject(error: unknown) {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    }
+
+    if (requestSignal.aborted) {
+      abortFrom(requestSignal);
+    } else if (remainingMs <= 0) {
+      controller.abort(new DOMException("The operation was aborted due to timeout", "TimeoutError"));
+    } else if (invocationSignal?.aborted) {
+      abortFrom(invocationSignal);
+    } else {
+      requestSignal.addEventListener("abort", onRequestAbort, { once: true });
+      if (invocationSignal && invocationSignal !== requestSignal) {
+        invocationSignal.addEventListener("abort", onInvocationAbort, { once: true });
+      }
+      timer = setTimeout(() => {
+        if (!signal.aborted) {
+          controller.abort(new DOMException("The operation was aborted due to timeout", "TimeoutError"));
+        }
+      }, remainingMs);
+    }
+
     if (signal.aborted) return onAbort();
     signal.addEventListener("abort", onAbort, { once: true });
-    Promise.resolve().then(() => work(signal)).then(resolve, reject)
-      .finally(() => signal.removeEventListener("abort", onAbort));
+    Promise.resolve().then(() => work(signal)).then(finishResolve, finishReject);
   });
 }
 
@@ -4365,13 +4482,17 @@ async function closeApp(
   let onClosed: () => void;
   const httpClosed = new Promise<void>((resolve) => { onClosed = resolve; });
   app.server.once("close", onClosed!);
-  const timeout = new Promise<void>((resolve) => {
+  const timeout = new Promise<void>((_resolve, reject) => {
     timer = setTimeout(() => {
-      app.server.close();
-      app.server.closeAllConnections();
-      resolve();
+      try {
+        app.server.close();
+        app.server.closeAllConnections();
+      } catch {
+        // Cleanup failure must not hide the incomplete shutdown outcome.
+      } finally {
+        reject(new Error("SERVER_SHUTDOWN_INCOMPLETE"));
+      }
     }, timeoutMs);
-    timer.unref();
   });
   try {
     await Promise.race([app.close(), timeout]);

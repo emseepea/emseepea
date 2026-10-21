@@ -130,7 +130,9 @@ jobs:
       - name: Build packages for publication
         run: npm run build
       - name: Check every package exists before trusted publishing
-        run: node scripts/verify-registry-release.mjs capture release-artifacts/registry-before.json
+        env:
+          EMSEEPEA_RELEASE_SHA: ${{ inputs.head_sha }}
+        run: node scripts/verify-registry-release.mjs capture release-artifacts/registry-before.json --tag next
       - name: Prepare package evidence
         env:
           RELEASE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
