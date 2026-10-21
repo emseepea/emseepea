@@ -22,7 +22,7 @@
   "devDependencies": {
     "@emseepea/feedback": "0.10.2",
     "@emseepea/server": "0.23.1",
-    "soap": "1.11.0",
+    "soap": "1.13.2",
     "xml-xsd-engine": "1.7.3",
     "zod": "4.4.3",
     "@emseepea/testing": "0.26.0",

@@ -56,8 +56,11 @@
     "release:next": "changeset publish --tag next"
   },
   "overrides": {
+    "follow-redirects": "1.16.1",
+    "launch-editor": "2.14.2",
     "postcss-nested": { "postcss-selector-parser": "7.1.6" },
-    "oxfmt": { "tinypool": "2.1.2" }
+    "oxfmt": { "tinypool": "2.1.2" },
+    "vite": "8.3.3"
   },
   "devDependencies": {
     "@opentelemetry/context-async-hooks": "2.10.0",
@@ -67,7 +70,7 @@
     "@changesets/changelog-github": "1.0.0",
     "@changesets/cli": "3.0.1",
     "@emseepea/testing": "0.26.0",
-    "@modelcontextprotocol/client": "2.2.0",
+    "@modelcontextprotocol/client": "2.3.1",
     "@types/node": "24.13.3",
     "axe-core": "4.13.0",
     "google-auth-library": "11.3.1",
