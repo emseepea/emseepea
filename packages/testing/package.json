@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/testing",
-  "version": "0.26.0",
+  "version": "0.26.2",
   "description": "MCP integration and semantic testing helpers",
   "license": "MIT",
   "repository": {
@@ -57,7 +57,7 @@
     "test:llm:built": "emseepea-test eval"
   },
   "dependencies": {
-    "@emseepea/server": "0.23.1",
+    "@emseepea/server": "0.24.1",
     "@modelcontextprotocol/client": "2.3.1",
     "@modelcontextprotocol/server": "2.3.1",
     "@modelcontextprotocol/core": "2.3.1"

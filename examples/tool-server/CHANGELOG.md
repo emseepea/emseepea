@@ -1,5 +1,11 @@
 # @emseepea/create-tool-server
 
+## 0.1.23
+
+### Patch Changes
+
+- [`b7665b7`](https://github.com/emseepea/emseepea/commit/b7665b76c47c1cf6af93003f5e154a5183ef8b52) Thanks [@tompahoward](https://github.com/tompahoward)! - Keep generated starter dependencies aligned with the server release across all initializer packages.
+
 ## 0.1.21
 
 ### Patch Changes
