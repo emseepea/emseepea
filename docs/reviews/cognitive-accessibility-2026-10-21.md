@@ -34,17 +34,18 @@ evidence wording.
 
 Result: PASS after revision. An independent cognitive-accessibility specialist
 reviewed the final story and linked problem record. The copy defines the
-14-complete-day eligibility rule, separates local evidence from exact-source
-commit GitHub verification, and distinguishes fixed dependencies from findings
-with no published fix. No cognitive-accessibility findings remain.
+14-complete-day eligibility rule, separates earlier local evidence from the
+subsequent exact-source-commit GitHub verification, and distinguishes fixed
+dependencies from findings with no published fix. No cognitive-accessibility
+findings remain.
 
 This is a source-text review. It does not prove continuous integration or
 release success.
 
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
-| `docs/stories/in-progress/STORY-003-resolve-the-vulnerable-lockfile-dependency.md` | `be066df88ba39e28ead86f235100891f0f5f4c5d72f0146da99526bbee1e6594` |
-| `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `7c8b7f3dbc03796490d8bd14f975471a8b992da674b37859553885b684bd66a6` |
+| `docs/stories/in-progress/STORY-003-resolve-the-vulnerable-lockfile-dependency.md` | `3f8fc55641e697d0133c8b37511c0ffe54210475ba40ce04d41bdcf2a0106dd2` |
+| `docs/problems/known-error/017-known-vulnerability-in-dev-dependency-blocks-trunk.md` | `340c148161ea1212792aa49d3580c923a0c0411b7aa3f9fd11f1c740bbb962de` |
 
 Reviewer: independent cognitive-accessibility specialist. Voice-and-tone review
 also passed on the final wording.

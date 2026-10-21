@@ -41,8 +41,8 @@ updates with the existing security checks for the exact source commit.
 - [x] The Open Source Vulnerabilities scan and release gate pass. Their only
       remaining findings are `braces` and `http-cache-semantics`, for which no
       published fix is available.
-- [ ] Exact local qualification passes for the exact source commit.
-- [ ] The GitHub Quality workflow passes for the exact source commit before the
+- [x] Exact local qualification passes for the exact source commit.
+- [x] The GitHub Quality workflow passes for the exact source commit before the
       blocked package release resumes.
 
 ## Driving problem trace
@@ -71,6 +71,8 @@ for eligible transitive fixes. Do not weaken or replace the vulnerability gate.
 
 - P017 Known Error record.
 - R007 release-pipeline supply-chain risk.
+- Exact source commit `9d6e7e33956a9c44c676361128f03bef69e06314` passed local
+  qualification and GitHub Quality run `39521050752` on 2026-10-21.
 
 (captured via `/wr-itil:capture-rfc`; expand at the next
 `/wr-itil:manage-story` invocation)
