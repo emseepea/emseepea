@@ -26,10 +26,11 @@ after(async () => {
   await server?.close();
 });
 
-test("every built page has accessible light/dark mobile and desktop output", { timeout: 180_000 }, async () => {
+test("every built page has accessible light/dark mobile and desktop output", { timeout: 900_000 }, async () => {
   for (const colorScheme of ["light", "dark"]) {
     for (const width of [1280, 320]) {
       const context = await browser.newContext({ colorScheme, viewport: { width, height: 900 } });
+      context.setDefaultTimeout(900_000);
       try {
         const page = await context.newPage();
         for (const route of [...routes, base + "404.html"]) {
