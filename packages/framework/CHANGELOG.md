@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.25.0
+
+### Minor Changes
+
+- [`b735c3c`](https://github.com/emseepea/emseepea/commit/b735c3c07213d5c1352edef3a4c382b4fbb0ca09) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an optional Google-authenticated worker endpoint for queued PostgreSQL Events delivery.
+
 ## 0.24.1
 
 ### Minor Changes
