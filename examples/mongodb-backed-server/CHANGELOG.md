@@ -1,5 +1,11 @@
 # @emseepea/create-mongodb-backed-server
 
+## 0.1.24
+
+### Patch Changes
+
+- [`e159752`](https://github.com/emseepea/emseepea/commit/e15975257a93a8f519eaec4197a2e1fec5cf233d) Thanks [@tompahoward](https://github.com/tompahoward)! - Align generated starter dependencies with the authenticated Events worker release.
+
 ## 0.1.23
 
 ### Patch Changes

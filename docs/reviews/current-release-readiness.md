@@ -1,6 +1,70 @@
 # Current Release Readiness
 
-Date: 2026-10-20
+Date: 2026-10-22
+
+## Authenticated queued Events worker
+
+Status: **LOCAL TESTS PASS; EXACT-COMMIT QUALIFICATION INCOMPLETE**.
+
+The optional worker checks a Google-signed service-account identity before
+PostgreSQL delivery. It creates no route or timer on ordinary servers. This
+release does not complete #174: scheduled recovery, independent deployment,
+feedback integration and native-client execution remain required.
+
+The worker source is committed as
+`b735c3c07213d5c1352edef3a4c382b4fbb0ca09`. All 26 worker tests, the public type
+fixture and the 19-case PostgreSQL delivery integration suite passed. Callback
+transport is mocked in the PostgreSQL suite. A separate fresh package-archive
+install passed public HTTP, signed-token, fixed-namespace, rejected-authority
+and shutdown checks. Its TypeScript consumer compiled with normal Node.js
+development types installed. These are synthetic tests, not live Google
+deployment.
+
+The normal `npm test` command passed all workspace checks and all 449 root
+tests. Website checks passed all 16 tests. This run began before the worker
+commit and did not bind a clean committed head. Clean committed-head
+qualification still needs its own result.
+
+The normal `npm run benchmark` command exited successfully on Node.js 26.5.1,
+macOS arm64. Its production-boundary report returned `PASS` and
+`qualifies: true`. This does not measure deployed Google worker performance.
+
+Architecture, jobs-to-be-done, voice, cognitive-accessibility and scoped
+rendered-page reviews passed. The worker source risk review scored commit,
+push and release at 5/25 each. The final pipeline assessment must also cover
+this release metadata. Required clean qualification, exact-source Quality,
+semantic Release build, registry/provenance verification, Publish and
+independent installed-package acceptance remain unchanged.
+
+### Planned public publication
+
+Changesets computes the versions below. Versions are not edited by hand.
+Existing release checks require starter dependencies to stay aligned. No private
+website or unchanged Tailwind version is added to the new npm package list.
+
+- `@emseepea/server@0.25.0`
+- `@emseepea/testing@0.26.3`
+- `@emseepea/feedback@0.10.5`
+- `@emseepea/react@0.4.11`
+- `@emseepea/svelte@0.2.11`
+- `@emseepea/create-api-backed-server@0.1.24`
+- `@emseepea/create-database-schema-server@0.1.24`
+- `@emseepea/create-html-ui-server@0.1.24`
+- `@emseepea/create-mongodb-backed-server@0.1.24`
+- `@emseepea/create-multi-instance-postgres-server@0.1.24`
+- `@emseepea/create-openapi-backed-server@0.1.24`
+- `@emseepea/create-progress-streaming-server@0.1.24`
+- `@emseepea/create-react-ui-server@0.1.24`
+- `@emseepea/create-resources-and-prompts-server@0.1.24`
+- `@emseepea/create-soap-backed-server@0.1.24`
+- `@emseepea/create-tool-server@0.1.24`
+
+- Result: PASS
+- Final result: within appetite, subject to the required exact-commit gates.
+
+## Previous release readiness (retained history)
+
+Previous review date: 2026-10-20.
 
 ## Native Claude failure diagnostics
 
@@ -45,9 +109,9 @@ Full qualification, benchmarks, exact-commit Quality, semantic release checks,
 publication, registry verification and merge-back remain required. No new
 publication is claimed here.
 
-### Current planned publication
+### Publication planned on 20 October
 
-The current Changesets plan includes `@emseepea/server` 0.24.0 for the external
+At that review, Changesets planned `@emseepea/server` 0.24.0 for the external
 Events lifecycle release. All eleven initializer packages are planned for
 0.1.22 patch releases so their generated starter dependencies remain aligned.
 The plan also retains `@emseepea/testing` 0.26.1, `@emseepea/feedback` 0.10.3,
@@ -56,22 +120,22 @@ The plan also retains `@emseepea/testing` 0.26.1, `@emseepea/feedback` 0.10.3,
 
 The planned public npm package list is:
 
-- `@emseepea/server@0.24.0`
-- `@emseepea/testing@0.26.1`
-- `@emseepea/feedback@0.10.3`
-- `@emseepea/react@0.4.9`
-- `@emseepea/svelte@0.2.9`
-- `@emseepea/create-api-backed-server@0.1.22`
-- `@emseepea/create-database-schema-server@0.1.22`
-- `@emseepea/create-html-ui-server@0.1.22`
-- `@emseepea/create-mongodb-backed-server@0.1.22`
-- `@emseepea/create-multi-instance-postgres-server@0.1.22`
-- `@emseepea/create-openapi-backed-server@0.1.22`
-- `@emseepea/create-progress-streaming-server@0.1.22`
-- `@emseepea/create-react-ui-server@0.1.22`
-- `@emseepea/create-resources-and-prompts-server@0.1.22`
-- `@emseepea/create-soap-backed-server@0.1.22`
-- `@emseepea/create-tool-server@0.1.22`
+- Earlier planned: `@emseepea/server@0.24.0`
+- Earlier planned: `@emseepea/testing@0.26.1`
+- Earlier planned: `@emseepea/feedback@0.10.3`
+- Earlier planned: `@emseepea/react@0.4.9`
+- Earlier planned: `@emseepea/svelte@0.2.9`
+- Earlier planned: `@emseepea/create-api-backed-server@0.1.22`
+- Earlier planned: `@emseepea/create-database-schema-server@0.1.22`
+- Earlier planned: `@emseepea/create-html-ui-server@0.1.22`
+- Earlier planned: `@emseepea/create-mongodb-backed-server@0.1.22`
+- Earlier planned: `@emseepea/create-multi-instance-postgres-server@0.1.22`
+- Earlier planned: `@emseepea/create-openapi-backed-server@0.1.22`
+- Earlier planned: `@emseepea/create-progress-streaming-server@0.1.22`
+- Earlier planned: `@emseepea/create-react-ui-server@0.1.22`
+- Earlier planned: `@emseepea/create-resources-and-prompts-server@0.1.22`
+- Earlier planned: `@emseepea/create-soap-backed-server@0.1.22`
+- Earlier planned: `@emseepea/create-tool-server@0.1.22`
 
 ## Optional Events store conformance helper
 

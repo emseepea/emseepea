@@ -132,6 +132,103 @@ is a bounded test aid, not a production initializer or deployment recipe.
 The remaining infrastructure will be delivered in reviewed increments. No new
 hosted service or generic task orchestrator is required by this guide.
 
+## Receive one queued event on a trusted worker
+
+The optional `@emseepea/server/events-google-worker` entry point checks a
+Google-signed service-account identity before looking up a delivery. It reuses
+PostgreSQL delivery, authorization checks, signed callbacks and durable attempt
+limits. Ordinary MCP servers gain no route or background timer.
+
+This endpoint is a foundation, not complete production setup. Task dispatch,
+scheduled recovery, provisioning and automatic native-client execution must
+still be configured and tested separately.
+
+1. Install the optional Google dependencies alongside the server and Fastify:
+
+   ```sh
+   npm install @emseepea/server fastify google-auth-library@11.3.1 google-logging-utils@2.1.0
+   ```
+
+2. Supply an owned PostgreSQL pool, event definitions and application
+   authorization. Use the same namespace and database as event capture and
+   subscription lifecycle. The worker creates no tables; apply the existing
+   delivery migrations before accepting tasks.
+3. Configure these trusted deployment values. They never come from a task body:
+
+   - `audience`: the exact HTTPS audience set on the Cloud Tasks OpenID Connect
+     (OIDC) token. This is normally the deployed worker URL.
+   - `serviceAccountEmail`: the dedicated task-invocation service account, not
+     the browser user's account or the request server's customer identity.
+   - `serviceAccountUid`: that service account's permanent numeric ID. Retrieve
+     it from the service account's `uniqueId` field in Google Cloud. Matching
+     the email alone is insufficient if an account is deleted and recreated.
+   - `namespace`: the deployment-owned Events namespace, never a tenant selector
+     supplied by the caller.
+
+4. Register the handler explicitly on the worker server:
+
+   ```ts title="Register the authenticated worker endpoint"
+   import Fastify from "fastify";
+   import { createGoogleEventDeliveryWorker } from "@emseepea/server/events-google-worker";
+   import { pool, definitions, authorize, workerConfiguration } from "./event-integration.js";
+
+   const app = Fastify({ logger: false });
+   const worker = createGoogleEventDeliveryWorker({
+     ...workerConfiguration, // namespace, audience, serviceAccountEmail, serviceAccountUid
+     pool,
+     definitions,
+     authorize,
+   });
+   app.post("/tasks", { bodyLimit: 1024 }, worker.handle);
+   ```
+
+   The import from `./event-integration.js` is deployment and application code
+   you provide. The pool implements the public `OwnedEventPool` contract from
+   `@emseepea/server/events-postgres`. It supplies owned database connections,
+   not custom subscription tables or queue leasing.
+
+   Do not log request authorization headers, JSON Web Tokens (JWTs), callback
+   secrets or feedback content. The optional Google adapter rejects unsafe SDK
+   logging configuration. Keep platform request-header and body limits enabled.
+
+5. Send only `{ "deliveryId": "opaque-delivery-id" }` in the task body. Extra
+   fields, including namespace, tenant and callback URL, are rejected. Cloud
+   Tasks headers alone are not authentication: the worker verifies the signed
+   token's issuer, audience, expiry, email and permanent numeric identity.
+6. Stop admitting requests during shutdown. Call `worker.settle` with your
+   shared shutdown `signal` and absolute `deadlineMs`, then finish closing the
+   worker server. A `false` result means some work has not finished. It does not
+   mean that work was cancelled. Allow the host's shutdown policy to handle
+   this incomplete result; do not report it as a clean shutdown.
+
+The worker uses one 25-second invocation deadline for authentication and
+delivery, inside the existing 28-second Cloud Tasks dispatch window. Authentication
+does not restart the delivery budget. Slow identity verification can leave too
+little time to deliver; that invocation requests a retry.
+
+### Worker responses and setup failures
+
+- `204`: no more task retries are needed. Delivery is complete, no longer
+  permitted, absent, or has exhausted its allowed attempts. This does not imply
+  callback acceptance.
+- `400`: the body is malformed or contains an unsupported selector. Fix the
+  task producer; repeating the same body will not repair it.
+- `401`: identity verification failed. Check the configured audience,
+  service-account email and permanent numeric ID. Confirm the token has the
+  expected issuer and has not expired. Never log the token while debugging.
+- `503`: pending delivery or an unavailable dependency requires retry. Check
+  PostgreSQL availability and logging configuration. Record failure categories
+  without tokens, secrets or feedback content. Existing durable delivery limits
+  still apply; a retry does not reset them.
+
+Invalid configuration fails construction with `INVALID_CONFIGURATION`.
+`UNSAFE_SDK_LOGGING` requires disabling Google SDK authentication logging before
+starting the worker. `UNSUPPORTED_DEPENDENCY_GRAPH` requires installing the exact
+optional dependency versions together rather than mixing logging-library copies.
+
+A successful worker response is not proof that a native client ran. Keep
+callback acceptance, automatic client execution and business effects separate.
+
 ## Supply the application pieces
 
 Start from an
