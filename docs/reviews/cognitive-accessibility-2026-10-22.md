@@ -41,3 +41,13 @@ or publication evidence.
 | --- | --- |
 | `website/src/content/docs/mcp-events.md` | `021535d6bb3bdfb6b40afd144785e74c8245f9cf25e914867533d9ac67b38958` |
 | `.changeset/trusted-google-event-worker.md` | `59fabe9d431a656c86ab93d9e9a080cd3ba4b00cb89fe785512fbcb7f490b938` |
+
+The specialist also reviewed the updated release-readiness summary and
+starter-alignment release note. Current planned versions are separated from
+retained historical results; clean committed-head qualification and publication
+remain unverified.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `c11bf546254f51c74b47e4cf05a13b471541a4b75aecdd1f4556ae8486d645ce` |
+| `.changeset/worker-starter-alignment.md` | `d2f4f0d294d556c148e0cd473dff9be03918b783042dcc3c34d38b03e6bcc9d8` |
