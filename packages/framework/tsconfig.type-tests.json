@@ -8,6 +8,7 @@
     "test/events-external.types.test.ts",
     "test/events-cloud-tasks-transport.types.ts",
     "test/events-postgres-delivery.types.test.ts",
-    "test/events-postgres-dispatch.types.ts"
+    "test/events-postgres-dispatch.types.ts",
+    "test/events-google-worker.types.test.ts"
   ]
 }

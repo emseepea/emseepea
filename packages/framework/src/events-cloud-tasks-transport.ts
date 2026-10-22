@@ -1,9 +1,8 @@
 import { createHash } from 'node:crypto';
-import { createRequire } from 'node:module';
-import { realpathSync } from 'node:fs';
 import { TextDecoder } from 'node:util';
-import { GoogleAuth, AuthClient } from 'google-auth-library';
-import { log, placeholder } from 'google-logging-utils';
+import { GoogleAuth } from 'google-auth-library';
+import { GoogleEventTransportSetupError, googleSdkGraphSafe, googleSdkLoggingSafe } from './events-google-sdk-guards.js';
+export { GoogleEventTransportSetupError } from './events-google-sdk-guards.js';
 import type { ExternalMcpEventInvocation } from './events-external.js';
 import type { EventDispatchTransport } from './events-postgres-dispatch.js';
 import { createGoogleApiLifetime } from './events-google-sdk-lifetime.js';
@@ -12,9 +11,6 @@ type Row=Record<string,unknown>;
 type Invocation=ExternalMcpEventInvocation;
 const origin='https://cloudtasks.googleapis.com';
 const requestLimit=8192,responseLimit=16384,bodyLimit=1024;
-export class GoogleEventTransportSetupError extends Error {
- constructor(readonly code:'INVALID_CONFIGURATION'|'UNSUPPORTED_DEPENDENCY_GRAPH'|'UNSAFE_SDK_LOGGING'){super(code);this.name='GoogleEventTransportSetupError';}
-}
 export interface CloudTasksEventConfiguration {
  readonly namespace:string;readonly projectId:string;readonly location:string;readonly queueId:string;
  readonly workerURL:string;readonly audience:string;readonly serviceAccountEmail:string;readonly serviceAccountUid:string;
@@ -26,13 +22,8 @@ interface Runtime {
  fetch:typeof globalThis.fetch;
 }
 const production:Runtime={
- graphSafe(){try{
-  const here=createRequire(import.meta.url),auth=createRequire(here.resolve('google-auth-library'));
-  const metadata=createRequire(auth.resolve('gcp-metadata'));
-  const expected=realpathSync(here.resolve('google-logging-utils'));
-  return expected===realpathSync(auth.resolve('google-logging-utils'))&&expected===realpathSync(metadata.resolve('google-logging-utils'));
- }catch{return false;}},
- loggingSafe:()=>!process.env.DEBUG_AUTH&&AuthClient.log===placeholder&&log('auth')===placeholder&&log('gcp-metadata')===placeholder,
+ graphSafe:googleSdkGraphSafe,
+ loggingSafe:googleSdkLoggingSafe,
  createAuth:projectId=>new GoogleAuth({projectId,universeDomain:'googleapis.com',scopes:['https://www.googleapis.com/auth/cloud-platform']}),
  fetch:(input,options)=>globalThis.fetch(input,options),
 };

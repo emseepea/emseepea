@@ -39,6 +39,10 @@
     "./events-postgres-lifecycle": {
       "types": "./dist/events-postgres-lifecycle.d.ts",
       "import": "./dist/events-postgres-lifecycle.js"
+    },
+    "./events-google-worker": {
+      "types": "./dist/events-google-worker.d.ts",
+      "import": "./dist/events-google-worker.js"
     }
   },
   "files": [
