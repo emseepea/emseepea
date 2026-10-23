@@ -102,8 +102,9 @@ original request and disclose recorded feedback only after success.
 In [issue #179](https://github.com/emseepea/emseepea/issues/179), this
 calculator-specific wording passed one application's production metadata scan.
 That result does not establish acceptance for another application, automatic
-invocation behavior, or privacy of stored content. Test the native journey with
-your supported clients; a description option does not change collection behavior
+invocation behavior, or privacy of stored content.
+
+Test the native journey with your supported clients; a description option does not change collection behavior
 or guarantee marketplace acceptance.
 
 ## Separate customer and internal feedback

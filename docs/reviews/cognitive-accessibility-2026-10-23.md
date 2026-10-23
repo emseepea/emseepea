@@ -28,10 +28,10 @@ website checks and release qualification are separate gates.
 
 | Reviewed file | SHA-256 of reviewed content | Result |
 | --- | --- | --- |
-| `packages/feedback/README.md` | `27212d96894caa89ec9a74db06875026823e1cfccf890cb8250646b32aa2abbb` | PASS |
-| `website/src/content/docs/feedback.md` | `3dbe3a03e2eb35cd5ccf81ab1c70e771405393ed01103d5a6807b97a1ac07b08` | PASS |
+| `packages/feedback/README.md` | `9086c3da34e2f1f66cd74ff55cb02a05213017d736dabc0751204134bbf90450` | PASS |
+| `website/src/content/docs/feedback.md` | `28ccdf84a55b62bdf17eccc7ba0967c7aa33ba783b53f9f6b817cab0dbcc5273` | PASS |
 | `.changeset/operation-specific-feedback-description.md` | `c0062157a6cb49c7901d6ae72972b64bbd756f344aefd6572f85d296761527c1` | PASS |
 | `docs/decisions/0127-application-specific-feedback-submission-descriptions.proposed.md` | `53d56e59e1c78cccee367c353db2df53308627527055cddf484109f910cc846f` | PASS |
 | `docs/decisions/README.md` | `9170143d036db01951c0f26e38c4dd4220e65f679d70d7507171b80aa5b0555c` | PASS |
 | `docs/reviews/feedback-description-outcome-2026-10-23.md` | `13193c074900ca1e091c2dc06633311fbfb4d1250a627b949328fc8acad4948d` | PASS |
-| `docs/reviews/current-release-readiness.md` | `81cf8cdeaab1773b5af582937b08a0c2ad99bc87e0048bc8357e2dd60a5ff873` | PASS |
+| `docs/reviews/current-release-readiness.md` | `d999951782367c9ab548dd4f399094b408c0676d7aa89901f3df8b0bab204f88` | PASS |

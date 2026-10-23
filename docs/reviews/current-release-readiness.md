@@ -35,12 +35,32 @@ triggers, disclosure, objections and storage policy to the adopter. No server-
 enforced privacy guarantee is claimed.
 
 Scoped cumulative risk assessment: commit, push and release are each estimated
-at 4/25 (Significant impact 4 × Rare likelihood 1), conditional on all existing
+at 5/25 (Severe impact 5 × Rare likelihood 1), conditional on all existing
 qualification gates. The metadata-only implementation, protocol comparisons,
 receipt and failure checks control regression risk. Required semantic checks
 control model-behavior risk. Registry, provenance and installed-package checks
 control publication risk. No credentials, new dependencies or backend writes
 are introduced by this change. Missing or failed gates block publication.
+
+### Qualification repairs
+
+The first full run stopped because PostgreSQL could not read checkout SQL
+fixtures with owner-only permissions. After correcting those local permissions,
+both PostgreSQL suites passed all 12 focused tests. The second full run passed
+all workspace checks but failed three root checks.
+
+A direct root run recorded 446 passes and three failures: fresh installs
+resolved two patches outside the scanned lockfile; a packed initializer's SQL
+fixture inherited the local restrictive file-creation mask; and one paragraph
+in each feedback guide exceeded the prose-density limit. The guides now split
+that paragraph. Qualification uses the standard 022 file-creation mask so
+synthetic SQL fixtures remain readable inside containers.
+
+The lockfile now records `@fastify/deepmerge@3.2.4` and
+`fast-json-stringify@7.1.3`, the patches selected by fresh installations under
+existing dependency ranges. No dependency manifest or publication scope changes.
+The normal vulnerability scan and complete qualification must cover this updated
+tree before release. These repairs are not passing full-run evidence.
 
 ### Planned publication
 
