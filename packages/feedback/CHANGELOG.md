@@ -1,5 +1,17 @@
 # @emseepea/feedback
 
+## 0.11.0
+
+### Minor Changes
+
+- [`b08c0e9`](https://github.com/emseepea/emseepea/commit/b08c0e9cb8b1a0960740099355a2016aa306df34) Thanks [@tompahoward](https://github.com/tompahoward)! - Limit the default `submit-feedback` description to feedback about the application
+  operation being performed. Preserve qualifying triggers, success disclosure,
+  objections and privacy guidance. Add an optional application-specific
+  `description` without replacing native schemas, execution or durable receipts.
+
+  Document accurate collection, storage and retention wording and the limits of
+  metadata-scan acceptance. This change does not guarantee marketplace approval.
+
 ## 0.10.5
 
 ### Patch Changes
