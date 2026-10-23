@@ -55,3 +55,18 @@ of successful publication or actual production use.
 
 The generated release PR #183 title and body also passed this review. Its body
 SHA-256 is `7a5f9aca5044cd08cb038b74e14076b8e1410770b605bd366a5edd102a3c0ff0`.
+
+## Node.js security patch release note
+
+Result: PASS. Reviewed the release note against the published-content criteria
+in QUALITY.md. It names the affected generated containers, states the exact
+Node.js patch, and links directly to the upstream security notice. The single
+sentence is easy to scan and requires no next action from readers. Image
+digests remain in the Dockerfiles. No wording corrections were required.
+
+This review covers source text; it does not establish publication or complete
+container qualification.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `.changeset/node-october-security.md` | `368e676c7fc36b340f32fac59acfe935a8bf9325748f111c84cb3d4aaffe318a` |

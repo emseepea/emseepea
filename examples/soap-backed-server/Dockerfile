@@ -1,13 +1,13 @@
-FROM docker.io/library/node:24.21.0-trixie-slim@sha256:db3ae80f5d8df06e04dabdf7b44cbf008d32de168205fa0294444aabbc08c590 AS build
+FROM docker.io/library/node:24.22.1-trixie-slim@sha256:43b9ba1142b8dcf33fa8f922ca1be85714adc444e0586c7cf7726daaeabc1bea AS build
 WORKDIR /app
 COPY . .
-RUN test "$(node --version)" = "v24.21.0" \
+RUN test "$(node --version)" = "v24.22.1" \
   && test -f package-lock.json \
   && npm ci --ignore-scripts \
   && npm run build \
   && npm prune --omit=dev --ignore-scripts
 
-FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:7781e8b4fccf59240bd539af6738cccf8dad4be303165c3a1fa065c48699b937
+FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:78f07ef1b5ea71ad7c055df15d0dd8997f2d288f9158623c4d4ae3d765b7d50d
 WORKDIR /app
 ENV EMSEEPEA_DEPLOYMENT_MODE=production-behind-proxy
 COPY --from=build --chown=65532:65532 /app/package.json ./package.json
