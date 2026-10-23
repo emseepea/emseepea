@@ -9,8 +9,8 @@ import { initializerPackages } from "../../scripts/public-packages.mjs";
 
 const examplesRoot = new URL("../../examples/", import.meta.url);
 const testingManifest = JSON.parse(await readFile(new URL("../../packages/testing/package.json", import.meta.url), "utf8"));
-const builderImage = "docker.io/library/node:24.21.0-trixie-slim@sha256:db3ae80f5d8df06e04dabdf7b44cbf008d32de168205fa0294444aabbc08c590";
-const runtimeImage = "gcr.io/distroless/nodejs24-debian13:nonroot@sha256:7781e8b4fccf59240bd539af6738cccf8dad4be303165c3a1fa065c48699b937";
+const builderImage = "docker.io/library/node:24.22.1-trixie-slim@sha256:43b9ba1142b8dcf33fa8f922ca1be85714adc444e0586c7cf7726daaeabc1bea";
+const runtimeImage = "gcr.io/distroless/nodejs24-debian13:nonroot@sha256:78f07ef1b5ea71ad7c055df15d0dd8997f2d288f9158623c4d4ae3d765b7d50d";
 
 test("every runnable example visibly owns deterministic and LLM checks", async () => {
   const directories = await readdir(examplesRoot, { withFileTypes: true });
@@ -71,7 +71,7 @@ test("every initializer owns the same safe container contract", async () => {
     assert.equal(dockerfile.match(/^FROM /gm)?.length, 2, `${initializer.example} should use two container stages`);
     assert.ok(dockerfile.includes(`FROM ${builderImage} AS build`), `${initializer.example} builder image drifted`);
     assert.ok(dockerfile.includes(`FROM ${runtimeImage}`), `${initializer.example} runtime image drifted`);
-    assert.ok(dockerfile.includes('test "$(node --version)" = "v24.21.0"'));
+    assert.ok(dockerfile.includes('test "$(node --version)" = "v24.22.1"'));
     assert.ok(dockerfile.includes("test -f package-lock.json"));
     assert.ok(dockerfile.includes("npm ci --ignore-scripts"));
     assert.doesNotMatch(dockerfile, /\\\\\n/, `${initializer.example} has a doubled Dockerfile continuation`);

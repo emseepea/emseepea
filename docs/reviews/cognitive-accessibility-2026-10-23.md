@@ -1,5 +1,24 @@
 # Cognitive Accessibility Review - 2026-10-23
 
+## Node.js security patch release note
+
+Result: PASS. Reviewed the release note against the published-content criteria
+in QUALITY.md. It names the affected generated containers, states the exact
+Node.js patch, and links directly to the upstream security notice. The single
+sentence is easy to scan and requires no next action from readers. Image
+digests remain in the Dockerfiles. No wording corrections were required.
+
+This review covers source text; it does not establish publication or complete
+container qualification.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `.changeset/node-october-security.md` | `368e676c7fc36b340f32fac59acfe935a8bf9325748f111c84cb3d4aaffe318a` |
+
+The Node security patch PR #184 title and description also passed this source-
+text review. The description SHA-256 is
+`051ba37e8c5f18cd32b64afaa5cc387de955cc0a4baf99370fc47dd93beaf18e`.
+
 ## Operation-specific feedback descriptions
 
 Reviewer: Codex, focused cognitive-accessibility and voice review.
