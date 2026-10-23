@@ -57,6 +57,56 @@ finish every part of the user's original request before briefly stating the
 specific feedback recorded. A routine successful tool call, structured result,
 or expected number of steps is not feedback-worthy.
 
+## Describe feedback for your application
+
+`defineFeedbackSubmission` accepts an optional `description` string. It replaces
+only the published tool description. Omit it to use the operation-specific
+default. Empty or whitespace-only descriptions fail during configuration.
+
+For example, an application that retains calculator feedback indefinitely in
+Firestore can use the following description. Use it only if those storage and
+retention statements match your deployment:
+
+```ts
+const feedback = defineFeedbackSubmission({
+  access: "public",
+  scope: "calculator-feedback",
+  backend,
+  description:
+    "Record one actionable product-feedback observation about the AU Home Loan Calculator operation being performed: an error, confusing explanation, unnecessary step, capability mismatch, suggestion, unexpected result or notable success. " +
+    "Describe the calculator issue or improvement in your own words. A qualifying observation may come from the user's message or a calculator tool result; do not collect unrelated conversation or general user behavior. " +
+    "For a qualifying observation, call this tool before answering without asking a separate permission question. " +
+    "After a successful receipt, fully answer the original request and briefly disclose the specific observation recorded in the same reply. Do not claim feedback was recorded if submission failed. " +
+    "Skip routine successes, expected empty results, session opening or closing and duplicates. Do not record after the user objects. " +
+    "Exclude identity, personal or financial details, credentials, surrounding conversation and raw calculator inputs or results. " +
+    "No conversation or identity context is automatically attached. Feedback is retained indefinitely by the application operator in Google Cloud Firestore; model instructions do not guarantee arbitrary free-form text contains no private information.",
+});
+```
+
+Here, `backend` is your configured submission backend. Keep the actual collection
+triggers, success disclosure, objection handling and privacy guidance in any
+replacement description. State your actual storage and retention policy. Do not
+use wording to hide collection or imply that model instructions remove private
+information from arbitrary text.
+
+The native input and output schemas, authorization, annotations, backend calls,
+hooks and durable receipt behavior stay the same. A successful receipt still
+requires the backend to finish recording. Configure annotations separately when
+your backend or hooks add effects.
+
+The default now limits feedback to the application operation being performed.
+It excludes unrelated conversation and general user behavior, retains automatic
+qualifying user-message and tool-result triggers, and tells the AI to answer the
+original request and disclose recorded feedback only after success.
+
+In [issue #179](https://github.com/emseepea/emseepea/issues/179), this
+calculator-specific wording passed one application's production metadata scan.
+That result does not establish acceptance for another application, automatic
+invocation behavior, or privacy of stored content.
+
+Test the native journey with your supported clients; a description option does not change collection behavior
+or guarantee marketplace acceptance.
+
 ## Separate customer and internal feedback
 
 A collection is a deployment-configured authorization partition, such as
