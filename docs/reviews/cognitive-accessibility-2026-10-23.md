@@ -1,0 +1,37 @@
+# Cognitive Accessibility Review - 2026-10-23
+
+## Operation-specific feedback descriptions
+
+Reviewer: Codex, focused cognitive-accessibility and voice review.
+Result: PASS after source-text review against the project voice guide and the
+published-content criteria in `QUALITY.md`. This is not independent human
+comprehension testing or a rendered-page accessibility result.
+
+The package and website guides put the optional setting and its replacement
+behavior first. The example names the application and explains its storage and
+retention assumptions before presenting the wording. Triggers, successful
+receipt, same-reply disclosure, objections and excluded content remain explicit.
+The example preserves the wording from the ticket; horizontal code scrolling
+may be needed on narrow screens. The surrounding explanation uses short
+paragraphs and descriptive links rather than relying on that example alone.
+
+The release note names the changed default, public option and evidence limit.
+The decision explains the alternatives and keeps production confirmation
+separate from local tests. The generated decision summary matches that proposal.
+The outcome record states the approved date, observable acceptance and next
+steps. The readiness record separates passing focused checks from pending
+qualification and publication. No content claims universal scan acceptance or
+private stored text merely because a model received instructions.
+
+No blocking cognitive-accessibility or voice findings remain. Required rendered
+website checks and release qualification are separate gates.
+
+| Reviewed file | SHA-256 of reviewed content | Result |
+| --- | --- | --- |
+| `packages/feedback/README.md` | `27212d96894caa89ec9a74db06875026823e1cfccf890cb8250646b32aa2abbb` | PASS |
+| `website/src/content/docs/feedback.md` | `3dbe3a03e2eb35cd5ccf81ab1c70e771405393ed01103d5a6807b97a1ac07b08` | PASS |
+| `.changeset/operation-specific-feedback-description.md` | `c0062157a6cb49c7901d6ae72972b64bbd756f344aefd6572f85d296761527c1` | PASS |
+| `docs/decisions/0127-application-specific-feedback-submission-descriptions.proposed.md` | `53d56e59e1c78cccee367c353db2df53308627527055cddf484109f910cc846f` | PASS |
+| `docs/decisions/README.md` | `9170143d036db01951c0f26e38c4dd4220e65f679d70d7507171b80aa5b0555c` | PASS |
+| `docs/reviews/feedback-description-outcome-2026-10-23.md` | `13193c074900ca1e091c2dc06633311fbfb4d1250a627b949328fc8acad4948d` | PASS |
+| `docs/reviews/current-release-readiness.md` | `81cf8cdeaab1773b5af582937b08a0c2ad99bc87e0048bc8357e2dd60a5ff873` | PASS |

@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 122 decisions: 73 current and 49 historical.
+This project has 123 decisions: 74 current and 49 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -88,6 +88,7 @@ recorded separately.
 - [ADR-0124: Opt-in Native ChatGPT Browser Journeys with Bounded Archived Transcripts](0124-opt-in-native-chatgpt-browser-journeys-with-bounded-archived-transcripts.proposed.md): Proposed; human review confirmed.
 - [ADR-0125: Atomic Events Publication with Durable Source Identity](0125-atomic-events-publication-with-durable-source-identity.proposed.md): Proposed; human review confirmed.
 - [ADR-0126: Explicit External Events Delivery Ownership](0126-explicit-external-events-delivery-ownership.proposed.md): Proposed; human review confirmed.
+- [ADR-0127: Application-specific Feedback Submission Descriptions](0127-application-specific-feedback-submission-descriptions.proposed.md): Proposed; human review unconfirmed.
 
 ### Historical decisions
 
@@ -2722,3 +2723,18 @@ Chosen option: **"Explicit external ownership with optional task composition"**,
 - Pause, cancellation, deadlines and shutdown retain the documented in-flight limits and checked callback protections.
 - Native client execution and business effects have independent evidence; callback acceptance is never substituted for them.
 - Successful actual production use demonstrates the architecture before acceptance; synthetic qualification, CI and publication alone are insufficient.
+
+### [ADR-0127: Application-specific Feedback Submission Descriptions](0127-application-specific-feedback-submission-descriptions.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+
+#### ADR-0127 Decision
+
+Chosen option: **"Optional complete description on the native submission constructor"**, because adopters need accurate application wording while retaining native execution.
+
+#### ADR-0127 Checks
+
+- Source and package checks show configured descriptions on all supported protocol versions without changes to other discovery fields, schemas, authorization or receipts.
+- Production confirmation names an adopter using the published option with its native backend and provides evidence of actual recording and accurate disclosure.
+- Metadata-scan acceptance is separate evidence and names the application and tested definition.

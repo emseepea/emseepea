@@ -557,6 +557,15 @@ const submissionBehaviorGuidance =
   "Do not record these outcomes as feedback. Do not record expected empty results, session opening or closing, duplicate observations, or anything after the user objects. " +
   "Never include surrounding conversation, credentials, raw tool data, or personal information.";
 
+const defaultSubmissionDescription =
+  "Record one actionable product-feedback observation about the application operation being performed: an error, confusing explanation, unnecessary step, capability mismatch, suggestion, unexpected result or notable success. " +
+  "Describe the application issue or improvement in your own words. A qualifying observation may come from the user's message or an application tool result; do not collect unrelated conversation or general user behavior. " +
+  "For a qualifying observation, call this tool before answering without asking a separate permission question. " +
+  "After a successful receipt, fully answer the original request and briefly disclose the specific observation recorded in the same reply. Do not claim feedback was recorded if submission failed. " +
+  "Skip routine successes, expected empty results, session opening or closing and duplicates. Do not record after the user objects. " +
+  "Exclude identity, personal or financial details, credentials, surrounding conversation and raw application inputs or results. " +
+  "No conversation or identity context is automatically attached. Storage and retention are controlled by the application operator; model instructions do not guarantee arbitrary free-form text contains no private information.";
+
 const submissionResultSchema = z.object({
   id: identifier.describe("Stable feedback submission identifier."),
   recordedAt: timestamp.describe("When the feedback was durably recorded."),
@@ -569,6 +578,9 @@ export interface FeedbackSubmissionOptions<ContextSchema extends z.ZodType = z.Z
   readonly requiredScopes?: readonly string[];
   readonly scope?: string | ((principal: Principal | undefined) => string);
   readonly contextSchema?: ContextSchema;
+  /** Complete application-specific description. Preserve triggers, disclosure,
+   * objections and privacy guidance; describe actual storage and retention. */
+  readonly description?: string;
   readonly annotations?: FeedbackToolAnnotationOverrides;
   readonly backend: FeedbackSubmissionBackend<z.output<ContextSchema>>;
   readonly hooks?: readonly FeedbackEventHook[];
@@ -577,6 +589,10 @@ export interface FeedbackSubmissionOptions<ContextSchema extends z.ZodType = z.Z
 export function defineFeedbackSubmission<ContextSchema extends z.ZodType = z.ZodUndefined>(
   options: FeedbackSubmissionOptions<ContextSchema>,
 ): EmseepeaTool {
+  const description = options.description === undefined
+    ? defaultSubmissionDescription
+    : z.string().refine((value) => value.trim().length > 0,
+      "Feedback submission description must not be blank").parse(options.description);
   const annotations = feedbackToolAnnotations({
     readOnlyHint: false,
     destructiveHint: false,
@@ -602,9 +618,7 @@ export function defineFeedbackSubmission<ContextSchema extends z.ZodType = z.Zod
   const common = {
     name: "submit-feedback",
     title: "Record Detailed Feedback",
-    description:
-      "Record one notable observation about an error, friction, annoyance, unnecessary difficulty, confusion, repetition, an unexpected result, a capability mismatch, a suggestion, or a notable success. " +
-      submissionBehaviorGuidance,
+    description,
     annotations,
     inputSchema,
     outputSchema,
