@@ -35,3 +35,23 @@ website checks and release qualification are separate gates.
 | `docs/decisions/README.md` | `9170143d036db01951c0f26e38c4dd4220e65f679d70d7507171b80aa5b0555c` | PASS |
 | `docs/reviews/feedback-description-outcome-2026-10-23.md` | `13193c074900ca1e091c2dc06633311fbfb4d1250a627b949328fc8acad4948d` | PASS |
 | `docs/reviews/current-release-readiness.md` | `d999951782367c9ab548dd4f399094b408c0676d7aa89901f3df8b0bab204f88` | PASS |
+
+## Generated feedback release content
+
+Reviewer: Codex, focused cognitive-accessibility and voice review.
+Result: PASS. The generated feedback 0.11.0 and website 0.0.13 entries identify
+the corrected default and optional description. They preserve the distinction
+between native execution, metadata scans and marketplace acceptance. Descriptive
+commit links and version headings make the entries easy to locate.
+
+This source-text review was completed before promotion. It covers the generated
+content in candidate `05a2cb312ddd0240e350ed9feabd64de930981c3`, not a claim
+of successful publication or actual production use.
+
+| Reviewed file | SHA-256 of reviewed content | Result |
+| --- | --- | --- |
+| `packages/feedback/CHANGELOG.md` | `f398bafe8b327609693eb751704660d17f061df5442dcd9b5cbc2be4b78859ac` | PASS |
+| `website/CHANGELOG.md` | `1bf03a6a8c502d6ffe2384f20ac74fa130c88fda0786133030af53065b695033` | PASS |
+
+The generated release PR #183 title and body also passed this review. Its body
+SHA-256 is `7a5f9aca5044cd08cb038b74e14076b8e1410770b605bd366a5edd102a3c0ff0`.
