@@ -33,9 +33,13 @@ collection policy and client approval controls are outside this metadata change.
 The accepted calculator scan is prior evidence for that application, not a
 promise of universal marketplace acceptance or automatic invocation behavior.
 
-## Current evidence
+## Completion
 
-The new public and protected tests pass discovery comparisons on all six
-supported protocol versions and verify validation, deferred receipt and backend
-failure. Runtime configuration rejects blank and non-string descriptions.
-Release and independent installed-package verification remain pending.
+Result: COMPLETE on 23 October 2026, before the approved deadline.
+`@emseepea/feedback@0.11.0` is published on npm's `latest` tag. The updated
+website guide is deployed. Required source, semantic, registry, publication and
+merge-back checks passed, followed by an independent installed-package check.
+
+The [release evidence](feedback-description-release-2026-10-23.md) records exact
+commits, workflows, verification outcomes and their limits. Marketplace
+acceptance remains application-specific.

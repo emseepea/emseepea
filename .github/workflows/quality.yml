@@ -57,7 +57,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: 24.21.0
+          node-version: 24.22.1
       - name: Validate the dispatched merge-back commit
         if: github.event_name == 'workflow_dispatch'
         env:
@@ -89,7 +89,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: 24.21.0
+          node-version: 24.22.1
       - name: Check documentation in the exact event range
         env:
           DOCS_REVIEW_BASE: ${{ needs.change-scope.outputs.base }}
@@ -134,7 +134,7 @@ jobs:
       - name: Set up Node.js for fix eligibility
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: 24.21.0
+          node-version: 24.22.1
       - name: Use the recorded npm version
         run: |
           corepack enable npm
@@ -154,8 +154,8 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
-          - 22.23.2
-          - 24.21.0
+          - 22.23.4
+          - 24.22.1
     steps:
       - name: Check out repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -237,7 +237,7 @@ jobs:
       - name: Check subscription SDK memory with paused readers
         run: node --expose-gc --test tests/load/subscription-sdk.test.mjs
   initializer-qualification:
-    name: Standalone initializer / ${{ matrix.example }} / Node.js 24.21.0
+    name: Standalone initializer / ${{ matrix.example }} / Node.js 24.22.1
     needs: [change-scope, vulnerability-scan]
     if: github.event_name == 'workflow_dispatch' || needs.change-scope.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
@@ -265,7 +265,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: 24.21.0
+          node-version: 24.22.1
           cache: npm
       - name: Use the recorded npm version
         run: |
@@ -331,7 +331,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: 24.21.0
+          node-version: 24.22.1
           cache: npm
       - name: Use the recorded npm version
         run: |
@@ -390,7 +390,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: 24.21.0
+          node-version: 24.22.1
           cache: npm
       - name: Use the recorded npm version
         run: |
