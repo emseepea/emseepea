@@ -1,8 +1,61 @@
 # Current Release Readiness
 
-Date: 2026-10-23
+Date: 2026-10-25
 
-## Operation-specific feedback descriptions
+## Initializer container security update
+
+Status: **LOCAL FEEDBACK CHECKS PASS; RELEASE PENDING**.
+
+The queued release updates all eleven initializer containers to Node.js
+24.22.1 and refreshed, digest-pinned builder and runtime images. Changesets
+computes the package versions below. No version is edited by hand.
+
+The previous release build rejected valid feedback wording: one trial said
+"below the search results", but the test required "below the results". The
+test now retains the required detail words and uses its existing independent
+judgments to check both the submitted detail and final response. Exact calls,
+the friction category and the objection checks are unchanged.
+
+Fresh local checks passed eight feedback cases, with three conversations and
+nine judgments per case. These used the existing local Claude account and
+`claude-sonnet-4-6`; they do not replace credentialed release qualification.
+The focused builds and repository lint check also passed. The current source
+still requires full clean-commit qualification, exact-source Quality, release
+checks, registry verification, promotion and merge-back verification.
+
+The local production benchmark was inconclusive. One accepted-request sample
+measured 58 requests per second against the existing 100-request threshold.
+CPU, allocation and wire-size checks passed in all three populations; the
+other two populations passed throughput too. This is not a benchmark pass.
+
+The repair changes test expectations and readiness metadata, not framework
+runtime behavior or release controls. This release does not complete #174.
+Architecture review passed. The scoped cumulative commit and push risk is 4/25,
+within appetite, subject to the required exact-commit gates. Cognitive review
+must cover this exact metadata before commit or publication.
+
+### Planned public packages
+
+- `@emseepea/create-api-backed-server@0.1.25`
+- `@emseepea/create-database-schema-server@0.1.25`
+- `@emseepea/create-html-ui-server@0.1.25`
+- `@emseepea/create-mongodb-backed-server@0.1.25`
+- `@emseepea/create-multi-instance-postgres-server@0.1.25`
+- `@emseepea/create-openapi-backed-server@0.1.25`
+- `@emseepea/create-progress-streaming-server@0.1.25`
+- `@emseepea/create-react-ui-server@0.1.25`
+- `@emseepea/create-resources-and-prompts-server@0.1.25`
+- `@emseepea/create-soap-backed-server@0.1.25`
+- `@emseepea/create-tool-server@0.1.25`
+
+- Result: PASS
+- Final result: within appetite, subject to the required exact-commit gates.
+
+## Previous release readiness, retained history
+
+Review date: 2026-10-23.
+
+### Operation-specific feedback descriptions
 
 Status: **RELEASED AND VERIFIED**.
 
@@ -37,9 +90,9 @@ The scoped cumulative commit, push and release risk assessment remains 5/25,
 within the repository's appetite. The existing qualification and publication
 gates all completed successfully. No approval or security control was changed.
 
-### Published public package
+#### Published public package
 
-- `@emseepea/feedback@0.11.0`
+- Previously published: `@emseepea/feedback@0.11.0`
 
 - Result: PASS
 - Final result: within appetite.
