@@ -30,9 +30,11 @@ other two populations passed throughput too. This is not a benchmark pass.
 
 The repair changes tests, diagnostic output and readiness metadata, not
 framework source or release controls. The root lockfile now records
-`fast-json-stringify@7.2.0`, which a fresh consumer install already selected
-within the existing dependency constraints. That graph still requires a fresh
-vulnerability scan and exact-source qualification. No public dependency
+`fast-json-stringify@7.2.0` and `hono@4.13.14`, which fresh consumer installs
+already selected within the existing dependency constraints. The guarded
+install now requests current registry metadata instead of preferring cached
+metadata. That graph still requires a fresh vulnerability scan
+and exact-source qualification. No public dependency
 constraint changes. This release does not complete #174.
 Architecture review passed. The scoped cumulative risk assessment is within
 the 5/25 appetite, subject to the required exact-commit gates. Cognitive review

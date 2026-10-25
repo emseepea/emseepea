@@ -21,7 +21,7 @@ claim, or proof of qualification or publication.
 
 | Reviewed file | SHA-256 of reviewed content | Result |
 | --- | --- | --- |
-| `docs/reviews/current-release-readiness.md` | `b719466e032603e8a218c72b8ed51455c9628bdb58a3a783ea4508e8f9c594b8` | PASS |
+| `docs/reviews/current-release-readiness.md` | `769ee91decf8e7bb8543ee717e724c4b5758627b65f1813a6c703f7434514bd4` | PASS |
 | `examples/api-backed-server/CHANGELOG.md` | `5e917fe2a62bab6d2a9a9f64f7521536fc467d2bbd5addab31745e3afe108ccc` | PASS |
 | `examples/database-schema-server/CHANGELOG.md` | `4a1e42f17a22810fa6f7375efe563037f0539cc9d86a9838193563853a662502` | PASS |
 | `examples/html-ui-server/CHANGELOG.md` | `3315a1f366f83282bddc4a50c40b148163edd31ecfe601bafd70ca89972e23a2` | PASS |
