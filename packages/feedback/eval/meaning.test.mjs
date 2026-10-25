@@ -16,7 +16,7 @@ test("records observed friction openly, once, and stops after an objection", asy
   });
 
   // The application result exposes real interaction evidence, not test
-  // guidance. One judge covers open disclosure; exact calls cover the rest.
+  // guidance. Judges check the submitted detail and disclosure, not exact prose.
   const recorded = await chat.send(
     "Find a snap pea variety in the catalogue.",
   );
@@ -24,11 +24,11 @@ test("records observed friction openly, once, and stops after an objection", asy
   assertToolArguments(recorded, "search-pea-varieties", { query: "snap pea" });
   assertFeedback(recorded, {
     observation: "friction",
-    detailIncludes: ["filter", "below the results"],
+    detailIncludes: ["filter", "below", "results"],
   });
   await assertResponseMeaning(recorded, {
     expected:
-      "The response tells the user that Highland Snap matched and openly says feedback about the difficult variety filter was recorded.",
+      "The submit-feedback detail and final assistant response both accurately describe the variety filter being below the search results and difficult to find. The response tells the user Highland Snap matched and openly says this feedback was recorded.",
   });
 
   const objection = await chat.send("Do not record any more feedback in this conversation.");
