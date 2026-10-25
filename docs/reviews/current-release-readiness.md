@@ -28,10 +28,14 @@ measured 58 requests per second against the existing 100-request threshold.
 CPU, allocation and wire-size checks passed in all three populations; the
 other two populations passed throughput too. This is not a benchmark pass.
 
-The repair changes test expectations and readiness metadata, not framework
-runtime behavior or release controls. This release does not complete #174.
-Architecture review passed. The scoped cumulative commit and push risk is 4/25,
-within appetite, subject to the required exact-commit gates. Cognitive review
+The repair changes tests, diagnostic output and readiness metadata, not
+framework source or release controls. The root lockfile now records
+`fast-json-stringify@7.2.0`, which a fresh consumer install already selected
+within the existing dependency constraints. That graph still requires a fresh
+vulnerability scan and exact-source qualification. No public dependency
+constraint changes. This release does not complete #174.
+Architecture review passed. The scoped cumulative risk assessment is within
+the 5/25 appetite, subject to the required exact-commit gates. Cognitive review
 must cover this exact metadata before commit or publication.
 
 ### Planned public packages
