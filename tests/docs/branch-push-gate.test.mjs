@@ -147,6 +147,25 @@ async function commitDocs(fixture, name = "first") {
   return git(fixture.repository, "rev-parse", "HEAD");
 }
 
+test("failed full qualification retains captured diagnostics and writes no evidence", async (t) => {
+  const fixture = await makeRepository(t);
+  const sha = await git(fixture.repository, "rev-parse", "HEAD");
+  await writeFile(join(fixture.bin, "npm"), `#!${process.execPath}
+if (process.argv[2] === "test") {
+  process.stdout.write("x".repeat(12_000) + "stdout-failure-tail\\n");
+  process.stderr.write("stderr-failure-tail\\n");
+  process.exitCode = 42;
+}
+`);
+  await assert.rejects(() => qualify(fixture, {}, ["--full"]), (error) => {
+    assert.equal(error.code, 1);
+    assert.equal(error.stderr.includes("stdout-failure-tail\n"), true);
+    assert.equal(error.stderr.includes("stderr-failure-tail\n"), true);
+    return true;
+  });
+  await assert.rejects(async () => stat(await evidencePath(fixture.repository, sha)), { code: "ENOENT" });
+});
+
 test("docs qualification checks the complete range without invoking npm and binds the real push destination", async (t) => {
   const fixture = await docsFixture(t);
   await commitDocs(fixture);

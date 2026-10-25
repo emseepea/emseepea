@@ -48,8 +48,14 @@ async function qualify() {
       env: reviewEnv,
     });
   } else {
-    await run("npm", ["ci"]);
-    await run("npm", ["test"]);
+    try {
+      await run("npm", ["ci"]);
+      await run("npm", ["test"]);
+    } catch (error) {
+      process.stderr.write(error.stdout ?? "");
+      process.stderr.write(error.stderr ?? "");
+      throw error;
+    }
   }
   assert.equal(await run("git", ["rev-parse", "HEAD"]), sha, "HEAD changed during qualification");
   assert.equal(await run("git", ["status", "--porcelain=v1", "--untracked-files=all"]), "", "checkout changed during qualification");
