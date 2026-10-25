@@ -82,7 +82,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
     run("npm", [
       "install",
       "--ignore-scripts",
-      "--prefer-offline",
+      "--prefer-online",
       "--no-audit",
       "--no-fund",
       "--userconfig", "/dev/null",

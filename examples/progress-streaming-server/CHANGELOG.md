@@ -1,5 +1,11 @@
 # @emseepea/create-progress-streaming-server
 
+## 0.1.25
+
+### Patch Changes
+
+- [#184](https://github.com/emseepea/emseepea/pull/184) [`1fc6b1d`](https://github.com/emseepea/emseepea/commit/1fc6b1d1eee5eb5db97db184cd286044e66321a6) Thanks [@tompahoward-agent](https://github.com/tompahoward-agent)! - Update generated production containers to Node.js 24.22.1 with refreshed, digest-pinned builder and Distroless runtime images for the [October 2026 Node.js security release](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases).
+
 ## 0.1.24
 
 ### Patch Changes
