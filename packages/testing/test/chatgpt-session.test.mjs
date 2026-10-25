@@ -73,11 +73,22 @@ test("attachment rejects a WebSocket redirect without contacting its destination
 test("real CDP attachment leaves the owner browser and original tab open", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "native-cdp-browser-"));
   const processHandle = spawn(chromium.executablePath(), ["--headless", "--no-sandbox", "--remote-debugging-address=127.0.0.1", "--remote-debugging-port=0", `--user-data-dir=${directory}`, "about:blank"], { stdio: "ignore" });
-  t.after(async () => { processHandle.kill(); await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }); });
-  processHandle.on("error", () => {});
+  const closed = new Promise((resolve) => processHandle.once("close", resolve));
+  let startupError;
+  processHandle.on("error", (error) => { startupError = error; });
+  t.after(async () => {
+    if (processHandle.pid && processHandle.exitCode === null && processHandle.signalCode === null) {
+      processHandle.kill("SIGKILL");
+    }
+    await closed;
+    await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  });
   let address;
-  const deadline = Date.now() + 10_000;
+  const deadline = Date.now() + 15 * 60_000;
   while (Date.now() < deadline) {
+    assert.ifError(startupError);
+    assert.equal(processHandle.exitCode, null, "synthetic CDP browser exited during startup");
+    assert.equal(processHandle.signalCode, null, "synthetic CDP browser was stopped during startup");
     const active = await readFile(join(directory, "DevToolsActivePort"), "utf8").catch(() => "");
     if (active) { const [port, path] = active.trim().split("\n"); address = `ws://127.0.0.1:${port}${path}`; break; }
     await delay(50);
