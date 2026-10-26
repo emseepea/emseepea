@@ -20,7 +20,7 @@ without claiming completed qualification.
 | `docs/decisions/0128-request-lifetime-opentelemetry-context.proposed.md` | `301a006c733fb2f7c2abfc4290ba906b38cd972f2c6658004c662152fb09d04a` |
 | `docs/decisions/README.md` | `13eaaed1996056a6dd46b9d89f2b9970d5092d9429abf7a67aff30df31690447` |
 | `.changeset/request-lifetime-tracing.md` | `d4e9b887ee99c771b87eed2a5b8f89a35711ed2e63e9d283a3fcf361692eb0ab` |
-| `docs/reviews/current-release-readiness.md` | `9c14b9de28c75827f058284503b16d22ad80ab88883935f53c31de6020bdf734` |
+| `docs/reviews/current-release-readiness.md` | `fb0f47cc0352e56094b63db67bc462c1d19feb1368cbc5522fd5507282254257` |
 
 The reviewer also returned PASS for the saved public bodies of outcome
 [#186](https://github.com/emseepea/emseepea/issues/186), increment
@@ -84,3 +84,17 @@ checks remain separate release requirements.
 | `packages/react/CHANGELOG.md` | `d621b97e1a8eacc9b5f3af4213bfb1c05967fd3a8b65bf3b6d46fae39af4408f` |
 | `packages/svelte/CHANGELOG.md` | `65366ee7f6ecae2b06c22926cbd77a3b251df5044ae37bccf5871327974ea966` |
 | `packages/testing/CHANGELOG.md` | `d77a7637177f795dc4c15e5d5a338f13e3f9f3948e425124d63131b35fd82ffd` |
+
+## Verified release records
+
+Result: PASS. Independent reviewer `/root/accessibility_critic` inspected the
+final readiness and release evidence records. The reviewer confirmed their
+clarity and checked the installed receipt, package identity, span relationships,
+HTTP and shutdown results, and successful workflow revisions. No wording
+corrections were required. The records distinguish the published capability
+from the limits of the synthetic backend check.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `fb0f47cc0352e56094b63db67bc462c1d19feb1368cbc5522fd5507282254257` |
+| `docs/reviews/request-tracing-release-2026-10-26.md` | `c791c0e064b9069dc1e2771bdc1fc8be84a50ff78207dc211c825c82cd327d64` |
