@@ -87,7 +87,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
       "--no-fund",
       "--userconfig", "/dev/null",
       ...tarballs,
-      "zod@4.4.3",
+      "zod@4.6.6",
       "typescript@6.0.3",
       "@types/node@24.13.3",
     ], directory);
