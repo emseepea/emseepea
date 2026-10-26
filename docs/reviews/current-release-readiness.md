@@ -4,36 +4,46 @@ Date: 2026-10-26
 
 ## Website request tracing guide
 
-Status: **LOCAL GUIDE AND WEBSITE CHECKS PASS; DEPLOYMENT PENDING**.
+Status: **SOURCE ADDED; WEBSITE PUBLICATION BLOCKED**.
 
-This website-only release adds a discoverable, runnable OpenTelemetry guide
-for the already released server 0.25.1. The prior npm release below remains
-complete and does not establish website deployment.
+The guide and navigation are committed on main. They are not deployed.
+The prior npm server 0.25.1 release below remains complete and does not
+establish website deployment. No release candidate was created for this
+website change.
 
-The guide reuses the executed package README example. Applications still own
-providers, context management, propagation, exporters and backend instrumentation.
-The example uses a synthetic backend and console exporter. It does not operate
-a production telemetry service.
-
-Completion requires execution against the published package, existing website
-build/browser/accessibility checks, clean exact-commit qualification, source
-Quality and its measured website artifact, frozen candidate checks, successful
-website deployment and merge-back qualification, and the live guide/navigation.
 The fresh external installation ran the website example verbatim against
 server 0.25.1: HTTP 200, incoming parent → request → backend child, and graceful
-shutdown passed. The website build and all 16 existing website checks passed,
-including every built page in light/dark mobile and desktop views. Exact-source
-qualification, remote website measurements, deployment and live checks remain
-pending for this change.
+shutdown passed. The website build and all 16 existing website checks passed.
+Full local exact-commit qualification also passed for corrected source
+`f4f19c7220aaba59a2985ea9a299b258d0b9b1eb`.
 
-Five independent plan critics passed increment #192 revision 1 / outcome #186
-revision 3. The cumulative commit, push and release risk is 5/25, within appetite
-subject to the existing exact-revision gates. No runtime, gate or permission
-changes. Changesets generates the private website version; no public npm package
-release is planned.
+[Source Quality 40394110659](https://github.com/emseepea/emseepea/actions/runs/40394110659)
+failed the Node 24 production performance gate. Accepted-request CPU p95 was
+3.522, 3.023 and 6.179 ms across the three complete ordinary populations,
+against the unchanged 5 ms ceiling. The mixed result is INCONCLUSIVE and does
+not qualify. Node 22, website measurements and the other required source
+checks passed; release preparation was skipped.
 
-- Result: PASS
-- Final result: within appetite, subject to the required exact-commit gates.
+The separate diagnostic populations passed, but are diagnostic-only and do not
+qualify. The retained evidence does not establish the cause of the ordinary
+CPU spikes. No runtime or dependency change appears in this website source.
+An unchanged retry cannot qualify merely because it passes, under
+[risk R014](../risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md).
+No retry, gate change or speculative runtime optimization was made.
+
+The [publication evidence](website-tracing-publication-2026-10-26.md) records
+the exact source and retained measurements. Publication requires an evidenced
+correction, separately assessed where it changes scope, followed by passing
+exact-source gates, the normal candidate/deployment/merge-back workflow and
+live guide/navigation verification. The Wednesday afternoon deadline remains.
+
+Five independent critics approved the website plan. Its 5/25 cumulative risk
+assessment was conditional on successful existing gates; this failure does not
+satisfy that condition. Changesets still contains a private website patch.
+No public npm package release is planned by this documentation change.
+
+- Result: BLOCKED
+- Final result: required exact-source performance gate did not qualify.
 
 ## Request tracing release
 
