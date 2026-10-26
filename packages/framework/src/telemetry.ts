@@ -105,7 +105,7 @@ export function openTelemetry(): ObservabilityAdapter {
   return adapter;
 }
 
-function startRequestSpan(tracer: Tracer, request: FastifyRequest): Span | undefined {
+function startRequestSpan(tracer: Tracer, request: FastifyRequest, startTime: number): Span | undefined {
   let parent = ROOT_CONTEXT;
   try {
     // Only tracing headers reach the configured propagator. In particular,
@@ -119,7 +119,7 @@ function startRequestSpan(tracer: Tracer, request: FastifyRequest): Span | undef
     if (extracted && isSpanContextValid(extracted)) parent = trace.setSpanContext(ROOT_CONTEXT, extracted);
   } catch { /* A broken propagator must not prevent protocol execution. */ }
   try {
-    return tracer.startSpan("mcp.request", { kind: SpanKind.SERVER }, parent);
+    return tracer.startSpan("mcp.request", { kind: SpanKind.SERVER, startTime }, parent);
   } catch { return undefined; }
 }
 
@@ -138,13 +138,14 @@ export function installObservability(
     const state: ObservabilityState = { protocolOutcome: "success" };
     requestStates.set(request, state);
     const started = performance.now();
-    const span = tracer ? startRequestSpan(tracer, request) : undefined;
+    const span = tracer ? startRequestSpan(tracer, request, performance.timeOrigin + started) : undefined;
     let ended = false;
     const finish = () => end(reply.raw.destroyed || reply.raw.socket?.destroyed ? "disconnected" : "finished");
     const close = () => end("disconnected");
     function end(outcome: "finished" | "disconnected"): void {
       if (ended) return;
       ended = true;
+      const finished = performance.now();
       reply.raw.off("finish", finish);
       reply.raw.off("close", close);
       const body = request.body;
@@ -168,13 +169,13 @@ export function installObservability(
             ? "protocol_error"
             : state.protocolOutcome,
         ...(callerClass ? { callerClass } : {}),
-        durationMs: Math.min(3_600_000, Math.max(0, performance.now() - started)),
+        durationMs: Math.min(3_600_000, Math.max(0, finished - started)),
         ...(state.forwardingRefusal ? { forwardingRefusal: state.forwardingRefusal } : {}),
       });
       if (span) {
         try { span.setAttributes(eventAttributes(event)); }
         catch { /* Span decoration cannot change protocol behaviour. */ }
-        try { span.end(); }
+        try { span.end(performance.timeOrigin + finished); }
         catch { /* Finalization is independent of adapter delivery. */ }
       }
       for (const adapter of adapters) {

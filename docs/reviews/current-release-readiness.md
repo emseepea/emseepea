@@ -4,7 +4,7 @@ Date: 2026-10-26
 
 ## Request tracing release
 
-Status: **LOCAL QUALIFICATION PASS; COMMITTED-SOURCE AND RELEASE CHECKS PENDING**.
+Status: **REPAIRED BUILD, FOCUSED CHECKS AND BENCHMARKS PASS; COMMIT QUALIFICATION PENDING**.
 
 The release makes OpenTelemetry spans cover the MCP request lifetime, continue
 incoming trace context, and connect instrumented asynchronous backend work.
@@ -19,12 +19,32 @@ command passed on Node 24.19.0, including the adapter-enabled profile and all
 three production populations. These are measured local results; exact-source
 CI qualification remains required.
 
+Source Quality run 40274201434 stopped release preparation because Zod 4.4.3
+has an eligible published security fix in 4.6.6. The repair updates exact Zod
+pins and the lockfile, including the real packed-consumer install. Other
+findings remain governed by the existing fix-maturity and no-fix policy.
+The earlier local results above precede this dependency repair. Full
+clean-commit qualification and source CI must pass again.
+
+A focused run under load also exposed a span/metric timing mismatch. Both now
+use the same monotonic request timestamps, including propagation time. The
+regression retains its timing assertion and deliberately delays propagation.
+The repaired build, type checks and all 23 focused tracing/schema checks pass.
+The fresh OSV eligibility gate permits this lockfile under the unchanged policy.
+Fresh-build benchmarks also pass on Node 24.22.1, including the adapter-enabled
+profile and all three production populations. Full exact-commit qualification
+and source CI remain pending for this repaired graph and timing behavior.
+
 Architecture, risk, jobs, cognitive-accessibility and planning reviews approved
 the implementation increment. Independent release-stage risk review assessed
 the cumulative commit, push and release risk at 5/25, within appetite subject
 to the existing mandatory gates. Commit qualification, source CI, candidate
 checks, promotion and registry verification remain pending. No credentials,
 release permissions or publication controls are changed.
+
+Independent architecture and risk reviews accepted this bounded dependency
+repair. The cumulative risk assessment remains 5/25, conditional on the
+existing qualification gates for the repaired source.
 
 Changesets computes the package versions below. Dependent packages and all
 starter projects release together so their framework and tooling references

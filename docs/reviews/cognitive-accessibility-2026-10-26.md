@@ -19,8 +19,8 @@ without claiming completed qualification.
 | `packages/framework/README.md` | `6967a8adec8061cf34c7e8652c99632793ba380b6b4fe6f0348452b949e12a7c` |
 | `docs/decisions/0128-request-lifetime-opentelemetry-context.proposed.md` | `301a006c733fb2f7c2abfc4290ba906b38cd972f2c6658004c662152fb09d04a` |
 | `docs/decisions/README.md` | `13eaaed1996056a6dd46b9d89f2b9970d5092d9429abf7a67aff30df31690447` |
-| `.changeset/request-lifetime-tracing.md` | `ff06374cda66e62d25aa9336a8d14f3d09892bec73a3c50e189959e460cf8d55` |
-| `docs/reviews/current-release-readiness.md` | `4650b8f8bf8800a80f046e13572215e78f7ea2c7680273d6bf6c8acddfa02a3a` |
+| `.changeset/request-lifetime-tracing.md` | `d4e9b887ee99c771b87eed2a5b8f89a35711ed2e63e9d283a3fcf361692eb0ab` |
+| `docs/reviews/current-release-readiness.md` | `9c14b9de28c75827f058284503b16d22ad80ab88883935f53c31de6020bdf734` |
 
 The reviewer also returned PASS for the saved public bodies of outcome
 [#186](https://github.com/emseepea/emseepea/issues/186), increment
@@ -47,3 +47,9 @@ The reviewer also checked the reopened outcome
 [#186](https://github.com/emseepea/emseepea/issues/186) and release increment
 [#189](https://github.com/emseepea/emseepea/issues/189). Their wording separates
 the accepted local implementation from the required published-package result.
+
+The reviewer returned PASS again after the actual source-CI failure required
+Zod 4.6.6 and a focused test exposed the timestamp mismatch. The final prose
+separates the repaired build, focused tests, dependency eligibility and
+benchmarks from the full exact-commit and remote checks that remain pending.
+The table records this final repair wording.

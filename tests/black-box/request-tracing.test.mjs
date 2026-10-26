@@ -76,7 +76,15 @@ function requestSpans(exporter) {
 }
 
 test("the request span covers async backend work and continues the incoming trace", async (t) => {
-  const { exporter, tracer } = tracing(t);
+  const delegate = new W3CTraceContextPropagator();
+  const { exporter, tracer } = tracing(t, { propagator: {
+    fields: () => delegate.fields(), inject: (...args) => delegate.inject(...args),
+    extract(...args) {
+      // Propagation work belongs to the measured request lifetime too.
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
+      return delegate.extract(...args);
+    },
+  } });
   const events = [];
   let entered;
   let release;

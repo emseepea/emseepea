@@ -20,5 +20,11 @@ request span. Preserve redacted metrics and isolate telemetry failures from
 protocol execution. The package guide now includes provider, context,
 propagation and shutdown setup.
 
+Use shared timestamps for request spans and duration metrics so propagation
+work is included in both measurements.
+
 Update generated starter projects to use the framework release containing
 request tracing.
+
+Update Zod to 4.6.6 to resolve the eligible security fix required by the
+repository's dependency gate.

@@ -56,6 +56,7 @@
     "release:next": "changeset publish --tag next"
   },
   "overrides": {
+    "zod": "4.6.6",
     "follow-redirects": "1.16.1",
     "launch-editor": "2.14.2",
     "postcss-nested": { "postcss-selector-parser": "7.1.6" },
@@ -79,7 +80,7 @@
     "playwright": "1.62.1",
     "semver": "7.8.5",
     "typescript": "6.0.3",
-    "zod": "4.4.3",
+    "zod": "4.6.6",
     "oxlint": "1.80.0"
   }
 }
