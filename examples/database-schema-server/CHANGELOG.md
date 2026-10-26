@@ -1,5 +1,25 @@
 # @emseepea/create-database-schema-server
 
+## 0.1.26
+
+### Patch Changes
+
+- [`8ff804f`](https://github.com/emseepea/emseepea/commit/8ff804f7ec52d356454c79ed1fbffda491d7ec62) Thanks [@tompahoward](https://github.com/tompahoward)! - Make OpenTelemetry request spans cover the actual HTTP request lifetime and
+  keep their context active through asynchronous tool execution. Continue valid
+  incoming trace context so instrumented backend calls can appear beneath the
+  request span. Preserve redacted metrics and isolate telemetry failures from
+  protocol execution. The package guide now includes provider, context,
+  propagation and shutdown setup.
+
+  Use shared timestamps for request spans and duration metrics so propagation
+  work is included in both measurements.
+
+  Update generated starter projects to use the framework release containing
+  request tracing.
+
+  Update Zod to 4.6.6 to resolve the eligible security fix required by the
+  repository's dependency gate.
+
 ## 0.1.25
 
 ### Patch Changes
