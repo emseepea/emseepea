@@ -102,4 +102,3 @@ caller-controlled correlation data, never identity or authorization.
 Framework spans and events exclude request arguments, results and credentials.
 Your backend instrumentation has its own data-capture policy; review what it
 records before enabling it.
-

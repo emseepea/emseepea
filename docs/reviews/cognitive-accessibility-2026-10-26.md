@@ -111,7 +111,11 @@ This prose review does not replace runtime, browser or live publication checks.
 
 | Reviewed file | SHA-256 of reviewed content |
 | --- | --- |
-| `website/src/content/docs/tracing.md` | `fd95d22c596e3194462d9716ed42bfd0731ae0a342abda1028938083337c340b` |
+| `website/src/content/docs/tracing.md` | `d1c78e6807957233d944835f36386327002e449160cb9a4a7a27fd17da07435a` |
 | `website/src/content/docs/less-server-code.md` | `d5f8b7a2358bb87900adffe95c7f1ffeb56136e3a74c9b38062dd932f8927fd3` |
 | `.changeset/website-request-tracing.md` | `8921698726acd2b80553900b3627844b37691703d1588f5900c2178370533544` |
 | `docs/reviews/current-release-readiness.md` | `dce568c7caff62d230d72abb79824d35b977e9ecd5823a835f24caf0a48f1d02` |
+
+The reviewer rechecked the guide after removing only a trailing blank line
+reported by source Quality's whitespace check. Prose and code were unchanged;
+the current guide hash above covers that correction.
