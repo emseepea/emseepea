@@ -98,3 +98,20 @@ from the limits of the synthetic backend check.
 | --- | --- |
 | `docs/reviews/current-release-readiness.md` | `fb0f47cc0352e56094b63db67bc462c1d19feb1368cbc5522fd5507282254257` |
 | `docs/reviews/request-tracing-release-2026-10-26.md` | `c791c0e064b9069dc1e2771bdc1fc8be84a50ff78207dc211c825c82cd327d64` |
+
+## Website tracing guide
+
+Result: PASS. Independent reviewer `/root/accessibility_critic` reviewed the
+website guide, sidebar placement, contextual observability link, Changeset and
+current readiness. The reviewer rechecked the readiness update after local
+execution and website checks passed. No wording corrections were required.
+The setup sequence and expected trace relationships are clear; application
+responsibilities, privacy limits and pending deployment are explicit.
+This prose review does not replace runtime, browser or live publication checks.
+
+| Reviewed file | SHA-256 of reviewed content |
+| --- | --- |
+| `website/src/content/docs/tracing.md` | `fd95d22c596e3194462d9716ed42bfd0731ae0a342abda1028938083337c340b` |
+| `website/src/content/docs/less-server-code.md` | `d5f8b7a2358bb87900adffe95c7f1ffeb56136e3a74c9b38062dd932f8927fd3` |
+| `.changeset/website-request-tracing.md` | `8921698726acd2b80553900b3627844b37691703d1588f5900c2178370533544` |
+| `docs/reviews/current-release-readiness.md` | `dce568c7caff62d230d72abb79824d35b977e9ecd5823a835f24caf0a48f1d02` |
