@@ -1,4 +1,5 @@
-import { metrics, SpanKind, trace } from "@opentelemetry/api";
+import { context, isSpanContextValid, metrics, propagation, ROOT_CONTEXT, SpanKind, trace } from "@opentelemetry/api";
+import type { Span, Tracer } from "@opentelemetry/api";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
 const methods = new Set<string>([
@@ -71,30 +72,55 @@ export function structuredLogging(
   return Object.freeze({ id, emit: write });
 }
 
+// Normalization preserves emit identity while copying the public adapter.
+// A public adapter ID must never grant access to the request lifecycle.
+const requestTracers = new WeakMap<ObservabilityAdapter["emit"], Tracer>();
+
+function eventAttributes(event: ObservabilityEvent) {
+  return {
+    "mcp.method": event.method,
+    ...(event.capability ? { "mcp.capability.name": event.capability } : {}),
+    "http.request.method": event.httpMethod,
+    "http.response.status_code": event.statusCode,
+    "emseepea.protocol.outcome": event.protocolOutcome,
+    "emseepea.transport.outcome": event.outcome,
+    ...(event.callerClass ? { "emseepea.caller.class": event.callerClass } : {}),
+  };
+}
+
 export function openTelemetry(): ObservabilityAdapter {
   const tracer = trace.getTracer("@emseepea/server");
   const meter = metrics.getMeter("@emseepea/server");
   const calls = meter.createCounter("emseepea.http.requests", { unit: "{request}" });
   const duration = meter.createHistogram("emseepea.http.response.duration", { unit: "s" });
-  return Object.freeze({
+  const adapter = Object.freeze({
     id: "opentelemetry",
     emit(event: ObservabilityEvent) {
-      const attributes = {
-        "mcp.method": event.method,
-        ...(event.capability ? { "mcp.capability.name": event.capability } : {}),
-        "http.request.method": event.httpMethod,
-        "http.response.status_code": event.statusCode,
-        "emseepea.protocol.outcome": event.protocolOutcome,
-        "emseepea.transport.outcome": event.outcome,
-        ...(event.callerClass ? { "emseepea.caller.class": event.callerClass } : {}),
-      };
-      const span = tracer.startSpan("mcp.request", { kind: SpanKind.SERVER });
-      span.setAttributes(attributes);
+      const attributes = eventAttributes(event);
       calls.add(1, attributes);
       duration.record(event.durationMs / 1_000, attributes);
-      span.end();
     },
   });
+  requestTracers.set(adapter.emit, tracer);
+  return adapter;
+}
+
+function startRequestSpan(tracer: Tracer, request: FastifyRequest): Span | undefined {
+  let parent = ROOT_CONTEXT;
+  try {
+    // Only tracing headers reach the configured propagator. In particular,
+    // baggage, credentials and unrelated ambient context are excluded.
+    const carrier: Record<string, string> = {};
+    for (const name of ["traceparent", "tracestate"]) {
+      const value = request.headers[name];
+      if (typeof value === "string" && value.length <= 512) carrier[name] = value;
+    }
+    const extracted = trace.getSpanContext(propagation.extract(ROOT_CONTEXT, carrier));
+    if (extracted && isSpanContextValid(extracted)) parent = trace.setSpanContext(ROOT_CONTEXT, extracted);
+  } catch { /* A broken propagator must not prevent protocol execution. */ }
+  try {
+    return tracer.startSpan("mcp.request", { kind: SpanKind.SERVER }, parent);
+  } catch { return undefined; }
 }
 
 export function installObservability(
@@ -105,12 +131,14 @@ export function installObservability(
   limits: { deliveryTimeoutMs: number },
 ): (timeoutMs: number) => Promise<void> {
   const pending = new Set<Promise<void>>();
+  const tracer = adapters.map((adapter) => requestTracers.get(adapter.emit)).find((value) => value !== undefined);
 
   app.addHook("onRequest", (request, reply, done) => {
     if (request.routeOptions.url !== "/mcp") { done(); return; }
     const state: ObservabilityState = { protocolOutcome: "success" };
     requestStates.set(request, state);
     const started = performance.now();
+    const span = tracer ? startRequestSpan(tracer, request) : undefined;
     let ended = false;
     const finish = () => end(reply.raw.destroyed || reply.raw.socket?.destroyed ? "disconnected" : "finished");
     const close = () => end("disconnected");
@@ -143,6 +171,12 @@ export function installObservability(
         durationMs: Math.min(3_600_000, Math.max(0, performance.now() - started)),
         ...(state.forwardingRefusal ? { forwardingRefusal: state.forwardingRefusal } : {}),
       });
+      if (span) {
+        try { span.setAttributes(eventAttributes(event)); }
+        catch { /* Span decoration cannot change protocol behaviour. */ }
+        try { span.end(); }
+        catch { /* Finalization is independent of adapter delivery. */ }
+      }
       for (const adapter of adapters) {
         try {
           const delivery = bounded(
@@ -156,7 +190,18 @@ export function installObservability(
     }
     reply.raw.once("finish", finish);
     reply.raw.once("close", close);
-    done();
+    if (!span) { done(); return; }
+    let continued = false;
+    try {
+      context.with(trace.setSpan(ROOT_CONTEXT, span), () => {
+        continued = true;
+        done();
+      });
+    } catch {
+      // A context manager can throw before or after calling the continuation.
+      // Never retry protocol work that has already started.
+      if (!continued) done();
+    }
   });
 
   return async (timeoutMs) => {

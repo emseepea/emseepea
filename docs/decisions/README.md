@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 123 decisions: 74 current and 49 historical.
+This project has 124 decisions: 75 current and 49 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -89,6 +89,7 @@ recorded separately.
 - [ADR-0125: Atomic Events Publication with Durable Source Identity](0125-atomic-events-publication-with-durable-source-identity.proposed.md): Proposed; human review confirmed.
 - [ADR-0126: Explicit External Events Delivery Ownership](0126-explicit-external-events-delivery-ownership.proposed.md): Proposed; human review confirmed.
 - [ADR-0127: Application-specific Feedback Submission Descriptions](0127-application-specific-feedback-submission-descriptions.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0128: Request-lifetime OpenTelemetry Context](0128-request-lifetime-opentelemetry-context.proposed.md): Proposed; human review unconfirmed.
 
 ### Historical decisions
 
@@ -2738,3 +2739,19 @@ Chosen option: **"Optional complete description on the native submission constru
 - Source and package checks show configured descriptions on all supported protocol versions without changes to other discovery fields, schemas, authorization or receipts.
 - Production confirmation names an adopter using the published option with its native backend and provides evidence of actual recording and accurate disclosure.
 - Metadata-scan acceptance is separate evidence and names the application and tested definition.
+
+### [ADR-0128: Request-lifetime OpenTelemetry Context](0128-request-lifetime-opentelemetry-context.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+
+#### ADR-0128 Decision
+
+Chosen option: **"Framework-owned request tracing"**. The existing `openTelemetry()` adapter opts into private tracing behavior. Its preserved `emit` function identifies this behavior across adapter normalization; the public adapter ID does not grant lifecycle access. Public contract changes remain possible when they add concrete adopter value. Lifecycle callbacks add ordering and failure semantics without an established need for this outcome.
+
+#### ADR-0128 Checks
+
+- Real HTTP tests cover request timing, incoming parents, asynchronous backend children, overlapping requests, missing/invalid context, streamed responses, disconnects and throwing telemetry components.
+- Existing redaction, disabled behavior and protocol checks remain required.
+- The guide includes checked setup and flush responsibilities.
+- Repository tests and performance checks determine qualification; the Wednesday deadline does not waive them.
