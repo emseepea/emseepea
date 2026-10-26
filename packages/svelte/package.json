@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/svelte",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "private": false,
   "license": "MIT",
   "repository": {
@@ -28,7 +28,7 @@
     "test:built": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@emseepea/server": "0.25.0"
+    "@emseepea/server": "0.25.1"
   },
   "peerDependencies": {
     "svelte": "^5.0.0"
