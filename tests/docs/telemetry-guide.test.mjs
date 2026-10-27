@@ -13,3 +13,9 @@ test("the copied SDK recipe preserves the response and reports collector timeout
   const { stdout } = await promisify(execFile)(process.execPath, ["scripts/verify-telemetry-guide.mjs", process.cwd(), "stalled"], { timeout: 40_000 });
   assert.match(stdout, /timed-out shutdown reported failure with exit 1 as expected/);
 });
+
+
+test("the copied HTTP-instrumented SDK guide exports a coherent trace without duplicate SERVER spans", { timeout: 45_000 }, async () => {
+  const { stdout } = await promisify(execFile)(process.execPath, ["scripts/verify-telemetry-guide.mjs", process.cwd(), "http"], { timeout: 40_000 });
+  assert.match(stdout, /one transport SERVER, framework INTERNAL child, backend and correlated logs PASS/);
+});

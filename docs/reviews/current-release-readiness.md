@@ -2,6 +2,50 @@
 
 Date: 2026-10-27
 
+## HTTP instrumentation coexistence
+
+Status: **LOCAL VERIFICATION IN PROGRESS**.
+
+Outcome #208 and increment #209 add explicit coexistence with an application's
+HTTP instrumentation. Source contribution #210 owns implementation and delivery.
+`httpInstrumentation: true` selects a framework INTERNAL child of a validated
+local active transport span, with the current SERVER fallback and defaults.
+
+Real local HTTP instrumentation reproduced two sibling SERVER spans before the
+change and the intended transport SERVER → framework INTERNAL → backend trace
+after it. The copied HTTP-instrumented guide exported all three signals with
+correct local log correlation and shutdown. Focused tracing and guide tests
+passed 24/24. These are local results; no new package or website is released yet.
+
+Architecture, JTBD, risk, cognitive-accessibility and planning reviews passed
+plan revision 1. Remaining source qualification, actual-diff reviews, candidate
+and installed-package checks, latest publication, website, full merge-back and
+independent acceptance remain required. The prior 0.25.4 release below stays
+historical and verified.
+
+### Planned publication closure
+
+The computed Changesets plan includes the following public packages. Versions
+are planned; publication and registry checks remain pending. The private
+website and shared UI dependency metadata follow the existing release workflow.
+
+- `@emseepea/create-api-backed-server@0.1.30`
+- `@emseepea/create-database-schema-server@0.1.30`
+- `@emseepea/create-html-ui-server@0.1.30`
+- `@emseepea/create-mongodb-backed-server@0.1.30`
+- `@emseepea/create-multi-instance-postgres-server@0.1.30`
+- `@emseepea/create-openapi-backed-server@0.1.30`
+- `@emseepea/create-progress-streaming-server@0.1.30`
+- `@emseepea/create-react-ui-server@0.1.30`
+- `@emseepea/create-resources-and-prompts-server@0.1.30`
+- `@emseepea/create-soap-backed-server@0.1.30`
+- `@emseepea/create-tool-server@0.1.30`
+- `@emseepea/feedback@0.11.5`
+- `@emseepea/react@0.4.16`
+- `@emseepea/server@0.25.5`
+- `@emseepea/svelte@0.2.16`
+- `@emseepea/testing@0.26.8`
+
 ## Correlated operational logs
 
 Status: **RELEASED AND VERIFIED**.

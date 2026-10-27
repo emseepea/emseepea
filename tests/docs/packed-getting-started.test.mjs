@@ -92,6 +92,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
       "@types/node@24.13.3",
       "@opentelemetry/api@1.9.1",
       "@opentelemetry/sdk-node@0.221.0",
+      "@opentelemetry/instrumentation-http@0.221.0",
     ], directory);
     const [consumerLockfile, recordedLockfile] = await Promise.all([
       readFile(path.join(directory, "package-lock.json"), "utf8").then(JSON.parse),
@@ -450,6 +451,7 @@ test("the packed public packages pass fresh-install and getting-started checks",
     await cp(new URL("scripts/verify-installed-package.mjs", root), path.join(directory, "verify-installed-package.mjs"));
     run(process.execPath, ["verify-installed-package.mjs"], directory);
     run(process.execPath, [fileURLToPath(new URL("scripts/verify-telemetry-guide.mjs", root)), directory], directory);
+    run(process.execPath, [fileURLToPath(new URL("scripts/verify-telemetry-guide.mjs", root)), directory, "http"], directory);
     const installed = JSON.parse(await readFile(path.join(directory, "node_modules/@emseepea/server/package.json"), "utf8"));
     assert.equal(installed.name, "@emseepea/server");
     const installedReadme = await readFile(path.join(directory, "node_modules/@emseepea/server/README.md"), "utf8");

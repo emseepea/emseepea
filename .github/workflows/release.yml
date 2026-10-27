@@ -194,10 +194,11 @@ jobs:
           trap 'rm -rf "$smoke_dir"' EXIT
           cd "$smoke_dir"
           npm init --yes >/dev/null
-          npm install --ignore-scripts --userconfig /dev/null "${package_specs[@]}" @opentelemetry/api@1.9.1 @opentelemetry/sdk-node@0.221.0
+          npm install --ignore-scripts --userconfig /dev/null "${package_specs[@]}" @opentelemetry/api@1.9.1 @opentelemetry/sdk-node@0.221.0 @opentelemetry/instrumentation-http@0.221.0
           npm audit signatures --userconfig /dev/null
           node --input-type=module < "$GITHUB_WORKSPACE/scripts/verify-installed-package.mjs"
           node "$GITHUB_WORKSPACE/scripts/verify-telemetry-guide.mjs" "$smoke_dir"
+          node "$GITHUB_WORKSPACE/scripts/verify-telemetry-guide.mjs" "$smoke_dir" http
           cd "$GITHUB_WORKSPACE"
           EMSEEPEA_GUIDE_PACKAGE_SOURCE=registry node --test tests/docs/getting-started-references.test.mjs
           EMSEEPEA_VERIFY_CONTAINERS=true node scripts/verify-registry-initializers.mjs

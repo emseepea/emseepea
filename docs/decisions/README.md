@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 124 decisions: 75 current and 49 historical.
+This project has 125 decisions: 76 current and 49 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -90,6 +90,7 @@ recorded separately.
 - [ADR-0126: Explicit External Events Delivery Ownership](0126-explicit-external-events-delivery-ownership.proposed.md): Proposed; human review confirmed.
 - [ADR-0127: Application-specific Feedback Submission Descriptions](0127-application-specific-feedback-submission-descriptions.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0128: Request-lifetime OpenTelemetry Context](0128-request-lifetime-opentelemetry-context.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0129: Coexistence with Application HTTP Instrumentation](0129-http-instrumentation-tracing-coexistence.proposed.md): Proposed; human review unconfirmed.
 
 ### Historical decisions
 
@@ -2755,3 +2756,19 @@ Chosen option: **"Framework-owned request tracing"**. The existing `openTelemetr
 - Existing redaction, disabled behavior and protocol checks remain required.
 - The guide includes checked setup and flush responsibilities.
 - Repository tests and performance checks determine qualification; the Wednesday deadline does not waive them.
+
+### [ADR-0129: Coexistence with Application HTTP Instrumentation](0129-http-instrumentation-tracing-coexistence.proposed.md)
+
+- Status: Proposed
+- Human review: Unconfirmed
+
+#### ADR-0129 Decision
+
+Chosen option: **"Explicitly declare application-owned HTTP instrumentation"**. `openTelemetry({ httpInstrumentation: true })` declares that the active local span belongs to the application's HTTP instrumentation. An active span cannot prove that provenance by itself; this is an application configuration promise.
+
+#### ADR-0129 Checks
+
+- Real standard HTTP instrumentation exports one transport SERVER span, a framework INTERNAL child and an asynchronous backend descendant.
+- Controlled incoming parents, defaults, fallback, context isolation and unsampled parent behavior are checked at the public HTTP boundary.
+- The installed-package guide exports traces, HTTP metrics and correlated logs and retains application-owned shutdown.
+- Required source, release and live website checks establish delivery; the Wednesday-afternoon deadline does not waive them.

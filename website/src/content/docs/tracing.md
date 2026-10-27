@@ -118,6 +118,71 @@ endpoints, headers, sampling and propagation. This recipe does not enable
 automatic HTTP or backend instrumentation; add those only after reviewing their
 data-capture policies.
 
+## Use existing HTTP instrumentation
+
+If your application already instruments incoming HTTP requests, enable
+`httpInstrumentation: true` on the framework adapter:
+
+```js title="http-observability.mjs"
+observability: [openTelemetry({ logs: true, httpInstrumentation: true })],
+```
+
+This option declares that the active local span belongs to your application's
+HTTP instrumentation. Em See Pea creates an INTERNAL `mcp.request` child of
+that span, followed by your backend spans. Only the transport instrumentation
+creates a SERVER span. The framework never modifies or ends the transport span.
+
+The option cannot establish where an active span came from. Enable it only
+where your HTTP instrumentation supplies the request context.
+
+Em See Pea copies
+only validated local trace identity into a clean context; it excludes ambient
+baggage, trace state and other context entries. An absent, invalid or remote
+active context falls back to the usual HTTP-header parent and SERVER span.
+Without this option, the existing framework SERVER behavior stays unchanged.
+
+To try this with the example above, install the compatible HTTP instrumentation:
+
+```sh
+npm install @opentelemetry/instrumentation-http@0.221.0
+```
+
+Replace `telemetry.mjs` with the following, and replace the server's
+`observability` line with the adapter line above. Keep its existing startup
+command and shutdown handler.
+
+```js title="telemetry.mjs"
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
+
+process.env.OTEL_TRACES_EXPORTER ??= "console";
+process.env.OTEL_METRICS_EXPORTER ??= "console";
+process.env.OTEL_LOGS_EXPORTER ??= "console";
+process.env.OTEL_EXPORTER_OTLP_TIMEOUT ??= "5000";
+process.env.OTEL_BSP_EXPORT_TIMEOUT ??= "5000";
+process.env.OTEL_BLRP_EXPORT_TIMEOUT ??= "5000";
+process.env.OTEL_METRIC_EXPORT_TIMEOUT ??= "5000";
+process.env.OTEL_METRIC_EXPORT_INTERVAL ??= "60000";
+
+export const sdk = new NodeSDK({
+  serviceName: "status-service",
+  autoDetectResources: false,
+  instrumentations: [new HttpInstrumentation({
+    disableOutgoingRequestInstrumentation: true,
+  })],
+});
+sdk.start();
+```
+
+The instrumentation must start before the application imports the HTTP server.
+This example instruments incoming HTTP only. HTTP instrumentation has its own
+capture policy; framework redaction does not cover its transport attributes.
+Review that policy before enabling it in your application.
+
+This mode changes
+trace parenting, not the meaning of framework HTTP metrics or request timing;
+it does not introduce a separate MCP operation timer.
+
 ## Interpret HTTP latency
 
 The counter and histogram describe the HTTP request through response completion
