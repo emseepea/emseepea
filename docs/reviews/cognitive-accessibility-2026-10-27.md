@@ -94,3 +94,31 @@ remain bounded; publication and live verification remain separate requirements.
 | `website/src/content/docs/less-server-code.md` | `c3c357e84fa437c68df29fd98587f10ffc46cffd287c94ed072e9b81b4948dbb` |
 | `.changeset/useful-http-metrics-sdk.md` | `5e8915ecac54514071d44f7dcb1aab153ac48844d0f25c86f9ababe60d43ff5e` |
 | `docs/reviews/current-release-readiness.md` | `3a0fd6689babdc051be484b1e54bf892a308fa433428a16c836b8b0e0c608a20` |
+
+## SDK website release changelog
+
+Result: PASS. Independent reviewer `/root/accessibility_critic` reviewed the
+seventeen generated changelog additions and PR #202 prose at frozen candidate
+`37b2bba69fa12eaa6d479f86a6cae628f5c5dff3`. The website changelog below is
+unchanged from that reviewed content. This entry records the genuine review for
+the merge-back documentation check; it does not turn the original failed
+qualification into a pass.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `website/CHANGELOG.md` | `9f5be1aeeeed7fae0cdfb6883708f12428aa813cd1d56aaa1186ba29cc8bfe7e` |
+
+## Correlated operational logs
+
+Result: PASS. Independent reviewer `/root/accessibility_critic` checked the
+three-signal guide, contextual link, Changeset and current readiness. The
+Changeset qualifies correlation IDs when a valid local span is available.
+Default-off behavior, uncorrelated fallback, application ownership and pending
+release checks are explicit. Density checks passed.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `website/src/content/docs/tracing.md` | `56f55069329502beaa8896b0f814b579c175eef0838a9e4e62359de7c9f636a8` |
+| `website/src/content/docs/less-server-code.md` | `da186a470ce2265401a461e93647a1e173dac7dba13b8385fd7637d256bdb75b` |
+| `.changeset/correlated-request-logs.md` | `1265e532debdf9c6dde0c7d94931befb699a27be04269499db9d54683c7bdf59` |
+| `docs/reviews/current-release-readiness.md` | `68c8f067a7cb25b2056c77010335c331a9e55bbe13b855ac8f62b4b1e42cd97f` |

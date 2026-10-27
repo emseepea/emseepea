@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/server",
-  "version": "0.25.3",
+  "version": "0.25.4",
   "description": "Fastify-first framework for Model Context Protocol 2026-07-28 servers over Streamable HTTP",
   "license": "MIT",
   "repository": {
@@ -62,6 +62,7 @@
   },
   "dependencies": {
     "@opentelemetry/api": "1.9.1",
+    "@opentelemetry/api-logs": "0.221.0",
     "@modelcontextprotocol/core": "2.3.1",
     "@modelcontextprotocol/fastify": "2.0.1",
     "@modelcontextprotocol/node": "2.1.1",
