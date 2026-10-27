@@ -67,6 +67,7 @@
     "@opentelemetry/core": "2.10.0",
     "@opentelemetry/context-async-hooks": "2.10.0",
     "@opentelemetry/sdk-metrics": "2.10.0",
+    "@opentelemetry/sdk-node": "0.221.0",
     "@opentelemetry/sdk-trace": "2.10.0",
     "@anthropic-ai/claude-code": "2.1.248",
     "@changesets/changelog-github": "1.0.0",

@@ -2,7 +2,58 @@
 
 Date: 2026-10-27
 
-## Qualified delivery baseline: Fastify and release preparation
+## Useful HTTP metrics and standard SDK recipe
+
+Status: **SOURCE PREPARED; DELIVERY PENDING**.
+
+Outcome #195 revision 4, increment #203 and contribution #204 add useful
+second-based histogram advice and replace the tracing guide's manual provider,
+context-manager and propagator setup with the standard Node SDK. The application
+owns its SDK, exporters and shutdown. No additional production MCP timer,
+result-frame parser or target-specific `_meta` propagation is added.
+
+The owned loopback OTLP/HTTP experiment verified real traces, backend parentage,
+request counts, duration seconds/buckets, restricted resource attributes and
+shutdown. Focused controls also prove that 6 ms and 300 ms samples fall in
+separate advised buckets and that application Views override the advice.
+Advice changes the default histogram layout for providers honoring it; it is an
+experimental API recommendation, not an enforced backend schema. Metric names,
+units, timing and attributes are unchanged. Logs remain a separate increment.
+
+The compatible SDK dependency is development-only. The framework continues to
+use the application's OpenTelemetry API/providers. The recipe disables automatic
+resource detection and automatic transport instrumentation. Its exporter timeouts
+are per export; they are not an overall application shutdown deadline.
+
+Required full qualification, remote dependency qualification, exact-source/candidate
+publication, registry-installed recipe, latest promotion, website deployment and
+merge-back remain pending. Compute the actual package closure from the generated
+candidate; do not infer completed publication from these local controls.
+
+The current Changesets plan computes sixteen public package patches (server,
+eleven initializers, feedback, React, Svelte and testing), plus the private website
+patch. The private shared UI workspace has dependency metadata only. The retained
+Fastify Changeset accounts for the initializer closure. Immutable candidate
+versions are allocated by the existing release workflow, not guessed here.
+The new lockfile passed the pinned OSV scan and existing fix-eligibility gate.
+Normal and stalled-collector controls passed: the latter confirms a successful
+tool response followed by reported shutdown failure, not acknowledged export.
+
+The prerequisite #199/#200 is independently accepted. Source `3bf6edf` passed
+canonical Quality 40487853868 and candidate `2e5c0dd` passed Release 40490975981,
+including all sixteen changed packages verified under `next`. Its earlier failed
+local benchmark is retained at #199 comment6439334586; canonical success does not
+explain or relabel that failure. Server `latest` remains 0.25.1 at this checkpoint.
+
+One genuine native ChatGPT pair is recorded in #198 comment6438956084. Both calls
+completed with matching server results and one metric sample per mode. HTTP
+tracing carriers reached the fixture through its forwarder; injection provenance
+remains unknown. Neither call carried tracing fields in `params._meta`. This is
+bounded evidence, not universal client support or incompatibility. The pair must
+not repeat. Probe/tunnels are stopped and OAuth disconnected; the GM owns final
+inert UI cleanup. Native cleanup does not block this server-side improvement.
+
+## Historical baseline preparation (qualified in the result above)
 
 Status: **SOURCE PREPARED; QUALIFICATION PENDING**.
 

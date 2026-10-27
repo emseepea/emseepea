@@ -1,54 +1,56 @@
 ---
-title: Trace requests
-description: Follow an MCP request through Em See Pea into instrumented backend calls with OpenTelemetry.
+title: Traces and metrics
+description: Export MCP request traces and useful HTTP latency metrics with the standard OpenTelemetry Node SDK.
 ---
 
-Use `@emseepea/server` 0.25.1 or later to follow an incoming trace through an
-MCP request and into your backend work. This example uses a console exporter
-so you can check the span relationships before choosing a telemetry service.
+Use the standard OpenTelemetry Node SDK to collect request traces and HTTP
+metrics. Em See Pea supplies instrumentation; your application owns the SDK,
+exporters and shutdown. No provider setup is needed inside your tools.
 
-## Configure tracing before starting the server
+## Start with console output
 
-`openTelemetry()` creates a server span when an MCP HTTP request starts and
-ends it when the response finishes or the caller disconnects. It keeps that
-span active through asynchronous request work, so instrumented backend calls
-can create child spans. Request counters and duration histograms keep their
-existing names and safe attributes.
-
-First configure your OpenTelemetry provider, asynchronous context manager,
-trace-context propagator and exporter. Em See Pea does not install global
-providers or instrument your backends. Without a tracing provider, its trace
-API is a no-op. Without context management or propagation, traces will not
-connect across asynchronous work or incoming requests respectively.
-
-This Node.js example exports traces to the console. Save it as
-`tracing-server.mjs` in a project with these dependencies:
+Install these dependencies in your application:
 
 ```sh
-npm install @emseepea/server zod @opentelemetry/api@1.9.1 @opentelemetry/core@2.10.0 @opentelemetry/context-async-hooks@2.10.0 @opentelemetry/sdk-trace@2.10.0
+npm install @emseepea/server zod @opentelemetry/api@1.9.1 @opentelemetry/sdk-node@0.221.0
 ```
 
+Save the SDK setup in `telemetry.mjs`. This compatible SDK version configures
+context management, W3C trace propagation and both signal providers. Logs are
+disabled for this example. Automatic resource detection is disabled so process,
+host and environment attributes are not added to the exported resource.
+
+```js title="telemetry.mjs"
+import { NodeSDK } from "@opentelemetry/sdk-node";
+
+process.env.OTEL_TRACES_EXPORTER ??= "console";
+process.env.OTEL_METRICS_EXPORTER ??= "console";
+process.env.OTEL_LOGS_EXPORTER = "none";
+process.env.OTEL_EXPORTER_OTLP_TIMEOUT ??= "5000";
+process.env.OTEL_BSP_EXPORT_TIMEOUT ??= "5000";
+process.env.OTEL_METRIC_EXPORT_TIMEOUT ??= "5000";
+process.env.OTEL_METRIC_EXPORT_INTERVAL ??= "60000";
+
+export const sdk = new NodeSDK({
+  serviceName: "status-service",
+  autoDetectResources: false,
+});
+sdk.start();
+```
+
+Save the server in `tracing-server.mjs`:
+
 ```js title="tracing-server.mjs"
-import { context, propagation, trace } from "@opentelemetry/api";
-import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
-import { W3CTraceContextPropagator } from "@opentelemetry/core";
-import { BatchSpanProcessor, ConsoleSpanExporter, TracerProvider } from "@opentelemetry/sdk-trace";
+import { trace } from "@opentelemetry/api";
 import { createEmseepea, defineTool, openTelemetry, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
+import { sdk } from "./telemetry.mjs";
 
-context.setGlobalContextManager(new AsyncLocalStorageContextManager().enable());
-propagation.setGlobalPropagator(new W3CTraceContextPropagator());
-const provider = new TracerProvider({
-  spanProcessors: [new BatchSpanProcessor({ exporter: new ConsoleSpanExporter() })],
-});
-trace.setGlobalTracerProvider(provider);
 const backendTracer = trace.getTracer("my-application.backend");
-const telemetry = { ...openTelemetry(), flush: () => provider.forceFlush() };
-
 const running = await serveEmseepea(createEmseepea({
   name: "tracing-example",
   version: "1.0.0",
-  observability: [telemetry],
+  observability: [openTelemetry()],
   tools: [defineTool({
     name: "read-status",
     description: "Read the example backend status.",
@@ -65,32 +67,85 @@ const running = await serveEmseepea(createEmseepea({
       });
     },
   })],
-}), { port: 3000 });
+}), { port: Number(process.env.PORT ?? 3000) });
 console.log(`MCP endpoint: ${running.url}`);
 
-async function stop() {
-  await running.close();
-  await provider.shutdown();
-  context.disable();
-  propagation.disable();
-  trace.disable();
+let stopping;
+function stop() {
+  return stopping ??= (async () => {
+    try { await running.close(); }
+    finally { await sdk.shutdown(); }
+  })().catch(() => {
+    console.error("Server or telemetry shutdown failed.");
+    process.exitCode = 1;
+  });
 }
 process.once("SIGINT", stop);
 process.once("SIGTERM", stop);
 ```
 
-## Check the result
+Load the SDK before the application:
 
-Run `node tracing-server.mjs`, then call `read-status` with your MCP client.
-The backend span and `mcp.request` span share a trace, with the backend span
-under the request.
+```sh
+node --import ./telemetry.mjs tracing-server.mjs
+```
 
-## Flush on shutdown
+Call `read-status` with your MCP client, then stop the server with Ctrl+C to
+export pending telemetry. `backend.read` and `mcp.request` share a trace, with
+the backend span under the request. The SDK also exports
+`emseepea.http.requests` in requests and `emseepea.http.response.duration` in
+seconds. Without installed providers, the framework's telemetry APIs are no-ops.
 
-The adapter's flush callback gives pending spans a bounded
-flush opportunity during server shutdown; the application then shuts down its
-provider. Configure a meter provider and metric exporter separately to collect
-the built-in request metrics.
+## Send both signals to an OTLP collector
+
+Use the same files with your collector's OTLP/HTTP endpoint:
+
+```sh
+OTEL_TRACES_EXPORTER=otlp OTEL_METRICS_EXPORTER=otlp \
+OTEL_EXPORTER_OTLP_PROTOCOL=http/json \
+OTEL_EXPORTER_OTLP_ENDPOINT=https://collector.example.com \
+node --import ./telemetry.mjs tracing-server.mjs
+```
+
+Replace the example endpoint with your collector. The SDK appends `/v1/traces`
+and `/v1/metrics`. Configure collector authentication through your deployment's
+secret handling.
+
+Review inherited `OTEL_*` settings: they can change exporters,
+endpoints, headers, sampling and propagation. This recipe does not enable
+automatic HTTP or backend instrumentation; add those only after reviewing their
+data-capture policies.
+
+## Interpret HTTP latency
+
+The counter and histogram describe the HTTP request through response completion
+or disconnection. They identify bounded MCP method, configured capability,
+status and outcome. Streaming duration includes the open response lifetime;
+it is not a separate MCP operation timer.
+
+The duration histogram recommends second-based boundaries:
+`0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10`.
+This separates millisecond requests that the SDK's default buckets grouped
+together.
+
+It changes the default bucket layout in providers that honor instrument
+advice; names, units, timing and attributes stay the same. Advice is an
+experimental OpenTelemetry API option. Your application's metric Views can
+override it; check the buckets exported by your provider. These custom metric
+names do not claim full OpenTelemetry semantic-convention compliance.
+
+## Shut down in order
+
+Close the HTTP server first, then await `sdk.shutdown()` once. The SDK exports
+pending traces and metrics and releases its providers. This recipe sets
+five-second exporter and metric-reader timeouts; configure them for your
+collector.
+
+They are per export, not an overall application shutdown deadline.
+The framework's adapter-flush timeout does not bound application-owned SDK
+shutdown. Arrange your process supervisor's grace period accordingly.
+If shutdown fails, the example reports a fixed message and exits with code 1;
+a collector outage does not change a tool response that has already completed.
 
 ## Keep trace data within its trust boundary
 
@@ -100,5 +155,14 @@ Missing or invalid parent context starts a new trace. Incoming trace IDs are
 caller-controlled correlation data, never identity or authorization.
 
 Framework spans and events exclude request arguments, results and credentials.
-Your backend instrumentation has its own data-capture policy; review what it
-records before enabling it.
+The resource in this recipe contains the known service name and SDK identity.
+Your backend instrumentation and exporters have their own data-capture policies.
+
+A [bounded native ChatGPT test](https://github.com/emseepea/emseepea/issues/198#issuecomment-6438956084)
+completed immediate and awaited calls. Tracing headers reached the fixture through
+its forwarder; their originating injector was not established.
+
+Neither call
+included tracing fields in `params._meta`. That observation does not establish
+universal client support or incompatibility, and no `_meta` propagation is added
+for that tested path.

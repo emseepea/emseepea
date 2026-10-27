@@ -4,6 +4,7 @@ import test from "node:test";
 import { metrics, trace } from "@opentelemetry/api";
 import {
   AggregationTemporality,
+  AggregationType,
   InMemoryMetricExporter,
   MeterProvider,
   PeriodicExportingMetricReader,
@@ -374,3 +375,36 @@ test("the OpenTelemetry adapter records only the safe event contract", async (t)
   await metering.forceFlush();
   assert.doesNotMatch(JSON.stringify({ attributes, metrics: metricExport.getMetrics() }), new RegExp(secret));
 });
+
+for (const override of [false, true]) {
+  test(`HTTP duration advice separates millisecond samples; application View override=${override}`, async (t) => {
+    const exporter = new InMemoryMetricExporter(AggregationTemporality.CUMULATIVE);
+    const reader = new PeriodicExportingMetricReader({ exporter, exportIntervalMillis: 600_000 });
+    const provider = new MeterProvider({ readers: [reader], ...(override ? { views: [{
+      instrumentName: "emseepea.http.response.duration",
+      aggregation: { type: AggregationType.EXPLICIT_BUCKET_HISTOGRAM, options: { boundaries: [1] } },
+    }] } : {}) });
+    assert.equal(metrics.setGlobalMeterProvider(provider), true);
+    t.after(async () => { metrics.disable(); await provider.shutdown(); });
+    const adapter = openTelemetry();
+    for (const durationMs of [6, 300]) adapter.emit({
+      type: "mcp.request", method: "tools/call", httpMethod: "POST", statusCode: 200,
+      outcome: "finished", protocolOutcome: "success", durationMs,
+    });
+    await provider.forceFlush();
+    const histogram = exporter.getMetrics().at(-1).scopeMetrics.flatMap((scope) => scope.metrics)
+      .find((metric) => metric.descriptor.name === "emseepea.http.response.duration");
+    assert.equal(histogram.descriptor.unit, "s");
+    const point = histogram.dataPoints[0].value;
+    assert.equal(point.count, 2); assert.ok(Math.abs(point.sum - .306) < 1e-12);
+    if (override) {
+      assert.deepEqual(point.buckets.boundaries, [1]);
+      assert.deepEqual(point.buckets.counts, [2, 0]);
+    } else {
+      assert.deepEqual(point.buckets.boundaries, [.005, .01, .025, .05, .075, .1, .25, .5, .75, 1, 2.5, 5, 7.5, 10]);
+      assert.equal(point.buckets.counts[1], 1);
+      assert.equal(point.buckets.counts[7], 1);
+      assert.equal(point.buckets.counts.reduce((a, b) => a + b), 2);
+    }
+  });
+}

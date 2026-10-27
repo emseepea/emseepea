@@ -78,3 +78,19 @@ corrections were required.
 
 This prose review does not qualify the changed workflow, pending auth artifact,
 candidate publication or native ChatGPT journey.
+
+## Standard SDK recipe and useful HTTP metrics
+
+Result: PASS. Independent reviewer `/root/accessibility_critic` reviewed the
+copied SDK guide, contextual link, Changeset and current readiness. The final
+wording distinguishes completed responses from reported shutdown failures,
+per-export timeouts from an application deadline, and local eligibility from
+pending remote qualification. The density guard passes. Native observations
+remain bounded; publication and live verification remain separate requirements.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `website/src/content/docs/tracing.md` | `cbc21d62ed3dcbdc1b90f540c3b8c8a06c6e1982a95b1d61de3d0ff70e38b566` |
+| `website/src/content/docs/less-server-code.md` | `c3c357e84fa437c68df29fd98587f10ffc46cffd287c94ed072e9b81b4948dbb` |
+| `.changeset/useful-http-metrics-sdk.md` | `5e8915ecac54514071d44f7dcb1aab153ac48844d0f25c86f9ababe60d43ff5e` |
+| `docs/reviews/current-release-readiness.md` | `3a0fd6689babdc051be484b1e54bf892a308fa433428a16c836b8b0e0c608a20` |
