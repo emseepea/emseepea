@@ -1,5 +1,11 @@
 # @emseepea/create-database-schema-server
 
+## 0.1.30
+
+### Patch Changes
+
+- [`aaacafd`](https://github.com/emseepea/emseepea/commit/aaacafd2e9c296bab85a8a6c02c7284951f2404b) Thanks [@tompahoward](https://github.com/tompahoward)! - Add `openTelemetry({ httpInstrumentation: true })` for applications with existing HTTP instrumentation. The framework creates an INTERNAL child of a valid active local transport span, avoiding another SERVER span; defaults and HTTP-header fallback stay unchanged. Document and verify the standard SDK example with real transport instrumentation, correlated logs and application-owned shutdown.
+
 ## 0.1.29
 
 ### Patch Changes
