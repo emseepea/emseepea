@@ -122,3 +122,20 @@ release checks are explicit. Density checks passed.
 | `website/src/content/docs/less-server-code.md` | `da186a470ce2265401a461e93647a1e173dac7dba13b8385fd7637d256bdb75b` |
 | `.changeset/correlated-request-logs.md` | `1265e532debdf9c6dde0c7d94931befb699a27be04269499db9d54683c7bdf59` |
 | `docs/reviews/current-release-readiness.md` | `68c8f067a7cb25b2056c77010335c331a9e55bbe13b855ac8f62b4b1e42cd97f` |
+
+## Correlated logs website release changelog
+
+Result: PASS. Independent reviewer `/root/accessibility_critic` reviewed all
+seventeen generated changelog additions and PR #207 prose at frozen candidate
+`4a1e75162efd04c083ab1ae541ddc8fd2acaec50`. The unchanged website changelog below
+is approved. This genuine receipt is recorded before promotion; candidate
+publication, website deployment and full merge-back remain separate checks.
+
+| Reviewed file | SHA-256 at the frozen candidate |
+| --- | --- |
+| `website/CHANGELOG.md` | `e8b073f888d1dc40e1670a2e981924435abc7d76c75accd641d563b0cdaefdf9` |
+
+The seventeen-file review manifest has SHA-256
+`7c4254684519678647d401fdab8bb3944400a2f400158c5566599acd873962b4`.
+PR prose has SHA-256
+`34763dd553a55b8fc1902ebe3a183602ea26159bc4cc7b185641c6db12568516`.
