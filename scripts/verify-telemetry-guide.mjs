@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 // Run the copied public recipe against dependencies installed in the given project.
 const project = path.resolve(process.argv[2] ?? fileURLToPath(new URL("../", import.meta.url)));
 const stalled = process.argv[3] === "stalled";
+const httpInstrumentation = process.argv[3] === "http";
 const guide = await readFile(new URL("../website/src/content/docs/tracing.md", import.meta.url), "utf8");
 const directory = await mkdtemp(path.join(project, ".telemetry-guide-"));
 const traceBatches = [];
@@ -47,8 +48,14 @@ const receiver = createServer(async (request, response) => {
 let child;
 try {
   for (const name of ["telemetry.mjs", "tracing-server.mjs"]) {
-    const code = guide.match(new RegExp('```js title="' + name.replaceAll(".", "\\.") + '"\\n([\\s\\S]*?)```'))?.[1];
+    let code = [...guide.matchAll(new RegExp('```js title="' + name.replaceAll(".", "\\.") + '"\\n([\\s\\S]*?)```', "g"))][httpInstrumentation && name === "telemetry.mjs" ? 1 : 0]?.[1];
     assert.ok(code, `missing ${name} in the public guide`);
+    if (httpInstrumentation && name === "tracing-server.mjs") {
+      const adapter = guide.match(/```js title="http-observability.mjs"\n([\s\S]*?)```/)?.[1]?.trim();
+      assert.ok(adapter, "missing documented HTTP adapter replacement");
+      assert.ok(code.includes("observability: [openTelemetry({ logs: true })],"));
+      code = code.replace("observability: [openTelemetry({ logs: true })],", adapter);
+    }
     await writeFile(path.join(directory, name), code);
   }
   await new Promise((resolve) => receiver.listen(0, "127.0.0.1", resolve));
@@ -116,7 +123,19 @@ try {
   const spans = traceBatches.flatMap((batch) => batch.resourceSpans.flatMap((r) => r.scopeSpans.flatMap((s) => s.spans)));
   const parent = spans?.find((s) => s.name === "mcp.request");
   const backend = spans?.find((s) => s.name === "backend.read");
-  assert.equal(parent?.traceId, remoteTrace); assert.equal(parent.parentSpanId, remoteSpan);
+  assert.equal(parent?.traceId, remoteTrace);
+  if (httpInstrumentation) {
+    const transport = spans.filter((span) => span.kind === 2);
+    assert.equal(transport.length, 1, "only HTTP instrumentation owns a SERVER span");
+    assert.equal(transport[0].traceId, remoteTrace);
+    assert.equal(transport[0].parentSpanId, remoteSpan);
+    assert.equal(parent.kind, 1, "framework processing is an INTERNAL span");
+    assert.equal(parent.parentSpanId, transport[0].spanId);
+    assert.notEqual(parent.spanId, transport[0].spanId);
+  } else {
+    assert.equal(parent.kind, 2);
+    assert.equal(parent.parentSpanId, remoteSpan);
+  }
   assert.equal(backend?.traceId, remoteTrace); assert.equal(backend.parentSpanId, parent.spanId);
   const instruments = latestMetrics?.resourceMetrics.flatMap((r) => r.scopeMetrics.flatMap((s) => s.metrics));
   const count = instruments?.find((m) => m.name === "emseepea.http.requests");
@@ -149,6 +168,7 @@ try {
     assert.equal(record.flags, 1); assert.equal(record.timeUnixNano, parent.endTimeUnixNano);
     assert.ok(record.attributes.every((a) => allowed.has(a.key)));
   }
+  if (httpInstrumentation) console.log("HTTP instrumentation guide: one transport SERVER, framework INTERNAL child, backend and correlated logs PASS");
   if (!stalled) console.log("Copied Node SDK guide: real OTLP traces, metrics and correlated logs, seconds/buckets, resource policy and shutdown PASS");
   if (stalled) console.log("Stalled collector: tool response succeeded; timed-out shutdown reported failure with exit 1 as expected (wire arrival is not export acknowledgement)");
 } finally {

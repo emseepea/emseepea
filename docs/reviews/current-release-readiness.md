@@ -2,74 +2,142 @@
 
 Date: 2026-10-27
 
+## HTTP instrumentation coexistence
+
+Status: **LOCAL VERIFICATION IN PROGRESS**.
+
+Outcome #208 and increment #209 add explicit coexistence with an application's
+HTTP instrumentation. Source contribution #210 owns implementation and delivery.
+`httpInstrumentation: true` selects a framework INTERNAL child of a validated
+local active transport span, with the current SERVER fallback and defaults.
+
+Real local HTTP instrumentation reproduced two sibling SERVER spans before the
+change and the intended transport SERVER → framework INTERNAL → backend trace
+after it. The copied HTTP-instrumented guide exported all three signals with
+correct local log correlation and shutdown. Focused tracing and guide tests
+passed 24/24. These are local results; no new package or website is released yet.
+
+Architecture, JTBD, risk, cognitive-accessibility and planning reviews passed
+plan revision 1. Remaining source qualification, actual-diff reviews, candidate
+and installed-package checks, latest publication, website, full merge-back and
+independent acceptance remain required. The prior 0.25.4 release below stays
+historical and verified.
+
+### Planned publication closure
+
+The computed Changesets plan includes the following public packages. Versions
+are planned; publication and registry checks remain pending. The private
+website and shared UI dependency metadata follow the existing release workflow.
+
+- `@emseepea/create-api-backed-server@0.1.30`
+- `@emseepea/create-database-schema-server@0.1.30`
+- `@emseepea/create-html-ui-server@0.1.30`
+- `@emseepea/create-mongodb-backed-server@0.1.30`
+- `@emseepea/create-multi-instance-postgres-server@0.1.30`
+- `@emseepea/create-openapi-backed-server@0.1.30`
+- `@emseepea/create-progress-streaming-server@0.1.30`
+- `@emseepea/create-react-ui-server@0.1.30`
+- `@emseepea/create-resources-and-prompts-server@0.1.30`
+- `@emseepea/create-soap-backed-server@0.1.30`
+- `@emseepea/create-tool-server@0.1.30`
+- `@emseepea/feedback@0.11.5`
+- `@emseepea/react@0.4.16`
+- `@emseepea/server@0.25.5`
+- `@emseepea/svelte@0.2.16`
+- `@emseepea/testing@0.26.8`
+
 ## Correlated operational logs
 
-Status: **SOURCE PREPARED; DELIVERY PENDING**.
+Status: **RELEASED AND VERIFIED**.
 
-Outcome #195 revision 5, increment #205 and contribution #206 add explicit
-`openTelemetry({ logs: true })` completion logs through the standard Logs API.
-The application owns providers, exporters and shutdown. No-argument usage stays
-logs-off; a missing provider is a no-op. The minimal runtime API dependency is
-aligned with the guide's Node SDK 0.221.0; no SDK runtime dependency is added.
+`@emseepea/server@0.25.4` is on npm's `latest` tag. Website 0.0.16 deploys the
+[Traces, metrics and logs guide](https://emseepea.github.io/emseepea/tracing/).
+The application-owned Node SDK recipe exports all three signals and shuts down
+its providers. Useful HTTP duration buckets remain overridable through Views.
 
-One fixed INFO record per MCP HTTP completion uses safe existing attributes,
-its validated local request span identity and completion timestamp. The private
-context excludes baggage, opaque trace state and unrelated ambient spans.
-Unsampled local spans retain useful correlation; no-op parent identities do not
-masquerade as local request spans. Counter, histogram and log calls are guarded
-independently. The public custom-adapter event contract remains unchanged.
+`openTelemetry({ logs: true })` adds safe completion logs with the valid local
+request span's correlation IDs and completion timestamp. Logs default off.
+Fixed INFO records use existing bounded attributes and exclude request payloads,
+credentials, baggage and opaque trace state. The public custom-adapter event
+contract remains unchanged. Synchronous counter, histogram and logger API
+failures are guarded independently.
 
-Real owned-loopback SDK export verified all three signals. Twenty focused tests
-passed, including concurrent correlation, delayed delivery, default-off,
-missing providers, unsampled contexts, signal failures and streaming disconnect.
-The copied guide's stalled collector control confirms a successful response and
-reported shutdown failure; bytes arriving do not establish acknowledged export.
-These controls do not claim metric exemplars or production performance.
+The existing release checks bind these revisions:
 
-Required full qualification, dependency eligibility, candidate publication,
-registry-installed recipe, latest, live website and full merge-back remain
-pending. Changesets computes sixteen public package patches and private website
-0.0.16; final immutable versions are allocated by the release workflow. The
-initializer patches update generated projects to consume the current server.
-The private shared UI workspace has dependency metadata only.
+- Source `749210473633c6ee1accfffe326e2ecd9287e34a` —
+  [Quality 40530849235](https://github.com/emseepea/emseepea/actions/runs/40530849235).
+- Candidate `4a1e75162efd04c083ab1ae541ddc8fd2acaec50` —
+  [Release 40534202322 attempt 2](https://github.com/emseepea/emseepea/actions/runs/40534202322).
+- Publish merge `8baf84fbf120293b12e96c3ee1e757208d417318` —
+  [Publish 40540106105](https://github.com/emseepea/emseepea/actions/runs/40540106105).
+- Merge-back `daff3b3a5d0f3af31edb289468c4ff7029fb94fe` —
+  [full Quality 40540849751](https://github.com/emseepea/emseepea/actions/runs/40540849751).
 
-- `@emseepea/create-api-backed-server@0.1.29`
-- `@emseepea/create-database-schema-server@0.1.29`
-- `@emseepea/create-html-ui-server@0.1.29`
-- `@emseepea/create-mongodb-backed-server@0.1.29`
-- `@emseepea/create-multi-instance-postgres-server@0.1.29`
-- `@emseepea/create-openapi-backed-server@0.1.29`
-- `@emseepea/create-progress-streaming-server@0.1.29`
-- `@emseepea/create-react-ui-server@0.1.29`
-- `@emseepea/create-resources-and-prompts-server@0.1.29`
-- `@emseepea/create-soap-backed-server@0.1.29`
-- `@emseepea/create-tool-server@0.1.29`
-- `@emseepea/feedback@0.11.4`
-- `@emseepea/react@0.4.15`
-- `@emseepea/server@0.25.4`
-- `@emseepea/svelte@0.2.15`
-- `@emseepea/testing@0.26.7`
+Source and candidate qualification, latest promotion, website deployment and
+full merge-back qualification all passed. The detailed chain and retained
+failures are recorded in [#205](https://github.com/emseepea/emseepea/issues/205)
+and [#206](https://github.com/emseepea/emseepea/issues/206).
 
-The genuine generated website changelog review receipt must land on main before
-promotion, while the candidate stays frozen. Existing full merge-back checks
-remain required. Architecture and OpenTelemetry source reviews passed. The scoped cumulative
-commit, push and automatic-publication risk is 5/25, conditional on the required
-exact-commit gates; those checks remain pending.
+The registry-installed recipe passed real traces, HTTP metrics and correlated
+log export, safe resource attributes, seconds/buckets and shutdown checks.
+Independent canonical registry readbacks matched all sixteen changed packages'
+versions, tags, integrities and candidate commits. The live guide returned
+HTTP 200 with its canonical URL; both copy-button JavaScript payloads matched
+the qualified source after decoding the renderer's newline representation.
 
-The SDK/metrics prerequisite #203/#204 is accepted and closed: server 0.25.3 is
-latest and website 0.0.15 is live. Source Quality 40501814688, candidate Release
-40505007574 and Publish 40508892916 attempt 3 succeeded, including full corrected
-merge-back Quality 40518121397. Earlier filesystem permissions, missing ledger
-receipt and transient jobs-API failures remain recorded in #203; later success
-does not relabel those failures.
+The original local qualification failure caused by the task-added proxy flag
+remains recorded in #206. Restoring that flag to its original setting preserved
+inherited proxy/CA settings; the unchanged control and fresh full qualification
+passed. Candidate Release attempt 1 later failed on a registry-read
+`ECONNRESET` after publication. One initial metadata readback also returned an
+older initializer tag; the complete fresh canonical readback matched the
+candidate before the bounded failed-job-only retry.
 
-The single native ChatGPT pair remains bounded by #198 comment6438956084.
+Attempt 2 retained the successful semantic result's original timestamps and
+passed the remaining strict checks. These failures were not relabelled as
+success. The genuine reviewed website-changelog receipt was normally qualified
+and pushed before promotion at `d151ba8`, with documentation-only Quality
+40535028816 passed and release preparation skipped. It did not replace full
+merge-back qualification.
+
+The release publishes these sixteen package versions. The private shared UI
+workspace has dependency metadata only; the private website is deployed rather
+than published to npm.
+
+- Published: `@emseepea/create-api-backed-server@0.1.29`
+- Published: `@emseepea/create-database-schema-server@0.1.29`
+- Published: `@emseepea/create-html-ui-server@0.1.29`
+- Published: `@emseepea/create-mongodb-backed-server@0.1.29`
+- Published: `@emseepea/create-multi-instance-postgres-server@0.1.29`
+- Published: `@emseepea/create-openapi-backed-server@0.1.29`
+- Published: `@emseepea/create-progress-streaming-server@0.1.29`
+- Published: `@emseepea/create-react-ui-server@0.1.29`
+- Published: `@emseepea/create-resources-and-prompts-server@0.1.29`
+- Published: `@emseepea/create-soap-backed-server@0.1.29`
+- Published: `@emseepea/create-tool-server@0.1.29`
+- Published: `@emseepea/feedback@0.11.4`
+- Published: `@emseepea/react@0.4.15`
+- Published: `@emseepea/server@0.25.4`
+- Published: `@emseepea/svelte@0.2.15`
+- Published: `@emseepea/testing@0.26.7`
+
+The SDK/metrics prerequisite (server 0.25.3 and website 0.0.15) was accepted
+under #203/#204. Its earlier permissions, ledger and API-state failures remain
+recorded in #203.
+
+The single native ChatGPT pair remains bounded by
+[#198's evidence](https://github.com/emseepea/emseepea/issues/198#issuecomment-6438956084).
 HTTP carriers reached the forwarded fixture with unknown injector provenance;
-tracing fields were absent in both calls' `params._meta`. No additional operation
-timer, result-frame parser, target-specific propagation or native repeat is
-added. Probe/tunnels are stopped and OAuth disconnected. The GM retains cleanup
-of two inert app definitions and one synthetic chat, pending the existing local
-permanent-deletion confirmation. This does not block server-side logs delivery.
+tracing fields were absent in both calls' `params._meta`. No additional
+operation timer, result-frame parser or tested-path `_meta` propagation is
+added. The GM retains the separately tracked inert app/chat cleanup; probe,
+forwarders and OAuth connection are already stopped or disconnected.
+
+The scoped release risk remains 5/25, within appetite. The required release
+checks above completed successfully. This update records the delivered result.
+
+- Result: PASS
+- Final result: within appetite.
 
 ## Historical SDK and metrics preparation (released as recorded above)
 

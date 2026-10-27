@@ -75,7 +75,7 @@ export function structuredLogging(
 
 // Normalization preserves emit identity while copying the public adapter.
 // A public adapter ID must never grant access to the request lifecycle.
-const requestTracers = new WeakMap<ObservabilityAdapter["emit"], Tracer>();
+const requestTracers = new WeakMap<ObservabilityAdapter["emit"], { tracer: Tracer; httpInstrumentation: boolean }>();
 const requestEmissions = new WeakMap<ObservabilityEvent, { context: Context; timestamp: number }>();
 
 function eventAttributes(event: ObservabilityEvent) {
@@ -93,6 +93,8 @@ function eventAttributes(event: ObservabilityEvent) {
 export function openTelemetry(options: {
   /** Emit safe completion records through the application's Logs API provider. Default: false. */
   readonly logs?: boolean;
+  /** Declare that the active local span is owned by application HTTP instrumentation. Default: false. */
+  readonly httpInstrumentation?: boolean;
 } = {}): ObservabilityAdapter {
   const tracer = trace.getTracer("@emseepea/server");
   const meter = metrics.getMeter("@emseepea/server");
@@ -125,30 +127,48 @@ export function openTelemetry(options: {
       } catch { /* Logging cannot change protocol behaviour or other signals. */ }
     },
   });
-  requestTracers.set(adapter.emit, tracer);
+  requestTracers.set(adapter.emit, { tracer, httpInstrumentation: options.httpInstrumentation === true });
   return adapter;
 }
 
-function startRequestSpan(tracer: Tracer, request: FastifyRequest, startTime: number): { span: Span; context: Context } | undefined {
+function startRequestSpan(tracer: Tracer, request: FastifyRequest, startTime: number, httpInstrumentation: boolean): { span: Span; context: Context } | undefined {
   let parent = ROOT_CONTEXT;
   let parentIdentity: { traceId: string; spanId: string } | undefined;
-  try {
-    // Only tracing headers reach the configured propagator. In particular,
-    // baggage, credentials and unrelated ambient context are excluded.
-    const carrier: Record<string, string> = {};
-    for (const name of ["traceparent", "tracestate"]) {
-      const value = request.headers[name];
-      if (typeof value === "string" && value.length <= 512) carrier[name] = value;
-    }
-    const extracted = trace.getSpanContext(propagation.extract(ROOT_CONTEXT, carrier));
-    if (extracted && isSpanContextValid(extracted)) {
-      parent = trace.setSpanContext(ROOT_CONTEXT, extracted);
-      parentIdentity = { traceId: extracted.traceId, spanId: extracted.spanId };
-    }
-  } catch { /* A broken propagator must not prevent protocol execution. */ }
+  let kind: SpanKind = SpanKind.SERVER;
+  if (httpInstrumentation) {
+    try {
+      const active = trace.getSpanContext(context.active());
+      if (active && active.isRemote !== true) {
+        // The option is the application's provenance promise. Import only local
+        // correlation identity, never ambient baggage, traceState or other data.
+        const local = { traceId: active.traceId, spanId: active.spanId, traceFlags: active.traceFlags, isRemote: false };
+        if (isSpanContextValid(local) && Number.isInteger(local.traceFlags) && local.traceFlags >= 0 && local.traceFlags <= 255) {
+          parent = trace.setSpanContext(ROOT_CONTEXT, local);
+          parentIdentity = local;
+          kind = SpanKind.INTERNAL;
+        }
+      }
+    } catch { /* Unavailable application context falls back to HTTP extraction. */ }
+  }
+  if (kind === SpanKind.SERVER) {
+    try {
+      // Only tracing headers reach the configured propagator. In particular,
+      // baggage, credentials and unrelated ambient context are excluded.
+      const carrier: Record<string, string> = {};
+      for (const name of ["traceparent", "tracestate"]) {
+        const value = request.headers[name];
+        if (typeof value === "string" && value.length <= 512) carrier[name] = value;
+      }
+      const extracted = trace.getSpanContext(propagation.extract(ROOT_CONTEXT, carrier));
+      if (extracted && isSpanContextValid(extracted)) {
+        parent = trace.setSpanContext(ROOT_CONTEXT, extracted);
+        parentIdentity = { traceId: extracted.traceId, spanId: extracted.spanId };
+      }
+    } catch { /* A broken propagator must not prevent protocol execution. */ }
+  }
   let span: Span;
   try {
-    span = tracer.startSpan("mcp.request", { kind: SpanKind.SERVER, startTime }, parent);
+    span = tracer.startSpan("mcp.request", { kind, startTime }, parent);
   } catch { return undefined; }
   let completionContext = ROOT_CONTEXT;
   try {
@@ -175,14 +195,14 @@ export function installObservability(
   limits: { deliveryTimeoutMs: number },
 ): (timeoutMs: number) => Promise<void> {
   const pending = new Set<Promise<void>>();
-  const tracer = adapters.map((adapter) => requestTracers.get(adapter.emit)).find((value) => value !== undefined);
+  const tracing = adapters.map((adapter) => requestTracers.get(adapter.emit)).find((value) => value !== undefined);
 
   app.addHook("onRequest", (request, reply, done) => {
     if (request.routeOptions.url !== "/mcp") { done(); return; }
     const state: ObservabilityState = { protocolOutcome: "success" };
     requestStates.set(request, state);
     const started = performance.now();
-    const requestSpan = tracer ? startRequestSpan(tracer, request, performance.timeOrigin + started) : undefined;
+    const requestSpan = tracing ? startRequestSpan(tracing.tracer, request, performance.timeOrigin + started, tracing.httpInstrumentation) : undefined;
     const span = requestSpan?.span;
     let ended = false;
     const finish = () => end(reply.raw.destroyed || reply.raw.socket?.destroyed ? "disconnected" : "finished");
@@ -217,7 +237,7 @@ export function installObservability(
         durationMs: Math.min(3_600_000, Math.max(0, finished - started)),
         ...(state.forwardingRefusal ? { forwardingRefusal: state.forwardingRefusal } : {}),
       });
-      if (tracer) requestEmissions.set(event, {
+      if (tracing) requestEmissions.set(event, {
         context: requestSpan?.context ?? ROOT_CONTEXT,
         timestamp: performance.timeOrigin + finished,
       });

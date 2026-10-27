@@ -64,6 +64,7 @@
     "vite": "8.3.3"
   },
   "devDependencies": {
+    "@opentelemetry/instrumentation-http": "0.221.0",
     "@opentelemetry/core": "2.10.0",
     "@opentelemetry/context-async-hooks": "2.10.0",
     "@opentelemetry/sdk-metrics": "2.10.0",
@@ -72,7 +73,7 @@
     "@anthropic-ai/claude-code": "2.1.248",
     "@changesets/changelog-github": "1.0.0",
     "@changesets/cli": "3.0.1",
-    "@emseepea/testing": "0.26.7",
+    "@emseepea/testing": "0.26.8",
     "@modelcontextprotocol/client": "2.3.1",
     "@types/node": "24.13.3",
     "axe-core": "4.13.0",

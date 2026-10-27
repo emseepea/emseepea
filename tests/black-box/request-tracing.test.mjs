@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 import test from "node:test";
-import { context, metrics, propagation, ROOT_CONTEXT, SpanKind, trace } from "@opentelemetry/api";
+import { context, createContextKey, createTraceState, metrics, propagation, ROOT_CONTEXT, SpanKind, trace } from "@opentelemetry/api";
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
 import { W3CTraceContextPropagator } from "@opentelemetry/core";
 import { InMemorySpanExporter, SimpleSpanProcessor, TracerProvider } from "@opentelemetry/sdk-trace";
@@ -323,4 +323,53 @@ test("tracing spans authorization failures without admitting tool work or export
   const [span] = requestSpans(exporter);
   assert.equal(span.attributes["http.response.status_code"], 401);
   assert.doesNotMatch(JSON.stringify({ attributes: span.attributes, events: span.events }), new RegExp(secret));
+});
+
+test("HTTP coexistence projects only declared local identity and preserves default and fallback parenting", async (t) => {
+  for (const scenario of ["local", "default", "missing", "remote", "invalid", "throws", "unsampled"]) {
+    await t.test(scenario, async (t) => {
+      const manager = new AsyncLocalStorageContextManager();
+      const originalActive = manager.active.bind(manager);
+      const local = { traceId: "abcdef1234567890abcdef1234567890", spanId: "abcdef1234567890", traceFlags: scenario === "unsampled" ? 0 : 1, isRemote: false, traceState: createTraceState(`vendor=${secret}`) };
+      const privateKey = createContextKey("private");
+      const provided = scenario === "remote" ? remote : scenario === "invalid" ? { ...local, spanId: "invalid" } : local;
+      const parent = propagation.setBaggage(trace.setSpanContext(ROOT_CONTEXT, provided),
+        propagation.createBaggage({ private: { value: secret } })).setValue(privateKey, secret);
+      manager.active = () => {
+        const current = originalActive();
+        if (current !== ROOT_CONTEXT) return current;
+        if (scenario === "throws") throw new Error(secret);
+        return scenario === "missing" ? ROOT_CONTEXT : parent;
+      };
+      const { exporter } = tracing(t, { manager });
+      let calls = 0;
+      let active;
+      const running = await server(t, ({ value }) => {
+        calls++;
+        active = trace.getActiveSpan()?.spanContext();
+        assert.equal(propagation.getBaggage(context.active()), undefined);
+        assert.equal(context.active().getValue(privateKey), undefined);
+        assert.equal(active.traceState, undefined);
+        return { data: { value } };
+      }, { adapters: [openTelemetry({ httpInstrumentation: scenario !== "default" })] });
+      const response = await request(running.url, { headers: { traceparent } });
+      assert.equal(response.status, 200);
+      assert.equal((await response.json()).result.structuredContent.value, secret);
+      assert.equal(calls, 1);
+      await delay(0);
+      const adopted = scenario === "local" || scenario === "unsampled";
+      assert.equal(active.traceId, adopted ? local.traceId : remote.traceId);
+      assert.notEqual(active.spanId, adopted ? local.spanId : remote.spanId);
+      if (scenario === "unsampled") {
+        assert.equal(active.traceFlags, 0);
+        assert.equal(requestSpans(exporter).length, 0, "the application sampler remains authoritative");
+      } else {
+        const [span] = requestSpans(exporter);
+        assert.equal(requestSpans(exporter).length, 1);
+        assert.equal(span.kind, adopted ? SpanKind.INTERNAL : SpanKind.SERVER);
+        assert.equal(span.parentSpanContext.spanId, adopted ? local.spanId : remote.spanId);
+        assert.doesNotMatch(JSON.stringify(span.attributes), new RegExp(secret));
+      }
+    });
+  }
 });
