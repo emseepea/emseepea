@@ -45,3 +45,20 @@ from negotiated protocol. No wording corrections were required.
 
 This prose review does not establish native ChatGPT support, production
 instrumentation, source qualification or release acceptance.
+
+## Fastify qualified-baseline prerequisite
+
+Result: PASS for the security Changeset and current release-readiness record.
+Independent reviewer `/root/accessibility_critic` checked both final files.
+The wording describes the narrow dependency repair and planned sixteen-package
+closure, distinguishes forecast risk from pending qualification, and separates
+candidate publication from `latest` promotion. It makes no native ChatGPT
+support claim. No wording corrections were required.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `.changeset/fastify-header-schema-fix.md` | `667ffb055fc22da97aa1ee2b53ebc367fe7fb93ca7255367e0e5104069845632` |
+| `docs/reviews/current-release-readiness.md` | `1cf1dbdc4209cc58a7f7466af27353643f9641581853c628ea140ac2c42da847` |
+
+Source, candidate, registry, publication and independent acceptance checks
+remain separate from this prose review.

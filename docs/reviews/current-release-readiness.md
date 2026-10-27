@@ -2,6 +2,73 @@
 
 Date: 2026-10-27
 
+## Fastify header-schema security patch
+
+Status: **SOURCE PREPARED; QUALIFICATION PENDING**.
+
+Outcome #195 plan revision 2, prerequisite #199 and contribution #200 restore
+the qualified source baseline for telemetry delivery. Fastify 5.12.5 is replaced
+with the exact 5.12.6 patch for
+[GHSA-389g-gv7q-r4x8](https://github.com/advisories/GHSA-389g-gv7q-r4x8),
+which concerns case-sensitive `propertyNames` enum/const validation in header
+schemas. This is not a claim of a general authentication bypass.
+
+The discovery source at `7cb001dd567206644d15d6e1bda55bfdc7aaaed0` passed
+full local qualification, its five collector controls and required benchmarks.
+[Source Quality 40464650869](https://github.com/emseepea/emseepea/actions/runs/40464650869)
+passed Node.js 22 and 24, website and documentation checks, but failed the
+existing mature-fix dependency gate. Initializer qualification and release
+preparation were skipped. The failed job log and a local pinned OSV scan both
+identify Fastify 5.12.6 as the eligible fix; the fix crossed the existing
+14-day threshold on 27 October. The original failure is retained, without an
+unchanged retry or gate exception.
+
+The source diff updates only Fastify's exact pin and lock entry. The Changeset
+also covers the eleven initializer templates required to consume the updated
+server. Changesets computes four further dependent package patches. The
+planned sixteen-package closure below comes from the existing release-plan
+reader, not a handwritten assumption about the framework alone.
+
+- `@emseepea/create-api-backed-server@0.1.27`
+- `@emseepea/create-database-schema-server@0.1.27`
+- `@emseepea/create-html-ui-server@0.1.27`
+- `@emseepea/create-mongodb-backed-server@0.1.27`
+- `@emseepea/create-multi-instance-postgres-server@0.1.27`
+- `@emseepea/create-openapi-backed-server@0.1.27`
+- `@emseepea/create-progress-streaming-server@0.1.27`
+- `@emseepea/create-react-ui-server@0.1.27`
+- `@emseepea/create-resources-and-prompts-server@0.1.27`
+- `@emseepea/create-soap-backed-server@0.1.27`
+- `@emseepea/create-tool-server@0.1.27`
+- `@emseepea/feedback@0.11.2`
+- `@emseepea/react@0.4.13`
+- `@emseepea/server@0.25.2`
+- `@emseepea/svelte@0.2.13`
+- `@emseepea/testing@0.26.5`
+
+These are planned versions, not published versions. Existing allocation and
+registry checks determine the actual candidate versions. A successful source
+Quality run can create/update the release PR and dispatch candidate publication
+to `next`; root retains the resulting workflow and registry watch. Candidate
+publication does not establish `latest` promotion, installed adopter behavior or
+completion of the telemetry outcome. No separate immediate `latest` promotion
+is required by the scoped risk assessment.
+
+All five independent critics passed the prerequisite plan. The risk reviewer
+assessed the scoped commit, push and automatic candidate-publication effects at
+5/25, conditional on reviewing this actual package closure and passing the
+existing install, full compatibility, benchmark, vulnerability, initializer,
+candidate and registry gates. Those new exact-source results remain pending.
+No source or publication qualification is inferred from this forecast.
+
+The native ChatGPT task #198 remains separately owned by the GM, with consent
+pending and support UNKNOWN. The temporary synthetic fixture does not use the
+advisory's affected header-schema constraints; risk review does not require it
+to stop solely for this finding. This security patch proves no native feature.
+
+- Result: PASS
+- Final result: within appetite, subject to the required exact-commit gates.
+
 ## Website request tracing guide
 
 Status: **RELEASED AND VERIFIED**.
