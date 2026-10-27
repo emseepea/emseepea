@@ -1,5 +1,13 @@
 # @emseepea/website
 
+## 0.0.16
+
+### Patch Changes
+
+- [`7492104`](https://github.com/emseepea/emseepea/commit/749210473633c6ee1accfffe326e2ecd9287e34a) Thanks [@tompahoward](https://github.com/tompahoward)! - Add opt-in OpenTelemetry completion logs with `openTelemetry({ logs: true })`. Each fixed INFO record carries safe request attributes and the request completion time. Correlation IDs are included when a valid local request span is available. Logs remain off by default; application-owned SDK providers and exporters control delivery and shutdown.
+
+  Extend the standard Node SDK guide to export traces, HTTP metrics and correlated logs with one setup. Keep request payloads, credentials, baggage and opaque trace state out of completion records, and isolate synchronous signal failures from protocol work.
+
 ## 0.0.15
 
 ### Patch Changes
