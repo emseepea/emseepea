@@ -1,5 +1,12 @@
 # @emseepea/react
 
+## 0.4.14
+
+### Patch Changes
+
+- Updated dependencies [[`a4565b9`](https://github.com/emseepea/emseepea/commit/a4565b9fb12523370374513e00f61f04ac758a35), [`7541d20`](https://github.com/emseepea/emseepea/commit/7541d204315382e555a84f5907c90d27f759a72a)]:
+  - @emseepea/server@0.25.3
+
 ## 0.4.12
 
 ### Patch Changes
