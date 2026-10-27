@@ -69,6 +69,9 @@ redacted events. They do not receive request or response bodies, headers,
 arguments, results, tokens, URLs, or raw errors. Do not use an operational route
 adapter to bypass that boundary.
 
+Follow [Trace requests](/emseepea/tracing/) to connect incoming trace context
+to instrumented backend work with OpenTelemetry.
+
 ### Local stdio transport: unsupported
 
 Em See Pea serves MCP over Streamable HTTP. It does not provide the standard
