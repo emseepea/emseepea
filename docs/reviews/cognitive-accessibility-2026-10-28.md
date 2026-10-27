@@ -20,3 +20,21 @@ publication, website delivery and independent acceptance remain separate.
 | `.changeset/http-instrumentation-coexistence.md` | `b9a545b93d9f64aeacd299e4f085d8d2b65d3e0652805e3f85161774b358ffe2` |
 | `website/src/content/docs/tracing.md` | `8655f0cb6a154aabaf6388c35af9833c54913201f47a751c7fd717f5b319b937` |
 | `docs/reviews/current-release-readiness.md` | `ad11eca9b819ad83a2e7af519861d19852b3c694c85ab6ef655c68ae3ebdc021` |
+
+## HTTP instrumentation release changelogs
+
+Result: PASS. Independent reviewer `/root/release_cognitive` reviewed all
+seventeen generated changelog additions and PR #214 prose at frozen candidate
+`1fb41db52ec8a43de58eb6eeeeccfb3448070eb9`. Historical changelog content remains
+unchanged. This records the actual reviewed website changelog before promotion;
+registry-installed checks, publication, live website and full merge-back remain
+separate requirements.
+
+| Reviewed file | SHA-256 at the frozen candidate |
+| --- | --- |
+| `website/CHANGELOG.md` | `9d1c6094be3d509c7134e1ec10d156500d0b45f7e917fc41c8884f5bc8062e92` |
+
+The seventeen-file manifest has SHA-256
+`9029cc6171647faf89643b35c4325c6a0de5ff854759ad6d291752e3e1d0e16a`.
+PR prose has SHA-256
+`4f0b29fe7669d1fe55e25daa1f2a7668ab27f3d43a58e135a358cd5b3ffbda0f`.
