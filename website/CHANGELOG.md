@@ -1,5 +1,13 @@
 # @emseepea/website
 
+## 0.0.15
+
+### Patch Changes
+
+- [`7541d20`](https://github.com/emseepea/emseepea/commit/7541d204315382e555a84f5907c90d27f759a72a) Thanks [@tompahoward](https://github.com/tompahoward)! - Recommend second-based HTTP duration histogram buckets so millisecond requests are distinguishable with the standard OpenTelemetry SDK. Application Views can override this instrument advice; metric names, units, timing and attributes stay the same.
+
+  Replace manual tracing setup in the guide with an application-owned Node SDK recipe that exports traces and request metrics, disables automatic resource detection, and shuts down both providers. Verify the copied recipe with real OTLP exports and fresh installed packages.
+
 ## 0.0.14
 
 ### Patch Changes
