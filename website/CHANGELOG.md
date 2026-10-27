@@ -1,5 +1,13 @@
 # @emseepea/website
 
+## 0.0.14
+
+### Patch Changes
+
+- [`f29e830`](https://github.com/emseepea/emseepea/commit/f29e830e2d5fe701e014a5434af9e618707f630e) Thanks [@tompahoward](https://github.com/tompahoward)! - Add a request tracing guide with runnable OpenTelemetry setup, backend span
+  relationships, shutdown and privacy guidance. Link it from website navigation
+  and the observability explanation.
+
 ## 0.0.13
 
 ### Patch Changes
