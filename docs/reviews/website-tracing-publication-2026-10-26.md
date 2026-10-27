@@ -2,6 +2,10 @@
 
 Date: 2026-10-26. Status: **SOURCE ADDED; PUBLICATION BLOCKED**.
 
+Historical checkpoint: the website was deployed and live-verified on 27 October.
+See the [subsequent release evidence](website-tracing-release-2026-10-27.md).
+The original measurements and evidence limit below remain retained history.
+
 [Increment #192](https://github.com/emseepea/emseepea/issues/192) implements the
 user's requested website follow-up to the completed npm tracing release.
 The target is a discoverable, runnable guide on the live website by Wednesday
