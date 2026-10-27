@@ -2,11 +2,11 @@
 
 Date: 2026-10-27
 
-## Fastify header-schema security patch
+## Qualified delivery baseline: Fastify and release preparation
 
 Status: **SOURCE PREPARED; QUALIFICATION PENDING**.
 
-Outcome #195 plan revision 2, prerequisite #199 and contribution #200 restore
+Outcome #195 plan revision 3, prerequisite #199 and contribution #200 restore
 the qualified source baseline for telemetry delivery. Fastify 5.12.5 is replaced
 with the exact 5.12.6 patch for
 [GHSA-389g-gv7q-r4x8](https://github.com/advisories/GHSA-389g-gv7q-r4x8),
@@ -23,7 +23,31 @@ identify Fastify 5.12.6 as the eligible fix; the fix crossed the existing
 14-day threshold on 27 October. The original failure is retained, without an
 unchanged retry or gate exception.
 
-The source diff updates only Fastify's exact pin and lock entry. The Changeset
+The runtime dependency diff updates only Fastify's exact pin and lock entry.
+Corrected source `a4565b9fb12523370374513e00f61f04ac758a35` passed full
+local qualification, benchmarks, focused controls and the pinned eligibility
+gate. [Source Quality 40469067445](https://github.com/emseepea/emseepea/actions/runs/40469067445)
+passed both Node versions, website/documentation, vulnerability and all eleven
+initializer jobs. Release preparation then failed inside the pinned Changesets
+action with `createCommitOnBranch` undefined, before opening a release PR or
+dispatching a candidate. That failure is retained separately from the earlier
+Fastify eligibility failure.
+
+The workflow correction selects the same pinned action's documented
+`push-with-git-cli: true` option. Actor/token permissions, versioning, generated
+branch/PR binding, exact-source checks and explicit candidate dispatch remain
+unchanged. Generated Git CLI commits need not carry the GitHub GPG signatures
+of API-created commits; signature equivalence is not claimed. Package signature,
+registry integrity and provenance checks remain mandatory.
+
+The synthetic OAuth fixture correction is tracked separately under #196/#198:
+permit only `https://chatgpt.com` alongside `'self'` in `form-action`, preserving
+registered callback/path, PKCE, PIN, resource and one-time-code checks. Root
+integrates the independently reviewed local artifact as a separate result under
+#200 and qualifies the final clean tip. Neither the fixture patch nor controlled
+checks establish native ChatGPT support.
+
+The Changeset
 also covers the eleven initializer templates required to consume the updated
 server. Changesets computes four further dependent package patches. The
 planned sixteen-package closure below comes from the existing release-plan
@@ -54,15 +78,17 @@ publication does not establish `latest` promotion, installed adopter behavior or
 completion of the telemetry outcome. No separate immediate `latest` promotion
 is required by the scoped risk assessment.
 
-All five independent critics passed the prerequisite plan. The risk reviewer
-assessed the scoped commit, push and automatic candidate-publication effects at
+All five independent critics passed repair plan revision 3. The risk reviewer
+assessed the Git CLI transport, fixed-origin CSP correction, scoped commit, push
+and automatic candidate-publication effects at
 5/25, conditional on reviewing this actual package closure and passing the
 existing install, full compatibility, benchmark, vulnerability, initializer,
 candidate and registry gates. Those new exact-source results remain pending.
 No source or publication qualification is inferred from this forecast.
 
-The native ChatGPT task #198 remains separately owned by the GM, with consent
-pending and support UNKNOWN. The temporary synthetic fixture does not use the
+The native ChatGPT task #198 remains separately owned by the GM. Tom approved
+Connect; the current blocker is the observed OAuth CSP callback rejection, and
+no native observe call has run. Support remains UNKNOWN. The temporary synthetic fixture does not use the
 advisory's affected header-schema constraints; risk review does not require it
 to stop solely for this finding. This security patch proves no native feature.
 

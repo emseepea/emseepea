@@ -431,6 +431,7 @@ jobs:
           publish-script: echo "publication is handled by release.yml"
           version-script: npm run version-packages
           create-github-releases: false
+          push-with-git-cli: true
           pr-base-branch: publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -62,3 +62,19 @@ support claim. No wording corrections were required.
 
 Source, candidate, registry, publication and independent acceptance checks
 remain separate from this prose review.
+
+## Release preparation and OAuth readiness records
+
+Result: PASS for the revised release-readiness prose. Independent reviewer
+`/root/accessibility_critic` checked the final file. It distinguishes the
+Fastify eligibility failure from the later release-preparation failure,
+describes the supported Git CLI transport and signature difference, and keeps
+the separately owned OAuth correction and native evidence pending. No wording
+corrections were required.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `1c7d416f77c2ac40a743737a72dbb86f054f1ea5a4d2b01d36ebe3976fd1435b` |
+
+This prose review does not qualify the changed workflow, pending auth artifact,
+candidate publication or native ChatGPT journey.
