@@ -94,3 +94,16 @@ remain bounded; publication and live verification remain separate requirements.
 | `website/src/content/docs/less-server-code.md` | `c3c357e84fa437c68df29fd98587f10ffc46cffd287c94ed072e9b81b4948dbb` |
 | `.changeset/useful-http-metrics-sdk.md` | `5e8915ecac54514071d44f7dcb1aab153ac48844d0f25c86f9ababe60d43ff5e` |
 | `docs/reviews/current-release-readiness.md` | `3a0fd6689babdc051be484b1e54bf892a308fa433428a16c836b8b0e0c608a20` |
+
+## SDK website release changelog
+
+Result: PASS. Independent reviewer `/root/accessibility_critic` reviewed the
+seventeen generated changelog additions and PR #202 prose at frozen candidate
+`37b2bba69fa12eaa6d479f86a6cae628f5c5dff3`. The website changelog below is
+unchanged from that reviewed content. This entry records the genuine review for
+the merge-back documentation check; it does not turn the original failed
+qualification into a pass.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `website/CHANGELOG.md` | `9f5be1aeeeed7fae0cdfb6883708f12428aa813cd1d56aaa1186ba29cc8bfe7e` |
