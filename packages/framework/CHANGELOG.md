@@ -1,5 +1,15 @@
 # @emseepea/server
 
+## 0.25.3
+
+### Patch Changes
+
+- [`a4565b9`](https://github.com/emseepea/emseepea/commit/a4565b9fb12523370374513e00f61f04ac758a35) Thanks [@tompahoward](https://github.com/tompahoward)! - Update Fastify to 5.12.6 to fix case-sensitive header-schema property-name validation (GHSA-389g-gv7q-r4x8). Update initializer templates to use the patched server.
+
+- [`7541d20`](https://github.com/emseepea/emseepea/commit/7541d204315382e555a84f5907c90d27f759a72a) Thanks [@tompahoward](https://github.com/tompahoward)! - Recommend second-based HTTP duration histogram buckets so millisecond requests are distinguishable with the standard OpenTelemetry SDK. Application Views can override this instrument advice; metric names, units, timing and attributes stay the same.
+
+  Replace manual tracing setup in the guide with an application-owned Node SDK recipe that exports traces and request metrics, disables automatic resource detection, and shuts down both providers. Verify the copied recipe with real OTLP exports and fresh installed packages.
+
 ## 0.25.1
 
 ### Patch Changes

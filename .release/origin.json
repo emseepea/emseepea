@@ -1,5 +1,135 @@
 {
-  "sha": "f4f19c7220aaba59a2985ea9a299b258d0b9b1eb",
-  "qualityRunId": "40394110659",
-  "recordedAt": "2026-10-27T04:38:24.581Z"
+  "sha": "7541d204315382e555a84f5907c90d27f759a72a",
+  "qualityRunId": "40501814688",
+  "recordedAt": "2026-10-27T12:35:40.720Z",
+  "versionAllocations": [
+    {
+      "name": "@emseepea/server",
+      "plannedVersion": "0.25.2",
+      "occupiedVersions": [
+        "0.25.2"
+      ],
+      "newVersion": "0.25.3"
+    },
+    {
+      "name": "@emseepea/create-tool-server",
+      "plannedVersion": "0.1.27",
+      "occupiedVersions": [
+        "0.1.27"
+      ],
+      "newVersion": "0.1.28"
+    },
+    {
+      "name": "@emseepea/create-api-backed-server",
+      "plannedVersion": "0.1.27",
+      "occupiedVersions": [
+        "0.1.27"
+      ],
+      "newVersion": "0.1.28"
+    },
+    {
+      "name": "@emseepea/create-openapi-backed-server",
+      "plannedVersion": "0.1.27",
+      "occupiedVersions": [
+        "0.1.27"
+      ],
+      "newVersion": "0.1.28"
+    },
+    {
+      "name": "@emseepea/create-resources-and-prompts-server",
+      "plannedVersion": "0.1.27",
+      "occupiedVersions": [
+        "0.1.27"
+      ],
+      "newVersion": "0.1.28"
+    },
+    {
+      "name": "@emseepea/create-progress-streaming-server",
+      "plannedVersion": "0.1.27",
+      "occupiedVersions": [
+        "0.1.27"
+      ],
+      "newVersion": "0.1.28"
+    },
+    {
+      "name": "@emseepea/create-html-ui-server",
+      "plannedVersion": "0.1.27",
+      "occupiedVersions": [
+        "0.1.27"
+      ],
+      "newVersion": "0.1.28"
+    },
+    {
+      "name": "@emseepea/create-react-ui-server",
+      "plannedVersion": "0.1.27",
+      "occupiedVersions": [
+        "0.1.27"
+      ],
+      "newVersion": "0.1.28"
+    },
+    {
+      "name": "@emseepea/create-multi-instance-postgres-server",
+      "plannedVersion": "0.1.27",
+      "occupiedVersions": [
+        "0.1.27"
+      ],
+      "newVersion": "0.1.28"
+    },
+    {
+      "name": "@emseepea/create-database-schema-server",
+      "plannedVersion": "0.1.27",
+      "occupiedVersions": [
+        "0.1.27"
+      ],
+      "newVersion": "0.1.28"
+    },
+    {
+      "name": "@emseepea/create-mongodb-backed-server",
+      "plannedVersion": "0.1.27",
+      "occupiedVersions": [
+        "0.1.27"
+      ],
+      "newVersion": "0.1.28"
+    },
+    {
+      "name": "@emseepea/create-soap-backed-server",
+      "plannedVersion": "0.1.27",
+      "occupiedVersions": [
+        "0.1.27"
+      ],
+      "newVersion": "0.1.28"
+    },
+    {
+      "name": "@emseepea/feedback",
+      "plannedVersion": "0.11.2",
+      "occupiedVersions": [
+        "0.11.2"
+      ],
+      "newVersion": "0.11.3"
+    },
+    {
+      "name": "@emseepea/react",
+      "plannedVersion": "0.4.13",
+      "occupiedVersions": [
+        "0.4.13"
+      ],
+      "newVersion": "0.4.14"
+    },
+    {
+      "name": "@emseepea/svelte",
+      "plannedVersion": "0.2.13",
+      "occupiedVersions": [
+        "0.2.13"
+      ],
+      "newVersion": "0.2.14"
+    },
+    {
+      "name": "@emseepea/testing",
+      "plannedVersion": "0.26.5",
+      "occupiedVersions": [
+        "0.26.5"
+      ],
+      "newVersion": "0.26.6"
+    }
+  ]
 }

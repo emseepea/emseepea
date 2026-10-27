@@ -1,39 +1,227 @@
 # Current Release Readiness
 
-Date: 2026-10-26
+Date: 2026-10-27
 
-## Website request tracing guide
+## Useful HTTP metrics and standard SDK recipe
 
-Status: **LOCAL GUIDE AND WEBSITE CHECKS PASS; DEPLOYMENT PENDING**.
+Status: **SOURCE PREPARED; DELIVERY PENDING**.
 
-This website-only release adds a discoverable, runnable OpenTelemetry guide
-for the already released server 0.25.1. The prior npm release below remains
-complete and does not establish website deployment.
+Outcome #195 revision 4, increment #203 and contribution #204 add useful
+second-based histogram advice and replace the tracing guide's manual provider,
+context-manager and propagator setup with the standard Node SDK. The application
+owns its SDK, exporters and shutdown. No additional production MCP timer,
+result-frame parser or target-specific `_meta` propagation is added.
 
-The guide reuses the executed package README example. Applications still own
-providers, context management, propagation, exporters and backend instrumentation.
-The example uses a synthetic backend and console exporter. It does not operate
-a production telemetry service.
+The owned loopback OTLP/HTTP experiment verified real traces, backend parentage,
+request counts, duration seconds/buckets, restricted resource attributes and
+shutdown. Focused controls also prove that 6 ms and 300 ms samples fall in
+separate advised buckets and that application Views override the advice.
+Advice changes the default histogram layout for providers honoring it; it is an
+experimental API recommendation, not an enforced backend schema. Metric names,
+units, timing and attributes are unchanged. Logs remain a separate increment.
 
-Completion requires execution against the published package, existing website
-build/browser/accessibility checks, clean exact-commit qualification, source
-Quality and its measured website artifact, frozen candidate checks, successful
-website deployment and merge-back qualification, and the live guide/navigation.
-The fresh external installation ran the website example verbatim against
-server 0.25.1: HTTP 200, incoming parent → request → backend child, and graceful
-shutdown passed. The website build and all 16 existing website checks passed,
-including every built page in light/dark mobile and desktop views. Exact-source
-qualification, remote website measurements, deployment and live checks remain
-pending for this change.
+The compatible SDK dependency is development-only. The framework continues to
+use the application's OpenTelemetry API/providers. The recipe disables automatic
+resource detection and automatic transport instrumentation. Its exporter timeouts
+are per export; they are not an overall application shutdown deadline.
 
-Five independent plan critics passed increment #192 revision 1 / outcome #186
-revision 3. The cumulative commit, push and release risk is 5/25, within appetite
-subject to the existing exact-revision gates. No runtime, gate or permission
-changes. Changesets generates the private website version; no public npm package
-release is planned.
+Required full qualification, remote dependency qualification, exact-source/candidate
+publication, registry-installed recipe, latest promotion, website deployment and
+merge-back remain pending. Compute the actual package closure from the generated
+candidate; do not infer completed publication from these local controls.
+
+The current Changesets plan computes sixteen public package patches (server,
+eleven initializers, feedback, React, Svelte and testing), plus the private website
+patch. The private shared UI workspace has dependency metadata only. The retained
+Fastify Changeset accounts for the initializer closure. Immutable candidate
+versions are allocated by the existing release workflow, not guessed here.
+The new lockfile passed the pinned OSV scan and existing fix-eligibility gate.
+Normal and stalled-collector controls passed: the latter confirms a successful
+tool response followed by reported shutdown failure, not acknowledged export.
+
+The prerequisite #199/#200 is independently accepted. Source `3bf6edf` passed
+canonical Quality 40487853868 and candidate `2e5c0dd` passed Release 40490975981,
+including all sixteen changed packages verified under `next`. Its earlier failed
+local benchmark is retained at #199 comment6439334586; canonical success does not
+explain or relabel that failure. Server `latest` remains 0.25.1 at this checkpoint.
+
+One genuine native ChatGPT pair is recorded in #198 comment6438956084. Both calls
+completed with matching server results and one metric sample per mode. HTTP
+tracing carriers reached the fixture through its forwarder; injection provenance
+remains unknown. Neither call carried tracing fields in `params._meta`. This is
+bounded evidence, not universal client support or incompatibility. The pair must
+not repeat. Probe/tunnels are stopped and OAuth disconnected; the GM owns final
+inert UI cleanup. Native cleanup does not block this server-side improvement.
+
+## Historical baseline preparation (qualified in the result above)
+
+Status: **SOURCE PREPARED; QUALIFICATION PENDING**.
+
+Outcome #195 plan revision 3, prerequisite #199 and contribution #200 restore
+the qualified source baseline for telemetry delivery. Fastify 5.12.5 is replaced
+with the exact 5.12.6 patch for
+[GHSA-389g-gv7q-r4x8](https://github.com/advisories/GHSA-389g-gv7q-r4x8),
+which concerns case-sensitive `propertyNames` enum/const validation in header
+schemas. This is not a claim of a general authentication bypass.
+
+The discovery source at `7cb001dd567206644d15d6e1bda55bfdc7aaaed0` passed
+full local qualification, its five collector controls and required benchmarks.
+[Source Quality 40464650869](https://github.com/emseepea/emseepea/actions/runs/40464650869)
+passed Node.js 22 and 24, website and documentation checks, but failed the
+existing mature-fix dependency gate. Initializer qualification and release
+preparation were skipped. The failed job log and a local pinned OSV scan both
+identify Fastify 5.12.6 as the eligible fix; the fix crossed the existing
+14-day threshold on 27 October. The original failure is retained, without an
+unchanged retry or gate exception.
+
+The runtime dependency diff updates only Fastify's exact pin and lock entry.
+Corrected source `a4565b9fb12523370374513e00f61f04ac758a35` passed full
+local qualification, benchmarks, focused controls and the pinned eligibility
+gate. [Source Quality 40469067445](https://github.com/emseepea/emseepea/actions/runs/40469067445)
+passed both Node versions, website/documentation, vulnerability and all eleven
+initializer jobs. Release preparation then failed inside the pinned Changesets
+action with `createCommitOnBranch` undefined, before opening a release PR or
+dispatching a candidate. That failure is retained separately from the earlier
+Fastify eligibility failure.
+
+The workflow correction selects the same pinned action's documented
+`push-with-git-cli: true` option. Actor/token permissions, versioning, generated
+branch/PR binding, exact-source checks and explicit candidate dispatch remain
+unchanged. Generated Git CLI commits need not carry the GitHub GPG signatures
+of API-created commits; signature equivalence is not claimed. Package signature,
+registry integrity and provenance checks remain mandatory.
+
+The synthetic OAuth fixture correction is tracked separately under #196/#198:
+permit only `https://chatgpt.com` alongside `'self'` in `form-action`, preserving
+registered callback/path, PKCE, PIN, resource and one-time-code checks. Root
+integrates the independently reviewed local artifact as a separate result under
+#200 and qualifies the final clean tip. Neither the fixture patch nor controlled
+checks establish native ChatGPT support.
+
+The Changeset
+also covers the eleven initializer templates required to consume the updated
+server. Changesets computes four further dependent package patches. The
+planned sixteen-package closure below comes from the existing release-plan
+reader, not a handwritten assumption about the framework alone.
+
+- `@emseepea/create-api-backed-server@0.1.27`
+- `@emseepea/create-database-schema-server@0.1.27`
+- `@emseepea/create-html-ui-server@0.1.27`
+- `@emseepea/create-mongodb-backed-server@0.1.27`
+- `@emseepea/create-multi-instance-postgres-server@0.1.27`
+- `@emseepea/create-openapi-backed-server@0.1.27`
+- `@emseepea/create-progress-streaming-server@0.1.27`
+- `@emseepea/create-react-ui-server@0.1.27`
+- `@emseepea/create-resources-and-prompts-server@0.1.27`
+- `@emseepea/create-soap-backed-server@0.1.27`
+- `@emseepea/create-tool-server@0.1.27`
+- `@emseepea/feedback@0.11.2`
+- `@emseepea/react@0.4.13`
+- `@emseepea/server@0.25.2`
+- `@emseepea/svelte@0.2.13`
+- `@emseepea/testing@0.26.5`
+
+These are planned versions, not published versions. Existing allocation and
+registry checks determine the actual candidate versions. A successful source
+Quality run can create/update the release PR and dispatch candidate publication
+to `next`; root retains the resulting workflow and registry watch. Candidate
+publication does not establish `latest` promotion, installed adopter behavior or
+completion of the telemetry outcome. No separate immediate `latest` promotion
+is required by the scoped risk assessment.
+
+All five independent critics passed repair plan revision 3. The risk reviewer
+assessed the Git CLI transport, fixed-origin CSP correction, scoped commit, push
+and automatic candidate-publication effects at
+5/25, conditional on reviewing this actual package closure and passing the
+existing install, full compatibility, benchmark, vulnerability, initializer,
+candidate and registry gates. Those new exact-source results remain pending.
+No source or publication qualification is inferred from this forecast.
+
+The native ChatGPT task #198 remains separately owned by the GM. Tom approved
+Connect; the current blocker is the observed OAuth CSP callback rejection, and
+no native observe call has run. Support remains UNKNOWN. The temporary synthetic fixture does not use the
+advisory's affected header-schema constraints; risk review does not require it
+to stop solely for this finding. This security patch proves no native feature.
 
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
+
+## Website request tracing guide
+
+Status: **RELEASED AND VERIFIED**.
+
+The [Trace requests guide](https://emseepea.github.io/emseepea/tracing/) is live.
+It includes runnable OpenTelemetry setup, expected request/backend span
+relationships, shutdown and privacy guidance. The sidebar and observability
+explanation link to it. Website version 0.0.14 was generated by Changesets;
+this release publishes no new npm framework package.
+
+The [release evidence](website-tracing-release-2026-10-27.md) records the exact
+source, candidate and deployment chain. Live HTTP 200, canonical URL, sidebar
+and contextual navigation passed without JavaScript. The copyable example
+matches the code executed against registry server 0.25.1.
+
+Source Quality 40394110659 attempt 2 and Release 40450852566 passed. Publish
+40452523342 successfully deployed the measured source artifact and completed
+merge-back qualification. Exact merge-back Quality 40452750748 also completed
+successfully. Increment #192 owns the independent final acceptance record.
+
+The original source attempt's INCONCLUSIVE performance result remains valid
+historical evidence. Following the renewed release instruction, the revised
+website-only plan explicitly excepted local R014 retry guidance for one whole
+workflow retry. No threshold, population, runtime, dependency, workflow or
+permission changed. The passing retry does not explain the original spikes,
+establish runtime performance equivalence or globally re-rate R014.
+
+Independent reviews assessed the scoped website release at 5/25, within appetite
+with the unchanged required gates completed successfully. The earlier blocked
+website checkpoint below is historical.
+
+- Result: PASS
+- Final result: within appetite.
+
+## Historical website checkpoint — 26 October
+
+Status: **SOURCE ADDED; WEBSITE PUBLICATION BLOCKED**.
+
+The guide and navigation are committed on main. They are not deployed.
+The prior npm server 0.25.1 release below remains complete and does not
+establish website deployment. No release candidate was created for this
+website change.
+
+The fresh external installation ran the website example verbatim against
+server 0.25.1: HTTP 200, incoming parent → request → backend child, and graceful
+shutdown passed. The website build and all 16 existing website checks passed.
+Full local exact-commit qualification also passed for corrected source
+`f4f19c7220aaba59a2985ea9a299b258d0b9b1eb`.
+
+[Source Quality 40394110659](https://github.com/emseepea/emseepea/actions/runs/40394110659)
+failed the Node 24 production performance gate. Accepted-request CPU p95 was
+3.522, 3.023 and 6.179 ms across the three complete ordinary populations,
+against the unchanged 5 ms ceiling. The mixed result is INCONCLUSIVE and does
+not qualify. Node 22, website measurements and the other required source
+checks passed; release preparation was skipped.
+
+The separate diagnostic populations passed, but are diagnostic-only and do not
+qualify. The retained evidence does not establish the cause of the ordinary
+CPU spikes. No runtime or dependency change appears in this website source.
+An unchanged retry cannot qualify merely because it passes, under
+[risk R014](../risks/R014-performance-gate-misclassifies-a-revision-when-measurement-variance-is-unclassified.active.md).
+No retry, gate change or speculative runtime optimization was made.
+
+The [publication evidence](website-tracing-publication-2026-10-26.md) records
+the exact source and retained measurements. Publication requires an evidenced
+correction, separately assessed where it changes scope, followed by passing
+exact-source gates, the normal candidate/deployment/merge-back workflow and
+live guide/navigation verification. The Wednesday afternoon deadline remains.
+
+Five independent critics approved the website plan. Its 5/25 cumulative risk
+assessment was conditional on successful existing gates; this failure does not
+satisfy that condition. Changesets still contains a private website patch.
+No public npm package release is planned by this documentation change.
+
+- Result: BLOCKED
+- Final result: required exact-source performance gate did not qualify.
 
 ## Request tracing release
 

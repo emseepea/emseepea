@@ -1,5 +1,11 @@
 # @emseepea/create-soap-backed-server
 
+## 0.1.28
+
+### Patch Changes
+
+- [`a4565b9`](https://github.com/emseepea/emseepea/commit/a4565b9fb12523370374513e00f61f04ac758a35) Thanks [@tompahoward](https://github.com/tompahoward)! - Update Fastify to 5.12.6 to fix case-sensitive header-schema property-name validation (GHSA-389g-gv7q-r4x8). Update initializer templates to use the patched server.
+
 ## 0.1.26
 
 ### Patch Changes

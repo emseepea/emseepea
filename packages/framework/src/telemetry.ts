@@ -92,7 +92,10 @@ export function openTelemetry(): ObservabilityAdapter {
   const tracer = trace.getTracer("@emseepea/server");
   const meter = metrics.getMeter("@emseepea/server");
   const calls = meter.createCounter("emseepea.http.requests", { unit: "{request}" });
-  const duration = meter.createHistogram("emseepea.http.response.duration", { unit: "s" });
+  const duration = meter.createHistogram("emseepea.http.response.duration", {
+    unit: "s",
+    advice: { explicitBucketBoundaries: [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10] },
+  });
   const adapter = Object.freeze({
     id: "opentelemetry",
     emit(event: ObservabilityEvent) {

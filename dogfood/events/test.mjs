@@ -69,6 +69,7 @@ test("ChatGPT-style DCR, PIN, PKCE, resource binding and bearer verification", a
     code_challenge: challenge, code_challenge_method: "S256", resource, scope: "feedback events:read", state: "state-1" });
   const page = await fetch(`${base}/authorize?${params}`);
   assert.equal(page.status, 200);
+  assert.equal(page.headers.get("content-security-policy"), "default-src 'none'; form-action 'self' https://chatgpt.com");
   const consentPage = await page.text();
   assert.match(consentPage, /<title>Temporary feedback test sign in<\/title>/);
   assert.match(consentPage, /<h1>Temporary feedback test sign in<\/h1>/);
@@ -77,6 +78,7 @@ test("ChatGPT-style DCR, PIN, PKCE, resource binding and bearer verification", a
   assert.doesNotMatch(consentPage, /notes|demo access/i);
   const denied = await fetch(`${base}/authorize`, { method: "POST", body: new URLSearchParams({ ...Object.fromEntries(params), pin: "wrong" }) });
   assert.equal(denied.status, 401);
+  assert.equal(denied.headers.get("content-security-policy"), "default-src 'none'; form-action 'self' https://chatgpt.com");
   const deniedPage = await denied.text();
   assert.match(deniedPage, /role="alert">Incorrect PIN/);
   assert.match(deniedPage, /aria-invalid="true" aria-describedby="pin-error"/);

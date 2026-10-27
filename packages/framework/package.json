@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/server",
-  "version": "0.25.1",
+  "version": "0.25.3",
   "description": "Fastify-first framework for Model Context Protocol 2026-07-28 servers over Streamable HTTP",
   "license": "MIT",
   "repository": {
@@ -66,7 +66,7 @@
     "@modelcontextprotocol/fastify": "2.0.1",
     "@modelcontextprotocol/node": "2.1.1",
     "@modelcontextprotocol/server": "2.3.1",
-    "fastify": "5.12.5",
+    "fastify": "5.12.6",
     "zod": "4.6.6"
   },
   "engines": {
