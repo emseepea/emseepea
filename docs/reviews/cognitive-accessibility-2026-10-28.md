@@ -38,3 +38,22 @@ The seventeen-file manifest has SHA-256
 `9029cc6171647faf89643b35c4325c6a0de5ff854759ad6d291752e3e1d0e16a`.
 PR prose has SHA-256
 `4f0b29fe7669d1fe55e25daa1f2a7668ab27f3d43a58e135a358cd5b3ffbda0f`.
+
+## Completed HTTP instrumentation release records
+
+Result: PASS. Independent reviewer `/root/release_cognitive` checked the final
+release-readiness record after Publish and full merge-back qualification passed.
+The record separates the delivered result from the preserved partial-publication
+failure, bounded retry and retained semantic execution. Historical native cleanup
+is clearly distinguished from its subsequently accepted completion.
+
+The merged PR description was also reviewed and updated to describe the final
+feature and verified delivery evidence. These prose checks do not replace the
+independent outcome acceptance or normal documentation qualification.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `de325ab9449d56d47a768d93547902c7a7b3713c7c49ac80d96d376e3c7c475a` |
+
+Final PR #214 prose has SHA-256
+`0ea12428ebffa09eb91500a5cc1b52f5b38606c608e52d2f7dfc66dbf852127e`.
