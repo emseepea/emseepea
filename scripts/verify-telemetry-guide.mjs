@@ -12,6 +12,7 @@ const stalled = process.argv[3] === "stalled";
 const guide = await readFile(new URL("../website/src/content/docs/tracing.md", import.meta.url), "utf8");
 const directory = await mkdtemp(path.join(project, ".telemetry-guide-"));
 const traceBatches = [];
+const logBatches = [];
 let latestMetrics;
 let receiverFailed = false;
 const remoteTrace = "1234567890abcdef1234567890abcdef";
@@ -19,7 +20,7 @@ const remoteSpan = "1234567890abcdef";
 const privateValue = "telemetry-guide-private-canary";
 const receiver = createServer(async (request, response) => {
   try {
-    assert.ok(["/v1/traces", "/v1/metrics"].includes(request.url));
+    assert.ok(["/v1/traces", "/v1/metrics", "/v1/logs"].includes(request.url));
     let body = "";
     for await (const chunk of request) { body += chunk; assert.ok(body.length < 1_000_000); }
     assert.ok(!body.includes(privateValue), "private request data reached the collector");
@@ -27,6 +28,9 @@ const receiver = createServer(async (request, response) => {
     if (request.url === "/v1/traces") {
       assert.ok(traceBatches.length < 16);
       traceBatches.push(parsed);
+    } else if (request.url === "/v1/logs") {
+      assert.ok(logBatches.length < 16);
+      logBatches.push(parsed);
     } else {
       // Metrics are cumulative; traces are independent batches.
       latestMetrics = parsed;
@@ -53,10 +57,10 @@ try {
   delete environment.NODE_TEST_CONTEXT;
   Object.assign(environment, {
     PORT: "0",
-    OTEL_TRACES_EXPORTER: "otlp", OTEL_METRICS_EXPORTER: "otlp",
+    OTEL_TRACES_EXPORTER: "otlp", OTEL_METRICS_EXPORTER: "otlp", OTEL_LOGS_EXPORTER: "otlp",
     OTEL_EXPORTER_OTLP_PROTOCOL: "http/json",
     OTEL_EXPORTER_OTLP_ENDPOINT: `http://127.0.0.1:${receiver.address().port}`,
-    OTEL_EXPORTER_OTLP_TIMEOUT: "1000", OTEL_BSP_EXPORT_TIMEOUT: "1000",
+    OTEL_EXPORTER_OTLP_TIMEOUT: "1000", OTEL_BSP_EXPORT_TIMEOUT: "1000", OTEL_BLRP_EXPORT_TIMEOUT: "1000",
     OTEL_METRIC_EXPORT_TIMEOUT: "1000", OTEL_METRIC_EXPORT_INTERVAL: "60000",
   });
   child = spawn(process.execPath, ["--import", "./telemetry.mjs", "tracing-server.mjs"], {
@@ -104,7 +108,7 @@ try {
   assert.equal(shutdownFailureReported, stalled);
   assert.ok(performance.now() - stoppedAt < 10_000, "configured recipe did not finish shutdown");
   assert.equal(receiverFailed, false, "collector rejected an export");
-  for (const entry of [...traceBatches.flatMap((batch) => batch.resourceSpans), ...(latestMetrics?.resourceMetrics ?? [])]) {
+  for (const entry of [...traceBatches.flatMap((batch) => batch.resourceSpans), ...logBatches.flatMap((batch) => batch.resourceLogs), ...(latestMetrics?.resourceMetrics ?? [])]) {
       const attrs = entry.resource.attributes;
       assert.deepEqual(attrs.map((a) => a.key).sort(), ["service.name", "telemetry.sdk.language", "telemetry.sdk.name", "telemetry.sdk.version"]);
       assert.equal(attrs.find((a) => a.key === "service.name").value.stringValue, "status-service");
@@ -134,7 +138,18 @@ try {
   assert.ok(Number.isFinite(point.sum) && point.sum >= 0 && point.sum < 10);
   const allowed = new Set(["mcp.method", "mcp.capability.name", "http.request.method", "http.response.status_code", "emseepea.protocol.outcome", "emseepea.transport.outcome"]);
   for (const p of [...counts, ...points]) assert.ok(p.attributes.every((a) => allowed.has(a.key)));
-  if (!stalled) console.log("Copied Node SDK guide: real OTLP traces, parentage, metrics, seconds/buckets, resource policy and shutdown PASS");
+  const records = logBatches.flatMap((batch) => batch.resourceLogs.flatMap((r) => r.scopeLogs.flatMap((scope) => scope.logRecords)));
+  if (!stalled) assert.equal(records.length, 1);
+  else assert.ok(records.length >= 1, "log bytes must arrive even when acknowledgement is deliberately stalled");
+  for (const record of records) {
+    assert.equal(record.eventName, "mcp.request");
+    assert.deepEqual(record.body, { stringValue: "MCP HTTP request ended" });
+    assert.equal(record.severityNumber, 9); assert.equal(record.severityText, "INFO");
+    assert.equal(record.traceId, parent.traceId); assert.equal(record.spanId, parent.spanId);
+    assert.equal(record.flags, 1); assert.equal(record.timeUnixNano, parent.endTimeUnixNano);
+    assert.ok(record.attributes.every((a) => allowed.has(a.key)));
+  }
+  if (!stalled) console.log("Copied Node SDK guide: real OTLP traces, metrics and correlated logs, seconds/buckets, resource policy and shutdown PASS");
   if (stalled) console.log("Stalled collector: tool response succeeded; timed-out shutdown reported failure with exit 1 as expected (wire arrival is not export acknowledgement)");
 } finally {
   if (child && child.exitCode === null && child.signalCode === null) { child.kill("SIGKILL"); await once(child, "exit").catch(() => {}); }

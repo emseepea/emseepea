@@ -2,6 +2,77 @@
 
 Date: 2026-10-27
 
+## Correlated operational logs
+
+Status: **SOURCE PREPARED; DELIVERY PENDING**.
+
+Outcome #195 revision 5, increment #205 and contribution #206 add explicit
+`openTelemetry({ logs: true })` completion logs through the standard Logs API.
+The application owns providers, exporters and shutdown. No-argument usage stays
+logs-off; a missing provider is a no-op. The minimal runtime API dependency is
+aligned with the guide's Node SDK 0.221.0; no SDK runtime dependency is added.
+
+One fixed INFO record per MCP HTTP completion uses safe existing attributes,
+its validated local request span identity and completion timestamp. The private
+context excludes baggage, opaque trace state and unrelated ambient spans.
+Unsampled local spans retain useful correlation; no-op parent identities do not
+masquerade as local request spans. Counter, histogram and log calls are guarded
+independently. The public custom-adapter event contract remains unchanged.
+
+Real owned-loopback SDK export verified all three signals. Twenty focused tests
+passed, including concurrent correlation, delayed delivery, default-off,
+missing providers, unsampled contexts, signal failures and streaming disconnect.
+The copied guide's stalled collector control confirms a successful response and
+reported shutdown failure; bytes arriving do not establish acknowledged export.
+These controls do not claim metric exemplars or production performance.
+
+Required full qualification, dependency eligibility, candidate publication,
+registry-installed recipe, latest, live website and full merge-back remain
+pending. Changesets computes sixteen public package patches and private website
+0.0.16; final immutable versions are allocated by the release workflow. The
+initializer patches update generated projects to consume the current server.
+The private shared UI workspace has dependency metadata only.
+
+- `@emseepea/create-api-backed-server@0.1.29`
+- `@emseepea/create-database-schema-server@0.1.29`
+- `@emseepea/create-html-ui-server@0.1.29`
+- `@emseepea/create-mongodb-backed-server@0.1.29`
+- `@emseepea/create-multi-instance-postgres-server@0.1.29`
+- `@emseepea/create-openapi-backed-server@0.1.29`
+- `@emseepea/create-progress-streaming-server@0.1.29`
+- `@emseepea/create-react-ui-server@0.1.29`
+- `@emseepea/create-resources-and-prompts-server@0.1.29`
+- `@emseepea/create-soap-backed-server@0.1.29`
+- `@emseepea/create-tool-server@0.1.29`
+- `@emseepea/feedback@0.11.4`
+- `@emseepea/react@0.4.15`
+- `@emseepea/server@0.25.4`
+- `@emseepea/svelte@0.2.15`
+- `@emseepea/testing@0.26.7`
+
+The genuine generated website changelog review receipt must land on main before
+promotion, while the candidate stays frozen. Existing full merge-back checks
+remain required. Architecture and OpenTelemetry source reviews passed. The scoped cumulative
+commit, push and automatic-publication risk is 5/25, conditional on the required
+exact-commit gates; those checks remain pending.
+
+The SDK/metrics prerequisite #203/#204 is accepted and closed: server 0.25.3 is
+latest and website 0.0.15 is live. Source Quality 40501814688, candidate Release
+40505007574 and Publish 40508892916 attempt 3 succeeded, including full corrected
+merge-back Quality 40518121397. Earlier filesystem permissions, missing ledger
+receipt and transient jobs-API failures remain recorded in #203; later success
+does not relabel those failures.
+
+The single native ChatGPT pair remains bounded by #198 comment6438956084.
+HTTP carriers reached the forwarded fixture with unknown injector provenance;
+tracing fields were absent in both calls' `params._meta`. No additional operation
+timer, result-frame parser, target-specific propagation or native repeat is
+added. Probe/tunnels are stopped and OAuth disconnected. The GM retains cleanup
+of two inert app definitions and one synthetic chat, pending the existing local
+permanent-deletion confirmation. This does not block server-side logs delivery.
+
+## Historical SDK and metrics preparation (released as recorded above)
+
 ## Useful HTTP metrics and standard SDK recipe
 
 Status: **SOURCE PREPARED; DELIVERY PENDING**.
@@ -104,22 +175,22 @@ server. Changesets computes four further dependent package patches. The
 planned sixteen-package closure below comes from the existing release-plan
 reader, not a handwritten assumption about the framework alone.
 
-- `@emseepea/create-api-backed-server@0.1.27`
-- `@emseepea/create-database-schema-server@0.1.27`
-- `@emseepea/create-html-ui-server@0.1.27`
-- `@emseepea/create-mongodb-backed-server@0.1.27`
-- `@emseepea/create-multi-instance-postgres-server@0.1.27`
-- `@emseepea/create-openapi-backed-server@0.1.27`
-- `@emseepea/create-progress-streaming-server@0.1.27`
-- `@emseepea/create-react-ui-server@0.1.27`
-- `@emseepea/create-resources-and-prompts-server@0.1.27`
-- `@emseepea/create-soap-backed-server@0.1.27`
-- `@emseepea/create-tool-server@0.1.27`
-- `@emseepea/feedback@0.11.2`
-- `@emseepea/react@0.4.13`
-- `@emseepea/server@0.25.2`
-- `@emseepea/svelte@0.2.13`
-- `@emseepea/testing@0.26.5`
+- Previously planned: `@emseepea/create-api-backed-server@0.1.27`
+- Previously planned: `@emseepea/create-database-schema-server@0.1.27`
+- Previously planned: `@emseepea/create-html-ui-server@0.1.27`
+- Previously planned: `@emseepea/create-mongodb-backed-server@0.1.27`
+- Previously planned: `@emseepea/create-multi-instance-postgres-server@0.1.27`
+- Previously planned: `@emseepea/create-openapi-backed-server@0.1.27`
+- Previously planned: `@emseepea/create-progress-streaming-server@0.1.27`
+- Previously planned: `@emseepea/create-react-ui-server@0.1.27`
+- Previously planned: `@emseepea/create-resources-and-prompts-server@0.1.27`
+- Previously planned: `@emseepea/create-soap-backed-server@0.1.27`
+- Previously planned: `@emseepea/create-tool-server@0.1.27`
+- Previously planned: `@emseepea/feedback@0.11.2`
+- Previously planned: `@emseepea/react@0.4.13`
+- Previously planned: `@emseepea/server@0.25.2`
+- Previously planned: `@emseepea/svelte@0.2.13`
+- Previously planned: `@emseepea/testing@0.26.5`
 
 These are planned versions, not published versions. Existing allocation and
 registry checks determine the actual candidate versions. A successful source

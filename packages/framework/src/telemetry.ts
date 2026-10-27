@@ -1,5 +1,6 @@
 import { context, isSpanContextValid, metrics, propagation, ROOT_CONTEXT, SpanKind, trace } from "@opentelemetry/api";
-import type { Span, Tracer } from "@opentelemetry/api";
+import type { Context, Span, Tracer } from "@opentelemetry/api";
+import { logs, SeverityNumber } from "@opentelemetry/api-logs";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
 const methods = new Set<string>([
@@ -75,6 +76,7 @@ export function structuredLogging(
 // Normalization preserves emit identity while copying the public adapter.
 // A public adapter ID must never grant access to the request lifecycle.
 const requestTracers = new WeakMap<ObservabilityAdapter["emit"], Tracer>();
+const requestEmissions = new WeakMap<ObservabilityEvent, { context: Context; timestamp: number }>();
 
 function eventAttributes(event: ObservabilityEvent) {
   return {
@@ -88,9 +90,13 @@ function eventAttributes(event: ObservabilityEvent) {
   };
 }
 
-export function openTelemetry(): ObservabilityAdapter {
+export function openTelemetry(options: {
+  /** Emit safe completion records through the application's Logs API provider. Default: false. */
+  readonly logs?: boolean;
+} = {}): ObservabilityAdapter {
   const tracer = trace.getTracer("@emseepea/server");
   const meter = metrics.getMeter("@emseepea/server");
+  const logger = options.logs === true ? logs.getLogger("@emseepea/server") : undefined;
   const calls = meter.createCounter("emseepea.http.requests", { unit: "{request}" });
   const duration = meter.createHistogram("emseepea.http.response.duration", {
     unit: "s",
@@ -100,16 +106,32 @@ export function openTelemetry(): ObservabilityAdapter {
     id: "opentelemetry",
     emit(event: ObservabilityEvent) {
       const attributes = eventAttributes(event);
-      calls.add(1, attributes);
-      duration.record(event.durationMs / 1_000, attributes);
+      const emission = requestEmissions.get(event);
+      const emissionContext = emission?.context ?? ROOT_CONTEXT;
+      try { calls.add(1, attributes, emissionContext); }
+      catch { /* One signal cannot suppress another. */ }
+      try { duration.record(event.durationMs / 1_000, attributes, emissionContext); }
+      catch { /* One signal cannot suppress another. */ }
+      try {
+        logger?.emit({
+          eventName: "mcp.request",
+          body: "MCP HTTP request ended",
+          severityNumber: SeverityNumber.INFO,
+          severityText: "INFO",
+          attributes,
+          context: emissionContext,
+          ...(emission ? { timestamp: emission.timestamp } : {}),
+        });
+      } catch { /* Logging cannot change protocol behaviour or other signals. */ }
     },
   });
   requestTracers.set(adapter.emit, tracer);
   return adapter;
 }
 
-function startRequestSpan(tracer: Tracer, request: FastifyRequest, startTime: number): Span | undefined {
+function startRequestSpan(tracer: Tracer, request: FastifyRequest, startTime: number): { span: Span; context: Context } | undefined {
   let parent = ROOT_CONTEXT;
+  let parentIdentity: { traceId: string; spanId: string } | undefined;
   try {
     // Only tracing headers reach the configured propagator. In particular,
     // baggage, credentials and unrelated ambient context are excluded.
@@ -119,11 +141,30 @@ function startRequestSpan(tracer: Tracer, request: FastifyRequest, startTime: nu
       if (typeof value === "string" && value.length <= 512) carrier[name] = value;
     }
     const extracted = trace.getSpanContext(propagation.extract(ROOT_CONTEXT, carrier));
-    if (extracted && isSpanContextValid(extracted)) parent = trace.setSpanContext(ROOT_CONTEXT, extracted);
+    if (extracted && isSpanContextValid(extracted)) {
+      parent = trace.setSpanContext(ROOT_CONTEXT, extracted);
+      parentIdentity = { traceId: extracted.traceId, spanId: extracted.spanId };
+    }
   } catch { /* A broken propagator must not prevent protocol execution. */ }
+  let span: Span;
   try {
-    return tracer.startSpan("mcp.request", { kind: SpanKind.SERVER, startTime }, parent);
+    span = tracer.startSpan("mcp.request", { kind: SpanKind.SERVER, startTime }, parent);
   } catch { return undefined; }
+  let completionContext = ROOT_CONTEXT;
+  try {
+    const value = span.spanContext();
+    // Log processors receive this context too. Exclude opaque traceState and
+    // arbitrary provider properties, retaining only validated correlation data.
+    const local = { traceId: value.traceId, spanId: value.spanId, traceFlags: value.traceFlags, isRemote: false };
+    // A no-op tracer can return its parent unchanged. Unsampled local spans,
+    // however, still have a new identity and remain useful for log correlation.
+    if (value.isRemote !== true && isSpanContextValid(local)
+      && Number.isInteger(local.traceFlags) && local.traceFlags >= 0 && local.traceFlags <= 255
+      && !(parentIdentity?.traceId === local.traceId && parentIdentity.spanId === local.spanId)) {
+      completionContext = trace.setSpanContext(ROOT_CONTEXT, local);
+    }
+  } catch { /* Invalid or broken span contexts produce uncorrelated records. */ }
+  return { span, context: completionContext };
 }
 
 export function installObservability(
@@ -141,7 +182,8 @@ export function installObservability(
     const state: ObservabilityState = { protocolOutcome: "success" };
     requestStates.set(request, state);
     const started = performance.now();
-    const span = tracer ? startRequestSpan(tracer, request, performance.timeOrigin + started) : undefined;
+    const requestSpan = tracer ? startRequestSpan(tracer, request, performance.timeOrigin + started) : undefined;
+    const span = requestSpan?.span;
     let ended = false;
     const finish = () => end(reply.raw.destroyed || reply.raw.socket?.destroyed ? "disconnected" : "finished");
     const close = () => end("disconnected");
@@ -174,6 +216,10 @@ export function installObservability(
         ...(callerClass ? { callerClass } : {}),
         durationMs: Math.min(3_600_000, Math.max(0, finished - started)),
         ...(state.forwardingRefusal ? { forwardingRefusal: state.forwardingRefusal } : {}),
+      });
+      if (tracer) requestEmissions.set(event, {
+        context: requestSpan?.context ?? ROOT_CONTEXT,
+        timestamp: performance.timeOrigin + finished,
       });
       if (span) {
         try { span.setAttributes(eventAttributes(event)); }

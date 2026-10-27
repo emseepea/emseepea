@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import test from "node:test";
 
-test("the copied standard SDK guide exports both signals and shuts down", { timeout: 45_000 }, async () => {
+test("the copied standard SDK guide exports all three signals and shuts down", { timeout: 45_000 }, async () => {
   const { stdout } = await promisify(execFile)(process.execPath, ["scripts/verify-telemetry-guide.mjs"], { timeout: 40_000 });
   assert.match(stdout, /resource policy and shutdown PASS/);
 });

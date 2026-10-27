@@ -62,6 +62,7 @@
   },
   "dependencies": {
     "@opentelemetry/api": "1.9.1",
+    "@opentelemetry/api-logs": "0.221.0",
     "@modelcontextprotocol/core": "2.3.1",
     "@modelcontextprotocol/fastify": "2.0.1",
     "@modelcontextprotocol/node": "2.1.1",

@@ -1,10 +1,11 @@
 ---
-title: Traces and metrics
-description: Export MCP request traces and useful HTTP latency metrics with the standard OpenTelemetry Node SDK.
+title: Traces, metrics and logs
+description: Export MCP request traces, useful HTTP latency metrics and safe correlated logs with the standard OpenTelemetry Node SDK.
 ---
 
 Use the standard OpenTelemetry Node SDK to collect request traces and HTTP
-metrics. Em See Pea supplies instrumentation; your application owns the SDK,
+metrics and safe request-completion logs. Em See Pea supplies instrumentation;
+your application owns the SDK,
 exporters and shutdown. No provider setup is needed inside your tools.
 
 ## Start with console output
@@ -16,8 +17,8 @@ npm install @emseepea/server zod @opentelemetry/api@1.9.1 @opentelemetry/sdk-nod
 ```
 
 Save the SDK setup in `telemetry.mjs`. This compatible SDK version configures
-context management, W3C trace propagation and both signal providers. Logs are
-disabled for this example. Automatic resource detection is disabled so process,
+context management, W3C trace propagation and all three signal providers.
+Automatic resource detection is disabled so process,
 host and environment attributes are not added to the exported resource.
 
 ```js title="telemetry.mjs"
@@ -25,9 +26,10 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 
 process.env.OTEL_TRACES_EXPORTER ??= "console";
 process.env.OTEL_METRICS_EXPORTER ??= "console";
-process.env.OTEL_LOGS_EXPORTER = "none";
+process.env.OTEL_LOGS_EXPORTER ??= "console";
 process.env.OTEL_EXPORTER_OTLP_TIMEOUT ??= "5000";
 process.env.OTEL_BSP_EXPORT_TIMEOUT ??= "5000";
+process.env.OTEL_BLRP_EXPORT_TIMEOUT ??= "5000";
 process.env.OTEL_METRIC_EXPORT_TIMEOUT ??= "5000";
 process.env.OTEL_METRIC_EXPORT_INTERVAL ??= "60000";
 
@@ -50,7 +52,7 @@ const backendTracer = trace.getTracer("my-application.backend");
 const running = await serveEmseepea(createEmseepea({
   name: "tracing-example",
   version: "1.0.0",
-  observability: [openTelemetry()],
+  observability: [openTelemetry({ logs: true })],
   tools: [defineTool({
     name: "read-status",
     description: "Read the example backend status.",
@@ -96,19 +98,19 @@ the backend span under the request. The SDK also exports
 `emseepea.http.requests` in requests and `emseepea.http.response.duration` in
 seconds. Without installed providers, the framework's telemetry APIs are no-ops.
 
-## Send both signals to an OTLP collector
+## Send all three signals to an OTLP collector
 
 Use the same files with your collector's OTLP/HTTP endpoint:
 
 ```sh
-OTEL_TRACES_EXPORTER=otlp OTEL_METRICS_EXPORTER=otlp \
+OTEL_TRACES_EXPORTER=otlp OTEL_METRICS_EXPORTER=otlp OTEL_LOGS_EXPORTER=otlp \
 OTEL_EXPORTER_OTLP_PROTOCOL=http/json \
 OTEL_EXPORTER_OTLP_ENDPOINT=https://collector.example.com \
 node --import ./telemetry.mjs tracing-server.mjs
 ```
 
 Replace the example endpoint with your collector. The SDK appends `/v1/traces`
-and `/v1/metrics`. Configure collector authentication through your deployment's
+and `/v1/metrics`, plus `/v1/logs`. Configure collector authentication through your deployment's
 secret handling.
 
 Review inherited `OTEL_*` settings: they can change exporters,
@@ -134,10 +136,32 @@ experimental OpenTelemetry API option. Your application's metric Views can
 override it; check the buckets exported by your provider. These custom metric
 names do not claim full OpenTelemetry semantic-convention compliance.
 
+## Correlate safe completion logs
+
+`openTelemetry({ logs: true })` emits one INFO record when each MCP HTTP
+response finishes or disconnects. Its event name is `mcp.request` and its fixed
+body is `MCP HTTP request ended`. Bounded attributes identify method, configured
+capability, status and outcome. Errors are represented by the outcome attributes;
+exception objects and request payloads are not recorded.
+
+The record uses the local request span's trace and span IDs and the response's
+completion timestamp, even if delivery occurs later. Trace IDs are not metric
+labels. Logs are off by default with `openTelemetry()` or `{ logs: false }`.
+A missing LoggerProvider is a no-op; the example's SDK supplies one.
+
+Without a valid local request span, the completion record is uncorrelated.
+A valid unsampled local span can still supply correlation IDs even when the
+tracing sampler does not export it. No unrelated ambient span, baggage or
+opaque `tracestate` is copied into completion-log processing.
+
+These are server operational logs sent to your exporter. They are separate from
+client-visible MCP `reportLog` messages. Other application or backend logging
+has its own data-capture policy.
+
 ## Shut down in order
 
 Close the HTTP server first, then await `sdk.shutdown()` once. The SDK exports
-pending traces and metrics and releases its providers. This recipe sets
+pending traces, metrics and logs and releases its providers. This recipe sets
 five-second exporter and metric-reader timeouts; configure them for your
 collector.
 
@@ -154,7 +178,8 @@ configured propagator. It retains validated span context and excludes baggage.
 Missing or invalid parent context starts a new trace. Incoming trace IDs are
 caller-controlled correlation data, never identity or authorization.
 
-Framework spans and events exclude request arguments, results and credentials.
+Framework spans, metrics and completion logs exclude request arguments, results
+and credentials.
 The resource in this recipe contains the known service name and SDK identity.
 Your backend instrumentation and exporters have their own data-capture policies.
 
