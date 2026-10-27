@@ -53,7 +53,7 @@ export function createDemoAuth({ issuer, resource, pin, signingKey }) {
       response.end(JSON.stringify(data));
     };
     const signInForm = (params, status = 200, error = "") => {
-      response.writeHead(status, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-security-policy": "default-src 'none'; form-action 'self'" });
+      response.writeHead(status, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-security-policy": "default-src 'none'; form-action 'self' https://chatgpt.com" });
       const hidden = [...params].filter(([name]) => name !== "pin").map(([name, value]) =>
         `<input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(value)}">`).join("");
       response.end(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Temporary feedback test sign in</title></head><body><main><h1>Temporary feedback test sign in</h1><p>Authorize temporary access to synthetic feedback conversations and feedback reply-event monitoring.</p><form method="post" action="/authorize">${error ? `<p id="pin-error" role="alert">${error}</p>` : ""}<label for="pin">Temporary test PIN</label><input id="pin" name="pin" type="password" autocomplete="one-time-code" required${error ? ' aria-invalid="true" aria-describedby="pin-error"' : ""}><button>Authorize temporary feedback access</button>${hidden}</form></main></body></html>`);
