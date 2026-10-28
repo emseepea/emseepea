@@ -165,3 +165,25 @@ required. Prose review does not substitute for that execution evidence.
 | --- | --- |
 | `website/src/content/docs/tracing.md` | `88b0ffbcb4b2231a5048f725845a6e862ce8897b5bcf1bb91691d953a5b10336` |
 | `docs/reviews/current-release-readiness.md` | `292f1491c08915cf73aa586f02e109d6587e9ce512fbcaefeac7f7749911fde8` |
+
+
+## Trace error visibility generated release prose
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed all
+seventeen generated changelog additions and the current generated PR #222
+prose at frozen candidate `db8357ef58b11f9cd88b9b1f763ffbcd3a85edf9`.
+Root independently compared the saved files with that exact candidate and the
+reviewer's manifest. The new entries explain standard ERROR filtering, finite
+error types, expected cancellation and privacy. Dependency updates are explicit.
+
+| Reviewed file | SHA-256 at the frozen candidate |
+| --- | --- |
+| `website/CHANGELOG.md` | `35a2d0b34e74981528773138baaa27df7fe705754edfb3e50c56f62f553d0bdd` |
+
+The seventeen-file reviewer manifest has SHA-256
+`c22b5894b5c78b7594a93a4a564d7eb120415e2e4d175be52f3a017bb0034842`.
+The generated PR title/body snapshot has SHA-256
+`11995e0a5956dc7191e484274c07959580d4e5571fcccb4229efd52c4eb7ade9`.
+This records actual prose review before promotion. Registry-installed checks,
+publication, live guidance and full merge-back remain separate requirements.
+Span naming remains the separate Next increment of outcome #219.
