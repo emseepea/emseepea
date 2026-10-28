@@ -1,5 +1,11 @@
 # @emseepea/create-react-ui-server
 
+## 0.1.32
+
+### Patch Changes
+
+- [`db836c6`](https://github.com/emseepea/emseepea/commit/db836c66d4a9f2ef3daeb5f36640d43ebd59ead1) Thanks [@tompahoward](https://github.com/tompahoward)! - Make genuine tool failures visible through standard OpenTelemetry ERROR span filtering, including tool errors returned with HTTP 200. Add bounded span error types while preserving routine client refusals, expected cancellation, genuine deadline failures and application-owned parent spans. Keep exception details and request payloads excluded, and leave completion events, logs, metrics and timing unchanged. Document the mapping and verify the real SDK failure/success paths.
+
 ## 0.1.31
 
 ### Patch Changes

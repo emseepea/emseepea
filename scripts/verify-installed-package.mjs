@@ -10,6 +10,7 @@ import {
   inputRequired,
   rootsResponse,
   notifyResourceUpdated,
+  openTelemetry,
   renderElicitationForm,
   serveEmseepea,
 } from "@emseepea/server";
@@ -223,8 +224,8 @@ app.addHook("preHandler", async (request) => {
 const running = await serveEmseepea(app, { port: 0 });
 const subscriptionController = new AbortController();
 let subscriptionReader;
-const request = async (method, params = {}) => {
-  const response = await fetch(running.url, {
+const request = async (method, params = {}, url = running.url) => {
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       Accept: "application/json, text/event-stream",
@@ -532,6 +533,61 @@ try {
   subscriptionController.abort();
   await subscriptionReader?.cancel().catch(() => {});
   await running.close();
+}
+
+await verifyTraceErrorFiltering();
+
+async function verifyTraceErrorFiltering() {
+  const { NodeSDK } = await import("@opentelemetry/sdk-node");
+  const { SpanStatusCode } = await import("@opentelemetry/api");
+  const exported = [];
+  const canary = "installed-trace-private-canary";
+  const sdk = new NodeSDK({
+    serviceName: "installed-trace-errors",
+    autoDetectResources: false,
+    metricReaders: [],
+    logRecordProcessors: [],
+    traceExporter: {
+      export(spans, done) { exported.push(...spans); done({ code: 0 }); },
+      async shutdown() {},
+    },
+  });
+  sdk.start();
+  let observed;
+  try {
+    observed = await serveEmseepea(createEmseepea({
+      name: "installed-trace-errors", version: "1", observability: [openTelemetry()],
+      tools: [defineTool({
+        name: "trace-error", access: "public", description: "Exercise installed trace error filtering.",
+        inputSchema: z.object({ fail: z.boolean() }), outputSchema: value,
+        handler({ fail }) {
+          if (fail) throw new Error(canary);
+          return { data: { value: "ready" } };
+        },
+      })],
+    }), { port: 0 });
+    for (const fail of [false, true]) {
+      const response = await request("tools/call", { name: "trace-error", arguments: { fail } }, observed.url);
+      if (fail ? response.result.isError !== true : response.result.structuredContent?.value !== "ready") {
+        throw new Error("installed trace fixture did not preserve the expected tool result");
+      }
+    }
+  } finally {
+    try { await observed?.close(); }
+    finally { await sdk.shutdown(); }
+  }
+  const errors = exported.filter((span) => span.status.code === SpanStatusCode.ERROR);
+  const successes = exported.filter((span) => span.status.code === SpanStatusCode.UNSET);
+  if (exported.length !== 2 || errors.length !== 1 || successes.length !== 1
+      || errors[0].attributes["http.response.status_code"] !== 200
+      || errors[0].attributes["error.type"] !== "tool_error"
+      || errors[0].status.message !== undefined || errors[0].events.length !== 0
+      || successes[0].attributes["error.type"] !== undefined) {
+    throw new Error("installed SDK error filtering did not distinguish the HTTP 200 tool failure");
+  }
+  const safe = exported.map((span) => ({ name: span.name, status: span.status, attributes: span.attributes, events: span.events }));
+  if (JSON.stringify(safe).includes(canary)) throw new Error("installed error span exposed private error content");
+  console.log("Installed SDK ERROR filter: HTTP 200 tool failure, successful UNSET span and private-error exclusion PASS");
 }
 
 async function nextSseMessage(reader) {

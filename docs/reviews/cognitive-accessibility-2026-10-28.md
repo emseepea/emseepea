@@ -79,3 +79,89 @@ website verification or independent acceptance.
 | `docs/decisions/README.md` | `deb810236ad0970b3792c9a7aea37e751c43a63d5a1508599c92461a86676cc9` |
 | `.changeset/active-span-default.md` | `7c542bad3f88708777b1a414584658066bb653beba38eef275e5e8dd92abc398` |
 | `docs/reviews/current-release-readiness.md` | `90fbed36743d6173ac67f9858166967e5d0ac0f47c201d738a93ae4f41b93513` |
+
+
+## Active-span default generated release prose
+
+Result: PASS. Independent reviewer `/root/default_cognitive` checked all
+seventeen generated changelogs at frozen PR #218 candidate
+`c03f0c8770c4b10477ba338310557d808cae4552`, including the actual website
+changelog. Each saved file matches its manifest hash and exact candidate bytes.
+The new sections describe default reuse, explicit opt-out and alias precedence;
+dependency-only updates remain explicit.
+
+| Reviewed file | SHA-256 at the frozen candidate |
+| --- | --- |
+| `website/CHANGELOG.md` | `a1a437166307b1852c137ff52c5391514a8c15b43197b1bb6e472247fa523ba0` |
+
+The seventeen-file manifest has SHA-256
+`13f8c062a4b8b3a65153a19e799d668a7648892676b42c286bbed15e82d2cb9f`.
+PR description SHA-256 is
+`9494696ccff716983bdb7e50c496b1f48fbaf9d57ca8aa1b5f4ff5b57e273e6d`.
+This records completed prose review before promotion. Installed-package checks,
+publication, live website and full merge-back remain separate requirements.
+
+
+## Verified active-span default release record
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed the final
+release-readiness record, merged PR #218 description and Reviewing bodies for
+#215, #216 and #217. The prose separates published behavior and verified
+delivery from the preserved registry observations and capture-fixture failure.
+The one bounded recovery and unchanged execution evidence are clear. Tracking
+bodies preserve the assessed plan as history and withhold Done until independent
+acceptance.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `ce74d0c17a4d0e4e9a16099e27d9056cd1e916646063e259f05fe8639bf1761b` |
+
+Final PR prose SHA-256:
+`705a3a49901b9c6cd692b81ce40dd0d4cac9af554452731288163ab0b3c09d1e`.
+Reviewing issue-body SHA-256 values:
+
+- #215: `f11fb30ffb56fd3b45b97c35cba9c7a402b21f104799a38e4868c430d51fac85`
+- #216: `1bd14b6f75045b0bcf0009e3c7bfe82c607736a707d0dbf794f07518badbe40b`
+- #217: `86ed1de0f5cd15c26b540ad66474f3f2b0aa6c03aa63e642f19451c2c1c0d9f0`
+
+This prose review remains separate from exact-commit documentation qualification
+and final independent outcome acceptance.
+
+
+## Standard trace error visibility
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed the
+proposed ADR0128 amendment, tracing guide, Changeset, release-readiness update
+and internal cancellation documentation for outcome #219's error-visibility
+increment #220. The guide explains the ordinary ERROR filter, finite error
+types, precedence and the distinction between expected source cancellation and
+genuine deadline/handler failures. Parent ownership and existing completion
+signals remain clear. The readiness record distinguishes 82 passing local
+checks and the local real-SDK fixture from pending released-package proof.
+
+Span naming remains the separately delivered Next increment. This prose review
+does not replace full qualification, publication, live website verification or
+independent acceptance.
+
+| Reviewed file | SHA-256 of current content |
+| --- | --- |
+| `docs/decisions/0128-request-lifetime-opentelemetry-context.proposed.md` | `d9aee1f0031779e5384a3fa8ac20091f7457ce99c1fb3b719e51ed1f184f3cd5` |
+| `website/src/content/docs/tracing.md` | `683f518099c44e158f554ebe1229322008dc68b4a1204d1e6e1f2278f2ea74d6` |
+| `.changeset/trace-error-filter.md` | `b8c6949e2f1f00b023e3c2e101c6241f1f8e88eb72ddda122640993f6e872f57` |
+| `docs/reviews/current-release-readiness.md` | `0d0098e7e81194c6098a537576f2bee07a59e795723a52011fabc49892e0cfa8` |
+
+
+## Trace error mapping mobile correction
+
+Result: PASS. Independent reviewer `/root/default_cognitive` re-reviewed the
+tracing guide and readiness record after the first local qualification exposed
+an unfocusable scrollable table at 320px. A two-column ERROR table and UNSET
+prose preserve the mapping and reduce mobile reading load. The existing rebuilt
+whole-site light/dark mobile/desktop accessibility check passed. The original
+failed qualification is retained; full exact-commit qualification is still
+required. Prose review does not substitute for that execution evidence.
+
+| Reviewed file | SHA-256 of current content |
+| --- | --- |
+| `website/src/content/docs/tracing.md` | `88b0ffbcb4b2231a5048f725845a6e862ce8897b5bcf1bb91691d953a5b10336` |
+| `docs/reviews/current-release-readiness.md` | `292f1491c08915cf73aa586f02e109d6587e9ce512fbcaefeac7f7749911fde8` |

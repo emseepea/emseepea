@@ -59,6 +59,41 @@ providers and exporter before creating the adapter. Backend instrumentation is
 also application-owned and has its own data-capture policy. The framework's
 redaction guarantee applies to framework spans and events.
 
+Apply the bounded error-status mapping below to framework spans. Preserve
+expected cancellation and existing completion-event contracts.
+
+## Error classification amendment
+
+[Outcome #219](https://github.com/emseepea/emseepea/issues/219) requires genuine
+tool failures to appear in ordinary trace error filters. Apply this precedence
+to the framework span when the response ends:
+
+1. A disconnected response keeps its status unset and has no `error.type`.
+2. A finished HTTP 5xx response sets ERROR and uses its finite status-code
+   string as `error.type`.
+3. Another finished tool error sets ERROR and `error.type: tool_error`, unless
+   it is an HTTP 4xx response or admitted work was cancelled through the SDK
+   request signal or the existing invocation/shutdown signal.
+4. Success, expected cancellation and remaining client/protocol outcomes keep
+   their status unset, without `error.type`.
+
+A real local observation found that orderly shutdown and deadline expiry can
+both finish HTTP 200 with the existing `tool_error` outcome. Keep a private
+cancellation boolean in request observability state, derived from the existing
+source signals in the tool catch. Do not inspect exception names, messages or
+abort reasons. The framework's separate deadline controller remains a genuine
+failure; an uncancelled handler-thrown `AbortError` is also a tool failure.
+
+Keep public completion events and their outcome, metric and log schemas
+unchanged. Error metadata belongs only to the framework span; never decorate
+the application's parent. Omit status descriptions and exception events.
+Protect error attributes, status and span finalization independently so a broken
+telemetry component cannot suppress another signal or protocol work.
+
+This amends classification within the existing HTTP request lifetime. It does
+not claim full MCP operation semantic-convention compliance or introduce a new
+operation timer. This decision remains proposed.
+
 ## Consequences
 
 - Operators can inspect elapsed time and backend child spans in the same trace.

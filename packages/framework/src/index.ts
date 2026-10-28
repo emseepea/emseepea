@@ -1764,7 +1764,8 @@ function createCheckedTool(
               },
             );
           } catch {
-            markCurrentProtocolOutcome("tool_error");
+            markCurrentProtocolOutcome("tool_error", context.mcpReq.signal.aborted ||
+              requestOperations.getStore()?.signal.aborted === true);
             return { content: [{ type: "text", text: "Tool execution failed" }], isError: true };
           }
         },
@@ -3275,10 +3276,11 @@ async function sendRpcError(
   });
 }
 
-function markCurrentProtocolOutcome(outcome: "tool_error" | "protocol_error"): void {
+function markCurrentProtocolOutcome(outcome: "tool_error" | "protocol_error", cancelled = false): void {
   const state = requestOperations.getStore()?.observability;
-  if (!state || state.protocolOutcome === "protocol_error") return;
-  state.protocolOutcome = outcome;
+  if (!state) return;
+  if (cancelled) state.cancelled = true;
+  if (state.protocolOutcome !== "protocol_error") state.protocolOutcome = outcome;
 }
 
 function markObservabilityProtocolError(request: FastifyRequest): void {

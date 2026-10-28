@@ -1,5 +1,12 @@
 # @emseepea/testing
 
+## 0.26.10
+
+### Patch Changes
+
+- Updated dependencies [[`db836c6`](https://github.com/emseepea/emseepea/commit/db836c66d4a9f2ef3daeb5f36640d43ebd59ead1)]:
+  - @emseepea/server@0.25.7
+
 ## 0.26.9
 
 ### Patch Changes
