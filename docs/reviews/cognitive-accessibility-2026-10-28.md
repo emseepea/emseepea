@@ -79,3 +79,24 @@ website verification or independent acceptance.
 | `docs/decisions/README.md` | `deb810236ad0970b3792c9a7aea37e751c43a63d5a1508599c92461a86676cc9` |
 | `.changeset/active-span-default.md` | `7c542bad3f88708777b1a414584658066bb653beba38eef275e5e8dd92abc398` |
 | `docs/reviews/current-release-readiness.md` | `90fbed36743d6173ac67f9858166967e5d0ac0f47c201d738a93ae4f41b93513` |
+
+
+## Active-span default generated release prose
+
+Result: PASS. Independent reviewer `/root/default_cognitive` checked all
+seventeen generated changelogs at frozen PR #218 candidate
+`c03f0c8770c4b10477ba338310557d808cae4552`, including the actual website
+changelog. Each saved file matches its manifest hash and exact candidate bytes.
+The new sections describe default reuse, explicit opt-out and alias precedence;
+dependency-only updates remain explicit.
+
+| Reviewed file | SHA-256 at the frozen candidate |
+| --- | --- |
+| `website/CHANGELOG.md` | `a1a437166307b1852c137ff52c5391514a8c15b43197b1bb6e472247fa523ba0` |
+
+The seventeen-file manifest has SHA-256
+`13f8c062a4b8b3a65153a19e799d668a7648892676b42c286bbed15e82d2cb9f`.
+PR description SHA-256 is
+`9494696ccff716983bdb7e50c496b1f48fbaf9d57ca8aa1b5f4ff5b57e273e6d`.
+This records completed prose review before promotion. Installed-package checks,
+publication, live website and full merge-back remain separate requirements.
