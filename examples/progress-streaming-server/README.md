@@ -54,6 +54,11 @@ in the template or the protected access described above. A client can ask for
 server-sent events (SSE), which carry progress over the same `POST` request.
 Without that request, the tool returns one JSON response when it finishes.
 
+The completed result includes readable text summarizing the tray, completed
+stages and germinated seed count, alongside the validated `structuredContent`.
+Read fields from `structuredContent` when processing the result; `content`
+contains display text rather than a JSON copy of those fields.
+
 ## Run
 
 From this directory:

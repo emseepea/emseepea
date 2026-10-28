@@ -29,6 +29,9 @@ export default ((access) => defineStreamingTool({
       await delay(150, undefined, { signal });
     }
     const data = { tray, status: "complete" as const, germinatedSeeds: 8 as const, totalSeeds: 10 as const, stages };
-    return { data };
+    return {
+      text: `Trial ${data.tray} ${data.status}. Completed progress stages: ${data.stages.join(" → ")}. Final result: ${data.germinatedSeeds} of ${data.totalSeeds} seeds germinated.`,
+      data,
+    };
   },
 })) satisfies CapabilityModuleFactory<AccessPolicy>;

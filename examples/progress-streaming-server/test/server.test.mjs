@@ -36,7 +36,10 @@ test("reports bounded progress before returning the final germination result", a
     totalSeeds: 10,
     stages: ["soak", "sow", "sprout"],
   });
-  assert.equal(result.content[0].text, JSON.stringify(result.structuredContent));
+  assert.deepEqual(result.content, [{
+    type: "text",
+    text: "Trial sample-tray complete. Completed progress stages: soak → sow → sprout. Final result: 8 of 10 seeds germinated.",
+  }]);
 });
 
 test("the same template composes protected access and observability", async (t) => {

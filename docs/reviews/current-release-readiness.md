@@ -27,7 +27,8 @@ application ownership, HTTP lifetime, public completion fields, logs and metrics
 retain their existing behavior. A failing renamer cannot suppress protocol work,
 status, finalization or completion delivery.
 
-All five critics passed plan revision 4 and its actual saved records. Real local
+All five critics passed naming revision 4 and repair revision 5, including their
+actual saved records. Real local
 HTTP/SDK observation showed generic baseline names, then the expected registered,
 method-only and unknown-method names after the change. Focused tracing and
 log-correlation checks passed 70 tests; metrics and copied-guide checks passed
@@ -39,6 +40,46 @@ The first focused run found a fixture setup error: its tool-list request went
 to a fixture with no registered tool. Adding the required registration preserved
 the expected statuses and name assertions; all 70 checks then passed. The initial
 failure is retained. No production behavior or assertion was weakened.
+
+### Readable progress-result qualification repair
+
+The first naming source passed full local qualification, all three benchmarks
+and [Source Quality 40663188385](https://github.com/emseepea/emseepea/actions/runs/40663188385).
+Its frozen candidate `5388ba9671c289c44557e6b685ee031662c4b301` failed
+[Release 40664790775 attempt 1](https://github.com/emseepea/emseepea/actions/runs/40664790775/attempts/1) before publication.
+The streaming example's model response discussed only optional feedback and
+omitted the requested stages/result. The tool data was complete, and the receipt
+already instructed answering the original request. All three judgments correctly
+identified the omission. Two other answer trials did not complete qualification
+after this failure and are not qualification passes.
+
+Retained semantic artifact 12805129495 ZIP SHA-256:
+`4ab81cca6da1b7257ae942c60a5d8f95bbea14fb642e9f53ca657a1c98ca9785`.
+Failed-job log SHA-256:
+`6ae756e11d109ed78adb5bc57f584a98e6276823a0ebadc18e301990e85ec935`.
+No naming regression, judge defect, transport loss or infrastructure cause is
+established. The failed candidate remains preserved.
+
+Revision 5 adds readable primary-result text to the real progress example,
+derived from its actual result fields alongside unchanged structured data.
+The existing public result contract delivers this text to ordinary MCP clients
+and the native model. This is a useful output improvement and a plausible
+repair hypothesis; it does not establish the cause or guarantee correction of
+the feedback detour.
+
+A real official-client observation confirmed the summary, exact structured
+result and all three ordered progress updates. The three existing progress tests
+passed after replacing their deliberate JSON-text expectation with the observed
+readable summary; data, progress, protected access and proxy assertions remain.
+The handler's timing and cancellation code remain unchanged. The README explains
+that clients process `structuredContent` and use `content` as display text.
+
+No evaluation prompt, feedback policy/availability, provider, settings, trial
+count, judgment count or semantic criterion changed. The new source and its
+normal generated candidate must pass every ordinary gate again, including actual
+native evidence containing the new primary text. If the same composition fails,
+publication stops for diagnosis; no iterative wording search, unchanged retry or
+waiver is authorized.
 
 Full clean qualification, all three benchmarks, remote Source Quality,
 frozen-candidate/prose review, strict registry-installed checks, latest/site
