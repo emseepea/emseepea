@@ -1,5 +1,15 @@
 # @emseepea/create-progress-streaming-server
 
+## 0.1.34
+
+### Patch Changes
+
+- [`8cf7d6d`](https://github.com/emseepea/emseepea/commit/8cf7d6d4218944f88ffb27f94b39f4fb860b566c) Thanks [@tompahoward](https://github.com/tompahoward)! - Name exported framework spans from bounded MCP methods and registered capability names, so operators can recognize calls directly in trace waterfalls. Preserve generic initial naming for head sampling, safe method-only and unknown-method fallbacks, error classification, application-owned parents and existing completion logs and metrics. Document trace-query migration and verify real installed SDK names without capturing unknown requested names or resource URIs.
+
+- [`796edde`](https://github.com/emseepea/emseepea/commit/796edde3812d52f2d7682477d78b287b083f4984) Thanks [@tompahoward](https://github.com/tompahoward)! - Return a readable completion summary alongside the progress example's unchanged structured result. Derive the tray, completed stages and germination counts from the actual data, while preserving progress notifications, cancellation and access behavior. Clients should process `structuredContent` for result fields and use `content` as display text.
+
+- [`b7f91d7`](https://github.com/emseepea/emseepea/commit/b7f91d76669ce36fcf934be0d46a8e699ca9d34e) Thanks [@tompahoward](https://github.com/tompahoward)! - Add a declared `summary` field to the progress example's structured result and reuse that same data-derived value as text content. Preserve all existing result fields, values, progress, cancellation and access behavior. Clients that present structured output now receive the same readable completion summary as text clients.
+
 ## 0.1.32
 
 ### Patch Changes
