@@ -57,3 +57,25 @@ independent outcome acceptance or normal documentation qualification.
 
 Final PR #214 prose has SHA-256
 `0ea12428ebffa09eb91500a5cc1b52f5b38606c608e52d2f7dfc66dbf852127e`.
+
+
+## Active-span default correction
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed the guide,
+proposed decision, generated decision summary, Changeset, option documentation
+and release-readiness update for outcome #215. The guide explains default local
+parenting, explicit opt-out, deprecated alias precedence, clean context and
+transport capture policy. Release targets and pending gates are distinguished
+from verified evidence. Public issue drafts and the implementation checkpoint
+were also reviewed before publication.
+
+This prose review does not replace source qualification, publication, live
+website verification or independent acceptance.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `website/src/content/docs/tracing.md` | `e7d0dbaf618d15de7ad6c7b4f8fa63f6643fbc403f8b5791f961ca6fae5544d9` |
+| `docs/decisions/0129-http-instrumentation-tracing-coexistence.proposed.md` | `fdd95b47e889242815ea96814a07bd2b1ec4eba1c450fb8b538ce3963137aeac` |
+| `docs/decisions/README.md` | `deb810236ad0970b3792c9a7aea37e751c43a63d5a1508599c92461a86676cc9` |
+| `.changeset/active-span-default.md` | `7c542bad3f88708777b1a414584658066bb653beba38eef275e5e8dd92abc398` |
+| `docs/reviews/current-release-readiness.md` | `90fbed36743d6173ac67f9858166967e5d0ac0f47c201d738a93ae4f41b93513` |

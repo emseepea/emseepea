@@ -325,8 +325,20 @@ test("tracing spans authorization failures without admitting tool work or export
   assert.doesNotMatch(JSON.stringify({ attributes: span.attributes, events: span.events }), new RegExp(secret));
 });
 
-test("HTTP coexistence projects only declared local identity and preserves default and fallback parenting", async (t) => {
-  for (const scenario of ["local", "default", "missing", "remote", "invalid", "throws", "unsampled"]) {
+test("active-span defaults, opt-outs and compatibility preserve clean parenting", async (t) => {
+  const scenarios = [
+    ["default", undefined, true],
+    ["enabled", { useActiveSpan: true }, true],
+    ["disabled", { useActiveSpan: false }, false],
+    ["legacy-enabled", { httpInstrumentation: true }, true],
+    ["legacy-disabled", { httpInstrumentation: false }, false],
+    ["new-false-wins", { useActiveSpan: false, httpInstrumentation: true }, false],
+    ["new-true-wins", { useActiveSpan: true, httpInstrumentation: false }, true],
+    ["missing", undefined, false], ["remote", undefined, false],
+    ["invalid", undefined, false], ["throws", undefined, false],
+    ["unsampled", undefined, true],
+  ];
+  for (const [scenario, options, adopted] of scenarios) {
     await t.test(scenario, async (t) => {
       const manager = new AsyncLocalStorageContextManager();
       const originalActive = manager.active.bind(manager);
@@ -351,13 +363,12 @@ test("HTTP coexistence projects only declared local identity and preserves defau
         assert.equal(context.active().getValue(privateKey), undefined);
         assert.equal(active.traceState, undefined);
         return { data: { value } };
-      }, { adapters: [openTelemetry({ httpInstrumentation: scenario !== "default" })] });
+      }, { adapters: [openTelemetry(options)] });
       const response = await request(running.url, { headers: { traceparent } });
       assert.equal(response.status, 200);
       assert.equal((await response.json()).result.structuredContent.value, secret);
       assert.equal(calls, 1);
       await delay(0);
-      const adopted = scenario === "local" || scenario === "unsampled";
       assert.equal(active.traceId, adopted ? local.traceId : remote.traceId);
       assert.notEqual(active.spanId, adopted ? local.spanId : remote.spanId);
       if (scenario === "unsampled") {

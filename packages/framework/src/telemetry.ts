@@ -75,7 +75,7 @@ export function structuredLogging(
 
 // Normalization preserves emit identity while copying the public adapter.
 // A public adapter ID must never grant access to the request lifecycle.
-const requestTracers = new WeakMap<ObservabilityAdapter["emit"], { tracer: Tracer; httpInstrumentation: boolean }>();
+const requestTracers = new WeakMap<ObservabilityAdapter["emit"], { tracer: Tracer; useActiveSpan: boolean }>();
 const requestEmissions = new WeakMap<ObservabilityEvent, { context: Context; timestamp: number }>();
 
 function eventAttributes(event: ObservabilityEvent) {
@@ -93,7 +93,9 @@ function eventAttributes(event: ObservabilityEvent) {
 export function openTelemetry(options: {
   /** Emit safe completion records through the application's Logs API provider. Default: false. */
   readonly logs?: boolean;
-  /** Declare that the active local span is owned by application HTTP instrumentation. Default: false. */
+  /** Use a valid active local span as the request parent. Default: true. */
+  readonly useActiveSpan?: boolean;
+  /** @deprecated Use useActiveSpan instead. Ignored when useActiveSpan is defined. */
   readonly httpInstrumentation?: boolean;
 } = {}): ObservabilityAdapter {
   const tracer = trace.getTracer("@emseepea/server");
@@ -127,20 +129,20 @@ export function openTelemetry(options: {
       } catch { /* Logging cannot change protocol behaviour or other signals. */ }
     },
   });
-  requestTracers.set(adapter.emit, { tracer, httpInstrumentation: options.httpInstrumentation === true });
+  requestTracers.set(adapter.emit, { tracer, useActiveSpan: (options.useActiveSpan ?? options.httpInstrumentation ?? true) === true });
   return adapter;
 }
 
-function startRequestSpan(tracer: Tracer, request: FastifyRequest, startTime: number, httpInstrumentation: boolean): { span: Span; context: Context } | undefined {
+function startRequestSpan(tracer: Tracer, request: FastifyRequest, startTime: number, useActiveSpan: boolean): { span: Span; context: Context } | undefined {
   let parent = ROOT_CONTEXT;
   let parentIdentity: { traceId: string; spanId: string } | undefined;
   let kind: SpanKind = SpanKind.SERVER;
-  if (httpInstrumentation) {
+  if (useActiveSpan) {
     try {
       const active = trace.getSpanContext(context.active());
       if (active && active.isRemote !== true) {
-        // The option is the application's provenance promise. Import only local
-        // correlation identity, never ambient baggage, traceState or other data.
+        // Import only validated local correlation identity, never ambient
+        // baggage, traceState or other application context data.
         const local = { traceId: active.traceId, spanId: active.spanId, traceFlags: active.traceFlags, isRemote: false };
         if (isSpanContextValid(local) && Number.isInteger(local.traceFlags) && local.traceFlags >= 0 && local.traceFlags <= 255) {
           parent = trace.setSpanContext(ROOT_CONTEXT, local);
@@ -202,7 +204,7 @@ export function installObservability(
     const state: ObservabilityState = { protocolOutcome: "success" };
     requestStates.set(request, state);
     const started = performance.now();
-    const requestSpan = tracing ? startRequestSpan(tracing.tracer, request, performance.timeOrigin + started, tracing.httpInstrumentation) : undefined;
+    const requestSpan = tracing ? startRequestSpan(tracing.tracer, request, performance.timeOrigin + started, tracing.useActiveSpan) : undefined;
     const span = requestSpan?.span;
     let ended = false;
     const finish = () => end(reply.raw.destroyed || reply.raw.socket?.destroyed ? "disconnected" : "finished");

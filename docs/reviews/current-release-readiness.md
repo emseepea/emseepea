@@ -2,7 +2,54 @@
 
 Date: 2026-10-28
 
-## HTTP instrumentation coexistence
+## Active-span default correction
+
+Status: **IMPLEMENTED; RELEASE QUALIFICATION PENDING**.
+
+Outcome [#215](https://github.com/emseepea/emseepea/issues/215), increment
+[#216](https://github.com/emseepea/emseepea/issues/216) and contribution
+[#217](https://github.com/emseepea/emseepea/issues/217) track this correction.
+`openTelemetry()` now reuses a valid active local span by default, creating an
+INTERNAL framework child. `useActiveSpan: false` selects bounded HTTP-header
+extraction and a SERVER span. The deprecated `httpInstrumentation` alias retains
+explicit values; the new option takes precedence when both are supplied.
+
+Identity-only context projection, application span ownership, unsampled context,
+HTTP fallback and failure isolation are unchanged. The guide uses the ordinary
+adapter with real HTTP instrumentation; it needs no parenting option.
+
+All five independent plan critics and saved-record planning comparison passed.
+Actual-source architecture and public prose reviews passed. The focused tracing,
+logs, metrics and copied-guide suite passed 60 tests, including default, explicit
+opt-outs, legacy values, precedence and real transport-to-backend topology.
+Full source qualification, benchmarks, remote checks, installed-package release,
+latest promotion, live website and independent acceptance remain pending.
+
+Planned package versions below are release targets, not publication evidence:
+
+- `@emseepea/server@0.25.6`
+- `@emseepea/create-api-backed-server@0.1.31`
+- `@emseepea/create-database-schema-server@0.1.31`
+- `@emseepea/create-html-ui-server@0.1.31`
+- `@emseepea/create-mongodb-backed-server@0.1.31`
+- `@emseepea/create-multi-instance-postgres-server@0.1.31`
+- `@emseepea/create-openapi-backed-server@0.1.31`
+- `@emseepea/create-progress-streaming-server@0.1.31`
+- `@emseepea/create-react-ui-server@0.1.31`
+- `@emseepea/create-resources-and-prompts-server@0.1.31`
+- `@emseepea/create-soap-backed-server@0.1.31`
+- `@emseepea/create-tool-server@0.1.31`
+- `@emseepea/feedback@0.11.6`
+- `@emseepea/react@0.4.17`
+- `@emseepea/svelte@0.2.17`
+- `@emseepea/testing@0.26.9`
+
+The private website target is 0.0.18 and is deployed rather than published to npm.
+Existing exact-source, registry provenance, signature and installed-package
+checks remain required. Risk forecast is 5/25 within appetite, conditional on
+those controls passing; it is not clearance for an unverified release.
+
+## Historical: HTTP instrumentation coexistence
 
 Status: **RELEASED AND VERIFIED**.
 

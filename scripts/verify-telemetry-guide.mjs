@@ -48,14 +48,8 @@ const receiver = createServer(async (request, response) => {
 let child;
 try {
   for (const name of ["telemetry.mjs", "tracing-server.mjs"]) {
-    let code = [...guide.matchAll(new RegExp('```js title="' + name.replaceAll(".", "\\.") + '"\\n([\\s\\S]*?)```', "g"))][httpInstrumentation && name === "telemetry.mjs" ? 1 : 0]?.[1];
+    const code = [...guide.matchAll(new RegExp('```js title="' + name.replaceAll(".", "\\.") + '"\\n([\\s\\S]*?)```', "g"))][httpInstrumentation && name === "telemetry.mjs" ? 1 : 0]?.[1];
     assert.ok(code, `missing ${name} in the public guide`);
-    if (httpInstrumentation && name === "tracing-server.mjs") {
-      const adapter = guide.match(/```js title="http-observability.mjs"\n([\s\S]*?)```/)?.[1]?.trim();
-      assert.ok(adapter, "missing documented HTTP adapter replacement");
-      assert.ok(code.includes("observability: [openTelemetry({ logs: true })],"));
-      code = code.replace("observability: [openTelemetry({ logs: true })],", adapter);
-    }
     await writeFile(path.join(directory, name), code);
   }
   await new Promise((resolve) => receiver.listen(0, "127.0.0.1", resolve));
