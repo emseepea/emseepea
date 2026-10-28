@@ -578,16 +578,18 @@ async function verifyTraceErrorFiltering() {
   }
   const errors = exported.filter((span) => span.status.code === SpanStatusCode.ERROR);
   const successes = exported.filter((span) => span.status.code === SpanStatusCode.UNSET);
-  if (exported.length !== 2 || errors.length !== 1 || successes.length !== 1
+  if (exported.length !== 2 || exported.some((span) => span.name !== "tools/call trace-error")
+      || errors.length !== 1 || successes.length !== 1
       || errors[0].attributes["http.response.status_code"] !== 200
       || errors[0].attributes["error.type"] !== "tool_error"
       || errors[0].status.message !== undefined || errors[0].events.length !== 0
       || successes[0].attributes["error.type"] !== undefined) {
-    throw new Error("installed SDK error filtering did not distinguish the HTTP 200 tool failure");
+    throw new Error("installed SDK span names or error filtering did not match the tool results");
   }
   const safe = exported.map((span) => ({ name: span.name, status: span.status, attributes: span.attributes, events: span.events }));
   if (JSON.stringify(safe).includes(canary)) throw new Error("installed error span exposed private error content");
   console.log("Installed SDK ERROR filter: HTTP 200 tool failure, successful UNSET span and private-error exclusion PASS");
+  console.log("Installed SDK span names: tools/call trace-error on success and failure PASS");
 }
 
 async function nextSseMessage(reader) {

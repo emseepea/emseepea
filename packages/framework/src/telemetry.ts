@@ -246,6 +246,8 @@ export function installObservability(
         timestamp: performance.timeOrigin + finished,
       });
       if (span) {
+        try { span.updateName(event.method === "_OTHER" ? "mcp.request" : `${event.method}${event.capability ? ` ${event.capability}` : ""}`); }
+        catch { /* Renaming cannot suppress status, finalization or delivery. */ }
         try { span.setAttributes(eventAttributes(event)); }
         catch { /* Span decoration cannot change protocol behaviour. */ }
         const errorType = outcome !== "finished" ? undefined

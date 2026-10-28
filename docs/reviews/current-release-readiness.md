@@ -2,17 +2,87 @@
 
 Date: 2026-10-28
 
-## Standard trace error visibility
+## Recognizable exported MCP span names
 
-Status: **RELEASED AND VERIFIED; INDEPENDENT ACCEPTANCE PENDING**.
+Status: **IMPLEMENTED; RELEASE QUALIFICATION PENDING**.
+
+[Outcome #219](https://github.com/emseepea/emseepea/issues/219) requires ordinary
+ERROR filtering and recognizable operation names in trace waterfalls. Error
+visibility is accepted and released in server 0.25.7. The remaining
+[increment #223](https://github.com/emseepea/emseepea/issues/223), with
+[contribution #224](https://github.com/emseepea/emseepea/issues/224), names the
+existing framework span from normalized methods and registered capabilities.
+This source change has not yet been released.
+
+At completion, a registered tool exports `tools/call read-status`. A known method
+without a registered capability exports only the method, such as `tools/call`
+or `tools/list`. An unknown/unparsed method retains `mcp.request`. Unknown
+requested names, resource URIs and request content stay excluded. The initial
+name remains generic for head sampling. The guide explains this timing and
+migration from exact generic-name trace queries.
+
+Only an independently guarded `updateName` is added to the existing finish/
+disconnect boundary. ERROR status and error types, parent identity/kind,
+application ownership, HTTP lifetime, public completion fields, logs and metrics
+retain their existing behavior. A failing renamer cannot suppress protocol work,
+status, finalization or completion delivery.
+
+All five critics passed plan revision 4 and its actual saved records. Real local
+HTTP/SDK observation showed generic baseline names, then the expected registered,
+method-only and unknown-method names after the change. Focused tracing and
+log-correlation checks passed 70 tests; metrics and copied-guide checks passed
+14. The existing local SDK verifier also exported the expected tool name on
+success and failure while preserving ERROR filtering and private-error exclusion.
+This is local source evidence; registry-installed release proof remains required.
+
+The first focused run found a fixture setup error: its tool-list request went
+to a fixture with no registered tool. Adding the required registration preserved
+the expected statuses and name assertions; all 70 checks then passed. The initial
+failure is retained. No production behavior or assertion was weakened.
+
+Full clean qualification, all three benchmarks, remote Source Quality,
+frozen-candidate/prose review, strict registry-installed checks, latest/site
+promotion, full exact merge-back qualification and independent increment/overall
+acceptance remain required. The previous registry recovery was used; it grants
+no retry authority for a future failure.
+
+The inherited Wednesday-afternoon target was missed. Both approved results remain
+required, with no replacement deadline or on-time claim assumed. After this
+remaining result is accepted, no further Next/Later increment is justified.
+
+Planned versions below are targets, not publication evidence:
+
+- `@emseepea/server@0.25.8`
+- `@emseepea/create-api-backed-server@0.1.33`
+- `@emseepea/create-database-schema-server@0.1.33`
+- `@emseepea/create-html-ui-server@0.1.33`
+- `@emseepea/create-mongodb-backed-server@0.1.33`
+- `@emseepea/create-multi-instance-postgres-server@0.1.33`
+- `@emseepea/create-openapi-backed-server@0.1.33`
+- `@emseepea/create-progress-streaming-server@0.1.33`
+- `@emseepea/create-react-ui-server@0.1.33`
+- `@emseepea/create-resources-and-prompts-server@0.1.33`
+- `@emseepea/create-soap-backed-server@0.1.33`
+- `@emseepea/create-tool-server@0.1.33`
+- `@emseepea/feedback@0.11.8`
+- `@emseepea/react@0.4.19`
+- `@emseepea/svelte@0.2.19`
+- `@emseepea/testing@0.26.11`
+
+The private website target is 0.0.20 and is deployed rather than published to npm.
+
+## Historical: accepted trace error visibility
+
+Status: **RELEASED, VERIFIED AND INDEPENDENTLY ACCEPTED**.
 
 `@emseepea/server@0.25.7` is on npm's `latest` tag, and website 0.0.19 is live.
 Operators can find genuine tool failures with the normal OpenTelemetry ERROR
 span filter, including failures returned with HTTP 200. This delivers the
 error-visibility result in [increment #220](https://github.com/emseepea/emseepea/issues/220),
 with contribution [#221](https://github.com/emseepea/emseepea/issues/221), with all
-delivery checks below passed. Independent increment acceptance remains required. [Outcome #219](https://github.com/emseepea/emseepea/issues/219)
-stays open: bounded operation span naming is the separate Next increment.
+delivery checks below passed. Independent increment acceptance passed; #220 and
+#221 are closed as completed. [Outcome #219](https://github.com/emseepea/emseepea/issues/219)
+stays open: bounded operation span naming is the current Now increment.
 
 Finished HTTP 5xx responses use ERROR and a finite status-code error type.
 Uncancelled tool failures use ERROR and `tool_error`. Expected cancellation,

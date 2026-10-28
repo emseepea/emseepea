@@ -6,7 +6,7 @@ import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-ho
 import { W3CTraceContextPropagator } from "@opentelemetry/core";
 import { InMemorySpanExporter, SimpleSpanProcessor, TracerProvider } from "@opentelemetry/sdk-trace";
 import { OAuthError, OAuthErrorCode } from "@modelcontextprotocol/server";
-import { createEmseepea, defineStreamingTool, defineTool, openTelemetry, serveEmseepea, structuredLogging } from "@emseepea/server";
+import { createEmseepea, definePrompt, defineResource, defineStreamingTool, defineTool, openTelemetry, serveEmseepea, structuredLogging } from "@emseepea/server";
 import { z } from "zod";
 
 const secret = "tracing-private-canary";
@@ -75,7 +75,7 @@ function request(url, { value = secret, headers = {}, signal, name = "echo", pro
 }
 
 function requestSpans(exporter) {
-  return exporter.getFinishedSpans().filter((span) => span.name === "mcp.request");
+  return exporter.getFinishedSpans().filter((span) => span.instrumentationScope.name === "@emseepea/server");
 }
 
 test("the request span covers async backend work and continues the incoming trace", async (t) => {
@@ -115,6 +115,7 @@ test("the request span covers async backend work and continues the incoming trac
   const child = exporter.getFinishedSpans().find((value) => value.name === "backend.read");
   assert.equal(requestSpans(exporter).length, 1);
   assert.equal(span.kind, SpanKind.SERVER);
+  assert.equal(span.name, "tools/call echo");
   assert.equal(span.parentSpanContext.spanId, remote.spanId);
   assert.equal(child.parentSpanContext.spanId, span.spanContext().spanId);
   assert.equal(child.spanContext().traceId, remote.traceId);
@@ -154,6 +155,7 @@ test("overlapping requests keep separate parents and backend contexts across awa
   assert.equal(new Set(seen.map((span) => span.spanId)).size, 2);
   assert.deepEqual(new Set(seen.map((span) => span.traceId)), new Set([remote.traceId, otherTrace]));
   assert.equal(requestSpans(exporter).length, 2);
+  assert.deepEqual(requestSpans(exporter).map((span) => span.name), ["tools/call echo", "tools/call echo"]);
   for (const child of exporter.getFinishedSpans().filter((span) => span.name.startsWith("backend."))) {
     const parent = requestSpans(exporter).find((span) => span.spanContext().spanId === child.parentSpanContext.spanId);
     assert.ok(parent);
@@ -231,6 +233,68 @@ test("streaming and disconnects each finalize the request span once", async (t) 
   assert.equal(requestSpans(exporter)[1].attributes["emseepea.transport.outcome"], "disconnected");
   assert.equal(requestSpans(exporter)[1].status.code, SpanStatusCode.UNSET);
   assert.equal(requestSpans(exporter)[1].attributes["error.type"], undefined);
+  assert.deepEqual(requestSpans(exporter).map((span) => span.name), ["tools/call echo", "tools/call echo"]);
+});
+
+test("exported names use normalized methods and registered names without requested identifiers", async (t) => {
+  const { exporter } = tracing(t);
+  const uri = `guide://private/${secret}`;
+  let reads = 0;
+  let prompts = 0;
+  const running = await serveEmseepea(createEmseepea({
+    name: "named-requests", version: "0", observability: [openTelemetry()],
+    tools: [defineTool({
+      name: "safe-tool", access: "public", description: "A listed tool.",
+      inputSchema: z.object({}), outputSchema: z.object({ value: z.string() }),
+      handler() { assert.fail("unknown requested names must not invoke the registered tool"); },
+    })],
+    resources: [defineResource({
+      name: "safe-resource", uri, access: "public",
+      handler() { reads++; return { contents: [{ uri, text: secret }] }; },
+    })],
+    prompts: [definePrompt({
+      name: "safe-prompt", access: "public", argsSchema: z.object({ topic: z.string() }),
+      handler() { prompts++; return { messages: [{ role: "user", content: { type: "text", text: secret } }] }; },
+    })],
+  }), { port: 0 });
+  t.after(() => running.close());
+  const cases = [
+    ["tools/list", {}, "tools/list", 200],
+    ["tools/call", { name: secret, arguments: {} }, "tools/call", 200],
+    ["resources/read", { uri }, "resources/read safe-resource", 200],
+    ["prompts/get", { name: "safe-prompt", arguments: { topic: secret } }, "prompts/get safe-prompt", 200],
+    ["prompts/get", { name: secret, arguments: {} }, "prompts/get", 200],
+    ["resources/read", { uri: `${uri}/unknown` }, "resources/read", 200],
+    [secret, {}, "mcp.request", 404],
+  ];
+  for (const [method, params, expected, status] of cases) {
+    const response = await fetch(running.url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json, text/event-stream", "Content-Type": "application/json",
+        "MCP-Protocol-Version": "2026-07-28", "Mcp-Method": method,
+        ...(params.name || params.uri ? { "Mcp-Name": params.name ?? params.uri } : {}),
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", id: secret, method, params: { ...params, _meta: meta } }),
+    });
+    assert.equal(response.status, status, method);
+    await response.arrayBuffer();
+    await delay(0);
+    assert.equal(requestSpans(exporter).at(-1).name, expected);
+  }
+  const malformed = await fetch(running.url, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: "{",
+  });
+  assert.equal(malformed.status, 400);
+  await malformed.arrayBuffer();
+  await delay(0);
+  assert.equal(requestSpans(exporter).length, cases.length + 1);
+  assert.equal(requestSpans(exporter).at(-1).name, "mcp.request");
+  assert.equal(reads, 1);
+  assert.equal(prompts, 1);
+  assert.doesNotMatch(JSON.stringify(requestSpans(exporter).map((span) => ({
+    name: span.name, attributes: span.attributes,
+  }))), new RegExp(secret));
 });
 
 test("disabled tracing and a custom adapter using the same ID do not create request spans", async (t) => {
@@ -291,6 +355,7 @@ test("protocol errors and throwing completion metrics cannot prevent span finali
   await response.json();
   await delay(0);
   assert.equal(requestSpans(exporter).length, 1);
+  assert.equal(requestSpans(exporter)[0].name, "tools/call");
   assert.equal(requestSpans(exporter)[0].attributes["emseepea.protocol.outcome"], "protocol_error");
   assert.equal(requestSpans(exporter)[0].status.code, SpanStatusCode.UNSET);
   assert.equal(requestSpans(exporter)[0].attributes["error.type"], undefined);
@@ -396,6 +461,7 @@ test("ordinary trace error filtering separates failures from expected cancellati
         await delay(20);
         const [span] = requestSpans(exporter);
         assert.equal(requestSpans(exporter).length, 1);
+        assert.equal(span.name, "tools/call echo");
         assert.equal(calls, mode === "http-503" ? 0 : 1);
         const errorType = mode === "http-503" || mode === "shutdown-503" ? "503"
           : ["tool-error", "throw", "abort-error", "timeout"].includes(mode) ? "tool_error" : undefined;
@@ -413,18 +479,20 @@ test("ordinary trace error filtering separates failures from expected cancellati
           assert.equal(transport.status.code, SpanStatusCode.UNSET);
           assert.deepEqual(transport.attributes, {});
           assert.equal(transport.isRecording(), true, "the application still owns its transport span");
+          assert.equal(transport.name, "application.transport");
         }
       });
     }
   }
 });
 
-test("error decoration failures cannot suppress status, finalization or completion delivery", async (t) => {
-  for (const fault of ["attribute", "status"]) {
+test("renaming and error decoration failures cannot suppress status, finalization or completion delivery", async (t) => {
+  for (const fault of ["name", "attribute", "status"]) {
     await t.test(fault, async (t) => {
       const observed = [];
       const span = {
         spanContext: () => ({ traceId: remote.traceId, spanId: "abcdef1234567890", traceFlags: 1 }),
+        updateName(name) { observed.push("name"); assert.equal(name, "tools/call echo"); if (fault === "name") throw new Error(secret); },
         setAttributes() { observed.push("attributes"); },
         setAttribute() { observed.push("error.type"); if (fault === "attribute") throw new Error(secret); },
         setStatus() { observed.push("status"); if (fault === "status") throw new Error(secret); },
@@ -441,7 +509,7 @@ test("error decoration failures cannot suppress status, finalization or completi
       assert.equal((await response.json()).result.isError, true);
       await delay(0);
       assert.equal(calls, 1);
-      assert.deepEqual(observed, ["attributes", "error.type", "status", "end", "emit"]);
+      assert.deepEqual(observed, ["name", "attributes", "error.type", "status", "end", "emit"]);
     });
   }
 });

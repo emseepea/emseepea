@@ -206,3 +206,24 @@ Final PR body SHA-256:
 `6c2660b677d6c0a6fea01282c9b61866c6c5ae12885ab47ce089061f2f3988ed`.
 This prose record does not replace documentation qualification or independent
 increment acceptance. Outcome #219 remains open for span naming.
+
+
+## Recognizable exported MCP span names
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed the
+proposed ADR0128 naming amendment, tracing guide, Changeset and release-readiness
+record for outcome #219's increment #223 and contribution #224. The prose
+explains registered/method-only/generic names, completion-time export versus
+initial head sampling, query migration and unchanged completion logs/metrics.
+The decision remains proposed. Local source proof and pending release evidence
+are clearly separated, with the original fixture failure retained.
+
+| Reviewed file | SHA-256 of current content |
+| --- | --- |
+| `docs/decisions/0128-request-lifetime-opentelemetry-context.proposed.md` | `99707d671bb8632ac6d74eb68f4a032ea2e865468fcec0cc9757d44df942ef8a` |
+| `website/src/content/docs/tracing.md` | `4fe6d26d3d8bf9f69f484129b6bd2bfbf7b8a4cbb445b8dc1d7f8b740eb90018` |
+| `.changeset/bounded-span-names.md` | `7946c1d64681b37547662cdf99e3222de0df94d90f0d03648dd2685e9546c5b9` |
+| `docs/reviews/current-release-readiness.md` | `7b02b63c430d5c5ebcaebecb151b71616e1542229f1401cc0fa3d862e7c45830` |
+
+This review does not replace full qualification, publication, installed-package
+verification, live guidance or independent increment/overall acceptance.

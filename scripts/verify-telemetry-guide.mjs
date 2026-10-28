@@ -115,7 +115,7 @@ try {
       assert.equal(attrs.find((a) => a.key === "service.name").value.stringValue, "status-service");
   }
   const spans = traceBatches.flatMap((batch) => batch.resourceSpans.flatMap((r) => r.scopeSpans.flatMap((s) => s.spans)));
-  const parent = spans?.find((s) => s.name === "mcp.request");
+  const parent = spans?.find((s) => s.name === "tools/call read-status");
   const backend = spans?.find((s) => s.name === "backend.read");
   assert.equal(parent?.traceId, remoteTrace);
   if (httpInstrumentation) {
