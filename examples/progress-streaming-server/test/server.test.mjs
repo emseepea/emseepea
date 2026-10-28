@@ -12,6 +12,8 @@ import {
 } from "@emseepea/testing";
 import { createProgressStreamingServer } from "../dist/app.js";
 
+const trialSummary = "Trial sample-tray complete. Completed progress stages: soak → sow → sprout. Final result: 8 of 10 seeds germinated.";
+
 test("reports bounded progress before returning the final germination result", async (t) => {
   const running = await startMcpServer(t, new URL("../dist/server.js", import.meta.url));
   const client = await running.connect();
@@ -22,6 +24,8 @@ test("reports bounded progress before returning the final germination result", a
   assert.equal(tool.outputSchema.properties.germinatedSeeds.description, "Number of seeds that germinated.");
   assert.equal(tool.outputSchema.properties.totalSeeds.description, "Total number of seeds in the trial.");
   assert.equal(tool.outputSchema.properties.stages.description, "Trial stages completed in order.");
+  assert.equal(tool.outputSchema.properties.summary.description, "Readable summary of the completed trial stages and final germination result.");
+  assert.ok(tool.outputSchema.required.includes("summary"));
   const progress = [];
   const result = await client.callTool(
     { name: "run-germination-trial", arguments: { tray: "sample-tray" } },
@@ -35,8 +39,12 @@ test("reports bounded progress before returning the final germination result", a
     germinatedSeeds: 8,
     totalSeeds: 10,
     stages: ["soak", "sow", "sprout"],
+    summary: trialSummary,
   });
-  assert.equal(result.content[0].text, JSON.stringify(result.structuredContent));
+  assert.deepEqual(result.content, [{
+    type: "text",
+    text: trialSummary,
+  }]);
 });
 
 test("the same template composes protected access and observability", async (t) => {
@@ -55,6 +63,8 @@ test("the same template composes protected access and observability", async (t) 
   );
   assert.deepEqual(progress.map(({ message }) => message), ["soak", "sow", "sprout"]);
   assert.equal(result.structuredContent.status, "complete");
+  assert.equal(result.structuredContent.summary, trialSummary);
+  assert.equal(result.content[0].text, trialSummary);
   assert.ok(events.some(({ capability }) => capability === "run-germination-trial"));
 });
 
@@ -99,6 +109,8 @@ test("protected progress crosses a trusted proxy through official and raw client
     assert.equal(proxy.responseTypes.at(-1), "text/event-stream");
     assert.deepEqual(progress.map(({ message }) => message), ["soak", "sow", "sprout"]);
     assert.equal(result.structuredContent.tray, "sample-tray");
+    assert.equal(result.structuredContent.summary, trialSummary);
+    assert.equal(result.content[0].text, trialSummary);
   } finally {
     await client.close();
   }
@@ -110,6 +122,8 @@ test("protected progress crosses a trusted proxy through official and raw client
     JSON.parse(frame.slice(frame.indexOf("data: ") + 6)));
   assert.deepEqual(messages.slice(0, -1).map(({ params }) => params.message), ["soak", "sow", "sprout"]);
   assert.equal(messages.at(-1).result.structuredContent.tray, "sample-tray");
+  assert.equal(messages.at(-1).result.structuredContent.summary, trialSummary);
+  assert.equal(messages.at(-1).result.content[0].text, trialSummary);
   assert.doesNotMatch(JSON.stringify(messages), /raw-token/);
 });
 

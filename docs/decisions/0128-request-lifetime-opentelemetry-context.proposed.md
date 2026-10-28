@@ -94,6 +94,26 @@ This amends classification within the existing HTTP request lifetime. It does
 not claim full MCP operation semantic-convention compliance or introduce a new
 operation timer. This decision remains proposed.
 
+## Exported span naming amendment
+
+Name the framework span from the existing normalized completion event at its
+finish/disconnect boundary. A known MCP method with a registered capability
+uses `tools/call read-status`; a known method without a registered capability
+uses the method alone, such as `tools/call` or `tools/list`. An unknown or
+unparsed method keeps `mcp.request`. Never copy unknown caller-supplied names
+or raw resource URIs into span names.
+
+The initial name remains `mcp.request` until completion. Head sampling therefore
+cannot select on the final operation name. Only the framework span is renamed;
+parent ownership, kind, identity, HTTP lifetime and error classification remain
+unchanged. Public completion fields, the `mcp.request` log event and metric
+names retain their existing meanings.
+
+Protect `span.updateName` independently so a broken renamer cannot suppress
+error decoration, finalization, adapter delivery or protocol execution. Update
+exact generic-name queries to use the exported operation name or existing
+attributes. This amendment remains proposed.
+
 ## Consequences
 
 - Operators can inspect elapsed time and backend child spans in the same trace.

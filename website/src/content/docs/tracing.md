@@ -93,7 +93,7 @@ node --import ./telemetry.mjs tracing-server.mjs
 ```
 
 Call `read-status` with your MCP client, then stop the server with Ctrl+C to
-export pending telemetry. `backend.read` and `mcp.request` share a trace, with
+export pending telemetry. `backend.read` and `tools/call read-status` share a trace, with
 the backend span under the request. The SDK also exports
 `emseepea.http.requests` in requests and `emseepea.http.response.duration` in
 seconds. Without installed providers, the framework's telemetry APIs are no-ops.
@@ -122,7 +122,7 @@ data-capture policies.
 
 `openTelemetry()` uses a valid active local span as its parent by default.
 With incoming HTTP instrumentation, Em See Pea creates an INTERNAL
-`mcp.request` child of the transport SERVER span, followed by your backend
+`tools/call read-status` child of the transport SERVER span, followed by your backend
 spans. No extra framework option is needed. The framework never modifies or
 ends the application's transport span.
 
@@ -197,6 +197,27 @@ advice; names, units, timing and attributes stay the same. Advice is an
 experimental OpenTelemetry API option. Your application's metric Views can
 override it; check the buckets exported by your provider. These custom metric
 names do not claim full OpenTelemetry semantic-convention compliance.
+
+## Recognize operations in a trace
+
+Exported framework spans use the normalized MCP method and registered capability
+name. The example above exports `tools/call read-status`, with `backend.read`
+as its child. A list request exports `tools/list`. Registered resources and
+prompts use their configured names; raw resource URIs and unknown requested
+names stay excluded.
+
+A known method with no registered capability uses only the method, such as
+`tools/call`. An unknown or unparsed method keeps `mcp.request`.
+
+The span starts as `mcp.request` and receives its final name when the HTTP
+response finishes or disconnects. Head sampling therefore sees the generic
+initial name. These names identify the existing HTTP request lifetime; they
+do not introduce a separate operation timer.
+
+Update trace queries that select exactly `span.name == "mcp.request"` to use
+the exported operation name or existing method/capability attributes.
+Completion logs keep event name `mcp.request`; metric names and attributes
+stay the same. The framework never renames the application's transport span.
 
 ## Find failed tool calls
 

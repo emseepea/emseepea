@@ -2,67 +2,266 @@
 
 Date: 2026-10-28
 
-## Standard trace error visibility
+## Recognizable exported MCP span names
 
 Status: **IMPLEMENTED; RELEASE QUALIFICATION PENDING**.
 
-Outcome [#219](https://github.com/emseepea/emseepea/issues/219) requires operators
-to find failures with ordinary trace filters and identify operations in span
-names. The current independently useful increment
-[#220](https://github.com/emseepea/emseepea/issues/220), with contribution
-[#221](https://github.com/emseepea/emseepea/issues/221), delivers error visibility
-first. Span naming remains provisional Next; this release alone does not
-complete the overall outcome.
+[Outcome #219](https://github.com/emseepea/emseepea/issues/219) requires ordinary
+ERROR filtering and recognizable operation names in trace waterfalls. Error
+visibility is accepted and released in server 0.25.7. The remaining
+[increment #223](https://github.com/emseepea/emseepea/issues/223), with
+[contribution #224](https://github.com/emseepea/emseepea/issues/224), names the
+existing framework span from normalized methods and registered capabilities.
+The naming update is not accepted on latest; the current representation
+repair remains unqualified for release.
 
-Framework spans now set standard ERROR status and bounded `error.type` for
-finished HTTP 5xx or uncancelled tool failures, including HTTP 200 tool errors.
-Routine client refusals and expected cancellation/disconnection remain unset.
-The observed shutdown/deadline distinction uses private source-signal state;
-exception names, reasons, messages and stacks are not inspected or captured.
+At completion, a registered tool exports `tools/call read-status`. A known method
+without a registered capability exports only the method, such as `tools/call`
+or `tools/list`. An unknown/unparsed method retains `mcp.request`. Unknown
+requested names, resource URIs and request content stay excluded. The initial
+name remains generic for head sampling. The guide explains this timing and
+migration from exact generic-name trace queries.
+
+Only an independently guarded `updateName` is added to the existing finish/
+disconnect boundary. ERROR status and error types, parent identity/kind,
+application ownership, HTTP lifetime, public completion fields, logs and metrics
+retain their existing behavior. A failing renamer cannot suppress protocol work,
+status, finalization or completion delivery.
+
+All five critics passed naming revision 4 and repair revisions 5 and 6, including their
+actual saved records. Real local
+HTTP/SDK observation showed generic baseline names, then the expected registered,
+method-only and unknown-method names after the change. Focused tracing and
+log-correlation checks passed 70 tests; metrics and copied-guide checks passed
+14. The existing local SDK verifier also exported the expected tool name on
+success and failure while preserving ERROR filtering and private-error exclusion.
+This is local source evidence; registry-installed release proof remains required.
+
+The first focused run found a fixture setup error: its tool-list request went
+to a fixture with no registered tool. Adding the required registration preserved
+the expected statuses and name assertions; all 70 checks then passed. The initial
+failure is retained. No production behavior or assertion was weakened.
+
+### Readable progress-result qualification repair
+
+The first naming source passed full local qualification, all three benchmarks
+and [Source Quality 40663188385](https://github.com/emseepea/emseepea/actions/runs/40663188385).
+Its frozen candidate `5388ba9671c289c44557e6b685ee031662c4b301` failed
+[Release 40664790775 attempt 1](https://github.com/emseepea/emseepea/actions/runs/40664790775/attempts/1) before publication.
+The streaming example's model response discussed only optional feedback and
+omitted the requested stages/result. The tool data was complete, and the receipt
+already instructed answering the original request. All three judgments correctly
+identified the omission. Two other answer trials did not complete qualification
+after this failure and are not qualification passes.
+
+Retained semantic artifact 12805129495 ZIP SHA-256:
+`4ab81cca6da1b7257ae942c60a5d8f95bbea14fb642e9f53ca657a1c98ca9785`.
+Failed-job log SHA-256:
+`6ae756e11d109ed78adb5bc57f584a98e6276823a0ebadc18e301990e85ec935`.
+No naming regression, judge defect, transport loss or infrastructure cause is
+established. The failed candidate remains preserved.
+
+Revision 5 adds readable primary-result text to the real progress example,
+derived from its actual result fields alongside unchanged structured data.
+The existing public result contract delivers this text to ordinary MCP clients
+and the native model. This is a useful output improvement and a plausible
+repair hypothesis; it does not establish the cause or guarantee correction of
+the feedback detour.
+
+A real official-client observation confirmed the summary, exact structured
+result and all three ordered progress updates. The three existing progress tests
+passed after replacing their deliberate JSON-text expectation with the observed
+readable summary; data, progress, protected access and proxy assertions remain.
+The handler's timing and cancellation code remain unchanged. The README explains
+that clients process `structuredContent` and use `content` as display text.
+
+No evaluation prompt, feedback policy/availability, provider, settings, trial
+count, judgment count or semantic criterion changed. The new source and its
+normal generated candidate must pass every ordinary gate again, including actual
+native evidence containing the new primary text. If the same composition fails,
+publication stops for diagnosis; no iterative wording search, unchanged retry or
+waiver is authorized.
+
+### Declared structured-summary representation repair
+
+The changed revision-5 candidate
+`4b9280f489c2959582d70f1e803355bf081a0129` passed its semantic job: thirteen
+workspace records, three complete progress trials and nine main meaning
+judgments. However, all three native results still recorded only original JSON,
+without the authored text. Its explicit native-text condition was unmet;
+semantic success does not prove that text reached the client or caused the pass.
+
+Verified semantic artifact 12810135789 ZIP SHA-256:
+`3a37a361da69dd6b44c37b9139690c89b92b5ffe96c024239fa3a0622737c233`.
+Both raw protocol controls preserved authored text on the wire; control SHA-256:
+`1b515c3272a2ef7eece6d06592c6150d0c1904db32e51b9d8ccb2358f50245d0`.
+Inspection of the pinned Claude CLI found normalizers preferring structured
+output and dropping accompanying text, consistent with the native records.
+The observed representation boundary requires a different output channel.
+
+Revision 6 adds a declared `summary` string to the structured result and reuses
+that exact value as text. The wording remains unchanged, computed once from
+actual fields. All original fields and values, progress, timing, access and
+signal handling remain intact. The README documents the additive output schema.
+This provides readable output for structured-only clients; it does not promise
+that a model will always complete the user's task.
+
+Real official-client and raw 2025/2026 observations confirmed the declared
+required summary, exact text/summary equality, original fields and ordered
+progress. The three existing progress tests passed with schema, summary,
+protected access and proxy assertions. Evaluation, feedback, provider, settings,
+prompts, trials, judgments and criteria remain unchanged. A new candidate must
+prove the actual native JSON includes the summary and pass all normal checks.
+Another absent-summary or same-composition failure stops publication for diagnosis.
+
+The full revision-5 Release 40673487876 also failed its registry readback as
+partial. Failed publication-job log SHA-256:
+`398e1d8a4f4913c7715004825328ce14ac576a1e484594b0fa90afad5494a2e7`.
+A later canonical readback shows all sixteen target versions occupied on next
+by that candidate. No strict installed-package success, latest/site delivery or
+acceptance is claimed. Preserve that registry failure separately from semantic
+success and the unmet native-text condition. Do not rerun or promote the candidate.
+
+The existing allocator must select fresh unused public versions for new source;
+occupied versions cannot be overwritten. Raw source Changeset plans below are
+pre-allocation values, not final candidate allocations or latest-release claims.
+
+Full clean qualification, all three benchmarks, remote Source Quality,
+frozen-candidate/prose review, strict registry-installed checks, latest/site
+promotion, full exact merge-back qualification and independent increment/overall
+acceptance remain required. The previous registry recovery was used; it grants
+no retry authority for a future failure.
+
+The inherited Wednesday-afternoon target was missed. Both approved results remain
+required, with no replacement deadline or on-time claim assumed. After this
+remaining result is accepted, no further Next/Later increment is justified.
+
+Raw source Changeset versions before required allocation (the previous next
+versions are occupied):
+
+- `@emseepea/server@0.25.8`
+- `@emseepea/create-api-backed-server@0.1.33`
+- `@emseepea/create-database-schema-server@0.1.33`
+- `@emseepea/create-html-ui-server@0.1.33`
+- `@emseepea/create-mongodb-backed-server@0.1.33`
+- `@emseepea/create-multi-instance-postgres-server@0.1.33`
+- `@emseepea/create-openapi-backed-server@0.1.33`
+- `@emseepea/create-progress-streaming-server@0.1.33`
+- `@emseepea/create-react-ui-server@0.1.33`
+- `@emseepea/create-resources-and-prompts-server@0.1.33`
+- `@emseepea/create-soap-backed-server@0.1.33`
+- `@emseepea/create-tool-server@0.1.33`
+- `@emseepea/feedback@0.11.8`
+- `@emseepea/react@0.4.19`
+- `@emseepea/svelte@0.2.19`
+- `@emseepea/testing@0.26.11`
+
+The private website target is 0.0.20 and is deployed rather than published to npm.
+
+## Historical: accepted trace error visibility
+
+Status: **RELEASED, VERIFIED AND INDEPENDENTLY ACCEPTED**.
+
+`@emseepea/server@0.25.7` is on npm's `latest` tag, and website 0.0.19 is live.
+Operators can find genuine tool failures with the normal OpenTelemetry ERROR
+span filter, including failures returned with HTTP 200. This delivers the
+error-visibility result in [increment #220](https://github.com/emseepea/emseepea/issues/220),
+with contribution [#221](https://github.com/emseepea/emseepea/issues/221), with all
+delivery checks below passed. Independent increment acceptance passed; #220 and
+#221 are closed as completed. [Outcome #219](https://github.com/emseepea/emseepea/issues/219)
+stays open: bounded operation span naming is the current Now increment.
+
+Finished HTTP 5xx responses use ERROR and a finite status-code error type.
+Uncancelled tool failures use ERROR and `tool_error`. Expected cancellation,
+disconnection, successful calls and routine client refusals remain unset.
 Genuine framework deadlines and uncancelled handler-thrown `AbortError` remain
-failures. Parent ownership and public completion-event/log/metric schemas stay
-unchanged.
+failures. The shutdown distinction uses private source-signal state without
+inspecting exception names, reasons, messages or stacks. Default parenting,
+application-owned spans/providers and public completion/log/metric schemas
+remain unchanged.
 
-All five independent critics passed plan revision 2 and its saved GitHub records.
-Actual local observation established the classification; focused tracing checks
-passed 48 tests, and existing logs, metrics and copied-guide checks passed 34.
-The local installed-verification fixture used a real Node SDK provider/exporter
-to select exactly the HTTP 200 tool failure through ERROR status and exclude its
-private error content. This is local source evidence, not a released-package
-claim. Full qualification, benchmarks, remote checks, registry-installed proof,
-promotion, live website and independent acceptance remain required.
+Real local observation established the cancellation distinction. Focused tracing
+checks passed 48 tests, and existing signal/copied-guide suites passed 34. The
+actual registry-installed Node SDK fixture then selected exactly the HTTP 200
+tool failure through ERROR status, left success unset and excluded private error
+content. Its CI marker appeared once. The job verified 178 registry signatures
+and 98 attestations, with ordinary public-type, fresh-initializer and copied-guide
+checks passing.
 
-The first local full qualification stopped at the tracing page's mobile
-accessibility check: a three-column table became an unfocusable scrollable
-region at 320px. The mapping now uses a two-column failure table with unset
-cases in prose. The existing whole-site light/dark mobile/desktop accessibility
-check passed after rebuilding the website. The original failure remains
-retained; full exact-commit qualification is required again for this correction.
+All sixteen changed public versions match canonical `latest` readback and the
+frozen candidate git head. Their integrities match the qualified artifact's
+per-package release identities. Artifact 12801327158 has ZIP SHA-256
+`63ba2c8bde8aa1b642656219b7b593b467a5e3616396bbefc692b4ae9b6e00fc`;
+root verified it before comparing the registry evidence. The complete successful
+publication-job log has SHA-256
+`cd1eedd17b75283a75a38fe2241eba24122107cbd4f841b3958d60b16ff7ce16`.
 
-The inherited Wednesday-afternoon target is likely infeasible for two complete
-release pipelines after the actual 17:17 AEDT start. Actual delivery and any
-missed target must be reported honestly; no new deadline is assumed.
+The [live tracing guide](https://emseepea.github.io/emseepea/tracing/#find-failed-tool-calls)
+returned HTTP 200 with the new error-filter section and canonical URL. All three
+copyable JavaScript examples match the reviewed source. An initial ad hoc check
+used the obsolete page title; deriving it from the reviewed frontmatter matched
+the live title. No website change was needed for that checker correction.
 
-Planned public versions below are targets, not publication evidence:
+The delivery chain is:
 
-- `@emseepea/server@0.25.7`
-- `@emseepea/create-api-backed-server@0.1.32`
-- `@emseepea/create-database-schema-server@0.1.32`
-- `@emseepea/create-html-ui-server@0.1.32`
-- `@emseepea/create-mongodb-backed-server@0.1.32`
-- `@emseepea/create-multi-instance-postgres-server@0.1.32`
-- `@emseepea/create-openapi-backed-server@0.1.32`
-- `@emseepea/create-progress-streaming-server@0.1.32`
-- `@emseepea/create-react-ui-server@0.1.32`
-- `@emseepea/create-resources-and-prompts-server@0.1.32`
-- `@emseepea/create-soap-backed-server@0.1.32`
-- `@emseepea/create-tool-server@0.1.32`
-- `@emseepea/feedback@0.11.7`
-- `@emseepea/react@0.4.18`
-- `@emseepea/svelte@0.2.18`
-- `@emseepea/testing@0.26.10`
+- Source `785650b4cf4dbacaf88eb48e8b033cecb4abc7f4` — full local qualification,
+  all three benchmarks and [Quality 40650205642](https://github.com/emseepea/emseepea/actions/runs/40650205642), all eighteen jobs passed.
+- Candidate `db8357ef58b11f9cd88b9b1f763ffbcd3a85edf9` — exact generated-tree
+  binding and [Release 40651909761 attempt 2](https://github.com/emseepea/emseepea/actions/runs/40651909761/attempts/2) passed.
+- Generated-prose receipt `3501f740f2658ed0fa9738c64d68ad4dc68414ba` —
+  [Documentation Quality 40652411997](https://github.com/emseepea/emseepea/actions/runs/40652411997) passed; all seventeen actual changelogs and PR prose were independently reviewed.
+- Publish merge `42934a75c752ffa5e8b78fcab5336464a7410651` —
+  [PR #222](https://github.com/emseepea/emseepea/pull/222) merged;
+  [Publish 40655806609](https://github.com/emseepea/emseepea/actions/runs/40655806609) passed all four jobs, including promotion, deployment, release records and exact merge-back qualification.
+- Exact merge-back `f9f4fcb7ab993a0e244e66dde3ef5c7b3f134422`, with parents
+  `3501f740f2658ed0fa9738c64d68ad4dc68414ba` and
+  `42934a75c752ffa5e8b78fcab5336464a7410651` —
+  [Quality 40656253896](https://github.com/emseepea/emseepea/actions/runs/40656253896) passed all seventeen required jobs; release preparation was skipped.
 
-The private website target is 0.0.19 and is deployed rather than published to npm.
+### Retained failures and bounded recovery
+
+The first local qualification failed the tracing page's mobile scrollable-table
+accessibility check. A two-column mapping passed the rebuilt whole-site
+light/dark mobile/desktop check; corrected source `785650b4` then passed full
+qualification and benchmarks. The original failure is retained.
+
+Release attempt 1 reported all sixteen publishes but failed its bounded registry
+readback with a partial result. Its underlying cause remains unknown. A later
+canonical readback established all sixteen expected versions and identities.
+All five critics assessed recovery revision 3, with action risk 5/25 conditional
+on the unchanged checks. One failed-jobs-only retry at the same frozen candidate
+passed. The successful semantic job and every step's original execution times
+were retained; no semantic, native or performance resampling occurred.
+
+The original failed publication-job log SHA-256 is
+`be12f4a121acdd2febf674776d47060a3ca1b7029a8073b2f59fa5cb34122bbb`.
+No source, versions, workflow, thresholds, tags or credentials were changed for
+recovery. It supplies no authority for another retry.
+
+The inherited Wednesday-afternoon target was missed. Work began after 17:17
+AEDT; latest and live guidance were independently observed at 19:20 AEDT. Both
+requested increments remain required, with no replacement deadline assumed.
+
+Published versions:
+
+- Published: `@emseepea/create-api-backed-server@0.1.32`
+- Published: `@emseepea/create-database-schema-server@0.1.32`
+- Published: `@emseepea/create-html-ui-server@0.1.32`
+- Published: `@emseepea/create-mongodb-backed-server@0.1.32`
+- Published: `@emseepea/create-multi-instance-postgres-server@0.1.32`
+- Published: `@emseepea/create-openapi-backed-server@0.1.32`
+- Published: `@emseepea/create-progress-streaming-server@0.1.32`
+- Published: `@emseepea/create-react-ui-server@0.1.32`
+- Published: `@emseepea/create-resources-and-prompts-server@0.1.32`
+- Published: `@emseepea/create-soap-backed-server@0.1.32`
+- Published: `@emseepea/create-tool-server@0.1.32`
+- Published: `@emseepea/feedback@0.11.7`
+- Published: `@emseepea/server@0.25.7`
+- Published: `@emseepea/react@0.4.18`
+- Published: `@emseepea/svelte@0.2.18`
+- Published: `@emseepea/testing@0.26.10`
+
+The private website is 0.0.19 and is deployed rather than published to npm.
 
 ## Historical: active-span default correction
 

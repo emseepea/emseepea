@@ -165,3 +165,152 @@ required. Prose review does not substitute for that execution evidence.
 | --- | --- |
 | `website/src/content/docs/tracing.md` | `88b0ffbcb4b2231a5048f725845a6e862ce8897b5bcf1bb91691d953a5b10336` |
 | `docs/reviews/current-release-readiness.md` | `292f1491c08915cf73aa586f02e109d6587e9ce512fbcaefeac7f7749911fde8` |
+
+
+## Trace error visibility generated release prose
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed all
+seventeen generated changelog additions and the current generated PR #222
+prose at frozen candidate `db8357ef58b11f9cd88b9b1f763ffbcd3a85edf9`.
+Root independently compared the saved files with that exact candidate and the
+reviewer's manifest. The new entries explain standard ERROR filtering, finite
+error types, expected cancellation and privacy. Dependency updates are explicit.
+
+| Reviewed file | SHA-256 at the frozen candidate |
+| --- | --- |
+| `website/CHANGELOG.md` | `35a2d0b34e74981528773138baaa27df7fe705754edfb3e50c56f62f553d0bdd` |
+
+The seventeen-file reviewer manifest has SHA-256
+`c22b5894b5c78b7594a93a4a564d7eb120415e2e4d175be52f3a017bb0034842`.
+The generated PR title/body snapshot has SHA-256
+`11995e0a5956dc7191e484274c07959580d4e5571fcccb4229efd52c4eb7ade9`.
+This records actual prose review before promotion. Registry-installed checks,
+publication, live guidance and full merge-back remain separate requirements.
+Span naming remains the separate Next increment of outcome #219.
+
+
+## Verified error-visibility release record
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed the final
+release-readiness record and PR #222 description after Release, Publish and full
+merge-back qualification passed. The record distinguishes verified package/live
+behavior from pending independent increment acceptance and the overall outcome's
+remaining naming increment. Original mobile and registry failures, the one
+bounded recovery and retained semantic execution remain explicit.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `582deec02fea4939b362c55fdfcc8f6559af435ef4955fee6686e1625f2b6546` |
+
+Final PR body SHA-256:
+`6c2660b677d6c0a6fea01282c9b61866c6c5ae12885ab47ce089061f2f3988ed`.
+This prose record does not replace documentation qualification or independent
+increment acceptance. Outcome #219 remains open for span naming.
+
+
+## Recognizable exported MCP span names
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed the
+proposed ADR0128 naming amendment, tracing guide, Changeset and release-readiness
+record for outcome #219's increment #223 and contribution #224. The prose
+explains registered/method-only/generic names, completion-time export versus
+initial head sampling, query migration and unchanged completion logs/metrics.
+The decision remains proposed. Local source proof and pending release evidence
+are clearly separated, with the original fixture failure retained.
+
+| Reviewed file | SHA-256 of current content |
+| --- | --- |
+| `docs/decisions/0128-request-lifetime-opentelemetry-context.proposed.md` | `99707d671bb8632ac6d74eb68f4a032ea2e865468fcec0cc9757d44df942ef8a` |
+| `website/src/content/docs/tracing.md` | `4fe6d26d3d8bf9f69f484129b6bd2bfbf7b8a4cbb445b8dc1d7f8b740eb90018` |
+| `.changeset/bounded-span-names.md` | `7946c1d64681b37547662cdf99e3222de0df94d90f0d03648dd2685e9546c5b9` |
+| `docs/reviews/current-release-readiness.md` | `7b02b63c430d5c5ebcaebecb151b71616e1542229f1401cc0fa3d862e7c45830` |
+
+This review does not replace full qualification, publication, installed-package
+verification, live guidance or independent increment/overall acceptance.
+
+
+## Exported span-name release changelogs
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed all
+seventeen generated changelog additions and the actual current PR #225 prose
+at frozen candidate `5388ba9671c289c44557e6b685ee031662c4b301`.
+Each full file matches the saved manifest and actual candidate bytes. The
+entries explain bounded exported names, generic initial sampling/fallback,
+query migration and preserved error/signal behavior. Dependency-only updates
+remain explicit.
+
+| Reviewed file | SHA-256 at the frozen candidate |
+| --- | --- |
+| `website/CHANGELOG.md` | `17df778e17ab9a9621a1af4f5b8bc19ddf7318c9ac7204e009ca976bc7588d6f` |
+
+The seventeen-file manifest has SHA-256
+`7053e61881790d98b0ed83583342fc52eaf32f4b305b5e25b91c8fb3084a7dfa`.
+The PR title/body snapshot has SHA-256
+`911b4456e2d4845bfdfd81a28f94efb72149f19556e856330e6c90c261738f5e`.
+This records genuine prose review before promotion. Registry-installed proof,
+publication, live guidance and full merge-back remain separate requirements.
+
+
+## Readable progress result qualification repair
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed the actual
+client-visible data-derived summary, progress README, Changeset and readiness
+record for revision 5 of increment #223. The summary distinguishes completed
+stages from the final seed result without model instructions or invented data.
+The README documents display text and unchanged structured fields. The record
+preserves the genuine failed semantic candidate, uncertain repair hypothesis,
+actual local output evidence and all pending new-source qualification gates.
+
+| Reviewed file | SHA-256 of current content |
+| --- | --- |
+| `examples/progress-streaming-server/src/capabilities/tool.run-germination-trial.ts` | `f63ae15c53d9317f62f6ac2b6a4a46325cc16c2ea776d2bb71cf98805baadb64` |
+| `examples/progress-streaming-server/README.md` | `1850c9d65a0c1ee9a0dfdbd3fd8772c2e1bcc96e28fd14112306b1aba3a2a4f4` |
+| `.changeset/readable-progress-result.md` | `b1e4801504b12bbe96798783cdaed7465de5c497620a373f450d3b18c557a20b` |
+| `docs/reviews/current-release-readiness.md` | `41c116009042613ca40d3f25614d8c7e650fcd24550b3bb1c7c8380337ad4d29` |
+
+This review establishes clarity of the changed output and its limits. It does
+not establish correction of the model omission or replace the unchanged native
+semantic criteria, full release qualification or independent acceptance.
+
+
+## Repaired span-name candidate changelogs
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed all
+seventeen actual generated changelogs and current PR #225 prose at the new
+candidate `4b9280f489c2959582d70f1e803355bf081a0129`. Each file matches the
+new manifest and actual candidate bytes. The progress initializer entry explains
+readable display text alongside unchanged structured fields. Naming and
+dependency entries remain clear.
+
+| Reviewed file | SHA-256 at the new frozen candidate |
+| --- | --- |
+| `website/CHANGELOG.md` | `17df778e17ab9a9621a1af4f5b8bc19ddf7318c9ac7204e009ca976bc7588d6f` |
+
+The new seventeen-file manifest has SHA-256
+`3e6fc5946fe36193a9845d396a7ca6d275c22da7443caec7b68093c1a11ff516`.
+The current PR title/body snapshot has SHA-256
+`1f36205ef4ed78c86d285645bb5fafe2381b49ada53507d621ca25491b4a6332`.
+This records a genuine review of the changed candidate. The failed prior
+candidate remains preserved; new semantic/native proof, publication, live
+guidance, full merge-back and acceptance remain separate requirements.
+
+
+## Declared structured progress summary
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed revision
+6's declared output-schema summary, shared data-derived text, progress README,
+Changeset and readiness record. The summary is computed once and reused in both
+result representations; original fields and values remain intact. The README
+explains the additive schema change. The record separates semantic success,
+unmet native-text evidence, registry failure and required fresh allocation.
+
+| Reviewed file | SHA-256 of current content |
+| --- | --- |
+| `examples/progress-streaming-server/src/capabilities/tool.run-germination-trial.ts` | `a2794a09f64bbfd4828ddfacf443d753d6c1e533edebe5523c704112836f40ac` |
+| `examples/progress-streaming-server/README.md` | `acb3654cfec1aeb526ee789d6f51d3a900cf5873e12787ddb48f442cf62e19a7` |
+| `.changeset/structured-progress-summary.md` | `a51f59b0e14030da97237d4e165fd2c0521ea8c432d82b532f9ef5d4c9efbe9d` |
+| `docs/reviews/current-release-readiness.md` | `f3d33ac5550e4bcbfaeee14b85d02425ceee7e47de8c449b522d42d25dd61e4d` |
+
+This review establishes clarity of the actual contract and qualification limits.
+Local protocol observations do not replace the required native JSON-summary
+proof or complete fresh-candidate release and independent acceptance.

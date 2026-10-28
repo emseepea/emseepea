@@ -137,7 +137,7 @@ test("concurrent completion logs retain local request identity and completion ti
   for (const response of responses) assert.equal(response.status, 200);
   await Promise.all(responses.map((r) => r.json())); await f.completed(2); await f.flush();
   const records = f.logExport.getFinishedLogRecords(); assert.equal(records.length, 2);
-  const requests = f.spans.getFinishedSpans().filter((s) => s.name === "mcp.request"); assert.equal(requests.length, 2);
+  const requests = f.spans.getFinishedSpans().filter((s) => s.instrumentationScope.name === "@emseepea/server"); assert.equal(requests.length, 2);
   for (const record of records) {
     checkRecord(record);
     const span = requests.find((s) => s.spanContext().spanId === record.spanContext.spanId); assert.ok(span);
@@ -186,7 +186,7 @@ test("manual events explicitly exclude an unrelated ambient span and baggage", a
 test("counter, histogram and logger API failures do not suppress other signals or protocol work", async (t) => {
   for (const fault of ["counter", "histogram", "logger"]) await t.test(fault, async (t) => {
     const f = await fixture(t, { fault }); const response = await call(f.running.url); assert.equal(response.status, 200); assert.equal((await response.json()).result.structuredContent.value, secret);
-    await f.completed(1); await f.flush(); assert.equal(f.calls(), 1); assert.equal(f.spans.getFinishedSpans().filter((s) => s.name === "mcp.request").length, 1);
+    await f.completed(1); await f.flush(); assert.equal(f.calls(), 1); assert.equal(f.spans.getFinishedSpans().filter((s) => s.instrumentationScope.name === "@emseepea/server").length, 1);
     assert.equal(f.points("emseepea.http.requests").length, fault === "counter" ? 0 : 1);
     assert.equal(f.points("emseepea.http.response.duration").length, fault === "histogram" ? 0 : 1);
     assert.equal(f.logExport.getFinishedLogRecords().length, fault === "logger" ? 0 : 1);
