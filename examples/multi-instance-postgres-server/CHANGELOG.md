@@ -1,5 +1,11 @@
 # @emseepea/create-multi-instance-postgres-server
 
+## 0.1.31
+
+### Patch Changes
+
+- [`32496d2`](https://github.com/emseepea/emseepea/commit/32496d2f713ca4e2dd1b70001733402a8da26276) Thanks [@tompahoward](https://github.com/tompahoward)! - Use valid active local OpenTelemetry context by default, so applications with HTTP instrumentation get a coherent request/backend trace without an extra option or duplicate framework SERVER span. Add `useActiveSpan: false` to opt out and use HTTP-header extraction. Keep `httpInstrumentation` as a deprecated alias; an explicit `useActiveSpan` takes precedence. Preserve clean context boundaries and existing fallback behavior. Update and verify the public SDK guide with the default adapter.
+
 ## 0.1.30
 
 ### Patch Changes
