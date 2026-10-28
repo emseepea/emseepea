@@ -120,26 +120,24 @@ data-capture policies.
 
 ## Use existing HTTP instrumentation
 
-If your application already instruments incoming HTTP requests, enable
-`httpInstrumentation: true` on the framework adapter:
+`openTelemetry()` uses a valid active local span as its parent by default.
+With incoming HTTP instrumentation, Em See Pea creates an INTERNAL
+`mcp.request` child of the transport SERVER span, followed by your backend
+spans. No extra framework option is needed. The framework never modifies or
+ends the application's transport span.
 
-```js title="http-observability.mjs"
-observability: [openTelemetry({ logs: true, httpInstrumentation: true })],
-```
+Em See Pea copies only validated local trace identity into a clean context;
+it excludes ambient baggage, trace state and other context entries. An absent,
+invalid or remote active context falls back to HTTP-header extraction and a
+framework SERVER span. Active context takes precedence over incoming headers.
 
-This option declares that the active local span belongs to your application's
-HTTP instrumentation. Em See Pea creates an INTERNAL `mcp.request` child of
-that span, followed by your backend spans. Only the transport instrumentation
-creates a SERVER span. The framework never modifies or ends the transport span.
+To always extract the parent from HTTP headers and create a framework SERVER
+span, set `openTelemetry({ useActiveSpan: false })`.
 
-The option cannot establish where an active span came from. Enable it only
-where your HTTP instrumentation supplies the request context.
-
-Em See Pea copies
-only validated local trace identity into a clean context; it excludes ambient
-baggage, trace state and other context entries. An absent, invalid or remote
-active context falls back to the usual HTTP-header parent and SERVER span.
-Without this option, the existing framework SERVER behavior stays unchanged.
+`useActiveSpan` defaults to `true`. The previous `httpInstrumentation` option
+is a deprecated alias; an explicitly supplied `useActiveSpan` takes precedence.
+Existing `httpInstrumentation: false` configurations retain their opt-out.
+The adapter uses the active span without proving which instrumentation created it.
 
 To try this with the example above, install the compatible HTTP instrumentation:
 
@@ -147,9 +145,8 @@ To try this with the example above, install the compatible HTTP instrumentation:
 npm install @opentelemetry/instrumentation-http@0.221.0
 ```
 
-Replace `telemetry.mjs` with the following, and replace the server's
-`observability` line with the adapter line above. Keep its existing startup
-command and shutdown handler.
+Replace `telemetry.mjs` with the following. Keep the server, startup command
+and shutdown handler unchanged.
 
 ```js title="telemetry.mjs"
 import { NodeSDK } from "@opentelemetry/sdk-node";

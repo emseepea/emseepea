@@ -21,23 +21,30 @@ span, so those spans become siblings under the incoming parent.
 ## Decision Drivers
 
 - Keep one transport SERVER span and a coherent framework/backend trace.
-- Preserve current behavior unless the application explicitly opts in.
+- Follow active local OpenTelemetry context without requiring extra configuration.
 - Import only validated local trace identity, with no ambient baggage or other
   application context data.
 - Preserve application ownership of transport spans, providers and shutdown.
 
 ## Considered Options
 
-1. Explicitly declare application-owned HTTP instrumentation.
-2. Automatically adopt any active span.
+1. Reuse valid active local context by default, with an explicit opt-out.
+2. Require an explicit declaration of application-owned HTTP instrumentation.
 3. Retain two independent SERVER spans.
 
 ## Decision Outcome
 
-Chosen option: **"Explicitly declare application-owned HTTP instrumentation"**.
-`openTelemetry({ httpInstrumentation: true })` declares that the active local
-span belongs to the application's HTTP instrumentation. An active span cannot
-prove that provenance by itself; this is an application configuration promise.
+Chosen option: **"Reuse valid active local context by default"**.
+Following the user-approved correction in
+[outcome #215](https://github.com/emseepea/emseepea/issues/215),
+`openTelemetry()` uses the active local span as its parent. This follows the
+application's active context; it does not establish which instrumentation
+created that span. `useActiveSpan: false` explicitly selects HTTP-header
+extraction instead.
+
+`useActiveSpan` defaults to true. The deprecated `httpInstrumentation` alias
+retains explicit true/false behavior when `useActiveSpan` is omitted. When both
+are supplied, `useActiveSpan` takes precedence.
 
 At request admission, project validated local trace ID, span ID and flags into
 ROOT_CONTEXT and create an INTERNAL `mcp.request` child. Exclude baggage,
@@ -45,7 +52,7 @@ opaque trace state and arbitrary context entries. Preserve unsampled local
 parents. Never modify, decorate or end the application's transport span.
 
 If active context is missing, remote, invalid or unavailable, use the existing
-bounded HTTP-header extraction and SERVER fallback. The default retains that
+bounded HTTP-header extraction and SERVER fallback. The explicit opt-out retains that
 same behavior. Telemetry failures cannot suppress or repeat protocol work.
 
 Keep backend work under the framework span. Metrics and optional completion
@@ -69,7 +76,7 @@ No public adapter lifecycle API or framework-owned SDK is introduced.
 
 - Real standard HTTP instrumentation exports one transport SERVER span, a
   framework INTERNAL child and an asynchronous backend descendant.
-- Controlled incoming parents, defaults, fallback, context isolation and
+- Controlled incoming parents, default reuse, explicit opt-outs, alias precedence, fallback, context isolation and
   unsampled parent behavior are checked at the public HTTP boundary.
 - The installed-package guide exports traces, HTTP metrics and correlated logs
   and retains application-owned shutdown.

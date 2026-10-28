@@ -2764,11 +2764,11 @@ Chosen option: **"Framework-owned request tracing"**. The existing `openTelemetr
 
 #### ADR-0129 Decision
 
-Chosen option: **"Explicitly declare application-owned HTTP instrumentation"**. `openTelemetry({ httpInstrumentation: true })` declares that the active local span belongs to the application's HTTP instrumentation. An active span cannot prove that provenance by itself; this is an application configuration promise.
+Chosen option: **"Reuse valid active local context by default"**. Following the user-approved correction in [outcome #215](https://github.com/emseepea/emseepea/issues/215), `openTelemetry()` uses the active local span as its parent. This follows the application's active context; it does not establish which instrumentation created that span. `useActiveSpan: false` explicitly selects HTTP-header extraction instead.
 
 #### ADR-0129 Checks
 
 - Real standard HTTP instrumentation exports one transport SERVER span, a framework INTERNAL child and an asynchronous backend descendant.
-- Controlled incoming parents, defaults, fallback, context isolation and unsampled parent behavior are checked at the public HTTP boundary.
+- Controlled incoming parents, default reuse, explicit opt-outs, alias precedence, fallback, context isolation and unsampled parent behavior are checked at the public HTTP boundary.
 - The installed-package guide exports traces, HTTP metrics and correlated logs and retains application-owned shutdown.
 - Required source, release and live website checks establish delivery; the Wednesday-afternoon deadline does not waive them.

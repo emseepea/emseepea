@@ -1,52 +1,133 @@
 # Current Release Readiness
 
-Date: 2026-10-27
+Date: 2026-10-28
 
-## HTTP instrumentation coexistence
+## Active-span default correction
 
-Status: **LOCAL VERIFICATION IN PROGRESS**.
+Status: **IMPLEMENTED; RELEASE QUALIFICATION PENDING**.
 
-Outcome #208 and increment #209 add explicit coexistence with an application's
-HTTP instrumentation. Source contribution #210 owns implementation and delivery.
-`httpInstrumentation: true` selects a framework INTERNAL child of a validated
-local active transport span, with the current SERVER fallback and defaults.
+Outcome [#215](https://github.com/emseepea/emseepea/issues/215), increment
+[#216](https://github.com/emseepea/emseepea/issues/216) and contribution
+[#217](https://github.com/emseepea/emseepea/issues/217) track this correction.
+`openTelemetry()` now reuses a valid active local span by default, creating an
+INTERNAL framework child. `useActiveSpan: false` selects bounded HTTP-header
+extraction and a SERVER span. The deprecated `httpInstrumentation` alias retains
+explicit values; the new option takes precedence when both are supplied.
 
-Real local HTTP instrumentation reproduced two sibling SERVER spans before the
-change and the intended transport SERVER → framework INTERNAL → backend trace
-after it. The copied HTTP-instrumented guide exported all three signals with
-correct local log correlation and shutdown. Focused tracing and guide tests
-passed 24/24. These are local results; no new package or website is released yet.
+Identity-only context projection, application span ownership, unsampled context,
+HTTP fallback and failure isolation are unchanged. The guide uses the ordinary
+adapter with real HTTP instrumentation; it needs no parenting option.
 
-Architecture, JTBD, risk, cognitive-accessibility and planning reviews passed
-plan revision 1. Remaining source qualification, actual-diff reviews, candidate
-and installed-package checks, latest publication, website, full merge-back and
-independent acceptance remain required. The prior 0.25.4 release below stays
-historical and verified.
+All five independent plan critics and saved-record planning comparison passed.
+Actual-source architecture and public prose reviews passed. The focused tracing,
+logs, metrics and copied-guide suite passed 60 tests, including default, explicit
+opt-outs, legacy values, precedence and real transport-to-backend topology.
+Full source qualification, benchmarks, remote checks, installed-package release,
+latest promotion, live website and independent acceptance remain pending.
 
-### Planned publication closure
+Planned package versions below are release targets, not publication evidence:
 
-The computed Changesets plan includes the following public packages. Versions
-are planned; publication and registry checks remain pending. The private
-website and shared UI dependency metadata follow the existing release workflow.
+- `@emseepea/server@0.25.6`
+- `@emseepea/create-api-backed-server@0.1.31`
+- `@emseepea/create-database-schema-server@0.1.31`
+- `@emseepea/create-html-ui-server@0.1.31`
+- `@emseepea/create-mongodb-backed-server@0.1.31`
+- `@emseepea/create-multi-instance-postgres-server@0.1.31`
+- `@emseepea/create-openapi-backed-server@0.1.31`
+- `@emseepea/create-progress-streaming-server@0.1.31`
+- `@emseepea/create-react-ui-server@0.1.31`
+- `@emseepea/create-resources-and-prompts-server@0.1.31`
+- `@emseepea/create-soap-backed-server@0.1.31`
+- `@emseepea/create-tool-server@0.1.31`
+- `@emseepea/feedback@0.11.6`
+- `@emseepea/react@0.4.17`
+- `@emseepea/svelte@0.2.17`
+- `@emseepea/testing@0.26.9`
 
-- `@emseepea/create-api-backed-server@0.1.30`
-- `@emseepea/create-database-schema-server@0.1.30`
-- `@emseepea/create-html-ui-server@0.1.30`
-- `@emseepea/create-mongodb-backed-server@0.1.30`
-- `@emseepea/create-multi-instance-postgres-server@0.1.30`
-- `@emseepea/create-openapi-backed-server@0.1.30`
-- `@emseepea/create-progress-streaming-server@0.1.30`
-- `@emseepea/create-react-ui-server@0.1.30`
-- `@emseepea/create-resources-and-prompts-server@0.1.30`
-- `@emseepea/create-soap-backed-server@0.1.30`
-- `@emseepea/create-tool-server@0.1.30`
-- `@emseepea/feedback@0.11.5`
-- `@emseepea/react@0.4.16`
-- `@emseepea/server@0.25.5`
-- `@emseepea/svelte@0.2.16`
-- `@emseepea/testing@0.26.8`
+The private website target is 0.0.18 and is deployed rather than published to npm.
+Existing exact-source, registry provenance, signature and installed-package
+checks remain required. Risk forecast is 5/25 within appetite, conditional on
+those controls passing; it is not clearance for an unverified release.
 
-## Correlated operational logs
+## Historical: HTTP instrumentation coexistence
+
+Status: **RELEASED AND VERIFIED**.
+
+`@emseepea/server@0.25.5` is on npm's `latest` tag. Website 0.0.17 deploys the
+[HTTP instrumentation guide](https://emseepea.github.io/emseepea/tracing/#use-existing-http-instrumentation).
+Applications can declare `httpInstrumentation: true` to create a framework
+INTERNAL child of their active local transport span, avoiding another SERVER
+span. Default behavior and HTTP-header fallback remain unchanged.
+
+Only validated local trace identity enters a clean framework context. Ambient
+baggage, opaque trace state and arbitrary context entries are excluded. The
+application owns its transport span, SDK providers and shutdown. The framework
+never modifies or ends the transport span. This is not separate MCP operation
+instrumentation; existing HTTP metric timing retains its meaning.
+
+The registry-installed SDK recipe passed real transport SERVER → framework
+INTERNAL → asynchronous backend parenting, correlated logs, HTTP metrics,
+resource policy and shutdown. Independent canonical reads matched all sixteen
+latest versions, integrities and candidate provenance commits. All four live
+JavaScript copy payloads match the qualified source.
+
+The delivery chain is:
+
+- Source `aaacafd2e9c296bab85a8a6c02c7284951f2404b` —
+  [Quality 40593982919](https://github.com/emseepea/emseepea/actions/runs/40593982919).
+- Candidate `1fb41db52ec8a43de58eb6eeeeccfb3448070eb9` —
+  [Release 40595979211 attempt 2](https://github.com/emseepea/emseepea/actions/runs/40595979211).
+- Reviewed main receipt `9419693a39a253e810a98f517a951a1f8c165e7a` —
+  [Documentation Quality 40596374641](https://github.com/emseepea/emseepea/actions/runs/40596374641).
+- Publish `144b9d54680412f142cb4067866ebddc49a4ed5b` —
+  [Publish 40599908838](https://github.com/emseepea/emseepea/actions/runs/40599908838).
+- Merge-back `8d196b8188d3ad9e674e37cbb7b36c1c04dcbaac` —
+  [Full Quality 40600424611](https://github.com/emseepea/emseepea/actions/runs/40600424611).
+
+Full merge-back qualification passed for its exact recorded commit. Source
+qualification, required benchmarks, candidate registry/provenance/signature/
+installed checks, latest promotion and website deployment also passed. The reviewed website changelog receipt
+landed through normal documentation qualification before promotion; the frozen
+candidate and original source binding were preserved.
+
+Attempt 1 failed the strict registry gate while its observed publication set
+was partial. The publish command had reported sixteen successes, but the first
+independent read omitted the new resources-and-prompts version; its exact-version
+request returned 404. Later canonical reads matched the full expected set.
+The underlying cause remains unknown.
+
+Affected architecture, risk and planning reviews approved one failed-job-only
+retry. Attempt 2 passed all remaining checks and retained the original semantic
+execution and step times. GitHub lists that retained result under a new job
+record. The original failure was not relabelled. Detailed evidence and cleanup
+are recorded in [#209](https://github.com/emseepea/emseepea/issues/209) and
+[#210](https://github.com/emseepea/emseepea/issues/210).
+
+The sixteen public versions are published. The private shared UI workspace has
+dependency metadata only; the private website is deployed rather than published
+to npm.
+
+- Published: `@emseepea/create-api-backed-server@0.1.30`
+- Published: `@emseepea/create-database-schema-server@0.1.30`
+- Published: `@emseepea/create-html-ui-server@0.1.30`
+- Published: `@emseepea/create-mongodb-backed-server@0.1.30`
+- Published: `@emseepea/create-multi-instance-postgres-server@0.1.30`
+- Published: `@emseepea/create-openapi-backed-server@0.1.30`
+- Published: `@emseepea/create-progress-streaming-server@0.1.30`
+- Published: `@emseepea/create-react-ui-server@0.1.30`
+- Published: `@emseepea/create-resources-and-prompts-server@0.1.30`
+- Published: `@emseepea/create-soap-backed-server@0.1.30`
+- Published: `@emseepea/create-tool-server@0.1.30`
+- Published: `@emseepea/feedback@0.11.5`
+- Published: `@emseepea/react@0.4.16`
+- Published: `@emseepea/server@0.25.5`
+- Published: `@emseepea/svelte@0.2.16`
+- Published: `@emseepea/testing@0.26.8`
+
+## Historical: correlated operational logs
+
+This preserves the 0.25.4 delivery checkpoint from 27 October. Its remaining
+native cleanup was subsequently accepted in closed #196 and #198.
 
 Status: **RELEASED AND VERIFIED**.
 
