@@ -2,7 +2,98 @@
 
 Date: 2026-10-28
 
-## Recognizable exported MCP span names
+## Verified trace triage release
+
+Status: **RELEASED AND VERIFIED**.
+
+`@emseepea/server@0.25.9` is on npm's `latest` tag; website 0.0.20 is live.
+Operators can use ordinary OpenTelemetry ERROR filtering to find genuine tool
+failures, including HTTP 200 tool errors, and recognize bounded MCP operation
+names directly in exported trace waterfalls. This delivers both results of
+[outcome #219](https://github.com/emseepea/emseepea/issues/219). Its
+[increment #223](https://github.com/emseepea/emseepea/issues/223) and
+[contribution #224](https://github.com/emseepea/emseepea/issues/224) track
+independent acceptance and final documentation qualification.
+The earlier accepted error increment #220 remains completed history.
+
+A registered tool exports `tools/call read-status`; a known method without a
+registered capability exports the method alone. Unknown/unparsed methods keep
+`mcp.request`. The initial name remains generic for head sampling. Unknown
+requested names, resource URIs and request content stay excluded. ERROR status,
+parent identity/kind, application ownership, request lifetime, completion logs
+and metrics retain their existing behavior. A failing renamer cannot suppress
+protocol work, status, finalization or completion delivery.
+
+### Verified delivery
+
+- Source `b7f91d76669ce36fcf934be0d46a8e699ca9d34e` passed
+  [Quality 40680594697](https://github.com/emseepea/emseepea/actions/runs/40680594697),
+  all eighteen jobs on the first ordinary invocation.
+- [PR #225](https://github.com/emseepea/emseepea/pull/225) candidate
+  `ee93fe488a2578c6ced04d9e1221addab555a692` binds that source and Quality.
+  Its recorded allocator skipped sixteen occupied public versions. Server
+  0.25.9, all eleven initializers 0.1.34, feedback 0.11.9, React 0.4.20,
+  Svelte 0.2.20 and testing 0.26.12 are the actual fresh allocations.
+- [Release 40682613383](https://github.com/emseepea/emseepea/actions/runs/40682613383)
+  passed both jobs on attempt 1. All thirteen semantic workspace records passed.
+  Three actual native progress results contain the declared structured summary
+  with every original field/value; nine main meaning judgments and the original
+  follow-up checks passed. Evaluation source, model/settings and prompts remained
+  unchanged, with zero semantic retries. Independent artifact inspection passed.
+- Strict registry-installed SDK checks exported `tools/call trace-error` on
+  success and failure, preserving standard ERROR filtering and private-error
+  exclusion. Both copied Node SDK recipes passed real OTLP traces, metrics,
+  correlated logs and the HTTP transport/framework/backend topology. Public
+  types, getting-started instructions and all fresh initializer checks passed.
+  The cryptographic audit verified 178 registry signatures and 98 attestations.
+- All seventeen generated changelogs and current candidate PR prose passed exact
+  independent review before promotion. Main receipt `1fef1c1` passed
+  [Docs Quality 40682888960](https://github.com/emseepea/emseepea/actions/runs/40682888960).
+- [Publish 40688715212](https://github.com/emseepea/emseepea/actions/runs/40688715212)
+  passed all four jobs at merge `be1e50e7f4ee1d487152045f84146804596e90e6`.
+  Canonical latest readback matches all sixteen changed package versions,
+  candidate identities and integrity values against the qualified artifact.
+- Exact merge-back `0b0b8eb9e50da97a5ce38103e5deb91ec7f6bb39` passed
+  [full Quality 40689247608](https://github.com/emseepea/emseepea/actions/runs/40689247608):
+  seventeen successful checks and release preparation skipped, on attempt 1.
+- The [live guide](https://emseepea.github.io/emseepea/tracing/) returned HTTP 200
+  with its canonical URL, operation-naming section and all three copyable
+  JavaScript examples matching source. Error filtering, query migration and
+  completion-time/head-sampling limits are documented.
+
+Promotion artifact 12814895412 ZIP SHA-256:
+`591368654a364afbba7854551dd7b54ddbf4c808c09e47dea218a4c485f94dba`.
+Native semantic artifact 12813598132 ZIP SHA-256:
+`1d6f2fc0df4a14191b2e55bdebd61e8a37faad6aa2a0c6a6159900c278c79de4`.
+Strict installed-package log SHA-256:
+`caeab115d1883e17f657afe761add8d55a98f95dfe3bd32eb6c97912dd8c0363`.
+
+### Retained failures and delivery limits
+
+The earlier candidates and failed qualification remain preserved below. The
+revision-6 local uninstrumented resource benchmark also exceeded the unchanged
+5 ms p95 CPU limit; its later observability and production commands were not
+reached. Log SHA-256:
+`9d96b214cdf7cc07ef931bea92ca82079c57afb3ddd96734debcd9ff27f3bc71`.
+All five critics assessed the explicit move to the first mandatory pinned CI
+profiles while retaining that local failure. Both CI profiles passed unchanged
+budgets and complete fixed populations. This does not explain the local result
+or establish performance equivalence; no favorable local repeat occurred.
+
+CLI authentication failed during delivery. The same agent account's connected
+GitHub tools carried the unmodified release helpers' real assertions through a
+reviewed temporary transport. Incomplete read-only exercises were preserved;
+the corrected adapter completed the read-only boundary before the guarded
+exact-candidate merge. No credential transfer, repository helper change,
+semantic resampling or release waiver was used. Final documentation uses the
+same exact-commit qualification and pre-push requirements through the assessed
+Git-object transport; its evidence is linked from the outcome record.
+
+The inherited Wednesday afternoon Sydney target was missed. No replacement
+or on-time claim is assumed. No further Next/Later feature is needed for these
+two delivered results.
+
+## Historical: span-name qualification preparation
 
 Status: **IMPLEMENTED; RELEASE QUALIFICATION PENDING**.
 
@@ -162,14 +253,14 @@ The private website target is 0.0.20 and is deployed rather than published to np
 
 Status: **RELEASED, VERIFIED AND INDEPENDENTLY ACCEPTED**.
 
-`@emseepea/server@0.25.7` is on npm's `latest` tag, and website 0.0.19 is live.
+`@emseepea/server@0.25.7` reached npm's `latest` tag, and website 0.0.19 went live at this earlier checkpoint.
 Operators can find genuine tool failures with the normal OpenTelemetry ERROR
 span filter, including failures returned with HTTP 200. This delivers the
 error-visibility result in [increment #220](https://github.com/emseepea/emseepea/issues/220),
 with contribution [#221](https://github.com/emseepea/emseepea/issues/221), with all
 delivery checks below passed. Independent increment acceptance passed; #220 and
 #221 are closed as completed. [Outcome #219](https://github.com/emseepea/emseepea/issues/219)
-stays open: bounded operation span naming is the current Now increment.
+remained open at that checkpoint for bounded operation span naming.
 
 Finished HTTP 5xx responses use ERROR and a finite status-code error type.
 Uncancelled tool failures use ERROR and `tool_error`. Expected cancellation,

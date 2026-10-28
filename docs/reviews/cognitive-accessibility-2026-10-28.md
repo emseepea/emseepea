@@ -339,3 +339,28 @@ summary delivery, strict installed-package qualification, latest/site delivery,
 full merge-back and independent acceptance remain separate. The local CPU
 failure and unreached later local benchmarks remain retained; CI success does
 not explain or erase them.
+
+## Verified trace triage release record
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed the final
+release-readiness record and merged PR #225 title/body after all four Publish
+jobs and full exact merge-back qualification passed. The record distinguishes
+released behavior, real installed SDK/native evidence, canonical latest/live
+readback and retained qualification failures from independent acceptance and
+final documentation qualification tracked in the outcome.
+
+The local CPU failure remains a failure, with two later local commands unreached;
+canonical-profile success is not described as its explanation or performance
+equivalence. The missed Wednesday target and the temporary same-account connector
+transport are explicit. Earlier incomplete transport exercises remain retained.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `a70ceeecab1c8013dd84772213d2c1c6f9a5e10ee7e93ca209b6943afcd013d5` |
+
+Merged PR title SHA-256:
+`427509fc1fbaee9de99c905f7177d8d4d76bb618eb3f444554082c34998f179f`.
+Merged PR body SHA-256:
+`5d577c7bbd6822805d9d89ce5d64a6c01f81a9018d639d911a6a5ce594f7e417`.
+This prose review does not replace the exact final documentation commit's
+qualification, pre-push checks or independent increment and overall acceptance.
