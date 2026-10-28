@@ -54,10 +54,14 @@ in the template or the protected access described above. A client can ask for
 server-sent events (SSE), which carry progress over the same `POST` request.
 Without that request, the tool returns one JSON response when it finishes.
 
-The completed result includes readable text summarizing the tray, completed
-stages and germinated seed count, alongside the validated `structuredContent`.
-Read fields from `structuredContent` when processing the result; `content`
-contains display text rather than a JSON copy of those fields.
+The completed result declares a `summary` string in `structuredContent` and
+returns the same value as `content` text. It is computed once from the tray,
+completion status, completed stages and germinated seed count. Clients that
+present structured results receive the same readable summary as text clients.
+
+The original structured fields and values remain unchanged. Process those
+fields for data, or use `summary` for presentation. This adds a declared field
+to the output schema; `content` remains display text.
 
 ## Run
 

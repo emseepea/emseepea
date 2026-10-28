@@ -21,6 +21,7 @@ export default ((access) => defineStreamingTool({
     totalSeeds: z.literal(10).describe("Total number of seeds in the trial."),
     stages: z.tuple([z.literal("soak"), z.literal("sow"), z.literal("sprout")])
       .describe("Trial stages completed in order."),
+    summary: z.string().describe("Readable summary of the completed trial stages and final germination result."),
   }),
   async handler({ tray }, { reportProgress, signal }: StreamingToolContext) {
     const stages: ["soak", "sow", "sprout"] = ["soak", "sow", "sprout"];
@@ -29,9 +30,10 @@ export default ((access) => defineStreamingTool({
       await delay(150, undefined, { signal });
     }
     const data = { tray, status: "complete" as const, germinatedSeeds: 8 as const, totalSeeds: 10 as const, stages };
+    const summary = `Trial ${data.tray} ${data.status}. Completed progress stages: ${data.stages.join(" → ")}. Final result: ${data.germinatedSeeds} of ${data.totalSeeds} seeds germinated.`;
     return {
-      text: `Trial ${data.tray} ${data.status}. Completed progress stages: ${data.stages.join(" → ")}. Final result: ${data.germinatedSeeds} of ${data.totalSeeds} seeds germinated.`,
-      data,
+      text: summary,
+      data: { ...data, summary },
     };
   },
 })) satisfies CapabilityModuleFactory<AccessPolicy>;

@@ -12,7 +12,8 @@ visibility is accepted and released in server 0.25.7. The remaining
 [increment #223](https://github.com/emseepea/emseepea/issues/223), with
 [contribution #224](https://github.com/emseepea/emseepea/issues/224), names the
 existing framework span from normalized methods and registered capabilities.
-This source change has not yet been released.
+The naming update is not accepted on latest; the current representation
+repair remains unqualified for release.
 
 At completion, a registered tool exports `tools/call read-status`. A known method
 without a registered capability exports only the method, such as `tools/call`
@@ -27,7 +28,7 @@ application ownership, HTTP lifetime, public completion fields, logs and metrics
 retain their existing behavior. A failing renamer cannot suppress protocol work,
 status, finalization or completion delivery.
 
-All five critics passed naming revision 4 and repair revision 5, including their
+All five critics passed naming revision 4 and repair revisions 5 and 6, including their
 actual saved records. Real local
 HTTP/SDK observation showed generic baseline names, then the expected registered,
 method-only and unknown-method names after the change. Focused tracing and
@@ -81,6 +82,50 @@ native evidence containing the new primary text. If the same composition fails,
 publication stops for diagnosis; no iterative wording search, unchanged retry or
 waiver is authorized.
 
+### Declared structured-summary representation repair
+
+The changed revision-5 candidate
+`4b9280f489c2959582d70f1e803355bf081a0129` passed its semantic job: thirteen
+workspace records, three complete progress trials and nine main meaning
+judgments. However, all three native results still recorded only original JSON,
+without the authored text. Its explicit native-text condition was unmet;
+semantic success does not prove that text reached the client or caused the pass.
+
+Verified semantic artifact 12810135789 ZIP SHA-256:
+`3a37a361da69dd6b44c37b9139690c89b92b5ffe96c024239fa3a0622737c233`.
+Both raw protocol controls preserved authored text on the wire; control SHA-256:
+`1b515c3272a2ef7eece6d06592c6150d0c1904db32e51b9d8ccb2358f50245d0`.
+Inspection of the pinned Claude CLI found normalizers preferring structured
+output and dropping accompanying text, consistent with the native records.
+The observed representation boundary requires a different output channel.
+
+Revision 6 adds a declared `summary` string to the structured result and reuses
+that exact value as text. The wording remains unchanged, computed once from
+actual fields. All original fields and values, progress, timing, access and
+signal handling remain intact. The README documents the additive output schema.
+This provides readable output for structured-only clients; it does not promise
+that a model will always complete the user's task.
+
+Real official-client and raw 2025/2026 observations confirmed the declared
+required summary, exact text/summary equality, original fields and ordered
+progress. The three existing progress tests passed with schema, summary,
+protected access and proxy assertions. Evaluation, feedback, provider, settings,
+prompts, trials, judgments and criteria remain unchanged. A new candidate must
+prove the actual native JSON includes the summary and pass all normal checks.
+Another absent-summary or same-composition failure stops publication for diagnosis.
+
+The full revision-5 Release 40673487876 also failed its registry readback as
+partial. Failed publication-job log SHA-256:
+`398e1d8a4f4913c7715004825328ce14ac576a1e484594b0fa90afad5494a2e7`.
+A later canonical readback shows all sixteen target versions occupied on next
+by that candidate. No strict installed-package success, latest/site delivery or
+acceptance is claimed. Preserve that registry failure separately from semantic
+success and the unmet native-text condition. Do not rerun or promote the candidate.
+
+The existing allocator must select fresh unused public versions for new source;
+occupied versions cannot be overwritten. Raw source Changeset plans below are
+pre-allocation values, not final candidate allocations or latest-release claims.
+
 Full clean qualification, all three benchmarks, remote Source Quality,
 frozen-candidate/prose review, strict registry-installed checks, latest/site
 promotion, full exact merge-back qualification and independent increment/overall
@@ -91,7 +136,8 @@ The inherited Wednesday-afternoon target was missed. Both approved results remai
 required, with no replacement deadline or on-time claim assumed. After this
 remaining result is accepted, no further Next/Later increment is justified.
 
-Planned versions below are targets, not publication evidence:
+Raw source Changeset versions before required allocation (the previous next
+versions are occupied):
 
 - `@emseepea/server@0.25.8`
 - `@emseepea/create-api-backed-server@0.1.33`

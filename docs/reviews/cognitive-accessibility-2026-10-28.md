@@ -293,3 +293,24 @@ The current PR title/body snapshot has SHA-256
 This records a genuine review of the changed candidate. The failed prior
 candidate remains preserved; new semantic/native proof, publication, live
 guidance, full merge-back and acceptance remain separate requirements.
+
+
+## Declared structured progress summary
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed revision
+6's declared output-schema summary, shared data-derived text, progress README,
+Changeset and readiness record. The summary is computed once and reused in both
+result representations; original fields and values remain intact. The README
+explains the additive schema change. The record separates semantic success,
+unmet native-text evidence, registry failure and required fresh allocation.
+
+| Reviewed file | SHA-256 of current content |
+| --- | --- |
+| `examples/progress-streaming-server/src/capabilities/tool.run-germination-trial.ts` | `a2794a09f64bbfd4828ddfacf443d753d6c1e533edebe5523c704112836f40ac` |
+| `examples/progress-streaming-server/README.md` | `acb3654cfec1aeb526ee789d6f51d3a900cf5873e12787ddb48f442cf62e19a7` |
+| `.changeset/structured-progress-summary.md` | `a51f59b0e14030da97237d4e165fd2c0521ea8c432d82b532f9ef5d4c9efbe9d` |
+| `docs/reviews/current-release-readiness.md` | `f3d33ac5550e4bcbfaeee14b85d02425ceee7e47de8c449b522d42d25dd61e4d` |
+
+This review establishes clarity of the actual contract and qualification limits.
+Local protocol observations do not replace the required native JSON-summary
+proof or complete fresh-candidate release and independent acceptance.
