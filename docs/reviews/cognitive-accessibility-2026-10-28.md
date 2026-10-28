@@ -227,3 +227,25 @@ are clearly separated, with the original fixture failure retained.
 
 This review does not replace full qualification, publication, installed-package
 verification, live guidance or independent increment/overall acceptance.
+
+
+## Exported span-name release changelogs
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed all
+seventeen generated changelog additions and the actual current PR #225 prose
+at frozen candidate `5388ba9671c289c44557e6b685ee031662c4b301`.
+Each full file matches the saved manifest and actual candidate bytes. The
+entries explain bounded exported names, generic initial sampling/fallback,
+query migration and preserved error/signal behavior. Dependency-only updates
+remain explicit.
+
+| Reviewed file | SHA-256 at the frozen candidate |
+| --- | --- |
+| `website/CHANGELOG.md` | `17df778e17ab9a9621a1af4f5b8bc19ddf7318c9ac7204e009ca976bc7588d6f` |
+
+The seventeen-file manifest has SHA-256
+`7053e61881790d98b0ed83583342fc52eaf32f4b305b5e25b91c8fb3084a7dfa`.
+The PR title/body snapshot has SHA-256
+`911b4456e2d4845bfdfd81a28f94efb72149f19556e856330e6c90c261738f5e`.
+This records genuine prose review before promotion. Registry-installed proof,
+publication, live guidance and full merge-back remain separate requirements.
