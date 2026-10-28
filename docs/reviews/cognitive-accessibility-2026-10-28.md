@@ -271,3 +271,25 @@ actual local output evidence and all pending new-source qualification gates.
 This review establishes clarity of the changed output and its limits. It does
 not establish correction of the model omission or replace the unchanged native
 semantic criteria, full release qualification or independent acceptance.
+
+
+## Repaired span-name candidate changelogs
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed all
+seventeen actual generated changelogs and current PR #225 prose at the new
+candidate `4b9280f489c2959582d70f1e803355bf081a0129`. Each file matches the
+new manifest and actual candidate bytes. The progress initializer entry explains
+readable display text alongside unchanged structured fields. Naming and
+dependency entries remain clear.
+
+| Reviewed file | SHA-256 at the new frozen candidate |
+| --- | --- |
+| `website/CHANGELOG.md` | `17df778e17ab9a9621a1af4f5b8bc19ddf7318c9ac7204e009ca976bc7588d6f` |
+
+The new seventeen-file manifest has SHA-256
+`3e6fc5946fe36193a9845d396a7ca6d275c22da7443caec7b68093c1a11ff516`.
+The current PR title/body snapshot has SHA-256
+`1f36205ef4ed78c86d285645bb5fafe2381b49ada53507d621ca25491b4a6332`.
+This records a genuine review of the changed candidate. The failed prior
+candidate remains preserved; new semantic/native proof, publication, live
+guidance, full merge-back and acceptance remain separate requirements.
