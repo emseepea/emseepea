@@ -187,3 +187,22 @@ The generated PR title/body snapshot has SHA-256
 This records actual prose review before promotion. Registry-installed checks,
 publication, live guidance and full merge-back remain separate requirements.
 Span naming remains the separate Next increment of outcome #219.
+
+
+## Verified error-visibility release record
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed the final
+release-readiness record and PR #222 description after Release, Publish and full
+merge-back qualification passed. The record distinguishes verified package/live
+behavior from pending independent increment acceptance and the overall outcome's
+remaining naming increment. Original mobile and registry failures, the one
+bounded recovery and retained semantic execution remain explicit.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `582deec02fea4939b362c55fdfcc8f6559af435ef4955fee6686e1625f2b6546` |
+
+Final PR body SHA-256:
+`6c2660b677d6c0a6fea01282c9b61866c6c5ae12885ab47ce089061f2f3988ed`.
+This prose record does not replace documentation qualification or independent
+increment acceptance. Outcome #219 remains open for span naming.
