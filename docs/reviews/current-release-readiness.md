@@ -32,6 +32,13 @@ private error content. This is local source evidence, not a released-package
 claim. Full qualification, benchmarks, remote checks, registry-installed proof,
 promotion, live website and independent acceptance remain required.
 
+The first local full qualification stopped at the tracing page's mobile
+accessibility check: a three-column table became an unfocusable scrollable
+region at 320px. The mapping now uses a two-column failure table with unset
+cases in prose. The existing whole-site light/dark mobile/desktop accessibility
+check passed after rebuilding the website. The original failure remains
+retained; full exact-commit qualification is required again for this correction.
+
 The inherited Wednesday-afternoon target is likely infeasible for two complete
 release pipelines after the actual 17:17 AEDT start. Actual delivery and any
 missed target must be reported honestly; no new deadline is assumed.

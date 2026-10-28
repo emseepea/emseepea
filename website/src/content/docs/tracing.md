@@ -204,14 +204,15 @@ Use your tracing backend's standard ERROR span-status filter to find genuine
 tool failures, including failures returned with HTTP 200. No custom outcome
 query or additional framework option is required.
 
-The framework applies this mapping to its own request span:
+The framework sets ERROR on its own span for these finished outcomes:
 
-| Request outcome | Span status | `error.type` |
-| --- | --- | --- |
-| Finished HTTP 5xx response | ERROR | HTTP status-code string, such as `503` |
-| Uncancelled tool failure outside HTTP 4xx | ERROR | `tool_error` |
-| Success, routine HTTP 4xx or remaining protocol outcomes | UNSET | Omitted |
-| Expected cancellation or disconnection | UNSET | Omitted |
+| Failure | `error.type` |
+| --- | --- |
+| HTTP 5xx response | HTTP status-code string, such as `503` |
+| Uncancelled tool failure outside HTTP 4xx | `tool_error` |
+
+Success, routine HTTP 4xx, remaining protocol outcomes and expected cancellation
+or disconnection keep status UNSET and omit `error.type`.
 
 A framework deadline expiry is a genuine tool failure. Expected cancellation
 comes from the SDK request or invocation/shutdown signal. A handler-thrown

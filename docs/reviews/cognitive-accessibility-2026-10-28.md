@@ -149,3 +149,19 @@ independent acceptance.
 | `website/src/content/docs/tracing.md` | `683f518099c44e158f554ebe1229322008dc68b4a1204d1e6e1f2278f2ea74d6` |
 | `.changeset/trace-error-filter.md` | `b8c6949e2f1f00b023e3c2e101c6241f1f8e88eb72ddda122640993f6e872f57` |
 | `docs/reviews/current-release-readiness.md` | `0d0098e7e81194c6098a537576f2bee07a59e795723a52011fabc49892e0cfa8` |
+
+
+## Trace error mapping mobile correction
+
+Result: PASS. Independent reviewer `/root/default_cognitive` re-reviewed the
+tracing guide and readiness record after the first local qualification exposed
+an unfocusable scrollable table at 320px. A two-column ERROR table and UNSET
+prose preserve the mapping and reduce mobile reading load. The existing rebuilt
+whole-site light/dark mobile/desktop accessibility check passed. The original
+failed qualification is retained; full exact-commit qualification is still
+required. Prose review does not substitute for that execution evidence.
+
+| Reviewed file | SHA-256 of current content |
+| --- | --- |
+| `website/src/content/docs/tracing.md` | `88b0ffbcb4b2231a5048f725845a6e862ce8897b5bcf1bb91691d953a5b10336` |
+| `docs/reviews/current-release-readiness.md` | `292f1491c08915cf73aa586f02e109d6587e9ce512fbcaefeac7f7749911fde8` |
