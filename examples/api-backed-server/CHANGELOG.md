@@ -1,5 +1,11 @@
 # @emseepea/create-api-backed-server
 
+## 0.1.34
+
+### Patch Changes
+
+- [`8cf7d6d`](https://github.com/emseepea/emseepea/commit/8cf7d6d4218944f88ffb27f94b39f4fb860b566c) Thanks [@tompahoward](https://github.com/tompahoward)! - Name exported framework spans from bounded MCP methods and registered capability names, so operators can recognize calls directly in trace waterfalls. Preserve generic initial naming for head sampling, safe method-only and unknown-method fallbacks, error classification, application-owned parents and existing completion logs and metrics. Document trace-query migration and verify real installed SDK names without capturing unknown requested names or resource URIs.
+
 ## 0.1.32
 
 ### Patch Changes

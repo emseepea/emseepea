@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/create-tool-server",
-  "version": "0.1.32",
+  "version": "0.1.34",
   "description": "Create an Em See Pea server with one public tool.",
   "license": "MIT",
   "type": "module",
@@ -18,10 +18,10 @@
     "prepack": "npm run build:initializer"
   },
   "devDependencies": {
-    "@emseepea/feedback": "0.11.7",
-    "@emseepea/server": "0.25.7",
+    "@emseepea/feedback": "0.11.9",
+    "@emseepea/server": "0.25.9",
     "zod": "4.6.6",
-    "@emseepea/testing": "0.26.10",
+    "@emseepea/testing": "0.26.12",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",
     "oxlint": "1.80.0"
