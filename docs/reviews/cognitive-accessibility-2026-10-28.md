@@ -100,3 +100,29 @@ PR description SHA-256 is
 `9494696ccff716983bdb7e50c496b1f48fbaf9d57ca8aa1b5f4ff5b57e273e6d`.
 This records completed prose review before promotion. Installed-package checks,
 publication, live website and full merge-back remain separate requirements.
+
+
+## Verified active-span default release record
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed the final
+release-readiness record, merged PR #218 description and Reviewing bodies for
+#215, #216 and #217. The prose separates published behavior and verified
+delivery from the preserved registry observations and capture-fixture failure.
+The one bounded recovery and unchanged execution evidence are clear. Tracking
+bodies preserve the assessed plan as history and withhold Done until independent
+acceptance.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `ce74d0c17a4d0e4e9a16099e27d9056cd1e916646063e259f05fe8639bf1761b` |
+
+Final PR prose SHA-256:
+`705a3a49901b9c6cd692b81ce40dd0d4cac9af554452731288163ab0b3c09d1e`.
+Reviewing issue-body SHA-256 values:
+
+- #215: `f11fb30ffb56fd3b45b97c35cba9c7a402b21f104799a38e4868c430d51fac85`
+- #216: `1bd14b6f75045b0bcf0009e3c7bfe82c607736a707d0dbf794f07518badbe40b`
+- #217: `86ed1de0f5cd15c26b540ad66474f3f2b0aa6c03aa63e642f19451c2c1c0d9f0`
+
+This prose review remains separate from exact-commit documentation qualification
+and final independent outcome acceptance.

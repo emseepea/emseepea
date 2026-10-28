@@ -4,50 +4,93 @@ Date: 2026-10-28
 
 ## Active-span default correction
 
-Status: **IMPLEMENTED; RELEASE QUALIFICATION PENDING**.
+Status: **RELEASED AND VERIFIED**.
 
-Outcome [#215](https://github.com/emseepea/emseepea/issues/215), increment
-[#216](https://github.com/emseepea/emseepea/issues/216) and contribution
-[#217](https://github.com/emseepea/emseepea/issues/217) track this correction.
-`openTelemetry()` now reuses a valid active local span by default, creating an
-INTERNAL framework child. `useActiveSpan: false` selects bounded HTTP-header
+`@emseepea/server@0.25.6` is on npm's `latest` tag. Website 0.0.18 deploys the
+[updated tracing guide](https://emseepea.github.io/emseepea/tracing/#use-existing-http-instrumentation).
+`openTelemetry()` now reuses a valid active local span by default and creates
+an INTERNAL framework child. `useActiveSpan: false` selects bounded HTTP-header
 extraction and a SERVER span. The deprecated `httpInstrumentation` alias retains
 explicit values; the new option takes precedence when both are supplied.
 
-Identity-only context projection, application span ownership, unsampled context,
-HTTP fallback and failure isolation are unchanged. The guide uses the ordinary
-adapter with real HTTP instrumentation; it needs no parenting option.
+Validated identity-only context, unsampled parents, privacy boundaries,
+application-owned spans/providers and failure isolation are preserved. The real
+registry-installed SDK example uses the default adapter and proves one transport
+SERVER span, an INTERNAL framework child, asynchronous backend parenting,
+correlated logs, HTTP metrics, resource policy and shutdown.
 
-All five independent plan critics and saved-record planning comparison passed.
-Actual-source architecture and public prose reviews passed. The focused tracing,
-logs, metrics and copied-guide suite passed 60 tests, including default, explicit
-opt-outs, legacy values, precedence and real transport-to-backend topology.
-Full source qualification, benchmarks, remote checks, installed-package release,
-latest promotion, live website and independent acceptance remain pending.
+All sixteen intended public versions and candidate commits match independent
+canonical `latest` reads. Their integrities match the qualified release artifact.
+The actual job verified 178 registry signatures and 98 attestations. All three
+live copyable JavaScript examples match the reviewed source; the canonical guide
+returned HTTP 200 and explains default reuse, opt-out and alias precedence.
 
-Planned package versions below are release targets, not publication evidence:
+The delivery chain is:
 
-- `@emseepea/server@0.25.6`
-- `@emseepea/create-api-backed-server@0.1.31`
-- `@emseepea/create-database-schema-server@0.1.31`
-- `@emseepea/create-html-ui-server@0.1.31`
-- `@emseepea/create-mongodb-backed-server@0.1.31`
-- `@emseepea/create-multi-instance-postgres-server@0.1.31`
-- `@emseepea/create-openapi-backed-server@0.1.31`
-- `@emseepea/create-progress-streaming-server@0.1.31`
-- `@emseepea/create-react-ui-server@0.1.31`
-- `@emseepea/create-resources-and-prompts-server@0.1.31`
-- `@emseepea/create-soap-backed-server@0.1.31`
-- `@emseepea/create-tool-server@0.1.31`
-- `@emseepea/feedback@0.11.6`
-- `@emseepea/react@0.4.17`
-- `@emseepea/svelte@0.2.17`
-- `@emseepea/testing@0.26.9`
+- Source `32496d2f713ca4e2dd1b70001733402a8da26276` —
+  [Quality 40633725145](https://github.com/emseepea/emseepea/actions/runs/40633725145), all eighteen jobs passed.
+- Candidate `c03f0c8770c4b10477ba338310557d808cae4552` —
+  [Release 40635212603 attempt 1](https://github.com/emseepea/emseepea/actions/runs/40635212603), all strict publication checks passed.
+- Reviewed main receipt `10ffeb1f599cea1e726d4256c6c1dcfdbb5b7935` —
+  [Documentation Quality 40635414782](https://github.com/emseepea/emseepea/actions/runs/40635414782).
+- Publish `c307450c699346fabfdbe949ab9d01989c8a62c6` —
+  [Publish 40637780474 attempt 2](https://github.com/emseepea/emseepea/actions/runs/40637780474), all four jobs passed.
+- Merge-back `acdae59d24a057b3b550ccf76b8ce4c4737ae58c` —
+  [Full Quality 40639849692](https://github.com/emseepea/emseepea/actions/runs/40639849692), all seventeen required jobs passed; release preparation correctly skipped.
 
-The private website target is 0.0.18 and is deployed rather than published to npm.
-Existing exact-source, registry provenance, signature and installed-package
-checks remain required. Risk forecast is 5/25 within appetite, conditional on
-those controls passing; it is not clearance for an unverified release.
+The merge-back has the reviewed main receipt and publish commit as its ordered
+parents. The frozen candidate and source binding remained unchanged.
+
+The first independent registry read showed the preceding React version, and its
+exact target returned 404. The original Release attempt's bounded registry gate
+subsequently passed; fresh independent reads matched all targets. Those initial
+observations are retained. Their underlying cause remains unknown.
+
+Original merge-back Quality 40638181479 failed before the PostgreSQL Events
+capture fixture executed any cases. Its report omitted a server-version result,
+reported a fixture/migration prerequisite failure and confirmed closed
+connections. The preceding feedback adapter check passed. The cause remains
+unknown; the failure was not relabelled as success or an infrastructure fault.
+
+Architecture, risk and planning reviews approved one failed-job-only Publish
+recovery after both original runs finished. The existing workflow recovered the
+same merge and dispatched full Quality 40639849692 with unchanged assertions.
+That run passed, including the capture fixture. The three successful Publish jobs
+and all their steps retain their original execution times despite new GitHub job
+descriptors. Candidate and semantic execution, code, versions and registry tags
+were unchanged by recovery.
+
+- Result: PASS
+- Final result: within appetite.
+
+Full clean source qualification and all three required benchmarks passed. The
+reviewed recovery's residual risk was 5/25, within appetite; all its required
+qualification and publication controls subsequently passed. Outcome acceptance
+and final tracking are recorded in [#215](https://github.com/emseepea/emseepea/issues/215),
+[#216](https://github.com/emseepea/emseepea/issues/216) and
+[#217](https://github.com/emseepea/emseepea/issues/217).
+
+Published public versions:
+
+- Published: `@emseepea/create-api-backed-server@0.1.31`
+- Published: `@emseepea/create-database-schema-server@0.1.31`
+- Published: `@emseepea/create-html-ui-server@0.1.31`
+- Published: `@emseepea/create-mongodb-backed-server@0.1.31`
+- Published: `@emseepea/create-multi-instance-postgres-server@0.1.31`
+- Published: `@emseepea/create-openapi-backed-server@0.1.31`
+- Published: `@emseepea/create-progress-streaming-server@0.1.31`
+- Published: `@emseepea/create-react-ui-server@0.1.31`
+- Published: `@emseepea/create-resources-and-prompts-server@0.1.31`
+- Published: `@emseepea/create-soap-backed-server@0.1.31`
+- Published: `@emseepea/create-tool-server@0.1.31`
+- Published: `@emseepea/feedback@0.11.6`
+- Published: `@emseepea/server@0.25.6`
+- Published: `@emseepea/react@0.4.17`
+- Published: `@emseepea/svelte@0.2.17`
+- Published: `@emseepea/testing@0.26.9`
+
+The private website is deployed rather than published to npm. The private shared
+UI workspace has dependency metadata only.
 
 ## Historical: HTTP instrumentation coexistence
 
