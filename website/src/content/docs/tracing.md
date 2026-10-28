@@ -198,13 +198,40 @@ experimental OpenTelemetry API option. Your application's metric Views can
 override it; check the buckets exported by your provider. These custom metric
 names do not claim full OpenTelemetry semantic-convention compliance.
 
+## Find failed tool calls
+
+Use your tracing backend's standard ERROR span-status filter to find genuine
+tool failures, including failures returned with HTTP 200. No custom outcome
+query or additional framework option is required.
+
+The framework applies this mapping to its own request span:
+
+| Request outcome | Span status | `error.type` |
+| --- | --- | --- |
+| Finished HTTP 5xx response | ERROR | HTTP status-code string, such as `503` |
+| Uncancelled tool failure outside HTTP 4xx | ERROR | `tool_error` |
+| Success, routine HTTP 4xx or remaining protocol outcomes | UNSET | Omitted |
+| Expected cancellation or disconnection | UNSET | Omitted |
+
+A framework deadline expiry is a genuine tool failure. Expected cancellation
+comes from the SDK request or invocation/shutdown signal. A handler-thrown
+`AbortError` without such cancellation remains a tool failure. Disconnection
+takes precedence; a finished HTTP 5xx response remains an error even if work
+was also cancelled.
+
+Error status and type belong only to the framework span. The application still
+owns the transport span. Exception messages, stacks, arguments and results are
+excluded; the framework adds no status description or exception event.
+Existing completion outcomes, logs, metrics and HTTP lifetime timing stay the
+same. This does not claim full MCP operation semantic-convention compliance.
+
 ## Correlate safe completion logs
 
 `openTelemetry({ logs: true })` emits one INFO record when each MCP HTTP
 response finishes or disconnects. Its event name is `mcp.request` and its fixed
 body is `MCP HTTP request ended`. Bounded attributes identify method, configured
-capability, status and outcome. Errors are represented by the outcome attributes;
-exception objects and request payloads are not recorded.
+capability, status and outcome. In these completion logs, errors use the outcome
+attributes; exception objects and request payloads are not recorded.
 
 The record uses the local request span's trace and span IDs and the response's
 completion timestamp, even if delivery occurs later. Trace IDs are not metric

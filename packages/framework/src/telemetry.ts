@@ -1,4 +1,4 @@
-import { context, isSpanContextValid, metrics, propagation, ROOT_CONTEXT, SpanKind, trace } from "@opentelemetry/api";
+import { context, isSpanContextValid, metrics, propagation, ROOT_CONTEXT, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import type { Context, Span, Tracer } from "@opentelemetry/api";
 import { logs, SeverityNumber } from "@opentelemetry/api-logs";
 import type { FastifyInstance, FastifyRequest } from "fastify";
@@ -25,6 +25,8 @@ export interface CallerClassification {
 
 export interface ObservabilityState {
   protocolOutcome: Exclude<ObservedProtocolOutcome, "disconnected">;
+  /** Internal cancellation provenance; never copied into completion events. */
+  cancelled?: boolean;
   /**
    * Why a production forwarding check refused, when the reason is one the
    * operator needs and the caller must not be told (ADR-0102). The response
@@ -246,6 +248,16 @@ export function installObservability(
       if (span) {
         try { span.setAttributes(eventAttributes(event)); }
         catch { /* Span decoration cannot change protocol behaviour. */ }
+        const errorType = outcome !== "finished" ? undefined
+          : statusCode >= 500 ? String(statusCode)
+            : statusCode >= 400 ? undefined
+              : event.protocolOutcome === "tool_error" && !state.cancelled ? "tool_error" : undefined;
+        if (errorType) {
+          try { span.setAttribute("error.type", errorType); }
+          catch { /* Error attributes cannot suppress status or finalization. */ }
+          try { span.setStatus({ code: SpanStatusCode.ERROR }); }
+          catch { /* Status cannot suppress finalization or other signals. */ }
+        }
         try { span.end(performance.timeOrigin + finished); }
         catch { /* Finalization is independent of adapter delivery. */ }
       }

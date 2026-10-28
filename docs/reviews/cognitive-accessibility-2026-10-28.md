@@ -126,3 +126,26 @@ Reviewing issue-body SHA-256 values:
 
 This prose review remains separate from exact-commit documentation qualification
 and final independent outcome acceptance.
+
+
+## Standard trace error visibility
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed the
+proposed ADR0128 amendment, tracing guide, Changeset, release-readiness update
+and internal cancellation documentation for outcome #219's error-visibility
+increment #220. The guide explains the ordinary ERROR filter, finite error
+types, precedence and the distinction between expected source cancellation and
+genuine deadline/handler failures. Parent ownership and existing completion
+signals remain clear. The readiness record distinguishes 82 passing local
+checks and the local real-SDK fixture from pending released-package proof.
+
+Span naming remains the separately delivered Next increment. This prose review
+does not replace full qualification, publication, live website verification or
+independent acceptance.
+
+| Reviewed file | SHA-256 of current content |
+| --- | --- |
+| `docs/decisions/0128-request-lifetime-opentelemetry-context.proposed.md` | `d9aee1f0031779e5384a3fa8ac20091f7457ce99c1fb3b719e51ed1f184f3cd5` |
+| `website/src/content/docs/tracing.md` | `683f518099c44e158f554ebe1229322008dc68b4a1204d1e6e1f2278f2ea74d6` |
+| `.changeset/trace-error-filter.md` | `b8c6949e2f1f00b023e3c2e101c6241f1f8e88eb72ddda122640993f6e872f57` |
+| `docs/reviews/current-release-readiness.md` | `0d0098e7e81194c6098a537576f2bee07a59e795723a52011fabc49892e0cfa8` |

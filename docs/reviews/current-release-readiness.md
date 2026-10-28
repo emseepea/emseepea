@@ -2,7 +2,62 @@
 
 Date: 2026-10-28
 
-## Active-span default correction
+## Standard trace error visibility
+
+Status: **IMPLEMENTED; RELEASE QUALIFICATION PENDING**.
+
+Outcome [#219](https://github.com/emseepea/emseepea/issues/219) requires operators
+to find failures with ordinary trace filters and identify operations in span
+names. The current independently useful increment
+[#220](https://github.com/emseepea/emseepea/issues/220), with contribution
+[#221](https://github.com/emseepea/emseepea/issues/221), delivers error visibility
+first. Span naming remains provisional Next; this release alone does not
+complete the overall outcome.
+
+Framework spans now set standard ERROR status and bounded `error.type` for
+finished HTTP 5xx or uncancelled tool failures, including HTTP 200 tool errors.
+Routine client refusals and expected cancellation/disconnection remain unset.
+The observed shutdown/deadline distinction uses private source-signal state;
+exception names, reasons, messages and stacks are not inspected or captured.
+Genuine framework deadlines and uncancelled handler-thrown `AbortError` remain
+failures. Parent ownership and public completion-event/log/metric schemas stay
+unchanged.
+
+All five independent critics passed plan revision 2 and its saved GitHub records.
+Actual local observation established the classification; focused tracing checks
+passed 48 tests, and existing logs, metrics and copied-guide checks passed 34.
+The local installed-verification fixture used a real Node SDK provider/exporter
+to select exactly the HTTP 200 tool failure through ERROR status and exclude its
+private error content. This is local source evidence, not a released-package
+claim. Full qualification, benchmarks, remote checks, registry-installed proof,
+promotion, live website and independent acceptance remain required.
+
+The inherited Wednesday-afternoon target is likely infeasible for two complete
+release pipelines after the actual 17:17 AEDT start. Actual delivery and any
+missed target must be reported honestly; no new deadline is assumed.
+
+Planned public versions below are targets, not publication evidence:
+
+- `@emseepea/server@0.25.7`
+- `@emseepea/create-api-backed-server@0.1.32`
+- `@emseepea/create-database-schema-server@0.1.32`
+- `@emseepea/create-html-ui-server@0.1.32`
+- `@emseepea/create-mongodb-backed-server@0.1.32`
+- `@emseepea/create-multi-instance-postgres-server@0.1.32`
+- `@emseepea/create-openapi-backed-server@0.1.32`
+- `@emseepea/create-progress-streaming-server@0.1.32`
+- `@emseepea/create-react-ui-server@0.1.32`
+- `@emseepea/create-resources-and-prompts-server@0.1.32`
+- `@emseepea/create-soap-backed-server@0.1.32`
+- `@emseepea/create-tool-server@0.1.32`
+- `@emseepea/feedback@0.11.7`
+- `@emseepea/react@0.4.18`
+- `@emseepea/svelte@0.2.18`
+- `@emseepea/testing@0.26.10`
+
+The private website target is 0.0.19 and is deployed rather than published to npm.
+
+## Historical: active-span default correction
 
 Status: **RELEASED AND VERIFIED**.
 

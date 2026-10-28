@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 import test from "node:test";
-import { context, createContextKey, createTraceState, metrics, propagation, ROOT_CONTEXT, SpanKind, trace } from "@opentelemetry/api";
+import { context, createContextKey, createTraceState, metrics, propagation, ROOT_CONTEXT, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
 import { W3CTraceContextPropagator } from "@opentelemetry/core";
 import { InMemorySpanExporter, SimpleSpanProcessor, TracerProvider } from "@opentelemetry/sdk-trace";
@@ -40,18 +40,21 @@ function tracing(t, { provider, propagator, manager } = {}) {
   return { exporter, tracer: trace.getTracer("test.backend") };
 }
 
-async function server(t, handler, { adapters = [openTelemetry()], streaming = false, access = "public", authentication } = {}) {
+async function server(t, handler, { adapters = [openTelemetry()], streaming = false, access = "public", authentication, operationTimeoutMs, configure } = {}) {
   const definition = {
     name: "echo", access, description: "Echo a test value.",
     ...(access === "protected" ? { requiredScopes: ["status:read"] } : {}),
     inputSchema: z.object({ value: z.string() }), handler,
     ...(!streaming ? { outputSchema: z.object({ value: z.string() }) } : {}),
   };
-  const running = await serveEmseepea(createEmseepea({
+  const app = createEmseepea({
     name: "tracing-test", version: "0", observability: adapters,
     ...(authentication ? { authentication } : {}),
+    ...(operationTimeoutMs !== undefined ? { operationTimeoutMs } : {}),
     tools: [streaming ? defineStreamingTool(definition) : defineTool(definition)],
-  }), { port: 0, shutdownTimeoutMs: 100 });
+  });
+  configure?.(app);
+  const running = await serveEmseepea(app, { port: 0, shutdownTimeoutMs: 100 });
   t.after(() => running.close());
   return running;
 }
@@ -226,6 +229,8 @@ test("streaming and disconnects each finalize the request span once", async (t) 
   await delay(30);
   assert.equal(requestSpans(exporter).length, 2);
   assert.equal(requestSpans(exporter)[1].attributes["emseepea.transport.outcome"], "disconnected");
+  assert.equal(requestSpans(exporter)[1].status.code, SpanStatusCode.UNSET);
+  assert.equal(requestSpans(exporter)[1].attributes["error.type"], undefined);
 });
 
 test("disabled tracing and a custom adapter using the same ID do not create request spans", async (t) => {
@@ -287,6 +292,8 @@ test("protocol errors and throwing completion metrics cannot prevent span finali
   await delay(0);
   assert.equal(requestSpans(exporter).length, 1);
   assert.equal(requestSpans(exporter)[0].attributes["emseepea.protocol.outcome"], "protocol_error");
+  assert.equal(requestSpans(exporter)[0].status.code, SpanStatusCode.UNSET);
+  assert.equal(requestSpans(exporter)[0].attributes["error.type"], undefined);
   assert.doesNotMatch(JSON.stringify(requestSpans(exporter)[0].attributes), new RegExp(secret));
 });
 
@@ -322,7 +329,121 @@ test("tracing spans authorization failures without admitting tool work or export
   assert.equal(requestSpans(exporter).length, 1);
   const [span] = requestSpans(exporter);
   assert.equal(span.attributes["http.response.status_code"], 401);
+  assert.equal(span.status.code, SpanStatusCode.UNSET);
+  assert.equal(span.attributes["error.type"], undefined);
   assert.doesNotMatch(JSON.stringify({ attributes: span.attributes, events: span.events }), new RegExp(secret));
+});
+
+test("ordinary trace error filtering separates failures from expected cancellation", async (t) => {
+  for (const parentMode of ["server", "internal"]) {
+    for (const mode of ["success", "tool-error", "throw", "abort-error", "timeout", "disconnect", "shutdown", "shutdown-503", "http-503"]) {
+      await t.test(`${parentMode}/${mode}`, async (t) => {
+        const manager = new AsyncLocalStorageContextManager();
+        const originalActive = manager.active.bind(manager);
+        let transport;
+        manager.active = () => {
+          const current = originalActive();
+          return current === ROOT_CONTEXT && transport ? trace.setSpan(ROOT_CONTEXT, transport) : current;
+        };
+        const { exporter, tracer } = tracing(t, { manager });
+        if (parentMode === "internal") {
+          transport = tracer.startSpan("application.transport", { kind: SpanKind.SERVER }, ROOT_CONTEXT);
+          t.after(() => transport.end());
+        }
+        const events = [];
+        let entered;
+        const started = new Promise((resolve) => { entered = resolve; });
+        let calls = 0;
+        const running = await server(t, async ({ value }, { signal }) => {
+          calls++;
+          entered();
+          if (mode === "tool-error") return { isError: true, content: [{ type: "text", text: secret }] };
+          if (mode === "throw") throw new Error(secret);
+          if (mode === "abort-error") throw new DOMException(secret, "AbortError");
+          if (["timeout", "disconnect", "shutdown", "shutdown-503"].includes(mode)) await delay(10_000, undefined, { signal });
+          return { data: { value } };
+        }, {
+          operationTimeoutMs: mode === "timeout" ? 40 : 1_000,
+          adapters: [openTelemetry(), structuredLogging("observed", (event) => events.push(event))],
+          ...(mode === "http-503" ? { configure(app) {
+            app.addHook("preHandler", async (_request, reply) => reply.code(503).send({ error: "Synthetic unavailable" }));
+          } } : {}),
+          ...(mode === "shutdown-503" ? { configure(app) {
+            app.addHook("onRequest", (_request, reply, done) => {
+              const writeHead = reply.raw.writeHead;
+              reply.raw.writeHead = function (...args) {
+                args[0] = 503;
+                return Reflect.apply(writeHead, this, args);
+              };
+              done();
+            });
+          } } : {}),
+        });
+        const controller = new AbortController();
+        const pending = request(running.url, { signal: controller.signal });
+        if (mode === "disconnect" || mode === "shutdown" || mode === "shutdown-503") {
+          await started;
+          if (mode === "disconnect") controller.abort();
+          else await running.close();
+        }
+        if (mode === "disconnect") await assert.rejects(pending, /abort/i);
+        else {
+          const response = await pending;
+          assert.equal(response.status, mode === "http-503" || mode === "shutdown-503" ? 503 : 200);
+          const result = await response.json();
+          if (!["success", "http-503"].includes(mode)) assert.equal(result.result.isError, true);
+        }
+        await delay(20);
+        const [span] = requestSpans(exporter);
+        assert.equal(requestSpans(exporter).length, 1);
+        assert.equal(calls, mode === "http-503" ? 0 : 1);
+        const errorType = mode === "http-503" || mode === "shutdown-503" ? "503"
+          : ["tool-error", "throw", "abort-error", "timeout"].includes(mode) ? "tool_error" : undefined;
+        assert.equal(span.status.code, errorType ? SpanStatusCode.ERROR : SpanStatusCode.UNSET);
+        assert.equal(span.attributes["error.type"], errorType);
+        assert.equal(span.status.message, undefined);
+        assert.deepEqual(span.events, []);
+        assert.equal(span.kind, transport ? SpanKind.INTERNAL : SpanKind.SERVER);
+        assert.equal(events.length, 1);
+        assert.equal(Object.hasOwn(events[0], "cancelled"), false);
+        if (mode === "shutdown") assert.equal(events[0].protocolOutcome, "tool_error", "public completion outcome remains unchanged");
+        assert.doesNotMatch(JSON.stringify({ attributes: span.attributes, status: span.status, events }), new RegExp(secret));
+        if (transport) {
+          assert.equal(span.parentSpanContext.spanId, transport.spanContext().spanId);
+          assert.equal(transport.status.code, SpanStatusCode.UNSET);
+          assert.deepEqual(transport.attributes, {});
+          assert.equal(transport.isRecording(), true, "the application still owns its transport span");
+        }
+      });
+    }
+  }
+});
+
+test("error decoration failures cannot suppress status, finalization or completion delivery", async (t) => {
+  for (const fault of ["attribute", "status"]) {
+    await t.test(fault, async (t) => {
+      const observed = [];
+      const span = {
+        spanContext: () => ({ traceId: remote.traceId, spanId: "abcdef1234567890", traceFlags: 1 }),
+        setAttributes() { observed.push("attributes"); },
+        setAttribute() { observed.push("error.type"); if (fault === "attribute") throw new Error(secret); },
+        setStatus() { observed.push("status"); if (fault === "status") throw new Error(secret); },
+        end() { observed.push("end"); },
+      };
+      tracing(t, { provider: { getTracer: () => ({ startSpan: () => span }) } });
+      let calls = 0;
+      const running = await server(t, () => {
+        calls++;
+        return { isError: true, content: [{ type: "text", text: "Synthetic failure" }] };
+      }, { adapters: [openTelemetry(), structuredLogging("completion", () => observed.push("emit"))] });
+      const response = await request(running.url);
+      assert.equal(response.status, 200);
+      assert.equal((await response.json()).result.isError, true);
+      await delay(0);
+      assert.equal(calls, 1);
+      assert.deepEqual(observed, ["attributes", "error.type", "status", "end", "emit"]);
+    });
+  }
 });
 
 test("active-span defaults, opt-outs and compatibility preserve clean parenting", async (t) => {
