@@ -696,11 +696,16 @@ instructions, tool descriptions, or input schemas.
 
 Provider events, MCP addresses, configuration, headers, provider and harness
 credentials, environment values, stderr, and home-directory paths are not
-retained. Discovery fails before judgment or retention if advertised server
+retained.
+
+Discovery fails before judgment or retention if advertised server
 context contains a known MCP authentication token, Claude provider token, or
-secret-named fixture environment value. Known configured authentication values
+secret-named fixture environment value.
+
+Known configured authentication values
 are scrubbed from elicitation evidence. Arbitrary secrets placed inside test
 content are not detected.
+
 Local evidence is written with mode `0600`; repository CI retains it for 14
 days.
 
