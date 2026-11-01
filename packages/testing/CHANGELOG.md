@@ -1,5 +1,13 @@
 # @emseepea/testing
 
+## 0.26.13
+
+### Patch Changes
+
+- [`e96e09a`](https://github.com/emseepea/emseepea/commit/e96e09adf61e1d0daee47d2ed31daab3be819253) Thanks [@tompahoward](https://github.com/tompahoward)! - Give semantic meaning judges initialized server instructions and advertised tool metadata as evidence. This lets judges distinguish a URL supplied by the server from an invented URL. Treat the context as data, and reject known configured secrets before judgment or retention. Preserve existing answer trials, meaning assertions and failure rules. Update starter projects to use the patched testing package.
+- Updated dependencies [[`e96e09a`](https://github.com/emseepea/emseepea/commit/e96e09adf61e1d0daee47d2ed31daab3be819253)]:
+  - @emseepea/server@0.25.10
+
 ## 0.26.12
 
 ### Patch Changes

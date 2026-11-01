@@ -1,5 +1,11 @@
 # @emseepea/server
 
+## 0.25.10
+
+### Patch Changes
+
+- [`e96e09a`](https://github.com/emseepea/emseepea/commit/e96e09adf61e1d0daee47d2ed31daab3be819253) Thanks [@tompahoward](https://github.com/tompahoward)! - Update the supported MCP Node adapter, server and core dependencies to admit the patched Hono HTTP server dependency.
+
 ## 0.25.9
 
 ### Patch Changes
