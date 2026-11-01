@@ -73,7 +73,7 @@
     "@anthropic-ai/claude-code": "2.1.248",
     "@changesets/changelog-github": "1.0.0",
     "@changesets/cli": "3.0.1",
-    "@emseepea/testing": "0.26.12",
+    "@emseepea/testing": "0.26.13",
     "@modelcontextprotocol/client": "2.3.1",
     "@modelcontextprotocol/node": "2.1.2",
     "@types/node": "24.13.3",

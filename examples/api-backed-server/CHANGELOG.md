@@ -1,5 +1,11 @@
 # @emseepea/create-api-backed-server
 
+## 0.1.35
+
+### Patch Changes
+
+- [`e96e09a`](https://github.com/emseepea/emseepea/commit/e96e09adf61e1d0daee47d2ed31daab3be819253) Thanks [@tompahoward](https://github.com/tompahoward)! - Give semantic meaning judges initialized server instructions and advertised tool metadata as evidence. This lets judges distinguish a URL supplied by the server from an invented URL. Treat the context as data, and reject known configured secrets before judgment or retention. Preserve existing answer trials, meaning assertions and failure rules. Update starter projects to use the patched testing package.
+
 ## 0.1.34
 
 ### Patch Changes
