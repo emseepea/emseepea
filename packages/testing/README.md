@@ -672,9 +672,16 @@ public host. Qualify each supported host through its real public journey.
 
 ## Diagnose Failures
 
-The evidence file contains readable test prompts, assistant responses,
-advertised MCP tool calls and arguments, model-visible tool results, expected
-meanings, and judge reasons. It also keeps hashes for comparison. A failed
+The evidence file contains:
+
+- readable test prompts and assistant responses;
+- initialized server instructions and advertised tool names, descriptions and input schemas;
+- tool calls, arguments and model-visible tool results;
+- expected meanings and judge reasons.
+
+The judge receives server advertisements as data
+about what was available, not as instructions or proof of completed actions.
+The evidence also keeps hashes for comparison. A failed
 meaning assertion runs and records all nine judgments, so disagreement is
 visible without a rerun.
 
@@ -684,12 +691,16 @@ failed answer trial is identified even when earlier trials completed.
 
 Treat test conversations as publishable artifact content. Use synthetic,
 non-sensitive fixtures and never put credentials or production data in prompts,
-tool arguments, tool results, assertions, or application context.
+tool arguments, tool results, assertions, application context, server
+instructions, tool descriptions, or input schemas.
 
 Provider events, MCP addresses, configuration, headers, provider and harness
 credentials, environment values, stderr, and home-directory paths are not
-retained. Known configured authentication values are scrubbed from elicitation
-evidence. Arbitrary secrets placed inside test content are not detected.
+retained. Discovery fails before judgment or retention if advertised server
+context contains a known MCP authentication token, Claude provider token, or
+secret-named fixture environment value. Known configured authentication values
+are scrubbed from elicitation evidence. Arbitrary secrets placed inside test
+content are not detected.
 Local evidence is written with mode `0600`; repository CI retains it for 14
 days.
 
