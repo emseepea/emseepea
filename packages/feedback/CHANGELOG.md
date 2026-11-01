@@ -1,5 +1,12 @@
 # @emseepea/feedback
 
+## 0.11.10
+
+### Patch Changes
+
+- Updated dependencies [[`e96e09a`](https://github.com/emseepea/emseepea/commit/e96e09adf61e1d0daee47d2ed31daab3be819253)]:
+  - @emseepea/server@0.25.10
+
 ## 0.11.9
 
 ### Patch Changes

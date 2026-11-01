@@ -108,7 +108,7 @@ export async function collectMcpMaterial(url, testCase, signal) {
   };
 }
 
-export async function listMcpTools(url, testCase, signal) {
+export async function listMcpServerContext(url, testCase, signal) {
   signal?.throwIfAborted();
   const client = await openClient(url, testCase);
   let abort;
@@ -117,14 +117,15 @@ export async function listMcpTools(url, testCase, signal) {
     signal?.addEventListener("abort", abort, { once: true });
   });
   try {
-    if (testCase.nativeResources && !client.getServerCapabilities()?.tools) return [];
-    const response = await Promise.race([client.listTools(), cancelled]);
+    const instructions = client.getInstructions();
+    const response = testCase.nativeResources && !client.getServerCapabilities()?.tools
+      ? { tools: [] } : await Promise.race([client.listTools(), cancelled]);
     const tools = response.tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
     tools.sort((left, right) => left.name.localeCompare(right.name));
     if (new Set(tools.map(({ name }) => name)).size !== tools.length) {
       throw new Error("MCP server advertised duplicate tool names");
     }
-    return tools;
+    return { ...(instructions === undefined ? {} : { instructions }), tools };
   } finally {
     signal?.removeEventListener("abort", abort);
     await client.close();

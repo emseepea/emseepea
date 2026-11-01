@@ -314,3 +314,53 @@ unmet native-text evidence, registry failure and required fresh allocation.
 This review establishes clarity of the actual contract and qualification limits.
 Local protocol observations do not replace the required native JSON-summary
 proof or complete fresh-candidate release and independent acceptance.
+
+## Structured-summary candidate release prose
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed all
+seventeen generated changelogs and the actual current PR #225 title/body at
+frozen candidate `ee93fe488a2578c6ced04d9e1221addab555a692`. Each saved full
+file matches the candidate bytes and manifest. The fresh versions skip occupied
+next versions; the progress entry documents the additive structured summary.
+The origin binds source `b7f91d76669ce36fcf934be0d46a8e699ca9d34e` and
+first-attempt Source Quality 40680594697, all eighteen jobs passed.
+
+| Reviewed file | SHA-256 at the frozen candidate |
+| --- | --- |
+| `website/CHANGELOG.md` | `17df778e17ab9a9621a1af4f5b8bc19ddf7318c9ac7204e009ca976bc7588d6f` |
+
+The seventeen-file reviewer manifest has SHA-256
+`34e43c6f4fcf811a6e9fcc97066739c00bd96f9dda36b9a6fbd10536ed710c46`.
+The generated PR title/body snapshot has SHA-256
+`f82db7a2c9483e8fc32596d7bbc49acca2d9694fdbb249083ea0ea1ac86db3f6`.
+
+This receipt establishes exact generated-prose review before promotion. Native
+summary delivery, strict installed-package qualification, latest/site delivery,
+full merge-back and independent acceptance remain separate. The local CPU
+failure and unreached later local benchmarks remain retained; CI success does
+not explain or erase them.
+
+## Verified trace triage release record
+
+Result: PASS. Independent reviewer `/root/default_cognitive` reviewed the final
+release-readiness record and merged PR #225 title/body after all four Publish
+jobs and full exact merge-back qualification passed. The record distinguishes
+released behavior, real installed SDK/native evidence, canonical latest/live
+readback and retained qualification failures from independent acceptance and
+final documentation qualification tracked in the outcome.
+
+The local CPU failure remains a failure, with two later local commands unreached;
+canonical-profile success is not described as its explanation or performance
+equivalence. The missed Wednesday target and the temporary same-account connector
+transport are explicit. Earlier incomplete transport exercises remain retained.
+
+| Reviewed file | SHA-256 of final content |
+| --- | --- |
+| `docs/reviews/current-release-readiness.md` | `a70ceeecab1c8013dd84772213d2c1c6f9a5e10ee7e93ca209b6943afcd013d5` |
+
+Merged PR title SHA-256:
+`427509fc1fbaee9de99c905f7177d8d4d76bb618eb3f444554082c34998f179f`.
+Merged PR body SHA-256:
+`5d577c7bbd6822805d9d89ce5d64a6c01f81a9018d639d911a6a5ce594f7e417`.
+This prose review does not replace the exact final documentation commit's
+qualification, pre-push checks or independent increment and overall acceptance.
