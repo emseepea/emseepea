@@ -4,8 +4,16 @@ Date: 2026-11-01
 
 ## Semantic judge context and supported dependency repair
 
-Status: **STAGED**. No package in this batch has been published or verified
-as installed by VODER.
+Status: **PUBLISHED**. All sixteen versions listed below are available under
+npm's `latest` tag. VODER's installed-adopter verification remains pending.
+
+Candidate `50aec36542f859e57d939c5a84c257baf22d18e6` passed
+[Release qualification 41273836953](https://github.com/emseepea/emseepea/actions/runs/41273836953).
+[Publication 41275324476](https://github.com/emseepea/emseepea/actions/runs/41275324476)
+promoted the qualified package bytes and recorded the releases.
+[Merge-back Quality 41275579037](https://github.com/emseepea/emseepea/actions/runs/41275579037)
+passed for `c1f89217e751cdd96ad4408145ff5c8e8add5a91`. The website publication
+job was skipped.
 
 The evaluator repair supplies meaning judges with initialized server
 instructions and advertised tool metadata. Judges can use this data to
@@ -25,14 +33,13 @@ native answer path, three answer trials, nine meaning judgments, assertions
 and failure rules. This does not certify a native ChatGPT journey or a
 model's general resistance to malicious instructions.
 
-## Planned publication
+## Published packages
 
-The existing Changesets planner requires sixteen public packages. The server
-and testing packages have direct patch changesets. All eleven starters must
-ship their updated starter dependencies. Feedback, React and Svelte receive
-automatic patches for their exact server dependency. These are planned
-versions; the release allocator may choose fresh versions if any are occupied.
-The generated candidate needs its own qualification and registry readback.
+The existing Changesets planner selected sixteen public packages. The server
+and testing packages had direct patch changesets. All eleven starters shipped
+their updated starter dependencies. Feedback, React and Svelte received
+automatic patches for their exact server dependency. Registry post-reads
+confirmed these exact versions, candidate revision and artifact integrity.
 
 - `@emseepea/server@0.25.10`
 - `@emseepea/testing@0.26.13`
@@ -52,6 +59,20 @@ The generated candidate needs its own qualification and registry readback.
 - `@emseepea/create-tool-server@0.1.35`
 
 ## Completed checks and retained limits
+
+The candidate's thirteen retained Claude evidence files contain 22 passing
+cases, 66 answer trials, and 207 judgments across 23 meaning assertions.
+Each case ran three answer trials; each meaning assertion retained nine
+judgments. Semantic retries were zero. All 66 trials retained server context.
+This is Claude qualification, not native ChatGPT certification.
+
+The release workflow verified downloaded package contracts, initializers,
+signatures and provenance. The CI registry verifier rejected a local
+invocation at its required Actions publish-ref check, before verification.
+Separate local read-only post-reads confirmed all sixteen `latest` tags,
+candidate revisions, integrities and attestation bindings against the
+qualified registry artifact. Cryptographic provenance verification came from
+the successful release workflow.
 
 Source `eb9e0d0a6194a7107d2fb504278abf557308e7c0` passed
 [Quality run 41270067732](https://github.com/emseepea/emseepea/actions/runs/41270067732).
@@ -83,18 +104,17 @@ the cause remains unresolved. Passing pinned-runtime qualification does not
 establish Node 26 compatibility. No timing limit or assertion was relaxed.
 The original VODER advisory failure remains a failed historical result.
 
-## Remaining release and adopter gates
+## Publication reviews and remaining adopter work
 
 Architecture, jobs-to-be-done, changeset risk and voice reviews passed for
 this metadata preparation. Independent cognitive-accessibility review passed
 for the complete publication copy. The cumulative preparation risk assessment
 rated commit, push and release preparation at 5/25 each, within appetite.
-Final marker wording remains subject to exact-copy review and the commit
-requires its own qualification. This assessment does not approve publication.
-
-The release candidate must then pass native semantic
-qualification, installed-package checks and registry verification before
-promotion. Publication approval remains separate from this preparation.
+The separate exact-candidate promotion assessment also rated residual risk
+at 5/25, within appetite. The guarded release watcher completed successfully
+after candidate qualification, installed-package checks, registry promotion
+and exact merge-back qualification. The published preparation snapshot remains
+available at the candidate revision.
 
 VODER must install the published testing package and qualify its unchanged
 Actions handoff separately. Its earlier testing 0.20.4 used an internal
