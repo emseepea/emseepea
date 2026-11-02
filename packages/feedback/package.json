@@ -70,7 +70,7 @@
     "zod": "4.6.6"
   },
   "devDependencies": {
-    "@emseepea/testing": "0.26.13",
+    "@emseepea/testing": "0.26.14",
     "pg": "8.23.0"
   },
   "engines": {
