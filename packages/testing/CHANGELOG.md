@@ -1,5 +1,11 @@
 # @emseepea/testing
 
+## 0.26.14
+
+### Patch Changes
+
+- [`b15cc35`](https://github.com/emseepea/emseepea/commit/b15cc3547cfe97f9b10ee601dc0546f1e68e1c7c) Thanks [@tompahoward](https://github.com/tompahoward)! - Retain ordered visible Claude assistant messages in semantic evidence and conversation turns, separately from the final response. Exclude hidden reasoning and preserve final-response assertions.
+
 ## 0.26.13
 
 ### Patch Changes
