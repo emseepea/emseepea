@@ -52,6 +52,9 @@ export interface ResourceOperation {
 export interface ConversationTurn {
   readonly resourceOperations: readonly (readonly ResourceOperation[])[];
   readonly responses: readonly string[];
+  /** Ordered native Claude visible messages by trial. Other providers currently return empty arrays.
+   * May include the final message; responses remains the separate terminal result. Excludes hidden reasoning. */
+  readonly assistantMessages: readonly (readonly string[])[];
   readonly toolCalls: readonly (readonly ToolCall[])[];
   readonly toolOutcomes: readonly (readonly ToolOutcome[])[];
   readonly elicitations: readonly (readonly ElicitationEvidence[])[];

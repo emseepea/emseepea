@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test, { mock } from "node:test";
@@ -19,10 +20,11 @@ const advertised = "https://example.com/approved-app";
 const invented = "https://example.com/invented-app";
 const requests = [];
 let response;
+let nativeAnswer;
 mock.module("../semantic/provider.mjs", { namedExports: {
   ...provider,
   startModelConversation: () => ({
-    send: async () => ({ answer: response, calls: [], toolResults: [], models: ["test-model"], pathEvidence: [] }),
+    send: async () => nativeAnswer ?? ({ answer: response, calls: [], toolResults: [], models: ["test-model"], pathEvidence: [] }),
     close: async () => {},
   }),
   runModel: async (_provider, prompt) => {
@@ -35,7 +37,7 @@ mock.module("../semantic/provider.mjs", { namedExports: {
     return { answer: JSON.stringify({ pass, score: pass ? 1 : 0, reason: "Checked server provenance." }), models: ["test-judge"] };
   },
 } });
-const { createConversation, assertNoToolCalls, assertResponseMeaning } = await import("../semantic/test.mjs");
+const { createConversation, assertNoToolCalls, assertResponseContains, assertResponseMeaning } = await import("../semantic/test.mjs");
 
 for (const [name, instructions, description, answer, pass] of [
   ["initialized instructions establish URL provenance", `Use ${advertised}.`, undefined, advertised, true],
@@ -79,6 +81,62 @@ for (const [name, instructions, description, answer, pass] of [
     }
   });
 }
+
+test("visible native messages reach public turns, judge history and failed evidence without replacing the final answer", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "visible-messages-test-"));
+  const previous = process.env.EMSEEPEA_EVIDENCE_DIR;
+  process.env.EMSEEPEA_EVIDENCE_DIR = directory;
+  const messages = [advertised, invented, invented];
+  nativeAnswer = provider.parseNativeClaudeEvents([
+    ...messages.map((text) => ({ type: "assistant", message: {
+      role: "assistant", content: [{ type: "thinking", thinking: "HIDDEN_REASONING" }, { type: "text", text }],
+    } })),
+    { type: "result", result: invented, num_turns: 1, is_error: false,
+      modelUsage: { "claude-sonnet-4-6": { canonicalModel: "claude-sonnet-4-6", provider: "firstParty" } } },
+  ], []);
+  requests.length = 0;
+  const chat = await createConversation(t, {
+    server: new URL("./judge-context-server.mjs", import.meta.url),
+    environment: { FIXTURE_INSTRUCTIONS: `Use ${advertised}.` },
+  });
+  t.after(async () => {
+    try {
+      const files = await readdir(directory);
+      assert.equal(files.length, 1);
+      const serialized = await readFile(join(directory, files[0]), "utf8");
+      const evidence = JSON.parse(serialized);
+      assert.equal(evidence.status, "failed");
+      assert.equal(serialized.includes("HIDDEN_REASONING"), false);
+      for (const trial of evidence.answerTrials) {
+        const record = trial.turns[0];
+        assert.deepEqual(record.assistantMessages, messages);
+        assert.equal(record.response, invented);
+        assert.equal(record.assistantMessagesSha256,
+          createHash("sha256").update(JSON.stringify(messages)).digest("hex"));
+        assert.equal(record.answerSha256, createHash("sha256").update(invented).digest("hex"));
+      }
+    } finally {
+      nativeAnswer = undefined;
+      if (previous === undefined) delete process.env.EMSEEPEA_EVIDENCE_DIR;
+      else process.env.EMSEEPEA_EVIDENCE_DIR = previous;
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+  const turn = await chat.send("Help me with this report.");
+  assertNoToolCalls(turn);
+  assert.deepEqual(turn.responses, [invented, invented, invented]);
+  assert.deepEqual(turn.assistantMessages, [messages, messages, messages]);
+  assert.throws(() => turn.assistantMessages[0].push("invented evidence"), TypeError);
+  assert.throws(() => assertResponseContains(turn, advertised), /Response did not contain/);
+  await assert.rejects(assertResponseMeaning(turn, { expected: "Use only a server-advertised URL." }), /expected meaning/);
+  assert.equal(requests.length, 9);
+  for (const { history, prompt } of requests) {
+    assert.equal(history[0].assistant, invented);
+    assert.deepEqual(history[0].assistantMessages, messages);
+    assert.match(prompt, /final assistant response/);
+    assert.equal(prompt.includes("HIDDEN_REASONING"), false);
+  }
+});
 
 for (const [field, source] of ["instructions", "description"].flatMap((field) =>
   ["auth", "environment", "provider"].map((source) => [field, source]))) {

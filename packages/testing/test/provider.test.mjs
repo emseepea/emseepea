@@ -245,6 +245,29 @@ test("native Claude accepts tool batches and longer provider journeys but retain
     /omitted an MCP tool result/);
 });
 
+test("native Claude retains ordered visible messages separately from its final result", () => {
+  const message = (...content) => ({ type: "assistant", message: { role: "assistant", content } });
+  const text = (value) => ({ type: "text", text: value });
+  const earlier = "Invoice search is incomplete; review Sales > Invoices manually.";
+  const final = "Feedback recording is unconfirmed.";
+  const events = [
+    message(text(earlier), { type: "thinking", thinking: "PRIVATE_REASONING" }, text("\nCheck coverage.")),
+    { type: "user", message: { role: "user", content: [text("PRIVATE_USER_TEXT")] } },
+    { type: "system", message: { role: "assistant", content: [text("PRIVATE_SYSTEM_TEXT")] } },
+    message({ type: "redacted_thinking", data: "PRIVATE_SIGNATURE" }),
+    message(text(final)),
+    message(text(final)),
+    { ...result, result: final },
+  ];
+  for (const input of [events, events.map((event) => JSON.stringify(event)).join("\n")]) {
+    const parsed = parseNativeClaudeEvents(input, []);
+    assert.deepEqual(parsed.assistantMessages, [earlier + "\nCheck coverage.", final, final]);
+    assert.equal(parsed.answer, final);
+    assert.equal(JSON.stringify(parsed).includes("PRIVATE_"), false);
+  }
+  assert.deepEqual(parseNativeClaudeEvents([result], []).assistantMessages, []);
+});
+
 test("requires exact judge JSON", () => {
   assert.deepEqual(
     parseJudgeVerdict('{"pass":true,"score":1,"reason":"All criteria passed."}'),
