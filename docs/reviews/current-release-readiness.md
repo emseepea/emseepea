@@ -42,11 +42,18 @@ a README paragraph above the repository limit and three unrecorded fresh-install
 dependency versions. The paragraph was split and the packed-consumer test
 passed after dependency-graph reconciliation.
 
-The same dependency failure was reproduced on unchanged main. Only the lock
-entries for `@hono/node-server@2.1.6`, `fast-json-stringify@7.2.1` and
-`jose@6.2.15` were reconciled with actual fresh consumers. These are ordinary
-transitive resolutions, not selected vulnerability repairs. No dependency
-constraint, security gate or acceptance assertion was weakened.
+The first dependency failure was reproduced on unchanged main. The original
+lock-only resolutions were `@hono/node-server@2.1.6`,
+`fast-json-stringify@7.2.1` and `jose@6.2.15`.
+
+A later fresh-consumer check resolved `semver@7.8.6` and
+`thread-stream@4.2.1`. The exact root development pin for semver was updated
+from 7.8.5 to 7.8.6, with npm-generated lockfile reconciliation for both packages.
+The latest full run failed. The repaired exact commit still requires qualification.
+
+These changes reconcile the observed dependency graph; they are not selected
+vulnerability repairs. No security gate or acceptance assertion was
+weakened.
 
 ## Reviews and remaining checks
 
