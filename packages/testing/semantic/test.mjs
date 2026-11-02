@@ -148,6 +148,7 @@ export async function createConversation(testContext, options) {
           toolCalls: recordedToolCalls,
           resourceOperations: answer.resourceOperations ?? [],
           assistant: answer.answer,
+          ...(answer.assistantMessages ? { assistantMessages: answer.assistantMessages } : {}),
         });
         const record = {
           turn: trial.record.turns.length + 1,
@@ -155,6 +156,10 @@ export async function createConversation(testContext, options) {
           interactionMode: "native-mcp",
           prompt,
           response: answer.answer,
+          ...(answer.assistantMessages ? {
+            assistantMessages: answer.assistantMessages,
+            assistantMessagesSha256: hash(JSON.stringify(answer.assistantMessages)),
+          } : {}),
           elicitations: answer.elicitations,
           toolCalls: recordedToolCalls,
           resourceOperations: answer.resourceOperations ?? [],
@@ -213,6 +218,7 @@ export async function createConversation(testContext, options) {
       }
       return Object.freeze({
         responses: Object.freeze(trials.map(({ answer }) => answer)),
+        assistantMessages: immutableSnapshot(trials.map(({ record }) => record.assistantMessages ?? [])),
         toolCalls: Object.freeze(trials.map(({ calls }) => Object.freeze(calls))),
         toolOutcomes: Object.freeze(trials.map(({ record }) => immutableSnapshot(record.toolCalls.map(
           ({ name, arguments: args, result, isError }) => ({ name, arguments: args, result, isError }),

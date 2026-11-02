@@ -190,6 +190,12 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
   }
   return {
     answer: result.result,
+    assistantMessages: events.flatMap(({ type, message }) => {
+      if (type !== "assistant" || !Array.isArray(message?.content)
+        || (message.role !== undefined && message.role !== "assistant")) return [];
+      const text = message.content.filter((block) => block.type === "text" && typeof block.text === "string");
+      return text.length ? [text.map((block) => block.text).join("")] : [];
+    }),
     calls,
     toolResults: toolUses.map(({ id }) => {
       const toolResult = toolResults.get(id);

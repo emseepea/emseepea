@@ -109,6 +109,14 @@ argument correctness, persisted effects, response meaning, or recovery from an
 error. Keep an exact assertion when order, count, and arguments are
 deterministic, and add the separate assertions your application outcome needs.
 
+Each turn exposes `assistantMessages`, an immutable array of visible native
+Claude messages for each trial, in event order. Other providers currently return
+empty arrays. These messages may include the final message; `responses` and
+response assertions continue to use the separate terminal result.
+
+Saved evidence and meaning-judge history retain these messages without hidden
+reasoning. Earlier text does not satisfy an assertion about the final response.
+
 Each turn also exposes `toolOutcomes`, aligned by trial and call order with
 `toolCalls`. Each outcome is a read-only snapshot of what the model saw. It
 contains only `name`, `arguments`, the model-visible `result`, and `isError`.
