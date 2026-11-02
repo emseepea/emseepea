@@ -1,11 +1,13 @@
 # Current Release Readiness
 
-Date: 2026-11-01
+Date: 2026-11-02
 
 ## Semantic judge context and supported dependency repair
 
 Status: **PUBLISHED**. All sixteen versions listed below are available under
-npm's `latest` tag. VODER's installed-adopter verification remains pending.
+npm's `latest` tag. VODER's installed-package checks and advisory Actions
+evaluation passed. Native ChatGPT and customer-production journeys remain
+unverified.
 
 Candidate `50aec36542f859e57d939c5a84c257baf22d18e6` passed
 [Release qualification 41273836953](https://github.com/emseepea/emseepea/actions/runs/41273836953).
@@ -104,7 +106,7 @@ the cause remains unresolved. Passing pinned-runtime qualification does not
 establish Node 26 compatibility. No timing limit or assertion was relaxed.
 The original VODER advisory failure remains a failed historical result.
 
-## Publication reviews and remaining adopter work
+## Publication reviews and adopter verification
 
 Architecture, jobs-to-be-done, changeset risk and voice reviews passed for
 this metadata preparation. Independent cognitive-accessibility review passed
@@ -116,13 +118,36 @@ after candidate qualification, installed-package checks, registry promotion
 and exact merge-back qualification. The published preparation snapshot remains
 available at the candidate revision.
 
-VODER must install the published testing package and qualify its unchanged
-Actions handoff separately. Its earlier testing 0.20.4 used an internal
-native-answer tool-call cap that current upstream removed under ADR-0116.
-The existing VODER selection assertions, three answer trials, nine judgments,
-zero retries, twenty-minute job timeout, advisory status and measured-cost
-promotion contract remain unchanged. Passing selection assertions do not
-constrain execution cost; the actual adopter run must be measured.
+VODER adopted testing 0.26.13 in commit
+`0641f6cddfb9356dd909ceae05e659b226d48c37`.
+[VODER Actions advisory job (repository access required)](https://github.com/voder-ai/voder-mcp-hub/actions/runs/41368040746/job/125032399432)
+passed on 2026-11-02. This is separate from the upstream release qualification.
+
+Ordinary `npm ci` with Node 24.22.1 and npm 12.0.2, the TypeScript build and
+all eight existing Actions fixture tests passed. All 382 existing production
+lock entries remained unchanged. Direct module resolution kept Actions on
+server 0.22.0 and core on 0.20.0; server 0.25.10 stayed in testing's development
+dependency closure.
+
+The retained advisory evidence passed all fifteen cases, including the four
+read-handoff cases: 45 trials, 90 answer turns, 45 server contexts and 270
+passing judgments across 30 meaning assertions. Each assertion kept three
+answer trials and nine judgments, with zero semantic retries. All six answers
+to the two accounting-read requests used the exact URL advertised by the server.
+
+The conversation evaluation took 411.115 seconds; the complete advisory job
+took 478 seconds. The retained evidence has no token usage or measured cost,
+so the measured-cost promotion condition remains unsatisfied. This run cannot count toward promotion
+under that contract. No gate was promoted.
+
+VODER's earlier testing 0.20.4 used an internal native-answer tool-call cap
+that current upstream removed under ADR-0116. The existing VODER selection
+assertions, twenty-minute job timeout, advisory status and measured-cost
+promotion contract remain unchanged.
+
+Passing selection assertions do not
+constrain execution cost. This Claude/framework result does not establish
+native ChatGPT or customer-production behavior.
 
 Prior release records remain available in this file's Git history.
 
