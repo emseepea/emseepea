@@ -19,7 +19,7 @@ test("native WebMCP forwards the complete official-client catalogue to the same 
   const bundle = await readFile(join(directory, "browser.js"), "utf8");
   const executions = [];
   const protectedCalls = [];
-  const tools = Array.from({ length: 12 }, (_, i) => defineTool({
+  const tools = Array.from({ length: 62 }, (_, i) => defineTool({
     name: `catalogue-${i}`, description: `Read synthetic catalogue entry ${i}.`, access: "public",
     inputSchema: z.object({ value: z.string() }), outputSchema: z.object({ value: z.string() }),
     annotations: { readOnlyHint: true },
@@ -55,7 +55,7 @@ test("native WebMCP forwards the complete official-client catalogue to the same 
   app.get("/browser.js", (_request, reply) => reply.type("text/javascript").send(bundle));
   const running = await serveEmseepea(app, { port: 0 });
   t.after(() => running.close());
-  const client = new Client({ name: "independent-native-check", version: "0.0.0" });
+  const client = new Client({ name: "independent-native-check", version: "0.0.0" }, { listMaxPages: 0 });
   await client.connect(new StreamableHTTPClientTransport(running.url));
   t.after(() => client.close());
   const browser = await chromium.launch({
@@ -69,18 +69,27 @@ test("native WebMCP forwards the complete official-client catalogue to the same 
   const registered = await page.evaluate(async () => {
     const { Client, StreamableHTTPClientTransport, registerWebMcp } = await import("/browser.js");
     if (typeof document.modelContext?.registerTool !== "function") throw new Error("Native WebMCP unavailable");
-    const client = new Client({ name: "synthetic-browser-client", version: "0.0.0" });
+    const capped = new Client({ name: "default-browser-client", version: "0.0.0" });
+    let cappedRejected = false;
+    try {
+      await capped.connect(new StreamableHTTPClientTransport(new URL("/mcp", location.href)));
+      try { await registerWebMcp({ client: capped }); } catch { cappedRejected = true; }
+    } finally { await capped.close(); }
+    const afterCapped = (await document.modelContext.getTools()).length;
+    const client = new Client({ name: "synthetic-browser-client", version: "0.0.0" }, { listMaxPages: 0 });
     await client.connect(new StreamableHTTPClientTransport(new URL("/mcp", location.href)));
     const registration = await registerWebMcp({ client });
     globalThis.syntheticWebMcp = { client, registration };
-    return { available: registration.available, tools: registration.tools,
+    return { cappedRejected, afterCapped, available: registration.available, tools: registration.tools,
       unsupported: registration.unsupported, native: await document.modelContext.getTools() };
   });
+  assert.equal(registered.cappedRejected, true);
+  assert.equal(registered.afterCapped, 0);
   assert.equal(registered.available, true);
-  assert.equal(registered.tools.length, 15);
-  assert.equal(registered.native.length, 15);
-  assert.equal(registered.unsupported.length, 15);
-  const nativeRead = registered.native.find(({ name }) => name === "catalogue-11");
+  assert.equal(registered.tools.length, 65);
+  assert.equal(registered.native.length, 65);
+  assert.equal(registered.unsupported.length, 65);
+  const nativeRead = registered.native.find(({ name }) => name === "catalogue-61");
   const nativeWrite = registered.native.find(({ name }) => name === "write-entry");
   assert.equal(nativeRead.annotations.readOnlyHint, true);
   assert.equal(nativeRead.annotations.consequentialHint, false);
@@ -91,13 +100,13 @@ test("native WebMCP forwards the complete official-client catalogue to the same 
   assert.equal(nativeWrite.outputSchema, undefined);
   assert.equal(executions.length, 0);
   const result = await page.evaluate(async () => {
-    const tool = (await document.modelContext.getTools()).find(({ name }) => name === "catalogue-11");
+    const tool = (await document.modelContext.getTools()).find(({ name }) => name === "catalogue-61");
     return JSON.parse(await document.modelContext.executeTool(tool, { value: "native-read" }));
   });
   assert.deepEqual(result.structuredContent, { value: "native-read" });
-  const independent = await client.callTool({ name: "catalogue-11", arguments: { value: "independent-read" } });
+  const independent = await client.callTool({ name: "catalogue-61", arguments: { value: "independent-read" } });
   assert.deepEqual(independent.structuredContent, { value: "independent-read" });
-  assert.deepEqual(executions, [{ index: 11, value: "native-read" }, { index: 11, value: "independent-read" }]);
+  assert.deepEqual(executions, [{ index: 61, value: "native-read" }, { index: 61, value: "independent-read" }]);
   const errorResult = await page.evaluate(async () => {
     const tool = (await document.modelContext.getTools()).find(({ name }) => name === "declined-entry");
     return JSON.parse(await document.modelContext.executeTool(tool, {}));
@@ -115,7 +124,7 @@ test("native WebMCP forwards the complete official-client catalogue to the same 
   for (const token of ["synthetic-alice", "synthetic-bob"]) {
     const accountResult = await page.evaluate(async (token) => {
       const { Client, StreamableHTTPClientTransport, registerWebMcp } = await import("/browser.js");
-      const client = new Client({ name: "account-browser", version: "0.0.0" });
+      const client = new Client({ name: "account-browser", version: "0.0.0" }, { listMaxPages: 0 });
       await client.connect(new StreamableHTTPClientTransport(new URL("/mcp", location.href),
         { requestInit: { headers: { authorization: `Bearer ${token}` } } }));
       const registration = await registerWebMcp({ client, filter: ({ name }) => name === "account-entry" });

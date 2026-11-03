@@ -7,7 +7,18 @@ Web Model Context Protocol (WebMCP) lets a website register tools with a support
 
 ## Register your catalogue
 
-Connect and authenticate your MCP client using your existing application setup. Then register its tools in one call:
+When creating an official MCP client, set `listMaxPages: 0` to discover catalogues of any size. The client otherwise stops after 64 listing pages. Keep your existing connection and authentication setup:
+
+```ts title="Create a client without a catalogue page cap"
+import { Client } from "@modelcontextprotocol/client";
+
+const client = new Client(
+  { name: "my-website", version: "1.0.0" },
+  { listMaxPages: 0 },
+);
+```
+
+After connecting and authenticating that client, register its tools in one call:
 
 ```ts title="Register the tool catalogue"
 import { registerWebMcp } from "@emseepea/server/webmcp";
@@ -31,7 +42,7 @@ Registration is a snapshot. Reconnect and register again after changing the serv
 
 ## Select tools when needed
 
-All discovered tools are included by default, across every listing page. To select a smaller set, provide a predicate:
+All discovered tools are included by default, across every listing page. The adapter does not override limits configured in the supplied client. To select a smaller set, provide a predicate:
 
 ```ts title="Filter the catalogue"
 const registration = await registerWebMcp({
