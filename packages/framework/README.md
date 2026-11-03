@@ -18,6 +18,10 @@ eligibility, and support limits. See the
 [protocol coverage ledger](https://github.com/emseepea/emseepea/blob/main/docs/protocol-coverage.md)
 for the supported MCP subset and gaps.
 
+## Expose MCP tools in a browser
+
+Use the optional `@emseepea/server/webmcp` entry point to register the tools from an existing connected MCP client. Follow [Expose MCP tools in a browser](https://emseepea.github.io/emseepea/webmcp/) for setup, optional filtering, cleanup and compatibility limits.
+
 ## Render a bounded result view
 
 Follow [Render an accessible result card](https://emseepea.github.io/emseepea/result-cards/)
