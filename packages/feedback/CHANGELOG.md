@@ -1,5 +1,13 @@
 # @emseepea/feedback
 
+## 0.12.0
+
+### Minor Changes
+
+- [`5d95cf1`](https://github.com/emseepea/emseepea/commit/5d95cf1fbd13a30c00df2d0cd903a4b28c090b64) Thanks [@tompahoward](https://github.com/tompahoward)! - Replace GitHub-specific prefixes in public feedback identifiers with provider-neutral thread, message and event references. Numeric provider identifiers remain visible. This changes existing identifiers: obtain current conversation references and recreate reply-event subscriptions after upgrading.
+
+  Persistent data: compatible; provider records and authorization are unchanged.
+
 ## 0.11.11
 
 ### Patch Changes
