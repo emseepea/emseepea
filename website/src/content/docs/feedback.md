@@ -307,8 +307,9 @@ The conversation helper adds reply, list, and get operations. Use
 `defineFeedbackSubmission` and `submit-feedback` to create every new feedback
 conversation. `create-feedback-thread` has been removed.
 
-Existing stored thread IDs remain valid for reply and get operations, and those
-threads remain available in list results.
+Except for the GitHub reference-format change described below, existing stored
+thread IDs remain valid for reply and get operations, and those threads remain
+available in list results.
 
 The ID returned by `submit-feedback` is the canonical thread ID for reply and
 get. List returns that thread under the same authorized scope.
@@ -367,6 +368,20 @@ reply journey in your own client and deployment.
 - Firestore stores the same model in separate scope trees with transaction-backed sequence and receipt updates.
 - GitHub Issues keeps issues, comments, labels, assignees, milestones, close and reopen actions, reactions, and notifications native.
 - Zendesk keeps tickets, public replies, assignment, tags, status, views, triggers, email, and private notes native. Private notes never reach the user.
+
+GitHub-backed feedback uses provider-neutral references such as `feedback-123`,
+`feedback-123-body` and `message-456`. Webhook event references use
+`event:<delivery>`. Issue and comment numbers remain visible.
+
+After upgrading,
+previously saved identifiers and reply-event subscriptions stop working. Call
+`list-feedback-threads` to obtain current conversation references, then recreate
+reply-event subscriptions with those references.
+
+A submission-only client can
+obtain a new reference only by making a new submission; do not resubmit old
+feedback just to replace a reference. Existing authorization and scope checks
+still apply.
 
 GitHub and Zendesk stay authoritative. Em See Pea does not mirror them into a
 second conversation database.
