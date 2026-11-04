@@ -387,12 +387,35 @@ test("Codex events retain native MCP calls and require a complete resumable turn
     assert.equal(JSON.stringify(error).includes("private-"), false);
     return true;
   });
+  const applicationError = parseCodexEvents(events.map((event) => event.item?.type === "mcp_tool_call"
+    ? { ...event, item: { ...event.item, status: "failed", result: { content: [
+      { type: "text", text: "The requested pea is unavailable." },
+    ], structured_content: null } } }
+    : event), [{ name: "get-pea" }]);
+  assert.deepEqual(applicationError.calls, [{ name: "get-pea", arguments: { name: "Snap" } }]);
+  assert.deepEqual(applicationError.toolResults, [{
+    content: [{ type: "text", text: "The requested pea is unavailable." }],
+    isError: true,
+  }]);
+  assert.equal(applicationError.answer, "Snap is a pea.");
   assert.throws(() => parseCodexEvents(events.map((event) => event.item?.type === "mcp_tool_call"
-    ? { ...event, item: { ...event.item, result: { isError: true, content: [] } } }
+    ? { ...event, item: { ...event.item, status: "failed", result: {
+      content: [{ type: "text", text: "Invocation failed." }],
+    } } }
     : event), [{ name: "get-pea" }]), /failed MCP tool call/);
   assert.throws(() => parseCodexEvents(events.map((event) => event.item?.type === "mcp_tool_call"
+    ? { ...event, item: { ...event.item, status: "failed", result: {
+      content: [{ type: "text", text: "" }], structured_content: null,
+    } } }
+    : event), [{ name: "get-pea" }]), /failed MCP tool call/);
+  assert.throws(() => parseCodexEvents(events.map((event) => event.item?.type === "mcp_tool_call"
+    ? { ...event, item: { ...event.item, status: "failed", result: {
+      content: [{ type: "text", text: "The requested pea is unavailable." }], structured_content: null,
+    } } }
+    : event).filter((event) => event.item?.type !== "agent_message"), [{ name: "get-pea" }]), /failed MCP tool call/);
+  assert.throws(() => parseCodexEvents(events.map((event) => event.item?.type === "mcp_tool_call"
     ? { ...event, item: { ...event.item, status: "failed", message: "private failure detail" } }
-    : event), [{ name: "get-pea" }], undefined, 1),
+    : event), [{ name: "get-pea" }]),
   (error) => error.message === "Model command reported a failed MCP tool call"
     && !error.message.includes("private failure detail"));
   assert.throws(() => parseCodexEvents([

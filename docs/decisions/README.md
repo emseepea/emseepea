@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 125 decisions: 76 current and 49 historical.
+This project has 127 decisions: 78 current and 49 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -91,6 +91,8 @@ recorded separately.
 - [ADR-0127: Application-specific Feedback Submission Descriptions](0127-application-specific-feedback-submission-descriptions.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0128: Request-lifetime OpenTelemetry Context](0128-request-lifetime-opentelemetry-context.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0129: Coexistence with Application HTTP Instrumentation](0129-http-instrumentation-tracing-coexistence.proposed.md): Proposed; human review unconfirmed.
+- [ADR-0130: Optional WebMCP Exposure through an Existing MCP Client](0130-optional-webmcp-exposure-through-existing-mcp.proposed.md): Proposed; human review confirmed.
+- [ADR-0131: Isolated CLI-to-Native-WebMCP Qualification](0131-isolated-cli-native-webmcp-qualification.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2772,3 +2774,36 @@ Chosen option: **"Reuse valid active local context by default"**. Following the 
 - Controlled incoming parents, default reuse, explicit opt-outs, alias precedence, fallback, context isolation and unsampled parent behavior are checked at the public HTTP boundary.
 - The installed-package guide exports traces, HTTP metrics and correlated logs and retains application-owned shutdown.
 - Required source, release and live website checks establish delivery; the Wednesday-afternoon deadline does not waive them.
+
+### [ADR-0130: Optional WebMCP Exposure through an Existing MCP Client](0130-optional-webmcp-exposure-through-existing-mcp.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0130 Decision
+
+Chosen option: **"Generic browser adapter through the caller’s connected MCP client"**. Expose it through the optional `@emseepea/server/webmcp` entry point. `registerWebMcp({ client })` uses the caller-owned connected client. Discover all listing pages; do not impose the earlier eight-page cutoff. An optional filter selects a smaller set.
+
+#### ADR-0130 Checks
+
+- Exercise the official browser MCP client against a real HTTP server and native WebMCP.
+- Check multiple tools, every listing page, optional filtering and metadata/result fidelity.
+- Check authorization before handler work, account changes, collisions and cleanup.
+- Verify publication and independently installed package behaviour through the existing workflow.
+- Keep native API, isolated model qualification and hosted extension claims separate.
+
+### [ADR-0131: Isolated CLI-to-Native-WebMCP Qualification](0131-isolated-cli-native-webmcp-qualification.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0131 Decision
+
+Chosen option: **"Test-only loopback MCP bridge to page-registered native WebMCP tools"**. The supported CLI connects to one loopback MCP server. That fixture discovers the synthetic page’s native WebMCP tools and invokes selected calls through the native browser API, adapter and real backend.
+
+#### ADR-0131 Checks
+
+- Verify the sole model-facing server exposes only page application tools.
+- Correlate model-native events with real native browser and server outcomes.
+- Retain fresh trials, unchanged user requests and independent judgments.
+- Run the normal exact-source, package, CI and release workflow separately.

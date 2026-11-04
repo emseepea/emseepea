@@ -132,6 +132,14 @@ Accessibility Guidelines (WCAG) conformance.
   events. Selection instructions, JSON call plans, answer wrappers, prepared
   MCP material, shell, filesystem, browser, tool search, plugins, ambient MCP
   servers, and unrelated tools are forbidden.
+- A test-only native WebMCP fixture may use browser automation internally to
+  discover and execute an isolated synthetic website’s actual page tools. The
+  model still receives only those application tools through the sole loopback
+  MCP server. It receives no browser, shell, filesystem or other ambient tools.
+
+  Correlate native provider events with browser results and backend observations.
+  This exception does not change resource/prompt qualification limits or the
+  credentialed release authority.
 - Resources and prompts retain deterministic protocol tests. They must not be
   described as semantically qualified until a supported provider offers an
   automatable native journey that represents how users select and consume them.

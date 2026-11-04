@@ -1,6 +1,6 @@
 {
   "name": "@emseepea/server",
-  "version": "0.25.10",
+  "version": "0.26.0",
   "description": "Fastify-first framework for Model Context Protocol 2026-07-28 servers over Streamable HTTP",
   "license": "MIT",
   "repository": {
@@ -43,6 +43,10 @@
     "./events-google-worker": {
       "types": "./dist/events-google-worker.d.ts",
       "import": "./dist/events-google-worker.js"
+    },
+    "./webmcp": {
+      "types": "./dist/webmcp.d.ts",
+      "import": "./dist/webmcp.js"
     }
   },
   "files": [
@@ -53,7 +57,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.type-tests.json",
     "test": "npm run test:built",
-    "test:built": "node --test test/*.test.js",
+    "test:built": "node --test test/*.test.js && node --test test/webmcp-*.integration.mjs",
     "test:postgres": "node test/with-postgres-capture.mjs",
     "test:postgres:lifecycle": "node test/with-postgres-lifecycle.mjs",
     "test:postgres:delivery": "node test/with-postgres-delivery.mjs",

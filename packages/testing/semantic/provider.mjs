@@ -454,9 +454,6 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
   if (authentication.test(errorText)) {
     throw codexEvidenceError("Model command is not signed in", "authentication");
   }
-  const failedTool = events.some(({ item }) => item?.type === "mcp_tool_call"
-    && (item.status === "failed" || item.result?.isError === true || item.result?.is_error === true));
-  if (failedTool) throw new Error("Model command reported a failed MCP tool call");
   if (processExitCode !== 0) throw codexProcessError(processExitCode, providerFailureCategory);
   if (events.some(({ type }) => type === "turn.failed" || type === "error")) {
     throw new Error("Model command reported an error");
@@ -479,6 +476,20 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
   const forbidden = completed.filter((item) => !["agent_message", "reasoning", "mcp_tool_call"].includes(item?.type));
   if (forbidden.length) throw forbiddenItemError(forbidden);
   const toolItems = completed.filter(({ type }) => type === "mcp_tool_call");
+  const terminalAnswerIndex = completed.findLastIndex(({ type }) => type === "agent_message");
+  const codexApplicationError = (item) => item.status === "failed"
+    && item.server === mcpServerName && advertised.has(item.tool)
+    && item.arguments && typeof item.arguments === "object" && !Array.isArray(item.arguments)
+    && item.result && typeof item.result === "object" && !Array.isArray(item.result)
+    && Object.keys(item.result).sort().join(",") === "content,structured_content"
+    && item.result.structured_content === null
+    && Array.isArray(item.result.content) && item.result.content.length > 0
+    && item.result.content.every((block) => block && block.type === "text"
+      && typeof block.text === "string" && block.text.length > 0)
+    && completed.indexOf(item) < terminalAnswerIndex;
+  if (toolItems.some((item) => item.status === "failed" && !codexApplicationError(item))) {
+    throw new Error("Model command reported a failed MCP tool call");
+  }
   const resourceItems = resourceCatalogue ? toolItems.flatMap((item) => {
     const operation = resourceHelperOperation(item, resourceCatalogue);
     return operation ? [{ item, operation }] : [];
@@ -495,8 +506,10 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
       || !item.arguments || typeof item.arguments !== "object" || Array.isArray(item.arguments)) {
       throw forbiddenItemError([item]);
     }
-    if (!item.result || typeof item.result !== "object" || item.status === "failed"
-      || item.result.isError === true || item.result.is_error === true) {
+    const applicationError = codexApplicationError(item)
+      || item.result?.isError === true || item.result?.is_error === true;
+    if (!item.result || typeof item.result !== "object"
+      || (item.status !== "completed" && !(item.status === "failed" && applicationError))) {
       throw new Error("Model command reported a failed MCP tool call");
     }
     return { name: item.tool, arguments: item.arguments };
@@ -504,7 +517,11 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
   const messages = completed.filter(({ type }) => type === "agent_message");
   const answer = messages.at(-1)?.text;
   if (typeof answer !== "string") throw new Error("Model command returned no answer");
-  const toolResults = applicationToolItems.map(({ result }) => ({ content: result.content ?? result, isError: false }));
+  const toolResults = applicationToolItems.map((item) => ({
+    content: item.result.content ?? item.result,
+    isError: item.result.isError === true || item.result.is_error === true
+      || codexApplicationError(item),
+  }));
   return {
     answer,
     calls,
