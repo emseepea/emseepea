@@ -371,10 +371,14 @@ reply journey in your own client and deployment.
 
 GitHub-backed feedback uses provider-neutral references such as `feedback-123`,
 `feedback-123-body` and `message-456`. Webhook event references use
-`event:<delivery>`. Issue and comment numbers remain visible. After upgrading,
+`event:<delivery>`. Issue and comment numbers remain visible.
+
+After upgrading,
 previously saved identifiers and reply-event subscriptions stop working. Call
 `list-feedback-threads` to obtain current conversation references, then recreate
-reply-event subscriptions with those references. A submission-only client can
+reply-event subscriptions with those references.
+
+A submission-only client can
 obtain a new reference only by making a new submission; do not resubmit old
 feedback just to replace a reference. Existing authorization and scope checks
 still apply.

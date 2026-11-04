@@ -12,8 +12,8 @@ contradictions identified in review were repaired and rechecked.
 
 | Reviewed file | SHA-256 |
 | --- | --- |
-| `packages/feedback/README.md` | `c9f89f48ccb6b734388e926708126327a3e48179e01bbae0d1962922fc1d49a3` |
-| `website/src/content/docs/feedback.md` | `76be43eb58b83484b9c3cda6bb445cc1f89532b39777489ab726a4e58eaba0a9` |
+| `packages/feedback/README.md` | `d9a35f359e6d0bb4a591c31509dde3367a5c6cde14368c203b67707a7ac1fe08` |
+| `website/src/content/docs/feedback.md` | `42b62363e6d746eb37d2af39fa25a24344d4d3a57e0c1907247cdd78b8e2ea66` |
 | `.changeset/provider-neutral-feedback-references.md` | `f8e2ea205fc8ab1d80297a1f448782344b72cfefff1e821cfcff299b2f4ffe00` |
 | `docs/risks/R017-valid-github-feedback-identifiers-reveal-the-backing-provider.active.md` | `8de6217b8613e1891c5fcd874b8814a3b47dc1714977bfc669d60937487d34ed` |
 | `docs/risks/README.md` | `8c750af37926f95e7496117d575ccc759f17bf8b43112fd268aedc79bd4b5255` |
