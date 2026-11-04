@@ -360,9 +360,9 @@ feedback conversation. The returned submission ID is the canonical thread ID
 for reply and get operations. List returns the thread when both helpers use the
 same authorized scope projection.
 
-`create-feedback-thread` has been removed. Existing stored thread IDs remain
-valid for reply and get operations, and those threads remain available in list
-results.
+`create-feedback-thread` has been removed. Except for the GitHub reference-format
+change described below, existing stored thread IDs remain valid for reply and
+get operations, and those threads remain available in list results.
 
 Legacy callers should set the required `observation` field to one of the
 allowed category values. Set `detail` to
@@ -626,6 +626,16 @@ dependency on Google's SDK. Scope hashes select separate document trees.
 application owns delivery and retry.
 
 ### GitHub Issues
+
+GitHub-backed feedback uses provider-neutral references such as `feedback-123`,
+`feedback-123-body` and `message-456`. Webhook event references use
+`event:<delivery>`. Issue and comment numbers remain visible. After upgrading,
+previously saved identifiers and reply-event subscriptions stop working. Call
+`list-feedback-threads` to obtain current conversation references, then recreate
+reply-event subscriptions with those references. A submission-only client can
+obtain a new reference only by making a new submission; do not resubmit old
+feedback just to replace a reference. Existing authorization and scope checks
+still apply.
 
 `createGitHubFeedbackBackend` keeps GitHub authoritative:
 

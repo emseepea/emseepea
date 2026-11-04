@@ -78,7 +78,7 @@ test("GitHub keeps the issue authoritative through replies, actions, and offer r
     message: "The result labels were unclear.",
   }, context);
   const threadId = created.conversation.id;
-  assert.equal(threadId, "github-issue-42");
+  assert.equal(threadId, "feedback-42");
 
   await backend.appendMessage({ threadId, message: "It happened on the second page." }, context);
   comments.push({
@@ -131,8 +131,8 @@ test("GitHub issue pagination neither skips nor repeats issues around pull reque
   const first = await backend.listThreads({ limit: 2 }, context);
   const second = await backend.listThreads({ limit: 2, cursor: first.page.nextCursor }, context);
 
-  assert.deepEqual(first.page.threads.map(({ id }) => id), ["github-issue-1", "github-issue-2"]);
-  assert.deepEqual(second.page.threads.map(({ id }) => id), ["github-issue-3"]);
+  assert.deepEqual(first.page.threads.map(({ id }) => id), ["feedback-1", "feedback-2"]);
+  assert.deepEqual(second.page.threads.map(({ id }) => id), ["feedback-3"]);
   assert.equal(second.page.nextCursor, undefined);
   assert.equal(requests.length, 2);
 });
@@ -157,7 +157,7 @@ test("GitHub issue pagination returns a continuation after its fixed raw-page ce
   assert.deepEqual(first.page.threads, []);
   assert.ok(first.page.nextCursor);
   const second = await backend.listThreads({ limit: 1, cursor: first.page.nextCursor }, context);
-  assert.deepEqual(second.page.threads.map(({ id }) => id), ["github-issue-101"]);
+  assert.deepEqual(second.page.threads.map(({ id }) => id), ["feedback-101"]);
   assert.deepEqual(requests, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
 });
 

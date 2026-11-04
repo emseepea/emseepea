@@ -174,7 +174,7 @@ export function createGitHubFeedbackBackend(
             events.push(event(
               "feedback.message.offered-to-client",
               threadId,
-              `github-comment-${comment.id}`,
+              `message-${comment.id}`,
               "team",
               offeredAt,
             ));
@@ -262,11 +262,11 @@ function issueConversation(
   issue: z.output<typeof githubIssueSchema>,
   issueComments: readonly z.output<typeof githubCommentSchema>[],
 ) {
-  const threadId = `github-issue-${issue.number}`;
+  const threadId = `feedback-${issue.number}`;
   const initialBody = stripMarkers(issue.body ?? "");
   const messages: FeedbackMessage[] = [
     {
-      id: `github-issue-${issue.number}-body`,
+      id: `feedback-${issue.number}-body`,
       threadId,
       sequence: 1,
       author: "user",
@@ -287,7 +287,7 @@ function assertProviderUrl(value: URL, provider: string): void {
 
 function githubThread(issue: z.output<typeof githubIssueSchema>): FeedbackThread {
   return {
-    id: `github-issue-${issue.number}`,
+    id: `feedback-${issue.number}`,
     subject: issue.title,
     status: issue.state,
     createdAt: issue.created_at,
@@ -302,7 +302,7 @@ function githubMessage(
 ): FeedbackMessage {
   const user = comment.body?.startsWith(USER_MARKER) ?? false;
   return {
-    id: `github-comment-${comment.id}`,
+    id: `message-${comment.id}`,
     threadId,
     sequence,
     author: user ? "user" : "team",
@@ -317,8 +317,8 @@ function stripMarkers(value: string): string {
 }
 
 function issueNumber(threadId: string): number {
-  const match = /^github-issue-(\d+)$/.exec(threadId);
-  if (!match) throw new Error("Invalid GitHub feedback thread identifier");
+  const match = /^feedback-(\d+)$/.exec(threadId);
+  if (!match) throw new Error("Invalid feedback thread identifier");
   return Number.parseInt(match[1]!, 10);
 }
 

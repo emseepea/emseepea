@@ -116,21 +116,21 @@ function githubEvent(
   payload: z.output<typeof githubPayloadSchema>,
   scope: string,
 ): FeedbackEvent {
-  const threadId = `github-issue-${payload.issue.number}`;
+  const threadId = `feedback-${payload.issue.number}`;
   if (kind === "issue_comment" && payload.action === "created" && payload.comment) {
     return Object.freeze({
-      id: `github:${delivery}`,
+      id: `event:${delivery}`,
       type: "feedback.message.added",
       occurredAt: payload.comment.created_at,
       scope,
       threadId,
-      messageId: `github-comment-${payload.comment.id}`,
+      messageId: `message-${payload.comment.id}`,
       author: payload.comment.body.startsWith("<!-- emseepea-feedback:user -->") ? "user" : "team",
     });
   }
   if (kind === "issues" && ["assigned", "closed", "labeled", "milestoned", "reopened", "unassigned", "unlabeled"].includes(payload.action)) {
     return Object.freeze({
-      id: `github:${delivery}`,
+      id: `event:${delivery}`,
       type: "feedback.status.changed",
       occurredAt: payload.issue.updated_at,
       scope,

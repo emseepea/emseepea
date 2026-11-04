@@ -55,12 +55,12 @@ test("GitHub webhook ingestion requires 32 secret bytes, authenticates, scopes, 
   );
   const events = await ingestGitHubFeedbackWebhook(input, options, liveContext());
   assert.deepEqual(events, [{
-    id: "github:delivery-1",
+    id: "event:delivery-1",
     type: "feedback.message.added",
     occurredAt: "2026-09-10T00:00:00.000Z",
     scope: "client-a",
-    threadId: "github-issue-42",
-    messageId: "github-comment-91",
+    threadId: "feedback-42",
+    messageId: "message-91",
     author: "team",
   }]);
   assert.deepEqual(await ingestGitHubFeedbackWebhook(input, options, liveContext()), []);
