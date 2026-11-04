@@ -1,5 +1,11 @@
 # @emseepea/create-html-ui-server
 
+## 0.1.36
+
+### Patch Changes
+
+- [`4e76fa2`](https://github.com/emseepea/emseepea/commit/4e76fa2dae2e7abbb389765123dba538e9c0e6d4) Thanks [@tompahoward](https://github.com/tompahoward)! - Update generated projects to use the framework release that adds optional WebMCP tool exposure. Keep each initializer’s published version aligned with its generated server dependency.
+
 ## 0.1.35
 
 ### Patch Changes

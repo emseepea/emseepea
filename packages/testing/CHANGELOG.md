@@ -1,5 +1,13 @@
 # @emseepea/testing
 
+## 0.26.15
+
+### Patch Changes
+
+- [`ad1f95d`](https://github.com/emseepea/emseepea/commit/ad1f95dc9e4815b8b9edffaac8f635c6cdda6ca3) Thanks [@tompahoward](https://github.com/tompahoward)! - Retain completed Codex MCP application-error results in semantic conversation evidence so tests can assess the model's recovery answer. Provider, transport, malformed-event and incomplete-turn failures remain fatal.
+- Updated dependencies [[`4e76fa2`](https://github.com/emseepea/emseepea/commit/4e76fa2dae2e7abbb389765123dba538e9c0e6d4)]:
+  - @emseepea/server@0.26.0
+
 ## 0.26.14
 
 ### Patch Changes
