@@ -101,7 +101,10 @@ test("the Claude subscription check runs only for the publication revision", () 
   assert.equal((job.match(/CLAUDE_CODE_OAUTH_TOKEN/g) ?? []).length, 2);
   assert.equal(manifest.scripts["claude:prepare"], "node node_modules/@anthropic-ai/claude-code/install.cjs");
   const prepare = job.match(/- name: Prepare the pinned Claude CLI[\s\S]*?(?=\n\s+- name:)/)?.[0] ?? "";
-  assert.match(prepare, /2\.1\.248/);
+  const claudeVersion = manifest.devDependencies["@anthropic-ai/claude-code"];
+  assert.match(claudeVersion, /^\d+\.\d+\.\d+$/);
+  const versionCheck = `test "$(node -p 'require("./node_modules/@anthropic-ai/claude-code/package.json").version')" = "${claudeVersion}"`;
+  assert.ok(prepare.split("\n").some((line) => line.trim() === versionCheck));
   assert.equal((prepare.match(/npm run claude:prepare/g) ?? []).length, 1);
   assert.match(prepare, /test -x node_modules\/\.bin\/claude/);
   assert.match(prepare, /realpath node_modules\/\.bin\/claude/);
