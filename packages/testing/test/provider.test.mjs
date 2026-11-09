@@ -102,6 +102,43 @@ test("Claude result failures retain only an allowlisted cause", () => {
     () => parseNativeClaudeEvents([{ ...failed, errors: [privateDetail] }], []),
     safeFailure("Model command reported an error", "unknown"),
   );
+  const assistantError = (error, parent_tool_use_id = null) => ({
+    type: "assistant",
+    error,
+    parent_tool_use_id,
+    message: { content: [{ type: "text", text: privateDetail }] },
+  });
+  const terminal = { ...failed, errors: [privateDetail] };
+  for (const [code, category] of [
+    ["rate_limit", "rate-limit"],
+    ["billing_error", "billing"],
+    ["account_on_hold", "provider"],
+    ["overloaded", "provider"],
+    ["authentication_failed", "authentication"],
+    [privateDetail, "unknown"],
+  ]) {
+    const events = [assistantError(code), terminal];
+    assert.throws(
+      () => parseNativeClaudeEvents(events, []),
+      safeFailure("Model command reported an error", category),
+    );
+    assert.throws(
+      () => parseClaudeEvents(events.map((event) => JSON.stringify(event)).join("\n"), 1),
+      safeFailure("Model command exited 1", category),
+    );
+  }
+  assert.throws(
+    () => parseNativeClaudeEvents([assistantError("rate_limit", "nested-tool"), terminal], []),
+    safeFailure("Model command reported an error", "unknown"),
+  );
+  assert.throws(
+    () => parseNativeClaudeEvents([
+      { ...assistantError("rate_limit"), agent_id: "nested-agent" },
+      terminal,
+      assistantError("billing_error"),
+    ], []),
+    safeFailure("Model command reported an error", "unknown"),
+  );
 });
 
 test("isolates model credentials from ordinary environment variables", () => {

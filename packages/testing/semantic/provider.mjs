@@ -27,12 +27,25 @@ const providerErrorMessages = new Map([
 const authenticationFailure = /not logged in|failed to authenticate|oauth session expired/i;
 const providerFailureCategories = new Set([
   "authentication",
+  "billing",
   "configuration",
   "host-storage",
   "permission-or-sandbox",
   "provider",
+  "rate-limit",
   "transport",
   "unknown",
+]);
+const claudeAssistantFailureCategories = new Map([
+  ["authentication_failed", "authentication"],
+  ["oauth_org_not_allowed", "authentication"],
+  ["account_on_hold", "provider"],
+  ["billing_error", "billing"],
+  ["rate_limit", "rate-limit"],
+  ["overloaded", "provider"],
+  ["invalid_request", "configuration"],
+  ["model_not_found", "provider"],
+  ["server_error", "provider"],
 ]);
 const stderrLimit = 32 * 1024;
 const forbiddenItemLimit = 64;
@@ -97,11 +110,11 @@ export function parseClaudeEvents(stdout, processExitCode = 0, failureCategory) 
     throw providerEvidenceError("Model command is not signed in", "authentication");
   }
   if (processExitCode !== 0) {
-    throw providerProcessError(processExitCode, claudeFailureCategory(result, failureCategory));
+    throw providerProcessError(processExitCode, claudeFailureCategory(events, result, failureCategory));
   }
   if (!result) throw new Error("Model command omitted its result event");
   if (result.is_error) {
-    throw claudeResultError(result);
+    throw claudeResultError(events, result);
   }
   if (typeof answer !== "string") throw new Error("Model command returned a non-text answer");
   if (toolUses.length > 0) {
@@ -181,7 +194,7 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
   }
   if (!result) throw new Error("Model command omitted its result event");
   if (result.is_error) {
-    throw claudeResultError(result);
+    throw claudeResultError(events, result);
   }
   if (typeof result.result !== "string") throw new Error("Model command returned a non-text answer");
   if ((result.permission_denials?.length ?? 0) > 0) {
@@ -725,7 +738,16 @@ function classifyProviderFailure(stderr) {
   return "unknown";
 }
 
-function claudeFailureCategory(result, fallback) {
+function claudeFailureCategory(events, result, fallback) {
+  const end = result ? events.lastIndexOf(result) : events.length;
+  const assistantFailure = events.findLast((event, index) => (
+    index < end
+    && event.type === "assistant"
+    && (event.parent_tool_use_id ?? null) === null
+    && (event.agent_id ?? null) === null
+    && claudeAssistantFailureCategories.has(event.error)
+  ));
+  if (assistantFailure) return claudeAssistantFailureCategories.get(assistantFailure.error);
   if (!result?.is_error) return fallback;
   const errors = Array.isArray(result.errors) ? result.errors : [];
   for (const detail of [result.result, ...errors]) {
@@ -736,9 +758,9 @@ function claudeFailureCategory(result, fallback) {
   return fallback;
 }
 
-function claudeResultError(result) {
+function claudeResultError(events, result) {
   const message = providerErrorMessages.get(result.subtype) ?? "Model command reported an error";
-  return providerEvidenceError(message, claudeFailureCategory(result));
+  return providerEvidenceError(message, claudeFailureCategory(events, result));
 }
 
 function providerEvidenceError(message, category) {

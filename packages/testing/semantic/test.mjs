@@ -606,10 +606,12 @@ function recordModelFailure(record, error) {
   const category = error?.providerFailureCategory;
   if ([
     "authentication",
+    "billing",
     "configuration",
     "host-storage",
     "permission-or-sandbox",
     "provider",
+    "rate-limit",
     "transport",
     "unknown",
   ].includes(category)) record.providerFailureCategory = category;
