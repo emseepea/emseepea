@@ -1,13 +1,15 @@
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
-import { feedbackConversationSchema } from "./index.js";
+import { feedbackConversationPageSchema, feedbackConversationSchema, feedbackThreadSchema } from "./index.js";
 import type {
   FeedbackAdapterContext,
   FeedbackBackendEvent,
   FeedbackConversationBackend,
   FeedbackSubmissionBackend,
+  PagedFeedbackConversationBackend,
 } from "./index.js";
 import { beforeDeadline, deadlineSignal } from "./deadline.js";
+import { feedbackPageText, feedbackResultFits } from "./page-results.js";
 
 interface FirestoreDocumentSnapshot {
   readonly id: string;
@@ -77,6 +79,79 @@ export function createFirestoreFeedbackSubmissionBackend<Context = undefined>(
 
 export function createFirestoreFeedbackBackend(
   options: FirestoreFeedbackOptions,
+): FeedbackConversationBackend {
+  return firestoreFeedbackBackend(options);
+}
+
+export function createPagedFirestoreFeedbackBackend(
+  options: FirestoreFeedbackOptions & { readonly maxResultBytes: number },
+): PagedFeedbackConversationBackend {
+  const { maxResultBytes } = options;
+  // A 4,000-character message can take 24,000 JSON bytes before metadata.
+  if (!Number.isSafeInteger(maxResultBytes) || maxResultBytes < 30_000) {
+    throw new Error("Paged Firestore feedback requires a result budget of at least 30,000 bytes");
+  }
+  return {
+    ...firestoreFeedbackBackend(options, maxResultBytes),
+    async getThreadPage(query, context) {
+      const binding = scopeHash(JSON.stringify(["feedback-thread-page-v1", context.scope, query.threadId]));
+      const after = query.cursor ? decodeMessageCursor(query.cursor, binding) : undefined;
+      const stamp = new Date().toISOString();
+      const conversation = await runTransaction(options, context, async (transaction) => {
+        const reference = threads(options, context.scope).doc(query.threadId);
+        const snapshot = document(await transaction.get(reference));
+        if (!snapshot.exists) throw new Error("Feedback thread not found");
+        const thread = threadDocument.parse(snapshot.data());
+        if (thread.id !== query.threadId) throw new Error("Invalid Firestore feedback thread");
+        let messagesQuery = reference.collection("messages").orderBy("sequence", "asc");
+        if (after !== undefined) messagesQuery = messagesQuery.startAfter(after);
+        const count = 50;
+        const { docs } = querySnapshot(await transaction.get(messagesQuery.limit(count + 1)));
+        let page = feedbackConversationPageSchema.parse({ ...publicThread(thread), messages: [] });
+        let previous = after ?? 0;
+        for (const row of docs.slice(0, count)) {
+          const message = messageDocument.parse(row.data());
+          if (message.threadId !== query.threadId || message.id !== row.id || message.sequence <= previous) {
+            throw new Error("Invalid Firestore feedback message");
+          }
+          const nextCursor = docs.length > page.messages.length + 1
+            ? encodeCursor(`${binding}:${message.sequence}`) : undefined;
+          const candidate = feedbackConversationPageSchema.parse({
+            ...page, messages: [...page.messages, message], nextCursor,
+          });
+          const projected = {
+            ...candidate,
+            messages: candidate.messages.map((entry) => entry.author === "team" && !entry.offeredToClientAt
+              ? { ...entry, offeredToClientAt: stamp } : entry),
+          };
+          if (!messagePageFits(candidate, maxResultBytes) || !messagePageFits(projected, maxResultBytes)) break;
+          previous = message.sequence;
+          page = candidate;
+        }
+        if ((docs.length && !page.messages.length) || !messagePageFits(page, maxResultBytes)) {
+          throw new Error("Feedback message page exceeds its result budget");
+        }
+        return page;
+      });
+      const pending = conversation.messages.filter((message) => message.author === "team" && !message.offeredToClientAt);
+      if (pending.length === 0) return { conversation, events: [] };
+      try {
+        const receipt = await recordOffers(options, context, query.threadId, pending, (timestamps) => {
+          if (!messagePageFits(withOffers(conversation, timestamps), maxResultBytes)) {
+            throw new Error("Feedback offer page exceeds its result budget");
+          }
+        });
+        return { conversation: withOffers(conversation, receipt.timestamps), events: receipt.events };
+      } catch {
+        return { conversation, events: [] };
+      }
+    },
+  };
+}
+
+function firestoreFeedbackBackend(
+  options: FirestoreFeedbackOptions,
+  maxResultBytes?: number,
 ): FeedbackConversationBackend {
   return {
     async createThread(command, context) {
@@ -159,6 +234,18 @@ export function createFirestoreFeedbackBackend(
         (transaction) => transaction.get(query),
       ));
       const rows = snapshot.docs.slice(0, limit + 1).map((item) => threadDocument.parse(item.data()));
+      if (maxResultBytes !== undefined) {
+        let page: { threads: z.output<typeof feedbackThreadSchema>[]; nextCursor?: string } = { threads: [] };
+        for (const row of rows.slice(0, limit)) {
+          const threads = [...page.threads, feedbackThreadSchema.parse(publicThread(row))];
+          const nextCursor = rows.length > threads.length ? encodeCursor(row.pageKey) : undefined;
+          const candidate = { threads, nextCursor };
+          if (!feedbackResultFits(candidate, feedbackPageText("threads", threads.length, !!nextCursor), maxResultBytes)) break;
+          page = candidate;
+        }
+        if (rows.length && !page.threads.length) throw new Error("Feedback thread page exceeds its result budget");
+        return { page };
+      }
       const visible = rows.slice(0, limit);
       const last = visible.at(-1);
       return {
@@ -188,45 +275,9 @@ export function createFirestoreFeedbackBackend(
       );
       if (pending.length === 0) return { conversation, events: [] };
       try {
-        const receipt = await runTransaction(options, context, async (transaction) => {
-          const reference = threads(options, context.scope).doc(query.threadId);
-          const timestamps = new Map<string, string>();
-          const unclaimed: typeof pending = [];
-          for (const message of pending) {
-            const messageReference = reference.collection("messages").doc(message.id);
-            const snapshot = document(await transaction.get(messageReference));
-            if (!snapshot.exists) throw new Error("Feedback message not found");
-            const current = messageDocument.parse(snapshot.data());
-            if (current.offeredToClientAt) {
-              timestamps.set(message.id, current.offeredToClientAt);
-              continue;
-            }
-            unclaimed.push(message);
-          }
-          const offeredAt = new Date().toISOString();
-          const events: FeedbackBackendEvent[] = [];
-          for (const message of unclaimed) {
-            const messageReference = reference.collection("messages").doc(message.id);
-            transaction.update(messageReference, { offeredToClientAt: offeredAt });
-            timestamps.set(message.id, offeredAt);
-            events.push(event(
-              "feedback.message.offered-to-client",
-              query.threadId,
-              message.id,
-              "team",
-              offeredAt,
-            ));
-          }
-          if (options.outbox) writeOutbox(transaction, options, context.scope, events);
-          return { timestamps, events };
-        });
+        const receipt = await recordOffers(options, context, query.threadId, pending);
         return {
-          conversation: {
-            ...conversation,
-            messages: conversation.messages.map((message) => receipt.timestamps.has(message.id)
-              ? { ...message, offeredToClientAt: receipt.timestamps.get(message.id) }
-              : message),
-          },
+          conversation: withOffers(conversation, receipt.timestamps),
           events: receipt.events,
         };
       } catch {
@@ -234,6 +285,60 @@ export function createFirestoreFeedbackBackend(
       }
     },
   };
+}
+
+function decodeMessageCursor(cursor: string, binding: string): number {
+  const [scope, value, extra] = Buffer.from(cursor, "base64url").toString("utf8").split(":");
+  const sequence = Number(value);
+  if (scope !== binding || extra !== undefined || !Number.isSafeInteger(sequence) || sequence < 1 ||
+      encodeCursor(`${binding}:${sequence}`) !== cursor) throw new Error("Invalid feedback message cursor");
+  return sequence;
+}
+
+function messagePageFits(page: z.output<typeof feedbackConversationPageSchema>, maxBytes: number): boolean {
+  const parsed = feedbackConversationPageSchema.parse(page);
+  return feedbackResultFits(parsed, feedbackPageText("messages", parsed.messages.length, !!parsed.nextCursor), maxBytes);
+}
+
+function withOffers<T extends { messages: z.output<typeof messageDocument>[] }>(
+  conversation: T,
+  timestamps: ReadonlyMap<string, string>,
+): T {
+  return {
+    ...conversation,
+    messages: conversation.messages.map((message) => timestamps.has(message.id)
+      ? { ...message, offeredToClientAt: timestamps.get(message.id) }
+      : message),
+  };
+}
+
+async function recordOffers(
+  options: FirestoreFeedbackOptions, context: FeedbackAdapterContext, threadId: string,
+  pending: readonly z.output<typeof messageDocument>[],
+  checkPage?: (timestamps: ReadonlyMap<string, string>) => void,
+) {
+  return runTransaction(options, context, async (transaction) => {
+    const messages = threads(options, context.scope).doc(threadId).collection("messages");
+    const timestamps = new Map<string, string>();
+    const unclaimed: typeof pending[number][] = [];
+    for (const message of pending) {
+      const snapshot = document(await transaction.get(messages.doc(message.id)));
+      if (!snapshot.exists) throw new Error("Feedback message not found");
+      const current = messageDocument.parse(snapshot.data());
+      if (current.offeredToClientAt) timestamps.set(message.id, current.offeredToClientAt);
+      else unclaimed.push(message);
+    }
+    const offeredAt = new Date().toISOString();
+    for (const message of unclaimed) timestamps.set(message.id, offeredAt);
+    checkPage?.(timestamps);
+    const events: FeedbackBackendEvent[] = [];
+    for (const message of unclaimed) {
+      transaction.update(messages.doc(message.id), { offeredToClientAt: offeredAt });
+      events.push(event("feedback.message.offered-to-client", threadId, message.id, "team", offeredAt));
+    }
+    if (options.outbox) writeOutbox(transaction, options, context.scope, events);
+    return { timestamps, events };
+  });
 }
 
 export async function appendFirestoreTeamReply(

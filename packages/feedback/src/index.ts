@@ -7,6 +7,7 @@ import {
 } from "@emseepea/server";
 import { z } from "zod";
 import { beforeDeadline, deadlineSignal } from "./deadline.js";
+import { feedbackPageText } from "./page-results.js";
 import {
   feedbackCollectionSchema,
   type FeedbackCollection,
@@ -678,6 +679,12 @@ const threadPageSchema = z.object({
   threads: z.array(feedbackThreadSchema).max(50).describe("Feedback threads visible in this scope."),
   nextCursor: z.string().min(1).max(1_000).optional().describe("Cursor for the next page, when more threads exist."),
 });
+const getThreadPageQuerySchema = getThreadQuerySchema.extend({
+  cursor: z.string().min(1).max(1_000).optional().describe("Continuation from the same feedback thread."),
+});
+export const feedbackConversationPageSchema = feedbackConversationSchema.extend({
+  nextCursor: z.string().min(1).max(1_000).optional().describe("Continuation when more messages exist in this thread."),
+});
 
 const createThreadResultSchema = z.strictObject({
   conversation: feedbackConversationSchema,
@@ -693,6 +700,9 @@ const listThreadsResultSchema = z.strictObject({
 const getThreadResultSchema = z.strictObject({
   conversation: feedbackConversationSchema,
   events: backendEventsSchema,
+});
+const getThreadPageResultSchema = getThreadResultSchema.extend({
+  conversation: feedbackConversationPageSchema,
 });
 
 export type CreateFeedbackThreadCommand = z.output<typeof createThreadCommandSchema>;
@@ -723,6 +733,15 @@ export interface FeedbackConversationBackend {
   ): GetFeedbackThreadResult | Promise<GetFeedbackThreadResult>;
 }
 
+export type GetFeedbackThreadPageQuery = z.output<typeof getThreadPageQuerySchema>;
+export type GetFeedbackThreadPageResult = z.input<typeof getThreadPageResultSchema>;
+export interface PagedFeedbackConversationBackend extends FeedbackConversationBackend {
+  getThreadPage(
+    query: GetFeedbackThreadPageQuery,
+    context: FeedbackAdapterContext,
+  ): GetFeedbackThreadPageResult | Promise<GetFeedbackThreadPageResult>;
+}
+
 export interface FeedbackConversationOptions {
   readonly requiredScopes: readonly string[];
   readonly scope?: (principal: Principal | undefined) => string;
@@ -732,6 +751,19 @@ export interface FeedbackConversationOptions {
 }
 
 export function defineFeedbackConversation(options: FeedbackConversationOptions): readonly EmseepeaTool[] {
+  return defineConversation(options);
+}
+
+export function definePagedFeedbackConversation(
+  options: FeedbackConversationOptions & { readonly backend: PagedFeedbackConversationBackend },
+): readonly EmseepeaTool[] {
+  return defineConversation(options, options.backend);
+}
+
+function defineConversation(
+  options: FeedbackConversationOptions,
+  paged?: PagedFeedbackConversationBackend,
+): readonly EmseepeaTool[] {
   const configuredAnnotations = feedbackConversationAnnotationOverridesSchema.parse(
     options.annotations === undefined ? {} : options.annotations,
   );
@@ -776,7 +808,7 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
         await options.backend.appendMessage(input, context),
       );
       await dispatchHooks(options.hooks, result.events ?? [], context);
-      return { data: result.message };
+      return paged ? { data: result.message, text: "Feedback reply saved." } : { data: result.message };
     },
   });
 
@@ -793,11 +825,30 @@ export function defineFeedbackConversation(options: FeedbackConversationOptions)
       const result = await listThreadsResultSchema.parseAsync(
         await options.backend.listThreads(input, context),
       );
-      return { data: result.page };
+      return paged
+        ? { data: result.page, text: feedbackPageText("threads", result.page.threads.length, !!result.page.nextCursor) }
+        : { data: result.page };
     },
   });
 
-  const getThread = defineTool({
+  const getThread = paged ? defineTool({
+    name: "get-feedback-thread",
+    ...access,
+    title: "Read Feedback Conversation",
+    description:
+      "Read one page of the exact feedback conversation. Quote each new team reply exactly as written in the structured result. Continue with the returned cursor for the same thread when more messages remain. Reading can record that a team reply was included in this page for the MCP client.",
+    annotations: annotations.get,
+    inputSchema: getThreadPageQuerySchema,
+    outputSchema: feedbackConversationPageSchema,
+    async handler(input, toolContext: ToolContext<"protected">) {
+      const context = contextFor(toolContext);
+      const { conversation, events } = await getThreadPageResultSchema.parseAsync(
+        await paged.getThreadPage(input, context),
+      );
+      await dispatchHooks(options.hooks, events ?? [], context);
+      return { data: conversation, text: feedbackPageText("messages", conversation.messages.length, !!conversation.nextCursor) };
+    },
+  }) : defineTool({
     name: "get-feedback-thread",
     ...access,
     title: "Read Feedback Conversation",
