@@ -73,6 +73,37 @@ test("accepts one tool-free answer from the required model", () => {
   assert.throws(() => parseClaudeEvents("not-json"), /invalid event data/);
 });
 
+test("Claude result failures retain only an allowlisted cause", () => {
+  const privateDetail = "PRIVATE_PROVIDER_DETAIL";
+  const failed = {
+    ...result,
+    is_error: true,
+    result: undefined,
+    errors: [`You've hit your limit. ${privateDetail}`],
+  };
+  const safeFailure = (message, category) => (error) => (
+    error.message === message
+    && error.providerFailureCategory === category
+    && !JSON.stringify(error).includes(privateDetail)
+  );
+  assert.throws(
+    () => parseNativeClaudeEvents([failed], []),
+    safeFailure("Model command reported an error", "provider"),
+  );
+  assert.throws(
+    () => parseClaudeEvents(JSON.stringify(failed), 1, "transport"),
+    safeFailure("Model command exited 1", "provider"),
+  );
+  assert.throws(
+    () => parseClaudeEvents(JSON.stringify({ ...failed, errors: [privateDetail] }), 1, "transport"),
+    safeFailure("Model command exited 1", "transport"),
+  );
+  assert.throws(
+    () => parseNativeClaudeEvents([{ ...failed, errors: [privateDetail] }], []),
+    safeFailure("Model command reported an error", "unknown"),
+  );
+});
+
 test("isolates model credentials from ordinary environment variables", () => {
   const original = {
     apiKey: process.env.ANTHROPIC_API_KEY,

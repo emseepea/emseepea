@@ -25,7 +25,7 @@ const providerErrorMessages = new Map([
   ["error_max_turns", "Model command exceeded its turn limit"],
 ]);
 const authenticationFailure = /not logged in|failed to authenticate|oauth session expired/i;
-const codexFailureCategories = new Set([
+const providerFailureCategories = new Set([
   "authentication",
   "configuration",
   "host-storage",
@@ -81,7 +81,7 @@ export function providerSettings(provider) {
     : { effort: "low", maxTurns: null, judgeMaxTurns: 4, permissionMode: "dontAsk", userSettings: false };
 }
 
-export function parseClaudeEvents(stdout, processExitCode = 0) {
+export function parseClaudeEvents(stdout, processExitCode = 0, failureCategory) {
   let events;
   try {
     events = stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
@@ -93,11 +93,15 @@ export function parseClaudeEvents(stdout, processExitCode = 0) {
   const toolUses = events.flatMap(({ message }) => (
     Array.isArray(message?.content) ? message.content.filter(({ type }) => type === "tool_use") : []
   ));
-  if (hasAuthenticationFailure(events)) throw new Error("Model command is not signed in");
-  if (processExitCode !== 0) throw new Error(`Model command exited ${processExitCode}`);
+  if (hasAuthenticationFailure(events)) {
+    throw providerEvidenceError("Model command is not signed in", "authentication");
+  }
+  if (processExitCode !== 0) {
+    throw providerProcessError(processExitCode, claudeFailureCategory(result, failureCategory));
+  }
   if (!result) throw new Error("Model command omitted its result event");
   if (result.is_error) {
-    throw new Error(providerErrorMessages.get(result.subtype) ?? "Model command reported an error");
+    throw claudeResultError(result);
   }
   if (typeof answer !== "string") throw new Error("Model command returned a non-text answer");
   if (toolUses.length > 0) {
@@ -172,10 +176,12 @@ export function parseNativeClaudeEvents(stdout, advertisedTools, requireInit = f
       responseSha256: hash(response.content),
     };
   });
-  if (hasAuthenticationFailure(events)) throw new Error("Model command is not signed in");
+  if (hasAuthenticationFailure(events)) {
+    throw providerEvidenceError("Model command is not signed in", "authentication");
+  }
   if (!result) throw new Error("Model command omitted its result event");
   if (result.is_error) {
-    throw new Error(providerErrorMessages.get(result.subtype) ?? "Model command reported an error");
+    throw claudeResultError(result);
   }
   if (typeof result.result !== "string") throw new Error("Model command returned a non-text answer");
   if ((result.permission_denials?.length ?? 0) > 0) {
@@ -425,12 +431,12 @@ export async function runModel(provider, prompt, directory, signal) {
   if (execution.errorCode === "ABORT_ERR") throw new Error("Model command was cancelled");
   if (execution.errorCode) throw new Error("Model command could not start");
   if (execution.code !== 0 && !execution.stdout) {
-    throw codexProcessError(execution.code, execution.providerFailureCategory);
+    throw providerProcessError(execution.code, execution.providerFailureCategory);
   }
   return provider.startsWith("codex-")
     ? parseCodexEvents(execution.stdout, [], undefined, execution.code,
       providerModel(provider), invocation.providerSecrets, execution.providerFailureCategory)
-    : parseClaudeEvents(execution.stdout, execution.code);
+    : parseClaudeEvents(execution.stdout, execution.code, execution.providerFailureCategory);
 }
 
 export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, processExitCode = 0,
@@ -452,9 +458,9 @@ export function parseCodexEvents(stdout, advertisedTools, expectedThreadId, proc
   const errorText = events.flatMap((event) => [event.message, event.error?.message, event.item?.message])
     .filter((value) => typeof value === "string").join("\n");
   if (authentication.test(errorText)) {
-    throw codexEvidenceError("Model command is not signed in", "authentication");
+    throw providerEvidenceError("Model command is not signed in", "authentication");
   }
-  if (processExitCode !== 0) throw codexProcessError(processExitCode, providerFailureCategory);
+  if (processExitCode !== 0) throw providerProcessError(processExitCode, providerFailureCategory);
   if (events.some(({ type }) => type === "turn.failed" || type === "error")) {
     throw new Error("Model command reported an error");
   }
@@ -684,7 +690,7 @@ function runProcess(command, args, options) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      const providerFailureCategory = classifyCodexFailure(stderr.toString("utf8"));
+      const providerFailureCategory = classifyProviderFailure(stderr.toString("utf8"));
       stderr = Buffer.alloc(0);
       resolve({ ...result, providerFailureCategory });
     };
@@ -697,7 +703,7 @@ function runProcess(command, args, options) {
   });
 }
 
-function classifyCodexFailure(stderr) {
+function classifyProviderFailure(stderr) {
   if (/no space left|disk (?:is )?full|storage (?:capacity|quota)|\benospc\b/i.test(stderr)) {
     return "host-storage";
   }
@@ -713,20 +719,36 @@ function classifyCodexFailure(stderr) {
   if (/connection (?:refused|reset)|network|transport|timed? out|\btls\b|certificate|\bdns\b|\beconn/i.test(stderr)) {
     return "transport";
   }
-  if (/provider (?:error|failure|unavailable)|model (?:is )?(?:unavailable|overloaded)|rate limit|service unavailable/i.test(stderr)) {
+  if (/provider (?:error|failure|unavailable)|model (?:is )?(?:unavailable|overloaded)|rate limit|service unavailable|(?:hit|reached) your limit/i.test(stderr)) {
     return "provider";
   }
   return "unknown";
 }
 
-function codexEvidenceError(message, category) {
+function claudeFailureCategory(result, fallback) {
+  if (!result?.is_error) return fallback;
+  const errors = Array.isArray(result.errors) ? result.errors : [];
+  for (const detail of [result.result, ...errors]) {
+    if (typeof detail !== "string") continue;
+    const category = classifyProviderFailure(detail);
+    if (category !== "unknown") return category;
+  }
+  return fallback;
+}
+
+function claudeResultError(result) {
+  const message = providerErrorMessages.get(result.subtype) ?? "Model command reported an error";
+  return providerEvidenceError(message, claudeFailureCategory(result));
+}
+
+function providerEvidenceError(message, category) {
   return Object.assign(new Error(message), {
-    providerFailureCategory: codexFailureCategories.has(category) ? category : "unknown",
+    providerFailureCategory: providerFailureCategories.has(category) ? category : "unknown",
   });
 }
 
-function codexProcessError(code, category) {
-  return codexEvidenceError(`Model command exited ${code}`, category);
+function providerProcessError(code, category) {
+  return providerEvidenceError(`Model command exited ${code}`, category);
 }
 
 function forbiddenItemError(items) {
