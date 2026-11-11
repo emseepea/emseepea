@@ -18,8 +18,8 @@ test("searches once and remembers the common name for a follow-up", async (t) =>
   const search = await chat.send(
     'Search the public taxon catalogue for "pea". ' +
     "In your final reply, give the scientific name of the species with more " +
-    "recorded observations, the number of observations, and whether that number " +
-    "estimates the wild population.",
+    "recorded observations and its count. Explain what that count represents: " +
+    "recorded observations or an estimate of the wild population.",
   );
 
   await assertToolCallsWithOptionalFeedback(search, [{
