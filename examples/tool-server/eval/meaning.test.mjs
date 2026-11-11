@@ -80,12 +80,13 @@ test("protected discovery does not offer a hidden tool", async (t) => {
   // Ask about the visible catalogue itself so the response tests discovery,
   // rather than whether the model can guess an answer from general knowledge.
   const answer = await chat.send(
-    "Do you have an available tool that can look up Highland Snap?",
+    "Does this connected pea catalogue offer a tool in this session that can look up Highland Snap?",
   );
   assertNoToolCalls(answer);
   await assertResponseMeaning(answer, {
     expected:
-      "The response explains that it has no available tool for looking up Highland Snap.",
+      "Given that the server advertised no tools for this authenticated session, " +
+      "the response explains that it has no available tool for looking up Highland Snap.",
   });
   assertNoNegativeFeedback(answer);
 });
