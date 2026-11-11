@@ -8,6 +8,8 @@
 # Em See Pea
 
 Em See Pea is a general-purpose framework for Model Context Protocol (MCP)
+
+[![Em See Pea on StartupScores](https://startupscores.com/badge/em-see-pea.svg?style=shield&v=combo&theme=dark)](https://startupscores.com/open-source/em-see-pea)
 `2026-07-28` servers over Streamable HTTP.
 
 The project is beta. [Maturity and support](SUPPORT.md#maturity-and-support)
