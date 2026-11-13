@@ -1,5 +1,15 @@
 # @emseepea/feedback
 
+## 0.13.0
+
+### Minor Changes
+
+- [`18fbe77`](https://github.com/emseepea/emseepea/commit/18fbe7732ba13c48c96e098d47e8eaefbce98c11) Thanks [@tompahoward](https://github.com/tompahoward)! - Add opt-in Firestore feedback pagination for MCP clients with a response size
+  limit. The paged tools return complete messages with a cursor for continuing
+  the same thread. The tool records an offer only for team replies it includes
+  in the returned page.
+  Existing feedback tools keep their current contract.
+
 ## 0.12.0
 
 ### Minor Changes

@@ -625,6 +625,18 @@ dependency on Google's SDK. Scope hashes select separate document trees.
 `outbox: true` to write event documents with the feedback transaction. Your
 application owns delivery and retry.
 
+For servers with a result-size limit, use
+`createPagedFirestoreFeedbackBackend({ database, maxResultBytes })` from
+`@emseepea/feedback/firestore` with `definePagedFeedbackConversation` from
+`@emseepea/feedback`. Set `maxResultBytes` to the server's
+`maxApplicationResultBytes`. The backend requires at least 30,000 bytes.
+
+The paged tools preserve complete messages in the structured result. Use a list
+cursor to fetch more threads. Use a message cursor with the same thread
+identifier to fetch more messages. Reading can record which team replies were
+included in the page for the MCP client. If the receipt write fails, the client
+can still receive the page without a new receipt.
+
 ### GitHub Issues
 
 GitHub-backed feedback uses provider-neutral references such as `feedback-123`,

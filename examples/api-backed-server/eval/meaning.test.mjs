@@ -17,8 +17,9 @@ test("searches once and remembers the common name for a follow-up", async (t) =>
   // no-call follow-up adds memory coverage without paying for a second judge.
   const search = await chat.send(
     'Search the public taxon catalogue for "pea". ' +
-    "Which species has more recorded observations, how many does it have, " +
-    "and does that count estimate the wild population?",
+    "In your final reply, give the scientific name of the species with more " +
+    "recorded observations and its count. Explain what that count represents: " +
+    "recorded observations or an estimate of the wild population.",
   );
 
   await assertToolCallsWithOptionalFeedback(search, [{
