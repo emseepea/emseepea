@@ -1,39 +1,48 @@
 # Current Release Readiness
 
-Date: 2026-11-10
+Date: 2026-11-15
 
-## Paged Firestore feedback conversations
+## MCP failure diagnostics
 
 Status: **PREPARED**. Publication is pending.
 
-The release adds opt-in Firestore feedback tools that keep serialized MCP
-results within the configured byte limit. A continuation cursor lets callers
-read later messages in the same thread. The default feedback tools retain
-their existing schemas and result format.
+Tool calls, resource reads, and prompt requests can carry a fixed failure
+reason in structured request telemetry. MCP Events methods have individual
+request labels. Internal webhook workers report terminal delivery and queue
+failures through the configured observability adapter.
 
-## Planned package
+## Planned packages
 
-- `@emseepea/feedback@0.13.0`
+- `@emseepea/create-api-backed-server@0.1.37`
+- `@emseepea/create-database-schema-server@0.1.37`
+- `@emseepea/create-html-ui-server@0.1.37`
+- `@emseepea/create-mongodb-backed-server@0.1.37`
+- `@emseepea/create-multi-instance-postgres-server@0.1.37`
+- `@emseepea/create-openapi-backed-server@0.1.37`
+- `@emseepea/create-progress-streaming-server@0.1.37`
+- `@emseepea/create-react-ui-server@0.1.37`
+- `@emseepea/create-resources-and-prompts-server@0.1.37`
+- `@emseepea/create-soap-backed-server@0.1.37`
+- `@emseepea/create-tool-server@0.1.37`
+- `@emseepea/feedback@0.13.1`
+- `@emseepea/react@0.4.23`
+- `@emseepea/server@0.26.1`
+- `@emseepea/svelte@0.2.23`
+- `@emseepea/testing@0.26.16`
 
 ## Qualification
 
-The implementation commit passed clean-install qualification and the Linux
-benchmark. The adapter tests cover full-text pagination, cross-scope and
-cross-thread cursor denial, and oversized results. Local packed-package tests
-used MCP `2025-06-18` and `2026-07-28` with synthetic Firestore data. They
-read through message 201, preserved the default tool contract, and confirmed
-that the tool records an offer only for team replies it includes in the
-returned page.
+Focused tests used real MCP HTTP requests and synthetic data. They confirmed
+the expected failure reasons, preserved public protocol responses, and
+checked that telemetry excludes private values. Worker tests covered retry,
+terminal failure, a store failure, and shutdown without a late log.
 
-Architecture, behavioural test, voice and cognitive reviews covered the
-implementation and adopter guide. The exact source Quality run, release
-candidate qualification, publication, registry readback, independent package
-installation and mergeback Quality are separate checks.
+Architecture, Jobs To Be Done, behavioural test, and cognitive accessibility
+reviews covered the implementation and guidance. The exact source Quality
+run, release candidate qualification, publication, registry readback,
+independent installation, and mergeback Quality are separate checks.
 
-The previous package release has a
-[release-time readiness record](https://github.com/emseepea/emseepea/blob/e1d1688dcbb9953d5436e22d570900e33b30ba90/docs/reviews/current-release-readiness.md).
-
-The verdicts below apply to preparation.
+These verdicts apply to release preparation.
 
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.

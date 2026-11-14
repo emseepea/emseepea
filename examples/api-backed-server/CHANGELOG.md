@@ -1,5 +1,18 @@
 # @emseepea/create-api-backed-server
 
+## 0.1.37
+
+### Patch Changes
+
+- [`0139e6e`](https://github.com/emseepea/emseepea/commit/0139e6e25e08bc7059db2a245dba39c7d4fc9d95) Thanks [@tompahoward](https://github.com/tompahoward)! - Identify input rejection, execution failure, and output rejection in tool,
+  resource, and prompt telemetry. Adapters can read the optional `failureReason`
+  field. OpenTelemetry logs and spans use `emseepea.failure_reason`.
+
+  Request telemetry now names the Events catalogue, subscription, and
+  unsubscription methods. An optional adapter callback and OpenTelemetry logs
+  report terminal delivery failures and queue errors from the internal webhook
+  worker.
+
 ## 0.1.36
 
 ### Patch Changes

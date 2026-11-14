@@ -97,6 +97,7 @@ import {
   type CallerClassification,
   type ObservabilityAdapter,
   type ObservabilityState,
+  type EventDeliveryObservation,
 } from "./telemetry.js";
 
 export {
@@ -109,6 +110,8 @@ export {
   type ObservedHttpMethod,
   type ObservedMcpMethod,
   type ObservedProtocolOutcome,
+  type ObservedFailureReason,
+  type EventDeliveryObservation,
 } from "./telemetry.js";
 
 export * from "./ui.js";
@@ -1133,10 +1136,15 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
         uri,
         cacheHint ? { ...metadata, cacheHint } : metadata,
         async (_requestedUri, context): Promise<ReadResourceResult | InputRequiredResult> => {
+          const operation = requestOperations.getStore();
+          const deadlineMs = operation?.deadlineMs ?? Date.now() + timeoutMs;
+          let executionSignal: AbortSignal | undefined;
+          let failureReason: ObservabilityState["failureReason"];
           try {
-            const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
+              executionSignal = signal;
               signal.throwIfAborted();
+              failureReason = "execution_failed";
               const result = await withClientReporters(
                 context,
                 signal,
@@ -1154,6 +1162,7 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
                 )),
               );
               signal.throwIfAborted();
+              failureReason = "invalid_output";
               if (isInputRequiredResult(result)) {
                 await assertInputRequired(result, requestState, context);
                 assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
@@ -1168,6 +1177,11 @@ export function defineResource(definition: ResourceDefinition): EmseepeaResource
               return parsed.data;
             });
           } catch {
+            const cancelled = context.mcpReq.signal.aborted || operation?.signal.aborted === true;
+            markCurrentProtocolOutcome("protocol_error", cancelled);
+            if (operation?.observability && !cancelled && !executionSignal?.aborted && Date.now() < deadlineMs) {
+              operation.observability.failureReason = failureReason;
+            }
             throw new Error("Resource read failed");
           }
         },
@@ -1375,10 +1389,15 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
         registeredTemplate,
         cacheHint ? { ...metadata, cacheHint } : metadata,
         async (requestedUri, variables, context): Promise<ReadResourceResult | InputRequiredResult> => {
+          const operation = requestOperations.getStore();
+          const deadlineMs = operation?.deadlineMs ?? Date.now() + timeoutMs;
+          let executionSignal: AbortSignal | undefined;
+          let failureReason: ObservabilityState["failureReason"];
           try {
-            const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
+              executionSignal = signal;
               signal.throwIfAborted();
+              failureReason = "execution_failed";
               const result = await withClientReporters(
                 context,
                 signal,
@@ -1399,6 +1418,7 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
                 ),
               );
               signal.throwIfAborted();
+              failureReason = "invalid_output";
               if (isInputRequiredResult(result)) {
                 await assertInputRequired(result, requestState, context);
                 assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
@@ -1413,6 +1433,11 @@ export function defineResourceTemplate(definition: ResourceTemplateDefinition): 
               return parsed.data;
             });
           } catch {
+            const cancelled = context.mcpReq.signal.aborted || operation?.signal.aborted === true;
+            markCurrentProtocolOutcome("protocol_error", cancelled);
+            if (operation?.observability && !cancelled && !executionSignal?.aborted && Date.now() < deadlineMs) {
+              operation.observability.failureReason = failureReason;
+            }
             throw new Error("Resource read failed");
           }
         },
@@ -1472,12 +1497,20 @@ export function definePrompt<Args extends z.ZodObject>(
           ),
         },
         async (args, context): Promise<GetPromptResult | InputRequiredResult> => {
+          const operation = requestOperations.getStore();
+          const deadlineMs = operation?.deadlineMs ?? Date.now() + timeoutMs;
+          let executionSignal: AbortSignal | undefined;
+          let failureReason: ObservabilityState["failureReason"];
           try {
-            const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(context.mcpReq.signal, deadlineMs, async (signal) => {
+              executionSignal = signal;
               const parsedArgs = await argsSchema.safeParseAsync(args);
-              if (!parsedArgs.success) throw new Error("Prompt received invalid arguments");
+              if (!parsedArgs.success) {
+                failureReason = "invalid_input";
+                throw new Error("Prompt received invalid arguments");
+              }
               signal.throwIfAborted();
+              failureReason = "execution_failed";
               const result = await withClientReporters(
                 context,
                 signal,
@@ -1498,6 +1531,7 @@ export function definePrompt<Args extends z.ZodObject>(
                 ),
               );
               signal.throwIfAborted();
+              failureReason = "invalid_output";
               if (isInputRequiredResult(result)) {
                 await assertInputRequired(result, requestState, context);
                 assertResultSize(result, maxApplicationResultBytes, deadlineMs, signal);
@@ -1510,6 +1544,11 @@ export function definePrompt<Args extends z.ZodObject>(
               return parsedResult.data;
             });
           } catch {
+            const cancelled = context.mcpReq.signal.aborted || operation?.signal.aborted === true;
+            markCurrentProtocolOutcome("protocol_error", cancelled);
+            if (operation?.observability && !cancelled && !executionSignal?.aborted && Date.now() < deadlineMs) {
+              operation.observability.failureReason = failureReason;
+            }
             throw new Error("Prompt rendering failed");
           }
         },
@@ -1708,14 +1747,20 @@ function createCheckedTool(
         name,
         metadata,
         async (input, context): Promise<CallToolResult | InputRequiredResult> => {
+          const operation = requestOperations.getStore();
+          const deadlineMs = operation?.deadlineMs ?? Date.now() + timeoutMs;
+          const observation = operation?.observability;
+          let executionSignal: AbortSignal | undefined;
+          let failureReason: ObservabilityState["failureReason"];
           try {
-            const deadlineMs = requestOperations.getStore()?.deadlineMs ?? Date.now() + timeoutMs;
             return await runWithDeadline(
               context.mcpReq.signal,
               deadlineMs,
               async (signal) => {
+                executionSignal = signal;
                 const parsedInput = await inputSchema.safeParseAsync(input);
                 if (!parsedInput.success) {
+                  failureReason = "invalid_input";
                   throw new Error("Tool received input that does not match its schema");
                 }
                 signal.throwIfAborted();
@@ -1727,6 +1772,7 @@ function createCheckedTool(
                       maxProgressEventBytes,
                     )
                   : undefined;
+                failureReason = "execution_failed";
                 let result: unknown;
                 if (runLoggedTool) {
                   result = await runLoggedTool(parsedInput.data, context, signal, deadlineMs, reporter);
@@ -1748,6 +1794,7 @@ function createCheckedTool(
                   }
                   reporter?.throwIfFailed();
                 }
+                failureReason = "invalid_output";
                 if (allowsInputRequired && isInputRequiredResult(result)) {
                   signal.throwIfAborted();
                   await assertInputRequired(result, requestState, context);
@@ -1764,8 +1811,12 @@ function createCheckedTool(
               },
             );
           } catch {
-            markCurrentProtocolOutcome("tool_error", context.mcpReq.signal.aborted ||
-              requestOperations.getStore()?.signal.aborted === true);
+            const cancelled = context.mcpReq.signal.aborted ||
+              operation?.signal.aborted === true;
+            markCurrentProtocolOutcome("tool_error", cancelled);
+            if (observation && !cancelled && !executionSignal?.aborted && Date.now() < deadlineMs) {
+              observation.failureReason = failureReason;
+            }
             return { content: [{ type: "text", text: "Tool execution failed" }], isError: true };
           }
         },
@@ -2614,7 +2665,7 @@ export function createEmseepea(options: EmseepeaOptions | ExternalEmseepeaOption
     }
   }
   const observabilityLimits = observability.length ? { deliveryTimeoutMs: 1_000 } : undefined;
-  const finishObservability = observabilityLimits
+  const observabilityRuntime = observabilityLimits
     ? installObservability(app, observability, (body) => capabilityNameForRequest(
         body,
         toolsByName,
@@ -2931,11 +2982,17 @@ export function createEmseepea(options: EmseepeaOptions | ExternalEmseepeaOption
       await sendRpcError(reply, 500, -32603, "Internal error");
     }
   });
+  const reportDeliveryFailure = observabilityRuntime && ((reason: EventDeliveryObservation["failureReason"]) => {
+    // An in-flight worker may finish after the observability sinks have flushed.
+    if (!stopping.signal.aborted) observabilityRuntime.reportEventDelivery(reason);
+  });
   let drainingEvents = false;
   const eventTimer = internalEventRuntime ? setInterval(() => {
     if (drainingEvents || stopping.signal.aborted) return;
     drainingEvents = true;
-    void internalEventRuntime!.drain().catch(() => {}).finally(() => { drainingEvents = false; });
+    void internalEventRuntime!.drain(reportDeliveryFailure)
+      .catch(() => reportDeliveryFailure?.("drain_failed"))
+      .finally(() => { drainingEvents = false; });
   }, 1000) : undefined;
   eventTimer?.unref();
   let externalSettled = true;
@@ -2955,7 +3012,7 @@ export function createEmseepea(options: EmseepeaOptions | ExternalEmseepeaOption
     requestTimeoutMs: operationTimeoutMs + 5_000,
     stopping,
     observabilityLimits,
-    finishObservability,
+    finishObservability: observabilityRuntime?.flush,
     ...(eventRuntime ? { publishMcpEvent: (
       name: string,
       data: Readonly<Record<string, unknown>>,
@@ -3474,14 +3531,16 @@ function normalizeObservability(
     if (!adapter || typeof adapter !== "object" ||
         typeof adapter.id !== "string" || !/^[A-Za-z0-9_.-]{1,64}$/.test(adapter.id) ||
         typeof adapter.emit !== "function" ||
-        adapter.flush !== undefined && typeof adapter.flush !== "function") {
-      throw new TypeError("observability adapters require a valid id, emit function, and optional flush function");
+        adapter.flush !== undefined && typeof adapter.flush !== "function" ||
+        adapter.emitEventDelivery !== undefined && typeof adapter.emitEventDelivery !== "function") {
+      throw new TypeError("observability adapters require a valid id, emit function, and function-valued optional event delivery and flush callbacks");
     }
     if (ids.has(adapter.id)) throw new TypeError(`Duplicate observability adapter id: ${adapter.id}`);
     ids.add(adapter.id);
     return Object.freeze({
       id: adapter.id,
       emit: adapter.emit,
+      ...(adapter.emitEventDelivery ? { emitEventDelivery: adapter.emitEventDelivery } : {}),
       ...(adapter.flush ? { flush: adapter.flush } : {}),
     });
   }));

@@ -339,6 +339,23 @@ It names the forwarding setting an operator has to correct, such as
 or Server-Sent Events (SSE) bodies. The OpenTelemetry adapter reports the same
 classification as `emseepea.protocol.outcome`.
 
+A failed tool call, resource read, or prompt request can include `failureReason`. Values are
+`invalid_input` for rejected arguments, `execution_failed` for an exception
+during execution, and `invalid_output` for a rejected result. The field is
+optional. A handler can return its own error result, and some failures, such
+as deadline expiry, may have only the protocol outcome.
+
+OpenTelemetry logs and spans report the reason as
+`emseepea.failure_reason`.
+
+The request adapter reports `events/list`, `events/subscribe`, and
+`events/unsubscribe` by name. These calls previously appeared as `_OTHER`.
+
+For internal webhook delivery failures, an adapter can implement
+`emitEventDelivery`. With OpenTelemetry logs enabled, these failures appear as
+`mcp.event.delivery` records. The tracing guide explains the
+[delivery reasons](https://emseepea.github.io/emseepea/tracing/#diagnose-webhook-delivery-failures).
+
 `callerClassifications` can classify known `User-Agent` prefixes without exposing
 the header. Configure 1 to 16 entries. Identifiers use 1 to 64 letters, numbers,
 dots, underscores, or hyphens. Prefixes use 1 to 128 characters and must not
