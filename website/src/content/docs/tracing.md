@@ -13,7 +13,7 @@ exporters and shutdown. No provider setup is needed inside your tools.
 Install these dependencies in your application:
 
 ```sh
-npm install @emseepea/server zod @opentelemetry/api@1.9.1 @opentelemetry/sdk-node@0.221.0
+npm install @emseepea/server zod @opentelemetry/api@1.9.1 @opentelemetry/sdk-node@0.223.0
 ```
 
 Save the SDK setup in `telemetry.mjs`. This compatible SDK version configures
@@ -142,7 +142,7 @@ The adapter uses the active span without proving which instrumentation created i
 To try this with the example above, install the compatible HTTP instrumentation:
 
 ```sh
-npm install @opentelemetry/instrumentation-http@0.221.0
+npm install @opentelemetry/instrumentation-http@0.223.0
 ```
 
 Replace `telemetry.mjs` with the following. Keep the server, startup command

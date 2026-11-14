@@ -91,8 +91,8 @@ test("the packed public packages pass fresh-install and getting-started checks",
       "typescript@6.0.3",
       "@types/node@24.13.3",
       "@opentelemetry/api@1.9.1",
-      "@opentelemetry/sdk-node@0.221.0",
-      "@opentelemetry/instrumentation-http@0.221.0",
+      "@opentelemetry/sdk-node@0.223.0",
+      "@opentelemetry/instrumentation-http@0.223.0",
     ], directory);
     const [consumerLockfile, recordedLockfile] = await Promise.all([
       readFile(path.join(directory, "package-lock.json"), "utf8").then(JSON.parse),
