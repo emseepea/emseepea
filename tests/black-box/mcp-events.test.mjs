@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
-import { createEmseepea, publishMcpEvent, serveEmseepea } from "@emseepea/server";
+import { logs } from "@opentelemetry/api-logs";
+import { createEmseepea, openTelemetry, publishMcpEvent, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
 const resourceServerUrl = new URL("https://api.example/mcp");
@@ -11,7 +12,7 @@ const requestMeta = {
   "io.modelcontextprotocol/clientCapabilities": {},
 };
 
-test("events are opt-in and their catalogue requires OAuth", async () => {
+test("events are opt-in, require OAuth, and report a failed drain", { timeout: 30_000 }, async (t) => {
   const plain = await serveEmseepea(createEmseepea({ name: "plain", version: "0.0.0" }), { port: 0 });
   try {
     const discovery = await rpc(plain.url, "server/discover");
@@ -25,8 +26,29 @@ test("events are opt-in and their catalogue requires OAuth", async () => {
   let verified = 0;
   const rows = new Map();
   const queued = new Map();
+  const observations = [];
+  const deliveryLogs = [];
+  const records = [];
+  const expectedDelivery = Promise.withResolvers();
+  let failNextDrain = false;
+  const drainStarted = Promise.withResolvers();
+  const releaseDrain = Promise.withResolvers();
+  let holdNextDrain = false;
+  logs.setGlobalLoggerProvider({ getLogger: () => ({ emit(record) {
+    if (record.eventName === "mcp.event.delivery") records.push(record);
+  } }) });
+  t.after(() => logs.disable());
   const eventApp = createEmseepea({
     name: "eventful",
+    observability: [
+      { id: "requests-only", emit: (event) => observations.push(event) },
+      { id: "broken-delivery-adapter", emit() {}, emitEventDelivery() { throw new Error("private-logger-error"); } },
+      openTelemetry({ logs: true }),
+      { id: "delivery-adapter", emit() {}, emitEventDelivery(event) {
+        deliveryLogs.push(event);
+        expectedDelivery.resolve();
+      } },
+    ],
     version: "0.0.0",
     cacheHints: { "server/discover": { ttlMs: 10, cacheScope: "private" } },
     authentication: {
@@ -69,7 +91,18 @@ test("events are opt-in and their catalogue requires OAuth", async () => {
         async delete(id) { rows.delete(id); },
         async list(name) { return [...rows.values()].filter((row) => row.name === name); },
         async enqueue(delivery) { queued.set(delivery.id, structuredClone(delivery)); },
-        async claimDue() { return []; },
+        async claimDue() {
+          if (failNextDrain) {
+            failNextDrain = false;
+            throw new Error("private-store-error");
+          }
+          if (holdNextDrain) {
+            drainStarted.resolve();
+            await releaseDrain.promise;
+            throw new Error("private-store-error-after-close");
+          }
+          return [];
+        },
         async complete(id) { queued.delete(id); },
         async reschedule(delivery) { queued.set(delivery.id, structuredClone(delivery)); },
       },
@@ -139,7 +172,25 @@ test("events are opt-in and their catalogue requires OAuth", async () => {
     assert.equal(queued.size, 1);
     const [delivery] = queued.values();
     assert.equal(JSON.parse(delivery.body).data.comment_id, "matching");
+    assert.deepEqual(observations.map(({ method }) => method), [
+      "server/discover", "events/list", "events/list", "events/subscribe", "events/subscribe", "events/unsubscribe",
+    ]);
+    failNextDrain = true;
+    await expectedDelivery.promise;
+    assert.deepEqual(deliveryLogs, [{ type: "mcp.event.delivery", failureReason: "drain_failed" }]);
+    assert.ok(Object.isFrozen(deliveryLogs[0]));
+    assert.equal(records.length, 1);
+    assert.deepEqual(records[0].attributes, { "emseepea.failure_reason": "drain_failed" });
+    assert.equal(records[0].body, "MCP event delivery failed");
+    assert.equal(queued.size, 1);
+    holdNextDrain = true;
+    await drainStarted.promise;
+    await eventful.close();
+    releaseDrain.resolve();
+    await new Promise(setImmediate);
+    assert.equal(deliveryLogs.length, 1, "late worker activity does not emit after shutdown");
   } finally {
+    releaseDrain.resolve();
     await eventful.close();
   }
 });

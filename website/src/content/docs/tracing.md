@@ -219,6 +219,18 @@ the exported operation name or existing method/capability attributes.
 Completion logs keep event name `mcp.request`; metric names and attributes
 stay the same. The framework never renames the application's transport span.
 
+## See why a capability failed
+
+A failed tool call, resource read, or prompt request can include the
+`failureReason` field in structured logs. OpenTelemetry
+logs and spans use `emseepea.failure_reason` when the framework can
+identify the failure stage. Use `invalid_input` to find rejected arguments,
+`execution_failed` to find exceptions during execution, and `invalid_output`
+to find rejected results.
+
+The reason is optional. It contains a fixed code. Argument values, results,
+and exception messages are excluded.
+
 ## Find failed tool calls
 
 Use your tracing backend's standard ERROR span-status filter to find genuine
@@ -244,16 +256,35 @@ was also cancelled.
 Error status and type belong only to the framework span. The application still
 owns the transport span. Exception messages, stacks, arguments and results are
 excluded; the framework adds no status description or exception event.
-Existing completion outcomes, logs, metrics and HTTP lifetime timing stay the
-same. This does not claim full MCP operation semantic-convention compliance.
+This tracing behavior covers HTTP requests and selected MCP outcomes.
+
+## Diagnose webhook delivery failures
+
+With `openTelemetry({ logs: true })`, the internal webhook worker emits a
+WARN log named `mcp.event.delivery`. For a custom sink, implement
+`emitEventDelivery` on an observability adapter.
+
+- `callback_rejected` means the callback returned HTTP 410 or 413 and the worker stopped retrying.
+- `retry_exhausted` means the callback did not succeed within the allowed attempts.
+- `drain_failed` means the worker could not finish processing its queue. Check the event store and worker health.
+
+The log carries `emseepea.failure_reason`. It excludes callback URLs,
+subscription identifiers, payloads, and exception text. This applies to
+the built-in worker. An external worker reports delivery through its own
+observability configuration.
+
+Request telemetry also identifies `events/list`, `events/subscribe`, and
+`events/unsubscribe` by name. They previously appeared as `_OTHER`.
 
 ## Correlate safe completion logs
 
 `openTelemetry({ logs: true })` emits one INFO record when each MCP HTTP
 response finishes or disconnects. Its event name is `mcp.request` and its fixed
 body is `MCP HTTP request ended`. Bounded attributes identify method, configured
-capability, status and outcome. In these completion logs, errors use the outcome
-attributes; exception objects and request payloads are not recorded.
+capability, status and outcome.
+
+See [why a capability failed](#see-why-a-capability-failed)
+for the optional failure reason. Exception objects and request payloads are excluded.
 
 The record uses the local request span's trace and span IDs and the response's
 completion timestamp, even if delivery occurs later. Trace IDs are not metric

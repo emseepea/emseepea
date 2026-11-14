@@ -8,7 +8,7 @@ import { W3CTraceContextPropagator } from "@opentelemetry/core";
 import { AggregationTemporality, InMemoryMetricExporter, MeterProvider, PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
 import { AlwaysOffSampler, InMemorySpanExporter, SimpleSpanProcessor, TracerProvider } from "@opentelemetry/sdk-trace";
 import { logs as sdkLogs } from "@opentelemetry/sdk-node";
-import { createEmseepea, defineStreamingTool, defineTool, openTelemetry, serveEmseepea, structuredLogging } from "@emseepea/server";
+import { createEmseepea, definePrompt, defineResource, defineResourceTemplate, defineStreamingTool, defineTool, openTelemetry, serveEmseepea, structuredLogging } from "@emseepea/server";
 import { z } from "zod";
 
 const secret = "request-logs-private-canary";
@@ -23,7 +23,7 @@ const meta = {
 };
 const allowed = ["emseepea.protocol.outcome", "emseepea.transport.outcome", "http.request.method", "http.response.status_code", "mcp.capability.name", "mcp.method"];
 
-async function fixture(t, { enabled = true, defaultOptions = false, tracing = true, loggerProvider = true, sampler, fault, stripRemote = false, blockDelivery = false, streaming = false, brokenSpan = false } = {}) {
+async function fixture(t, { enabled = true, defaultOptions = false, tracing = true, loggerProvider = true, sampler, fault, stripRemote = false, blockDelivery = false, streaming = false, brokenSpan = false, capabilities = {} } = {}) {
   const spans = new InMemorySpanExporter();
   const tracingSdk = new TracerProvider({ spanProcessors: [new SimpleSpanProcessor({ exporter: spans })], ...(sampler ? { sampler } : {}) });
   const logExport = new sdkLogs.InMemoryLogRecordExporter();
@@ -86,6 +86,8 @@ async function fixture(t, { enabled = true, defaultOptions = false, tracing = tr
         if (value === "disconnect") await delay(2_000, undefined, { signal });
         return { content: [{ type: "text", text: secret }] };
       }
+      if (value === "throw") throw new Error(secret);
+      if (value === "invalid-output") return { data: { value: 42 } };
       if (value === "tool-error") return { content: [{ type: "text", text: secret }], isError: true };
       if (brokenSpan) return { data: { value } };
       return trace.getTracer("logs-test.backend").startActiveSpan("backend.read", async (span) => {
@@ -95,7 +97,7 @@ async function fixture(t, { enabled = true, defaultOptions = false, tracing = tr
     },
   };
   const adapter = defaultOptions ? openTelemetry() : openTelemetry({ logs: enabled });
-  running = await serveEmseepea(createEmseepea({ name: "request-logs", version: "1", tools: [streaming ? defineStreamingTool(definition) : defineTool(definition)], observability: [
+  running = await serveEmseepea(createEmseepea({ name: "request-logs", version: "1", ...capabilities, tools: [streaming ? defineStreamingTool(definition) : defineTool(definition)], observability: [
     structuredLogging("completion", (event) => {
       events.push(event);
       if (blockDelivery) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
@@ -121,10 +123,12 @@ function call(url, { value = secret, traceparent = parent(firstTrace), progress 
   } }) });
 }
 
-function checkRecord(record) {
+function checkRecord(record, failureReason) {
   assert.equal(record.eventName, "mcp.request"); assert.equal(record.body, "MCP HTTP request ended");
   assert.equal(record.severityNumber, 9); assert.equal(record.severityText, "INFO");
-  assert.deepEqual(Object.keys(record.attributes).sort(), allowed);
+  const attributes = failureReason ? [...allowed, "emseepea.failure_reason"].sort() : allowed;
+  assert.deepEqual(Object.keys(record.attributes).sort(), attributes);
+  assert.equal(record.attributes["emseepea.failure_reason"], failureReason);
   assert.doesNotMatch(JSON.stringify({ body: record.body, attributes: record.attributes, spanContext: record.spanContext }), new RegExp(secret + "|opaque-private-state"));
 }
 
@@ -151,6 +155,82 @@ test("concurrent completion logs retain local request identity and completion ti
   assert.equal(f.points("emseepea.http.requests")[0].value, 2);
 });
 
+test("tool failure reasons reach adapters, logs and spans without exposing error text", async (t) => {
+  const f = await fixture(t);
+  const failures = [
+    [{ private: secret }, "invalid_input"],
+    ["throw", "execution_failed"],
+    ["invalid-output", "invalid_output"],
+  ];
+  for (const [value] of failures) {
+    const response = await call(f.running.url, { value });
+    assert.equal(response.status, 200);
+    const { result } = await response.json();
+    assert.equal(result.isError, true);
+    assert.deepEqual(result.content, [{ type: "text", text: "Tool execution failed" }]);
+  }
+  const deliberate = await call(f.running.url, { value: "tool-error" });
+  assert.equal((await deliberate.json()).result.isError, true);
+  await f.completed(4);
+  await f.flush();
+
+  const reasons = [...failures.map(([, reason]) => reason), undefined];
+  const attribute = "emseepea.failure_reason";
+  const records = f.logExport.getFinishedLogRecords();
+  const spans = f.spans.getFinishedSpans().filter((span) => span.instrumentationScope.name === "@emseepea/server");
+  assert.equal(f.calls(), 3, "invalid input never reaches the handler");
+  assert.deepEqual(f.events.map((event) => event.failureReason), reasons);
+  assert.deepEqual(records.map((record) => record.attributes[attribute]), reasons);
+  assert.deepEqual(spans.map((span) => span.attributes[attribute]), reasons);
+  assert.equal(f.points("emseepea.http.requests").length, 1);
+  assert.equal(f.points("emseepea.http.requests")[0].value, 4);
+  assert.equal(f.points("emseepea.http.requests")[0].attributes[attribute], undefined);
+  assert.doesNotMatch(JSON.stringify([f.events, records.map(({ attributes, body }) => ({ attributes, body }))]), new RegExp(secret));
+});
+
+test("resource and prompt diagnostics identify the failure stage without exposing values", async (t) => {
+  const base = { access: "public" };
+  const resource = defineResource({
+    ...base, name: "static", uri: "log://static",
+    handler() { throw new Error(secret); },
+  });
+  const template = defineResourceTemplate({
+    ...base, name: "template", uriTemplate: "log://template/{id}",
+    handler() { return { contents: secret }; },
+  });
+  let promptCalls = 0;
+  const prompt = definePrompt({
+    ...base, name: "prompt", argsSchema: z.object({ value: z.literal("allowed") }),
+    handler() { promptCalls += 1; return { messages: secret }; },
+  });
+  const f = await fixture(t, { capabilities: { resources: [resource, template], prompts: [prompt] } });
+  const failures = [
+    ["resources/read", { uri: "log://static" }, "execution_failed"],
+    ["resources/read", { uri: "log://template/" + secret }, "invalid_output"],
+    ["prompts/get", { name: "prompt", arguments: { value: secret } }, "invalid_input"],
+    ["prompts/get", { name: "prompt", arguments: { value: "allowed" } }, "invalid_output"],
+  ];
+  for (const [method, params] of failures) {
+    const reply = await fetch(f.running.url, {
+      method: "POST",
+      headers: { Accept: "application/json, text/event-stream", "Content-Type": "application/json",
+        "MCP-Protocol-Version": "2026-07-28", "Mcp-Method": method, "Mcp-Name": params.name ?? params.uri },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params: { ...params, _meta: meta } }),
+    });
+    const { error } = await reply.json();
+    assert.ok(error);
+    assert.doesNotMatch(JSON.stringify(error), new RegExp(secret));
+  }
+  await f.completed(failures.length);
+  await f.flush();
+  assert.equal(promptCalls, 1);
+  const reasons = failures.map(([, , reason]) => reason);
+  assert.deepEqual(f.events.map((event) => event.failureReason), reasons);
+  assert.ok(f.events.every((event) => event.protocolOutcome === "protocol_error"));
+  assert.deepEqual(f.logExport.getFinishedLogRecords().map((record) => record.attributes["emseepea.failure_reason"]), reasons);
+  assert.doesNotMatch(JSON.stringify(f.events), new RegExp(secret));
+});
+
 test("logging defaults off and a missing logger provider is a no-op", async (t) => {
   for (const options of [{ defaultOptions: true }, { enabled: false }, { loggerProvider: false }]) await t.test(JSON.stringify(options), async (t) => {
     const f = await fixture(t, options); assert.equal((await call(f.running.url)).status, 200); await f.completed(1); await f.flush();
@@ -172,7 +252,7 @@ test("valid unsampled local spans still correlate; invalid incoming parents star
 test("no-op tracer parents and broken local contexts never masquerade as local request spans", async (t) => {
   for (const options of [{ tracing: false }, { tracing: false, stripRemote: true }, { brokenSpan: true }]) await t.test(JSON.stringify(options), async (t) => {
     const f = await fixture(t, options); assert.equal((await call(f.running.url)).status, 200); await f.completed(1); await f.flush();
-    const [record] = f.logExport.getFinishedLogRecords(); checkRecord(record); assert.equal(record.spanContext, undefined); assert.equal(f.calls(), 1);
+    const [record] = f.logExport.getFinishedLogRecords(); checkRecord(record, options.brokenSpan ? "execution_failed" : undefined); assert.equal(record.spanContext, undefined); assert.equal(f.calls(), 1);
   });
 });
 
@@ -202,7 +282,7 @@ test("tool errors and streaming finish/disconnect each emit exactly one safe com
     const f = await fixture(t, { streaming: true }); const first = await call(f.running.url, { progress: true }); await first.text(); await f.completed(1);
     const controller = new AbortController(); const response = await call(f.running.url, { value: "disconnect", progress: true, signal: controller.signal });
     const body = response.text(); controller.abort(); await assert.rejects(body, /abort/i); await f.completed(2); await f.flush();
-    const records = f.logExport.getFinishedLogRecords(); assert.equal(records.length, 2); records.forEach(checkRecord);
+    const records = f.logExport.getFinishedLogRecords(); assert.equal(records.length, 2); records.forEach((record) => checkRecord(record));
     assert.deepEqual(records.map((r) => r.attributes["emseepea.transport.outcome"]), ["finished", "disconnected"]);
   });
 });

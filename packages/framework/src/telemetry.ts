@@ -6,17 +6,19 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 const methods = new Set<string>([
   "server/discover", "tools/list", "tools/call", "resources/list",
   "resources/templates/list", "resources/read", "prompts/list", "prompts/get",
-  "completion/complete", "subscriptions/listen",
+  "completion/complete", "subscriptions/listen", "events/list", "events/subscribe", "events/unsubscribe",
 ]);
 const httpMethods = new Set<string>(["POST", "GET", "HEAD", "PUT", "PATCH", "DELETE", "OPTIONS"]);
 
 export type ObservedMcpMethod =
   | "server/discover" | "tools/list" | "tools/call" | "resources/list"
   | "resources/templates/list" | "resources/read" | "prompts/list" | "prompts/get"
-  | "completion/complete" | "subscriptions/listen" | "_OTHER";
+  | "completion/complete" | "subscriptions/listen" | "events/list" | "events/subscribe" | "events/unsubscribe" | "_OTHER";
 export type ObservedHttpMethod =
   | "POST" | "GET" | "HEAD" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "_OTHER";
 export type ObservedProtocolOutcome = "success" | "tool_error" | "protocol_error" | "disconnected";
+
+export type ObservedFailureReason = "invalid_input" | "execution_failed" | "invalid_output";
 
 export interface CallerClassification {
   readonly id: string;
@@ -25,6 +27,7 @@ export interface CallerClassification {
 
 export interface ObservabilityState {
   protocolOutcome: Exclude<ObservedProtocolOutcome, "disconnected">;
+  failureReason?: ObservedFailureReason;
   /** Internal cancellation provenance; never copied into completion events. */
   cancelled?: boolean;
   /**
@@ -51,6 +54,7 @@ export interface ObservabilityEvent {
   readonly statusCode: number;
   readonly outcome: "finished" | "disconnected";
   readonly protocolOutcome: ObservedProtocolOutcome;
+  readonly failureReason?: ObservedFailureReason;
   readonly callerClass?: string;
   readonly durationMs: number;
   /**
@@ -62,17 +66,24 @@ export interface ObservabilityEvent {
   readonly forwardingRefusal?: ObservedForwardingRefusal;
 }
 
+export interface EventDeliveryObservation {
+  readonly type: "mcp.event.delivery";
+  readonly failureReason: "callback_rejected" | "retry_exhausted" | "drain_failed";
+}
+
 export interface ObservabilityAdapter {
   readonly id: string;
   readonly emit: (event: ObservabilityEvent) => void | Promise<void>;
+  readonly emitEventDelivery?: (event: EventDeliveryObservation) => void | Promise<void>;
   readonly flush?: () => void | Promise<void>;
 }
 
 export function structuredLogging(
   id: string,
   write: (event: ObservabilityEvent) => void | Promise<void>,
+  emitEventDelivery?: ObservabilityAdapter["emitEventDelivery"],
 ): ObservabilityAdapter {
-  return Object.freeze({ id, emit: write });
+  return Object.freeze({ id, emit: write, ...(emitEventDelivery ? { emitEventDelivery } : {}) });
 }
 
 // Normalization preserves emit identity while copying the public adapter.
@@ -110,6 +121,16 @@ export function openTelemetry(options: {
   });
   const adapter = Object.freeze({
     id: "opentelemetry",
+    ...(logger ? { emitEventDelivery(event: EventDeliveryObservation) {
+      logger.emit({
+        eventName: event.type,
+        body: "MCP event delivery failed",
+        severityNumber: SeverityNumber.WARN,
+        severityText: "WARN",
+        attributes: { "emseepea.failure_reason": event.failureReason },
+        context: ROOT_CONTEXT,
+      });
+    } } : {}),
     emit(event: ObservabilityEvent) {
       const attributes = eventAttributes(event);
       const emission = requestEmissions.get(event);
@@ -124,7 +145,9 @@ export function openTelemetry(options: {
           body: "MCP HTTP request ended",
           severityNumber: SeverityNumber.INFO,
           severityText: "INFO",
-          attributes,
+          attributes: event.failureReason
+            ? { ...attributes, "emseepea.failure_reason": event.failureReason }
+            : attributes,
           context: emissionContext,
           ...(emission ? { timestamp: emission.timestamp } : {}),
         });
@@ -197,8 +220,19 @@ export function installObservability(
   capabilityName: (body: unknown) => string | undefined,
   callerClassifications: readonly CallerClassification[] | undefined,
   limits: { deliveryTimeoutMs: number },
-): (timeoutMs: number) => Promise<void> {
+): {
+  flush: (timeoutMs: number) => Promise<void>;
+  reportEventDelivery: (failureReason: EventDeliveryObservation["failureReason"]) => void;
+} {
   const pending = new Set<Promise<void>>();
+  function deliver(write: () => void | Promise<void>): void {
+    try {
+      const delivery = bounded(Promise.resolve(write()).catch(() => {}), limits.deliveryTimeoutMs);
+      pending.add(delivery);
+      void delivery.finally(() => pending.delete(delivery));
+    } catch { /* Observability cannot change protocol behaviour. */ }
+  }
+
   const tracing = adapters.map((adapter) => requestTracers.get(adapter.emit)).find((value) => value !== undefined);
 
   app.addHook("onRequest", (request, reply, done) => {
@@ -239,6 +273,8 @@ export function installObservability(
             : state.protocolOutcome,
         ...(callerClass ? { callerClass } : {}),
         durationMs: Math.min(3_600_000, Math.max(0, finished - started)),
+        ...(outcome === "finished" && state.protocolOutcome !== "success" && state.failureReason
+          ? { failureReason: state.failureReason } : {}),
         ...(state.forwardingRefusal ? { forwardingRefusal: state.forwardingRefusal } : {}),
       });
       if (tracing) requestEmissions.set(event, {
@@ -250,6 +286,10 @@ export function installObservability(
         catch { /* Renaming cannot suppress status, finalization or delivery. */ }
         try { span.setAttributes(eventAttributes(event)); }
         catch { /* Span decoration cannot change protocol behaviour. */ }
+        if (event.failureReason) {
+          try { span.setAttribute("emseepea.failure_reason", event.failureReason); }
+          catch { /* Failure detail cannot suppress span finalization. */ }
+        }
         const errorType = outcome !== "finished" ? undefined
           : statusCode >= 500 ? String(statusCode)
             : statusCode >= 400 ? undefined
@@ -263,16 +303,7 @@ export function installObservability(
         try { span.end(performance.timeOrigin + finished); }
         catch { /* Finalization is independent of adapter delivery. */ }
       }
-      for (const adapter of adapters) {
-        try {
-          const delivery = bounded(
-            Promise.resolve(adapter.emit(event)).catch(() => {}),
-            limits.deliveryTimeoutMs,
-          );
-          pending.add(delivery);
-          void delivery.finally(() => pending.delete(delivery));
-        } catch { /* Observability cannot change protocol behaviour. */ }
-      }
+      for (const adapter of adapters) deliver(() => adapter.emit(event));
     }
     reply.raw.once("finish", finish);
     reply.raw.once("close", close);
@@ -290,13 +321,21 @@ export function installObservability(
     }
   });
 
-  return async (timeoutMs) => {
-    await bounded(Promise.all(pending), timeoutMs);
-    await Promise.all(adapters.map(async (adapter) => {
-      if (!adapter.flush) return;
-      try { await bounded(Promise.resolve().then(() => adapter.flush!()), timeoutMs); }
-      catch { /* Every adapter gets an independent bounded flush opportunity. */ }
-    }));
+  const deliveryAdapters = adapters.filter((adapter) => adapter.emitEventDelivery);
+  return {
+    reportEventDelivery(failureReason) {
+      if (deliveryAdapters.length === 0) return;
+      const event: EventDeliveryObservation = Object.freeze({ type: "mcp.event.delivery", failureReason });
+      for (const adapter of deliveryAdapters) deliver(() => adapter.emitEventDelivery!(event));
+    },
+    async flush(timeoutMs) {
+      await bounded(Promise.all(pending), timeoutMs);
+      await Promise.all(adapters.map(async (adapter) => {
+        if (!adapter.flush) return;
+        try { await bounded(Promise.resolve().then(() => adapter.flush!()), timeoutMs); }
+        catch { /* Every adapter gets an independent bounded flush opportunity. */ }
+      }));
+    },
   };
 }
 

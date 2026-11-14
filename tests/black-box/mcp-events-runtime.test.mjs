@@ -93,6 +93,23 @@ test("event subscription verifies, stores, filters, signs, delivers and unsubscr
   assert.equal(sent.length, 4);
   assert.equal(pending.size, 0);
 
+  authorized = true;
+  const failures = [];
+  deliveryStatuses.push(503, 503, 503, 503, 410);
+  await runtime.publish("comment.created", { document_id: "doc-1", comment_id: "exhausted" });
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await runtime.drain((reason) => failures.push(reason));
+    assert.equal(pending.size, 1);
+    assert.deepEqual(failures, []);
+  }
+  await runtime.drain((reason) => failures.push(reason));
+  assert.equal(pending.size, 0);
+  assert.deepEqual(failures, ["retry_exhausted"]);
+  await runtime.publish("comment.created", { document_id: "doc-1", comment_id: "rejected" });
+  await runtime.drain((reason) => failures.push(reason));
+  assert.equal(pending.size, 0);
+  assert.deepEqual(failures, ["retry_exhausted", "callback_rejected"]);
+
   await runtime.unsubscribe("owner-b", {
     name: params.name, arguments: params.arguments,
     delivery: { mode: "webhook", url: params.delivery.url },

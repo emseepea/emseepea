@@ -2,6 +2,7 @@ import type { AuthInfo } from "@modelcontextprotocol/server";
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { isIP } from "node:net";
 import { z, type ZodType } from "zod";
+import type { EventDeliveryObservation } from "./telemetry.js";
 import { postCheckedWebhook, signWebhook } from "./events-webhook.js";
 
 export interface McpEventDefinition {
@@ -108,7 +109,7 @@ export interface McpEventRuntime {
     data: Readonly<Record<string, unknown>>,
     audience?: Readonly<{ ownerKey: string }>,
   ): Promise<void>;
-  drain(): Promise<void>;
+  drain(observe?: (reason: EventDeliveryObservation["failureReason"]) => void): Promise<void>;
   ready(): Promise<boolean>;
 }
 
@@ -245,7 +246,7 @@ export function createMcpEventRuntime(
         }));
       }
     },
-    async drain() {
+    async drain(observe) {
       if (!await runtime.ready()) return;
       const due = await bounded(() => options.store.claimDue(4, Date.now(), 60_000));
       for (const delivery of due) {
@@ -273,8 +274,11 @@ export function createMcpEventRuntime(
           });
           status = response.status;
         } catch { /* Retry transient delivery failures below. */ }
-        if (status >= 200 && status < 300 || status === 410 || status === 413 || delivery.attempts >= 3) {
+        const delivered = status >= 200 && status < 300;
+        const rejected = status === 410 || status === 413;
+        if (delivered || rejected || delivery.attempts >= 3) {
           await bounded(() => options.store.complete(delivery.id, delivery.leaseId));
+          if (!delivered) observe?.(rejected ? "callback_rejected" : "retry_exhausted");
         } else {
           await bounded(() => options.store.reschedule({ ...delivery, attempts: delivery.attempts + 1,
             nextAttemptAt: Date.now() + Math.min(60_000, 1000 * 5 ** delivery.attempts) }));
