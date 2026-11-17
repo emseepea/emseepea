@@ -1,48 +1,50 @@
 # Current Release Readiness
 
-Date: 2026-11-15
+Date: 2026-11-17
 
-## MCP failure diagnostics
+## Stateless MCP tools on Cloudflare Workers
 
 Status: **PREPARED**. Publication is pending.
 
-Tool calls, resource reads, and prompt requests can carry a fixed failure
-reason in structured request telemetry. MCP Events methods have individual
-request labels. Internal webhook workers report terminal delivery and queue
-failures through the configured observability adapter.
+The public `createEmseepeaFetch` entry point serves explicitly registered
+tools at `/mcp`. Developers can use the same tool declaration on Cloudflare
+Workers and Node/Fastify. The Fetch entry point checks configured request
+authorities, supplied browser origins, request bytes, and authorization
+before dispatching a tool.
 
 ## Planned packages
 
-- `@emseepea/create-api-backed-server@0.1.37`
-- `@emseepea/create-database-schema-server@0.1.37`
-- `@emseepea/create-html-ui-server@0.1.37`
-- `@emseepea/create-mongodb-backed-server@0.1.37`
-- `@emseepea/create-multi-instance-postgres-server@0.1.37`
-- `@emseepea/create-openapi-backed-server@0.1.37`
-- `@emseepea/create-progress-streaming-server@0.1.37`
-- `@emseepea/create-react-ui-server@0.1.37`
-- `@emseepea/create-resources-and-prompts-server@0.1.37`
-- `@emseepea/create-soap-backed-server@0.1.37`
-- `@emseepea/create-tool-server@0.1.37`
-- `@emseepea/feedback@0.13.1`
-- `@emseepea/react@0.4.23`
-- `@emseepea/server@0.26.1`
-- `@emseepea/svelte@0.2.23`
-- `@emseepea/testing@0.26.16`
+- `@emseepea/create-api-backed-server@0.1.38`
+- `@emseepea/create-database-schema-server@0.1.38`
+- `@emseepea/create-html-ui-server@0.1.38`
+- `@emseepea/create-mongodb-backed-server@0.1.38`
+- `@emseepea/create-multi-instance-postgres-server@0.1.38`
+- `@emseepea/create-openapi-backed-server@0.1.38`
+- `@emseepea/create-progress-streaming-server@0.1.38`
+- `@emseepea/create-react-ui-server@0.1.38`
+- `@emseepea/create-resources-and-prompts-server@0.1.38`
+- `@emseepea/create-soap-backed-server@0.1.38`
+- `@emseepea/create-tool-server@0.1.38`
+- `@emseepea/feedback@0.13.2`
+- `@emseepea/react@0.4.24`
+- `@emseepea/server@0.27.0`
+- `@emseepea/svelte@0.2.24`
+- `@emseepea/testing@0.26.17`
 
 ## Qualification
 
-Focused tests used real MCP HTTP requests and synthetic data. They confirmed
-the expected failure reasons, preserved public protocol responses, and
-checked that telemetry excludes private values. Worker tests covered retry,
-terminal failure, a store failure, and shutdown without a late log.
+An independent install of a locally packed server ran one synthetic tool
+through Fastify and local workerd. Discovery, listing, structured results,
+and input and output validation matched. Workerd checks exercised declared
+and streamed request size, authority and Origin, public OAuth metadata,
+protected discovery, and verified caller access. The checks covered missing,
+invalid, expired, wrong-resource, and insufficient-scope credentials,
+verifier timeout, and rejection before tool input validation.
 
-Architecture, Jobs To Be Done, behavioural test, and cognitive accessibility
-reviews covered the implementation and guidance. The exact source Quality
-run, release candidate qualification, publication, registry readback,
-independent installation, and mergeback Quality are separate checks.
-
-These verdicts apply to release preparation.
+The exact source Quality run and release candidate qualification must pass
+before promotion. Verify the installed registry package on both runtimes,
+then confirm publication and mergeback. The published deployment guide and
+live Worker verification are tracked separately in issue #246.
 
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.
