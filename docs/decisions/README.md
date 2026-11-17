@@ -5,7 +5,7 @@
 Use the quick index to find a decision. The details below preserve each
 decision's chosen approach, its checks, and any decision it replaces.
 
-This project has 127 decisions: 78 current and 49 historical.
+This project has 129 decisions: 80 current and 49 historical.
 
 Human review confirmed means the decision's substance was explicitly approved.
 Proposed means production validation is incomplete. Human review is
@@ -93,6 +93,8 @@ recorded separately.
 - [ADR-0129: Coexistence with Application HTTP Instrumentation](0129-http-instrumentation-tracing-coexistence.proposed.md): Proposed; human review unconfirmed.
 - [ADR-0130: Optional WebMCP Exposure through an Existing MCP Client](0130-optional-webmcp-exposure-through-existing-mcp.proposed.md): Proposed; human review confirmed.
 - [ADR-0131: Isolated CLI-to-Native-WebMCP Qualification](0131-isolated-cli-native-webmcp-qualification.proposed.md): Proposed; human review confirmed.
+- [ADR-0132: Stateless Fetch Entry Point for MCP Tools](0132-stateless-fetch-entry-point-for-mcp-tools.proposed.md): Proposed; human review confirmed.
+- [ADR-0133: Explicit Request Protection at the Workers Boundary](0133-explicit-request-protection-at-the-workers-boundary.proposed.md): Proposed; human review confirmed.
 
 ### Historical decisions
 
@@ -2807,3 +2809,35 @@ Chosen option: **"Test-only loopback MCP bridge to page-registered native WebMCP
 - Correlate model-native events with real native browser and server outcomes.
 - Retain fresh trials, unchanged user requests and independent judgments.
 - Run the normal exact-source, package, CI and release workflow separately.
+
+### [ADR-0132: Stateless Fetch Entry Point for MCP Tools](0132-stateless-fetch-entry-point-for-mcp-tools.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0132 Decision
+
+Chosen option: **Stateless Fetch entry point**, because the official MCP SDK can serve Fetch requests and the existing framework tool checks can be shared across both paths.
+
+#### ADR-0132 Checks
+
+- Verify that the installed package serves the same declared tool in Fastify and `workerd`.
+- From an MCP client, discover, list, and call the tool on both runtimes. Confirm matching structured tool output and equivalent rejection of invalid tool inputs and results.
+- Verify that an adopter's deployed Worker serves the tool through its production MCP endpoint before recording production confirmation.
+
+### [ADR-0133: Explicit Request Protection at the Workers Boundary](0133-explicit-request-protection-at-the-workers-boundary.proposed.md)
+
+- Status: Proposed
+- Human review: Confirmed
+
+#### ADR-0133 Decision
+
+Chosen option: **Framework checks at the Fetch boundary**, because an installed Em See Pea server should enforce its configured protections before running application logic.
+
+#### ADR-0133 Checks
+
+- Verify that disallowed authority or Origin, and oversized bodies with and without a declared length, are rejected before tool execution on `workerd`.
+- Verify that forwarding headers cannot override authority or identity.
+- Verify that protected calls and discovery configured to grant access by permission reject missing or invalid credentials and insufficient scopes. Verify that access works with the required credentials and scopes.
+- Verify that public discovery and public OAuth metadata remain available without a token.
+- Verify the configured request protections on an adopter's deployed Worker before recording production confirmation.

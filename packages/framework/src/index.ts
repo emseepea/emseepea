@@ -25,6 +25,7 @@ import {
   inputResponse as sdkInputResponse,
   isInputRequiredResult,
   oauthMetadataResponse,
+  readRequestBody,
   specTypeSchemas,
   verifyBearerToken,
   type AuthInfo,
@@ -764,6 +765,17 @@ export interface EmseepeaOptions {
   readonly deployment?: DeploymentProfile;
   readonly authentication?: AuthenticationOptions;
 }
+/** Configuration for explicitly registered tools served through a Fetch boundary. */
+export interface EmseepeaFetchOptions extends Pick<EmseepeaOptions,
+  | "name" | "version" | "title" | "description" | "icons" | "websiteUrl" | "instructions"
+  | "authentication" | "maxRequestBytes" | "maxApplicationResultBytes" | "operationTimeoutMs"
+  | "maxProgressEvents" | "maxProgressEventBytes"
+> {
+  readonly tools: readonly EmseepeaTool[];
+  readonly allowedAuthorities: readonly string[];
+  readonly allowedOrigins?: readonly string[];
+}
+
 export interface ExternalEmseepeaOptions extends Omit<EmseepeaOptions, "events"> {
   readonly events: ExternalMcpEventsOptions;
 }
@@ -2261,6 +2273,44 @@ function installListPagination(server: McpServer, pagination: CompiledListPagina
 export function createEmseepea(options: ExternalEmseepeaOptions): FastifyInstance;
 export function createEmseepea(options: EmseepeaOptions): FastifyInstance;
 export function createEmseepea(options: EmseepeaOptions | ExternalEmseepeaOptions): FastifyInstance {
+  return assembleEmseepea(options);
+}
+
+interface FetchBoundary {
+  readonly allowedAuthorities: ReadonlySet<string>;
+  readonly allowedOrigins: ReadonlySet<string>;
+}
+
+/** Create a stateless MCP handler for a Fetch runtime such as Cloudflare Workers. */
+export function createEmseepeaFetch(options: EmseepeaFetchOptions): (request: Request) => Promise<Response> {
+  if (!options.allowedAuthorities.length) {
+    throw new TypeError("Fetch requires at least one allowed authority");
+  }
+  const boundary = {
+    allowedAuthorities: new Set(options.allowedAuthorities.map((value) =>
+      requiredNormalized("allowed authority", value, normalizeAuthority))),
+    allowedOrigins: new Set((options.allowedOrigins ?? []).map((value) =>
+      requiredNormalized("allowed HTTPS origin", value, normalizeOrigin))),
+  };
+  const {
+    name, version, title, description, icons, websiteUrl, instructions, tools, authentication,
+    maxRequestBytes, maxApplicationResultBytes, operationTimeoutMs, maxProgressEvents, maxProgressEventBytes,
+  } = options;
+  return assembleEmseepea({
+    name, version, title, description, icons, websiteUrl, instructions, tools, authentication,
+    maxRequestBytes, maxApplicationResultBytes, operationTimeoutMs, maxProgressEvents, maxProgressEventBytes,
+  }, boundary);
+}
+
+function assembleEmseepea(options: EmseepeaOptions | ExternalEmseepeaOptions): FastifyInstance;
+function assembleEmseepea(
+  options: EmseepeaOptions,
+  fetchBoundary: FetchBoundary,
+): (request: Request) => Promise<Response>;
+function assembleEmseepea(
+  options: EmseepeaOptions | ExternalEmseepeaOptions,
+  fetchBoundary?: FetchBoundary,
+): FastifyInstance | ((request: Request) => Promise<Response>) {
   const observability = normalizeObservability(options.observability);
   const callerClassifications = normalizeCallerClassifications(options.callerClassifications);
   const readiness = options.readiness;
@@ -2566,6 +2616,11 @@ export function createEmseepea(options: EmseepeaOptions | ExternalEmseepeaOption
     responseMode: hasProgress || resourceSubscriptions || clientLogging ? "auto" : "json",
     keepAliveMs: 0,
   });
+  if (fetchBoundary) {
+    return fetchMcpHandler(sdkHandler, {
+      ...fetchBoundary, toolsByName, enabledMethods, authentication, maxRequestBytes, operationTimeoutMs,
+    });
+  }
   const nodeHandler = toNodeHandler(sdkHandler);
   const app = createMcpFastifyApp({ host: deployment.mode === "loopback" ? "127.0.0.1" : "0.0.0.0" });
   const unstartedSockets = new Set<import("node:net").Socket>();
@@ -2762,7 +2817,16 @@ export function createEmseepea(options: EmseepeaOptions | ExternalEmseepeaOption
       );
       return;
     }
-    if (!await validateMcpRequestHeaders(request, reply, legacy)) return;
+    const headerError = mcpRequestHeaderError(
+      request.body,
+      request.headers.accept,
+      (name) => singleHeader(request.raw.rawHeaders, name),
+      legacy,
+    );
+    if (headerError) {
+      await sendRpcError(reply, ...headerError);
+      return;
+    }
     if (!legacy && isRecord(request.body) && typeof request.body.method === "string" &&
         !enabledMethods.has(request.body.method)) {
       await sendRpcError(reply, 404, -32601, "Method not found", requestId(request.body.id));
@@ -3056,6 +3120,116 @@ export async function publishMcpEvent(
   await runtime.publishMcpEvent(name, data, audience);
 }
 
+function fetchMcpHandler(
+  sdkHandler: ReturnType<typeof createMcpHandler>,
+  options: FetchBoundary & {
+    readonly toolsByName: ReadonlyMap<string, EmseepeaTool>;
+    readonly enabledMethods: ReadonlySet<string>;
+    readonly authentication?: NormalizedOAuth;
+    readonly maxRequestBytes: number;
+    readonly operationTimeoutMs: number;
+  },
+): (request: Request) => Promise<Response> {
+  const { authentication } = options;
+  const protectsCatalogue = authentication?.discovery === "protected";
+  return async (request) => {
+    const url = new URL(request.url);
+    const authority = normalizeAuthority(url.host);
+    const suppliedOrigin = request.headers.get("origin");
+    const origin = suppliedOrigin === null ? undefined : normalizeOrigin(suppliedOrigin);
+    if (!authority || !options.allowedAuthorities.has(authority) ||
+        (suppliedOrigin !== null && (!origin || !options.allowedOrigins.has(origin)))) {
+      return fetchRpcError(403, -32000, "Forbidden");
+    }
+    if (authentication && url.pathname.startsWith("/.well-known/")) {
+      return oauthMetadataResponse(request, authentication.metadata) ?? new Response(null, { status: 404 });
+    }
+    if (url.pathname !== "/mcp") return new Response(null, { status: 404 });
+    if (request.method !== "POST") {
+      return new Response(null, { status: 405, headers: { allow: "POST" } });
+    }
+
+    let body: unknown;
+    try {
+      const read = await readRequestBody(request, options.maxRequestBytes);
+      if (read.tooLarge) return fetchRpcError(413, -32600, "Request exceeds configured size limit");
+      body = JSON.parse(read.text);
+    } catch {
+      return fetchRpcError(400, -32700, "Parse error");
+    }
+    // The Fetch boundary authorizes one operation before dispatch.
+    if (Array.isArray(body)) {
+      return fetchRpcError(400, -32600, "JSON-RPC batches are not supported");
+    }
+    const id = isRecord(body) ? requestId(body.id) : null;
+    const header = (name: string) => request.headers.get(name) ?? undefined;
+    const classification = classifyInboundRequest({
+      httpMethod: request.method,
+      protocolVersionHeader: header("mcp-protocol-version"),
+      mcpMethodHeader: header("mcp-method"),
+      mcpNameHeader: header("mcp-name"),
+      body,
+    });
+    if (classification.kind === "reject") {
+      return fetchRpcError(classification.httpStatus, classification.code, classification.message, id,
+        isRecord(classification.data) ? classification.data : undefined);
+    }
+    const legacy = classification.kind === "legacy";
+    const headerError = mcpRequestHeaderError(body, header("accept"), header, legacy);
+    if (headerError) return fetchRpcError(...headerError);
+
+    if (!legacy && isRecord(body) && typeof body.method === "string" &&
+        !options.enabledMethods.has(body.method)) {
+      return fetchRpcError(404, -32601, "Method not found", id);
+    }
+    const params = isRecord(body) && isRecord(body.params) ? body.params : undefined;
+    const toolName = isRecord(body) && body.method === "tools/call" && typeof params?.name === "string"
+      ? params.name : undefined;
+    const access = toolName === undefined ? undefined : options.toolsByName.get(toolName)?.[TOOL_ACCESS];
+    let authInfo: AuthInfo | undefined;
+    if (authentication && (protectsCatalogue || access && access !== "public")) {
+      const requiredScopes = protectsCatalogue || access === undefined || access === "public" ? [] : access.requiredScopes;
+      const authorization = header("authorization");
+      // Require one complete bearer credential, including when Fetch folds repeated headers.
+      const bearer = authorization?.match(/^Bearer +([A-Za-z0-9._~+/-]+=*)$/i);
+      try {
+        authInfo = await verifyRequestBearer(bearer ? `Bearer ${bearer[1]}` : undefined,
+          request.signal, requiredScopes, authentication);
+      } catch (error) {
+        return bearerAuthChallengeResponse(safeOAuthError(error), {
+          requiredScopes: [...requiredScopes], resourceMetadataUrl: authentication.resourceMetadataUrl,
+        });
+      }
+    }
+    const principal = authInfo ? principalFrom(authInfo) : undefined;
+    if (protectsCatalogue && isCapabilityInvocation(body) &&
+        (access === undefined || !accessAllows(access, principal))) {
+      return fetchRpcError(200, -32602, "Capability not found", id);
+    }
+    const response = await requestOperations.run({
+      signal: request.signal,
+      deadlineMs: Date.now() + options.operationTimeoutMs,
+      principal,
+      filterCatalogues: protectsCatalogue,
+      legacy,
+    }, () => sdkHandler.fetch(request, { parsedBody: body, authInfo }));
+    if (!protectsCatalogue) return response;
+    const privateResponse = new Response(response.body, response);
+    privateResponse.headers.set("cache-control", "private, no-store");
+    return privateResponse;
+  };
+}
+
+function fetchRpcError(
+  status: number,
+  code: number,
+  message: string,
+  id: string | number | null = null,
+  data?: Readonly<Record<string, unknown>>,
+): Response {
+  return Response.json({ jsonrpc: "2.0", id, error: { code, message, ...(data ? { data } : {}) } }, { status });
+}
+
 function safeOAuthError(error: unknown): unknown {
   if (!(error instanceof OAuthError)) return error;
   const message = error.code === OAuthErrorCode.InvalidToken
@@ -3080,32 +3254,46 @@ async function verifyAuthenticatedRequest(
   reply.raw.once("close", abort);
   if (requestAlreadyClosed(request, reply)) abort();
   try {
-    const authInfo = await runWithDeadline(
+    return await verifyRequestBearer(
+      singleHeader(request.raw.rawHeaders, "authorization"),
       disconnected.signal,
-      Date.now() + authentication.verificationTimeoutMs,
-      () => verifyBearerToken(singleHeader(request.raw.rawHeaders, "authorization"), {
-        verifier: {
-          async verifyAccessToken(token) {
-            const authInfo = await authentication.verifier.verifyAccessToken(token);
-            principalFrom(authInfo);
-            return authInfo;
-          },
-        },
-        requiredScopes: [...requiredScopes],
-        resourceMetadataUrl: authentication.resourceMetadataUrl,
-      }),
+      requiredScopes,
+      authentication,
     );
-    if (!authInfo.resource || authInfo.resource.hash || !checkResourceAllowed({
-      requestedResource: authInfo.resource,
-      configuredResource: authentication.metadata.resourceServerUrl,
-    })) {
-      throw new OAuthError(OAuthErrorCode.InvalidToken, "Token is not valid for this resource");
-    }
-    return authInfo;
   } finally {
     request.raw.off("aborted", abort);
     reply.raw.off("close", abort);
   }
+}
+
+async function verifyRequestBearer(
+  authorization: string | undefined | null,
+  signal: AbortSignal,
+  requiredScopes: readonly string[],
+  authentication: NormalizedOAuth,
+): Promise<AuthInfo> {
+  const authInfo = await runWithDeadline(
+    signal,
+    Date.now() + authentication.verificationTimeoutMs,
+    () => verifyBearerToken(authorization, {
+      verifier: {
+        async verifyAccessToken(token) {
+          const authInfo = await authentication.verifier.verifyAccessToken(token);
+          principalFrom(authInfo);
+          return authInfo;
+        },
+      },
+      requiredScopes: [...requiredScopes],
+      resourceMetadataUrl: authentication.resourceMetadataUrl,
+    }),
+  );
+  if (!authInfo.resource || authInfo.resource.hash || !checkResourceAllowed({
+    requestedResource: authInfo.resource,
+    configuredResource: authentication.metadata.resourceServerUrl,
+  })) {
+    throw new OAuthError(OAuthErrorCode.InvalidToken, "Token is not valid for this resource");
+  }
+  return authInfo;
 }
 
 function requestAlreadyClosed(request: FastifyRequest, reply: FastifyReply): boolean {
@@ -3704,60 +3892,56 @@ function singleHeader(rawHeaders: readonly string[], name: string): string | und
   return values.length === 0 ? undefined : values.length === 1 ? values[0] : null;
 }
 
-async function validateMcpRequestHeaders(
-  request: FastifyRequest,
-  reply: FastifyReply,
+type McpRequestHeaderError = [
+  status: number,
+  code: number,
+  message: string,
+  id: string | number | null,
+  data?: Readonly<Record<string, unknown>>,
+];
+
+function mcpRequestHeaderError(
+  body: unknown,
+  accept: string | string[] | undefined,
+  header: (name: string) => string | undefined | null,
   legacy: boolean,
-): Promise<boolean> {
-  const body = request.body;
+): McpRequestHeaderError | undefined {
   const id = isRecord(body) ? requestId(body.id) : null;
-  if (!acceptsMcpResponses(request.headers.accept)) {
-    await sendRpcError(
-      reply,
-      406,
-      -32000,
-      "Not Acceptable: Client must accept both application/json and text/event-stream",
-      id,
-    );
-    return false;
+  if (!acceptsMcpResponses(accept)) {
+    return [406, -32000, "Not Acceptable: Client must accept both application/json and text/event-stream", id];
   }
-  if (legacy || !isRecord(body) || typeof body.method !== "string") return true;
-  const header = (name: string) => singleHeader(request.raw.rawHeaders, name);
-  const rejectMismatch = async (name: string) => {
-    await sendRpcError(reply, 400, -32020, `Missing or mismatched ${name} header`, id);
-    return false;
-  };
+  if (legacy || !isRecord(body) || typeof body.method !== "string") return undefined;
+  const mismatch = (name: string): McpRequestHeaderError =>
+    [400, -32020, `Missing or mismatched ${name} header`, id];
   const protocolVersion = header("mcp-protocol-version");
-  if (!protocolVersion) return rejectMismatch("MCP-Protocol-Version");
+  if (!protocolVersion) return mismatch("MCP-Protocol-Version");
   const params = isRecord(body.params) ? body.params : undefined;
   const meta = params && isRecord(params._meta) ? params._meta : undefined;
   const bodyVersion = meta?.["io.modelcontextprotocol/protocolVersion"];
   if (typeof bodyVersion !== "string" || protocolVersion !== bodyVersion) {
-    return rejectMismatch("MCP-Protocol-Version");
+    return mismatch("MCP-Protocol-Version");
   }
   if (protocolVersion !== PROTOCOL_VERSION) {
-    await sendRpcError(
-      reply,
+    return [
       400,
       ProtocolErrorCode.UnsupportedProtocolVersion,
       `Unsupported protocol version: ${protocolVersion}`,
       id,
       { requested: protocolVersion, supported: [PROTOCOL_VERSION] },
-    );
-    return false;
+    ];
   }
-  if (header("mcp-method") !== body.method) return rejectMismatch("Mcp-Method");
+  if (header("mcp-method") !== body.method) return mismatch("Mcp-Method");
 
   const nameField = body.method === "tools/call" || body.method === "prompts/get"
     ? "name"
     : body.method === "resources/read"
       ? "uri"
       : undefined;
-  if (!nameField) return true;
-  if (!params || typeof params[nameField] !== "string") return rejectMismatch("Mcp-Name");
+  if (!nameField) return undefined;
+  if (!params || typeof params[nameField] !== "string") return mismatch("Mcp-Name");
   const name = header("mcp-name");
-  if (!name || decodeMcpHeaderValue(name) !== params[nameField]) return rejectMismatch("Mcp-Name");
-  return true;
+  if (!name || decodeMcpHeaderValue(name) !== params[nameField]) return mismatch("Mcp-Name");
+  return undefined;
 }
 
 function acceptsMcpResponses(value: string | string[] | undefined): boolean {
