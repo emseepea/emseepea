@@ -180,15 +180,19 @@ test('unfinished challenge is tracked after abort and late completion cannot act
   } finally { finish();mock.timers.reset();await f.runtime.settle(); }
 });
 
-test('effect completed synchronously after stage deadline is unknown before timer dispatch',async()=>{
-  const f=fixture({callbackTimeoutMs:5});let stageSignal;
-  f.control.afterActivate=(_request,invocation)=>{
-    stageSignal=invocation.signal;
-    const end=performance.now()+15;
-    while(performance.now()<end) { /* Deliberately prevent the timer from dispatching. */ }
+test('effect completed synchronously after stage deadline is unknown before timer dispatch', async (t) => {
+  const callbackTimeoutMs = 5;
+  const f = fixture({ callbackTimeoutMs });
+  let clock = performance.now();
+  let stageSignal;
+  t.mock.method(performance, 'now', () => clock);
+  f.control.afterActivate = (_request, invocation) => {
+    stageSignal = invocation.signal;
+    clock += callbackTimeoutMs + 1;
   };
-  await reject(f.runtime.subscribe('owner:1',params()),'OUTCOME_UNKNOWN');
-  assert.equal(f.calls.writes,1);assert.equal(stageSignal.aborted,true);
+  await reject(f.runtime.subscribe('owner:1', params()), 'OUTCOME_UNKNOWN');
+  assert.equal(f.calls.writes, 1);
+  assert.equal(stageSignal.aborted, true);
 });
 
 test('adapter raw work settlement is called even with no core operation pending under one cap',async()=>{
