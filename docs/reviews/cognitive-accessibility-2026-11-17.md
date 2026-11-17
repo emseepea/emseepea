@@ -22,3 +22,16 @@ the expected result of each request check.
 | --- | --- |
 | `website/src/content/docs/workers-deployment.md` | `eaf8549b11886c5511fde1e519d193f62f828ae15566f815c281ad8234f3b9e8` |
 | `.changeset/workers-deployment-guide.md` | `a814295224ae4d96920e084d7d46f40f2d006b917d1947f262045be47d143b8f` |
+
+## Website 0.0.21 changelog
+
+Result: PASS from the independent cognitive accessibility reviewer.
+
+The generated entry describes the deployment guide and the steps it covers.
+It follows the existing heading structure and preserves earlier entries.
+The reviewer checked this exact content after the mergeback documentation
+check identified the missing review record.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `website/CHANGELOG.md` | `2fa10055718035ccffac59e52407e296b977bf77090385f69dc5a0ffbf8454f9` |
