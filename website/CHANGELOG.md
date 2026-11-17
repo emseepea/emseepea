@@ -1,5 +1,11 @@
 # @emseepea/website
 
+## 0.0.21
+
+### Patch Changes
+
+- [`2f753aa`](https://github.com/emseepea/emseepea/commit/2f753aabedbc95be6f55b87478bdac0ec02b4696) Thanks [@tompahoward](https://github.com/tompahoward)! - Add a step-by-step guide to deploy an Em See Pea MCP tool on Cloudflare Workers. The guide covers setup, local testing, request protection, deployment, and checking the live endpoint.
+
 ## 0.0.20
 
 ### Patch Changes
