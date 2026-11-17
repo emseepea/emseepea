@@ -1,5 +1,11 @@
 # @emseepea/create-soap-backed-server
 
+## 0.1.38
+
+### Patch Changes
+
+- [`ce388e0`](https://github.com/emseepea/emseepea/commit/ce388e096dce192a8feb614e7ce42a749da9b1db) Thanks [@tompahoward](https://github.com/tompahoward)! - Add `createEmseepeaFetch` for stateless MCP tools on Cloudflare Workers. Use the same explicitly registered tool on Workers and Node/Fastify. The Fetch entry point serves `/mcp` and checks the request’s host and optional port, supplied browser origin, body size, and authorization before tool execution.
+
 ## 0.1.37
 
 ### Patch Changes
