@@ -42,3 +42,18 @@ the missing submission call and the replacement candidate's pending checks.
 | `website/src/content/docs/feedback.md` | `14ad8cfa5df996f5681b5dad682590d99d876cbd8bf8be3701ebf2ac82955cd2` |
 | `.changeset/honest-feedback-receipt.md` | `b1ba304d450f440a5dd7829d977f77b14cd0e27bed1e10acd76a4280544ea2f0` |
 | `docs/reviews/current-release-readiness.md` | `2c22e12789047bc1778431c66def1b1c26262df1fe06c25a2d5c18262182b393` |
+
+## Replacement website 0.0.22 changelog
+
+Result: PASS from the independent cognitive accessibility reviewer.
+
+The generated entry for receipt guidance explains when the assistant can
+confirm submission. The recovery entry keeps the setup purpose clear. The
+reviewer inspected the release preview generated from source
+`5b41e1e4113bd72c6d8ef12da93b03ce3f4091c4`. The changelog in replacement
+candidate `dda5204ba23af0924672f6e4375ae776d1e49b23` matches that preview
+byte for byte.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `website/CHANGELOG.md` | `338744e7cf7414a718b84889785988720cd8454223832784f5a7bb81894718be` |
