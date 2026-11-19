@@ -1,5 +1,13 @@
 # @emseepea/website
 
+## 0.0.22
+
+### Patch Changes
+
+- [`5b41e1e`](https://github.com/emseepea/emseepea/commit/5b41e1e4113bd72c6d8ef12da93b03ce3f4091c4) Thanks [@tompahoward](https://github.com/tompahoward)! - Clarify that assistants should only tell users feedback was recorded after `submit-feedback` returns a successful receipt.
+
+- [`0f43d5d`](https://github.com/emseepea/emseepea/commit/0f43d5d4e04b84b79a806d5cf84878b4b42935ee) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an optional authenticated recovery endpoint that can queue committed PostgreSQL Events while the request server is idle. The Events guide explains how to configure the scheduler and interpret recovery results.
+
 ## 0.0.21
 
 ### Patch Changes
