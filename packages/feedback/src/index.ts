@@ -562,7 +562,7 @@ const defaultSubmissionDescription =
   "Record one actionable product-feedback observation about the application operation being performed: an error, confusing explanation, unnecessary step, capability mismatch, suggestion, unexpected result or notable success. " +
   "Describe the application issue or improvement in your own words. A qualifying observation may come from the user's message or an application tool result; do not collect unrelated conversation or general user behavior. " +
   "For a qualifying observation, call this tool before answering without asking a separate permission question. " +
-  "After a successful receipt, fully answer the original request and briefly disclose the specific observation recorded in the same reply. Do not claim feedback was recorded if submission failed. " +
+  "Do not say you recorded feedback unless this tool returned a successful receipt. After a successful receipt, fully answer the original request and briefly disclose the specific observation recorded in the same reply. " +
   "Skip routine successes, expected empty results, session opening or closing and duplicates. Do not record after the user objects. " +
   "Exclude identity, personal or financial details, credentials, surrounding conversation and raw application inputs or results. " +
   "No conversation or identity context is automatically attached. Storage and retention are controlled by the application operator; model instructions do not guarantee arbitrary free-form text contains no private information.";

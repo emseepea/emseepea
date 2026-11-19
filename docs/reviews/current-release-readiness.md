@@ -43,6 +43,14 @@ duplicate. Separate checks covered credentials, pause, retry and shutdown.
 
 A clean consumer installed the local archive, passed six public-entry checks
 and compiled the public TypeScript API. The website built successfully.
+
+The first release candidate failed the feedback semantic check because one
+trial claimed a submission without calling `submit-feedback`. The default
+description and custom examples require a successful receipt before that claim.
+The metadata regression failed with the old wording and passed with the new
+wording across both MCP handshake families. The replacement candidate must
+pass the existing semantic check with the same prompts and assertions.
+
 Promotion requires the exact source Quality run and release candidate checks.
 After publication, verify the registry consumer, live guide and mergeback.
 Live provider deployment and automatic native-client execution remain part of

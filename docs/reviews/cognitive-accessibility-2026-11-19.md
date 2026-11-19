@@ -27,3 +27,18 @@ preview byte for byte.
 | Reviewed file | SHA-256 |
 | --- | --- |
 | `website/CHANGELOG.md` | `fee2993861590a19140f6e2ca87bb97bb17bff07bca0a42459508549303551f0` |
+
+## Feedback receipt guidance
+
+Result: PASS from the independent cognitive accessibility reviewer.
+
+The examples specify when an assistant can say it recorded feedback. They keep
+the objection, privacy and disclosure guidance. The readiness record explains
+the missing submission call and the replacement candidate's pending checks.
+
+| Reviewed file | SHA-256 |
+| --- | --- |
+| `packages/feedback/README.md` | `040eb52dff9f40341f8828949152ab0e65f4c794b232fd95b46932f60d80b93d` |
+| `website/src/content/docs/feedback.md` | `14ad8cfa5df996f5681b5dad682590d99d876cbd8bf8be3701ebf2ac82955cd2` |
+| `.changeset/honest-feedback-receipt.md` | `b1ba304d450f440a5dd7829d977f77b14cd0e27bed1e10acd76a4280544ea2f0` |
+| `docs/reviews/current-release-readiness.md` | `2c22e12789047bc1778431c66def1b1c26262df1fe06c25a2d5c18262182b393` |
