@@ -744,6 +744,8 @@ export interface PagedFeedbackConversationBackend extends FeedbackConversationBa
 
 export interface FeedbackConversationOptions {
   readonly requiredScopes: readonly string[];
+  /** Advertise the enforced scopes to OpenAI clients in tool discovery. */
+  readonly openAIOAuthMetadata?: boolean;
   readonly scope?: (principal: Principal | undefined) => string;
   readonly annotations?: FeedbackConversationAnnotationOverrides;
   readonly backend: FeedbackConversationBackend;
@@ -787,7 +789,14 @@ function defineConversation(
       openWorldHint: true,
     }, configuredAnnotations.get),
   });
-  const access = { access: "protected" as const, requiredScopes: options.requiredScopes };
+  const { requiredScopes } = options;
+  const access = {
+    access: "protected" as const,
+    requiredScopes,
+    ...(options.openAIOAuthMetadata === true && Array.isArray(requiredScopes)
+      ? { _meta: { securitySchemes: [{ type: "oauth2", scopes: Object.freeze([...requiredScopes]) }] } }
+      : {}),
+  };
   const contextFor = (context: ToolContext<"protected">) => createAdapterContext(
     options.scope ?? ((principal) => principal?.clientId ?? ""),
     context,
