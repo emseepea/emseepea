@@ -96,16 +96,16 @@ for each item. Keep completion records with your deployment:
 - **Identity and policy:** stable owner and tenant mapping, event eligibility,
   record access, revocation and deletion handling, retention, and payload limits.
   These remain application decisions. Enabling Events grants no email permission.
-- **Durable Events storage:** atomic subscription changes, durable queued
-  deliveries, concurrent claims, stale-lease rejection, renewal, expiry, cleanup,
-  and restart recovery. A shared conformance suite and optional PostgreSQL Events
-  adapter/migrations are still delivery work; do not substitute a feedback store.
-- **Delivery while requests are idle:** a separately invoked bounded worker or
-  scheduler, health checks, graceful shutdown, scaling, and one delivery owner.
-  In-process timers cannot ensure execution when a host suspends CPU or scales
-  to zero. An external scheduler must not compete with an SDK-owned worker.
-  A supported external-worker mode and deployment recipe remain delivery work;
-  this guide does not expose a configuration switch for them.
+- **Durable Events storage:** the framework includes PostgreSQL Events migrations
+  and storage, lifecycle, delivery and dispatch components. Qualify atomic
+  subscription changes, concurrent claims, stale-lease rejection, renewal,
+  expiry, cleanup and restart recovery for your deployment. A shared
+  store conformance suite and other store evaluations remain delivery work.
+- **Delivery while requests are idle:** use the [targeted worker](#receive-one-queued-event-on-a-trusted-worker)
+  and [scheduled recovery handler](#recover-queued-events-on-a-schedule) below.
+  Assign one delivery owner and configure health checks, graceful shutdown and
+  scaling. In-process timers depend on request-server CPU. A complete runnable
+  deployment recipe and live qualification remain delivery work.
 - **Business changes and events:** a transactional outbox that saves the
   business change and pending event together, then publishes after commit with
   stable identity and safe retry. Arrange reconciliation for missed dispatch.
@@ -139,9 +139,10 @@ Google-signed service-account identity before looking up a delivery. It reuses
 PostgreSQL delivery, authorization checks, signed callbacks and durable attempt
 limits. Ordinary MCP servers gain no route or background timer.
 
-This endpoint is a foundation, not complete production setup. Task dispatch,
-scheduled recovery, provisioning and automatic native-client execution must
-still be configured and tested separately.
+This endpoint receives one task. Configure the
+[scheduled recovery endpoint](#recover-queued-events-on-a-schedule) to find
+queued work while the request server is idle. Verify infrastructure and
+automatic native-client execution separately.
 
 1. Install the optional Google dependencies alongside the server and Fastify:
 
@@ -183,9 +184,9 @@ still be configured and tested separately.
    ```
 
    The import from `./event-integration.js` is deployment and application code
-   you provide. The pool implements the public `OwnedEventPool` contract from
-   `@emseepea/server/events-postgres`. It supplies owned database connections,
-   not custom subscription tables or queue leasing.
+   you provide. The `pool` type is part of `GoogleEventDeliveryWorkerOptions`.
+   Supply a PostgreSQL pool that can hand the worker its own connection. The
+   framework manages subscription tables, queue leasing and delivery.
 
    Do not log request authorization headers, JSON Web Tokens (JWTs), callback
    secrets or feedback content. The optional Google adapter rejects unsafe SDK
@@ -228,6 +229,76 @@ optional dependency versions together rather than mixing logging-library copies.
 
 A successful worker response is not proof that a native client ran. Keep
 callback acceptance, automatic client execution and business effects separate.
+
+## Recover queued events on a schedule
+
+Run scheduled recovery on the worker service so the request server can go idle
+without stopping delivery. Each recovery attempt looks for committed PostgreSQL
+event intents that need a Cloud Tasks task. It can recover after a restart and
+uses the existing dispatch ledger to avoid creating another task for matching work.
+
+1. Apply the dispatch migrations with `createPostgresEventDispatchMigrator` from
+   `@emseepea/server/events-postgres`. Configure a pool whose role can read the
+   relevant Events rows and maintain the dispatch ledger. The recovery pool does
+   not need callback signing keys. Use the same database and Events namespace
+   as the targeted worker.
+2. Create a running Cloud Tasks queue without a queue-level routing override.
+   Give the worker runtime identity permission to read the queue, create tasks,
+   inspect them with full view and use the configured task-invocation service
+   account. Use the runtime's application default credentials.
+   [Google Cloud Tasks setup](https://docs.cloud.google.com/tasks/docs/creating-http-target-tasks).
+3. Register a separate recovery route alongside the targeted worker. The
+   top-level identity values refer to the scheduler's token. The identity under
+   `tasks` refers to the Cloud Tasks token sent to the targeted worker. Use
+   distinct service accounts. Supply both accounts' permanent numeric IDs.
+
+   ```ts title="Register the scheduled recovery endpoint"
+   import { createGoogleEventRecoveryWorker } from "@emseepea/server/events-google-worker";
+   import { dispatchPool, schedulerIdentity, taskQueue, isDispatchPaused } from "./event-integration.js";
+
+   const recovery = createGoogleEventRecoveryWorker({
+     ...schedulerIdentity, // audience, serviceAccountEmail, serviceAccountUid
+     tasks: taskQueue, // namespace, projectId, location, queueId, workerURL,
+                       // audience, serviceAccountEmail, serviceAccountUid
+     pool: dispatchPool,
+     isPaused: isDispatchPaused,
+   });
+   app.post("/recover", { bodyLimit: 1024 }, recovery.handle);
+   ```
+
+   Supply the trusted configuration and pause check in your integration module.
+   On shutdown, call `recovery.settle` with the same signal and deadline as
+   `worker.settle`, and check both results before reporting clean shutdown.
+4. Configure an authenticated Cloud Scheduler HTTP POST to `/recover` with no
+   query parameters and no body or an empty JSON object. Set the job's OIDC
+   audience to the exact value configured for the recovery endpoint and grant
+   the scheduler identity permission to invoke the target. Use one schedule
+   per deployed namespace and set its request deadline above the handler's
+   25-second limit. [Google Cloud Scheduler HTTP authentication](https://docs.cloud.google.com/scheduler/docs/http-target-auth).
+
+### Recovery results and operations
+
+- **HTTP 200, `complete`:** the bounded recovery attempt finished. Inspect
+  `created` and `observed` for provider tasks created or already found.
+  `deferred` can include work that is ineligible or will be checked later.
+  Investigate persistent `conflicts` by comparing queue and worker configuration.
+  Investigate repeated `unknown` counts with the queue and dispatch ledger.
+  Leave recorded task identity intact for the next attempt. The response does
+  not establish an empty backlog, callback acceptance or client execution.
+- **HTTP 200, `paused`:** the application requested a pause. Pause the scheduler
+  job as well if you want to stop scheduled requests. Existing tasks can still
+  invoke the targeted worker. Resume both dispatch and the schedule to recover
+  eligible pending work.
+- **HTTP 503:** try again according to the scheduler's retry policy. Check queue
+  configuration, runtime credentials and PostgreSQL availability if it persists.
+  An instance that is shutting down can return 503 without a response body.
+- **HTTP 400 or 401:** correct the request shape or identity before retrying.
+  Keep tokens, callback secrets and event payloads out of logs.
+
+Inspect pending intents and dispatch categories in the Events database and
+compare task status in Cloud Tasks. Test with synthetic data before enabling
+the schedule for real events. Observe task creation, webhook acceptance and
+automatic client execution separately.
 
 ## Supply the application pieces
 

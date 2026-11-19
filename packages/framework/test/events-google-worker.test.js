@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {generateKeyPairSync, sign} from 'node:crypto';
 import Fastify from 'fastify';
-import {OAuth2Client} from 'google-auth-library';
+import {GoogleAuth,OAuth2Client} from 'google-auth-library';
 import {z} from 'zod';
-import {createGoogleEventDeliveryWorker} from '../dist/events-google-worker.js';
+import {createGoogleEventDeliveryWorker,createGoogleEventRecoveryWorker} from '../dist/events-google-worker.js';
 import {createGoogleEventDeliveryWorkerRuntime} from '../dist/events-google-worker-runtime.js';
 
 const keys=generateKeyPairSync('rsa',{modulusLength:2048});
@@ -127,4 +127,67 @@ test('public factory verifies a signed token and uses its fixed namespace in che
  assert.equal(response.status,204);
  const lookup=queries.find(entry=>entry.sql.includes('delivery_id=$2'));
  assert.deepEqual(lookup.values,['synthetic','one']);assert.equal(released,1);
+});
+
+const schedulerIdentity={
+ audience:'https://worker.example/recover',
+ serviceAccountEmail:'scheduler@synthetic-test.iam.gserviceaccount.com',
+ serviceAccountUid:'987654321',
+};
+const tasks={...config,namespace:'synthetic',projectId:'synthetic-test',location:'us-central1',queueId:'events',workerURL:config.audience};
+const schedulerToken=()=>token({aud:schedulerIdentity.audience,sub:schedulerIdentity.serviceAccountUid,email:schedulerIdentity.serviceAccountEmail});
+
+function recoveryFixture(t) {
+ t.mock.method(OAuth2Client.prototype,'getFederatedSignonCertsAsync',async()=>({certs:client().certificateCache,format:'PEM'}));
+ let connections=0,providerCalls=0,paused=true;
+ t.mock.method(GoogleAuth.prototype,'getClient',async()=>({
+  getRequestHeaders:async()=>new Headers({authorization:'Bearer synthetic'}),
+ }));
+ t.mock.method(globalThis,'fetch',async url=>{
+  providerCalls++;
+  assert.equal(String(url),'https://cloudtasks.googleapis.com/v2/projects/synthetic-test/locations/us-central1/queues/events');
+  return Response.json({}, {status:503});
+ });
+ const pool={async connect(){connections++;throw new Error('NO_DATABASE');}};
+ const scheduler=createGoogleEventRecoveryWorker({...schedulerIdentity,tasks,pool,isPaused:()=>paused});
+ const worker=createGoogleEventDeliveryWorker({...config,namespace:'synthetic',pool,definitions:[
+  {name:'synthetic.event',description:'Synthetic event.',inputSchema:z.strictObject({}),payloadSchema:z.strictObject({}),matches:()=>true},
+ ],authorize:()=>true});
+ const app=Fastify({logger:false});
+ app.post('/recover',{bodyLimit:1024},scheduler.handle);
+ app.post('/tasks',{bodyLimit:1024},worker.handle);
+ t.after(async()=>{await Promise.all([scheduler.settle(invocation(5000)),worker.settle(invocation(5000))]);await app.close();});
+ const post=(url,jwt,payload)=>app.inject({method:'POST',url,headers:{authorization:`Bearer ${jwt}`},payload});
+ return {scheduler,post,resume:()=>{paused=false;},calls:()=>({connections,providerCalls})};
+}
+
+test('recovery route rejects cross-use of credentials and all request selectors before backend work',async t=>{
+ const {post,calls}=recoveryFixture(t);
+ assert.equal((await post('/recover',token(),{})).statusCode,401);
+ assert.equal((await post('/tasks',schedulerToken(),{deliveryId:'one'})).statusCode,401);
+ assert.equal((await post('/recover',schedulerToken(),{namespace:'other'})).statusCode,400);
+ assert.equal((await post('/recover?namespace=other',schedulerToken(),{})).statusCode,400);
+ assert.equal((await post('/recover',schedulerToken(),[])).statusCode,400);
+ assert.deepEqual(calls(),{connections:0,providerCalls:0});
+});
+
+test('recovery distinguishes deliberate pause, queue failure and shutdown',async t=>{
+ const {scheduler,post,resume,calls}=recoveryFixture(t);
+ const paused=await post('/recover',schedulerToken());
+ assert.equal(paused.statusCode,200);
+ assert.deepEqual(paused.json(),{status:'paused',selected:0,created:0,observed:0,conflicts:0,unknown:0,deferred:0});
+ assert.deepEqual(calls(),{connections:0,providerCalls:0});
+ resume();
+ const retry=await post('/recover',schedulerToken(),{});
+ assert.equal(retry.statusCode,503);
+ assert.equal(retry.json().status,'retry_pending');
+ assert.deepEqual(calls(),{connections:0,providerCalls:1});
+ assert.equal(await scheduler.settle(invocation(5000)),true);
+ assert.equal((await post('/recover',schedulerToken(),{})).statusCode,503);
+ assert.deepEqual(calls(),{connections:0,providerCalls:1});
+});
+
+test('recovery cannot reuse the targeted worker service identity',()=>{
+ const pool={async connect(){throw new Error('NO_DATABASE');}};
+ assert.throws(()=>createGoogleEventRecoveryWorker({...config,tasks,pool,isPaused:()=>false}),{code:'INVALID_CONFIGURATION'});
 });
