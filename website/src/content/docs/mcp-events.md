@@ -27,7 +27,7 @@ for your deployment before relying on a trigger.
 
 ## Check client availability first
 
-Checked **15 October 2026** against [OpenAI's MCP Events
+Checked **19 November 2026** against [OpenAI's MCP Events
 guide](https://developers.openai.com/plugins/build/mcp-events). Its availability
 statement lists the following surfaces. For each surface, you still need to
 verify that the subscribed chat runs automatically after an application event.
@@ -53,8 +53,10 @@ Before configuring monitoring:
 
 1. Use one of the documented client surfaces and check that your workspace
    permits the plugin and event-triggered tasks.
-2. Connect and authorize the MCP server through its plugin. ChatGPT Events
-   requires MCP 2.0, protocol version `2026-07-28`.
+2. Connect and authorize the MCP server through its plugin. Em See Pea
+   exposes Events over MCP 2.0 HTTP, protocol version `2026-07-28`.
+   OpenAI also documents Events over Streamable HTTP with `initialize` for
+   servers that expose Events through that handshake.
 3. Confirm that discovery (`server/discover` and `events/list`) exposes the
    intended event to that account. Check the plugin page for discovered events.
 4. Rescan the server after changing tools or events. In the intended chat,
@@ -269,22 +271,25 @@ uses the existing dispatch ledger to avoid creating another task for matching wo
    Supply the trusted configuration and pause check in your integration module.
    On shutdown, call `recovery.settle` with the same signal and deadline as
    `worker.settle`, and check both results before reporting clean shutdown.
-4. Configure an authenticated Cloud Scheduler HTTP POST to `/recover` with no
-   query parameters and no body or an empty JSON object. Set the job's OIDC
-   audience to the exact value configured for the recovery endpoint and grant
-   the scheduler identity permission to invoke the target. Use one schedule
-   per deployed namespace and set its request deadline above the handler's
-   25-second limit. [Google Cloud Scheduler HTTP authentication](https://docs.cloud.google.com/scheduler/docs/http-target-auth).
+4. Configure a Cloud Scheduler HTTP POST to `/recover`. Omit query parameters
+   and send no body or an empty JSON object. Set the job's OIDC audience to the
+   exact value configured for the recovery endpoint. Grant the scheduler
+   identity permission to invoke the target.
+
+   Use one schedule per deployed namespace. Set its request deadline above
+   the handler's 25-second limit.
+   [Google Cloud Scheduler HTTP authentication](https://docs.cloud.google.com/scheduler/docs/http-target-auth).
 
 ### Recovery results and operations
 
-- **HTTP 200, `complete`:** the bounded recovery attempt finished. Inspect
-  `created` and `observed` for provider tasks created or already found.
-  `deferred` can include work that is ineligible or will be checked later.
-  Investigate persistent `conflicts` by comparing queue and worker configuration.
-  Investigate repeated `unknown` counts with the queue and dispatch ledger.
-  Leave recorded task identity intact for the next attempt. The response does
-  not establish an empty backlog, callback acceptance or client execution.
+- **HTTP 200, `complete`:** the recovery attempt finished. Inspect
+  `created` and `observed` for new and existing tasks. `deferred` includes
+  work that was ineligible or will be checked later.
+
+  For repeated `conflicts`, compare the queue and worker configuration. For
+  repeated `unknown` counts, check the queue and dispatch ledger. Keep the
+  recorded task identity for the next attempt. Check backlog, callback
+  acceptance and client execution separately.
 - **HTTP 200, `paused`:** the application requested a pause. Pause the scheduler
   job as well if you want to stop scheduled requests. Existing tasks can still
   invoke the targeted worker. Resume both dispatch and the schedule to recover

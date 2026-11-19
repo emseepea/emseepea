@@ -10,6 +10,6 @@ that still requires live deployment.
 
 | Reviewed file | SHA-256 |
 | --- | --- |
-| `website/src/content/docs/mcp-events.md` | `b99b1b77150263393dd0046e7aa8c5ea610a1e11fce41153167cb0a5ede4592b` |
+| `website/src/content/docs/mcp-events.md` | `9502e0121727aac1d5b7f073202793fc1b163c4251c4008a97466a8e6fa791a5` |
 | `.changeset/scheduled-events-recovery.md` | `36502a43ccac5ead23e217932b5211b5364e339d6714b3a11629ad380808fdb6` |
 | `docs/reviews/current-release-readiness.md` | `c3a5f65421d294126ce4a4c1ee0fbf98c4462faf0656139a65b37d605eee50a6` |
