@@ -1,50 +1,60 @@
 # Current Release Readiness
 
-Date: 2026-11-17
+Date: 2026-11-19
 
-## Stateless MCP tools on Cloudflare Workers
+## Scheduled recovery for PostgreSQL Events
 
 Status: **PREPARED**. Publication is pending.
 
-The public `createEmseepeaFetch` entry point serves explicitly registered
-tools at `/mcp`. Developers can use the same tool declaration on Cloudflare
-Workers and Node/Fastify. The Fetch entry point checks configured request
-authorities, supplied browser origins, request bytes, and authorization
-before dispatching a tool.
+An adopter can register a separate recovery route on the Events worker
+service. The route verifies the scheduler identity, then finds committed
+work while the request server is idle. It uses the existing dispatch ledger
+and checked Cloud Tasks transport. General server imports stay Google-free.
 
 ## Planned packages
 
-- `@emseepea/create-api-backed-server@0.1.38`
-- `@emseepea/create-database-schema-server@0.1.38`
-- `@emseepea/create-html-ui-server@0.1.38`
-- `@emseepea/create-mongodb-backed-server@0.1.38`
-- `@emseepea/create-multi-instance-postgres-server@0.1.38`
-- `@emseepea/create-openapi-backed-server@0.1.38`
-- `@emseepea/create-progress-streaming-server@0.1.38`
-- `@emseepea/create-react-ui-server@0.1.38`
-- `@emseepea/create-resources-and-prompts-server@0.1.38`
-- `@emseepea/create-soap-backed-server@0.1.38`
-- `@emseepea/create-tool-server@0.1.38`
-- `@emseepea/feedback@0.13.2`
-- `@emseepea/react@0.4.24`
-- `@emseepea/server@0.27.0`
-- `@emseepea/svelte@0.2.24`
-- `@emseepea/testing@0.26.17`
+- `@emseepea/create-api-backed-server@0.1.39`
+- `@emseepea/create-database-schema-server@0.1.39`
+- `@emseepea/create-html-ui-server@0.1.39`
+- `@emseepea/create-mongodb-backed-server@0.1.39`
+- `@emseepea/create-multi-instance-postgres-server@0.1.39`
+- `@emseepea/create-openapi-backed-server@0.1.39`
+- `@emseepea/create-progress-streaming-server@0.1.39`
+- `@emseepea/create-react-ui-server@0.1.39`
+- `@emseepea/create-resources-and-prompts-server@0.1.39`
+- `@emseepea/create-soap-backed-server@0.1.39`
+- `@emseepea/create-tool-server@0.1.39`
+- `@emseepea/feedback@0.13.3`
+- `@emseepea/react@0.4.25`
+- `@emseepea/server@0.28.0`
+- `@emseepea/svelte@0.2.25`
+- `@emseepea/testing@0.26.18`
+
+The private website is planned at `0.0.22` so the recovery guide can deploy.
 
 ## Qualification
 
-An independent install of a locally packed server ran one synthetic tool
-through Fastify and local workerd. Discovery, listing, structured results,
-and input and output validation matched. Workerd checks exercised declared
-and streamed request size, authority and Origin, public OAuth metadata,
-protected discovery, and verified caller access. The checks covered missing,
-invalid, expired, wrong-resource, and insufficient-scope credentials,
-verifier timeout, and rejection before tool input validation.
+The framework build and 62 worker and transport checks passed. The real
+PostgreSQL 17.11 dispatch suite passed all 19 cases. Its recovery scenario
+used signed synthetic scheduler tokens over loopback HTTP and controlled
+Cloud Tasks responses. It found committed work with the request server absent,
+restarted the worker and observed the original task without creating a
+duplicate. Separate checks covered credentials, pause, retry and shutdown.
 
-The exact source Quality run and release candidate qualification must pass
-before promotion. Verify the installed registry package on both runtimes,
-then confirm publication and mergeback. The published deployment guide and
-live Worker verification are tracked separately in issue #246.
+A clean consumer installed the local archive, passed six public-entry checks
+and compiled the public TypeScript API. The website built successfully.
+
+The first release candidate failed the feedback semantic check because one
+trial claimed a submission without calling `submit-feedback`. The default
+description and custom examples require a successful receipt before that claim.
+The metadata regression failed with the old wording and passed with the new
+wording across both MCP handshake families. The replacement candidate must
+pass the existing semantic check with the same prompts and assertions.
+
+Promotion requires the exact source Quality run and release candidate checks.
+After publication, verify the registry consumer, live guide and mergeback.
+Live provider deployment and automatic native-client execution remain part of
+issue #174.
 
 - Result: PASS
 - Final result: within appetite, subject to the required exact-commit gates.

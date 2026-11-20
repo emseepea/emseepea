@@ -1,5 +1,11 @@
 # @emseepea/create-html-ui-server
 
+## 0.1.39
+
+### Patch Changes
+
+- [`0f43d5d`](https://github.com/emseepea/emseepea/commit/0f43d5d4e04b84b79a806d5cf84878b4b42935ee) Thanks [@tompahoward](https://github.com/tompahoward)! - Add an optional authenticated recovery endpoint that can queue committed PostgreSQL Events while the request server is idle. The Events guide explains how to configure the scheduler and interpret recovery results.
+
 ## 0.1.38
 
 ### Patch Changes

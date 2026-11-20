@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { OAuthError, OAuthErrorCode } from "@modelcontextprotocol/server";
+import { defineFeedbackConversation, definePagedFeedbackConversation } from "@emseepea/feedback";
 import { createEmseepea, defineTool, serveEmseepea } from "@emseepea/server";
 import { z } from "zod";
 
@@ -17,6 +18,95 @@ test("protected tools fail startup without OAuth resource-server configuration",
     () => createEmseepea({ name: "missing-oauth", version: "0.0.0", tools: [tool] }),
     /Protected capabilities require authentication/,
   );
+});
+
+test("feedback conversation tools opt in to OpenAI OAuth discovery in both HTTP formats", async (t) => {
+  const scopes = ["feedback:read", "feedback:reply"];
+  const toolNames = ["get-feedback-thread", "list-feedback-threads", "reply-to-feedback-thread"];
+
+  for (const createTools of [defineFeedbackConversation, definePagedFeedbackConversation]) {
+    assert.throws(() => createTools({
+      requiredScopes: "feedback:read",
+      openAIOAuthMetadata: true,
+      backend: {},
+    }), /protected with scopes/);
+    for (const enabled of [undefined, false, true]) {
+      await t.test(`${createTools.name}, opt-in ${enabled}`, async () => {
+        let listCalls = 0;
+        const backend = {
+          createThread: () => assert.fail("unexpected create"),
+          appendMessage: () => assert.fail("unexpected reply"),
+          getThread: () => assert.fail("unexpected read"),
+          getThreadPage: () => assert.fail("unexpected paged read"),
+          listThreads: () => {
+            listCalls += 1;
+            return { page: { threads: [] } };
+          },
+        };
+        const requiredScopes = [...scopes];
+        const tools = createTools({
+          requiredScopes,
+          ...(enabled === undefined ? {} : { openAIOAuthMetadata: enabled }),
+          backend,
+        });
+        requiredScopes.push("unrelated:scope");
+        const running = await serveEmseepea(createEmseepea({
+          name: "feedback-oauth-discovery",
+          version: "0.0.0",
+          tools,
+          authentication: {
+            verifier: {
+              verifyAccessToken: async (token) => ({
+                token,
+                clientId: "synthetic-feedback-client",
+                scopes: token === "full" ? scopes : [scopes[0]],
+                expiresAt: Math.floor(Date.now() / 1_000) + 60,
+                resource: resourceServerUrl,
+              }),
+            },
+            metadata: {
+              resourceServerUrl,
+              oauthMetadata: {
+                issuer: "https://auth.example",
+                authorization_endpoint: "https://auth.example/authorize",
+                token_endpoint: "https://auth.example/token",
+                response_types_supported: ["code"],
+              },
+            },
+          },
+        }), { port: 0 });
+
+        try {
+          for (const listing of [
+            await rpc(running.url, "tools/list"),
+            await legacyRpc(running.url, "tools/list", {}),
+          ]) {
+            assert.equal(listing.response.status, 200);
+            const { tools } = listing.body.result;
+            assert.deepEqual(tools.map(({ name }) => name).sort(), toolNames);
+            for (const { _meta } of tools) {
+              assert.deepEqual(_meta["io.emseepea/access"], { type: "protected", requiredScopes: scopes });
+              if (enabled) {
+                assert.deepEqual(_meta.securitySchemes, [{ type: "oauth2", scopes }]);
+              } else {
+                assert.equal(Object.hasOwn(_meta, "securitySchemes"), false);
+              }
+            }
+          }
+
+          const call = { name: "list-feedback-threads", arguments: {} };
+          assert.equal((await rpc(running.url, "tools/call", call, "partial")).response.status, 403);
+          assert.equal(listCalls, 0);
+          const authorized = await rpc(running.url, "tools/call", call, "full");
+          assert.equal(authorized.response.status, 200);
+          assert.equal(authorized.body.result.isError, false);
+          assert.equal(listCalls, 1);
+        } finally {
+          await running.close();
+        }
+      });
+    }
+  }
 });
 
 test("invalid OAuth metadata and verification limits fail before listening", () => {
@@ -461,7 +551,13 @@ function protectedCall(url, token) {
   );
 }
 
-async function legacyProtectedCall(url, token) {
+function legacyProtectedCall(url, token) {
+  return legacyRpc(url, "tools/call", {
+    name: "protected-bean", arguments: { id: "legacy-protected-request" },
+  }, token);
+}
+
+async function legacyRpc(url, method, params, token) {
   const headers = {
     Accept: "application/json, text/event-stream",
     "Content-Type": "application/json",
@@ -474,8 +570,8 @@ async function legacyProtectedCall(url, token) {
     body: JSON.stringify({
       jsonrpc: "2.0",
       id: crypto.randomUUID(),
-      method: "tools/call",
-      params: { name: "protected-bean", arguments: { id: "legacy-protected-request" } },
+      method,
+      params,
     }),
   });
   const text = await response.text();

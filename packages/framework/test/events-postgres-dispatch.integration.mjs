@@ -1,5 +1,10 @@
-// Synthetic SQL/transport fixture only: provider methods are inert, no HTTP/native/hosted calls.
+// Real PostgreSQL and loopback HTTP; Cloud Tasks responses are synthetic.
 import assert from 'node:assert/strict';
+import {generateKeyPairSync,sign} from 'node:crypto';
+import {mock} from 'node:test';
+import Fastify from 'fastify';
+import {GoogleAuth,OAuth2Client} from 'google-auth-library';
+import {createGoogleEventRecoveryWorker} from '../dist/events-google-worker.js';
 import {createRequire} from 'node:module';
 import {join,isAbsolute} from 'node:path';
 import {performance} from 'node:perf_hooks';
@@ -40,7 +45,7 @@ if(mode==='--once'){
  try{const result=await d.value.dispatch(childId,inv());process.stdout.write(JSON.stringify({result,creates:d.calls.create.length})+'\n');}
  finally{if(!await cleanup())process.exitCode=1;}
 }else{
- const report={scope:'UNCOMMITTED_DISPATCH_ONLY_INERT_PROVIDER_SYNTHETIC_SQL_ROWS',node:process.version,platform:`${process.platform}/${process.arch}`,pgVersion:'8.23.0',plannedCases:18,cases:[]};
+ const report={scope:'POSTGRES_DISPATCH_WITH_SYNTHETIC_PROVIDER',node:process.version,platform:`${process.platform}/${process.arch}`,pgVersion:'8.23.0',plannedCases:19,cases:[]};
  let admin,migration,runtime;
  async function run(name,fn){const start=performance.now();try{const facts=await fn();report.cases.push({name,status:'PASS',...facts,elapsedMs:Math.round(performance.now()-start)});}catch(error){report.cases.push({name,status:'FAIL',category:/^[A-Z0-9_]{1,60}$/.test(error?.code??'')?error.code:'ASSERTION_OR_FIXTURE_FAILED',elapsedMs:Math.round(performance.now()-start)});}}
  async function prepare(ns,n=1){
@@ -126,6 +131,76 @@ if(mode==='--once'){
   await run('restrictive natural-key foreign key preserves dispatch receipt on physical source deletion',async()=>{
    await assert.rejects(admin.query("DELETE FROM public.emseepea_event_sources WHERE namespace='first'"),error=>error.code==='23503');assert.equal((await row('first')).length,1);return {physicalDeletionBlocked:true,ordinarySourceErasureImplemented:false};
   });
+  await run('authenticated recovery through the checked transport survives a worker restart',async()=>{
+   const namespace='http-recovery';
+   const identity={audience:'https://worker.example/recover',serviceAccountEmail:'scheduler@synthetic-test.iam.gserviceaccount.com',serviceAccountUid:'123456'};
+   const tasks={namespace,projectId:'synthetic-test',location:'us-central1',queueId:'events',workerURL:'https://worker.example/tasks',
+    audience:'https://worker.example/tasks',serviceAccountEmail:'worker@synthetic-test.iam.gserviceaccount.com',serviceAccountUid:'789012'};
+   const queue='projects/synthetic-test/locations/us-central1/queues/events',api='https://cloudtasks.googleapis.com/v2/'+queue;
+   const keys=generateKeyPairSync('rsa',{modulusLength:2048}),jwtTime=Math.floor(Date.now()/1000);
+   const encoded=claims=>Buffer.from(JSON.stringify(claims)).toString('base64url');
+   const unsigned=encoded({alg:'RS256',kid:'synthetic'})+'.'+encoded({iss:'https://accounts.google.com',
+    aud:identity.audience,sub:identity.serviceAccountUid,email:identity.serviceAccountEmail,email_verified:true,iat:jwtTime,exp:jwtTime+3600});
+   const jwt=unsigned+'.'+sign('RSA-SHA256',Buffer.from(unsigned),keys.privateKey).toString('base64url');
+   const send=globalThis.fetch;
+   const stored=new Map();
+   let fault=false,creates=0,requests=0;
+   mock.method(OAuth2Client.prototype,'getFederatedSignonCertsAsync',async()=>({certs:{
+    synthetic:keys.publicKey.export({type:'spki',format:'pem'}),
+   },format:'PEM'}));
+   mock.method(GoogleAuth.prototype,'getClient',async()=>({getRequestHeaders:async()=>new Headers({authorization:'Bearer synthetic'})}));
+   mock.method(globalThis,'fetch',async (url,options)=>{
+    const requested=String(url);requests++;
+    assert.ok(requested.startsWith(api));
+    if(requested===api)return Response.json({name:queue,state:'RUNNING'});
+    if(requested===api+'/tasks'&&options.method==='POST'){
+     const {task}=JSON.parse(options.body);
+     assert.equal(task.httpRequest.oidcToken.serviceAccountEmail,tasks.serviceAccountEmail);
+     assert.equal(task.httpRequest.url,tasks.workerURL);
+     assert.deepEqual(JSON.parse(Buffer.from(task.httpRequest.body,'base64').toString()),{deliveryId:'delivery:http-recovery:source:1'});
+     stored.set(task.name,task);creates++;
+     return Response.json({name:task.name});
+    }
+    const task=stored.get(new URL(requested).pathname.slice('/v2/'.length));
+    assert.ok(task);
+    return fault?Response.json({}, {status:503}):Response.json(task);
+   });
+   const invokeRecovery=async()=>{
+    const recovery=createGoogleEventRecoveryWorker({...identity,tasks,pool:runtime,isPaused:()=>false});
+    const app=Fastify({logger:false});
+    app.post('/recover',{bodyLimit:1024},recovery.handle);
+    try{
+     await app.listen({host:'127.0.0.1',port:0});
+     const response=await send('http://127.0.0.1:'+app.server.address().port+'/recover',{method:'POST',headers:{authorization:'Bearer '+jwt}});
+     assert.equal(response.status,200);
+     return await response.json();
+    }finally{
+     try{assert.equal(await recovery.settle(inv(5000)),true);}
+     finally{await app.close();}
+    }
+   };
+   try{
+    await prepare(namespace);
+    assert.equal((await row(namespace)).length,0);
+    const first=await invokeRecovery();
+    assert.equal(first.status,'complete');assert.equal(first.created,1);assert.equal(creates,1);
+    await due(namespace);
+    const restarted=await invokeRecovery();
+    assert.equal(restarted.observed,1);assert.equal(restarted.created,0);assert.equal(creates,1);
+    fault=true;
+    await due(namespace);
+    const uncertain=await invokeRecovery();
+    assert.equal(uncertain.status,'complete');assert.equal(uncertain.unknown,1);assert.equal(creates,1);
+    await due(namespace);
+    await admin.query('UPDATE public.emseepea_event_dispatch_state SET config_hash=$2 WHERE namespace=$1',[namespace,fingerprint]);
+    const beforeConflict=requests;
+    const conflict=await invokeRecovery();
+    assert.equal(conflict.status,'complete');assert.equal(conflict.conflicts,1);
+    assert.equal(requests-beforeConflict,1);assert.equal(creates,1);
+    return {realLoopbackHttp:true,requestServerAbsent:true,restartedWorker:true,syntheticProvider:true,
+     created:creates,duplicateTasks:0,unknown:uncertain.unknown,conflicts:conflict.conflicts};
+   }finally{mock.restoreAll();}
+  });
   await run('schema drift rejects without repairing the changed default',async()=>{
    await migration.query('ALTER TABLE public.emseepea_event_dispatch_state ALTER terminal SET DEFAULT true');const m=createPostgresEventDispatchMigrator(migration);owners.push(m);await assert.rejects(m.migrate(inv(15000)),error=>error.code==='INCOMPATIBLE_SCHEMA');
    const saved=(await admin.query(`SELECT pg_catalog.pg_get_expr(d.adbin,d.adrelid) AS value FROM pg_catalog.pg_attrdef d JOIN pg_catalog.pg_attribute a ON a.attrelid=d.adrelid AND a.attnum=d.adnum WHERE d.adrelid='public.emseepea_event_dispatch_state'::pg_catalog.regclass AND a.attname='terminal'`)).rows;
@@ -134,7 +209,7 @@ if(mode==='--once'){
  }catch{report.failureCategory='FIXTURE_OR_MIGRATION_PREREQUISITE_FAILED';}
  finally{
   report.connectionsClosed=await cleanup();report.cleanupFailures=cleanupFailures;report.passed=report.cases.filter(v=>v.status==='PASS').length;report.failed=report.cases.filter(v=>v.status==='FAIL').length;report.unrun=report.plannedCases-report.cases.length;
-  report.status=report.failed||report.unrun||report.failureCategory||!report.connectionsClosed?'FAIL_UNCOMMITTED_DISPATCH_ONLY':'PASS_UNCOMMITTED_DISPATCH_ONLY';
+  report.status=report.failed||report.unrun||report.failureCategory||!report.connectionsClosed?'FAIL_POSTGRES_DISPATCH':'PASS_POSTGRES_DISPATCH';
   process.stdout.write(JSON.stringify(report)+'\n');if(report.status.startsWith('FAIL'))process.exitCode=1;
  }
 }

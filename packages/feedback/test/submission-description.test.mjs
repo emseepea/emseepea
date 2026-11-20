@@ -60,7 +60,7 @@ for (const access of ["public", "protected"]) {
         assert.match(original.description, /without asking a separate permission question/);
         assert.match(original.description, /fully answer the original request/);
         assert.match(original.description, /disclose the specific observation recorded in the same reply/);
-        assert.match(original.description, /Do not claim feedback was recorded if submission failed/);
+        assert.match(original.description, /Do not say you recorded feedback unless this tool returned a successful receipt/);
         assert.match(original.description, /Skip routine successes, expected empty results, session opening or closing and duplicates/);
         assert.match(original.description, /Do not record after the user objects/);
         assert.match(original.description, /Exclude identity, personal or financial details, credentials, surrounding conversation and raw application inputs or results/);

@@ -174,7 +174,8 @@ export function createPostgresEventDispatchRuntime(options:EventDispatchOptions)
    return result;
   }catch(error){
    result.status=error instanceof Error&&error.message==='DISPATCH_PAUSED'?'paused':closing?'stopping':'retry_pending';
-   result.unknown++;return result;
+   if(result.status!=='paused'||result.selected>0)result.unknown++;
+   return result;
   }finally{
    // A visible timeout never frees the single slot while raw SDK/SQL or disposal is outstanding.
    const drained=owner.quiesce();

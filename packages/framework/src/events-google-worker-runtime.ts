@@ -4,6 +4,8 @@ import {OAuth2Client} from 'google-auth-library';
 import {assertGoogleSdkSafe,GoogleEventTransportSetupError} from './events-google-sdk-guards.js';
 import {createGoogleApiLifetime} from './events-google-sdk-lifetime.js';
 import {createPostgresEventDelivery,type PostgresEventDelivery,type PostgresEventDeliveryOptions} from './events-postgres-delivery.js';
+import {createCloudTasksRestTransportRuntime,type CloudTasksEventConfiguration} from './events-cloud-tasks-transport.js';
+import {createPostgresEventDispatchRuntime,type EventDispatchOptions} from './events-postgres-dispatch.js';
 import type {ExternalMcpEventInvocation} from './events-external.js';
 
 interface WorkerIdentity {
@@ -12,6 +14,11 @@ interface WorkerIdentity {
  readonly serviceAccountUid:string;
 }
 export interface GoogleEventDeliveryWorkerOptions extends PostgresEventDeliveryOptions,WorkerIdentity {}
+export interface GoogleEventRecoveryWorkerOptions extends WorkerIdentity {
+ readonly tasks:CloudTasksEventConfiguration;
+ readonly pool:EventDispatchOptions['pool'];
+ readonly isPaused:EventDispatchOptions['isPaused'];
+}
 export interface GoogleEventDeliveryWorker {
  handle(request:FastifyRequest,reply:FastifyReply):Promise<void>;
  settle(invocation:ExternalMcpEventInvocation):Promise<boolean>;
@@ -46,6 +53,44 @@ export function createGoogleEventDeliveryWorker(options:GoogleEventDeliveryWorke
 }
 /** Private test seam. The public factory always uses Google verification and checked delivery. */
 export function createGoogleEventDeliveryWorkerRuntime(options:WorkerIdentity,delivery:PostgresEventDelivery,auth:OAuth2Client):GoogleEventDeliveryWorker {
+ return createGoogleEventHandler(options,auth,request=>deliveryId(request.body),async (id,context,reply)=>{
+  const result=await delivery.deliver(id,context);
+  reply.code(result.outcome==='terminal'?204:503).send();
+ },invocation=>delivery.settle(invocation));
+}
+
+/** Explicitly register handle on the scheduler route, with its own invoker identity. */
+export function createGoogleEventRecoveryWorker(options:GoogleEventRecoveryWorkerOptions):GoogleEventDeliveryWorker {
+ const scheduler=identity(options);
+ if(!options.tasks||scheduler.serviceAccountEmail===options.tasks.serviceAccountEmail||
+  scheduler.serviceAccountUid===options.tasks.serviceAccountUid)throw new GoogleEventTransportSetupError('INVALID_CONFIGURATION');
+ const transport=createCloudTasksRestTransportRuntime(options.tasks);
+ const dispatch=createPostgresEventDispatchRuntime({
+  namespace:options.tasks.namespace,pool:options.pool,isPaused:options.isPaused,transport,
+ });
+ return createGoogleEventHandler(scheduler,new OAuth2Client(),emptyRequest,async (_empty,context,reply)=>{
+  const result=await dispatch.reconcile(context);
+  const retry=result.status==='retry_pending'||result.status==='stopping';
+  reply.code(retry?503:200).send(result);
+ },async invocation=>{
+  const settled=await Promise.all([dispatch.settle(invocation),transport.settle(invocation)]);
+  return settled.every(Boolean);
+ });
+}
+
+function emptyRequest(request:FastifyRequest):true|null {
+ const body=request.body;
+ if(request.raw.url?.includes('?'))return null;
+ if(body===undefined)return true;
+ return body!==null&&typeof body==='object'&&Object.getPrototypeOf(body)===Object.prototype&&
+  Reflect.ownKeys(body).length===0?true:null;
+}
+
+function createGoogleEventHandler<Input>(
+ options:WorkerIdentity,auth:OAuth2Client,parse:(request:FastifyRequest)=>Input|null,
+ execute:(input:Input,context:ExternalMcpEventInvocation,reply:FastifyReply)=>Promise<void>,
+ settle:(invocation:ExternalMcpEventInvocation)=>Promise<boolean>,
+):GoogleEventDeliveryWorker {
  const configured=identity(options),authentication=createGoogleApiLifetime();assertGoogleSdkSafe();
  const pending=new Set<Promise<void>>(),controllers=new Set<AbortController>();let closing=false;
  async function handle(request:FastifyRequest,reply:FastifyReply):Promise<void> {
@@ -56,7 +101,7 @@ export function createGoogleEventDeliveryWorkerRuntime(options:WorkerIdentity,de
   request.raw.once('aborted',abort);reply.raw.once('close',closed);
   if(request.raw.aborted||reply.raw.destroyed)abort();
   try {
-   const id=deliveryId(request.body);if(id===null){reply.code(400).send();return;}
+   const input=parse(request);if(input===null){reply.code(400).send();return;}
    const header=request.headers.authorization;
    const authHeaders=request.raw.rawHeaders.filter((_,index)=>index%2===0&&request.raw.rawHeaders[index]!.toLowerCase()==='authorization');
    if(authHeaders.length!==1||typeof header!=='string'||header.length>8192||!/^Bearer [A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(header)){reply.code(401).send();return;}
@@ -72,8 +117,7 @@ export function createGoogleEventDeliveryWorkerRuntime(options:WorkerIdentity,de
    });
    if(closing||controller.signal.aborted||performance.now()>=end||allowed===null){reply.code(503).send();return;}
    if(!allowed){reply.code(401).send();return;}
-   const result=await delivery.deliver(id,context);
-   reply.code(result.outcome==='terminal'?204:503).send();
+   await execute(input,context,reply);
   }catch{if(!reply.sent)reply.code(503).send();}
   finally{clearTimeout(timer);controllers.delete(controller);request.raw.removeListener('aborted',abort);reply.raw.removeListener('close',closed);}
  }
@@ -85,7 +129,7 @@ export function createGoogleEventDeliveryWorkerRuntime(options:WorkerIdentity,de
   async settle(invocation:ExternalMcpEventInvocation):Promise<boolean> {
    closing=true;for(const controller of controllers)controller.abort();
    if(!invocation?.signal||!Number.isFinite(invocation.deadlineMs)||invocation.signal.aborted||invocation.deadlineMs<=Date.now())return false;
-   const complete=Promise.all([authentication.settle(invocation),delivery.settle(invocation),Promise.allSettled(pending).then(()=>true)]).then(results=>results.every(Boolean),()=>false);
+   const complete=Promise.all([authentication.settle(invocation),settle(invocation),Promise.allSettled(pending).then(()=>true)]).then(results=>results.every(Boolean),()=>false);
    let timer:ReturnType<typeof setTimeout>|undefined,stop:(()=>void)|undefined;
    try{return await Promise.race([complete,new Promise<false>(resolve=>{
     timer=setTimeout(()=>resolve(false),Math.min(2147483647,Math.max(1,invocation.deadlineMs-Date.now())));
