@@ -1,5 +1,15 @@
 # @emseepea/feedback
 
+## 0.13.3
+
+### Patch Changes
+
+- [`87b6c83`](https://github.com/emseepea/emseepea/commit/87b6c83678388ccdebdf094c860da2a38a4ae361) Thanks [@tompahoward](https://github.com/tompahoward)! - Set `openAIOAuthMetadata: true` to let OpenAI clients discover the OAuth scopes your feedback conversation tools require.
+
+- [`5b41e1e`](https://github.com/emseepea/emseepea/commit/5b41e1e4113bd72c6d8ef12da93b03ce3f4091c4) Thanks [@tompahoward](https://github.com/tompahoward)! - Clarify that assistants should only tell users feedback was recorded after `submit-feedback` returns a successful receipt.
+- Updated dependencies [[`0f43d5d`](https://github.com/emseepea/emseepea/commit/0f43d5d4e04b84b79a806d5cf84878b4b42935ee)]:
+  - @emseepea/server@0.28.0
+
 ## 0.13.2
 
 ### Patch Changes
